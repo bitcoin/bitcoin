@@ -806,8 +806,8 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case PruneTristate:
         if (changed()) {
             const bool is_autoprune = (value.value<Qt::CheckState>() == Qt::Checked);
-            if (suffix.empty() && !is_autoprune) setOption(option, true, "-prev");
             const auto prune_setting = PruneSettingFromMiB(value.value<Qt::CheckState>(), getOption(PruneSizeMiB).toInt());
+            if (suffix.empty() && !is_autoprune) setOption(option, Qt::Checked, "-prev");
             update(prune_setting);
             if (suffix.empty()) gArgs.ModifyRWConfigFile("prune", prune_setting.getValStr());
             if (suffix.empty() && is_autoprune) UpdateRwSetting(node(), option, "-prev", {});
