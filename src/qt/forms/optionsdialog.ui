@@ -708,7 +708,7 @@
          <item>
           <widget class="QLabel" name="maxuploadtargetUnitLabel">
            <property name="text">
-            <string>MB per day</string>
+            <string>MiB per day</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
