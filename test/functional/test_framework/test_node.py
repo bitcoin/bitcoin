@@ -724,7 +724,7 @@ class TestNode():
 
         return p2p_conn
 
-    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=None, advertise_v2_p2p=None, **kwargs):
+    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, wait_for_disconnect=False, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=None, advertise_v2_p2p=None, **kwargs):
         """Add an outbound p2p connection from node. Must be an
         "outbound-full-relay", "block-relay-only", "addr-fetch" or "feeler" connection.
 
@@ -771,7 +771,7 @@ class TestNode():
         if reconnect:
             p2p_conn.wait_for_reconnect()
 
-        if connection_type == "feeler":
+        if connection_type == "feeler" or wait_for_disconnect:
             # feeler connections are closed as soon as the node receives a `version` message
             p2p_conn.wait_until(lambda: p2p_conn.message_count["version"] == 1, check_connected=False)
             p2p_conn.wait_until(lambda: not p2p_conn.is_connected, check_connected=False)
