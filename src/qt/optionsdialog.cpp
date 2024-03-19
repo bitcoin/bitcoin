@@ -129,7 +129,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     connect(ui->connectSocksTor, &QPushButton::toggled, ui->proxyPortTor, &QWidget::setEnabled);
     connect(ui->connectSocksTor, &QPushButton::toggled, this, &OptionsDialog::updateProxyValidationState);
 
-    ui->maxuploadtarget->setMinimum(144 /* MB/day */);
+    ui->maxuploadtarget->setMinimum(144 /* MiB/day */);
     ui->maxuploadtarget->setMaximum(std::numeric_limits<int>::max());
     connect(ui->maxuploadtargetCheckbox, SIGNAL(toggled(bool)), ui->maxuploadtarget, SLOT(setEnabled(bool)));
 
