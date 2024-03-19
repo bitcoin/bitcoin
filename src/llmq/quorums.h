@@ -21,6 +21,7 @@
 #include <atomic>
 #include <map>
 
+class CActiveMasternodeManager;
 class CBlockIndex;
 class CChainState;
 class CConnman;
@@ -192,7 +193,7 @@ public:
     void Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, Span<CDeterministicMNCPtr> _members);
 
     bool SetVerificationVector(const std::vector<CBLSPublicKey>& quorumVecIn);
-    bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare);
+    bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const CActiveMasternodeManager& mn_activeman);
 
     bool HasVerificationVector() const;
     bool IsMember(const uint256& proTxHash) const;
@@ -223,6 +224,7 @@ private:
     CDKGSessionManager& dkgManager;
     CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
+    const CActiveMasternodeManager* m_mn_activeman;
     const CSporkManager& m_sporkman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
@@ -237,8 +239,9 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
-                   CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
+    CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
+                   CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
+                   const CActiveMasternodeManager* mn_activeman, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CQuorumManager() { Stop(); };
 
     void Start();

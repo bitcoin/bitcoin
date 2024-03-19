@@ -539,9 +539,9 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CConnman& _connman, const CQuorumManager& _qman,
+CSigningManager::CSigningManager(CConnman& _connman, const CActiveMasternodeManager* mn_activeman, const CQuorumManager& _qman,
                                  bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), connman(_connman), qman(_qman)
+    db(fMemory, fWipe), connman(_connman), m_mn_activeman(mn_activeman), qman(_qman)
 {
 }
 
@@ -896,7 +896,9 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
 bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigSharesManager& shareman, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
 {
     if (!fMasternodeMode) return false;
-    if (WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash().IsNull())) return false;
+
+    assert(m_mn_activeman);
+    if (WITH_LOCK(m_mn_activeman->cs, return m_mn_activeman->GetProTxHash().IsNull())) return false;
 
     const CQuorumCPtr quorum = [&]() {
         if (quorumHash.IsNull()) {
@@ -918,7 +920,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
         return false;
     }
 
-    if (!WITH_LOCK(::activeMasternodeManager->cs, return quorum->IsValidMember(::activeMasternodeManager->GetProTxHash()))) {
+    if (!WITH_LOCK(m_mn_activeman->cs, return quorum->IsValidMember(m_mn_activeman->GetProTxHash()))) {
         return false;
     }
 

@@ -199,7 +199,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("encrypted contributions. time=%d", t1.count());
 
-    qc.sig = ::activeMasternodeManager->Sign(qc.GetSignHash());
+    qc.sig = m_mn_activeman->Sign(qc.GetSignHash());
 
     logger.Flush();
 
@@ -316,7 +316,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
 
     bool complain = false;
     CBLSSecretKey skContribution;
-    if (!::activeMasternodeManager->Decrypt(*qc.contributions, *myIdx, skContribution, PROTOCOL_VERSION)) {
+    if (!m_mn_activeman->Decrypt(*qc.contributions, *myIdx, skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
     } else if (member->idx != myIdx && ShouldSimulateError(DKGError::type::COMPLAIN_LIE)) {
@@ -517,7 +517,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("sending complaint. badCount=%d, complaintCount=%d", badCount, complaintCount);
 
-    qc.sig = ::activeMasternodeManager->Sign(qc.GetSignHash());
+    qc.sig = m_mn_activeman->Sign(qc.GetSignHash());
 
     logger.Flush();
 
@@ -711,7 +711,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return;
     }
 
-    qj.sig = ::activeMasternodeManager->Sign(qj.GetSignHash());
+    qj.sig = m_mn_activeman->Sign(qj.GetSignHash());
 
     logger.Flush();
 
@@ -1003,7 +1003,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         (*commitmentHash.begin())++;
     }
 
-    qc.sig = ::activeMasternodeManager->Sign(commitmentHash);
+    qc.sig = m_mn_activeman->Sign(commitmentHash);
     qc.quorumSig = skShare.Sign(commitmentHash);
 
     if (lieType == 3) {
