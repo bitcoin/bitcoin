@@ -60,12 +60,12 @@ void OptionsDialog::FixTabOrder(QWidget * const o)
     prevwidget = o;
 }
 
-void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text)
+void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text, QLayout *horizontalLayout)
 {
     QWidget * const parent = o->parentWidget();
     const QStringList text_parts = text.split("%s");
 
-    QHBoxLayout * const horizontalLayout = new QHBoxLayout();
+    if (!horizontalLayout) horizontalLayout = new QHBoxLayout();
 
     QLabel * const labelBefore = new QLabel(parent);
     labelBefore->setText(text_parts[0]);

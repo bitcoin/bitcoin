@@ -19,6 +19,7 @@ class QCheckBox;
 class QDataWidgetMapper;
 class QDoubleSpinBox;
 class QEvent;
+class QLayout;
 class QSpinBox;
 class QString;
 class QValueComboBox;
@@ -100,7 +101,7 @@ private:
 
     QWidget *prevwidget{nullptr};
     void FixTabOrder(QWidget *);
-    void CreateOptionUI(QBoxLayout *, QWidget *, const QString& text);
+    void CreateOptionUI(QBoxLayout *, QWidget *, const QString& text, QLayout *horizontalLayout = nullptr);
 
     QCheckBox *walletrbf;
 
