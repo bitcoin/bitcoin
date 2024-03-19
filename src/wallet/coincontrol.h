@@ -117,7 +117,8 @@ public:
     std::optional<uint32_t> m_version;
     //! Use this change target instead of default behavior if set
     std::optional<CAmount> m_change_target;
-
+    //! Maximum of excess value added to the input that does not count as waste and can be added to the target value.
+    std::optional<CAmount> m_max_excess;
     CCoinControl();
 
     /**

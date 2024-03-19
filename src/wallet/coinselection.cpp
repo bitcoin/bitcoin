@@ -84,6 +84,7 @@ struct {
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
+ * @param const CAmount& Maximum amount of excess to exclude from waste.
  * @param int max_weight The maximum weight available for the input set.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
@@ -91,9 +92,11 @@ struct {
 static const size_t TOTAL_TRIES = 100000;
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_weight)
+                                             int max_weight, const CAmount& max_excess /* = CAmount{0} */)
 {
-    SelectionResult result(selection_target, SelectionAlgorithm::BNB);
+    CAmount selection_target_min = selection_target - max_excess;
+    CAmount selection_target_max = selection_target + max_excess;
+    SelectionResult result(selection_target_min, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
     std::vector<size_t> curr_selection; // selected utxo indexes
     int curr_selection_weight = 0; // sum of selected utxo weight
@@ -106,7 +109,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
         assert(utxo.GetSelectionAmount() > 0);
         curr_available_value += utxo.GetSelectionAmount();
     }
-    if (curr_available_value < selection_target) {
+    if (curr_available_value < selection_target_min) {
         return util::Error();
     }
 
@@ -124,15 +127,16 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
         // Conditions for starting a backtrack
         bool backtrack = false;
-        if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
+        if (curr_value + curr_available_value < selection_target_min || // Cannot possibly reach target with the amount remaining in the curr_available_value.
+            curr_value > selection_target_max + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_selection_weight > max_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
             max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
-        } else if (curr_value >= selection_target) {       // Selected value is within range
-            curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
+        } else if (curr_value >= selection_target_min) {       // Selected value is within range
+            CAmount excess = (curr_value > selection_target_max ? curr_value - selection_target_max: 0);
+            curr_waste += excess; // This is the excess value which is added to the waste for the below comparison
             // Adding another UTXO after this check could bring the waste down if the long term fee is higher than the current fee.
             // However we are not going to explore that because this optimization for the waste is only done when we have hit our target
             // value. Adding any more UTXOs will be just burning the UTXO; it will go entirely to fees. Thus we aren't going to
@@ -141,7 +145,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
                 best_selection = curr_selection;
                 best_waste = curr_waste;
             }
-            curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
+            curr_waste -= excess; // Remove the excess value as we will be selecting different coins now
             backtrack = true;
         }
 
@@ -194,6 +198,8 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
     }
+
+    result.SetTargetToCurrentAmount(selection_target_max);
     result.ComputeAndSetWaste(cost_of_change, cost_of_change, CAmount{0});
     assert(best_waste == result.GetWaste());
 
@@ -843,12 +849,17 @@ void SelectionResult::SetBumpFeeDiscount(const CAmount discount)
 void SelectionResult::ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee)
 {
     const CAmount change = GetChange(min_viable_change, change_fee);
-
     if (change > 0) {
         m_waste = GetSelectionWaste(change_cost, m_target, m_use_effective);
     } else {
         m_waste = GetSelectionWaste(0, m_target, m_use_effective);
     }
+}
+
+void SelectionResult::SetTargetToCurrentAmount(const CAmount max_target)
+{
+    CAmount curr_value = m_use_effective ? GetSelectedEffectiveValue() : GetSelectedValue();
+    m_target = std::min(curr_value, max_target);
 }
 
 void SelectionResult::SetAlgoCompleted(bool algo_completed)
