@@ -47,11 +47,13 @@ private:
 
 private:
     const std::unique_ptr<db_type> m_db;
-    const bool is_valid{false};
+    bool is_valid{false};
 
 public:
-    explicit CNetFulfilledRequestManager(bool load_cache);
+    explicit CNetFulfilledRequestManager();
     ~CNetFulfilledRequestManager();
+
+    bool LoadCache(bool load_cache);
 
     bool IsValid() const { return is_valid; }
     void CheckAndRemove();
@@ -63,7 +65,5 @@ public:
 
     void DoMaintenance();
 };
-
-extern std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
 
 #endif // BITCOIN_NETFULFILLEDMAN_H

@@ -14,6 +14,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -61,16 +62,17 @@ BlockAssembler::Options::Options() {
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
-                               const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
+BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate),
-      m_chain_helper(chain_helper),
-      quorum_block_processor(*llmq_ctx.quorum_block_processor),
-      m_clhandler(*llmq_ctx.clhandler),
-      m_isman(*llmq_ctx.isman),
-      m_evoDb(evoDb)
+      m_cpoolman(*Assert(node.cpoolman)),
+      m_chain_helper(*Assert(node.chain_helper)),
+      m_mnhfman(*Assert(node.mnhf_manager)),
+      quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
+      m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
+      m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
+      m_evoDb(*Assert(node.evodb))
 {
     blockMinFeeRate = options.blockMinFeeRate;
     nBlockMaxSize = options.nBlockMaxSize;
@@ -93,9 +95,8 @@ static BlockAssembler::Options DefaultOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(CChainState& chainstate, CEvoDB& evoDb, CChainstateHelper& chain_helper, LLMQContext& llmq_ctx,
-                               const CTxMemPool& mempool, const CChainParams& params)
-    : BlockAssembler(chainstate, evoDb, chain_helper, llmq_ctx, mempool, params, DefaultOptions()) {}
+BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params)
+    : BlockAssembler(chainstate, node, mempool, params, DefaultOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
@@ -233,7 +234,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 BlockValidationState state;
-                const auto creditPoolDiff = GetCreditPoolDiffForBlock(*pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
+                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
                 if (creditPoolDiff == std::nullopt) {
                     throw std::runtime_error(strprintf("%s: GetCreditPoolDiffForBlock failed: %s", __func__, state.ToString()));
                 }
@@ -407,12 +408,12 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     // duplicates of indexes. There's used `BlockSubsidy` equaled to 0
     std::optional<CCreditPoolDiff> creditPoolDiff;
     if (DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V20)) {
-        CCreditPool creditPool = creditPoolManager->GetCreditPool(pindexPrev, chainparams.GetConsensus());
+        CCreditPool creditPool = m_cpoolman.GetCreditPool(pindexPrev, chainparams.GetConsensus());
         creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus(), 0);
     }
 
     // This map with signals is used only to find duplicates
-    std::unordered_map<uint8_t, int> signals = m_chainstate.GetMNHFSignalsStage(pindexPrev);
+    std::unordered_map<uint8_t, int> signals = m_mnhfman.GetSignalsStage(pindexPrev);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block

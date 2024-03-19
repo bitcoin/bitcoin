@@ -305,16 +305,13 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    node.netfulfilledman = nullptr;
-    ::netfulfilledman.reset();
     node.mn_metaman = nullptr;
     ::mmetaman.reset();
-    node.dstxman = nullptr;
-    ::dstxManager.reset();
     node.mn_sync = nullptr;
     ::masternodeSync.reset();
     node.sporkman.reset();
     node.govman.reset();
+    node.netfulfilledman.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -350,8 +347,7 @@ void PrepareShutdown(NodeContext& node)
         llmq::quorumSnapshotManager.reset();
         node.dmnman = nullptr;
         deterministicMNManager.reset();
-        node.cpoolman = nullptr;
-        creditPoolManager.reset();
+        node.cpoolman.reset();
         node.mnhf_manager.reset();
         node.evodb.reset();
     }
@@ -1711,8 +1707,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
+    assert(!node.netfulfilledman);
+    node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
+
     assert(!node.govman);
-    node.govman = std::make_unique<CGovernanceManager>();
+    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman);
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
@@ -1742,7 +1741,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 
     assert(!::masternodeSync);
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.govman);
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman, *node.govman);
     node.mn_sync = ::masternodeSync.get();
 
     assert(!node.peerman);
@@ -1872,7 +1871,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #endif
 
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *node.mn_sync, ::deterministicMNManager, *node.govman, node.llmq_ctx, node.cj_ctx
+        *node.connman, *node.mn_sync, *node.govman, ::deterministicMNManager, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -1951,7 +1950,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
 
                 chainman.Reset();
-                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.mnhf_manager, *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
+                chainman.InitializeChainstate(Assert(node.mempool.get()), *node.evodb, node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
                 chainman.m_total_coinstip_cache = nCoinCacheUsage;
                 chainman.m_total_coinsdb_cache = nCoinDBCache;
 
@@ -1966,9 +1965,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 deterministicMNManager.reset();
                 deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
                 node.dmnman = deterministicMNManager.get();
-                creditPoolManager.reset();
-                creditPoolManager = std::make_unique<CCreditPoolManager>(*node.evodb);
-                node.cpoolman = creditPoolManager.get();
+                node.cpoolman.reset();
+                node.cpoolman = std::make_unique<CCreditPoolManager>(*node.evodb);
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
 
@@ -1977,12 +1975,13 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 
                 node.chain_helper.reset();
-                node.chain_helper = std::make_unique<CChainstateHelper>(*node.govman, Params().GetConsensus(), *node.mn_sync, *node.sporkman);
+                node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
+                                                                        chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2242,10 +2241,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         }
     }
 
-    assert(!::dstxManager);
-    ::dstxManager = std::make_unique<CDSTXManager>();
-    node.dstxman = ::dstxManager.get();
-
     assert(!::mmetaman);
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);
     node.mn_metaman = ::mmetaman.get();
@@ -2257,10 +2252,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         return InitError(strprintf(_("Failed to clear masternode cache at %s"), file_path));
     }
 
-    assert(!::netfulfilledman);
-    ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(fLoadCacheFiles);
-    node.netfulfilledman = ::netfulfilledman.get();
-    if (!node.netfulfilledman->IsValid()) {
+    if (!node.netfulfilledman->LoadCache(fLoadCacheFiles)) {
         auto file_path = (GetDataDir() / "netfulfilled.dat").string();
         if (fLoadCacheFiles) {
             return InitError(strprintf(_("Failed to load fulfilled requests cache from %s"), file_path));

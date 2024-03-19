@@ -23,10 +23,11 @@ namespace llmq {
 
 
 CEHFSignalsHandler::CEHFSignalsHandler(CChainState& chainstate, CConnman& connman,
-                                       CSigningManager& sigman, CSigSharesManager& shareman,
+                                       CMNHFManager& mnhfman, CSigningManager& sigman, CSigSharesManager& shareman,
                                        const CSporkManager& sporkman, const CQuorumManager& qman, CTxMemPool& mempool) :
     chainstate(chainstate),
     connman(connman),
+    mnhfman(mnhfman),
     sigman(sigman),
     shareman(shareman),
     sporkman(sporkman),
@@ -54,7 +55,7 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
         // TODO: v20 will never attempt to create EHF messages on main net; if this is needed it will be done by v20.1 or v21 nodes
         return;
     }
-    const auto ehfSignals = chainstate.GetMNHFSignalsStage(pindexNew);
+    const auto ehfSignals = mnhfman.GetSignalsStage(pindexNew);
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // Skip deployments that do not use dip0023
         if (!deployment.useEHF) continue;
@@ -113,7 +114,7 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
         return;
     }
 
-    const auto ehfSignals = chainstate.GetMNHFSignalsStage(WITH_LOCK(cs_main, return chainstate.m_chain.Tip()));
+    const auto ehfSignals = mnhfman.GetSignalsStage(WITH_LOCK(cs_main, return chainstate.m_chain.Tip()));
     MNHFTxPayload mnhfPayload;
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // skip deployments that do not use dip0023 or that have already been mined
@@ -138,7 +139,7 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
             LOCK(cs_main);
             const MempoolAcceptResult result = AcceptToMemoryPool(chainstate, mempool, tx_to_sent, /* bypass_limits */ false);
             if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                connman.RelayTransaction(*tx_to_sent);
+                connman.RelayTransaction(*tx_to_sent, /*is_dstx=*/ false);
             } else {
                 LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", result.m_state.ToString());
             }

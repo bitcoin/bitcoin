@@ -12,6 +12,7 @@ class CChainState;
 class CConnman;
 class CDBWrapper;
 class CEvoDB;
+class CMNHFManager;
 class CSporkManager;
 class CTxMemPool;
 class PeerManager;
@@ -31,8 +32,8 @@ class CSigningManager;
 struct LLMQContext {
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
-    LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CSporkManager& sporkman,
-                CTxMemPool& mempool,
+    LLMQContext(CChainState& chainstate, CConnman& connman, CEvoDB& evo_db, CMNHFManager& mnhfman,
+                CSporkManager& sporkman, CTxMemPool& mempool,
                 const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     ~LLMQContext();
 

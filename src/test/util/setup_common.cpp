@@ -105,7 +105,7 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
     return os;
 }
 
-void DashTestSetup(NodeContext& node)
+void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 {
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
@@ -115,8 +115,9 @@ void DashTestSetup(NodeContext& node)
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.sporkman, *node.mempool, node.peerman, true, false);
-    node.chain_helper = std::make_unique<CChainstateHelper>(*node.govman, Params().GetConsensus(), *node.mn_sync, *node.sporkman);
+    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, true, false);
+    node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
+                                                            chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 }
 
 void DashTestSetupClose(NodeContext& node)
@@ -125,6 +126,9 @@ void DashTestSetupClose(NodeContext& node)
     node.llmq_ctx->Interrupt();
     node.llmq_ctx->Stop();
     node.llmq_ctx.reset();
+#ifdef ENABLE_WALLET
+    node.coinjoin_loader.reset();
+#endif // ENABLE_WALLET
     node.dmnman = nullptr;
     ::deterministicMNManager.reset();
     node.cj_ctx.reset();
@@ -179,8 +183,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
     connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
-    creditPoolManager = std::make_unique<CCreditPoolManager>(*m_node.evodb);
-    m_node.cpoolman = creditPoolManager.get();
+    m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     static bool noui_connected = false;
     if (!noui_connected) {
         noui_connect();
@@ -193,8 +196,7 @@ BasicTestingSetup::~BasicTestingSetup()
 {
     connman.reset();
     llmq::quorumSnapshotManager.reset();
-    m_node.cpoolman = nullptr;
-    creditPoolManager.reset();
+    m_node.cpoolman.reset();
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
 
@@ -222,16 +224,13 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
+    m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
-    m_node.govman = std::make_unique<CGovernanceManager>();
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.govman);
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman);
+    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
     m_node.mn_sync = ::masternodeSync.get();
-    ::dstxManager = std::make_unique<CDSTXManager>();
-    m_node.dstxman = ::dstxManager.get();
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
     m_node.mn_metaman = ::mmetaman.get();
-    ::netfulfilledman = std::make_unique<CNetFulfilledRequestManager>(/* load_cache */ false);
-    m_node.netfulfilledman = ::netfulfilledman.get();
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -245,16 +244,13 @@ ChainTestingSetup::~ChainTestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    m_node.netfulfilledman = nullptr;
-    ::netfulfilledman.reset();
     m_node.mn_metaman = nullptr;
     ::mmetaman.reset();
-    m_node.dstxman = nullptr;
-    ::dstxManager.reset();
     m_node.mn_sync = nullptr;
     ::masternodeSync.reset();
     m_node.govman.reset();
     m_node.sporkman.reset();
+    m_node.netfulfilledman.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.args = nullptr;
@@ -274,7 +270,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.mnhf_manager, *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager, llmq::quorumBlockProcessor);
+    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
@@ -294,7 +290,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
-    DashTestSetup(m_node);
+    DashTestSetup(m_node, chainparams);
 
     BlockValidationState state;
     if (!::ChainstateActive().ActivateBestChain(state)) {
@@ -387,10 +383,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(
-            ::ChainstateActive(), *m_node.evodb, *m_node.chain_helper, *m_node.llmq_ctx,
-            empty_pool, chainparams
-        ).CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler(::ChainstateActive(), m_node, empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {

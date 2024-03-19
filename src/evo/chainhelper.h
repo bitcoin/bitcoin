@@ -7,18 +7,27 @@
 
 #include <memory>
 
+class CCreditPoolManager;
+class CDeterministicMNManager;
+class CMNHFManager;
 class CMNPaymentsProcessor;
 class CMasternodeSync;
 class CGovernanceManager;
+class CSpecialTxProcessor;
 class CSporkManager;
 
 namespace Consensus { struct Params; }
+namespace llmq {
+class CChainLocksHandler;
+class CQuorumBlockProcessor;
+}
 
 class CChainstateHelper
 {
 public:
-    explicit CChainstateHelper(CGovernanceManager& govman, const Consensus::Params& consensus_params, const CMasternodeSync& mn_sync,
-                               const CSporkManager& sporkman);
+    explicit CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
+                               llmq::CQuorumBlockProcessor& qblockman, const Consensus::Params& consensus_params,
+                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler);
     ~CChainstateHelper();
 
     CChainstateHelper() = delete;
@@ -26,6 +35,7 @@ public:
 
 public:
     const std::unique_ptr<CMNPaymentsProcessor> mn_payments;
+    const std::unique_ptr<CSpecialTxProcessor> special_tx;
 };
 
 #endif // BITCOIN_EVO_CHAINHELPER_H
