@@ -324,10 +324,10 @@ class NetTest(BitcoinTestFramework):
         self.restart_node(1, ["-checkaddrman=1", "-test=addrman"], clear_addrman=True)
         node = self.nodes[1]
 
-        self.log.debug("Test that addpeerinfo is a hidden RPC")
+        self.log.debug("Test that addpeeraddress is a hidden RPC")
         # It is hidden from general help, but its detailed help may be called directly.
-        assert "addpeerinfo" not in node.help()
-        assert "addpeerinfo" in node.help("addpeerinfo")
+        assert "addpeeraddress" not in node.help()
+        assert "unknown command: addpeeraddress" not in node.help("addpeeraddress")
 
         self.log.debug("Test that adding an empty address fails")
         assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
@@ -452,7 +452,7 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("Test that getrawaddrman is a hidden RPC")
         # It is hidden from general help, but its detailed help may be called directly.
         assert "getrawaddrman" not in node.help()
-        assert "getrawaddrman" in node.help("getrawaddrman")
+        assert "unknown command: getrawaddrman" not in node.help("getrawaddrman")
 
         def check_addr_information(result, expected):
             """Utility to compare a getrawaddrman result entry with an expected entry"""
