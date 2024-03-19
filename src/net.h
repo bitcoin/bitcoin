@@ -920,7 +920,7 @@ public:
     * @param[in]   pnode           The node which we are sending messages to.
     * @return                      True if there is more work to be done
     */
-    virtual bool SendMessages(CNode* pnode) = 0;
+    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
 
 
 protected:
@@ -1377,7 +1377,7 @@ private:
 
     NodeId GetNewNodeId();
 
-    size_t SocketSendData(CNode *pnode);
+    size_t SocketSendData(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
     size_t SocketRecvData(CNode* pnode);
     void DumpAddresses();
 
