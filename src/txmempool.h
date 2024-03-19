@@ -28,7 +28,6 @@
 #include <util/epochguard.h>
 #include <util/hasher.h>
 
-#include <boost/optional.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -840,7 +839,7 @@ public:
         return m_epoch.visited(it->m_epoch_marker);
     }
 
-    bool visited(boost::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch) {
+    bool visited(std::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch) {
         assert(m_epoch.guarded());
         return !it || visited(*it);
     }
