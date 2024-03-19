@@ -153,8 +153,7 @@ bool KeyMan::AddCryptedKey(const PublicKey& vchPubKey,
 
 PrivateKey KeyMan::GenerateNewSeed()
 {
-    PrivateKey key(BLS12_381_KeyGen::derive_master_SK(MclScalar::Rand(true).GetVch()));
-    return key;
+    return GenRandomSeed();
 }
 
 void KeyMan::LoadHDChain(const blsct::HDChain& chain)
@@ -195,13 +194,12 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     blsct::HDChain newHdChain;
 
     auto seed = key.GetPublicKey();
-    auto scalarMasterKey = key.GetScalar();
-    auto childKey = BLS12_381_KeyGen::derive_child_SK(scalarMasterKey, 130);
-    auto transactionKey = BLS12_381_KeyGen::derive_child_SK(childKey, 0);
-    auto blindingKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(childKey, 1));
-    auto tokenKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(childKey, 2));
-    auto viewKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(transactionKey, 0));
-    auto spendKey = PrivateKey(BLS12_381_KeyGen::derive_child_SK(transactionKey, 1));
+    auto childKey = FromSeedToChildKey(key.GetScalar());
+    auto transactionKey = FromChildToTransactionKey(childKey);
+    auto blindingKey = PrivateKey(FromChildToBlindingKey(childKey));
+    auto tokenKey = PrivateKey(FromChildToTokenKey(childKey));
+    auto viewKey = PrivateKey(FromTransactionToViewKey(transactionKey));
+    auto spendKey = PrivateKey(FromTransactionToSpendKey(transactionKey));
 
     newHdChain.nVersion = blsct::HDChain::VERSION_HD_BASE;
     newHdChain.seed_id = key.GetPublicKey().GetID();
@@ -353,7 +351,7 @@ void KeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
 
 SubAddress KeyMan::GetSubAddress(const SubAddressIdentifier& id) const
 {
-    return SubAddress(viewKey, spendPublicKey, id);
+    return DeriveSubAddress(viewKey, spendPublicKey, id);
 };
 
 bool KeyMan::HaveKey(const CKeyID& id) const
@@ -442,11 +440,7 @@ CKeyID KeyMan::GetHashId(const blsct::PublicKey& blindingKey, const blsct::Publi
     if (!fViewKeyDefined || !viewKey.IsValid())
         throw std::runtime_error(strprintf("%s: the wallet has no view key available", __func__));
 
-    auto t = blindingKey.GetG1Point() * viewKey.GetScalar();
-    auto dh = MclG1Point::GetBasePoint() * t.GetHashWithSalt(0).Negate();
-    auto D_prime = spendingKey.GetG1Point() + dh;
-
-    return PublicKey(D_prime).GetID();
+    return CalculateHashId(blindingKey.GetG1Point(), spendingKey.GetG1Point(), viewKey.GetScalar());
 };
 
 blsct::PrivateKey KeyMan::GetMasterSeedKey() const
@@ -503,32 +497,25 @@ blsct::PrivateKey KeyMan::GetSpendingKeyForOutput(const CTxOut& out, const SubAd
 
     auto sk = GetSpendingKey();
 
-    HashWriter string{};
-
-    string << std::vector<unsigned char>(subAddressHeader.begin(), subAddressHeader.end());
-    string << viewKey;
-    string << id.account;
-    string << id.address;
-
-    MclG1Point t = out.blsctData.blindingKey * viewKey.GetScalar();
-    MclScalar ret = t.GetHashWithSalt(0) + sk.GetScalar() + MclScalar(string.GetHash());
-
-    return ret;
+    return CalculatePrivateSpendingKey(out.blsctData.blindingKey, viewKey.GetScalar(), sk.GetScalar(), id.account, id.address);
 }
 
-bulletproofs::AmountRecoveryResult<Mcl> KeyMan::RecoverOutputs(const std::vector<CTxOut>& outs)
+using Arith = Mcl;
+
+bulletproofs::AmountRecoveryResult<Arith> KeyMan::RecoverOutputs(const std::vector<CTxOut>& outs)
 {
     if (!fViewKeyDefined || !viewKey.IsValid())
-        return bulletproofs::AmountRecoveryResult<Mcl>::failure();
+        return bulletproofs::AmountRecoveryResult<Arith>::failure();
 
-    bulletproofs::RangeProofLogic<Mcl> rp;
-    std::vector<bulletproofs::AmountRecoveryRequest<Mcl>> reqs;
+    bulletproofs::RangeProofLogic<Arith> rp;
+    std::vector<bulletproofs::AmountRecoveryRequest<Arith>> reqs;
     reqs.reserve(outs.size());
 
     for (size_t i = 0; i < outs.size(); i++) {
         CTxOut out = outs[i];
-        auto nonce = out.blsctData.blindingKey * viewKey.GetScalar();
-        reqs.push_back(bulletproofs::AmountRecoveryRequest<Mcl>::of(out.blsctData.rangeProof, nonce));
+        auto nonce = CalculateNonce(out.blsctData.blindingKey, viewKey.GetScalar());
+        bulletproofs::RangeProof<Arith> proof = out.blsctData.rangeProof;
+        reqs.push_back(bulletproofs::AmountRecoveryRequest<Arith>::of(proof, nonce));
     }
 
     return rp.RecoverAmounts(reqs);
@@ -539,10 +526,7 @@ bool KeyMan::IsMine(const blsct::PublicKey& blindingKey, const blsct::PublicKey&
     if (!fViewKeyDefined || !viewKey.IsValid())
         return false;
 
-    HashWriter hash{};
-    hash << (blindingKey.GetG1Point() * viewKey.GetScalar());
-
-    if (viewTag != (hash.GetHash().GetUint64(0) & 0xFFFF)) return false;
+    if (viewTag != CalculateViewTag(blindingKey.GetG1Point(), viewKey.GetScalar())) return false;
 
     auto hashId = GetHashId(blindingKey, spendingKey);
 

@@ -5,6 +5,7 @@
 #ifndef BLSCT_VERIFICATION_H
 #define BLSCT_VERIFICATION_H
 
+#include <chain.h>
 #include <coins.h>
 
 namespace blsct {
