@@ -103,7 +103,9 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->pruneWarning->setStyleSheet("QLabel { color: red; }");
 
     ui->pruneSizeMiB->setEnabled(false);
-    connect(ui->prune, &QPushButton::toggled, ui->pruneSizeMiB, &QWidget::setEnabled);
+    connect(ui->prune, &QCheckBox::stateChanged, [this](int state){
+        ui->pruneSizeMiB->setEnabled(state == Qt::Checked);
+    });
 
     ui->networkPort->setValidator(new QIntValidator(1024, 65535, this));
     connect(ui->networkPort, SIGNAL(textChanged(const QString&)), this, SLOT(checkLineEdit()));
