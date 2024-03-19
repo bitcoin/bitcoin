@@ -2321,38 +2321,39 @@ bool CWalletTx::InMempool() const
 
 bool CWalletTx::IsTrusted() const
 {
-    std::set<uint256> s;
-    return IsTrusted(s);
+    std::set<uint256> trusted_parents;
+    LOCK(pwallet->cs_wallet);
+    return pwallet->IsTrusted(*this, trusted_parents);
 }
 
-bool CWalletTx::IsTrusted(std::set<uint256>& trusted_parents) const
+bool CWallet::IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const
 {
+    AssertLockHeld(cs_wallet);
     // Quick answer in most cases
-    if (!pwallet->chain().checkFinalTx(*tx)) return false;
-    int nDepth = GetDepthInMainChain();
+    if (!chain().checkFinalTx(*wtx.tx)) return false;
+    int nDepth = wtx.GetDepthInMainChain();
     if (nDepth >= 1) return true;
     if (nDepth < 0) return false;
-    if (IsLockedByInstantSend()) return true;
+    if (wtx.IsLockedByInstantSend()) return true;
     // using wtx's cached debit
-    if (!pwallet->m_spend_zero_conf_change || !IsFromMe(ISMINE_ALL)) return false;
+    if (!m_spend_zero_conf_change || !wtx.IsFromMe(ISMINE_ALL)) return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    if (!InMempool()) return false;
+    if (!wtx.InMempool()) return false;
 
     // Trusted if all inputs are from us and are in the mempool:
-    LOCK(pwallet->cs_wallet);
-    for (const CTxIn& txin : tx->vin)
+    for (const CTxIn& txin : wtx.tx->vin)
     {
         // Transactions not sent by us: not trusted
-        const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+        const CWalletTx* parent = GetWalletTx(txin.prevout.hash);
         if (parent == nullptr) return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         // Check that this specific input being spent is trusted
-        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE) return false;
+        if (IsMine(parentOut) != ISMINE_SPENDABLE) return false;
         // If we've already trusted this parent, continue
         if (trusted_parents.count(parent->GetHash())) continue;
         // Recurse to check that the parent is also trusted
-        if (!parent->IsTrusted(trusted_parents)) return false;
+        if (!IsTrusted(*parent, trusted_parents)) return false;
         trusted_parents.insert(parent->GetHash());
     }
     return true;
@@ -2457,7 +2458,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse
         LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
         for (auto pcoin : GetSpendableTXs()) {
-            const bool is_trusted{pcoin->IsTrusted(trusted_parents)};
+            const bool is_trusted{IsTrusted(*pcoin, trusted_parents)};
             const int tx_depth{pcoin->GetDepthInMainChain()};
             const CAmount tx_credit_mine{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
@@ -2595,7 +2596,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
         if (nDepth == 0 && !pcoin->InMempool())
             continue;
 
-        bool safeTx = pcoin->IsTrusted(trusted_parents);
+        bool safeTx = IsTrusted(*pcoin, trusted_parents);
 
         if (fOnlySafe && !safeTx) {
             continue;
@@ -3375,7 +3376,15 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
     return true;
 }
 
-bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize)
+bool CWallet::CreateTransactionInternal(
+        const std::vector<CRecipient>& vecSend,
+        CTransactionRef& tx,
+        CAmount& nFeeRet,
+        int& nChangePosInOut,
+        bilingual_str& error,
+        const CCoinControl& coin_control,
+        bool sign,
+        int nExtraPayloadSize)
 {
     CAmount nValue = 0;
     ReserveDestination reservedest(this);
@@ -3743,6 +3752,47 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     return true;
 }
 
+bool CWallet::CreateTransaction(
+        const std::vector<CRecipient>& vecSend,
+        CTransactionRef& tx,
+        CAmount& nFeeRet,
+        int& nChangePosInOut,
+        bilingual_str& error,
+        const CCoinControl& coin_control,
+        bool sign,
+        int nExtraPayloadSize)
+{
+    int nChangePosIn = nChangePosInOut;
+    CTransactionRef tx2 = tx;
+    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, sign, nExtraPayloadSize);
+    // try with avoidpartialspends unless it's enabled already
+    if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
+        CCoinControl tmp_cc = coin_control;
+        tmp_cc.m_avoid_partial_spends = true;
+
+        // Re-use the change destination from the first creation attempt to avoid skipping BIP44 indexes
+        const int ungrouped_change_pos = nChangePosInOut;
+        if (ungrouped_change_pos != -1) {
+            ExtractDestination(tx->vout[ungrouped_change_pos].scriptPubKey, tmp_cc.destChange);
+        }
+
+        CAmount nFeeRet2;
+        int nChangePosInOut2 = nChangePosIn;
+        bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
+        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, sign, nExtraPayloadSize)) {
+            // if fee of this alternative one is within the range of the max fee, we use this one
+            const bool use_aps = nFeeRet2 <= nFeeRet + m_max_aps_fee;
+            WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");
+            if (use_aps) {
+                tx = tx2;
+                nFeeRet = nFeeRet2;
+                nChangePosInOut = nChangePosInOut2;
+            }
+        }
+    }
+    return res;
+}
+
 void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
 {
     LOCK(cs_wallet);
@@ -4046,7 +4096,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
         {
             const CWalletTx *pcoin = &walletEntry.second;
 
-            if (!pcoin->IsTrusted(trusted_parents))
+            if (!IsTrusted(*pcoin, trusted_parents))
                 continue;
 
             if (pcoin->IsImmatureCoinBase())
@@ -4647,6 +4697,22 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
         }
 
         walletInstance->m_min_fee = CFeeRate{min_tx_fee.value()};
+    }
+
+    if (gArgs.IsArgSet("-maxapsfee")) {
+        const std::string max_aps_fee{gArgs.GetArg("-maxapsfee", "")};
+        if (max_aps_fee == "-1") {
+            walletInstance->m_max_aps_fee = -1;
+        } else if (std::optional<CAmount> max_fee = ParseMoney(max_aps_fee)) {
+            if (max_fee.value() > HIGH_APS_FEE) {
+                warnings.push_back(AmountHighWarn("-maxapsfee") + Untranslated(" ") +
+                                  _("This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection."));
+            }
+            walletInstance->m_max_aps_fee = max_fee.value();
+        } else {
+            error = AmountErrMsg("maxapsfee", max_aps_fee);
+            return nullptr;
+        }
     }
 
     if (gArgs.IsArgSet("-fallbackfee")) {

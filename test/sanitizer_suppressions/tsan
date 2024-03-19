@@ -31,6 +31,8 @@ race:LoadWallet
 race:WalletBatch::WriteHDChain
 race:BerkeleyBatch
 race:BerkeleyDatabase
+race:DatabaseBatch
+race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
 race:bitcoin-qt
 # deadlock (TODO fix)

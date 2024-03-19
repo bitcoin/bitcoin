@@ -100,7 +100,7 @@ class TestP2PConn(P2PInterface):
 class DashZMQTest (DashTestFramework):
     def set_test_params(self):
         # That's where the zmq publisher will listen for subscriber
-        self.address = "tcp://127.0.0.1:28333"
+        self.address = "tcp://127.0.0.1:28331"
         # node0 creates all available ZMQ publisher
         node0_extra_args = ["-zmqpub%s=%s" % (pub.value, self.address) for pub in ZMQPublisher]
         node0_extra_args.append("-whitelist=127.0.0.1")
