@@ -6,7 +6,6 @@
 #define NAVCOIN_BLSCT_KEYMAN_H
 
 #include <blsct/double_public_key.h>
-#include <blsct/eip_2333/bls12_381_keygen.h>
 #include <blsct/private_key.h>
 #include <blsct/public_key.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_request.h>

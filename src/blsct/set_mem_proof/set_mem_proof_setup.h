@@ -9,6 +9,7 @@
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
 #include <blsct/building_block/pedersen_commitment.h>
+#include <blsct/range_proof/generators.h>
 #include <mutex>
 
 // N is the maximum size of the set of membership public key
@@ -29,6 +30,8 @@ public:
     const Point h;
     const Points hs;
 
+    const range_proof::GeneratorsFactory<T>& Gf() const;
+
     // Hash functions
     Scalar H1(const std::vector<uint8_t>& msg) const;
     Scalar H2(const std::vector<uint8_t>& msg) const;
@@ -36,8 +39,6 @@ public:
     Scalar H4(const std::vector<uint8_t>& msg) const;
 
     Point H5(const std::vector<uint8_t>& msg) const;
-    Point H6(const std::vector<uint8_t>& msg) const;
-    Point H7(const std::vector<uint8_t>& msg) const;
 
     const PedersenCommitment<T> pedersen;
 
@@ -55,6 +56,8 @@ private:
     static Points GenGenerators(const Point& base_point, const size_t& size);
 
     inline static const GeneratorDeriver m_deriver = GeneratorDeriver<Point>("set_membership_proof");
+
+    inline static range_proof::GeneratorsFactory<T>* m_gf;
     inline static std::mutex m_init_mutex;
     inline static bool m_is_initialized = false;
 };

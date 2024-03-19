@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/eip_2333/bls12_381_keygen.h>
 #include <blsct/wallet/helpers.h>
 
 namespace blsct {
@@ -39,5 +40,45 @@ MclScalar CalculatePrivateSpendingKey(const MclG1Point& blindingKey, const MclSc
 MclG1Point CalculateNonce(const MclG1Point& blindingKey, const MclScalar& viewKey)
 {
     return blindingKey * viewKey;
+}
+
+SubAddress DeriveSubAddress(const PrivateKey& viewKey, const PublicKey& spendKey, const SubAddressIdentifier& subAddressId)
+{
+    return SubAddress(viewKey, spendKey, subAddressId);
+}
+
+MclScalar FromSeedToChildKey(const MclScalar& seed)
+{
+    return BLS12_381_KeyGen::derive_child_SK(seed, 130);
+}
+
+MclScalar FromChildToTransactionKey(const MclScalar& seed)
+{
+    return BLS12_381_KeyGen::derive_child_SK(seed, 0);
+}
+
+MclScalar FromChildToBlindingKey(const MclScalar& seed)
+{
+    return BLS12_381_KeyGen::derive_child_SK(seed, 1);
+}
+
+MclScalar FromChildToTokenKey(const MclScalar& seed)
+{
+    return BLS12_381_KeyGen::derive_child_SK(seed, 2);
+}
+
+MclScalar FromTransactionToViewKey(const MclScalar& seed)
+{
+    return BLS12_381_KeyGen::derive_child_SK(seed, 0);
+}
+
+MclScalar FromTransactionToSpendKey(const MclScalar& seed)
+{
+    return BLS12_381_KeyGen::derive_child_SK(seed, 1);
+}
+
+MclScalar GenRandomSeed()
+{
+    return BLS12_381_KeyGen::derive_master_SK(MclScalar::Rand(true).GetVch());
 }
 } // namespace blsct

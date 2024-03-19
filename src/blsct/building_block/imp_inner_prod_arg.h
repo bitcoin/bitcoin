@@ -7,7 +7,6 @@
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
-#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <hash.h>
 #include <vector>
 #include <optional>

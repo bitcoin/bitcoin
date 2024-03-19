@@ -2,11 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <blsct/arith/mcl/mcl.h>
+#include <blsct/pos/pos.h>
+#include <blsct/public_keys.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
+#include <blsct/range_proof/generators.h>
 #include <blsct/wallet/verification.h>
 #include <util/strencodings.h>
 
 namespace blsct {
-bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward, const CAmount& minStake)
+bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward, const CAmount& minStake, CBlockIndex* pindexPrev)
 {
     if (!view.HaveInputs(tx)) {
         return false;
@@ -14,7 +20,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
 
     range_proof::GeneratorsFactory<Mcl> gf;
     bulletproofs::RangeProofLogic<Mcl> rp;
-    std::vector<bulletproofs::RangeProof<Mcl>> vProofs;
+    std::vector<bulletproofs::RangeProofWithSeed<Mcl>> vProofs;
     std::vector<Message> vMessages;
     std::vector<PublicKey> vPubKeys;
     MclG1Point balanceKey;
@@ -40,18 +46,18 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     }
 
     CAmount nFee = 0;
-    bulletproofs::RangeProof<Mcl> stakedCommitmentRangeProof;
+    bulletproofs::RangeProofWithSeed<Mcl> stakedCommitmentRangeProof;
 
     for (auto& out : tx.vout) {
         if (out.IsBLSCT()) {
             vPubKeys.emplace_back(out.blsctData.ephemeralKey);
             auto out_hash = out.GetHash();
             vMessages.emplace_back(out_hash.begin(), out_hash.end());
-            vProofs.emplace_back(out.blsctData.rangeProof);
+            vProofs.emplace_back(bulletproofs::RangeProofWithSeed<Mcl>{out.blsctData.rangeProof, out.tokenId});
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
 
-            if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof, minStake)) {
-                vProofs.push_back(stakedCommitmentRangeProof);
+            if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof) && pindexPrev) {
+                vProofs.push_back(bulletproofs::RangeProofWithSeed<Mcl>{stakedCommitmentRangeProof, blsct::CalculateSetMemProofGeneratorSeed(*pindexPrev), minStake});
             }
         } else {
             if (!out.scriptPubKey.IsUnspendable() && out.nValue > 0) {

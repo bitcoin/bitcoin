@@ -61,13 +61,7 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT = 900;
 static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
-static const bool DEFAULT_NAMED = false;
 static const int CONTINUE_EXECUTION = -1;
-static constexpr int8_t UNKNOWN_NETWORK{-1};
-// See GetNetworkName() in netbase.cpp
-static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "onion", "i2p", "cjdns", "internal"};
-static constexpr std::array NETWORK_SHORT_NAMES{"npr", "ipv4", "ipv6", "onion", "i2p", "cjdns", "int"};
-static constexpr std::array UNREACHABLE_NETWORK_IDS{/*not_publicly_routable*/ 0, /*internal*/ 6};
 static const char* const DEFAULT_LOGFILE = "staker.log";
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
@@ -418,13 +412,6 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     return response;
 }
 
-/** Parse UniValue result to update the message to print to std::cout. */
-static void ParseResult(const UniValue& result, std::string& strPrint)
-{
-    if (result.isNull()) return;
-    strPrint = result.isStr() ? result.get_str() : result.write(2);
-}
-
 /** Parse UniValue error to update the message to print to std::cerr and the code to return. */
 static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
 {
@@ -449,149 +436,10 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
     nRet = abs(error["code"].getInt<int>());
 }
 
-/**
- * GetWalletBalances calls listwallets; if more than one wallet is loaded, it then
- * fetches mine.trusted balances for each loaded wallet and pushes them to `result`.
- *
- * @param result  Reference to UniValue object the wallet names and balances are pushed to.
- */
-static void GetWalletBalances(UniValue& result)
-{
-    DefaultRequestHandler rh;
-    const UniValue listwallets = ConnectAndCallRPC(&rh, "listwallets", /* args=*/{});
-    if (!listwallets.find_value("error").isNull()) return;
-    const UniValue& wallets = listwallets.find_value("result");
-    if (wallets.size() <= 1) return;
-
-    UniValue balances(UniValue::VOBJ);
-    for (const UniValue& wallet : wallets.getValues()) {
-        const std::string& wallet_name = wallet.get_str();
-        const UniValue getbalances = ConnectAndCallRPC(&rh, "getbalances", /* args=*/{}, wallet_name);
-        const UniValue& balance = getbalances.find_value("result")["mine"]["trusted"];
-        balances.pushKV(wallet_name, balance);
-    }
-    result.pushKV("balances", balances);
-}
-
-/**
- * GetProgressBar constructs a progress bar with 5% intervals.
- *
- * @param[in]   progress      The proportion of the progress bar to be filled between 0 and 1.
- * @param[out]  progress_bar  String representation of the progress bar.
- */
-static void GetProgressBar(double progress, std::string& progress_bar)
-{
-    if (progress < 0 || progress > 1) return;
-
-    static constexpr double INCREMENT{0.05};
-    static const std::string COMPLETE_BAR{"\u2592"};
-    static const std::string INCOMPLETE_BAR{"\u2591"};
-
-    for (int i = 0; i < progress / INCREMENT; ++i) {
-        progress_bar += COMPLETE_BAR;
-    }
-
-    for (int i = 0; i < (1 - progress) / INCREMENT; ++i) {
-        progress_bar += INCOMPLETE_BAR;
-    }
-}
-
 static std::string rpcPass = "";
 static std::string walletName = "";
 static std::string walletPassphrase = "";
 static bool mustUnlockWallet = false;
-
-static int CommandLineRPC(int argc, char* argv[])
-{
-    std::string strPrint;
-    int nRet = 0;
-    try {
-        // Skip switches
-        while (argc > 1 && IsSwitchChar(argv[1][0])) {
-            argc--;
-            argv++;
-        }
-        if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
-            NO_STDIN_ECHO();
-            if (!StdinReady()) {
-                fputs("RPC password> ", stderr);
-                fflush(stderr);
-            }
-            if (!std::getline(std::cin, rpcPass)) {
-                throw std::runtime_error("-stdinrpcpass specified but failed to read from standard input");
-            }
-            if (StdinTerminal()) {
-                fputc('\n', stdout);
-            }
-            gArgs.ForceSetArg("-rpcpassword", rpcPass);
-        }
-        std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
-        if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
-            NO_STDIN_ECHO();
-            std::string walletPass;
-            if (args.size() < 1 || args[0].substr(0, 16) != "walletpassphrase") {
-                throw std::runtime_error("-stdinwalletpassphrase is only applicable for walletpassphrase(change)");
-            }
-            if (!StdinReady()) {
-                fputs("Wallet passphrase> ", stderr);
-                fflush(stderr);
-            }
-            if (!std::getline(std::cin, walletPass)) {
-                throw std::runtime_error("-stdinwalletpassphrase specified but failed to read from standard input");
-            }
-            if (StdinTerminal()) {
-                fputc('\n', stdout);
-            }
-            args.insert(args.begin() + 1, walletPass);
-        }
-        if (gArgs.GetBoolArg("-stdin", false)) {
-            // Read one arg per line from stdin and append
-            std::string line;
-            while (std::getline(std::cin, line)) {
-                args.push_back(line);
-            }
-            if (StdinTerminal()) {
-                fputc('\n', stdout);
-            }
-        }
-        std::unique_ptr<BaseRequestHandler> rh;
-        std::string method;
-
-        rh.reset(new DefaultRequestHandler());
-        if (args.size() < 1) {
-            throw std::runtime_error("too few parameters (need at least command)");
-        }
-        method = args[0];
-        args.erase(args.begin()); // Remove trailing method name from arguments vector
-
-        if (nRet == 0) {
-            // Perform RPC call
-            std::optional<std::string> wallet_name{};
-            if (gArgs.IsArgSet("-wallet")) wallet_name = gArgs.GetArg("-wallet", "");
-            const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
-
-            // Parse reply
-            UniValue result = reply.find_value("result");
-            const UniValue& error = reply.find_value("error");
-            if (error.isNull()) {
-                ParseResult(result, strPrint);
-            } else {
-                ParseError(error, strPrint, nRet);
-            }
-        }
-    } catch (const std::exception& e) {
-        strPrint = std::string("error: ") + e.what();
-        nRet = EXIT_FAILURE;
-    } catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineRPC()");
-        throw;
-    }
-
-    if (strPrint != "") {
-        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint);
-    }
-    return nRet;
-}
 
 void Setup()
 {
@@ -821,17 +669,22 @@ CBlock GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh)
     auto staked_commitments = GetStakedCommitments(rh);
     auto staked_elments = StakedCommitmentsArrayToElements(staked_commitments);
 
-    auto eta = ParseHex(result.find_value("eta").get_str());
+    auto eta_fiat_shamir = ParseHex(result.find_value("eta_fiat_shamir").get_str());
+    auto eta_phi = ParseHex(result.find_value("eta_phi").get_str());
 
     MclScalar m = staked_commitments[0].value;
     MclScalar f = staked_commitments[0].gamma;
 
+    uint32_t prev_time = result.find_value("prev_time").get_real();
+    uint64_t modifier = result.find_value("modifier").get_real();
+    uint64_t next_target = stoi(result.find_value("bits").get_str(), 0, 16);
+
     proposal.nVersion = result.find_value("version").get_real();
     proposal.nTime = result.find_value("curtime").get_real();
-    proposal.nBits = stoi(result.find_value("bits").get_str(), 0, 16);
+    proposal.nBits = next_target;
     proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
     proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
-    proposal.posProof = blsct::ProofOfStake(staked_elments, eta, m, f).setMemProof;
+    proposal.posProof = blsct::ProofOfStake(staked_elments, eta_fiat_shamir, eta_phi, m, f, prev_time, proposal.nTime, modifier, next_target);
     proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
 
     return proposal;

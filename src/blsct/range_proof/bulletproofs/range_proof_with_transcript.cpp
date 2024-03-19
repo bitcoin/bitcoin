@@ -13,11 +13,13 @@
 #include <blsct/common.h>
 #include <hash.h>
 #include <cmath>
+#include <variant>
 
 namespace bulletproofs {
 
 template <typename T>
-RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProof<T>& proof) {
+RangeProofWithTranscript<T> RangeProofWithTranscript<T>::Build(const RangeProofWithSeed<T>& proof)
+{
     using Scalar = typename T::Scalar;
 
     // build transcript in the same way the prove function builds it
@@ -64,6 +66,6 @@ retry:
         concat_input_values_in_bits
     );
 }
-template RangeProofWithTranscript<Mcl> RangeProofWithTranscript<Mcl>::Build(const RangeProof<Mcl>&);
+template RangeProofWithTranscript<Mcl> RangeProofWithTranscript<Mcl>::Build(const RangeProofWithSeed<Mcl>&);
 
 } // namespace bulletproofs

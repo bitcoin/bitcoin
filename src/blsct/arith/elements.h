@@ -82,11 +82,19 @@ public:
      */
     Elements<T> operator-(const Elements<T>& rhs) const;
 
+    /**
+     * [p1, p2] - q1 = [p1-q1, p2-q1]
+     */
+    Elements<T> operator-(const T& rhs) const;
+
     void operator=(const Elements<T>& rhs);
 
     bool operator==(const Elements<T>& rhs) const;
 
     bool operator!=(const Elements<T>& rhs) const;
+
+    bool operator<=(const T& rhs) const;
+    bool operator>=(const T& rhs) const;
 
     /**
      * Returns elements slice [fromIndex, vec.size())
@@ -144,7 +152,7 @@ public:
 
     OrderedElements();
     OrderedElements(const std::set<T>& vec);
-    OrderedElements(const OrderedElements& other) : m_set(other.m_set) {};
+    // OrderedElements(const OrderedElements& other) : m_set(other.m_set) {};
 
     Elements<T> GetElements() const;
 

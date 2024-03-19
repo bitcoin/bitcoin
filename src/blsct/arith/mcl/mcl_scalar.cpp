@@ -5,6 +5,8 @@
 #include <blsct/arith/mcl/mcl_scalar.h>
 #include <blsct/common.h>
 #include <crypto/sha256.h>
+#include <iostream>
+#include <util/strencodings.h>
 
 MclScalar::MclScalar()
 {
@@ -214,7 +216,12 @@ bool MclScalar::operator!=(const MclScalar& b) const
 
 bool MclScalar::operator<(const MclScalar& b) const
 {
-    return GetVch() < b.GetVch();
+    return std::memcmp(&(GetVch()[0]), &(b.GetVch()[0]), MclScalar::SERIALIZATION_SIZE) < 0;
+}
+
+bool MclScalar::operator>(const MclScalar& b) const
+{
+    return std::memcmp(&(GetVch()[0]), &(b.GetVch()[0]), MclScalar::SERIALIZATION_SIZE) > 0;
 }
 
 const MclScalar::Underlying& MclScalar::GetUnderlying() const

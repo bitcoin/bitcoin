@@ -12,23 +12,28 @@ using Points = Elements<Point>;
 using Prover = SetMemProofProver<Arith>;
 
 namespace blsct {
-ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const Scalar& m, const Scalar& f)
+ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const Scalar& m, const Scalar& f, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params)
 {
-    auto stakedCommitments = cache.GetStakedCommitments().GetElements();
-    auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev);
+    auto staked_commitments = cache.GetStakedCommitments().GetElements();
+    auto eta_fiat_shamir = blsct::CalculateSetMemProofRandomness(pindexPrev);
+    auto eta_phi = blsct::CalculateSetMemProofGeneratorSeed(pindexPrev);
 
-    return ProofOfStake(stakedCommitments, eta, m, f);
+    auto next_target = blsct::GetNextTargetRequired(&pindexPrev, params);
+    return ProofOfStake(staked_commitments, eta_fiat_shamir, eta_phi, m, f, pindexPrev.nTime, pindexPrev.nStakeModifier, block.nTime, next_target);
 }
 
 bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const
 {
-    auto eta = blsct::CalculateSetMemProofRandomness(pindexPrev);
-    auto kernelHash = blsct::CalculateKernelHash(pindexPrev, block);
+    auto staked_commitments = cache.GetStakedCommitments().GetElements();
+    auto eta_fiat_shamir = blsct::CalculateSetMemProofRandomness(pindexPrev);
+    auto eta_phi = blsct::CalculateSetMemProofGeneratorSeed(pindexPrev);
 
-    auto proof = ProofOfStake(setMemProof);
-    auto stakedCommitments = cache.GetStakedCommitments().GetElements();
+    auto kernel_hash = blsct::CalculateKernelHash(pindexPrev, block);
+    auto next_target = blsct::GetNextTargetRequired(&pindexPrev, params);
 
-    auto res = proof.Verify(stakedCommitments, eta, kernelHash, blsct::GetNextTargetRequired(&pindexPrev, params));
+    auto proof = ProofOfStake(setMemProof, rangeProof);
+
+    auto res = proof.Verify(staked_commitments, eta_fiat_shamir, eta_phi, kernel_hash, next_target);
 
     return res;
 }

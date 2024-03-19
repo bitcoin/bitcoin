@@ -76,7 +76,7 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 
 $(LIBBLS):
 	$(AM_V_at) \
-		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		ARCH='$(host_cpu)' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
 		CFLAGS='$(CXXFLAGS)' \
@@ -90,7 +90,7 @@ $(LIBBLS):
 $(LIBMCL):
 	$(AM_V_at) \
 		MCL_USE_LLVM=0 \
-		ARCH='$(firstword $(subst -, ,$(HOST)))' \
+		ARCH='$(host_cpu)' \
 		CC='$(CC)' \
 		CXX='$(CXX)' \
 		CFLAGS='$(CXXFLAGS)' \
@@ -865,6 +865,7 @@ libbitcoin_consensus_a_SOURCES = \
   blsct/set_mem_proof/set_mem_proof.cpp \
   blsct/set_mem_proof/set_mem_proof_setup.cpp \
   blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/pos/helpers.cpp \
   blsct/pos/proof.cpp \
   blsct/signature.cpp \
   consensus/amount.h \
@@ -924,9 +925,9 @@ libbitcoin_common_a_SOURCES = \
   blsct/public_keys.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
@@ -1249,9 +1250,9 @@ libnavcoinkernel_la_SOURCES = \
   blsct/public_keys.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
-  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs/range_proof_logic.cpp \
   blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
   blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \

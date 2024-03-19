@@ -2450,7 +2450,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
             if (tx.IsBLSCT()) {
                 if (params.GetConsensus().fBLSCT) {
-                    if (!blsct::VerifyTx(tx, view, 0, params.GetConsensus().nPePoSMinStakeAmount)) {
+                    if (!blsct::VerifyTx(tx, view, 0, params.GetConsensus().nPePoSMinStakeAmount, pindex)) {
                         return error("ConnectBlock(): VerifyTx on transaction %s failed",
                                      tx.GetHash().ToString());
                     }

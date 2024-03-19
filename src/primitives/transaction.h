@@ -293,12 +293,12 @@ public:
 
     bool IsStakedCommitment() const
     {
-        bulletproofs::RangeProof<Mcl> dummy;
+        bulletproofs::RangeProofWithSeed<Mcl> dummy;
 
-        return GetStakedCommitmentRangeProof(dummy, -1);
+        return GetStakedCommitmentRangeProof(dummy);
     }
 
-    bool GetStakedCommitmentRangeProof(bulletproofs::RangeProof<Mcl>& rangeProof, const CAmount& minStake) const
+    bool GetStakedCommitmentRangeProof(bulletproofs::RangeProofWithSeed<Mcl>& rangeProof) const
     {
         if (!IsBLSCT())
             return false;
@@ -314,17 +314,6 @@ public:
 
             DataStream s(MakeByteSpan(commitment));
             s >> rangeProof;
-
-            range_proof::GeneratorsFactory<Mcl> gf;
-            range_proof::Generators<Mcl> gen = gf.GetInstance(tokenId);
-
-            rangeProof.Vs.Clear();
-
-            if (minStake <= 0) {
-                rangeProof.Vs.Add(blsctData.rangeProof.Vs[0]);
-            } else {
-                rangeProof.Vs.Add(blsctData.rangeProof.Vs[0] - (gen.G * MclScalar(minStake)));
-            }
         } catch (...) {
             return false;
         }

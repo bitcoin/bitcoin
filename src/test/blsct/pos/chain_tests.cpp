@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     Coin coin2 = CreateCoin(recvAddress);
     Coin coin3;
 
-    auto out3 = blsct::CreateOutput(recvAddress, 1000 * COIN, "test", TokenId(), Scalar::Rand(), blsct::CreateOutputType::STAKED_COMMITMENT, 1000 * COIN);
+    auto out3 = blsct::CreateOutput(recvAddress, 1000 * COIN, "test", TokenId(), Scalar::Rand(), blsct::CreateOutputType::STAKED_COMMITMENT, 999 * COIN);
     coin3.nHeight = 1;
     coin3.out = out3.out;
 
@@ -68,26 +68,26 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
         coins_view_cache.AddCoin(outpoint, std::move(coin), true);
         coins_view_cache.AddCoin(outpoint2, std::move(coin2), true);
 
-        BOOST_ASSERT(coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-        BOOST_ASSERT(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
 
         coins_view_cache.SpendCoin(outpoint);
 
-        BOOST_ASSERT(!coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-        BOOST_ASSERT(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(!coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
         BOOST_ASSERT(coins_view_cache.Flush());
-        BOOST_ASSERT(!coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-        BOOST_ASSERT(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(!coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
     }
 
-    BOOST_ASSERT(!base.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-    BOOST_ASSERT(base.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+    BOOST_CHECK(!base.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
+    BOOST_CHECK(base.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
 
     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 
     coins_view_cache.AddCoin(outpoint3, std::move(coin3), true);
-    BOOST_ASSERT(coins_view_cache.GetStakedCommitments().Exists(coin3.out.blsctData.rangeProof.Vs[0]));
-    BOOST_ASSERT(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+    BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin3.out.blsctData.rangeProof.Vs[0]));
+    BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
 
     CBlockIndex index;
     index.phashBlock = new uint256(InsecureRand256());
@@ -97,15 +97,14 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     bool fStop = false;
 
     while (!fStop) {
-        posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, index, out3.value, out3.gamma);
-
+        posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, index, block, m_node.chainman->GetConsensus());
         arith_uint256 targetBn;
         targetBn.SetCompact(blsct::GetNextTargetRequired(&index, m_node.chainman->GetConsensus()));
         arith_uint256 kernelHash = UintToArith256(blsct::CalculateKernelHash(index.nTime, index.nStakeModifier, posProof.setMemProof.phi, block.nTime));
 
         std::cout << kernelHash.ToString() << " < " << targetBn.ToString() << " " << (kernelHash < targetBn) << " " << (out3.value.GetUint64() - (kernelHash / targetBn).GetLow64()) << "\n";
 
-        if (kernelHash < targetBn)
+        if (blsct::ProofOfStakeLogic(posProof).Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()))
             fStop = true;
         else
             block.nTime += 1;
@@ -113,7 +112,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
 
     blsct::ProofOfStakeLogic posProofLogic(posProof);
 
-    BOOST_ASSERT(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
+    BOOST_CHECK(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

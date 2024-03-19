@@ -6,8 +6,9 @@
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_AMOUNT_RECOVERY_REQUEST_H
 
 #include <blsct/arith/elements.h>
+#include <blsct/building_block/generator_deriver.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
-#include <ctokens/tokenid.h>
+#include <blsct/range_proof/common.h>
 
 namespace bulletproofs {
 
@@ -19,7 +20,7 @@ struct AmountRecoveryRequest
     using Points = Elements<Point>;
 
     size_t id;
-    TokenId token_id;
+    typename GeneratorDeriver<T>::Seed seed;
     Scalar x;
     Scalar z;
     Points Vs;
@@ -27,9 +28,12 @@ struct AmountRecoveryRequest
     Points Rs;
     Scalar mu;
     Scalar tau_x;
-    Point nonce;
+    typename range_proof::GammaSeed<T> nonce;
+    Scalar min_value;
 
-    static AmountRecoveryRequest<T> of(RangeProof<T>& proof, Point& nonce);
+    static AmountRecoveryRequest<T> of(
+        const RangeProofWithSeed<T>& proof,
+        const range_proof::GammaSeed<T>& nonce);
 };
 
 } // namespace bulletproofs

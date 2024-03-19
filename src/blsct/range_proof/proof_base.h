@@ -16,6 +16,12 @@ struct ProofBase {
     using Scalar = typename T::Scalar;
     using Points = Elements<Point>;
 
+    ProofBase(){};
+
+    ProofBase(const Points& Vs,
+              const Points& Ls,
+              const Points& Rs) : Vs(Vs), Ls(Ls), Rs(Rs){};
+
     Points Vs;
     Points Ls;
     Points Rs;

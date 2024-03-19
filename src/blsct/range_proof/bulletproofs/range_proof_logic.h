@@ -5,18 +5,21 @@
 #ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_LOGIC_H
 #define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_LOGIC_H
 
-#include <optional>
-#include <vector>
-
 #include <blsct/arith/elements.h>
-#include <blsct/range_proof/common.h>
+#include <blsct/building_block/generator_deriver.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_request.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_result.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs/range_proof_with_transcript.h>
+#include <blsct/range_proof/common.h>
 #include <blsct/range_proof/recovered_data.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
 #include <hash.h>
+
+#include <optional>
+#include <variant>
+#include <vector>
 
 namespace bulletproofs {
 
@@ -28,29 +31,28 @@ class RangeProofLogic
 public:
     using Scalar = typename T::Scalar;
     using Point = typename T::Point;
+    using Seed = typename GeneratorDeriver<T>::Seed;
     using Scalars = Elements<Scalar>;
     using Points = Elements<Point>;
 
     RangeProof<T> Prove(
         Scalars vs,
-        Point& nonce,
+        const range_proof::GammaSeed<T>& nonce,
         const std::vector<uint8_t>& message,
-        const TokenId& token_id,
+        const Seed& seed,
         const Scalar& minValue = 0) const;
 
     bool Verify(
-        const std::vector<RangeProof<T>>& proofs
-    ) const;
+        const std::vector<RangeProofWithSeed<T>>& proofs) const;
 
     AmountRecoveryResult<T> RecoverAmounts(
-        const std::vector<AmountRecoveryRequest<T>>& reqs
-    ) const;
+        const std::vector<AmountRecoveryRequest<T>>& reqs) const;
 
 private:
-    bool VerifyProofs(
+    bool
+    VerifyProofs(
         const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-        const size_t& max_mn
-    ) const;
+        const size_t& max_mn) const;
 
     range_proof::Common<T> m_common;
 };

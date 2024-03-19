@@ -66,8 +66,9 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
 
     bulletproofs::RangeProofLogic<T> rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
-
-    auto is_valid = rp.Verify(std::vector<bulletproofs::RangeProof<T>> { p });
+    std::vector<bulletproofs::RangeProofWithSeed<T>> proofs;
+    proofs.push_back({p, token_id});
+    auto is_valid = rp.Verify(proofs);
     BOOST_CHECK(is_valid);
 }
 
@@ -83,8 +84,9 @@ BOOST_AUTO_TEST_CASE(test_range_proof_recovery_one_value)
 
     bulletproofs::RangeProofLogic<T> rp;
     auto proof = rp.Prove(vs, nonce, msg.second, token_id);
+    bulletproofs::RangeProofWithSeed<T> proofWithSeed = {proof, token_id};
 
-    auto req = bulletproofs::AmountRecoveryRequest<T>::of(proof, nonce);
+    auto req = bulletproofs::AmountRecoveryRequest<T>::of(proofWithSeed, nonce);
     auto reqs = std::vector<bulletproofs::AmountRecoveryRequest<T>> { req };
     auto result = rp.RecoverAmounts(reqs);
 
@@ -131,7 +133,7 @@ static std::vector<TestCase> BuildTestCases()
             x.should_complete_recovery = true;
             x.num_amounts = 1;
             x.msg = GenMsgPair();
-            x.verify_result = true;
+            x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
             x.min_value = lower_bound;
             test_cases.push_back(x);
         }
@@ -148,7 +150,7 @@ static std::vector<TestCase> BuildTestCases()
             x.should_complete_recovery = true;
             x.num_amounts = 0;
             x.msg = GenMsgPair();
-            x.verify_result = false;
+            x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
             x.min_value = lower_bound;
             test_cases.push_back(x);
         }
@@ -162,7 +164,7 @@ static std::vector<TestCase> BuildTestCases()
             x.should_complete_recovery = true;
             x.num_amounts = 0;
             x.msg = GenMsgPair();
-            x.verify_result = true;
+            x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
             x.min_value = lower_bound;
             test_cases.push_back(x);
         }
@@ -176,7 +178,7 @@ static std::vector<TestCase> BuildTestCases()
             x.should_complete_recovery = true;
             x.num_amounts = 0;
             x.msg = GenMsgPair();
-            x.verify_result = false;
+            x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
             x.min_value = lower_bound;
             test_cases.push_back(x);
         }
@@ -195,7 +197,7 @@ static std::vector<TestCase> BuildTestCases()
                 x.should_complete_recovery = true;
                 x.num_amounts = 1;
                 x.msg = GenMsgPair(std::string(msg_size, 'x'));
-                x.verify_result = true;
+                x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
                 x.min_value = lower_bound;
                 test_cases.push_back(x);
             }
@@ -215,7 +217,7 @@ static std::vector<TestCase> BuildTestCases()
                 x.should_complete_recovery = true;
                 x.num_amounts = n == 1 ? 1 : 0; // recovery should be performed only when n=1
                 x.msg = GenMsgPair();
-                x.verify_result = true;
+                x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
                 x.min_value = lower_bound;
                 test_cases.push_back(x);
             }
@@ -236,7 +238,7 @@ static std::vector<TestCase> BuildTestCases()
             x.should_complete_recovery = true;
             x.num_amounts = 0;
             x.msg = GenMsgPair();
-            x.verify_result = false;
+            x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
             x.min_value = lower_bound;
             test_cases.push_back(x);
         }
@@ -258,7 +260,8 @@ static std::vector<TestCase> BuildTestCases()
                 x.should_complete_recovery = true;
                 x.num_amounts = 1;
                 x.msg = GenMsgPair(msg);
-                x.verify_result = true;
+                x.verify_result = x.values >= lower_bound && x.values <= (upper_bound + lower_bound);
+
                 x.min_value = lower_bound;
                 test_cases.push_back(x);
             }
@@ -275,18 +278,19 @@ static void RunTestCase(
     auto token_id = GenTokenId();
     auto nonce = GenNonce();
 
-    std::vector<bulletproofs::RangeProof<T>> proofs;
+    std::vector<bulletproofs::RangeProofWithSeed<T>> proofs;
 
     // calculate proofs
     if (test_case.is_batched) {
-        auto proof = rp.Prove(test_case.values, nonce, test_case.msg.second, token_id);
-        proofs.push_back(proof);
+        auto proof = rp.Prove(test_case.values, nonce, test_case.msg.second, token_id, test_case.min_value);
+        proofs.push_back({proof, token_id, test_case.min_value});
     } else {
         for (auto value: test_case.values.m_vec) {
             Scalars single_value_vec;
             single_value_vec.Add(value);
-            auto proof = rp.Prove(single_value_vec, nonce, test_case.msg.second, token_id);
-            proofs.push_back(proof);
+
+            auto proof = rp.Prove(single_value_vec, nonce, test_case.msg.second, token_id, test_case.min_value);
+            proofs.push_back({proof, token_id, test_case.min_value});
         }
     }
 
@@ -305,13 +309,13 @@ static void RunTestCase(
 
     if (recovery_result.is_completed) {
         auto amounts = recovery_result.amounts;
+
         BOOST_CHECK(amounts.size() == test_case.num_amounts);
 
         for (size_t i=0; i<amounts.size(); ++i) {
             auto x = amounts[i];
             auto gamma = nonce.GetHashWithSalt(100 + i);
-
-            BOOST_CHECK(((uint64_t) x.amount) == test_case.values[i].GetUint64());
+            BOOST_CHECK(((uint64_t)x.amount) == test_case.values[i].GetUint64());
             BOOST_CHECK(x.gamma == gamma);
 
             std::vector<unsigned char> x_msg(x.message.begin(), x.message.end());
@@ -382,54 +386,6 @@ BOOST_AUTO_TEST_CASE(test_range_proof_number_of_input_values)
             values.Add(Scalar(1));
         }
         BOOST_CHECK_THROW(rp.Prove(values, nonce, msg, token_id), std::runtime_error);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_range_proof_validate_proofs_by_sizes)
-{
-    auto gen_valid_proof_wo_value_commitments = [](size_t num_inputs) {
-        bulletproofs::RangeProof<T> p;
-        auto n = blsct::Common::GetFirstPowerOf2GreaterOrEqTo(num_inputs);
-        for (size_t i=0; i<n; ++i) {
-            p.Vs.Add(MclG1Point::GetBasePoint());
-        }
-        auto num_rounds = range_proof::Common<Mcl>::GetNumRoundsExclLast(n);
-        for (size_t i=0; i<num_rounds; ++i) {
-            p.Ls.Add(MclG1Point::GetBasePoint());
-            p.Rs.Add(MclG1Point::GetBasePoint());
-        }
-        return p;
-    };
-
-    bulletproofs::RangeProofLogic<T> rp;
-    {
-        // no proof should validate fine
-        std::vector<bulletproofs::RangeProof<T>> proofs;
-        BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
-    }
-    {
-        // no value commitment
-        bulletproofs::RangeProof<T> p;
-        std::vector<bulletproofs::RangeProof<T>> proofs { p };
-        BOOST_CHECK_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs), std::runtime_error);
-    }
-    {
-        // minimum number of value commitments
-        auto p = gen_valid_proof_wo_value_commitments(1);
-        std::vector<bulletproofs::RangeProof<T>> proofs { p };
-        BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
-    }
-    {
-        // maximum number of value commitments
-        auto p = gen_valid_proof_wo_value_commitments(range_proof::Setup::max_input_values);
-        std::vector<bulletproofs::RangeProof<T>> proofs { p };
-        BOOST_CHECK_NO_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs));
-    }
-    {
-        // number of value commitments exceeding maximum
-        auto p = gen_valid_proof_wo_value_commitments(range_proof::Setup::max_input_values + 1);
-        std::vector<bulletproofs::RangeProof<T>> proofs { p };
-        BOOST_CHECK_THROW(range_proof::Common<T>::ValidateProofsBySizes(proofs), std::runtime_error);
     }
 }
 

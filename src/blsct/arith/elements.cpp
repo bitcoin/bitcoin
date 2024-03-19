@@ -355,6 +355,38 @@ template Elements<MclScalar> Elements<MclScalar>::operator-(const Elements<MclSc
 template Elements<MclG1Point> Elements<MclG1Point>::operator-(const Elements<MclG1Point>&) const;
 
 template <typename T>
+Elements<T> Elements<T>::operator-(const T& rhs) const
+{
+    Elements<T> ret;
+    for (size_t i = 0; i < m_vec.size(); ++i) {
+        ret.m_vec.push_back(m_vec[i] - rhs);
+    }
+    return ret;
+}
+template Elements<MclScalar> Elements<MclScalar>::operator-(const MclScalar&) const;
+template Elements<MclG1Point> Elements<MclG1Point>::operator-(const MclG1Point&) const;
+
+template <typename T>
+bool Elements<T>::operator<=(const T& rhs) const
+{
+    for (size_t i = 0; i < m_vec.size(); ++i) {
+        if (m_vec[i] > rhs) return false;
+    }
+    return true;
+}
+template bool Elements<MclScalar>::operator<=(const MclScalar&) const;
+
+template <typename T>
+bool Elements<T>::operator>=(const T& rhs) const
+{
+    for (size_t i = 0; i < m_vec.size(); ++i) {
+        if (m_vec[i] < rhs) return false;
+    }
+    return true;
+}
+template bool Elements<MclScalar>::operator>=(const MclScalar&) const;
+
+template <typename T>
 void Elements<T>::operator=(const Elements<T>& rhs)
 {
     m_vec.clear();
@@ -516,5 +548,5 @@ std::string Elements<T>::GetString(const uint8_t& radix) const
 
     return ss.str();
 }
-template
-std::string Elements<MclG1Point>::GetString(const uint8_t& radix) const;
+template std::string Elements<MclG1Point>::GetString(const uint8_t& radix) const;
+template std::string Elements<MclScalar>::GetString(const uint8_t& radix) const;

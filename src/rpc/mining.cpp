@@ -994,10 +994,7 @@ static RPCHelpMan getblocktemplate()
             result.pushKV("height", (int64_t)(pindexPrev->nHeight + 1));
 
             CCoinsViewCache* coins_view;
-            {
-                LOCK(::cs_main);
-                coins_view = &active_chainstate.CoinsTip();
-            }
+            coins_view = &active_chainstate.CoinsTip();
 
             if (consensusParams.fBLSCT) {
                 UniValue stakedCommitments(UniValue::VARR);
@@ -1007,7 +1004,8 @@ static RPCHelpMan getblocktemplate()
                     stakedCommitments.push_back(HexStr(stakedCommitmentsElements[i].GetVch()));
 
                 result.pushKV("staked_commitments", stakedCommitments);
-                result.pushKV("eta", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev)));
+                result.pushKV("eta_fiat_shamir", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev)));
+                result.pushKV("eta_phi", HexStr(blsct::CalculateSetMemProofGeneratorSeed(*pindexPrev)));
             }
 
             if (consensusParams.signet_blocks) {

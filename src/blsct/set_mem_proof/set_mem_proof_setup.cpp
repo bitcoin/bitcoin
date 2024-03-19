@@ -21,6 +21,8 @@ const SetMemProofSetup<T>& SetMemProofSetup<T>::Get()
     PedersenCommitment<T> pedersen_commitment(g, h);
     x = new SetMemProofSetup<T>(g, h, hs, pedersen_commitment);
 
+    m_gf = new range_proof::GeneratorsFactory<T>();
+
     m_is_initialized = true;
     return *x;
 }
@@ -83,6 +85,14 @@ template
 typename Mcl::Scalar SetMemProofSetup<Mcl>::H4(const std::vector<uint8_t>& msg) const;
 
 template <typename T>
+typename T::Point SetMemProofSetup<T>::H5(const std::vector<uint8_t>& msg) const
+{
+    return GenPoint(msg, 5);
+}
+template
+typename Mcl::Point SetMemProofSetup<Mcl>::H5(const std::vector<uint8_t>& msg) const;
+
+template <typename T>
 typename T::Point SetMemProofSetup<T>::GenPoint(const std::vector<uint8_t>& msg, const uint64_t& i)
 {
     HashWriter hasher{};
@@ -96,25 +106,10 @@ template
 typename Mcl::Point SetMemProofSetup<Mcl>::GenPoint(const std::vector<uint8_t>& msg, const uint64_t& i);
 
 template <typename T>
-typename T::Point SetMemProofSetup<T>::H5(const std::vector<uint8_t>& msg) const
+const range_proof::GeneratorsFactory<T>& SetMemProofSetup<T>::Gf() const
 {
-    return GenPoint(msg, 5);
+    return *m_gf;
 }
 template
-typename Mcl::Point SetMemProofSetup<Mcl>::H5(const std::vector<uint8_t>& msg) const;
+const range_proof::GeneratorsFactory<Mcl>& SetMemProofSetup<Mcl>::Gf() const;
 
-template <typename T>
-typename T::Point SetMemProofSetup<T>::H6(const std::vector<uint8_t>& msg) const
-{
-    return GenPoint(msg, 6);
-}
-template
-typename Mcl::Point SetMemProofSetup<Mcl>::H6(const std::vector<uint8_t>& msg) const;
-
-template <typename T>
-typename T::Point SetMemProofSetup<T>::H7(const std::vector<uint8_t>& msg) const
-{
-    return GenPoint(msg, 7);
-}
-template
-typename Mcl::Point SetMemProofSetup<Mcl>::H7(const std::vector<uint8_t>& msg) const;

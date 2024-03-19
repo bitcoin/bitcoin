@@ -231,7 +231,21 @@ std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pin
     return std::vector<unsigned char>(hash.begin(), hash.end());
 }
 
-uint256 CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time)
+
+blsct::Message
+CalculateSetMemProofGeneratorSeed(const CBlockIndex& pindexPrev)
+{
+    HashWriter ss{};
+
+    ss << pindexPrev.nHeight << pindexPrev.nStakeModifier;
+
+    auto hash = ss.GetHash();
+
+    return std::vector<unsigned char>(hash.begin(), hash.end());
+}
+
+uint256
+CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time)
 {
     HashWriter ss{};
 

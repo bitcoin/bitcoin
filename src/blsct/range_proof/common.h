@@ -14,6 +14,33 @@
 namespace range_proof {
 
 template <typename T>
+struct GammaSeed {
+    using Scalar = typename T::Scalar;
+    using Point = typename T::Point;
+    using Scalars = Elements<Scalar>;
+    using Seed = std::variant<Point, Scalars>;
+
+    Seed seed;
+
+    GammaSeed(const Scalars& seed) : seed(seed){};
+    GammaSeed(const Point& seed) : seed(seed){};
+
+    Scalar GetHashWithSalt(const uint64_t& salt) const
+    {
+        if (std::holds_alternative<Scalars>(seed)) {
+            auto source = std::get<Scalars>(seed);
+            return (source.Size() > 0 ? source[0] : Scalar()).GetHashWithSalt(salt);
+        } else if (std::holds_alternative<Point>(seed)) {
+            auto source = std::get<Point>(seed);
+            return source.GetHashWithSalt(salt);
+        } else {
+            throw std::runtime_error(strprintf("%s: seed is neither Scalars or Point\n", __func__));
+        }
+        return Scalar();
+    }
+};
+
+template <typename T>
 class Common {
 public:
     using Scalar = typename T::Scalar;
@@ -37,12 +64,6 @@ public:
     );
 
     const Scalar& GetUint64Max() const;
-
-    // static Point GenerateBaseG1PointH(
-    //     const Point& p,
-    //     size_t index,
-    //     TokenId token_id
-    // );
 
     range_proof::GeneratorsFactory<T>& Gf() const;
     const Scalar& Zero() const;

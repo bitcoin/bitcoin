@@ -58,20 +58,6 @@ BOOST_AUTO_TEST_CASE(test_h1_to_h7)
             }
         }
     }
-
-    // the same message should be hashed to different points
-    {
-        Point p5 = setup.H5(msg);
-        Point p6 = setup.H6(msg);
-        Point p7 = setup.H7(msg);
-
-        std::vector<Point> vec {p5, p6, p7};
-        for (size_t i=0; i<vec.size()-1; ++i) {
-            for (size_t j=i+1; j<vec.size(); ++j) {
-                BOOST_CHECK(vec[i] != vec[j]);
-            }
-        }
-    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

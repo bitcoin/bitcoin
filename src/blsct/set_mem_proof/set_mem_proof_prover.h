@@ -7,9 +7,11 @@
 
 #include <vector>
 #include <blsct/arith/elements.h>
+#include <blsct/range_proof/generators.h>
 #include <blsct/set_mem_proof/set_mem_proof_setup.h>
 #include <blsct/set_mem_proof/set_mem_proof.h>
 #include <blsct/building_block/imp_inner_prod_arg.h>
+#include <blsct/common.h>
 #include <hash.h>
 
 template <typename T>
@@ -26,13 +28,15 @@ public:
         const Point& sigma,  // Commitment of the set member
         const Scalar& m,  // Message used for the commitment of the set member
         const Scalar& f,  // Mask f used for the commitment of the set member
-        const Scalar& eta  // Entropy
+        const Scalar& eta_fiat_shamir, // entropy for fiat shamir
+        const blsct::Message& eta_phi // entropy for building generators
     );
 
     static bool Verify(
         const SetMemProofSetup<T>& setup,
         const Points& Ys_src,
-        const Scalar& eta,
+        const Scalar& eta_fiat_shamir,
+        const blsct::Message& eta_phi,
         const SetMemProof<T>& proof  // Output of Prove()
     );
 
