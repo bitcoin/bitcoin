@@ -289,7 +289,6 @@ public:
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
     int64_t m_ping_usec;
-    int64_t m_ping_wait_usec;
     int64_t m_min_ping_usec;
     // Our address, as reported by the peer
     std::string addrLocal;
@@ -642,17 +641,12 @@ public:
      * in CConnman::AttemptToEvictConnection. */
     std::atomic<int64_t> nLastTXTime{0};
 
-    // Ping time measurement:
-    // The pong reply we're expecting, or 0 if no pong expected.
-    std::atomic<uint64_t> nPingNonceSent{0};
-    /** When the last ping was sent, or 0 if no ping was ever sent */
-    std::atomic<std::chrono::microseconds> m_ping_start{std::chrono::microseconds{0}};
-    // Last measured round-trip time.
-    std::atomic<int64_t> nPingUsecTime{0};
-    // Best measured round-trip time.
-    std::atomic<int64_t> nMinPingUsecTime{std::numeric_limits<int64_t>::max()};
-    // Whether a ping is requested.
-    std::atomic<bool> fPingQueued{false};
+    /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
+    std::atomic<int64_t> m_last_ping_time{0};
+
+    /** Lowest measured round-trip time. Used as an inbound peer eviction
+     * criterium in CConnman::AttemptToEvictConnection. */
+    std::atomic<int64_t> m_min_ping_time{std::numeric_limits<int64_t>::max()};
 
     // If true, we will send him CoinJoin queue messages
     std::atomic<bool> fSendDSQueue{false};
@@ -837,6 +831,12 @@ public:
 
 
     std::string ConnectionTypeAsString() const;
+
+    /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
+    void PongReceived(std::chrono::microseconds ping_time) {
+        m_last_ping_time = count_microseconds(ping_time);
+        m_min_ping_time = std::min(m_min_ping_time.load(), count_microseconds(ping_time));
+    }
 
     /** Whether this peer is an inbound onion, e.g. connected via our Tor onion service. */
     bool IsInboundOnion() const { return m_inbound_onion; }
@@ -1288,6 +1288,9 @@ public:
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
+    /** Return true if the peer has been connected for long enough to do inactivity checks. */
+    bool RunInactivityChecks(const CNode& node) const;
+
 private:
     struct ListenSocket {
     public:
@@ -1588,7 +1591,7 @@ struct NodeEvictionCandidate
 {
     NodeId id;
     int64_t nTimeConnected;
-    int64_t nMinPingUsecTime;
+    int64_t m_min_ping_time;
     int64_t nLastBlockTime;
     int64_t nLastTXTime;
     bool fRelevantServices;
