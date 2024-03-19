@@ -39,7 +39,8 @@ def expected_messages(filename):
 class AsmapTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-checkaddrman=1"]]  # Do addrman checks on all operations.
+        # Do addrman checks on all operations and use deterministic addrman
+        self.extra_args = [["-checkaddrman=1", "-test=addrman"]]
 
     def fill_addrman(self, node_id):
         """Add 2 tried addresses to the addrman, followed by 2 new addresses."""

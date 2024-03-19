@@ -319,7 +319,9 @@ class NetTest(BitcoinTestFramework):
 
     def test_addpeeraddress(self):
         self.log.info("Test addpeeraddress")
-        self.restart_node(1, ["-checkaddrman=1", "-test=addrman"])
+        # The node has an existing, non-deterministic addrman from a previous test.
+        # Clear it to have a deterministic addrman.
+        self.restart_node(1, ["-checkaddrman=1", "-test=addrman"], clear_addrman=True)
         node = self.nodes[1]
 
         self.log.debug("Test that addpeerinfo is a hidden RPC")
