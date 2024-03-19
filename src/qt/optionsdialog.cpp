@@ -325,10 +325,11 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 
-    if (model->data(model->index(OptionsModel::PruneTristate, 0), Qt::EditRole).value<Qt::CheckState>() == Qt::PartiallyChecked) {
+    const auto prune_checkstate = model->data(model->index(OptionsModel::PruneTristate, 0), Qt::EditRole).value<Qt::CheckState>();
+    if (prune_checkstate == Qt::PartiallyChecked) {
         ui->prune->setTristate();
     }
-    mapper->addMapping(ui->prune, OptionsModel::PruneTristate);
+    ui->prune->setCheckState(prune_checkstate);
     mapper->addMapping(ui->pruneSizeMiB, OptionsModel::PruneSizeMiB);
 
     /* Wallet */
@@ -477,6 +478,8 @@ void OptionsDialog::on_okButton_clicked()
             }
         }
     }
+
+    model->setData(model->index(OptionsModel::PruneTristate, 0), ui->prune->checkState());
 
     model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
     model->setData(model->index(OptionsModel::FontForQRCodes, 0), ui->qrFont->itemData(ui->qrFont->currentIndex()));
