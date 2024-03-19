@@ -40,6 +40,7 @@
 #include <thread>
 #include <optional>
 #include <queue>
+#include <vector>
 
 #ifndef WIN32
 #define USE_WAKEUP_PIPE
@@ -1591,6 +1592,23 @@ inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, 
 
 /** Dump binary message to file, with timestamp */
 void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);
+
+struct NodeEvictionCandidate
+{
+    NodeId id;
+    int64_t nTimeConnected;
+    int64_t nMinPingUsecTime;
+    int64_t nLastBlockTime;
+    int64_t nLastTXTime;
+    bool fRelevantServices;
+    bool fRelayTxes;
+    bool fBloomFilter;
+    uint64_t nKeyedNetGroup;
+    bool prefer_evict;
+    bool m_is_local;
+};
+
+[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
 
 class CExplicitNetCleanup
 {
