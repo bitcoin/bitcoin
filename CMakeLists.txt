@@ -506,7 +506,11 @@ if(ENABLE_HARDENING)
     endif()
 
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-      try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
+      if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
+      else()
+        try_append_cxx_flags("-mbranch-protection=standard" TARGET hardening_interface SKIP_LINK)
+      endif()
     endif()
 
     try_append_linker_flag("-Wl,--enable-reloc-section" TARGET hardening_interface)
