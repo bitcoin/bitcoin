@@ -58,7 +58,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::MNAUTH || !::masternodeSync->IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
@@ -87,8 +87,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, std::string_v
         return tl::unexpected{MisbehavingError{100, "invalid mnauth signature"}};
     }
 
-    const auto mnList = deterministicMNManager->GetListAtChainTip();
-    const auto dmn = mnList.GetMN(mnauth.proRegTxHash);
+    const auto dmn = tip_mn_list.GetMN(mnauth.proRegTxHash);
     if (!dmn) {
         // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
         // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a

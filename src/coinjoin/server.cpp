@@ -55,7 +55,7 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
 
     LogPrint(BCLog::COINJOIN, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CoinJoin::DenominationToString(dsa.nDenom), dsa.txCollateral.ToString()); /* Continued */
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mnList = m_dmnman.GetListAtChainTip();
     auto dmn = WITH_LOCK(activeMasternodeInfoCs, return mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint));
     if (!dmn) {
         PushStatus(peer, STATUS_REJECTED, ERR_MN_LIST);
@@ -115,9 +115,9 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
         return tl::unexpected{100};
     }
 
+    const auto tip_mn_list = m_dmnman.GetListAtChainTip();
     if (dsq.masternodeOutpoint.IsNull()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        if (auto dmn = mnList.GetValidMN(dsq.m_protxHash)) {
+        if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
             dsq.masternodeOutpoint = dmn->collateralOutpoint;
         } else {
             return tl::unexpected{10};
@@ -145,8 +145,7 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
 
     if (dsq.IsTimeOutOfBounds()) return {};
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+    auto dmn = tip_mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
     if (!dmn) return {};
 
     if (dsq.m_protxHash.IsNull()) {
@@ -159,7 +158,7 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
 
     if (!dsq.fReady) {
         int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-        int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+        int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
         LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman->GetDsqCount());
         //don't allow a few nodes to dominate the queuing process
         if (nLastDsq != 0 && nDsqThreshold > mmetaman->GetDsqCount()) {

@@ -17,6 +17,7 @@
 class CBlockIndex;
 class CBLSWorker;
 class CChainState;
+class CDeterministicMNManager;
 class CSporkManager;
 class PeerManager;
 
@@ -120,6 +121,7 @@ private:
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
     CConnman& connman;
+    CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
@@ -142,9 +144,9 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
-                       CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
-                       const Consensus::LLMQParams& _params, int _quorumIndex);
+    CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
+                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
+                       const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);

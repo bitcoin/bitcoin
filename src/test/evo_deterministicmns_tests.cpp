@@ -436,8 +436,8 @@ void FuncDIP3Protx(TestChainSetup& setup)
         // Technically, the payload is still valid...
         {
             LOCK(cs_main);
-            BOOST_ASSERT(CheckProRegTx(CTransaction(tx), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
-            BOOST_ASSERT(CheckProRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
+            BOOST_ASSERT(CheckProRegTx(dmnman, CTransaction(tx), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
+            BOOST_ASSERT(CheckProRegTx(dmnman, CTransaction(tx2), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
         }
         // But the signature should not verify anymore
         BOOST_ASSERT(CheckTransactionSignature(*(setup.m_node.mempool), tx));
@@ -542,8 +542,8 @@ void FuncDIP3Protx(TestChainSetup& setup)
     TxValidationState dummy_state;
     {
         LOCK(cs_main);
-        BOOST_ASSERT(CheckProUpRegTx(CTransaction(tx), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
-        BOOST_ASSERT(!CheckProUpRegTx(CTransaction(tx2), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
+        BOOST_ASSERT(CheckProUpRegTx(dmnman, CTransaction(tx), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
+        BOOST_ASSERT(!CheckProUpRegTx(dmnman, CTransaction(tx2), ::ChainActive().Tip(), dummy_state, ::ChainstateActive().CoinsTip(), true));
     }
     BOOST_ASSERT(CheckTransactionSignature(*(setup.m_node.mempool), tx));
     BOOST_ASSERT(!CheckTransactionSignature(*(setup.m_node.mempool), tx2));

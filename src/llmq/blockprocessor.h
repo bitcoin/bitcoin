@@ -22,6 +22,7 @@ class BlockValidationState;
 class CChainState;
 class CConnman;
 class CDataStream;
+class CDeterministicMNManager;
 class CEvoDB;
 class CNode;
 
@@ -38,6 +39,7 @@ class CQuorumBlockProcessor
 private:
     CChainState& m_chainstate;
     CConnman& connman;
+    CDeterministicMNManager& m_dmnman;
     CEvoDB& m_evoDb;
 
     mutable RecursiveMutex minableCommitmentsCs;
@@ -47,7 +49,7 @@ private:
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CChainState& chainstate, CConnman& _connman, CEvoDB& evoDb);
+    explicit CQuorumBlockProcessor(CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CEvoDB& evoDb);
 
     PeerMsgRet ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
 

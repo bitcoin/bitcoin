@@ -109,13 +109,13 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 {
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
-    node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.mempool, *node.mn_sync, /* relay_txes */ true);
     ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
     node.dmnman = ::deterministicMNManager.get();
+    node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.dmnman, *node.mempool, *node.mn_sync, /* relay_txes */ true);
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, true, false);
+    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, true, false);
     node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                             chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 }
@@ -226,7 +226,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
-    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman);
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman, ::deterministicMNManager);
     ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
     m_node.mn_sync = ::masternodeSync.get();
     ::mmetaman = std::make_unique<CMasternodeMetaMan>(/* load_cache */ false);
@@ -283,7 +283,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.govman,
-                                       *m_node.sporkman, m_node.cj_ctx, m_node.llmq_ctx, false);
+                                       *m_node.sporkman, ::deterministicMNManager, m_node.cj_ctx, m_node.llmq_ctx, false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
@@ -408,7 +408,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
         BOOST_ASSERT(cbTx.has_value());
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx->merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx->merkleRootMNList, *m_node.dmnman, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {

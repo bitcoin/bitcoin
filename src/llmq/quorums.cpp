@@ -205,11 +205,12 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
     return true;
 }
 
-CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGSessionManager& _dkgManager,
+CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
                                CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
     blsWorker(_blsWorker),
     m_chainstate(chainstate),
     connman(_connman),
+    m_dmnman(dmnman),
     dkgManager(_dkgManager),
     m_evoDb(_evoDb),
     quorumBlockProcessor(_quorumBlockProcessor),
@@ -349,7 +350,7 @@ void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqPar
                     });
 
     for (const auto& quorum : lastQuorums) {
-        if (utils::EnsureQuorumConnections(llmqParams, connman, m_sporkman, quorum->m_quorum_base_block_index, myProTxHash)) {
+        if (utils::EnsureQuorumConnections(llmqParams, connman, m_dmnman, m_sporkman, m_dmnman.GetListAtChainTip(), quorum->m_quorum_base_block_index, myProTxHash)) {
             if (connmanQuorumsToDelete.erase(quorum->qc->quorumHash) > 0) {
                 LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- llmqType[%d] h[%d] keeping mn quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, quorum->m_quorum_base_block_index->nHeight, quorum->m_quorum_base_block_index->GetBlockHash().ToString());
             }
@@ -391,7 +392,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
     auto quorum = std::make_shared<CQuorum>(llmq_params_opt.value(), blsWorker);
-    auto members = utils::GetAllQuorumMembers(qc->llmqType, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(qc->llmqType, m_dmnman, pQuorumBaseBlockIndex);
 
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
 
@@ -639,7 +640,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, gsl::not_nul
 
 size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex) const
 {
-    auto mns = deterministicMNManager->GetListForBlock(pIndex);
+    auto mns = m_dmnman.GetListForBlock(pIndex);
     std::vector<uint256> vecProTxHashes;
     vecProTxHashes.reserve(mns.GetValidMNsCount());
     mns.ForEachMN(true, [&](auto& pMasternode) {

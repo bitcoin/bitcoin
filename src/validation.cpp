@@ -830,7 +830,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
     // mined
     // NOTE: we use UTXO here and do NOT allow mempool txes as masternode collaterals
-    if (!CheckSpecialTx(tx, m_active_chainstate.m_chain.Tip(), m_active_chainstate.CoinsTip(), true, state))
+    if (!CheckSpecialTx(*::deterministicMNManager, tx, m_active_chainstate.m_chain.Tip(), m_active_chainstate.CoinsTip(), true, state))
         return false;
 
     if (m_pool.existsProviderTxConflict(tx)) {

@@ -5,12 +5,14 @@
 #ifndef BITCOIN_GOVERNANCE_GOVERNANCE_H
 #define BITCOIN_GOVERNANCE_GOVERNANCE_H
 
+#include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/object.h>
 
 #include <cachemap.h>
 #include <cachemultimap.h>
 #include <net_types.h>
+#include <util/check.h>
 
 #include <optional>
 
@@ -20,6 +22,7 @@ template<typename T>
 class CFlatDB;
 class CInv;
 
+class CDeterministicMNManager;
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
@@ -253,6 +256,7 @@ private:
     bool is_valid{false};
 
     CNetFulfilledRequestManager& m_netfulfilledman;
+    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
 
     int64_t nTimeLastDiff;
     // keep track of current block height
@@ -266,7 +270,7 @@ private:
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
 public:
-    explicit CGovernanceManager(CNetFulfilledRequestManager& netfulfilledman);
+    explicit CGovernanceManager(CNetFulfilledRequestManager& netfulfilledman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
     ~CGovernanceManager();
 
     bool LoadCache(bool load_cache);
@@ -339,7 +343,7 @@ public:
     {
         bool fOK = ProcessVote(nullptr, vote, exception, connman);
         if (fOK) {
-            vote.Relay(connman);
+            vote.Relay(connman, Assert(m_dmnman)->GetListAtChainTip());
         }
         return fOK;
     }

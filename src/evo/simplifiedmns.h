@@ -170,6 +170,7 @@ public:
 };
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
-                               const llmq::CQuorumBlockProcessor& quorum_block_processor, std::string& errorRet, bool extended = false);
+                               CDeterministicMNManager& dmnman, const llmq::CQuorumBlockProcessor& quorum_block_processor,
+                               std::string& errorRet, bool extended = false);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

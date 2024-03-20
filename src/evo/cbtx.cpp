@@ -59,7 +59,9 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidati
 }
 
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
-bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state, const CCoinsViewCache& view)
+bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNManager& dmnman,
+                          const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state,
+                          const CCoinsViewCache& view)
 {
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
@@ -83,7 +85,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const 
         static int64_t nTimeMerkleQuorum = 0;
 
         uint256 calculatedMerkleRoot;
-        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state, view)) {
+        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, dmnman, state, view)) {
             // pass the state returned by the function above
             return false;
         }
@@ -112,7 +114,8 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, const 
     return true;
 }
 
-bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const CCoinsViewCache& view)
+bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet,
+                              CDeterministicMNManager& dmnman, BlockValidationState& state, const CCoinsViewCache& view)
 {
     try {
         static std::atomic<int64_t> nTimeDMN = 0;
@@ -122,7 +125,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         int64_t nTime1 = GetTimeMicros();
 
         CDeterministicMNList tmpMNList;
-        if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, view, tmpMNList, false)) {
+        if (!dmnman.BuildNewListFromBlock(block, pindexPrev, state, view, tmpMNList, false)) {
             // pass the state returned by the function above
             return false;
         }
@@ -233,7 +236,9 @@ auto CalcHashCountFromQCHashes(const QcHashMap& qcHashes)
     return hash_count;
 }
 
-bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet, BlockValidationState& state)
+bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev,
+                               const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet,
+                               BlockValidationState& state)
 {
     static int64_t nTimeMined = 0;
     static int64_t nTimeLoop = 0;
@@ -324,7 +329,8 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     return true;
 }
 
-bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindex, const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state)
+bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindex,
+                            const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state)
 {
     if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
         return true;
@@ -379,7 +385,8 @@ bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindex, cons
     return true;
 }
 
-bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev, uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature)
+bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev,
+                           uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature)
 {
     auto best_clsig = chainlock_handler.GetBestChainLock();
     if (best_clsig.getHeight() == pindexPrev->nHeight) {

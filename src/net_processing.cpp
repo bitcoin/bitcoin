@@ -239,8 +239,10 @@ public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
                     BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman,
                     CTxMemPool& pool, CGovernanceManager& govman, CSporkManager& sporkman,
+                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
                     const std::unique_ptr<CJContext>& cj_ctx,
-                    const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
+                    const std::unique_ptr<LLMQContext>& llmq_ctx,
+                    bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -333,6 +335,7 @@ private:
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
+    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<CJContext>& m_cj_ctx;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     CGovernanceManager& m_govman;
@@ -1590,22 +1593,25 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex, const Conse
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                                CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
                                                CGovernanceManager& govman, CSporkManager& sporkman,
+                                               const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                const std::unique_ptr<CJContext>& cj_ctx,
                                                const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, govman, sporkman, cj_ctx, llmq_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, govman, sporkman, dmnman, cj_ctx, llmq_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman, BanMan* banman,
                                  CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 CGovernanceManager& govman, CSporkManager& sporkman, const std::unique_ptr<CJContext>& cj_ctx,
-                                 const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
+                                 CGovernanceManager& govman, CSporkManager& sporkman, const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                 const std::unique_ptr<CJContext>& cj_ctx, const std::unique_ptr<LLMQContext>& llmq_ctx,
+                                 bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
       m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
+      m_dmnman(dmnman),
       m_cj_ctx(cj_ctx),
       m_llmq_ctx(llmq_ctx),
       m_govman(govman),
@@ -2787,8 +2793,8 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv, const
     connman.PushMessage(&peer, std::move(msg));
 }
 
-std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CDSTXManager& dstxman, ChainstateManager& chainman, CTxMemPool& mempool,
-                                                                CCoinJoinBroadcastTx& dstx, uint256 hashTx)
+std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CDeterministicMNManager& dmnman, CDSTXManager& dstxman, ChainstateManager& chainman,
+                                                                CTxMemPool& mempool, CCoinJoinBroadcastTx& dstx, uint256 hashTx)
 {
     assert(::mmetaman != nullptr);
 
@@ -2811,7 +2817,7 @@ std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CDSTXManager& ds
     // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
     if (dstx.masternodeOutpoint.IsNull()) {
         for (int i = 0; i < 24 && pindex; ++i) {
-            dmn = deterministicMNManager->GetListForBlock(pindex).GetMN(dstx.m_protxHash);
+            dmn = dmnman.GetListForBlock(pindex).GetMN(dstx.m_protxHash);
             if (dmn) {
                 dstx.masternodeOutpoint = dmn->collateralOutpoint;
                 break;
@@ -2820,7 +2826,7 @@ std::pair<bool /*ret*/, bool /*do_return*/> static ValidateDSTX(CDSTXManager& ds
         }
     } else {
         for (int i = 0; i < 24 && pindex; ++i) {
-            dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
+            dmn = dmnman.GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
             if (dmn) {
                 dstx.m_protxHash = dmn->proTxHash;
                 break;
@@ -3645,7 +3651,7 @@ void PeerManagerImpl::ProcessMessage(
         if (nInvType == MSG_DSTX) {
            // Validate DSTX and return bRet if we need to return from here
            uint256 hashTx = tx.GetHash();
-           const auto& [bRet, bDoReturn] = ValidateDSTX(*(m_cj_ctx->dstxman), m_chainman, m_mempool, dstx, hashTx);
+           const auto& [bRet, bDoReturn] = ValidateDSTX(*Assert(m_dmnman), *(m_cj_ctx->dstxman), m_chainman, m_mempool, dstx, hashTx);
            if (bDoReturn) {
                return;
            }
@@ -4336,7 +4342,7 @@ void PeerManagerImpl::ProcessMessage(
 
         CSimplifiedMNListDiff mnListDiff;
         std::string strError;
-        if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, *m_llmq_ctx->quorum_block_processor, strError)) {
+        if (BuildSimplifiedMNListDiff(cmd.baseBlockHash, cmd.blockHash, mnListDiff, *m_dmnman, *m_llmq_ctx->quorum_block_processor, strError)) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
         } else {
             strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
@@ -4375,7 +4381,7 @@ void PeerManagerImpl::ProcessMessage(
 
         llmq::CQuorumRotationInfo quorumRotationInfoRet;
         std::string strError;
-        if (BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *m_llmq_ctx->qman, *m_llmq_ctx->quorum_block_processor, strError)) {
+        if (BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *m_dmnman, *m_llmq_ctx->qman, *m_llmq_ctx->quorum_block_processor, strError)) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QUORUMROTATIONINFO, quorumRotationInfoRet));
         } else {
             strError = strprintf("getquorumrotationinfo failed for size(baseBlockHashes)=%d, blockRequestHash=%s. error=%s", cmd.baseBlockHashes.size(), cmd.blockRequestHash.ToString(), strError);
@@ -4437,7 +4443,7 @@ void PeerManagerImpl::ProcessMessage(
         ProcessPeerMsgRet(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
         ::masternodeSync->ProcessMessage(pfrom, msg_type, vRecv);
         ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);

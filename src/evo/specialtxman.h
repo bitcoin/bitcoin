@@ -29,8 +29,8 @@ class CChainLocksHandler;
 
 extern RecursiveMutex cs_main;
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs,
-                    TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool CheckSpecialTx(CDeterministicMNManager& dmnman, const CTransaction& tx, const CBlockIndex* pindexPrev,
+                    const CCoinsViewCache& view, bool check_sigs, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 class CSpecialTxProcessor
 {

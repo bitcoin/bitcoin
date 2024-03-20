@@ -34,7 +34,7 @@ void LogPrintfFinalCommitment(Types... out) {
     }
 }
 
-bool CFinalCommitment::Verify(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const
+bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const
 {
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
@@ -88,7 +88,7 @@ bool CFinalCommitment::Verify(gsl::not_null<const CBlockIndex*> pQuorumBaseBlock
         LogPrintfFinalCommitment("q[%s] invalid vvecSig\n");
         return false;
     }
-    auto members = utils::GetAllQuorumMembers(llmqType, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, pQuorumBaseBlockIndex);
     if (LogAcceptCategory(BCLog::LLMQ)) {
         std::stringstream ss;
         std::stringstream ss2;
@@ -173,7 +173,7 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
     return true;
 }
 
-bool CheckLLMQCommitment(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
+bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
 {
     const auto opt_qcTx = GetTxPayload<CFinalCommitmentTxPayload>(tx);
     if (!opt_qcTx) {
@@ -226,7 +226,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, gsl::not_null<const CBlockIndex
         return true;
     }
 
-    if (!qcTx.commitment.Verify(pQuorumBaseBlockIndex, false)) {
+    if (!qcTx.commitment.Verify(dmnman, pQuorumBaseBlockIndex, false)) {
         LogPrintfFinalCommitment("h[%d] invalid qcTx.commitment[%s] Verify failed\n", pindexPrev->nHeight, qcTx.commitment.quorumHash.ToString());
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-invalid");
     }

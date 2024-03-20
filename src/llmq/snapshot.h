@@ -208,7 +208,8 @@ public:
 };
 
 bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& response,
-                             const CQuorumManager& qman, const CQuorumBlockProcessor& quorumBlockProcessor, std::string& errorRet);
+                             CDeterministicMNManager& dmnman, const CQuorumManager& qman,
+                             const CQuorumBlockProcessor& quorumBlockProcessor, std::string& errorRet);
 uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex);
 
 class CQuorumSnapshotManager

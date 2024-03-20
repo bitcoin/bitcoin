@@ -1711,7 +1711,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
     assert(!node.govman);
-    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman);
+    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman, ::deterministicMNManager);
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
@@ -1747,7 +1747,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
                                      *node.scheduler, chainman, *node.mempool, *node.govman, *node.sporkman,
-                                     node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
+                                     ::deterministicMNManager, node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1877,7 +1877,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     if (fMasternodeMode) {
         // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
+        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
         RegisterValidationInterface(activeMasternodeManager.get());
     }
 
@@ -1975,7 +1975,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 
@@ -2220,7 +2220,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 7c: Setup CoinJoin
 
-    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.mempool, *node.mn_sync, !ignores_incoming_txs);
+    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mempool, *node.mn_sync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
@@ -2394,8 +2394,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         vImportFiles.push_back(strFile);
     }
 
-    chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &chainman, &args] {
-        ThreadImport(chainman, *pdsNotificationInterface ,vImportFiles, args);
+    chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
+        ThreadImport(chainman, *node.dmnman, *pdsNotificationInterface, vImportFiles, args);
     });
 
     // Wait for genesis block to be processed

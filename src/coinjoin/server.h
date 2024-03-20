@@ -12,6 +12,7 @@
 class CChainState;
 class CCoinJoinServer;
 class CDataStream;
+class CDeterministicMNManager;
 class CDSTXManager;
 class CNode;
 class CTxMemPool;
@@ -25,6 +26,7 @@ class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
 private:
     CChainState& m_chainstate;
     CConnman& connman;
+    CDeterministicMNManager& m_dmnman;
     CDSTXManager& m_dstxman;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
@@ -82,9 +84,11 @@ private:
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CDSTXManager& dstxman, CTxMemPool& mempool, const CMasternodeSync& mn_sync) :
+    explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CDSTXManager& dstxman,
+                             CTxMemPool& mempool, const CMasternodeSync& mn_sync) :
         m_chainstate(chainstate),
         connman(_connman),
+        m_dmnman(dmnman),
         m_dstxman(dstxman),
         mempool(mempool),
         m_mn_sync(mn_sync),

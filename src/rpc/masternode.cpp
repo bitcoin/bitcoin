@@ -285,7 +285,7 @@ static UniValue masternode_status(const JSONRPCRequest& request)
     return mnObj;
 }
 
-static std::string GetRequiredPaymentsString(CGovernanceManager& govman, int nBlockHeight, const CDeterministicMNCPtr &payee)
+static std::string GetRequiredPaymentsString(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight, const CDeterministicMNCPtr &payee)
 {
     std::string strPayments = "Unknown";
     if (payee) {
@@ -301,9 +301,9 @@ static std::string GetRequiredPaymentsString(CGovernanceManager& govman, int nBl
             strPayments += ", " + EncodeDestination(dest);
         }
     }
-    if (CSuperblockManager::IsSuperblockTriggered(govman, nBlockHeight)) {
+    if (CSuperblockManager::IsSuperblockTriggered(govman, tip_mn_list, nBlockHeight)) {
         std::vector<CTxOut> voutSuperblock;
-        if (!CSuperblockManager::GetSuperblockPayments(govman, nBlockHeight, voutSuperblock)) {
+        if (!CSuperblockManager::GetSuperblockPayments(govman, tip_mn_list, nBlockHeight, voutSuperblock)) {
             return strPayments + ", error";
         }
         std::string strSBPayees = "Unknown";
@@ -362,10 +362,13 @@ static UniValue masternode_winners(const JSONRPCRequest& request, const Chainsta
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
+
+    const auto tip_mn_list = node.dmnman->GetListAtChainTip();
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
         const CBlockIndex* pIndex = pindexTip->GetAncestor(h - 1);
         auto payee = node.dmnman->GetListForBlock(pIndex).GetMNPayee(pIndex);
-        std::string strPayments = GetRequiredPaymentsString(*node.govman, h, payee);
+        std::string strPayments = GetRequiredPaymentsString(*node.govman, tip_mn_list, h, payee);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
         obj.pushKV(strprintf("%d", h), strPayments);
     }
@@ -373,7 +376,7 @@ static UniValue masternode_winners(const JSONRPCRequest& request, const Chainsta
     auto projection = node.dmnman->GetListForBlock(pindexTip).GetProjectedMNPayees(pindexTip, 20);
     for (size_t i = 0; i < projection.size(); i++) {
         int h = nChainTipHeight + 1 + i;
-        std::string strPayments = GetRequiredPaymentsString(*node.govman, h, projection[i]);
+        std::string strPayments = GetRequiredPaymentsString(*node.govman, tip_mn_list, h, projection[i]);
         if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
         obj.pushKV(strprintf("%d", h), strPayments);
     }

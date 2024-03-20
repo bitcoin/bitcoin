@@ -119,7 +119,7 @@ bool CDKGSession::Init(gsl::not_null<const CBlockIndex*> _pQuorumBaseBlockIndex,
 
     if (!myProTxHash.IsNull()) {
         dkgDebugManager.InitLocalSessionStatus(params, quorumIndex, m_quorum_base_block_index->GetBlockHash(), m_quorum_base_block_index->nHeight);
-        relayMembers = utils::GetQuorumRelayMembers(params, m_quorum_base_block_index, myProTxHash, true);
+        relayMembers = utils::GetQuorumRelayMembers(params, m_dmnman, m_quorum_base_block_index, myProTxHash, true);
         if (LogAcceptCategory(BCLog::LLMQ)) {
             std::stringstream ss;
             for (const auto& r : relayMembers) {
@@ -1266,7 +1266,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         t2.stop();
 
         cxxtimer::Timer t3(true);
-        if (!fqc.Verify(m_quorum_base_block_index, true)) {
+        if (!fqc.Verify(m_dmnman, m_quorum_base_block_index, true)) {
             logger.Batch("failed to verify final commitment");
             continue;
         }

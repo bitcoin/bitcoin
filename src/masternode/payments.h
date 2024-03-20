@@ -12,6 +12,7 @@
 
 class CBlock;
 class CBlockIndex;
+class CDeterministicMNManager;
 class CGovernanceManager;
 class CMasternodeSync;
 class CTransaction;
@@ -31,6 +32,7 @@ CAmount PlatformShare(const CAmount masternodeReward);
 class CMNPaymentsProcessor
 {
 private:
+    CDeterministicMNManager& m_dmnman;
     CGovernanceManager& m_govman;
     const Consensus::Params& m_consensus_params;
     const CMasternodeSync& m_mn_sync;
@@ -46,9 +48,9 @@ private:
     [[nodiscard]] bool IsOldBudgetBlockValueValid(const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
 
 public:
-    explicit CMNPaymentsProcessor(CGovernanceManager& govman, const Consensus::Params& consensus_params, const CMasternodeSync& mn_sync,
-                                  const CSporkManager& sporkman) :
-        m_govman{govman}, m_consensus_params{consensus_params}, m_mn_sync{mn_sync}, m_sporkman{sporkman} {}
+    explicit CMNPaymentsProcessor(CDeterministicMNManager& dmnman, CGovernanceManager& govman, const Consensus::Params& consensus_params,
+                                  const CMasternodeSync& mn_sync, const CSporkManager& sporkman) :
+        m_dmnman{dmnman}, m_govman{govman}, m_consensus_params{consensus_params}, m_mn_sync{mn_sync}, m_sporkman{sporkman} {}
 
     bool IsBlockValueValid(const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet);
     bool IsBlockPayeeValid(const CTransaction& txNew, const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward);

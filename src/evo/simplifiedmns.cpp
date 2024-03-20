@@ -317,7 +317,8 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
 }
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
-                               const llmq::CQuorumBlockProcessor& quorum_block_processor, std::string& errorRet, bool extended)
+                               CDeterministicMNManager& dmnman, const llmq::CQuorumBlockProcessor& quorum_block_processor,
+                               std::string& errorRet, bool extended)
 {
     AssertLockHeld(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
@@ -346,8 +347,8 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         return false;
     }
 
-    auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
-    auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
+    auto baseDmnList = dmnman.GetListForBlock(baseBlockIndex);
+    auto dmnList = dmnman.GetListForBlock(blockIndex);
     mnListDiffRet = BuildSimplifiedDiff(baseDmnList, dmnList, extended);
 
     // We need to return the value that was provided by the other peer as it otherwise won't be able to recognize the

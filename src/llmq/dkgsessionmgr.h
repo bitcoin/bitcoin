@@ -17,6 +17,7 @@
 class CBlockIndex;
 class CChainState;
 class CDBWrapper;
+class CDeterministicMNManager;
 class CDKGDebugManager;
 class CSporkManager;
 class PeerManager;
@@ -36,6 +37,7 @@ private:
     CBLSWorker& blsWorker;
     CChainState& m_chainstate;
     CConnman& connman;
+    CDeterministicMNManager& m_dmnman;
     CDKGDebugManager& dkgDebugManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
     const CSporkManager& spork_manager;
@@ -63,8 +65,8 @@ private:
     mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
-    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDKGDebugManager& _dkgDebugManager,
-                       CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
+    CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
+                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, const CSporkManager& sporkman,
                        bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 

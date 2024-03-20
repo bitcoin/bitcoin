@@ -20,6 +20,7 @@ class CBlockIndex;
 class CChainParams;
 class CConnman;
 class CCreditPoolManager;
+class CDeterministicMNManager;
 class CEvoDB;
 class CChainstateHelper;
 class CMNHFManager;
@@ -160,6 +161,7 @@ private:
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
     CChainState& m_chainstate;
+    CDeterministicMNManager& m_dmnman;
     CCreditPoolManager& m_cpoolman;
     CChainstateHelper& m_chain_helper;
     CMNHFManager& m_mnhfman;

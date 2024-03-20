@@ -49,9 +49,9 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
         return tl::unexpected{100};
     }
 
+    const auto tip_mn_list = m_dmnman.GetListAtChainTip();
     if (dsq.masternodeOutpoint.IsNull()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        if (auto dmn = mnList.GetValidMN(dsq.m_protxHash)) {
+        if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
             dsq.masternodeOutpoint = dmn->collateralOutpoint;
         } else {
             return tl::unexpected{10};
@@ -82,8 +82,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
 
         if (dsq.IsTimeOutOfBounds()) return {};
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        auto dmn = tip_mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
         if (!dmn) return {};
 
         if (dsq.m_protxHash.IsNull()) {
@@ -105,7 +104,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
             return {};
         } else {
             int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+            int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq,
                      nDsqThreshold, mmetaman->GetDsqCount());
             // don't allow a few nodes to dominate the queuing process
@@ -154,11 +153,12 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, cons
     }
 }
 
-CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, const CMasternodeSync& mn_sync,
+CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, const CMasternodeSync& mn_sync,
                                                const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
     m_wallet(wallet),
     m_walletman(walletman),
     m_manager(*Assert(walletman.Get(wallet.GetName()))),
+    m_dmnman(dmnman),
     m_mn_sync(mn_sync),
     m_queueman(queueman)
 {}
@@ -810,7 +810,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CTxMemPo
             return false;
         }
 
-        if (deterministicMNManager->GetListAtChainTip().GetValidMNsCount() == 0 &&
+        if (m_dmnman.GetListAtChainTip().GetValidMNsCount() == 0 &&
             Params().NetworkIDString() != CBaseChainParams::REGTEST) {
             strAutoDenomResult = _("No Masternodes detected.");
             WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- %s\n", strAutoDenomResult.original);
@@ -972,7 +972,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, CTxMemPo
         return false;
     }
 
-    int nMnCountEnabled = deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
+    int nMnCountEnabled = m_dmnman.GetListAtChainTip().GetValidMNsCount();
 
     // If we've used 90% of the Masternode list then drop the oldest first ~30%
     int nThreshold_high = nMnCountEnabled * 0.9;
@@ -988,7 +988,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, CTxMemPo
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     if (int(deqSessions.size()) < CCoinJoinClientOptions::GetSessions()) {
-        deqSessions.emplace_back(m_wallet, m_walletman, m_mn_sync, m_queueman);
+        deqSessions.emplace_back(m_wallet, m_walletman, m_dmnman, m_mn_sync, m_queueman);
     }
     for (auto& session : deqSessions) {
         if (!CheckAutomaticBackup()) return false;
@@ -1012,7 +1012,7 @@ void CCoinJoinClientManager::AddUsedMasternode(const COutPoint& outpointMn)
 
 CDeterministicMNCPtr CCoinJoinClientManager::GetRandomNotUsedMasternode()
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mnList = m_dmnman.GetListAtChainTip();
 
     size_t nCountEnabled = mnList.GetValidMNsCount();
     size_t nCountNotExcluded = nCountEnabled - vecMasternodesUsed.size();
@@ -1060,7 +1060,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
     if (m_queueman == nullptr) return false;
 
-    const auto mnList = deterministicMNManager->GetListAtChainTip();
+    const auto mnList = m_dmnman.GetListAtChainTip();
     const int nWeightedMnCount = mnList.GetValidWeightedMNsCount();
 
     // Look through the queues and see if anything matches
@@ -1121,7 +1121,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
     if (nBalanceNeedsAnonymized <= 0) return false;
 
     int nTries = 0;
-    const auto mnList = deterministicMNManager->GetListAtChainTip();
+    const auto mnList = m_dmnman.GetListAtChainTip();
     const int nMnCount = mnList.GetValidMNsCount();
     const int nWeightedMnCount = mnList.GetValidWeightedMNsCount();
 
@@ -1889,7 +1889,7 @@ void CoinJoinWalletManager::Add(CWallet& wallet) {
     assert(::masternodeSync != nullptr);
     m_wallet_manager_map.try_emplace(
         wallet.GetName(),
-        std::make_unique<CCoinJoinClientManager>(wallet, *this, m_mn_sync, m_queueman)
+        std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_sync, m_queueman)
     );
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }

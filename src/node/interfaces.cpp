@@ -120,20 +120,16 @@ public:
     }
     int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
     {
-        // TODO: Move GetListAtChainTip query outside CGovernanceObject, query requires
-        //       active CDeterministicMNManager instance
         if (context().govman != nullptr && context().dmnman != nullptr) {
-            return obj.GetAbsoluteYesCount(vote_signal);
+            return obj.GetAbsoluteYesCount(context().dmnman->GetListAtChainTip(), vote_signal);
         }
         return 0;
     }
     bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
     {
-        // TODO: Move GetListAtChainTip query outside CGovernanceObject, query requires
-        //       active CDeterministicMNManager instance
         if (context().govman != nullptr && context().dmnman != nullptr) {
             LOCK(cs_main);
-            return obj.IsValidLocally(error, check_collateral);
+            return obj.IsValidLocally(context().dmnman->GetListAtChainTip(), error, check_collateral);
         }
         return false;
     }

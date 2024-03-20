@@ -119,7 +119,8 @@ struct CImportingNow {
     }
 };
 
-void ThreadImport(ChainstateManager& chainman, CDSNotificationInterface& dsnfi, std::vector<fs::path> vImportFiles, const ArgsManager& args)
+void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CDSNotificationInterface& dsnfi,
+                  std::vector<fs::path> vImportFiles, const ArgsManager& args)
 {
     ScheduleBatchPriority();
 
@@ -200,7 +201,7 @@ void ThreadImport(ChainstateManager& chainman, CDSNotificationInterface& dsnfi, 
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
         LOCK(cs_main);
         int64_t nStart = GetTimeMillis();
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto mnList = dmnman.GetListAtChainTip();
         mnList.ForEachMN(false, [&](auto& dmn) {
             Coin coin;
             GetUTXOCoin(dmn.collateralOutpoint, coin);

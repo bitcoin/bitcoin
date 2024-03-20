@@ -324,13 +324,13 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     payload.sig = key.Sign(hash);
 }
 
-static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit = true)
+static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit = true)
 {
     {
     LOCK(cs_main);
 
     TxValidationState state;
-    if (!CheckSpecialTx(CTransaction(tx), chainman.ActiveChain().Tip(), chainman.ActiveChainstate().CoinsTip(), true, state)) {
+    if (!CheckSpecialTx(dmnman, CTransaction(tx), chainman.ActiveChain().Tip(), chainman.ActiveChainstate().CoinsTip(), true, state)) {
         throw std::runtime_error(state.ToString());
     }
     } // cs_main
@@ -579,6 +579,7 @@ static void protx_register_prepare_evo_help(const JSONRPCRequest& request)
 }
 
 static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
+                                              CDeterministicMNManager& dmnman,
                                               const ChainstateManager& chainman,
                                               const bool specific_legacy_bls_scheme,
                                               const bool isExternalRegister,
@@ -738,7 +739,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         ptx.collateralOutpoint.n = collateralIndex;
 
         SetTxPayload(tx, ptx);
-        return SignAndSendSpecialTx(request, chainman, tx, fSubmit);
+        return SignAndSendSpecialTx(request, dmnman, chainman, tx, fSubmit);
     } else {
         // referencing external collateral
 
@@ -786,7 +787,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 }
                 SignSpecialTxPayloadByString(tx, ptx, key);
                 SetTxPayload(tx, ptx);
-                return SignAndSendSpecialTx(request, chainman, tx, fSubmit);
+                return SignAndSendSpecialTx(request, dmnman, chainman, tx, fSubmit);
             }
         } catch (...) {
             if (unlockOnError) {
@@ -797,7 +798,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 }
 
-static UniValue protx_register_evo(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_register_evo(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     bool isExternalRegister = request.strMethod == "protxregister_evo";
     bool isFundRegister = request.strMethod == "protxregister_fund_evo";
@@ -810,26 +811,26 @@ static UniValue protx_register_evo(const JSONRPCRequest& request, const Chainsta
         isFundRegister = request.strMethod == "protxregister_fund_hpmn";
         isPrepareRegister = request.strMethod == "protxregister_prepare_hpmn";
     }
-    return protx_register_common_wrapper(request, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
+    return protx_register_common_wrapper(request, dmnman, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
 }
 
-static UniValue protx_register(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_register(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     bool isExternalRegister = request.strMethod == "protxregister";
     bool isFundRegister = request.strMethod == "protxregister_fund";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare";
-    return protx_register_common_wrapper(request, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, dmnman, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
 }
 
-static UniValue protx_register_legacy(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_register_legacy(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     bool isExternalRegister = request.strMethod == "protxregister_legacy";
     bool isFundRegister = request.strMethod == "protxregister_fund_legacy";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare_legacy";
-    return protx_register_common_wrapper(request, chainman, true, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, dmnman, chainman, true, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
 }
 
-static UniValue protx_register_submit(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_register_submit(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     protx_register_submit_help(request);
 
@@ -862,7 +863,7 @@ static UniValue protx_register_submit(const JSONRPCRequest& request, const Chain
     }
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request, chainman, tx);
+    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
 }
 
 static void protx_update_service_help(const JSONRPCRequest& request)
@@ -913,7 +914,7 @@ static void protx_update_service_evo_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, const ChainstateManager& chainman, const MnType mnType)
+static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const MnType mnType)
 {
     if (request.strMethod.find("_hpmn") != std::string::npos) {
         if (!IsDeprecatedRPCEnabled("hpmn")) {
@@ -932,8 +933,6 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     if (!wallet) return NullUniValue;
 
     EnsureWalletIsUnlocked(wallet.get());
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     const bool is_bls_legacy = !isV19active;
@@ -973,7 +972,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         paramIdx += 3;
     }
 
-    auto dmn = node.dmnman->GetListAtChainTip().GetMN(ptx.proTxHash);
+    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
@@ -1027,7 +1026,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, chainman, tx);
+    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
 }
 
 static void protx_update_registrar_help(const JSONRPCRequest& request, bool legacy)
@@ -1057,7 +1056,7 @@ static void protx_update_registrar_help(const JSONRPCRequest& request, bool lega
     }.Check(request);
 }
 
-static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, const ChainstateManager& chainman, const bool specific_legacy_bls_scheme)
+static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const bool specific_legacy_bls_scheme)
 {
     protx_update_registrar_help(request, specific_legacy_bls_scheme);
 
@@ -1066,12 +1065,10 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, co
 
     EnsureWalletIsUnlocked(wallet.get());
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-
     CProUpRegTx ptx;
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
-    auto dmn = node.dmnman->GetListAtChainTip().GetMN(ptx.proTxHash);
+    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
@@ -1134,17 +1131,17 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, co
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, chainman, tx);
+    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
 }
 
-static UniValue protx_update_registrar(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_update_registrar(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
-    return protx_update_registrar_wrapper(request, chainman, false);
+    return protx_update_registrar_wrapper(request, dmnman, chainman, false);
 }
 
-static UniValue protx_update_registrar_legacy(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_update_registrar_legacy(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
-    return protx_update_registrar_wrapper(request, chainman, true);
+    return protx_update_registrar_wrapper(request, dmnman, chainman, true);
 }
 
 static void protx_revoke_help(const JSONRPCRequest& request)
@@ -1170,7 +1167,7 @@ static void protx_revoke_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_revoke(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_revoke(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     protx_revoke_help(request);
 
@@ -1178,8 +1175,6 @@ static UniValue protx_revoke(const JSONRPCRequest& request, const ChainstateMana
     if (!wallet) return NullUniValue;
 
     EnsureWalletIsUnlocked(wallet.get());
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     const bool is_bls_legacy = !isV19active;
@@ -1197,7 +1192,7 @@ static UniValue protx_revoke(const JSONRPCRequest& request, const ChainstateMana
         ptx.nReason = (uint16_t)nReason;
     }
 
-    auto dmn = node.dmnman->GetListAtChainTip().GetMN(ptx.proTxHash);
+    auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
@@ -1232,7 +1227,7 @@ static UniValue protx_revoke(const JSONRPCRequest& request, const ChainstateMana
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, chainman, tx);
+    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
 }
 
 #endif//ENABLE_WALLET
@@ -1346,7 +1341,8 @@ static UniValue BuildDMNListEntry(const CWallet* const pwallet, const CDetermini
     return o;
 }
 
-static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_list(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                           const ChainstateManager& chainman)
 {
     protx_list_help(request);
 
@@ -1357,8 +1353,6 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
     } catch (...) {
     }
 #endif
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     std::string type = "registered";
     if (!request.params[0].isNull()) {
@@ -1396,14 +1390,14 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
             setOutpts.emplace(outpt);
         }
 
-        CDeterministicMNList mnList = node.dmnman->GetListForBlock(chainman.ActiveChain()[height]);
+        CDeterministicMNList mnList = dmnman.GetListForBlock(chainman.ActiveChain()[height]);
         mnList.ForEachMN(false, [&](const auto& dmn) {
             if (setOutpts.count(dmn.collateralOutpoint) ||
                 CheckWalletOwnsKey(wallet.get(), dmn.pdmnState->keyIDOwner) ||
                 CheckWalletOwnsKey(wallet.get(), dmn.pdmnState->keyIDVoting) ||
                 CheckWalletOwnsScript(wallet.get(), dmn.pdmnState->scriptPayout) ||
                 CheckWalletOwnsScript(wallet.get(), dmn.pdmnState->scriptOperatorPayout)) {
-                ret.push_back(BuildDMNListEntry(wallet.get(), dmn, *node.mn_metaman, detailed, chainman));
+                ret.push_back(BuildDMNListEntry(wallet.get(), dmn, mn_metaman, detailed, chainman));
             }
         });
 #endif
@@ -1421,12 +1415,12 @@ static UniValue protx_list(const JSONRPCRequest& request, const ChainstateManage
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        CDeterministicMNList mnList = node.dmnman->GetListForBlock(chainman.ActiveChain()[height]);
+        CDeterministicMNList mnList = dmnman.GetListForBlock(chainman.ActiveChain()[height]);
         bool onlyValid = type == "valid";
         bool onlyEvoNodes = type == "evo";
         mnList.ForEachMN(onlyValid, [&](const auto& dmn) {
             if (onlyEvoNodes && dmn.nType != MnType::Evo) return;
-            ret.push_back(BuildDMNListEntry(wallet.get(), dmn, *node.mn_metaman, detailed, chainman));
+            ret.push_back(BuildDMNListEntry(wallet.get(), dmn, mn_metaman, detailed, chainman));
         });
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type specified");
@@ -1455,7 +1449,8 @@ static void protx_info_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_info(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_info(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                           const ChainstateManager& chainman)
 {
     protx_info_help(request);
 
@@ -1466,8 +1461,6 @@ static UniValue protx_info(const JSONRPCRequest& request, const ChainstateManage
     } catch (...) {
     }
 #endif
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
@@ -1489,12 +1482,12 @@ static UniValue protx_info(const JSONRPCRequest& request, const ChainstateManage
         }
     }
 
-    auto mnList = node.dmnman->GetListForBlock(pindex);
+    auto mnList = dmnman.GetListForBlock(pindex);
     auto dmn = mnList.GetMN(proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(wallet.get(), *dmn, *node.mn_metaman, true, chainman, pindex);
+    return BuildDMNListEntry(wallet.get(), *dmn, mn_metaman, true, chainman, pindex);
 }
 
 static void protx_diff_help(const JSONRPCRequest& request)
@@ -1525,7 +1518,8 @@ static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, 
     }
 }
 
-static UniValue protx_diff(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_diff(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman,
+                           const LLMQContext& llmq_ctx)
 {
     protx_diff_help(request);
 
@@ -1539,9 +1533,8 @@ static UniValue protx_diff(const JSONRPCRequest& request, const ChainstateManage
 
     CSimplifiedMNListDiff mnListDiff;
     std::string strError;
-    const LLMQContext& llmq_ctx = EnsureAnyLLMQContext(request.context);
 
-    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, *llmq_ctx.quorum_block_processor, strError, extended)) {
+    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, dmnman, *llmq_ctx.quorum_block_processor, strError, extended)) {
         throw std::runtime_error(strError);
     }
 
@@ -1579,11 +1572,9 @@ static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateMan
     }
 }
 
-static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateManager& chainman)
+static UniValue protx_listdiff(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     protx_listdiff_help(request);
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     LOCK(cs_main);
     UniValue ret(UniValue::VOBJ);
@@ -1602,8 +1593,8 @@ static UniValue protx_listdiff(const JSONRPCRequest& request, const ChainstateMa
     ret.pushKV("baseHeight", pBaseBlockIndex->nHeight);
     ret.pushKV("blockHeight", pTargetBlockIndex->nHeight);
 
-    auto baseBlockMNList = node.dmnman->GetListForBlock(pBaseBlockIndex);
-    auto blockMNList = node.dmnman->GetListForBlock(pTargetBlockIndex);
+    auto baseBlockMNList = dmnman.GetListForBlock(pBaseBlockIndex);
+    auto blockMNList = dmnman.GetListForBlock(pTargetBlockIndex);
 
     auto mnDiff = baseBlockMNList.BuildDiff(blockMNList);
 
@@ -1675,37 +1666,44 @@ static UniValue protx(const JSONRPCRequest& request)
     const JSONRPCRequest new_request{request.strMethod == "protx" ? request.squashed() : request};
     const std::string command{new_request.strMethod};
 
-    const ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
+
+    CHECK_NONFATAL(node.dmnman);
+    CDeterministicMNManager& dmnman = *node.dmnman;
+
+    CHECK_NONFATAL(node.mn_metaman);
+    CMasternodeMetaMan& mn_metaman = *node.mn_metaman;
 
 #ifdef ENABLE_WALLET
     if (command == "protxregister" || command == "protxregister_fund" || command == "protxregister_prepare") {
-        return protx_register(new_request, chainman);
+        return protx_register(new_request, dmnman, chainman);
     } else if (command == "protxregister_evo" || command == "protxregister_fund_evo" || command == "protxregister_prepare_evo" || command == "protxregister_hpmn" || command == "protxregister_fund_hpmn" || command == "protxregister_prepare_hpmn") {
-        return protx_register_evo(new_request, chainman);
+        return protx_register_evo(new_request, dmnman, chainman);
     } else if (command == "protxregister_legacy" || command == "protxregister_fund_legacy" || command == "protxregister_prepare_legacy") {
-        return protx_register_legacy(new_request, chainman);
+        return protx_register_legacy(new_request, dmnman, chainman);
     } else if (command == "protxregister_submit") {
-        return protx_register_submit(new_request, chainman);
+        return protx_register_submit(new_request, dmnman, chainman);
     } else if (command == "protxupdate_service") {
-        return protx_update_service_common_wrapper(new_request, chainman, MnType::Regular);
+        return protx_update_service_common_wrapper(new_request, dmnman, chainman, MnType::Regular);
     } else if (command == "protxupdate_service_evo" || command == "protxupdate_service_hpmn") {
-        return protx_update_service_common_wrapper(new_request, chainman, MnType::Evo);
+        return protx_update_service_common_wrapper(new_request, dmnman, chainman, MnType::Evo);
     } else if (command == "protxupdate_registrar") {
-        return protx_update_registrar(new_request, chainman);
+        return protx_update_registrar(new_request, dmnman, chainman);
     } else if (command == "protxupdate_registrar_legacy") {
-        return protx_update_registrar_legacy(new_request, chainman);
+        return protx_update_registrar_legacy(new_request, dmnman, chainman);
     } else if (command == "protxrevoke") {
-        return protx_revoke(new_request, chainman);
+        return protx_revoke(new_request, dmnman, chainman);
     } else
 #endif
     if (command == "protxlist") {
-        return protx_list(new_request, chainman);
+        return protx_list(new_request, dmnman, mn_metaman, chainman);
     } else if (command == "protxinfo") {
-        return protx_info(new_request, chainman);
+        return protx_info(new_request, dmnman, mn_metaman, chainman);
     } else if (command == "protxdiff") {
-        return protx_diff(new_request, chainman);
+        return protx_diff(new_request, dmnman, chainman, *node.llmq_ctx);
     } else if (command == "protxlistdiff") {
-        return protx_listdiff(new_request, chainman);
+        return protx_listdiff(new_request, dmnman, chainman);
     }
     else {
         protx_help();
