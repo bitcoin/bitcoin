@@ -848,21 +848,13 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return BlockFileSeq().FileName(pos);
 }
 
-bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown)
+bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime)
 {
     LOCK(cs_LastBlockFile);
 
     const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
-    // Check that chain type is NORMAL if fKnown is true, because fKnown is only
-    // true during reindexing, and reindexing deletes snapshot chainstates, so
-    // chain_type will not be SNAPSHOT. Also check that cursor exists, because
-    // the normal cursor should never be null.
-    if (fKnown) {
-        Assume(chain_type == BlockfileType::NORMAL);
-        Assume(m_blockfile_cursors[chain_type]);
-    }
 
-    if (!fKnown && !m_blockfile_cursors[chain_type]) {
+    if (!m_blockfile_cursors[chain_type]) {
         // If a snapshot is loaded during runtime, we may not have initialized this cursor yet.
         assert(chain_type == BlockfileType::ASSUMED);
         const auto new_cursor = BlockfileCursor{this->MaxBlockfileNum() + 1};
@@ -871,88 +863,105 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
     }
     const int last_blockfile = m_blockfile_cursors[chain_type]->file_num;
 
-    int nFile = fKnown ? pos.nFile : last_blockfile;
+    int nFile = last_blockfile;
     if (static_cast<int>(m_blockfile_info.size()) <= nFile) {
         m_blockfile_info.resize(nFile + 1);
     }
 
     bool finalize_undo = false;
-    if (!fKnown) {
-        unsigned int max_blockfile_size{MAX_BLOCKFILE_SIZE};
-        // Use smaller blockfiles in test-only -fastprune mode - but avoid
-        // the possibility of having a block not fit into the block file.
-        if (m_opts.fast_prune) {
-            max_blockfile_size = 0x10000; // 64kiB
-            if (nAddSize >= max_blockfile_size) {
-                // dynamically adjust the blockfile size to be larger than the added size
-                max_blockfile_size = nAddSize + 1;
-            }
+    unsigned int max_blockfile_size{MAX_BLOCKFILE_SIZE};
+    // Use smaller blockfiles in test-only -fastprune mode - but avoid
+    // the possibility of having a block not fit into the block file.
+    if (m_opts.fast_prune) {
+        max_blockfile_size = 0x10000; // 64kiB
+        if (nAddSize >= max_blockfile_size) {
+            // dynamically adjust the blockfile size to be larger than the added size
+            max_blockfile_size = nAddSize + 1;
         }
-        assert(nAddSize < max_blockfile_size);
-
-        while (m_blockfile_info[nFile].nSize + nAddSize >= max_blockfile_size) {
-            // when the undo file is keeping up with the block file, we want to flush it explicitly
-            // when it is lagging behind (more blocks arrive than are being connected), we let the
-            // undo block write case handle it
-            finalize_undo = (static_cast<int>(m_blockfile_info[nFile].nHeightLast) ==
-                    Assert(m_blockfile_cursors[chain_type])->undo_height);
-
-            // Try the next unclaimed blockfile number
-            nFile = this->MaxBlockfileNum() + 1;
-            // Set to increment MaxBlockfileNum() for next iteration
-            m_blockfile_cursors[chain_type] = BlockfileCursor{nFile};
-
-            if (static_cast<int>(m_blockfile_info.size()) <= nFile) {
-                m_blockfile_info.resize(nFile + 1);
-            }
-        }
-        pos.nFile = nFile;
-        pos.nPos = m_blockfile_info[nFile].nSize;
     }
+    assert(nAddSize < max_blockfile_size);
+
+    while (m_blockfile_info[nFile].nSize + nAddSize >= max_blockfile_size) {
+        // when the undo file is keeping up with the block file, we want to flush it explicitly
+        // when it is lagging behind (more blocks arrive than are being connected), we let the
+        // undo block write case handle it
+        finalize_undo = (static_cast<int>(m_blockfile_info[nFile].nHeightLast) ==
+                         Assert(m_blockfile_cursors[chain_type])->undo_height);
+
+        // Try the next unclaimed blockfile number
+        nFile = this->MaxBlockfileNum() + 1;
+        // Set to increment MaxBlockfileNum() for next iteration
+        m_blockfile_cursors[chain_type] = BlockfileCursor{nFile};
+
+        if (static_cast<int>(m_blockfile_info.size()) <= nFile) {
+            m_blockfile_info.resize(nFile + 1);
+        }
+    }
+    pos.nFile = nFile;
+    pos.nPos = m_blockfile_info[nFile].nSize;
 
     if (nFile != last_blockfile) {
-        if (!fKnown) {
-            LogPrint(BCLog::BLOCKSTORAGE, "Leaving block file %i: %s (onto %i) (height %i)\n",
-                last_blockfile, m_blockfile_info[last_blockfile].ToString(), nFile, nHeight);
+        LogPrint(BCLog::BLOCKSTORAGE, "Leaving block file %i: %s (onto %i) (height %i)\n",
+                 last_blockfile, m_blockfile_info[last_blockfile].ToString(), nFile, nHeight);
 
-            // Do not propagate the return code. The flush concerns a previous block
-            // and undo file that has already been written to. If a flush fails
-            // here, and we crash, there is no expected additional block data
-            // inconsistency arising from the flush failure here. However, the undo
-            // data may be inconsistent after a crash if the flush is called during
-            // a reindex. A flush error might also leave some of the data files
-            // untrimmed.
-            if (!FlushBlockFile(last_blockfile, !fKnown, finalize_undo)) {
-                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning,
-                              "Failed to flush previous block file %05i (finalize=%i, finalize_undo=%i) before opening new block file %05i\n",
-                              last_blockfile, !fKnown, finalize_undo, nFile);
-            }
+        // Do not propagate the return code. The flush concerns a previous block
+        // and undo file that has already been written to. If a flush fails
+        // here, and we crash, there is no expected additional block data
+        // inconsistency arising from the flush failure here. However, the undo
+        // data may be inconsistent after a crash if the flush is called during
+        // a reindex. A flush error might also leave some of the data files
+        // untrimmed.
+        if (!FlushBlockFile(last_blockfile, /*fFinalize=*/true, finalize_undo)) {
+            LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning,
+                          "Failed to flush previous block file %05i (finalize=1, finalize_undo=%i) before opening new block file %05i\n",
+                          last_blockfile, finalize_undo, nFile);
         }
         // No undo data yet in the new file, so reset our undo-height tracking.
         m_blockfile_cursors[chain_type] = BlockfileCursor{nFile};
     }
 
     m_blockfile_info[nFile].AddBlock(nHeight, nTime);
-    if (fKnown) {
-        m_blockfile_info[nFile].nSize = std::max(pos.nPos + nAddSize, m_blockfile_info[nFile].nSize);
-    } else {
-        m_blockfile_info[nFile].nSize += nAddSize;
-    }
+    m_blockfile_info[nFile].nSize += nAddSize;
 
-    if (!fKnown) {
-        bool out_of_space;
-        size_t bytes_allocated = BlockFileSeq().Allocate(pos, nAddSize, out_of_space);
-        if (out_of_space) {
-            m_opts.notifications.fatalError(_("Disk space is too low!"));
-            return false;
-        }
-        if (bytes_allocated != 0 && IsPruneMode()) {
-            m_check_for_pruning = true;
-        }
+    bool out_of_space;
+    size_t bytes_allocated = BlockFileSeq().Allocate(pos, nAddSize, out_of_space);
+    if (out_of_space) {
+        m_opts.notifications.fatalError(_("Disk space is too low!"));
+        return false;
+    }
+    if (bytes_allocated != 0 && IsPruneMode()) {
+        m_check_for_pruning = true;
     }
 
     m_dirty_fileinfo.insert(nFile);
     return true;
+}
+
+void BlockManager::UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos)
+{
+    LOCK(cs_LastBlockFile);
+
+    const unsigned int added_size = ::GetSerializeSize(TX_WITH_WITNESS(block));
+    const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
+    // Check that chain type is NORMAL, because this function is only
+    // called during reindexing, and reindexing deletes snapshot chainstates, so
+    // chain_type will not be SNAPSHOT. Also check that cursor exists, because
+    // the normal cursor should never be null.
+    Assume(chain_type == BlockfileType::NORMAL);
+    Assume(m_blockfile_cursors[chain_type]);
+    const int nFile = pos.nFile;
+    if (static_cast<int>(m_blockfile_info.size()) <= nFile) {
+        m_blockfile_info.resize(nFile + 1);
+    }
+
+    const int last_blockfile = m_blockfile_cursors[chain_type]->file_num;
+    if (nFile != last_blockfile) {
+        // No undo data yet in the new file, so reset our undo-height tracking.
+        m_blockfile_cursors[chain_type] = BlockfileCursor{nFile};
+    }
+    m_blockfile_info[nFile].AddBlock(nHeight, block.GetBlockTime());
+    m_blockfile_info[nFile].nSize = std::max(pos.nPos + added_size, m_blockfile_info[nFile].nSize);
+    m_dirty_fileinfo.insert(nFile);
 }
 
 bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
@@ -1145,17 +1154,17 @@ FlatFilePos BlockManager::SaveBlockToDisk(const CBlock& block, int nHeight, cons
     const auto position_known {dbp != nullptr};
     if (position_known) {
         blockPos = *dbp;
+        // position_known is set iff performing a reindex. In this case, no blocks need to be written, only the blockfile info database needs to be rebuilt.
+        UpdateBlockInfo(block, nHeight, *dbp);
     } else {
         // when known, blockPos.nPos points at the offset of the block data in the blk file. that already accounts for
         // the serialization header present in the file (the 4 magic message start bytes + the 4 length bytes = 8 bytes = BLOCK_SERIALIZATION_HEADER_SIZE).
         // we add BLOCK_SERIALIZATION_HEADER_SIZE only for new blocks since they will have the serialization header added when written to disk.
         nBlockSize += static_cast<unsigned int>(BLOCK_SERIALIZATION_HEADER_SIZE);
-    }
-    if (!FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime(), position_known)) {
-        LogError("%s: FindBlockPos failed\n", __func__);
-        return FlatFilePos();
-    }
-    if (!position_known) {
+        if (!FindBlockPos(blockPos, nBlockSize, nHeight, block.GetBlockTime())) {
+            LogError("%s: FindBlockPos failed\n", __func__);
+            return FlatFilePos();
+        }
         if (!WriteBlockToDisk(block, blockPos)) {
             m_opts.notifications.fatalError(_("Failed to write block."));
             return FlatFilePos();

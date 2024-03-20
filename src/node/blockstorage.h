@@ -161,11 +161,10 @@ private:
      * block file depending on nAddSize. May flush the previous blockfile to disk if full, updates
      * blockfile info, and checks if there is enough disk space to save the block.
      *
-     * If fKnown is false, the nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
+     * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields which are written before it by WriteBlockToDisk (BLOCK_SERIALIZATION_HEADER_SIZE).
-     * If fKnown is true, nAddSize should be just the size of the serialized CBlock.
      */
-    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
+    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
@@ -339,6 +338,15 @@ public:
      *          in case of an error, an empty FlatFilePos
      */
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
+
+    /** Update blockfile info while processing a block during reindex. The block must be available on disk.
+     *
+     * @param[in]  block        the block being processed
+     * @param[in]  nHeight      the height of the block
+     * @param[in]  pos          the position of the serialized CBlock on disk. This is the position returned
+     *                          by WriteBlockToDisk pointing at the CBlock, not the separator fields before it
+     */
+    void UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos);
 
     /** Whether running in -prune mode. */
     [[nodiscard]] bool IsPruneMode() const { return m_prune_mode; }
