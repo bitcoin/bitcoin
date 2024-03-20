@@ -388,13 +388,10 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root);
 /** Return the sum of the claimed work on a given set of headers. No verification of PoW is done. */
 arith_uint256 CalculateClaimedHeadersWork(const std::vector<CBlockHeader>& headers);
 
-enum class VerifyDBResult {
-    SUCCESS,
-    CORRUPTED_BLOCK_DB,
-    INTERRUPTED,
-    SKIPPED_L3_CHECKS,
-    SKIPPED_MISSING_BLOCKS,
-};
+struct Success{};
+struct SkippedL3Checks{};
+struct SkippedMissingBlocks{};
+using VerifyDBResult = std::variant<Success, kernel::Interrupted, SkippedL3Checks, SkippedMissingBlocks>;
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB
@@ -405,7 +402,7 @@ private:
 public:
     explicit CVerifyDB(kernel::Notifications& notifications);
     ~CVerifyDB();
-    [[nodiscard]] VerifyDBResult VerifyDB(
+    [[nodiscard]] kernel::FlushResult<VerifyDBResult> VerifyDB(
         Chainstate& chainstate,
         const Consensus::Params& consensus_params,
         CCoinsView& coinsview,

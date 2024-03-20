@@ -19,6 +19,7 @@
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
+#include <util/overloaded.h>
 #include <util/translation.h>
 #include <validation.h>
 
@@ -282,7 +283,7 @@ FlushResult<InterruptResult, ChainstateLoadError> VerifyLoadedChainstate(Chainst
 
     LOCK(cs_main);
 
-    util::Result<InterruptResult, ChainstateLoadError> result;
+    FlushResult<InterruptResult, ChainstateLoadError> result;
     for (Chainstate* chainstate : chainman.GetAll()) {
         if (!is_coinsview_empty(chainstate)) {
             const CBlockIndex* tip = chainstate->m_chain.Tip();
@@ -294,27 +295,25 @@ FlushResult<InterruptResult, ChainstateLoadError> VerifyLoadedChainstate(Chainst
                 return result;
             }
 
-            VerifyDBResult verify_result = CVerifyDB(chainman.GetNotifications()).VerifyDB(
+            auto verify_result{CVerifyDB(chainman.GetNotifications()).VerifyDB(
                 *chainstate, chainman.GetConsensus(), chainstate->CoinsDB(),
                 options.check_level,
-                options.check_blocks);
-            switch (verify_result) {
-            case VerifyDBResult::SUCCESS:
-            case VerifyDBResult::SKIPPED_MISSING_BLOCKS:
-                break;
-            case VerifyDBResult::INTERRUPTED:
-                result.Update(Interrupted{});
-                return result;
-            case VerifyDBResult::CORRUPTED_BLOCK_DB:
+                options.check_blocks) >> result};
+            if (verify_result) {
+                std::visit(util::Overloaded{
+                    [&](Success) {},
+                    [&](SkippedMissingBlocks) {},
+                    [&](SkippedL3Checks) {
+                        if (options.require_full_verification) {
+                            result.Update({util::Error{_("Insufficient dbcache for block verification")}, ChainstateLoadError::FAILURE_INSUFFICIENT_DBCACHE});
+                        }
+                    },
+                    [&](kernel::Interrupted) {
+                       result.Update(Interrupted{});
+                    }}, *verify_result);
+            } else {
                 result.Update({util::Error{_("Corrupted block database detected")}, ChainstateLoadError::FAILURE});
-                return result;
-            case VerifyDBResult::SKIPPED_L3_CHECKS:
-                if (options.require_full_verification) {
-                    result.Update({util::Error{_("Insufficient dbcache for block verification")}, ChainstateLoadError::FAILURE_INSUFFICIENT_DBCACHE});
-                    return result;
-                }
-                break;
-            } // no default case, so the compiler can warn about missing cases
+            }
         }
     }
 
