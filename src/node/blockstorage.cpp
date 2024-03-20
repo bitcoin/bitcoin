@@ -42,6 +42,8 @@
 using kernel::AbortFailure;
 using kernel::FlushResult;
 using kernel::FlushStatus;
+using kernel::Interrupted;
+using kernel::InterruptResult;
 
 namespace kernel {
 static constexpr uint8_t DB_BLOCK_FILES{'f'};
@@ -398,18 +400,19 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
     return pindex;
 }
 
-bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+util::Result<InterruptResult, AbortFailure> BlockManager::LoadBlockIndexData(const std::optional<uint256>& snapshot_blockhash)
 {
     if (!m_block_tree_db->LoadBlockIndexGuts(
             GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
-        return false;
+        return util::Error{};
     }
 
     if (snapshot_blockhash) {
         const std::optional<AssumeutxoData> maybe_au_data = GetParams().AssumeutxoForBlockhash(*snapshot_blockhash);
         if (!maybe_au_data) {
-            m_opts.notifications.fatalError(strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString()));
-            return false;
+            auto error{strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString())};
+            m_opts.notifications.fatalError(error);
+            return {util::Error{std::move(error)}, AbortFailure{.fatal = true}};
         }
         const AssumeutxoData& au_data = *Assert(maybe_au_data);
         m_snapshot_height = au_data.height;
@@ -436,10 +439,11 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
 
     CBlockIndex* previous_index{nullptr};
     for (CBlockIndex* pindex : vSortedByHeight) {
-        if (m_interrupt) return false;
+        if (m_interrupt) return Interrupted{};
         if (previous_index && pindex->nHeight > previous_index->nHeight + 1) {
-            LogError("%s: block index is non-contiguous, index of height %d missing\n", __func__, previous_index->nHeight + 1);
-            return false;
+            auto error{Untranslated(strprintf("block index is non-contiguous, index of height %d missing", previous_index->nHeight + 1))};
+            LogError("%s: %s\n", __func__, error.original);
+            return util::Error{std::move(error)};
         }
         previous_index = pindex;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
@@ -474,7 +478,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
         }
     }
 
-    return true;
+    return {};
 }
 
 bool BlockManager::WriteBlockIndexDB()
@@ -499,10 +503,11 @@ bool BlockManager::WriteBlockIndexDB()
     return true;
 }
 
-bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+util::Result<InterruptResult, AbortFailure> BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
 {
-    if (!LoadBlockIndex(snapshot_blockhash)) {
-        return false;
+    auto result{LoadBlockIndexData(snapshot_blockhash)};
+    if (!result || IsInterrupted(*result)) {
+        return result;
     }
     int max_blockfile_num{0};
 
@@ -534,7 +539,8 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++) {
         FlatFilePos pos(*it, 0);
         if (OpenBlockFile(pos, true).IsNull()) {
-            return false;
+            result.Update(util::Error{});
+            return result;
         }
     }
 
@@ -558,7 +564,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     m_block_tree_db->ReadReindexing(fReindexing);
     if (fReindexing) fReindex = true;
 
-    return true;
+    return result;
 }
 
 void BlockManager::ScanAndUnlinkAlreadyPrunedFiles()
