@@ -10,6 +10,7 @@ $(package)_patches += builtin_sha1.patch
 $(package)_patches += fix_have_windows.patch
 $(package)_patches += cmake_minimum.patch
 $(package)_patches += no_librt.patch
+$(package)_patches += fix_mingw_link.patch
 
 define $(package)_set_vars
   $(package)_config_opts := -DCMAKE_BUILD_TYPE=None -DWITH_DOCS=OFF -DWITH_LIBSODIUM=OFF
@@ -26,7 +27,8 @@ define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/builtin_sha1.patch && \
   patch -p1 < $($(package)_patch_dir)/fix_have_windows.patch && \
   patch -p1 < $($(package)_patch_dir)/cmake_minimum.patch && \
-  patch -p1 < $($(package)_patch_dir)/no_librt.patch
+  patch -p1 < $($(package)_patch_dir)/no_librt.patch && \
+  patch -p1 < $($(package)_patch_dir)/fix_mingw_link.patch
 endef
 
 define $(package)_config_cmds
