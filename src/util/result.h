@@ -23,13 +23,13 @@ struct Messages {
     std::vector<bilingual_str> warnings{};
 };
 
-//! The Result<SuccessType, FailureType, MessagesType> class provides
+//! The Result<SuccessType, FailureType, InfoType, MessagesType> class provides
 //! an efficient way for functions to return structured result information, as
 //! well as descriptive error and warning messages.
 //!
 //! Logically, a result object is equivalent to:
 //!
-//!     tuple<variant<SuccessType, FailureType>, MessagesType>
+//!     tuple<variant<SuccessType, FailureType>, InfoType, MessagesType>
 //!
 //! But the physical representation is more efficient because it avoids
 //! allocating memory for FailureType and MessagesType fields unless there is an
@@ -38,7 +38,7 @@ struct Messages {
 //! Result<SuccessType> objects support the same operators as
 //! std::optional<SuccessType>, such as !result, *result, result->member, to
 //! make SuccessType values easy to access. They also provide
-//! result.GetFailure() and result.GetMessages() methods to
+//! result.GetFailure(), result.GetInfo(), result.GetMessages() methods to
 //! access other parts of the result. A simple usage example is:
 //!
 //!    util::Result<int> AddNumbers(int a, int b)
@@ -64,7 +64,7 @@ struct Messages {
 //! return function results.
 //!
 //! Usage examples can be found in \example ../test/result_tests.cpp.
-template <typename SuccessType = void, typename FailureType = void, typename MessagesType = Messages>
+template <typename SuccessType = void, typename FailureType = void, typename InfoType = void, typename MessagesType = Messages>
 class Result;
 
 //! Wrapper object to pass an error string to the Result constructor.
@@ -76,8 +76,15 @@ struct Warning {
     bilingual_str message;
 };
 
+//! Wrapper object to pass an InfoType object to the result constructor.
+template <typename T>
+struct Info {
+    Info(T&& obj) : m_obj(obj) {}
+    T& m_obj;
+};
+
 //! Type trait that can be specialized to control the way SuccessType /
-//! FailureType / MessagesType values are combined. Default behavior
+//! FailureType / InfoType / MessagesType values are combined. Default behavior
 //! is for new values to overwrite existing ones, but this can be specialized
 //! for custom behavior when Result::Update() method is called or << operator is
 //! used. For example, this is specialized for Messages struct below to append
@@ -128,14 +135,36 @@ bilingual_str JoinMessages(const Messages& messages);
 //! Substitute for std::monostate that doesn't depend on std::variant.
 struct Monostate{};
 
-//! Implemention note: Result class inherits from a FailDataHolder class holding
-//! a unique_ptr to FailureType and MessagesTypes values, and a SuccessHolder
-//! class holding a SuccessType value in an anonymous union.
+//! Implemention note: Result class inherits from an InfoHolder class holding an
+//! IntoType value, a FailDataHolder class holding a unique_ptr to FailureType
+//! and MessagesTypes values, and a SuccessHolder class holding a SuccessType
+//! value in an anonymous union.
+//!
+//! To take advantage of the Empty Base Optimization, inheritance is linear with
+//! FailDataHolder inheriting from InfoHolder, SuccessHolder inheriting from
+//! FailDataHolder, and Holder classes specializing for void so no space is used
+//! when void types are specified.
 //! @{
+//! Container for InfoType, providing public GetInfo() method.
+template <typename InfoType>
+class InfoHolder
+{
+protected:
+    InfoType m_info{};
+public:
+    // Public accessors.
+    const InfoType& GetInfo() const LIFETIMEBOUND { return m_info; }
+    InfoType& GetInfo() LIFETIMEBOUND { return m_info; }
+};
+
+//! Specialization of InfoHolder when InfoType is void.
+template <>
+class InfoHolder<void> {};
+
 //! Container for FailureType and MessagesType, providing public operator
 //! bool(), GetFailure(), GetMessages(), and EnsureMessages() methods.
-template <typename FailureType, typename MessagesType>
-class FailDataHolder
+template <typename FailureType, typename InfoType, typename MessagesType>
+class FailDataHolder : public InfoHolder<InfoType>
 {
 protected:
     struct FailData {
@@ -163,8 +192,8 @@ public:
 
 //! Container for SuccessType, providing public accessor methods similar to
 //! std::optional methods to access the success value.
-template <typename SuccessType, typename FailureType, typename MessagesType>
-class SuccessHolder : public FailDataHolder<FailureType, MessagesType>
+template <typename SuccessType, typename FailureType, typename InfoType, typename MessagesType>
+class SuccessHolder : public FailDataHolder<FailureType, InfoType, MessagesType>
 {
 protected:
     //! Success value embedded in an anonymous union so it doesn't need to be
@@ -197,20 +226,21 @@ public:
 };
 
 //! Specialization of SuccessHolder when SuccessType is void.
-template <typename FailureType, typename MessagesType>
-class SuccessHolder<void, FailureType, MessagesType> : public FailDataHolder<FailureType, MessagesType>
+template <typename FailureType, typename InfoType, typename MessagesType>
+class SuccessHolder<void, FailureType, InfoType, MessagesType> : public FailDataHolder<FailureType, InfoType, MessagesType>
 {
 };
 //! @}
 } // namespace detail
 
 // Result type class, documented at the top of this file.
-template <typename SuccessType_, typename FailureType_, typename MessagesType_>
-class Result : public detail::SuccessHolder<SuccessType_, FailureType_, MessagesType_>
+template <typename SuccessType_, typename FailureType_, typename InfoType_, typename MessagesType_>
+class Result : public detail::SuccessHolder<SuccessType_, FailureType_, InfoType_, MessagesType_>
 {
 public:
     using SuccessType = SuccessType_;
     using FailureType = FailureType_;
+    using InfoType = InfoType_;
     using MessagesType = MessagesType_;
     static constexpr bool is_result{true};
 
@@ -238,7 +268,7 @@ public:
     }
 
     //! Update this result by moving from another result object. Existing
-    //! success, failure, and messages values are updated (using
+    //! success, failure, info, and messages values are updated (using
     //! ResultTraits::Update specializations), so errors and warning messages
     //! get appended instead of overwriting existing ones.
     Result& Update(Result&& other) LIFETIMEBOUND
@@ -261,7 +291,7 @@ public:
     }
 
 protected:
-    template <typename, typename, typename>
+    template <typename, typename, typename, typename>
     friend class Result;
 
     //! Helper function to construct a new success or failure value using the
@@ -296,7 +326,15 @@ protected:
         Construct<Failure>(result, std::forward<Args>(args)...);
     }
 
-    //! Move success, failure, and messages from source Result object to
+    //! Construct() overload peeling off a util::Info constructor argument.
+    template <bool Failure, typename Result, typename T, typename... Args>
+    static void Construct(Result& result, util::Info<T> info, Args&&... args)
+    {
+        ResultTraits<InfoType>::Update(result.GetInfo(), info.m_obj);
+        Construct<Failure>(result, std::forward<Args>(args)...);
+    }
+
+    //! Move success, failure, info, and messages from source Result object to
     //! destination object. Existing values are updated (using
     //! ResultTraits::Update specializations), so destination errors and warning
     //! messages get appended to instead of overwritten. The source and
@@ -308,7 +346,7 @@ protected:
     template <bool DstConstructed, typename DstResult, typename SrcResult>
     static void Move(DstResult& dst, SrcResult& src)
     {
-        // Use operator>> to move messages value first, then move
+        // Use operator>> to move info and messages values first, then move
         // success or failure value below.
         src >> dst;
         // If DstConstructed is true, it means dst has either a success value or
@@ -367,7 +405,7 @@ protected:
 };
 
 //! Move information from a source Result object to a destination object. It
-//! only moves MessagesType values without affecting SuccessType or
+//! only moves InfoType and MessagesType values without affecting SuccessType or
 //! FailureType values of either Result object.
 //!
 //! This is useful for combining error and warning messages from multiple result
@@ -384,6 +422,9 @@ requires (std::decay_t<SrcResult>::is_result)
 decltype(auto) operator>>(SrcResult&& src LIFETIMEBOUND, DstResult&& dst)
 {
     using SrcType = std::decay_t<SrcResult>;
+    if constexpr (!std::is_same_v<typename SrcType::InfoType, void>) {
+        ResultTraits<typename SrcType::InfoType>::Update(dst.GetInfo(), src.GetInfo());
+    }
     if (src.GetMessages() && MessagesTraits<typename SrcType::MessagesType>::HasMessages(*src.GetMessages())) {
         ResultTraits<typename SrcType::MessagesType>::Update(dst.EnsureMessages(), *src.GetMessages());
     }
