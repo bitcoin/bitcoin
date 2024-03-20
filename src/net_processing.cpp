@@ -54,6 +54,7 @@
 #include <typeinfo>
 #include <utility>
 
+using kernel::AbortFailure;
 using kernel::FlushResult;
 
 /** Headers download timeout.
@@ -3606,7 +3607,8 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
     bool new_block{false};
-    m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
+    FlushResult<void, AbortFailure> process_result;
+    (void)m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block, process_result);
     if (new_block) {
         node.m_last_block_time = GetTime<std::chrono::seconds>();
         // In case this block came from a different peer than we requested
