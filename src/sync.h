@@ -11,6 +11,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <thread>
 
@@ -115,6 +116,21 @@ public:
 #endif // __clang__
 };
 
+template <typename PARENT>
+class LOCKABLE SharedAnnotatedMixin : public AnnotatedMixin<PARENT>
+{
+public:
+    bool try_shared_lock() SHARED_TRYLOCK_FUNCTION(true)
+    {
+        return PARENT::try_shared_lock();
+    }
+    void shared_lock() SHARED_LOCK_FUNCTION()
+    {
+        PARENT::shared_lock();
+    }
+    using SharedLock = std::shared_lock<PARENT>;
+};
+
 /**
  * Wrapped mutex: supports recursive locking, but no waiting
  * TODO: We should move away from using the recursive lock by default.
@@ -123,6 +139,9 @@ using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 
 /** Wrapped mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<std::mutex> Mutex;
+/** Wrapped shared mutex: supports read locking via .shared_lock, exlusive locking via .lock;
+ * does not support recursive locking */
+typedef SharedAnnotatedMixin<std::shared_mutex> SharedMutex;
 
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
@@ -223,16 +242,77 @@ public:
      friend class reverse_lock;
 };
 
+template <typename Mutex, typename Base = typename Mutex::SharedLock>
+class SCOPED_LOCKABLE SharedLock : public Base
+{
+private:
+    void SharedEnter(const char* pszName, const char* pszFile, int nLine)
+    {
+        EnterCritical(pszName, pszFile, nLine, Base::mutex());
+#ifdef DEBUG_LOCKCONTENTION
+        if (!Base::try_lock()) {
+            PrintLockContention(pszName, pszFile, nLine);
+#endif
+            Base::lock();
+#ifdef DEBUG_LOCKCONTENTION
+        }
+#endif
+    }
+
+    bool TrySharedEnter(const char* pszName, const char* pszFile, int nLine)
+    {
+        EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
+        if (Base::try_lock()) {
+            return true;
+        }
+        LeaveCritical();
+        return false;
+    }
+
+public:
+    SharedLock(Mutex& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) SHARED_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
+    {
+        if (fTry) {
+            TrySharedEnter(pszName, pszFile, nLine);
+        } else {
+            SharedEnter(pszName, pszFile, nLine);
+        }
+    }
+
+    SharedLock(Mutex* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) SHARED_LOCK_FUNCTION(pmutexIn)
+    {
+        if (!pmutexIn) return;
+
+        *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
+        if (fTry) {
+            TrySharedEnter(pszName, pszFile, nLine);
+        } else {
+            SharedEnter(pszName, pszFile, nLine);
+        }
+    }
+
+    ~SharedLock() UNLOCK_FUNCTION()
+    {
+        if (Base::owns_lock()) {
+            LeaveCritical();
+        }
+    }
+};
+
 #define REVERSE_LOCK(g) typename std::decay<decltype(g)>::type::reverse_lock PASTE2(revlock, __COUNTER__)(g, #g, __FILE__, __LINE__)
 
 template<typename MutexArg>
 using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove_pointer<MutexArg>::type>::type>;
+template<typename MutexArg>
+using ReadLock = SharedLock<typename std::remove_reference<typename std::remove_pointer<MutexArg>::type>::type>;
 
 #define LOCK(cs) DebugLock<decltype(cs)> PASTE2(criticalblock, __COUNTER__)(cs, #cs, __FILE__, __LINE__)
+#define READ_LOCK(cs) ReadLock<decltype(cs)> PASTE2(criticalblock, __COUNTER__)(cs, #cs, __FILE__, __LINE__)
 #define LOCK2(cs1, cs2)                                               \
     DebugLock<decltype(cs1)> criticalblock1(cs1, #cs1, __FILE__, __LINE__); \
     DebugLock<decltype(cs2)> criticalblock2(cs2, #cs2, __FILE__, __LINE__);
 #define TRY_LOCK(cs, name) DebugLock<decltype(cs)> name(cs, #cs, __FILE__, __LINE__, true)
+#define TRY_READ_LOCK(cs, name) ReadLock<decltype(cs)> name(cs, #cs, __FILE__, __LINE__, true)
 #define WAIT_LOCK(cs, name) DebugLock<decltype(cs)> name(cs, #cs, __FILE__, __LINE__)
 
 #define ENTER_CRITICAL_SECTION(cs)                            \
@@ -273,6 +353,7 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 //! The above is detectable at compile-time with the -Wreturn-local-addr flag in
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
 #define WITH_LOCK(cs, code) [&]() -> decltype(auto) { LOCK(cs); code; }()
+#define WITH_READ_LOCK(cs, code) [&]() -> decltype(auto) { READ_LOCK(cs); code; }()
 
 class CSemaphore
 {
