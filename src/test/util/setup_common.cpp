@@ -66,6 +66,8 @@
 #include <stdexcept>
 
 using namespace util::hex_literals;
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
 using node::BlockManager;
@@ -429,7 +431,9 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 
     CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    FlushResult<void, AbortFailure> process_result;
+    (void)Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr, process_result);
+    Assert(process_result);
 
     return block;
 }
