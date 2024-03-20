@@ -69,12 +69,12 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
     // Note that it also sets m_blockfiles_indexed based on the disk flag!
-    if (!chainman.LoadBlockIndex()) {
-        if (chainman.m_interrupt) {
-            result.Update(Interrupted{});
-        } else {
-            result.Update({util::Error{_("Error loading block database")}, ChainstateLoadError::FAILURE});
-        }
+    auto load_result{chainman.LoadBlockIndex() >> result};
+    if (!load_result) {
+        result.Update({util::Error{_("Error loading block database")}, ChainstateLoadError::FAILURE});
+        return result;
+    } else if (IsInterrupted(*load_result) || chainman.m_interrupt) {
+        result.Update(Interrupted{});
         return result;
     }
 
