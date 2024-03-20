@@ -1235,7 +1235,8 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
+                // Ignore failure value, do not treat flush error as failure.
+                chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent) >> result;
                 if (chainman.m_interrupt) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;
@@ -1246,7 +1247,8 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             fReindex = false;
             LogPrintf("Reindexing finished\n");
             // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-            chainman.ActiveChainstate().LoadGenesisBlock();
+            // Ignore failure value, do not treat flush error as failure.
+            chainman.ActiveChainstate().LoadGenesisBlock() >> result;
         }
 
         // -loadblock=
@@ -1254,7 +1256,8 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             AutoFile file{fsbridge::fopen(path, "rb")};
             if (!file.IsNull()) {
                 LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
-                chainman.LoadExternalBlockFile(file);
+                // Ignore failure value, do not treat flush error as failure.
+                chainman.LoadExternalBlockFile(file) >> result;
                 if (chainman.m_interrupt) {
                     LogPrintf("Interrupt requested. Exit %s\n", __func__);
                     return;

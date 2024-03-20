@@ -18,6 +18,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
+
 BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 
 //! Test resizing coins-related Chainstate caches during runtime.
@@ -123,9 +126,11 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         LOCK(::cs_main);
         bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
         BOOST_CHECK(checked);
+        FlushResult<void, AbortFailure> accept_result;
         bool accepted = chainman.AcceptBlock(
-            pblockone, state, &pindex, true, nullptr, &newblock, true);
+            pblockone, accept_result, state, &pindex, true, nullptr, &newblock, true);
         BOOST_CHECK(accepted);
+        BOOST_CHECK(accept_result);
     }
 
     // UpdateTip is called here

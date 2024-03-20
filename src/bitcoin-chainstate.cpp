@@ -227,7 +227,9 @@ int main(int argc, char* argv[])
         bool new_block;
         auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
         validation_signals.RegisterSharedValidationInterface(sc);
-        bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+        kernel::FlushResult<void, kernel::AbortFailure> process_result;
+        bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block, process_result);
+        if (!process_result) std::cerr << util::ErrorString(process_result).original << std::endl;
         validation_signals.UnregisterSharedValidationInterface(sc);
         if (!new_block && accepted) {
             std::cerr << "duplicate" << std::endl;
