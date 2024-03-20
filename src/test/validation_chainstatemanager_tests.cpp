@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     {
         LOCK(::cs_main);
         c1.InitCoinsCache(1 << 23);
-        manager.MaybeRebalanceCaches();
+        BOOST_CHECK(manager.MaybeRebalanceCaches());
     }
 
     BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, max_cache);
@@ -152,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     {
         LOCK(::cs_main);
         c2.InitCoinsCache(1 << 23);
-        manager.MaybeRebalanceCaches();
+        BOOST_CHECK(manager.MaybeRebalanceCaches());
     }
 
     BOOST_CHECK_CLOSE(double(c1.m_coinstip_cache_size_bytes), max_cache * 0.05, 1);
@@ -375,7 +375,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             for (Chainstate* cs : chainman.GetAll()) {
                 LOCK(::cs_main);
-                cs->ForceFlushStateToDisk();
+                BOOST_CHECK(cs->ForceFlushStateToDisk());
             }
             // Process all callbacks referring to the old manager before wiping it.
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
