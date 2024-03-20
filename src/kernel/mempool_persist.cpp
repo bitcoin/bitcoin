@@ -38,14 +38,19 @@ namespace kernel {
 static const uint64_t MEMPOOL_DUMP_VERSION_NO_XOR_KEY{1};
 static const uint64_t MEMPOOL_DUMP_VERSION{2};
 
-bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
+FlushResult<InterruptResult> LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active_chainstate, ImportMempoolOptions&& opts)
 {
-    if (load_path.empty()) return false;
+    FlushResult<InterruptResult> result;
+    if (load_path.empty()) {
+        result.Update(util::Error{});
+        return result;
+    }
 
     AutoFile file{opts.mockable_fopen_function(load_path, "rb")};
     if (file.IsNull()) {
         LogInfo("Failed to open mempool file. Continuing anyway.\n");
-        return false;
+        result.Update(util::Error{});
+        return result;
     }
 
     int64_t count = 0;
@@ -64,7 +69,8 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         } else if (version == MEMPOOL_DUMP_VERSION) {
             file >> xor_key;
         } else {
-            return false;
+            result.Update(util::Error{});
+            return result;
         }
         file.SetXor(xor_key);
         uint64_t total_txns_to_load;
@@ -98,7 +104,9 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_expiry)) {
                 LOCK(cs_main);
-                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                auto [accepted, flush_result] = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                // Ignore failure value, do not treat flush error as failure.
+                flush_result >> result;
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {
@@ -115,8 +123,10 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             } else {
                 ++expired;
             }
-            if (active_chainstate.m_chainman.m_interrupt)
-                return false;
+            if (active_chainstate.m_chainman.m_interrupt) {
+                result.Update(Interrupted{});
+                return result;
+            }
         }
         std::map<uint256, CAmount> mapDeltas;
         file >> mapDeltas;
@@ -139,11 +149,12 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         }
     } catch (const std::exception& e) {
         LogInfo("Failed to deserialize mempool data on file: %s. Continuing anyway.\n", e.what());
-        return false;
+        result.Update(util::Error{});
+        return result;
     }
 
     LogInfo("Imported mempool transactions from file: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast\n", count, failed, expired, already_there, unbroadcast);
-    return true;
+    return result;
 }
 
 bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mockable_fopen_function, bool skip_file_commit)
