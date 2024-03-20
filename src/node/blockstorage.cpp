@@ -853,8 +853,16 @@ bool BlockManager::FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigne
     LOCK(cs_LastBlockFile);
 
     const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
+    // Check that chain type is NORMAL if fKnown is true, because fKnown is only
+    // true during reindexing, and reindexing deletes snapshot chainstates, so
+    // chain_type will not be SNAPSHOT. Also check that cursor exists, because
+    // the normal cursor should never be null.
+    if (fKnown) {
+        Assume(chain_type == BlockfileType::NORMAL);
+        Assume(m_blockfile_cursors[chain_type]);
+    }
 
-    if (!m_blockfile_cursors[chain_type]) {
+    if (!fKnown && !m_blockfile_cursors[chain_type]) {
         // If a snapshot is loaded during runtime, we may not have initialized this cursor yet.
         assert(chain_type == BlockfileType::ASSUMED);
         const auto new_cursor = BlockfileCursor{this->MaxBlockfileNum() + 1};
