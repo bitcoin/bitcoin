@@ -371,7 +371,7 @@ public:
     void CleanupBlockRevFiles() const;
 };
 
-void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles);
+[[nodiscard]] kernel::FlushResult<kernel::InterruptResult, kernel::AbortFailure> ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
