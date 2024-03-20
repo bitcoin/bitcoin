@@ -18,13 +18,13 @@
 #include <vector>
 
 namespace util {
-//! The Result<SuccessType, ErrorType, MessagesType> class provides
+//! The Result<SuccessType, ErrorType, InfoType, MessagesType> class provides
 //! an efficient way for functions to return structured result information, as
-//! well as descriptive error messages.
+//! well as descriptive error and warning messages.
 //!
 //! Logically, a result object is equivalent to:
 //!
-//!     tuple<variant<SuccessType, ErrorType>, MessagesType>
+//!     tuple<variant<SuccessType, ErrorType>, InfoType, MessagesType>
 //!
 //! But the physical representation is more efficient because it avoids
 //! allocating memory for ErrorType and MessagesType fields unless there is an
@@ -33,7 +33,7 @@ namespace util {
 //! Result<SuccessType> objects support the same operators as
 //! std::optional<SuccessType>, such as !result, *result, result->member, to
 //! make SuccessType values easy to access. They also provide
-//! result.error() and result.messages() methods to
+//! result.error(), result.info(), and result.messages() methods to
 //! access other parts of the result. A simple usage example is:
 //!
 //!    Result<int> AddNumbers(int a, int b)
@@ -81,7 +81,7 @@ namespace util {
 //!
 //! Semantically, the update() method merges state from different results,
 //! appending data instead of overwriting it where possible.
-template <typename SuccessType = void, typename ErrorType = void, typename MessagesType = Messages>
+template <typename SuccessType = void, typename ErrorType = void, typename InfoType = void, typename MessagesType = Messages>
 class Result;
 
 //! Traits class that can be specialized to control the way result types are
@@ -114,10 +114,36 @@ void ResultUpdate(auto&& dst_fn, T& src)
 //! Substitute for std::monostate that doesn't depend on std::variant.
 struct Monostate{};
 
+//! Implementation note: Result class inherits from an InfoHolder class holding an
+//! IntoType value, a FailDataHolder class holding a unique_ptr to ErrorType
+//! and MessagesTypes values, and a SuccessHolder class holding a SuccessType
+//! value in an anonymous union.
+//!
+//! To take advantage of the Empty Base Optimization, inheritance is linear with
+//! FailDataHolder inheriting from InfoHolder, SuccessHolder inheriting from
+//! FailDataHolder, and Holder classes specializing for void so no space is used
+//! when void types are specified.
+//! @{
+//! Container for InfoType, providing public info() method.
+template <typename InfoType>
+class InfoHolder
+{
+protected:
+    InfoType m_info{};
+public:
+    // Public accessors.
+    const InfoType& info() const LIFETIMEBOUND { return m_info; }
+    InfoType& info() LIFETIMEBOUND { return m_info; }
+};
+
+//! Specialization of InfoHolder when InfoType is void.
+template <>
+class InfoHolder<void> {};
+
 //! Container for ErrorType and MessagesType, providing public operator
 //! bool(), error(), messages_ptr(), and messages() methods.
-template <typename ErrorType, typename MessagesType>
-class FailDataHolder
+template <typename ErrorType, typename InfoType, typename MessagesType>
+class FailDataHolder : public InfoHolder<InfoType>
 {
 protected:
     struct FailData {
@@ -146,8 +172,8 @@ public:
 //! Container for SuccessType, providing public accessor methods similar to
 //! std::optional methods to access the success value. There is a specialization
 //! of this class for the void success type.
-template <typename SuccessType, typename ErrorType, typename MessagesType>
-class SuccessHolder : public FailDataHolder<ErrorType, MessagesType>
+template <typename SuccessType, typename ErrorType, typename InfoType, typename MessagesType>
+class SuccessHolder : public FailDataHolder<ErrorType, InfoType, MessagesType>
 {
 protected:
     //! Success value embedded in an anonymous union so it doesn't need to be
@@ -180,20 +206,21 @@ public:
 };
 
 //! Specialization of SuccessHolder when SuccessType is void.
-template <typename ErrorType, typename MessagesType>
-class SuccessHolder<void, ErrorType, MessagesType> : public FailDataHolder<ErrorType, MessagesType>
+template <typename ErrorType, typename InfoType, typename MessagesType>
+class SuccessHolder<void, ErrorType, InfoType, MessagesType> : public FailDataHolder<ErrorType, InfoType, MessagesType>
 {
 };
 //! @}
 } // namespace detail
 
 // Result type class, documented at the top of this file.
-template <typename SuccessType_, typename ErrorType_, typename MessagesType_>
-class Result : public detail::SuccessHolder<SuccessType_, ErrorType_, MessagesType_>
+template <typename SuccessType_, typename ErrorType_, typename InfoType_, typename MessagesType_>
+class Result : public detail::SuccessHolder<SuccessType_, ErrorType_, InfoType_, MessagesType_>
 {
 public:
     using SuccessType = SuccessType_;
     using ErrorType = ErrorType_;
+    using InfoType = InfoType_;
     using MessagesType = MessagesType_;
     static constexpr bool is_result{true};
 
@@ -218,7 +245,7 @@ public:
     }
 
     //! Update this result by moving from another result object. Existing
-    //! success, error, and messages values are updated using
+    //! success, error, info, and messages values are updated using
     //! ResultTraits::update calls so state can be combined instead of
     //! overwritten.
     Result& update(Result&& other) LIFETIMEBOUND
@@ -232,7 +259,7 @@ public:
     Result& operator=(Result&&) = delete;
 
 protected:
-    template <typename, typename, typename>
+    template <typename, typename, typename, typename>
     friend class Result;
 
     //! Helper function to construct a new success or error value using the
@@ -266,7 +293,7 @@ protected:
         construct<construct_error>(result, std::forward<Args>(args)...);
     }
 
-    //! Move success, error, and message values from source Result object to
+    //! Move success, error, info, and message values source Result object to
     //! destination object. Existing values are updated using
     //! ResultTraits::update calls so state can be combined instead of
     //! overwritten.
@@ -278,7 +305,7 @@ protected:
     template <bool DstConstructed, typename DstResult, typename SrcResult>
     static void move(DstResult& dst, SrcResult& src)
     {
-        // Use operator>> to move messages values first, then move
+        // Use operator>> to move info and messages values first, then move
         // success or error value below.
         src >> dst;
         // If DstConstructed is true, it means dst has either a success value or
@@ -344,6 +371,9 @@ requires (std::decay_t<SrcResult>::is_result)
 decltype(auto) operator>>(SrcResult&& src LIFETIMEBOUND, DstResult&& dst)
 {
     using SrcType = std::decay_t<SrcResult>;
+    if constexpr (!std::is_same_v<typename SrcType::InfoType, void>) {
+        detail::ResultUpdate([&]()->auto& { return dst.info(); }, src.info());
+    }
     if (src.messages_ptr()) {
         detail::ResultUpdate([&]()->auto& { return dst.messages(); }, src.messages());
     }
@@ -382,6 +412,16 @@ struct ResultTraits<Warning> {
     static void construct(ResultType& dst, Warning&& src)
     {
        dst.messages().warnings.push_back(std::move(src.message));
+    }
+};
+
+//! ResultTraits specialization for Info struct.
+template<typename T>
+struct ResultTraits<Info<T>> {
+    template<typename ResultType>
+    static void construct(ResultType& dst, Info<T>&& src)
+    {
+       dst.info() = std::move(src.m_value);
     }
 };
 } // namespace util

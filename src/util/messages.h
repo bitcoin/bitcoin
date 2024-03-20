@@ -28,6 +28,13 @@ struct Warning {
     bilingual_str message;
 };
 
+//! Wrapper object to pass an InfoType object to the result constructor.
+template <typename T>
+struct Info {
+    Info(T&& value) : m_value(value) {}
+    T& m_value;
+};
+
 //! Helper function to join messages in space separated string.
 bilingual_str JoinMessages(const Messages& messages);
 
