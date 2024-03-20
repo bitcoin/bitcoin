@@ -92,7 +92,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     m_node.validation_signals->RegisterSharedValidationInterface(sub);
 
     // ActivateBestChain back to tip
-    chainstate.ActivateBestChain(state_dummy, nullptr);
+    BOOST_CHECK(chainstate.ActivateBestChain(state_dummy, nullptr));
     BOOST_CHECK_EQUAL(tip, chainstate.m_chain.Tip());
     // Check that we flushed inside ActivateBestChain while we were at the
     // second block from tip, since FlushStateToDisk is called with PERIODIC

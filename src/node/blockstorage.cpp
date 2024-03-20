@@ -1304,6 +1304,7 @@ public:
 
 void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths)
 {
+    FlushResult<InterruptResult, AbortFailure> result; // TODO Return this result!
     ImportingNow imp{chainman.m_blockman.m_importing};
 
     // -reindex
@@ -1353,8 +1354,9 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    if (auto result = chainman.ActivateBestChains(); !result) {
-        chainman.GetNotifications().fatalError(util::ErrorString(result));
+    if (auto activate_result = chainman.ActivateBestChains(); !activate_result) {
+        chainman.GetNotifications().fatalError(util::ErrorString(activate_result));
+        activate_result >> result;
     }
     // End scope of ImportingNow
 }
