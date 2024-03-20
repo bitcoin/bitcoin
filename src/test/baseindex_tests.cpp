@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
         BOOST_REQUIRE(index.Init());
         index.Sync();
         if (do_flush) {
-            chainstate.ForceFlushStateToDisk();
+            BOOST_CHECK(chainstate.ForceFlushStateToDisk());
             m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
         }
         BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, expected_sync_height);
