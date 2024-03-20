@@ -19,6 +19,8 @@ extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](cons
 };
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
+const std::function<std::string()> G_TEST_GET_FULL_NAME{};
+
 MAIN_FUNCTION
 {
     return GuiMain(argc, argv);

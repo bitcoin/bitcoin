@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,7 +36,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-17.0.6 /msan/llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-18.1.1" /msan/llvm-project
 
   cmake -G Ninja -B /msan/clang_build/ \
     -DLLVM_ENABLE_PROJECTS="clang" \
@@ -53,13 +53,14 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /msan/clang_build/bin/llvm-symbolizer 100
 
   cmake -G Ninja -B /msan/cxx_build/ \
-    -DLLVM_ENABLE_RUNTIMES='libcxx;libcxxabi' \
+    -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
     -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_USE_SANITIZER=MemoryWithOrigins \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DLLVM_TARGETS_TO_BUILD=Native \
     -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
+    -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
     -DLIBCXX_HARDENING_MODE=debug \
     -S /msan/llvm-project/runtimes
 

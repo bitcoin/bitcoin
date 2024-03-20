@@ -274,13 +274,15 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 /**
 * Validate (and maybe submit) a package to the mempool. See doc/policy/packages.md for full details
 * on package validation rules.
-* @param[in]    test_accept     When true, run validation checks but don't submit to mempool.
+* @param[in]    test_accept         When true, run validation checks but don't submit to mempool.
+* @param[in]    max_sane_feerate    If exceeded by an individual transaction, rest of (sub)package evalution is aborted.
+*                                   Only for sanity checks against local submission of transactions.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing. It is also
 * possible for the package to be partially submitted.
 */
 PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
-                                                   const Package& txns, bool test_accept)
+                                                   const Package& txns, bool test_accept, std::optional<CFeeRate> max_sane_feerate)
                                                    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /* Mempool validation helper functions */
@@ -382,8 +384,8 @@ bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consens
 /** Check if a block has been mutated (with respect to its merkle root and witness commitments). */
 bool IsBlockMutated(const CBlock& block, bool check_witness_root);
 
-/** Return the sum of the work on a given set of headers */
-arith_uint256 CalculateHeadersWork(const std::vector<CBlockHeader>& headers);
+/** Return the sum of the claimed work on a given set of headers. No verification of PoW is done. */
+arith_uint256 CalculateClaimedHeadersWork(const std::vector<CBlockHeader>& headers);
 
 enum class VerifyDBResult {
     SUCCESS,
@@ -583,9 +585,10 @@ public:
     const CBlockIndex* SnapshotBase() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
-     * The set of all CBlockIndex entries with either BLOCK_VALID_TRANSACTIONS (for
-     * itself and all ancestors) *or* BLOCK_ASSUMED_VALID (if using background
-     * chainstates) and as good as our current tip or better. Entries may be failed,
+     * The set of all CBlockIndex entries that have as much work as our current
+     * tip or more, and transaction data needed to be validated (with
+     * BLOCK_VALID_TRANSACTIONS for each block and its parents back to the
+     * genesis block or an assumeutxo snapshot block). Entries may be failed,
      * though, and pruning nodes may be missing the data for the block.
      */
     std::set<CBlockIndex*, node::CBlockIndexWorkComparator> setBlockIndexCandidates;

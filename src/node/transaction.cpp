@@ -92,7 +92,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 node.mempool->AddUnbroadcastTx(txid);
             }
 
-            if (wait_callback) {
+            if (wait_callback && node.validation_signals) {
                 // For transactions broadcast from outside the wallet, make sure
                 // that the wallet has been notified of the transaction before
                 // continuing.
@@ -101,7 +101,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 // with a transaction to/from their wallet, immediately call some
                 // wallet RPC, and get a stale result because callbacks have not
                 // yet been processed.
-                CallFunctionInValidationInterfaceQueue([&promise] {
+                node.validation_signals->CallFunctionInValidationInterfaceQueue([&promise] {
                     promise.set_value();
                 });
                 callback_set = true;

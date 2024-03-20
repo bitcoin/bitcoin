@@ -17,6 +17,7 @@ Test plan:
     - support no authentication (other proxy)
     - support no authentication + user/pass authentication (Tor)
     - proxy on IPv6
+    - proxy over unix domain sockets
 
 - Create various proxies (as threads)
 - Create nodes that connect to them
@@ -39,7 +40,9 @@ addnode connect to a CJDNS address
 - Test passing unknown -onlynet
 """
 
+import os
 import socket
+import tempfile
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
@@ -47,7 +50,7 @@ from test_framework.util import (
     assert_equal,
     p2p_port,
 )
-from test_framework.netutil import test_ipv6_local
+from test_framework.netutil import test_ipv6_local, test_unix_socket
 
 # Networks returned by RPC getpeerinfo.
 NET_UNROUTABLE = "not_publicly_routable"
@@ -60,14 +63,17 @@ NET_CJDNS = "cjdns"
 # Networks returned by RPC getnetworkinfo, defined in src/rpc/net.cpp::GetNetworksInfo()
 NETWORKS = frozenset({NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS})
 
+# Use the shortest temp path possible since UNIX sockets may have as little as 92-char limit
+socket_path = tempfile.NamedTemporaryFile().name
 
 class ProxyTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 5
+        self.num_nodes = 7
         self.setup_clean_chain = True
 
     def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()
+        self.have_unix_sockets = test_unix_socket()
         # Create two proxies on different ports
         # ... one unauthenticated
         self.conf1 = Socks5Configuration()
@@ -89,6 +95,15 @@ class ProxyTest(BitcoinTestFramework):
         else:
             self.log.warning("Testing without local IPv6 support")
 
+        if self.have_unix_sockets:
+            self.conf4 = Socks5Configuration()
+            self.conf4.af = socket.AF_UNIX
+            self.conf4.addr = socket_path
+            self.conf4.unauth = True
+            self.conf4.auth = True
+        else:
+            self.log.warning("Testing without local unix domain sockets support")
+
         self.serv1 = Socks5Server(self.conf1)
         self.serv1.start()
         self.serv2 = Socks5Server(self.conf2)
@@ -96,6 +111,9 @@ class ProxyTest(BitcoinTestFramework):
         if self.have_ipv6:
             self.serv3 = Socks5Server(self.conf3)
             self.serv3.start()
+        if self.have_unix_sockets:
+            self.serv4 = Socks5Server(self.conf4)
+            self.serv4.start()
 
         # We will not try to connect to this.
         self.i2p_sam = ('127.0.0.1', 7656)
@@ -109,10 +127,15 @@ class ProxyTest(BitcoinTestFramework):
             ['-listen', f'-proxy={self.conf2.addr[0]}:{self.conf2.addr[1]}','-proxyrandomize=1'],
             [],
             ['-listen', f'-proxy={self.conf1.addr[0]}:{self.conf1.addr[1]}','-proxyrandomize=1',
-                '-cjdnsreachable']
+                '-cjdnsreachable'],
+            [],
+            []
         ]
         if self.have_ipv6:
             args[3] = ['-listen', f'-proxy=[{self.conf3.addr[0]}]:{self.conf3.addr[1]}','-proxyrandomize=0', '-noonion']
+        if self.have_unix_sockets:
+            args[5] = ['-listen', f'-proxy=unix:{socket_path}']
+            args[6] = ['-listen', f'-onion=unix:{socket_path}']
         self.add_nodes(self.num_nodes, extra_args=args)
         self.start_nodes()
 
@@ -124,7 +147,7 @@ class ProxyTest(BitcoinTestFramework):
     def node_test(self, node, *, proxies, auth, test_onion, test_cjdns):
         rv = []
         addr = "15.61.23.23:1234"
-        self.log.debug(f"Test: outgoing IPv4 connection through node for address {addr}")
+        self.log.debug(f"Test: outgoing IPv4 connection through node {node.index} for address {addr}")
         node.addnode(addr, "onetry")
         cmd = proxies[0].queue.get()
         assert isinstance(cmd, Socks5Command)
@@ -140,7 +163,7 @@ class ProxyTest(BitcoinTestFramework):
 
         if self.have_ipv6:
             addr = "[1233:3432:2434:2343:3234:2345:6546:4534]:5443"
-            self.log.debug(f"Test: outgoing IPv6 connection through node for address {addr}")
+            self.log.debug(f"Test: outgoing IPv6 connection through node {node.index} for address {addr}")
             node.addnode(addr, "onetry")
             cmd = proxies[1].queue.get()
             assert isinstance(cmd, Socks5Command)
@@ -156,7 +179,7 @@ class ProxyTest(BitcoinTestFramework):
 
         if test_onion:
             addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
-            self.log.debug(f"Test: outgoing onion connection through node for address {addr}")
+            self.log.debug(f"Test: outgoing onion connection through node {node.index} for address {addr}")
             node.addnode(addr, "onetry")
             cmd = proxies[2].queue.get()
             assert isinstance(cmd, Socks5Command)
@@ -171,7 +194,7 @@ class ProxyTest(BitcoinTestFramework):
 
         if test_cjdns:
             addr = "[fc00:1:2:3:4:5:6:7]:8888"
-            self.log.debug(f"Test: outgoing CJDNS connection through node for address {addr}")
+            self.log.debug(f"Test: outgoing CJDNS connection through node {node.index} for address {addr}")
             node.addnode(addr, "onetry")
             cmd = proxies[1].queue.get()
             assert isinstance(cmd, Socks5Command)
@@ -185,7 +208,7 @@ class ProxyTest(BitcoinTestFramework):
             self.network_test(node, addr, network=NET_CJDNS)
 
         addr = "node.noumenon:8333"
-        self.log.debug(f"Test: outgoing DNS name connection through node for address {addr}")
+        self.log.debug(f"Test: outgoing DNS name connection through node {node.index} for address {addr}")
         node.addnode(addr, "onetry")
         cmd = proxies[3].queue.get()
         assert isinstance(cmd, Socks5Command)
@@ -229,6 +252,12 @@ class ProxyTest(BitcoinTestFramework):
         self.node_test(self.nodes[4],
             proxies=[self.serv1, self.serv1, self.serv1, self.serv1],
             auth=False, test_onion=True, test_cjdns=True)
+
+        if self.have_unix_sockets:
+            self.node_test(self.nodes[5],
+                proxies=[self.serv4, self.serv4, self.serv4, self.serv4],
+                auth=True, test_onion=True, test_cjdns=False)
+
 
         def networks_dict(d):
             r = {}
@@ -315,6 +344,37 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(n4['i2p']['reachable'], False)
         assert_equal(n4['cjdns']['reachable'], True)
 
+        if self.have_unix_sockets:
+            n5 = networks_dict(nodes_network_info[5])
+            assert_equal(NETWORKS, n5.keys())
+            for net in NETWORKS:
+                if net == NET_I2P:
+                    expected_proxy = ''
+                    expected_randomize = False
+                else:
+                    expected_proxy = 'unix:' + self.conf4.addr # no port number
+                    expected_randomize = True
+                assert_equal(n5[net]['proxy'], expected_proxy)
+                assert_equal(n5[net]['proxy_randomize_credentials'], expected_randomize)
+            assert_equal(n5['onion']['reachable'], True)
+            assert_equal(n5['i2p']['reachable'], False)
+            assert_equal(n5['cjdns']['reachable'], False)
+
+            n6 = networks_dict(nodes_network_info[6])
+            assert_equal(NETWORKS, n6.keys())
+            for net in NETWORKS:
+                if net != NET_ONION:
+                    expected_proxy = ''
+                    expected_randomize = False
+                else:
+                    expected_proxy = 'unix:' + self.conf4.addr # no port number
+                    expected_randomize = True
+                assert_equal(n6[net]['proxy'], expected_proxy)
+                assert_equal(n6[net]['proxy_randomize_credentials'], expected_randomize)
+            assert_equal(n6['onion']['reachable'], True)
+            assert_equal(n6['i2p']['reachable'], False)
+            assert_equal(n6['cjdns']['reachable'], False)
+
         self.stop_node(1)
 
         self.log.info("Test passing invalid -proxy hostname raises expected init error")
@@ -383,6 +443,18 @@ class ProxyTest(BitcoinTestFramework):
         msg = "Error: Unknown network specified in -onlynet: 'abc'"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
+        self.log.info("Test passing too-long unix path to -proxy raises init error")
+        self.nodes[1].extra_args = [f"-proxy=unix:{'x' * 1000}"]
+        if self.have_unix_sockets:
+            msg = f"Error: Invalid -proxy address or hostname: 'unix:{'x' * 1000}'"
+        else:
+            # If unix sockets are not supported, the file path is incorrectly interpreted as host:port
+            msg = f"Error: Invalid port specified in -proxy: 'unix:{'x' * 1000}'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        # Cleanup socket path we established outside the individual test directory.
+        if self.have_unix_sockets:
+            os.unlink(socket_path)
 
 if __name__ == '__main__':
     ProxyTest().main()

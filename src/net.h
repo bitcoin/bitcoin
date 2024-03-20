@@ -53,11 +53,6 @@ class CNode;
 class CScheduler;
 struct bilingual_str;
 
-/** Default for -whitelistrelay. */
-static const bool DEFAULT_WHITELISTRELAY = true;
-/** Default for -whitelistforcerelay. */
-static const bool DEFAULT_WHITELISTFORCERELAY = false;
-
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 /** Run the feeler connection loop once every 2 minutes. **/
@@ -1053,7 +1048,8 @@ public:
         uint64_t nMaxOutboundLimit = 0;
         int64_t m_peer_connect_timeout = DEFAULT_PEER_CONNECT_TIMEOUT;
         std::vector<std::string> vSeedNodes;
-        std::vector<NetWhitelistPermissions> vWhitelistedRange;
+        std::vector<NetWhitelistPermissions> vWhitelistedRangeIncoming;
+        std::vector<NetWhitelistPermissions> vWhitelistedRangeOutgoing;
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
         std::vector<CService> onion_binds;
@@ -1064,6 +1060,8 @@ public:
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
         bool m_i2p_accept_incoming;
+        bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
+        bool whitelist_relay = DEFAULT_WHITELISTRELAY;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1087,7 +1085,8 @@ public:
             LOCK(m_total_bytes_sent_mutex);
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         }
-        vWhitelistedRange = connOptions.vWhitelistedRange;
+        vWhitelistedRangeIncoming = connOptions.vWhitelistedRangeIncoming;
+        vWhitelistedRangeOutgoing = connOptions.vWhitelistedRangeOutgoing;
         {
             LOCK(m_added_nodes_mutex);
             // Attempt v2 connection if we support v2 - we'll reconnect with v1 if our
@@ -1098,6 +1097,8 @@ public:
             }
         }
         m_onion_binds = connOptions.onion_binds;
+        whitelist_forcerelay = connOptions.whitelist_forcerelay;
+        whitelist_relay = connOptions.whitelist_relay;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
@@ -1339,7 +1340,7 @@ private:
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
-    void AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const;
+    void AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr, const std::vector<NetWhitelistPermissions>& ranges) const;
 
     void DeleteNode(CNode* pnode);
 
@@ -1398,7 +1399,9 @@ private:
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
-    std::vector<NetWhitelistPermissions> vWhitelistedRange;
+    std::vector<NetWhitelistPermissions> vWhitelistedRangeIncoming;
+    // Whitelisted ranges for outgoing connections.
+    std::vector<NetWhitelistPermissions> vWhitelistedRangeOutgoing;
 
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
@@ -1550,6 +1553,18 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    /**
+     * flag for adding 'forcerelay' permission to whitelisted inbound
+     * and manual peers with default permissions.
+     */
+    bool whitelist_forcerelay;
+
+    /**
+     * flag for adding 'relay' permission to whitelisted inbound
+     * and manual peers with default permissions.
+     */
+    bool whitelist_relay;
 
     /**
      * Mutex protecting m_i2p_sam_sessions.

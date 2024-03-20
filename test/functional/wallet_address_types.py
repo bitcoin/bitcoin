@@ -79,9 +79,8 @@ class AddressTypeTest(BitcoinTestFramework):
             ["-changetype=p2sh-segwit"],
             [],
         ]
-        # whitelist all peers to speed up tx relay / mempool sync
-        for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
