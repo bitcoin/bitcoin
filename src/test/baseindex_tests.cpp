@@ -42,7 +42,9 @@
 #include <utility>
 #include <vector>
 
+using kernel::AbortFailure;
 using kernel::ChainstateRole;
+using kernel::FlushResult;
 
 using IndexFactory = std::function<std::unique_ptr<BaseIndex>(node::NodeContext&)>;
 
@@ -130,7 +132,9 @@ BOOST_FIXTURE_TEST_CASE(index_unclean_shutdown, TestChain100Setup)
                 LOCK(cs_main);
                 BlockValidationState state;
                 BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
-                BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+                FlushResult<void, AbortFailure> accept_result;
+                BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, accept_result, &new_block_index, true, nullptr, nullptr, true));
+                BOOST_CHECK(accept_result);
                 CCoinsViewCache view(&chainstate.CoinsTip());
                 BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
             }
@@ -215,7 +219,9 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, TestChain100Setup)
     BOOST_REQUIRE(BuildChain(m_node, prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
 
     for (const auto& block : fork) {
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+        FlushResult<void, AbortFailure> process_result;
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr, process_result));
+        BOOST_CHECK(process_result);
     }
 
     // Unblock the index thread so it can process the reorg
