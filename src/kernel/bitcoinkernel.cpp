@@ -974,7 +974,8 @@ btck_ChainstateManager* btck_chainstate_manager_create(
 
         for (Chainstate* chainstate : WITH_LOCK(chainman->GetMutex(), return chainman->GetAll())) {
             BlockValidationState state;
-            if (!chainstate->ActivateBestChain(state, nullptr)) {
+            auto activate_result{chainstate->ActivateBestChain(state, nullptr)};
+            if (!activate_result) {
                 LogError("Failed to connect best block: %s", state.ToString());
                 return nullptr;
             }
