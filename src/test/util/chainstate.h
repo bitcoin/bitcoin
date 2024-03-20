@@ -83,7 +83,7 @@ CreateAndActivateUTXOSnapshot(
             chain.CoinsTip().SetBestBlock(gen_hash);
             chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
-            node.chainman->MaybeRebalanceCaches();
+            Assert(node.chainman->MaybeRebalanceCaches());
 
             // Reset the HAVE_DATA flags below the snapshot height, simulating
             // never-having-downloaded them in the first place.
