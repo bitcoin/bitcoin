@@ -26,20 +26,22 @@
 #include <cassert>
 #include <vector>
 
+using kernel::AbortFailure;
 using kernel::CacheSizes;
+using kernel::FlushResult;
 using kernel::Interrupted;
 using kernel::InterruptResult;
 
 namespace node {
 // Complete initialization of chainstates after the initial call has been made
 // to ChainstateManager::InitializeChainstate().
-static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInitialization(
+static FlushResult<InterruptResult, ChainstateLoadError> CompleteChainstateInitialization(
     ChainstateManager& chainman,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     if (chainman.m_interrupt) return Interrupted{};
 
-    util::Result<InterruptResult, ChainstateLoadError> result;
+    FlushResult<InterruptResult, ChainstateLoadError> result;
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
@@ -152,15 +154,16 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
     // Now that chainstates are loaded and we're able to flush to
     // disk, rebalance the coins caches to desired levels based
     // on the condition of each chainstate.
-    chainman.MaybeRebalanceCaches();
+    // Ignore failure value, do not treat flush error as failure.
+    chainman.MaybeRebalanceCaches() >> result;
 
     return result;
 }
 
-util::Result<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
-                                                                  const ChainstateLoadOptions& options)
+FlushResult<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
+                                                                 const ChainstateLoadOptions& options)
 {
-    util::Result<InterruptResult, ChainstateLoadError> result;
+    FlushResult<InterruptResult, ChainstateLoadError> result;
     if (!chainman.AssumedValidBlock().IsNull()) {
         LogInfo("Assuming ancestors of block %s have valid signatures.", chainman.AssumedValidBlock().GetHex());
     } else {

@@ -1809,7 +1809,7 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
     }
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
-    active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    auto flush_result{active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC)};
     return result;
 }
 
@@ -1841,7 +1841,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     }
     // Ensure the coins cache is still within limits.
     BlockValidationState state_dummy;
-    active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    auto flush_result{active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC)};
     return result;
 }
 
@@ -2735,14 +2735,14 @@ CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
-bool Chainstate::FlushStateToDisk(
+FlushResult<void, AbortFailure> Chainstate::FlushStateToDisk(
     BlockValidationState &state,
     FlushStateMode mode,
     int nManualPruneHeight)
 {
     LOCK(cs_main);
     assert(this->CanFlushToDisk());
-    FlushResult<> result; // TODO Return this result!
+    FlushResult<void, AbortFailure> result;
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
 
@@ -2812,7 +2812,10 @@ bool Chainstate::FlushStateToDisk(
 
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
-                return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                auto error{_("Disk space is too low!")};
+                FatalError(m_chainman.GetNotifications(), state, error);
+                result.update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
+                return result;
             }
             {
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
@@ -2851,7 +2854,10 @@ bool Chainstate::FlushStateToDisk(
                 // an overestimation, as most will delete an existing entry or
                 // overwrite one. Still, use a conservative safety factor of 2.
                 if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
-                    return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                    auto error{_("Disk space is too low!")};
+                    FatalError(m_chainman.GetNotifications(), state, error);
+                    result.update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
+                    return result;
                 }
                 // Flush the chainstate (which may refer to block index entries).
                 const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
@@ -2876,26 +2882,37 @@ bool Chainstate::FlushStateToDisk(
         m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), GetLocator(m_chain.Tip()));
     }
     } catch (const std::runtime_error& e) {
-        return FatalError(m_chainman.GetNotifications(), state, strprintf(_("System error while flushing: %s"), e.what()));
+        auto error{strprintf(_("System error while flushing: %s"), e.what())};
+        FatalError(m_chainman.GetNotifications(), state, error);
+        result.update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
+        return result;
     }
-    return true;
+    return result;
 }
 
-void Chainstate::ForceFlushStateToDisk()
+FlushResult<> Chainstate::ForceFlushStateToDisk()
 {
+    FlushResult<> result;
     BlockValidationState state;
-    if (!this->FlushStateToDisk(state, FlushStateMode::ALWAYS)) {
-        LogWarning("Failed to force flush state (%s)", state.ToString());
+    if (!(this->FlushStateToDisk(state, FlushStateMode::ALWAYS) >> result)) {
+        auto error{Untranslated(strprintf("Failed to force flush state (%s)", state.ToString()))};
+        LogWarning("%s", error.original);
+        result.update(util::Error{std::move(error)});
     }
+    return result;
 }
 
-void Chainstate::PruneAndFlush()
+FlushResult<> Chainstate::PruneAndFlush()
 {
+    FlushResult<> result;
     BlockValidationState state;
     m_blockman.m_check_for_pruning = true;
-    if (!this->FlushStateToDisk(state, FlushStateMode::NONE)) {
-        LogWarning("Failed to flush state (%s)", state.ToString());
+    if (!(this->FlushStateToDisk(state, FlushStateMode::NONE) >> result)) {
+        auto error{Untranslated(strprintf("Failed to flush state (%s)", state.ToString()))};
+        LogWarning("%s", error.original);
+        result.update(util::Error{std::move(error)});
     }
+    return result;
 }
 
 static void UpdateTipLog(
@@ -2973,6 +2990,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
+    FlushResult<> result; // TODO Return this result!
     CBlockIndex *pindexDelete = m_chain.Tip();
     assert(pindexDelete);
     assert(pindexDelete->pprev);
@@ -3009,7 +3027,8 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
+    if (!(FlushStateToDisk(state, FlushStateMode::IF_NEEDED) >> result)) {
+        result.update(util::Error{});
         return false;
     }
 
@@ -3089,6 +3108,7 @@ bool Chainstate::ConnectTip(
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
     assert(pindexNew->pprev == m_chain.Tip());
+    FlushResult<void, AbortFailure> result; // TODO Return this result!
     // Read block from disk.
     const auto time_1{SteadyClock::now()};
     if (!block_to_connect) {
@@ -3135,7 +3155,8 @@ bool Chainstate::ConnectTip(
              Ticks<SecondsDouble>(m_chainman.time_flush),
              Ticks<MillisecondsDouble>(m_chainman.time_flush) / m_chainman.num_blocks_total);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
+    if (!(FlushStateToDisk(state, FlushStateMode::IF_NEEDED) >> result)) {
+        result.update(util::Error{});
         return false;
     }
     const auto time_5{SteadyClock::now()};
@@ -3400,6 +3421,8 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     // we use m_chainstate_mutex to enforce mutual exclusion so that only one caller may execute this function at a time
     LOCK(m_chainstate_mutex);
 
+    FlushResult<> result; // TODO Return this result!
+
     // Belt-and-suspenders check that we aren't attempting to advance the
     // chainstate past the target block.
     if (WITH_LOCK(::cs_main, return m_target_utxohash)) {
@@ -3515,11 +3538,13 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             if (exited_ibd) {
                 // If a background chainstate is in use, we may need to rebalance our
                 // allocation of caches once a chainstate exits initial block download.
-                m_chainman.MaybeRebalanceCaches();
+                // Ignore failure value, do not treat flush error as failure.
+                m_chainman.MaybeRebalanceCaches() >> result;
             }
 
             // Write changes periodically to disk, after relay.
-            if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+            if (!(FlushStateToDisk(state, FlushStateMode::PERIODIC) >> result)) {
+                result.update(util::Error{});
                 return false;
             }
 
@@ -4469,7 +4494,8 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     // the block files may be pruned, so we can just call this on one
     // chainstate (particularly if we haven't implemented pruning with
     // background validation yet).
-    ActiveChainstate().FlushStateToDisk(state, FlushStateMode::NONE);
+    // Ignore failure value, do not treat flush error as failure.
+    ActiveChainstate().FlushStateToDisk(state, FlushStateMode::NONE) >> result;
 
     CheckBlockIndex();
 
@@ -4615,13 +4641,17 @@ BlockValidationState TestBlockValidity(
 }
 
 /* This function is called from the RPC code for pruneblockchain */
-void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight)
+FlushResult<void, AbortFailure> PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight)
 {
     BlockValidationState state;
-    if (!active_chainstate.FlushStateToDisk(
-            state, FlushStateMode::NONE, nManualPruneHeight)) {
-        LogWarning("Failed to flush state after manual prune (%s)", state.ToString());
+    FlushResult<void, AbortFailure> result{active_chainstate.FlushStateToDisk(
+            state, FlushStateMode::NONE, nManualPruneHeight)};
+    if (!result) {
+        auto error{Untranslated(strprintf("Failed to flush state after manual prune (%s)", state.ToString()))};
+        LogWarning("%s", error.original);
+        result.update(util::Error{std::move(error)});
     }
+    return result;
 }
 
 bool Chainstate::LoadChainTip()
@@ -5541,13 +5571,13 @@ std::string Chainstate::ToString()
                      tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
 }
 
-bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
+FlushResult<void, AbortFailure> Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
 {
     AssertLockHeld(::cs_main);
     if (coinstip_size == m_coinstip_cache_size_bytes &&
             coinsdb_size == m_coinsdb_cache_size_bytes) {
         // Cache sizes are unchanged, no need to continue.
-        return true;
+        return {};
     }
     size_t old_coinstip_size = m_coinstip_cache_size_bytes;
     m_coinstip_cache_size_bytes = coinstip_size;
@@ -5560,16 +5590,14 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
         this->ToString(), coinstip_size * (1.0 / 1024 / 1024));
 
     BlockValidationState state;
-    bool ret;
 
     if (coinstip_size > old_coinstip_size) {
         // Likely no need to flush if cache sizes have grown.
-        ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
+        return FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
     } else {
         // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(state, FlushStateMode::ALWAYS);
+        return FlushStateToDisk(state, FlushStateMode::ALWAYS);
     }
-    return ret;
 }
 
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
@@ -5657,12 +5685,12 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return destroyed && !fs::exists(db_path);
 }
 
-util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
+FlushResult<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
         bool in_memory)
 {
-    util::Result<CBlockIndex*> result;
+    FlushResult<CBlockIndex*> result;
     uint256 base_blockhash = metadata.m_base_blockhash;
 
     CBlockIndex* snapshot_start_block{};
@@ -5735,9 +5763,10 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
 
         // Temporarily resize the active coins cache to make room for the newly-created
         // snapshot chain.
+        // Ignore failure value, do not treat flush error as failure.
         this->ActiveChainstate().ResizeCoinsCaches(
             static_cast<size_t>(current_coinstip_cache_size * IBD_CACHE_PERC),
-            static_cast<size_t>(current_coinsdb_cache_size * IBD_CACHE_PERC));
+            static_cast<size_t>(current_coinsdb_cache_size * IBD_CACHE_PERC)) >> result;
     }
 
     auto snapshot_chainstate = WITH_LOCK(::cs_main,
@@ -5755,7 +5784,8 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
 
     auto cleanup_bad_snapshot = [&](bilingual_str reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         result.update(util::Error{std::move(reason)});
-        this->MaybeRebalanceCaches();
+        // Ignore failure value, do not treat flush error as failure.
+        this->MaybeRebalanceCaches() >> result;
 
         // PopulateAndValidateSnapshot can return (in error) before the leveldb datadir
         // has been created, so only attempt removal if we got that far.
@@ -5806,7 +5836,8 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     LogInfo("[snapshot] (%.2f MB)",
               chainstate.CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
 
-    this->MaybeRebalanceCaches();
+    // Ignore failure value, do not treat flush error as failure.
+    this->MaybeRebalanceCaches() >> result;
     result.update(snapshot_start_block);
     return result;
 }
@@ -6051,6 +6082,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 // reaches its target block and is no longer changing.
 SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs)
 {
+    FlushResult<> result; // TODO Return this result!
     AssertLockHeld(cs_main);
 
     // If the snapshot does not need to be validated...
@@ -6103,7 +6135,8 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
     };
 
     CCoinsViewDB& validated_coins_db = validated_cs.CoinsDB();
-    validated_cs.ForceFlushStateToDisk();
+    // Ignore failure value, do not treat flush error as failure.
+    validated_cs.ForceFlushStateToDisk() >> result;
 
     const auto& maybe_au_data = m_options.chainparams.AssumeutxoForHeight(validated_cs.m_chain.Height());
     if (!maybe_au_data) {
@@ -6156,7 +6189,8 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
 
     unvalidated_cs.m_assumeutxo = Assumeutxo::VALIDATED;
     validated_cs.m_target_utxohash = AssumeutxoHash{validated_cs_stats->hashSerialized};
-    this->MaybeRebalanceCaches();
+    // Ignore failure value, do not treat flush error as failure.
+    this->MaybeRebalanceCaches() >> result;
 
     return SnapshotCompletionResult::SUCCESS;
 }
@@ -6167,36 +6201,44 @@ Chainstate& ChainstateManager::ActiveChainstate() const
     return CurrentChainstate();
 }
 
-void ChainstateManager::MaybeRebalanceCaches()
+FlushResult<> ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);
+    FlushResult<> result;
+    auto resize_caches = [&](Chainstate& chainstate, const auto&... args) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        if (!(chainstate.ResizeCoinsCaches(args...) >> result)) {
+            result.update(util::Error{});
+        }
+    };
+
     Chainstate& current_cs{CurrentChainstate()};
     Chainstate* historical_cs{HistoricalChainstate()};
     if (!historical_cs && !current_cs.m_from_snapshot_blockhash) {
         // Allocate everything to the IBD chainstate. This will always happen
         // when we are not using a snapshot.
-        current_cs.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
+        resize_caches(current_cs, m_total_coinstip_cache, m_total_coinsdb_cache);
     } else if (!historical_cs) {
         // If background validation has completed and snapshot is our active chain...
         LogInfo("[snapshot] allocating all cache to the snapshot chainstate");
         // Allocate everything to the snapshot chainstate.
-        current_cs.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
+        resize_caches(current_cs, m_total_coinstip_cache, m_total_coinsdb_cache);
     } else {
         // If both chainstates exist, determine who needs more cache based on IBD status.
         //
         // Note: shrink caches first so that we don't inadvertently overwhelm available memory.
         if (IsInitialBlockDownload()) {
-            historical_cs->ResizeCoinsCaches(
+            resize_caches(*historical_cs,
                 m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-            current_cs.ResizeCoinsCaches(
+            resize_caches(current_cs,
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         } else {
-            current_cs.ResizeCoinsCaches(
+            resize_caches(current_cs,
                 m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-            historical_cs->ResizeCoinsCaches(
+            resize_caches(*historical_cs,
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         }
     }
+    return result;
 }
 
 void ChainstateManager::ResetChainstates()
