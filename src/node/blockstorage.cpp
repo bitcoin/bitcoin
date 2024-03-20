@@ -1284,9 +1284,9 @@ public:
     }
 };
 
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths)
+FlushResult<InterruptResult, AbortFailure> ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths)
 {
-    FlushResult<InterruptResult, AbortFailure> result; // TODO Return this result!
+    FlushResult<InterruptResult, AbortFailure> result;
     ImportingNow imp{chainman.m_blockman.m_importing};
 
     // -reindex
@@ -1311,7 +1311,8 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent) >> result;
             if (chainman.m_interrupt) {
                 LogInfo("Interrupt requested. Exit reindexing.");
-                return;
+                result.update(Interrupted{});
+                return result;
             }
         }
         WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
@@ -1331,7 +1332,8 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             chainman.LoadExternalBlockFile(file) >> result;
             if (chainman.m_interrupt) {
                 LogInfo("Interrupt requested. Exit block importing.");
-                return;
+                result.update(Interrupted{});
+                return result;
             }
         } else {
             LogWarning("Could not open blocks file %s", fs::PathToString(path));
@@ -1341,9 +1343,10 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     if (auto activate_result = chainman.ActivateBestChains(); !activate_result) {
         chainman.GetNotifications().fatalError(util::ErrorString(activate_result));
-        activate_result >> result;
+        result.update(activate_result);
     }
     // End scope of ImportingNow
+    return result;
 }
 
 std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {
