@@ -453,7 +453,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
             cs->ClearBlockIndexCandidates();
             BOOST_CHECK(cs->setBlockIndexCandidates.empty());
         }
-        chainman.LoadBlockIndex();
+        BOOST_CHECK(chainman.LoadBlockIndex());
     };
 
     // Ensure that without any assumed-valid BlockIndex entries, only the current tip is

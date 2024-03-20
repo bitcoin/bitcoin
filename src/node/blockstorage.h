@@ -14,6 +14,7 @@
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/result.h>
+#include <kernel/notifications_interface.h>
 #include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
@@ -202,7 +203,7 @@ private:
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
      * collections like m_dirty_blockindex.
      */
-    bool LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+    [[nodiscard]] util::Result<kernel::InterruptResult, kernel::AbortFailure> LoadBlockIndexData(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return false if block file or undo file flushing fails. */
@@ -357,7 +358,7 @@ public:
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+    [[nodiscard]] util::Result<kernel::InterruptResult, kernel::AbortFailure> LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
