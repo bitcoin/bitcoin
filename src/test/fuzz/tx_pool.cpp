@@ -108,7 +108,8 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         // Now try to add those transactions back, as though a reorg happened.
         std::vector<Txid> hashes_to_update;
         for (const auto& tx : block_template->block.vtx) {
-            const auto res = AcceptToMemoryPool(chainstate, tx, GetTime(), true, /*test_accept=*/false);
+            auto [res, flush_result]{AcceptToMemoryPool(chainstate, tx, GetTime(), true, /*test_accept=*/false)};
+            Assert(flush_result);
             if (res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                 hashes_to_update.push_back(tx->GetHash());
             } else {
@@ -331,8 +332,9 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
 
         // Make sure ProcessNewPackage on one transaction works.
         // The result is not guaranteed to be the same as what is returned by ATMP.
-        const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true, /*client_maxfeerate=*/{}));
+        auto [result_package, process_result]{WITH_LOCK(::cs_main,
+                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true, /*client_maxfeerate=*/{}))};
+        Assert(process_result);
         // If something went wrong due to a package-specific policy, it might not return a
         // validation result for the transaction.
         if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
@@ -342,7 +344,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
                    it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
         }
 
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), /*bypass_limits=*/false, /*test_accept=*/false));
+        auto [res, flush_result]{WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), /*bypass_limits=*/false, /*test_accept=*/false))};
+        Assert(flush_result);
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         node.validation_signals->SyncWithValidationInterfaceQueue();
         node.validation_signals->UnregisterSharedValidationInterface(txr);
@@ -450,7 +453,8 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         ever_bypassed_limits |= bypass_limits;
 
         const auto tx = MakeTransactionRef(mut_tx);
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
+        auto [res, flush_result]{WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false))};
+        Assert(flush_result);
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());

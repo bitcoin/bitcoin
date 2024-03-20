@@ -78,7 +78,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
             if (check_max_fee || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
-                const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
+                auto [result, flush_result]{node.chainman->ProcessTransaction(tx, /*test_accept=*/ true)};
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
                 } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
@@ -91,7 +91,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
             case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
                 // Try to submit the transaction to the mempool.
                 {
-                    const MempoolAcceptResult result =
+                    auto [result, flush_result] =
                         node.chainman->ProcessTransaction(tx, /*test_accept=*/false);
                     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                         return HandleATMPError(result.m_state, err_string);

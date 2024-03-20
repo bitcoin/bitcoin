@@ -298,11 +298,12 @@ static bool IsCurrentForFeeEstimation(Chainstate& active_chainstate) EXCLUSIVE_L
     return true;
 }
 
-void Chainstate::MaybeUpdateMempoolForReorg(
+FlushResult<> Chainstate::MaybeUpdateMempoolForReorg(
     DisconnectedBlockTransactions& disconnectpool,
     bool fAddToMempool)
 {
-    if (!m_mempool) return;
+    FlushResult<> result;
+    if (!m_mempool) return result;
 
     AssertLockHeld(cs_main);
     AssertLockHeld(m_mempool->cs);
@@ -317,10 +318,14 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         auto it = queuedTx.rbegin();
         while (it != queuedTx.rend()) {
             // ignore validation errors in resurrected transactions
-            if (!fAddToMempool || (*it)->IsCoinBase() ||
-                AcceptToMemoryPool(*this, *it, GetTime(),
-                    /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
-                        MempoolAcceptResult::ResultType::VALID) {
+            bool remove{!fAddToMempool || (*it)->IsCoinBase()};
+            if (!remove) {
+                auto [mempool_result, flush_result] = AcceptToMemoryPool(*this, *it, GetTime(),
+                    /*bypass_limits=*/true, /*test_accept=*/false);
+                flush_result >> result;
+                remove = mempool_result.m_result_type != MempoolAcceptResult::ResultType::VALID;
+            }
+            if (remove) {
                 // If the transaction doesn't make it in to the mempool, remove any
                 // transactions that depend on it (which would now be orphans).
                 m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
@@ -392,6 +397,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
     m_mempool->removeForReorg(m_chain, filter_final_and_mature);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(*m_mempool, this->CoinsTip());
+    return result;
 }
 
 /**
@@ -1781,7 +1787,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
 } // anon namespace
 
-MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
+std::tuple<MempoolAcceptResult, FlushResult<void, AbortFailure>> AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
                                        int64_t accept_time, bool bypass_limits, bool test_accept)
 {
     AssertLockHeld(::cs_main);
@@ -1810,10 +1816,10 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
     // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
     auto flush_result{active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC)};
-    return result;
+    return {std::move(result), std::move(flush_result)};
 }
 
-PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
+std::tuple<PackageMempoolAcceptResult, FlushResult<void, AbortFailure>> ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
                                                    const Package& package, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate)
 {
     AssertLockHeld(cs_main);
@@ -1842,7 +1848,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     // Ensure the coins cache is still within limits.
     BlockValidationState state_dummy;
     auto flush_result{active_chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC)};
-    return result;
+    return {std::move(result), std::move(flush_result)};
 }
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
@@ -3288,6 +3294,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
+    FlushResult<void, AbortFailure> result; // TODO Return this result!
     const CBlockIndex* pindexOldTip = m_chain.Tip();
     const CBlockIndex* pindexFork = m_chain.FindFork(pindexMostWork);
 
@@ -3298,7 +3305,8 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
         if (!DisconnectTip(state, &disconnectpool)) {
             // This is likely a fatal error, but keep the mempool consistent,
             // just in case. Only remove from the mempool in this case.
-            MaybeUpdateMempoolForReorg(disconnectpool, false);
+            // Ignore failure value, do not treat flush error as failure.
+            MaybeUpdateMempoolForReorg(disconnectpool, false) >> result;
 
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
@@ -3342,7 +3350,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
                     // A system error occurred (disk space, database error, ...).
                     // Make the mempool consistent with the current tip, just in case
                     // any observers try to use it before shutdown.
-                    MaybeUpdateMempoolForReorg(disconnectpool, false);
+                    MaybeUpdateMempoolForReorg(disconnectpool, false) >> result;
                     return false;
                 }
             } else {
@@ -3359,7 +3367,8 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
     if (fBlocksDisconnected) {
         // If any blocks were disconnected, disconnectpool may be non empty.  Add
         // any disconnected transactions back to the mempool.
-        MaybeUpdateMempoolForReorg(disconnectpool, true);
+        // Ignore failure value, do not treat flush error as failure.
+        MaybeUpdateMempoolForReorg(disconnectpool, true) >> result;
     }
     if (m_mempool) m_mempool->check(this->CoinsTip(), this->m_chain.Height() + 1);
 
@@ -3612,6 +3621,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
+    FlushResult<> result; // TODO Return this result!
 
     // Genesis block can't be invalidated
     assert(pindex);
@@ -3676,7 +3686,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // transactions back to the mempool if disconnecting was successful,
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
-        MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
+        // Ignore failure value, do not treat flush error as failure.
+        MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret) >> result;
         if (!ret) return false;
         assert(invalid_walk_tip->pprev == m_chain.Tip());
 
@@ -4552,14 +4563,14 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
     return true;
 }
 
-MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
+std::tuple<MempoolAcceptResult, FlushResult<void, AbortFailure>> ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
 {
     AssertLockHeld(cs_main);
     Chainstate& active_chainstate = ActiveChainstate();
     if (!active_chainstate.GetMempool()) {
         TxValidationState state;
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
-        return MempoolAcceptResult::Failure(state);
+        return {MempoolAcceptResult::Failure(state), FlushResult<>{}};
     }
     auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
