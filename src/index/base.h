@@ -78,13 +78,6 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
-    /// Sync the index with the block index starting from the current best block.
-    /// Intended to be run in its own thread, m_thread_sync, and can be
-    /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
-    /// flag is set and the BlockConnected ValidationInterface callback takes
-    /// over and the sync thread exits.
-    void ThreadSync();
-
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
     /// Recommendations for error handling:
@@ -152,8 +145,15 @@ public:
     /// validation interface so that it stays in sync with blockchain updates.
     [[nodiscard]] bool Init();
 
-    /// Starts the initial sync process.
+    /// Starts the initial sync process on a background thread.
     [[nodiscard]] bool StartBackgroundSync();
+
+    /// Sync the index with the block index starting from the current best block.
+    /// Intended to be run in its own thread, m_thread_sync, and can be
+    /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
+    /// flag is set and the BlockConnected ValidationInterface callback takes
+    /// over and the sync thread exits.
+    void Sync();
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();

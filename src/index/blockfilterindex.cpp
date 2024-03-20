@@ -128,6 +128,16 @@ bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& blo
         m_next_filter_pos.nFile = 0;
         m_next_filter_pos.nPos = 0;
     }
+
+    if (block) {
+        auto op_last_header = ReadFilterHeader(block->height, block->hash);
+        if (!op_last_header) {
+            LogError("Cannot read last block filter header; index may be corrupted\n");
+            return false;
+        }
+        m_last_header = *op_last_header;
+    }
+
     return true;
 }
 
@@ -222,10 +232,25 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     return data_size;
 }
 
+std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint256& expected_block_hash)
+{
+    std::pair<uint256, DBVal> read_out;
+    if (!m_db->Read(DBHeightKey(height), read_out)) {
+        return std::nullopt;
+    }
+
+    if (read_out.first != expected_block_hash) {
+        LogError("%s: previous block header belongs to unexpected block %s; expected %s\n",
+                         __func__, read_out.first.ToString(), expected_block_hash.ToString());
+        return std::nullopt;
+    }
+
+    return read_out.second.header;
+}
+
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     CBlockUndo block_undo;
-    uint256 prev_header;
 
     if (block.height > 0) {
         // pindex variable gives indexing code access to node internals. It
@@ -234,34 +259,28 @@ bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
         if (!m_chainstate->m_blockman.UndoReadFromDisk(block_undo, *pindex)) {
             return false;
         }
-
-        std::pair<uint256, DBVal> read_out;
-        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
-            return false;
-        }
-
-        uint256 expected_block_hash = *Assert(block.prev_hash);
-        if (read_out.first != expected_block_hash) {
-            LogError("%s: previous block header belongs to unexpected block %s; expected %s\n",
-                         __func__, read_out.first.ToString(), expected_block_hash.ToString());
-            return false;
-        }
-
-        prev_header = read_out.second.header;
     }
 
     BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
 
+    const uint256& header = filter.ComputeHeader(m_last_header);
+    bool res = Write(filter, block.height, header);
+    if (res) m_last_header = header; // update last header
+    return res;
+}
+
+bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
+{
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
 
     std::pair<uint256, DBVal> value;
-    value.first = block.hash;
+    value.first = filter.GetBlockHash();
     value.second.hash = filter.GetHash();
-    value.second.header = filter.ComputeHeader(prev_header);
+    value.second.header = filter_header;
     value.second.pos = m_next_filter_pos;
 
-    if (!m_db->Write(DBHeightKey(block.height), value)) {
+    if (!m_db->Write(DBHeightKey(block_height), value)) {
         return false;
     }
 
@@ -315,6 +334,8 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, con
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
     if (!m_db->WriteBatch(batch)) return false;
 
+    // Update cached header
+    m_last_header = *Assert(ReadFilterHeader(new_tip.height, new_tip.hash));
     return true;
 }
 
