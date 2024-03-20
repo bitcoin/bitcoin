@@ -156,9 +156,9 @@ private:
     /** Return false if undo file flushing fails. */
     [[nodiscard]] kernel::FlushResult<> FlushUndoFile(int block_file, bool finalize = false);
 
-    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
+    [[nodiscard]] kernel::FlushResult<void, kernel::AbortFailure> FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
     [[nodiscard]] kernel::FlushResult<> FlushChainstateBlockFile(int tip_height);
-    bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
+    [[nodiscard]] util::Result<void, kernel::AbortFailure> FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     FlatFileSeq BlockFileSeq() const;
     FlatFileSeq UndoFileSeq() const;
@@ -310,11 +310,11 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
-    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+    [[nodiscard]] kernel::FlushResult<void, kernel::AbortFailure> WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
-    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
+    [[nodiscard]] kernel::FlushResult<FlatFilePos, kernel::AbortFailure> SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
 
     /** Whether running in -prune mode. */
     [[nodiscard]] bool IsPruneMode() const { return m_prune_mode; }
