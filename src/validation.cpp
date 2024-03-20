@@ -4768,17 +4768,17 @@ CVerifyDB::~CVerifyDB()
     m_notifications.progress(bilingual_str{}, 100, false);
 }
 
-VerifyDBResult CVerifyDB::VerifyDB(
+FlushResult<VerifyDBResult> CVerifyDB::VerifyDB(
     Chainstate& chainstate,
     const Consensus::Params& consensus_params,
     CCoinsView& coinsview,
     int nCheckLevel, int nCheckDepth)
 {
     AssertLockHeld(cs_main);
-    FlushResult<> result; // TODO Return this result!
+    FlushResult<VerifyDBResult> result;
 
     if (chainstate.m_chain.Tip() == nullptr || chainstate.m_chain.Tip()->pprev == nullptr) {
-        return VerifyDBResult::SUCCESS;
+        return result;
     }
 
     // Verify blocks in the best chain
@@ -4820,22 +4820,28 @@ VerifyDBResult CVerifyDB::VerifyDB(
         CBlock block;
         // check level 0: read from disk
         if (!chainstate.m_blockman.ReadBlock(block, *pindex)) {
-            LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            return VerifyDBResult::CORRUPTED_BLOCK_DB;
+            auto error{Untranslated(strprintf("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString()))};
+            LogError("%s", error.original);
+            result.update(util::Error{std::move(error)});
+            return result;
         }
         // check level 1: verify block validity
         if (nCheckLevel >= 1 && !CheckBlock(block, state, consensus_params)) {
-            LogError("Verification error: found bad block at %d, hash=%s (%s)",
-                      pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
-            return VerifyDBResult::CORRUPTED_BLOCK_DB;
+            auto error{Untranslated(strprintf("Verification error: found bad block at %d, hash=%s (%s)",
+                      pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString()))};
+            LogError("%s", error.original);
+            result.update(util::Error{std::move(error)});
+            return result;
         }
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
             CBlockUndo undo;
             if (!pindex->GetUndoPos().IsNull()) {
                 if (!chainstate.m_blockman.ReadBlockUndo(undo, *pindex)) {
-                    LogError("Verification error: found bad undo data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-                    return VerifyDBResult::CORRUPTED_BLOCK_DB;
+                    auto error{Untranslated(strprintf("Verification error: found bad undo data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString()))};
+                    LogError("%s", error.original);
+                    result.update(util::Error{std::move(error)});
+                    return result;
                 }
             }
         }
@@ -4847,8 +4853,10 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 assert(coins.GetBestBlock() == pindex->GetBlockHash());
                 DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins);
                 if (res == DISCONNECT_FAILED) {
-                    LogError("Verification error: irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-                    return VerifyDBResult::CORRUPTED_BLOCK_DB;
+                    auto error{Untranslated(strprintf("Verification error: irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString()))};
+                    LogError("%s", error.original);
+                    result.update(util::Error{std::move(error)});
+                    return result;
                 }
                 if (res == DISCONNECT_UNCLEAN) {
                     nGoodTransactions = 0;
@@ -4860,11 +4868,16 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 skipped_l3_checks = true;
             }
         }
-        if (chainstate.m_chainman.m_interrupt) return VerifyDBResult::INTERRUPTED;
+        if (chainstate.m_chainman.m_interrupt) {
+            result.update(Interrupted{});
+            return result;
+        }
     }
     if (pindexFailure) {
-        LogError("Verification error: coin database inconsistencies found (last %i blocks, %i good transactions before that)", chainstate.m_chain.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
-        return VerifyDBResult::CORRUPTED_BLOCK_DB;
+        auto error{Untranslated(strprintf("Verification error: coin database inconsistencies found (last %i blocks, %i good transactions before that)", chainstate.m_chain.Height() - pindexFailure->nHeight + 1, nGoodTransactions))};
+        LogError("%s", error.original);
+        result.update(util::Error{std::move(error)});
+        return result;
     }
     if (skipped_l3_checks) {
         LogWarning("Skipped verification of level >=3 (insufficient database cache size). Consider increasing -dbcache.");
@@ -4886,26 +4899,32 @@ VerifyDBResult CVerifyDB::VerifyDB(
             pindex = chainstate.m_chain.Next(pindex);
             CBlock block;
             if (!chainstate.m_blockman.ReadBlock(block, *pindex)) {
-                LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-                return VerifyDBResult::CORRUPTED_BLOCK_DB;
+                auto error{Untranslated(strprintf("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString()))};
+                LogError("%s", error.original);
+                result.update(util::Error{std::move(error)});
+                return result;
             }
             if (!(chainstate.ConnectBlock(block, state, pindex, coins) >> result)) {
-                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
-                return VerifyDBResult::CORRUPTED_BLOCK_DB;
+                auto error{Untranslated(strprintf("Verification error: found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString()))};
+                LogError("%s", error.original);
+                result.update(util::Error{std::move(error)});
+                return result;
             }
-            if (chainstate.m_chainman.m_interrupt) return VerifyDBResult::INTERRUPTED;
+            if (chainstate.m_chainman.m_interrupt) {
+                result.update(Interrupted{});
+                return result;
+            }
         }
     }
 
     LogInfo("Verification: No coin database inconsistencies in last %i blocks (%i transactions)", block_count, nGoodTransactions);
 
     if (skipped_l3_checks) {
-        return VerifyDBResult::SKIPPED_L3_CHECKS;
+        result.update(SkippedL3Checks{});
+    } else if (skipped_no_block_data) {
+        result.update(SkippedMissingBlocks{});
     }
-    if (skipped_no_block_data) {
-        return VerifyDBResult::SKIPPED_MISSING_BLOCKS;
-    }
-    return VerifyDBResult::SUCCESS;
+    return result;
 }
 
 /** Apply the effects of a block on the utxo cache, ignoring that it may already have been applied. */

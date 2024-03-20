@@ -1255,8 +1255,9 @@ static RPCHelpMan verifychain()
     LOCK(cs_main);
 
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    return CVerifyDB(chainman.GetNotifications()).VerifyDB(
-               active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth) == VerifyDBResult::SUCCESS;
+    auto verify_result{CVerifyDB(chainman.GetNotifications()).VerifyDB(
+        active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth)};
+    return verify_result && std::holds_alternative<VerifySuccess>(*verify_result);
 },
     };
 }
