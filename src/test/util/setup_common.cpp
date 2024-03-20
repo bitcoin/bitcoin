@@ -366,7 +366,8 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     m_node.notifications->setChainstateLoaded(true);
 
     BlockValidationState state;
-    if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
+    auto activate_result{chainman.ActiveChainstate().ActivateBestChain(state)};
+    if (!activate_result) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 }
