@@ -28,7 +28,8 @@ Build changes
 - `5ac7814`: improve build instructions for unix systems
 - `24a0299`: fix building with Boost 1.77+
 - `a376e2e` - `0698e23`: build changes for macOS. Primarily updates macOS build SDK to Xcode 12.1, increasing minimum macOS version to 10.15.6. These changes fix an issue where Litecoin-Qt UI may not appear as expected on macOS 14+.
-- `41b4c16`: fixes builds on Alpine Linux/musl. 
+- `41b4c16`: fixes builds on Alpine Linux/musl.
+- `3b590e9`: hardened runtime build for signed macOS builds
 
 Test related fixes
 --------------------------
@@ -38,6 +39,10 @@ Test related fixes
 - `c2a4fc3`: fixes another secp256k1-zkp test
 - `c2a4fc3`: disabled run_schnorrsig_tests() in secp256k1-zkp.
 - `7e3c1f5`: disable secp256k1-zkp openssl test, fixing `make check` on macOS.
+
+Qt
+--------------------------
+- `f1c0ecf`: reverts tempfix where macOS 14+ unexpectedly uses Fusion UI theme
 
 Credits
 =======
