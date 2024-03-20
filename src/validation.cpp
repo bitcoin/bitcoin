@@ -74,6 +74,7 @@
 #include <tuple>
 #include <utility>
 
+using kernel::AbortFailure;
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
@@ -2416,6 +2417,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 {
     AssertLockHeld(cs_main);
     assert(pindex);
+    FlushResult<void, AbortFailure> result;
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
@@ -2715,7 +2717,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (fJustCheck)
         return true;
 
-    if (!m_blockman.WriteUndoDataForBlock(blockundo, state, *pindex)) {
+    if (!(m_blockman.WriteUndoDataForBlock(blockundo, state, *pindex) >> result)) {
+        result.Update(util::Error{});
         return false;
     }
 
@@ -4436,6 +4439,7 @@ void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked)
 {
+    FlushResult<> result;
     const CBlock& block = *pblock;
 
     if (fNewBlock) *fNewBlock = false;
@@ -4510,11 +4514,14 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             blockPos = *dbp;
             m_blockman.UpdateBlockInfo(block, pindex->nHeight, blockPos);
         } else {
-            blockPos = m_blockman.SaveBlockToDisk(block, pindex->nHeight);
-            if (blockPos.IsNull()) {
-                state.Error(strprintf("%s: Failed to find position to write new block to disk", __func__));
+            auto pos{m_blockman.SaveBlockToDisk(block, pindex->nHeight) >> result};
+            if (!pos || pos->IsNull()) {
+                auto error{Untranslated("Failed to find position to write new block to disk")};
+                state.Error(strprintf("%s: %s", __func__, error.original));
+                result.Update(util::Error{std::move(error)});
                 return false;
             }
+            blockPos = *pos;
         }
         ReceivedBlockTransactions(block, pindex, blockPos);
     } catch (const std::runtime_error& e) {
@@ -4990,6 +4997,7 @@ bool Chainstate::LoadGenesisBlock()
 {
     LOCK(cs_main);
 
+    FlushResult<> result;
     const CChainParams& params{m_chainman.GetParams()};
 
     // Check whether we're already initialized by checking for genesis in
@@ -5001,13 +5009,15 @@ bool Chainstate::LoadGenesisBlock()
 
     try {
         const CBlock& block = params.GenesisBlock();
-        FlatFilePos blockPos{m_blockman.SaveBlockToDisk(block, 0)};
-        if (blockPos.IsNull()) {
-            LogError("%s: writing genesis block to disk failed\n", __func__);
+        auto blockPos{m_blockman.SaveBlockToDisk(block, 0) >> result};
+        if (!blockPos || blockPos->IsNull()) {
+            auto error{Untranslated("writing genesis block to disk failed")};
+            LogError("%s: %s\n", __func__, error.original);
+            result.Update(util::Error{std::move(error)});
             return false;
         }
         CBlockIndex* pindex = m_blockman.AddToBlockIndex(block, m_chainman.m_best_header);
-        m_chainman.ReceivedBlockTransactions(block, pindex, blockPos);
+        m_chainman.ReceivedBlockTransactions(block, pindex, *blockPos);
     } catch (const std::runtime_error& e) {
         LogError("%s: failed to write genesis block: %s\n", __func__, e.what());
         return false;
