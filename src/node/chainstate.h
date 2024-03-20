@@ -50,7 +50,7 @@ enum class ChainstateLoadError {
 
 kernel::FlushResult<kernel::InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
                                                                                  const ChainstateLoadOptions& options);
-util::Result<kernel::InterruptResult, ChainstateLoadError> VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
+kernel::FlushResult<kernel::InterruptResult, ChainstateLoadError> VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATE_H

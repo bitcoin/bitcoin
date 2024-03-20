@@ -232,7 +232,10 @@ FlushResult<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManag
     // snapshot is actually validated? Because this entails unusual
     // filesystem operations to move leveldb data directories around, and that seems
     // too risky to do in the middle of normal runtime.
-    auto snapshot_completion = chainman.MaybeCompleteSnapshotValidation();
+    FlushResult<void, AbortFailure> snapshot_result;
+    auto snapshot_completion = chainman.MaybeCompleteSnapshotValidation(snapshot_result);
+    // Ignore failure value, do not treat flush error as failure.
+    snapshot_result >> result;
 
     if (snapshot_completion == SnapshotCompletionResult::SKIPPED) {
         // do nothing; expected case
@@ -271,7 +274,7 @@ FlushResult<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManag
     return result;
 }
 
-util::Result<InterruptResult, ChainstateLoadError> VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options)
+FlushResult<InterruptResult, ChainstateLoadError> VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options)
 {
     auto is_coinsview_empty = [&](Chainstate* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         return options.reindex || options.reindex_chainstate || chainstate->CoinsTip().GetBestBlock().IsNull();

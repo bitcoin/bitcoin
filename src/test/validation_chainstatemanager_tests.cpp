@@ -25,6 +25,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockManager;
 using node::KernelNotifications;
 using node::SnapshotMetadata;
@@ -635,8 +637,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+    FlushResult<void, AbortFailure> process_result;
+    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation(process_result));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
+    BOOST_CHECK(process_result);
 
     WITH_LOCK(::cs_main, BOOST_CHECK(chainman.IsSnapshotValidated()));
     BOOST_CHECK(chainman.IsSnapshotActive());
@@ -651,8 +655,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     BOOST_CHECK_EQUAL(all_chainstates[0], &active_cs);
 
     // Trying completion again should return false.
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation(process_result));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SKIPPED);
+    BOOST_CHECK(process_result);
 
     // The invalid snapshot path should not have been used.
     fs::path snapshot_invalid_dir = gArgs.GetDataDirNet() / "chainstate_snapshot_INVALID";
@@ -722,8 +727,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 
     {
         ASSERT_DEBUG_LOG("failed to validate the -assumeutxo snapshot state");
-        res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+        FlushResult<void, AbortFailure> process_result;
+        res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation(process_result));
         BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
+        BOOST_CHECK(!process_result);
     }
 
     auto all_chainstates = chainman.GetAll();
