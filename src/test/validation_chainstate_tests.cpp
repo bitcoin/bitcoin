@@ -43,18 +43,18 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));
 
-        c1.ResizeCoinsCaches(
+        BOOST_CHECK(c1.ResizeCoinsCaches(
             1 << 24,  // upsizing the coinsview cache
             1 << 22  // downsizing the coinsdb cache
-        );
+        ));
 
         // View should still have the coin cached, since we haven't destructed the cache on upsize.
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));
 
-        c1.ResizeCoinsCaches(
+        BOOST_CHECK(c1.ResizeCoinsCaches(
             1 << 22,  // downsizing the coinsview cache
             1 << 23  // upsizing the coinsdb cache
-        );
+        ));
 
         // The view cache should be empty since we had to destruct to downsize.
         BOOST_CHECK(!c1.CoinsTip().HaveCoinInCache(outpoint));

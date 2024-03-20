@@ -284,7 +284,8 @@ epilogue:
         LOCK(cs_main);
         for (Chainstate* chainstate : chainman.GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                auto flush_result{chainstate->ForceFlushStateToDisk()};
+                if (!flush_result) std::cerr << util::ErrorString(flush_result).original << std::endl;
                 chainstate->ResetCoinsViews();
             }
         }

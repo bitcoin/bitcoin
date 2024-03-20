@@ -29,18 +29,20 @@
 #include <memory>
 #include <vector>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using kernel::Interrupted;
 using kernel::InterruptResult;
 
 namespace node {
 // Complete initialization of chainstates after the initial call has been made
 // to ChainstateManager::InitializeChainstate().
-static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInitialization(
+static FlushResult<InterruptResult, ChainstateLoadError> CompleteChainstateInitialization(
     ChainstateManager& chainman,
     const CacheSizes& cache_sizes,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    util::Result<InterruptResult, ChainstateLoadError> result;
+    FlushResult<InterruptResult, ChainstateLoadError> result;
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
     // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
@@ -173,15 +175,16 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
     // Now that chainstates are loaded and we're able to flush to
     // disk, rebalance the coins caches to desired levels based
     // on the condition of each chainstate.
-    chainman.MaybeRebalanceCaches();
+    // Ignore failure value, do not treat flush error as failure.
+    chainman.MaybeRebalanceCaches() >> result;
 
     return result;
 }
 
-util::Result<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
-                                                                  const ChainstateLoadOptions& options)
+FlushResult<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
+                                                                 const ChainstateLoadOptions& options)
 {
-    util::Result<InterruptResult, ChainstateLoadError> result;
+    FlushResult<InterruptResult, ChainstateLoadError> result;
     if (!chainman.AssumedValidBlock().IsNull()) {
         LogPrintf("Assuming ancestors of block %s have valid signatures.\n", chainman.AssumedValidBlock().GetHex());
     } else {
