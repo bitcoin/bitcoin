@@ -82,6 +82,9 @@ using kernel::ChainstateRole;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
 using kernel::FlushResult;
+using kernel::Interrupted;
+using kernel::InterruptResult;
+using kernel::IsInterrupted;
 using kernel::Notifications;
 
 using fsbridge::FopenFn;
@@ -4901,13 +4904,14 @@ void Chainstate::PopulateBlockIndexCandidates()
     }
 }
 
-bool ChainstateManager::LoadBlockIndex()
+util::Result<InterruptResult, AbortFailure> ChainstateManager::LoadBlockIndex()
 {
     AssertLockHeld(cs_main);
+    util::Result<InterruptResult, AbortFailure> result;
     // Load block index from databases
     if (m_blockman.m_blockfiles_indexed) {
-        bool ret{m_blockman.LoadBlockIndexDB(CurrentChainstate().m_from_snapshot_blockhash)};
-        if (!ret) return false;
+        result.update(m_blockman.LoadBlockIndexDB(CurrentChainstate().m_from_snapshot_blockhash));
+        if (!result || IsInterrupted(*result)) return result;
 
         m_blockman.ScanAndUnlinkAlreadyPrunedFiles();
 
@@ -4916,7 +4920,10 @@ bool ChainstateManager::LoadBlockIndex()
                   CBlockIndexHeightOnlyComparator());
 
         for (CBlockIndex* pindex : vSortedByHeight) {
-            if (m_interrupt) return false;
+            if (m_interrupt) {
+                result.update(Interrupted{});
+                return result;
+            }
             if (pindex->nStatus & BLOCK_FAILED_VALID && (!m_best_invalid || pindex->nChainWork > m_best_invalid->nChainWork)) {
                 m_best_invalid = pindex;
             }
@@ -4924,7 +4931,7 @@ bool ChainstateManager::LoadBlockIndex()
                 m_best_header = pindex;
         }
     }
-    return true;
+    return result;
 }
 
 bool Chainstate::LoadGenesisBlock()
