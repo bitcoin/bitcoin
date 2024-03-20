@@ -1258,11 +1258,13 @@ int btck_chainstate_manager_process_block(
     int* _new_block)
 {
     bool new_block;
-    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    kernel::FlushResult<void, kernel::AbortFailure> process_result;
+    bool accepted = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block, process_result);
+    if (!process_result) LogError("%s", util::ErrorString(process_result).original);
     if (_new_block) {
         *_new_block = new_block ? 1 : 0;
     }
-    return result ? 0 : -1;
+    return accepted ? 0 : -1;
 }
 
 const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_ChainstateManager* chainman)

@@ -408,7 +408,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
  *
  * For signets the challenge verification is skipped when check_pow is false.
  */
-BlockValidationState TestBlockValidity(
+kernel::FlushResult<void, BlockValidationState> TestBlockValidity(
     Chainstate& chainstate,
     const CBlock& block,
     bool check_pow,
@@ -805,7 +805,7 @@ public:
     /** Whether the chain state needs to be redownloaded due to lack of witness data */
     [[nodiscard]] bool NeedsRedownload() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
-    bool LoadGenesisBlock();
+    [[nodiscard]] kernel::FlushResult<> LoadGenesisBlock();
 
     void TryAddBlockIndexCandidate(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1201,7 +1201,7 @@ public:
      *                                              unknown parent, key is parent block hash
      *                                              (only used for reindex)
      * */
-    void LoadExternalBlockFile(
+    [[nodiscard]] kernel::FlushResult<kernel::InterruptResult, kernel::AbortFailure> LoadExternalBlockFile(
         AutoFile& file_in,
         FlatFilePos* dbp = nullptr,
         std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
@@ -1228,9 +1228,10 @@ public:
      *                               block header is already present in block
      *                               index then this parameter has no effect)
      * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
+     * @param[out]  result    Errors from saving or flushing the block.
      * @returns     If the block was processed, independently of block validity
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) LOCKS_EXCLUDED(cs_main);
+    [[nodiscard]] bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block, kernel::FlushResult<void, kernel::AbortFailure>& result) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
@@ -1257,6 +1258,7 @@ public:
      * @param[in]   min_pow_checked True if proof-of-work anti-DoS checks have
      *                              been done by caller for headers chain
      *
+     * @param[out]  result      Errors from saving or flushing the block.
      * @param[out]  state       The state of the block validation.
      * @param[out]  ppindex     Optional return parameter to get the
      *                          CBlockIndex pointer for this block.
@@ -1265,7 +1267,7 @@ public:
      *
      * @returns   False if the block or header is invalid, or if saving to disk fails (likely a fatal error); true otherwise.
      */
-    bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    [[nodiscard]] bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, kernel::FlushResult<void, kernel::AbortFailure>& result, BlockValidationState& state, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock, bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 

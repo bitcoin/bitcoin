@@ -35,6 +35,8 @@
 using namespace util::hex_literals;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockAssembler;
 
 namespace miner_tests {
@@ -829,7 +831,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         // via the Mining interface. The former is used by net_processing as well
         // as the submitblock RPC.
         if (current_height % 2 == 0) {
-            BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+            FlushResult<void, AbortFailure> process_result;
+            BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr, process_result));
+            BOOST_CHECK(process_result);
         } else {
             BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase)));
         }
