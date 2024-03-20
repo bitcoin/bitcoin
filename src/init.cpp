@@ -120,6 +120,7 @@
 using common::AmountErrMsg;
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
+using kernel::FlushResult;
 using kernel::InterruptResult;
 using node::ApplyArgsManOptions;
 using node::BlockManager;
@@ -338,7 +339,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                (void)chainstate->ForceFlushStateToDisk();
             }
         }
     }
@@ -364,7 +365,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                (void)chainstate->ForceFlushStateToDisk();
                 chainstate->ResetCoinsViews();
             }
         }
@@ -1215,7 +1216,7 @@ bool CheckHostPortOptions(const ArgsManager& args) {
 
 // A GUI user may opt to retry once with do_reindex set if there is a failure during chainstate initialization.
 // The function therefore has to support re-entry.
-util::Result<kernel::InterruptResult, ChainstateLoadError> InitAndLoadChainstate(
+FlushResult<kernel::InterruptResult, ChainstateLoadError> InitAndLoadChainstate(
     NodeContext& node,
     bool do_reindex,
     const bool do_reindex_chainstate,
@@ -1315,7 +1316,7 @@ util::Result<kernel::InterruptResult, ChainstateLoadError> InitAndLoadChainstate
             "", CClientUIInterface::MSG_ERROR);
     };
     uiInterface.InitMessage(_("Loading block index…"));
-    auto catch_exceptions = [](auto&& f) -> util::Result<InterruptResult, node::ChainstateLoadError> {
+    auto catch_exceptions = [](auto&& f) -> FlushResult<InterruptResult, node::ChainstateLoadError> {
         try {
             return f();
         } catch (const std::exception& e) {
@@ -1814,7 +1815,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LOCK(cs_main);
             for (Chainstate* chainstate : chainman.GetAll()) {
                 uiInterface.InitMessage(_("Pruning blockstore…"));
-                chainstate->PruneAndFlush();
+                (void)chainstate->PruneAndFlush();
             }
         }
     } else {
