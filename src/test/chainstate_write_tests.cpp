@@ -34,18 +34,18 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
     NodeClockContext clock_ctx{};
 
     // The first periodic flush sets m_next_write and does not flush
-    chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    BOOST_CHECK(chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC));
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(!sub->m_did_flush);
 
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
     clock_ctx += DATABASE_WRITE_INTERVAL_MIN - 1min;
-    chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    BOOST_CHECK(chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC));
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(!sub->m_did_flush);
 
     clock_ctx += DATABASE_WRITE_INTERVAL_MAX;
-    chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
+    BOOST_CHECK(chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC));
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(sub->m_did_flush);
 }
@@ -84,7 +84,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     BOOST_CHECK_EQUAL(second_from_tip->pprev, chainstate.m_chain.Tip());
 
     // Set m_next_write to current time
-    chainstate.FlushStateToDisk(state_dummy, FlushStateMode::FORCE_FLUSH);
+    BOOST_CHECK(chainstate.FlushStateToDisk(state_dummy, FlushStateMode::FORCE_FLUSH));
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
     // The next call to a PERIODIC write will flush
