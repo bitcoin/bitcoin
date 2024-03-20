@@ -242,6 +242,22 @@ BOOST_AUTO_TEST_CASE(check_update)
     ExpectSuccess(result3, Untranslated("error warning warning 2"), 5);
 }
 
+BOOST_AUTO_TEST_CASE(check_update_info)
+{
+    // Test that updating with util::Info sets the info value without
+    // changing the error or success value.
+    util::Result<void, void, int> result{util::Error{Untranslated("error")}};
+    result.update(util::Info{5});
+    BOOST_CHECK(!result);
+    BOOST_CHECK_EQUAL(result.info(), 5);
+    BOOST_CHECK_EQUAL(util::ErrorString(result).original, "error");
+
+    util::Result<void, void, int> result2;
+    result2.update(util::Info{6});
+    BOOST_CHECK(result2);
+    BOOST_CHECK_EQUAL(result2.info(), 6);
+}
+
 BOOST_AUTO_TEST_CASE(check_dereference_operators)
 {
     util::Result<std::pair<int, std::string>> mutable_result;
