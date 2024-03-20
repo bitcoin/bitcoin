@@ -174,20 +174,6 @@ void BaseIndex::Sync()
             pindex = pindex_next;
 
 
-            auto current_time{std::chrono::steady_clock::now()};
-            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
-                LogPrintf("Syncing %s with block chain from height %d\n",
-                          GetName(), pindex->nHeight);
-                last_log_time = current_time;
-            }
-
-            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
-                SetBestBlockIndex(pindex->pprev);
-                last_locator_write_time = current_time;
-                // No need to handle errors in Commit. See rationale above.
-                Commit();
-            }
-
             CBlock block;
             interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
             if (!m_chainstate->m_blockman.ReadBlockFromDisk(block, *pindex)) {
@@ -201,6 +187,20 @@ void BaseIndex::Sync()
                 FatalErrorf("%s: Failed to write block %s to index database",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
+            }
+
+            auto current_time{std::chrono::steady_clock::now()};
+            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
+                LogPrintf("Syncing %s with block chain from height %d\n",
+                          GetName(), pindex->nHeight);
+                last_log_time = current_time;
+            }
+
+            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
+                SetBestBlockIndex(pindex);
+                last_locator_write_time = current_time;
+                // No need to handle errors in Commit. See rationale above.
+                Commit();
             }
         }
     }
