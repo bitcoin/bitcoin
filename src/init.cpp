@@ -2051,7 +2051,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.background_init_thread = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &kernel_notifications, &node] {
         ScheduleBatchPriority();
         // Import blocks and ActivateBestChain()
-        ImportBlocks(chainman, vImportFiles);
+        (void)ImportBlocks(chainman, vImportFiles);
         // An interrupted import may return without activating genesis. Wake
         // the init thread's genesis wait, which is otherwise only notified
         // on blockTip, and that never fires when the import was interrupted
