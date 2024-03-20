@@ -2027,7 +2027,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.background_init_thread = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         ScheduleBatchPriority();
         // Import blocks and ActivateBestChain()
-        ImportBlocks(chainman, vImportFiles);
+        (void)ImportBlocks(chainman, vImportFiles);
         WITH_LOCK(::cs_main, chainman.UpdateIBDStatus());
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogInfo("Stopping after block import");
