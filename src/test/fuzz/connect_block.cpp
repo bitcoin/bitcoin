@@ -469,12 +469,12 @@ FUZZ_TARGET(connect_block, .init = initialize_connect_block)
 
     // Try to connect the block.
     BlockValidationState state;
-    bool connected = active_chainstate.ConnectBlock(block,
-                                                    state,
-                                                    &new_index,
-                                                    active_coins,
-                                                    /*fJustCheck=*/true);
-    Assert(connected == state.IsValid());
+    auto connect_result = active_chainstate.ConnectBlock(block,
+                                                         state,
+                                                         &new_index,
+                                                         active_coins,
+                                                         /*fJustCheck=*/true);
+    Assert(bool(connect_result) == state.IsValid());
 }
 
 } // namespace
