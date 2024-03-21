@@ -1059,7 +1059,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if (change_spend_size == -1) {
         coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
     } else {
-        coin_selection_params.change_spend_size = (size_t)change_spend_size;
+        coin_selection_params.change_spend_size = change_spend_size;
     }
 
     // Set discard feerate
