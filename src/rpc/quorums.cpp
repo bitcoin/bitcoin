@@ -275,7 +275,8 @@ static void quorum_dkgstatus_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CSporkManager& sporkman, const LLMQContext& llmq_ctx)
+static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const CActiveMasternodeManager* mn_activeman,
+                                 const ChainstateManager& chainman, const CSporkManager& sporkman, const LLMQContext& llmq_ctx)
 {
     quorum_dkgstatus_help(request);
 
@@ -295,9 +296,11 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMN
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int tipHeight = pindexTip->nHeight;
 
-    const uint256 proTxHash = fMasternodeMode ?
-                              WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()) :
-                              uint256();
+    const uint256 proTxHash = [&mn_activeman]() {
+        if (!fMasternodeMode) return uint256();
+        CHECK_NONFATAL(mn_activeman);
+        return WITH_LOCK(mn_activeman->cs, return mn_activeman->GetProTxHash());
+    }();
 
     UniValue minableCommitments(UniValue::VARR);
     UniValue quorumArrConnections(UniValue::VARR);
@@ -881,7 +884,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumdkginfo") {
         return quorum_dkginfo(new_request, llmq_ctx, chainman);
     } else if (command == "quorumdkgstatus") {
-        return quorum_dkgstatus(new_request, *node.dmnman, chainman, *node.sporkman, llmq_ctx);
+        return quorum_dkgstatus(new_request, *node.dmnman, node.mn_activeman, chainman, *node.sporkman, llmq_ctx);
     } else if (command == "quorummemberof") {
         return quorum_memberof(new_request, chainman, node, llmq_ctx);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {

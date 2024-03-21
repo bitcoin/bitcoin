@@ -316,17 +316,21 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     auto mnList = node.dmnman->GetListAtChainTip();
 
-    bool fMnFound{false};
     if (fMasternodeMode) {
-        LOCK(::activeMasternodeManager->cs);
-        fMnFound = mnList.HasValidMNByCollateral(::activeMasternodeManager->GetOutPoint());
+        CHECK_NONFATAL(node.mn_activeman);
+
+        LOCK(node.mn_activeman->cs);
+        const bool fMnFound = mnList.HasValidMNByCollateral(node.mn_activeman->GetOutPoint());
 
         LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-                ::activeMasternodeManager->GetPubKey().ToString(::activeMasternodeManager->IsLegacy()),
-                ::activeMasternodeManager->GetOutPoint().ToStringShort(), request.params.size(), fMnFound);
+                 node.mn_activeman->GetPubKey().ToString(node.mn_activeman->IsLegacy()),
+                 node.mn_activeman->GetOutPoint().ToStringShort(),
+                 request.params.size(),
+                 fMnFound);
     } else {
         LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = N/A, outpoint = N/A, params.size() = %lld, fMnFound = %d\n",
-                 request.params.size(), fMnFound);
+                 request.params.size(),
+                 false);
     }
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS

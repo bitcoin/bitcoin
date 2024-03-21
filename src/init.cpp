@@ -369,7 +369,8 @@ void PrepareShutdown(NodeContext& node)
         pdsNotificationInterface = nullptr;
     }
     if (fMasternodeMode) {
-        UnregisterValidationInterface(::activeMasternodeManager.get());
+        UnregisterValidationInterface(node.mn_activeman);
+        node.mn_activeman = nullptr;
         ::activeMasternodeManager.reset();
     }
 
@@ -1854,7 +1855,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         {
             // Create and register activeMasternodeManager, will init later in ThreadImport
             ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
-            RegisterValidationInterface(::activeMasternodeManager.get());
+            node.mn_activeman = ::activeMasternodeManager.get();
+            RegisterValidationInterface(node.mn_activeman);
         }
     }
 

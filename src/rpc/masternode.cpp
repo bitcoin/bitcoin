@@ -262,16 +262,17 @@ static UniValue masternode_status(const JSONRPCRequest& request)
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.mn_activeman);
 
     UniValue mnObj(UniValue::VOBJ);
     CDeterministicMNCPtr dmn;
     {
-        LOCK(::activeMasternodeManager->cs);
+        LOCK(node.mn_activeman->cs);
 
         // keep compatibility with legacy status for now (might get deprecated/removed later)
-        mnObj.pushKV("outpoint", ::activeMasternodeManager->GetOutPoint().ToStringShort());
-        mnObj.pushKV("service", ::activeMasternodeManager->GetService().ToString());
-        dmn = node.dmnman->GetListAtChainTip().GetMN(::activeMasternodeManager->GetProTxHash());
+        mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
+        mnObj.pushKV("service", node.mn_activeman->GetService().ToString());
+        dmn = node.dmnman->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
     }
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
@@ -280,8 +281,8 @@ static UniValue masternode_status(const JSONRPCRequest& request)
         mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
-    mnObj.pushKV("state", activeMasternodeManager->GetStateString());
-    mnObj.pushKV("status", activeMasternodeManager->GetStatus());
+    mnObj.pushKV("state", node.mn_activeman->GetStateString());
+    mnObj.pushKV("status", node.mn_activeman->GetStatus());
 
     return mnObj;
 }

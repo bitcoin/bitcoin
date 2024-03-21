@@ -12,6 +12,7 @@
 
 class ArgsManager;
 class BanMan;
+class CActiveMasternodeManager;
 class CAddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
@@ -79,6 +80,7 @@ struct NodeContext {
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<LLMQContext> llmq_ctx;
+    CActiveMasternodeManager* mn_activeman{nullptr};
     CDeterministicMNManager* dmnman{nullptr};
     CMasternodeMetaMan* mn_metaman{nullptr};
     CMasternodeSync* mn_sync{nullptr};
