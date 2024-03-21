@@ -14,7 +14,7 @@ jobs:
         run: git fetch
       - name: Run Clang-Format-Diff.py
         run: |
-          git diff -U0 origin/develop -- . ':(exclude)src/qt/dashstrings.cpp' ':(exclude)src/qt/locale/' | ./contrib/devtools/clang-format-diff.py -p1 > diff_output.txt
+          git diff -U0 origin/develop -- $(git ls-files -- $(cat test/util/data/non-backported.txt)) | ./contrib/devtools/clang-format-diff.py -p1 > diff_output.txt
           if [ -s diff_output.txt ]; then
               echo "Clang format differences found:"
               cat diff_output.txt
