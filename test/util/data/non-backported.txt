@@ -13,7 +13,6 @@ src/evo/*.cpp
 src/evo/*.h
 src/governance/*.cpp
 src/governance/*.h
-src/keepass.*
 src/llmq/*.cpp
 src/llmq/*.h
 src/masternode/*.cpp
@@ -38,4 +37,5 @@ src/test/dynamic_activation*.cpp
 src/test/evo*.cpp
 src/test/governance*.cpp
 src/unordered_lru_cache.h
+src/wallet/bip39*
 src/wallet/hdchain.*
