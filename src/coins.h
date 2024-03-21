@@ -131,7 +131,6 @@ private:
 
 public:
     Coin coin; // The actual cached data.
-    unsigned char flags;
 
     enum Flags {
         /**
@@ -154,9 +153,8 @@ public:
         FRESH = (1 << 1),
     };
 
-    CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
-    CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
+    CCoinsCacheEntry() = default;
+    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)) {}
     ~CCoinsCacheEntry()
     {
         // We must always clear the flags when destroying this to remove it from
@@ -268,8 +266,10 @@ public:
     virtual std::vector<uint256> GetHeadBlocks() const;
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
-    //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true);
+    //! The passed pairs are a linked list that can be modified.
+    //! If will_erase is true, the coins will be erased by the caller afterwards,
+    //! so the coins can be moved out of the pairs instead of copied
+    virtual bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
@@ -295,7 +295,7 @@ public:
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
+    bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -314,6 +314,12 @@ protected:
      */
     mutable uint256 hashBlock;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
+    /**
+     * The head of the flagged entry linked list.
+     * Destroy it after cacheCoins, since any existing entries could still be
+     * flagged and reference the head in CCoinsCacheEntry's destructor
+     */
+    mutable CoinsCachePair m_flagged_head;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
@@ -332,7 +338,7 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
+    bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
