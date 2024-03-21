@@ -22,6 +22,11 @@ if ! sed --help 2>&1 | grep -q 'GNU'; then
     exit 1;
 fi
 
+if ! grep --help 2>&1 | grep -q 'GNU'; then
+    echo "Error: the installed grep package is not compatible. Please make sure you have GNU grep installed in your system.";
+    exit 1;
+fi
+
 RET=0
 PREV_BRANCH=$(git name-rev --name-only HEAD)
 PREV_HEAD=$(git rev-parse HEAD)
