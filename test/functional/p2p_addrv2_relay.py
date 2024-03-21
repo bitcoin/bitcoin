@@ -11,6 +11,7 @@ import time
 from test_framework.messages import (
     CAddress,
     msg_addrv2,
+    msg_sendaddrv2,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -75,6 +76,12 @@ class AddrTest(BitcoinTestFramework):
         self.extra_args = [["-whitelist=addr@127.0.0.1"]]
 
     def run_test(self):
+        self.log.info('Check disconnection when sending sendaddrv2 after verack')
+        conn = self.nodes[0].add_p2p_connection(P2PInterface())
+        with self.nodes[0].assert_debug_log(['sendaddrv2 received after verack from peer=0; disconnecting']):
+            conn.send_message(msg_sendaddrv2())
+            conn.wait_for_disconnect()
+
         self.log.info('Create connection that sends addrv2 messages')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         msg = msg_addrv2()
@@ -89,8 +96,8 @@ class AddrTest(BitcoinTestFramework):
         msg.addrs = ADDRS
         msg_size = calc_addrv2_msg_size(ADDRS)
         with self.nodes[0].assert_debug_log([
-                f'received: addrv2 ({msg_size} bytes) peer=0',
-                f'sending addrv2 ({msg_size} bytes) peer=1',
+                f'received: addrv2 ({msg_size} bytes) peer=1',
+                f'sending addrv2 ({msg_size} bytes) peer=2',
         ]):
             addr_source.send_and_ping(msg)
             self.nodes[0].setmocktime(int(time.time()) + 30 * 60)
