@@ -31,9 +31,9 @@ class CMnemonic
 public:
     static SecureString Generate(int strength);    // strength in bits
     static SecureString FromData(const SecureVector& data, int len);
-    static bool Check(SecureString mnemonic);
+    static bool Check(const SecureString& mnemonic);
     // passphrase must be at most 256 characters otherwise it would be truncated
-    static void ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet);
+    static void ToSeed(const SecureString& mnemonic, const SecureString& passphrase, SecureVector& seedRet);
 };
 
 #endif // BITCOIN_WALLET_BIP39_H

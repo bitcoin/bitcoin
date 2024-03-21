@@ -33,6 +33,8 @@ IGNORED_WARNINGS=(
     "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. \[useStlAlgorithm\]"
     "src/rpc/.*cpp:.*: note: Function pointer used here."
     "src/masternode/sync.cpp:.*: warning: Variable 'pnode' can be declared as pointer to const \[constVariableReference\]"
+    "src/wallet/bip39.cpp.*: warning: The scope of the variable 'ssCurrentWord' can be reduced. \[variableScope\]"
+
 
     "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const"
     "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here"
