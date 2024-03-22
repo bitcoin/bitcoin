@@ -21,17 +21,17 @@ struct Generators {
 
 public:
     Generators(
-        const Point& H,
         const Point& G,
+        const Point& H,
         const Points& Gi,
         const Points& Hi
-    ) : H{H}, G{G}, Gi{Gi}, Hi{Hi} {}
+    ) : G{G}, H{H}, Gi{Gi}, Hi{Hi} {}
 
     Points GetGiSubset(const size_t& size) const;
     Points GetHiSubset(const size_t& size) const;
 
-    const Point H;
     const Point G;
+    const Point H;
     const Points Gi;
     const Points Hi;
 };
@@ -69,7 +69,7 @@ public:
 
 private:
     inline const static GeneratorDeriver m_deriver =
-        GeneratorDeriver<typename T::Point>("bulletproofs");
+        GeneratorDeriver<typename T::Point>("proof-of-stake");
 
     // G generators are cached
     inline static std::map<const Seed, const Point> m_G_cache;
