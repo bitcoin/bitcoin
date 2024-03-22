@@ -5,7 +5,6 @@
 
 #include <policy/fees.h>
 
-#include <clientversion.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
@@ -31,6 +30,10 @@
 #include <exception>
 #include <stdexcept>
 #include <utility>
+
+// The current format written, and the version required to read. Must be
+// increased to at least 289900+1 on the next breaking change.
+constexpr int CURRENT_FEES_FILE_VERSION{149900};
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -961,7 +964,7 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
 {
     try {
         LOCK(m_cs_fee_estimator);
-        fileout << 149900; // version required to read: 0.14.99 or later
+        fileout << CURRENT_FEES_FILE_VERSION;
         fileout << int{0}; // Unused dummy field. Written files may contain any value in [0, 289900]
         fileout << nBestSeenHeight;
         if (BlockSpan() > HistoricalBlockSpan()/2) {
@@ -988,7 +991,7 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         LOCK(m_cs_fee_estimator);
         int nVersionRequired, dummy;
         filein >> nVersionRequired >> dummy;
-        if (nVersionRequired > CLIENT_VERSION) {
+        if (nVersionRequired > CURRENT_FEES_FILE_VERSION) {
             throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
         }
 
@@ -997,9 +1000,9 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         unsigned int nFileBestSeenHeight;
         filein >> nFileBestSeenHeight;
 
-        if (nVersionRequired < 149900) {
+        if (nVersionRequired < CURRENT_FEES_FILE_VERSION) {
             LogPrintf("%s: incompatible old fee estimation data (non-fatal). Version: %d\n", __func__, nVersionRequired);
-        } else { // New format introduced in 149900
+        } else { // nVersionRequired == CURRENT_FEES_FILE_VERSION
             unsigned int nFileHistoricalFirst, nFileHistoricalBest;
             filein >> nFileHistoricalFirst >> nFileHistoricalBest;
             if (nFileHistoricalFirst > nFileHistoricalBest || nFileHistoricalBest > nFileBestSeenHeight) {
