@@ -979,7 +979,7 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
         longStats->Write(fileout);
     }
     catch (const std::exception&) {
-        LogPrintf("CBlockPolicyEstimator::Write(): unable to write policy estimator data (non-fatal)\n");
+        LogWarning("Unable to write policy estimator data (non-fatal)");
         return false;
     }
     return true;
@@ -992,7 +992,7 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         int nVersionRequired, dummy;
         filein >> nVersionRequired >> dummy;
         if (nVersionRequired > CURRENT_FEES_FILE_VERSION) {
-            throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
+            throw std::runtime_error{strprintf("File version (%d) too high to be read.", nVersionRequired)};
         }
 
         // Read fee estimates file into temporary variables so existing data
@@ -1001,7 +1001,7 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         filein >> nFileBestSeenHeight;
 
         if (nVersionRequired < CURRENT_FEES_FILE_VERSION) {
-            LogPrintf("%s: incompatible old fee estimation data (non-fatal). Version: %d\n", __func__, nVersionRequired);
+            LogWarning("Incompatible old fee estimation data (non-fatal). Version: %d", nVersionRequired);
         } else { // nVersionRequired == CURRENT_FEES_FILE_VERSION
             unsigned int nFileHistoricalFirst, nFileHistoricalBest;
             filein >> nFileHistoricalFirst >> nFileHistoricalBest;
@@ -1041,7 +1041,7 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         }
     }
     catch (const std::exception& e) {
-        LogPrintf("CBlockPolicyEstimator::Read(): unable to read policy estimator data (non-fatal): %s\n",e.what());
+        LogWarning("Unable to read policy estimator data (non-fatal): %s", e.what());
         return false;
     }
     return true;
