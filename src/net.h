@@ -711,7 +711,7 @@ private:
     const bool m_inbound_onion{false};
 
     // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
-    mutable RecursiveMutex cs_mnauth;
+    mutable Mutex cs_mnauth;
     uint256 sentMNAuthChallenge GUARDED_BY(cs_mnauth);
     uint256 receivedMNAuthChallenge GUARDED_BY(cs_mnauth);
     uint256 verifiedProRegTxHash GUARDED_BY(cs_mnauth);
