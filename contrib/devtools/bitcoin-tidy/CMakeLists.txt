@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(bitcoin-tidy VERSION 1.0.0 DESCRIPTION "clang-tidy checks for Bitcoin Core")
+project(bitcoin-tidy
+    VERSION
+    1.0.0
+    DESCRIPTION "clang-tidy checks for Bitcoin Core"
+    LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
@@ -9,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
 
 set(CMAKE_DISABLE_FIND_PACKAGE_CURL ON)
+set(CMAKE_DISABLE_FIND_PACKAGE_FFI ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_LibEdit ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_LibXml2 ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_Terminfo ON)
