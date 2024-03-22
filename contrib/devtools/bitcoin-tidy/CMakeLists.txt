@@ -4,7 +4,7 @@ project(bitcoin-tidy VERSION 1.0.0 DESCRIPTION "clang-tidy checks for Bitcoin Co
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
 
