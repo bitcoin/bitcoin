@@ -117,7 +117,7 @@ class QuorumDataInterface(P2PInterface):
 
 class QuorumDataMessagesTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-llmq-data-recovery=0"]] * 4
+        extra_args = [["-llmq-data-recovery=0", "-deprecatedrpc=banscore"]] * 4
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=extra_args)
 
     def restart_mn(self, mn, reindex=False):

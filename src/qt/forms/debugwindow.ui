@@ -1190,36 +1190,13 @@
                 </widget>
                </item>
                <item row="11" column="0">
-                <widget class="QLabel" name="label_24">
-                 <property name="text">
-                  <string>Ban Score</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="11" column="2">
-                <widget class="QLabel" name="peerBanScore">
-                 <property name="cursor">
-                  <cursorShape>IBeamCursor</cursorShape>
-                 </property>
-                 <property name="text">
-                  <string>N/A</string>
-                 </property>
-                 <property name="textFormat">
-                  <enum>Qt::PlainText</enum>
-                 </property>
-                 <property name="textInteractionFlags">
-                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                 </property>
-                </widget>
-               </item>
-               <item row="12" column="0">
                 <widget class="QLabel" name="label_22">
                  <property name="text">
                   <string>Connection Time</string>
                  </property>
                 </widget>
                </item>
-               <item row="12" column="2">
+               <item row="11" column="2">
                 <widget class="QLabel" name="peerConnTime">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1235,14 +1212,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="13" column="0">
+               <item row="12" column="0">
                 <widget class="QLabel" name="label_15">
                  <property name="text">
                   <string>Last Send</string>
                  </property>
                 </widget>
                </item>
-               <item row="13" column="2">
+               <item row="12" column="2">
                 <widget class="QLabel" name="peerLastSend">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1258,14 +1235,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="14" column="0">
+               <item row="13" column="0">
                 <widget class="QLabel" name="label_19">
                  <property name="text">
                   <string>Last Receive</string>
                  </property>
                 </widget>
                </item>
-               <item row="14" column="2">
+               <item row="13" column="2">
                 <widget class="QLabel" name="peerLastRecv">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1281,14 +1258,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="15" column="0">
+               <item row="14" column="0">
                 <widget class="QLabel" name="label_18">
                  <property name="text">
                   <string>Sent</string>
                  </property>
                 </widget>
                </item>
-               <item row="15" column="2">
+               <item row="14" column="2">
                 <widget class="QLabel" name="peerBytesSent">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1304,14 +1281,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="16" column="0">
+               <item row="15" column="0">
                 <widget class="QLabel" name="label_20">
                  <property name="text">
                   <string>Received</string>
                  </property>
                 </widget>
                </item>
-               <item row="16" column="2">
+               <item row="15" column="2">
                 <widget class="QLabel" name="peerBytesRecv">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1327,14 +1304,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="17" column="0">
+               <item row="16" column="0">
                 <widget class="QLabel" name="label_26">
                  <property name="text">
                   <string>Ping Time</string>
                  </property>
                 </widget>
                </item>
-               <item row="17" column="2">
+               <item row="16" column="2">
                 <widget class="QLabel" name="peerPingTime">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1350,7 +1327,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="18" column="0">
+               <item row="17" column="0">
                 <widget class="QLabel" name="peerPingWaitLabel">
                  <property name="toolTip">
                   <string>The duration of a currently outstanding ping.</string>
@@ -1360,7 +1337,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="18" column="2">
+               <item row="17" column="2">
                 <widget class="QLabel" name="peerPingWait">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1376,14 +1353,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="19" column="0">
+               <item row="18" column="0">
                 <widget class="QLabel" name="peerMinPingLabel">
                  <property name="text">
                   <string>Min Ping</string>
                  </property>
                 </widget>
                </item>
-               <item row="19" column="2">
+               <item row="18" column="2">
                 <widget class="QLabel" name="peerMinPing">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1399,14 +1376,14 @@
                  </property>
                 </widget>
                </item>
-               <item row="20" column="0">
+               <item row="19" column="0">
                 <widget class="QLabel" name="label_timeoffset">
                  <property name="text">
                   <string>Time Offset</string>
                  </property>
                 </widget>
                </item>
-               <item row="20" column="2">
+               <item row="19" column="2">
                 <widget class="QLabel" name="timeoffset">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1422,7 +1399,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="21" column="0">
+               <item row="20" column="0">
                 <widget class="QLabel" name="peerMappedASLabel">
                  <property name="toolTip">
                   <string>The mapped Autonomous System used for diversifying peer selection.</string>
@@ -1432,7 +1409,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="21" column="2">
+               <item row="20" column="2">
                 <widget class="QLabel" name="peerMappedAS">
                  <property name="cursor">
                   <cursorShape>IBeamCursor</cursorShape>
@@ -1448,7 +1425,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="22" column="0">
+               <item row="21" column="0">
                 <spacer name="verticalSpacer_3">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>

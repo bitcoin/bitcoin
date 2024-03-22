@@ -25,7 +25,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
 )
 
-banscore = 10
+DISCOURAGEMENT_THRESHOLD = 100
 
 
 class LazyPeer(P2PInterface):
@@ -91,7 +91,6 @@ class P2PVersionStore(P2PInterface):
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-banscore=' + str(banscore)]]
 
     def setup_network(self):
         self.disable_mocktime()
@@ -100,7 +99,7 @@ class P2PLeakTest(BitcoinTestFramework):
     def run_test(self):
         # Peer that never sends a version. We will send a bunch of messages
         # from this peer anyway and verify eventual disconnection.
-        no_version_ban_peer = self.nodes[0].add_p2p_connection(
+        no_version_disconnect_peer = self.nodes[0].add_p2p_connection(
             LazyPeer(), send_version=False, wait_for_verack=False)
 
         # Another peer that never sends a version, nor any other messages. It shouldn't receive anything from the node.
@@ -111,14 +110,14 @@ class P2PLeakTest(BitcoinTestFramework):
 
         # Send enough ping messages (any non-version message will do) prior to sending
         # version to reach the peer discouragement threshold. This should get us disconnected.
-        for _ in range(banscore):
-            no_version_ban_peer.send_message(msg_ping())
+        for _ in range(DISCOURAGEMENT_THRESHOLD):
+            no_version_disconnect_peer.send_message(msg_ping())
 
         # Wait until we got the verack in response to the version. Though, don't wait for the node to receive the
         # verack, since we never sent one
         no_verack_idle_peer.wait_for_verack()
 
-        no_version_ban_peer.wait_until(lambda: no_version_ban_peer.ever_connected, check_connected=False)
+        no_version_disconnect_peer.wait_until(lambda: no_version_disconnect_peer.ever_connected, check_connected=False)
         no_version_idle_peer.wait_until(lambda: no_version_idle_peer.ever_connected)
         no_verack_idle_peer.wait_until(lambda: no_verack_idle_peer.version_received)
 
@@ -129,12 +128,12 @@ class P2PLeakTest(BitcoinTestFramework):
         time.sleep(5)
 
         #This peer should have been banned
-        assert not no_version_ban_peer.is_connected
+        assert not no_version_disconnect_peer.is_connected
 
         self.nodes[0].disconnect_p2ps()
 
         # Make sure no unexpected messages came in
-        assert no_version_ban_peer.unexpected_msg == False
+        assert no_version_disconnect_peer.unexpected_msg == False
         assert no_version_idle_peer.unexpected_msg == False
         assert no_verack_idle_peer.unexpected_msg == False
 
