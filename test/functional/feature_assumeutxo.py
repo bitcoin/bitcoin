@@ -134,7 +134,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             with self.nodes[0].assert_debug_log([log_msg]):
                 self.nodes[0].assert_start_raises_init_error(expected_msg=error_msg)
 
-        expected_error_msg = f"Error: A fatal internal error occurred, see debug.log for details"
+        expected_error_msg = f"Error: A fatal internal error occurred, see debug.log for details: Assumeutxo data not found for the given blockhash '7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a'."
         error_details = f"Assumeutxo data not found for the given blockhash"
         expected_error(log_msg=error_details, error_msg=expected_error_msg)
 

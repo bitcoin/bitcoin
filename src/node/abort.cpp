@@ -16,14 +16,13 @@
 
 namespace node {
 
-void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const std::string& debug_message, const bilingual_str& user_message)
+void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& message)
 {
-    SetMiscWarning(Untranslated(debug_message));
-    LogPrintf("*** %s\n", debug_message);
-    InitError(user_message.empty() ? _("A fatal internal error occurred, see debug.log for details") : user_message);
+    SetMiscWarning(message);
+    InitError(_("A fatal internal error occurred, see debug.log for details: ") + message);
     exit_status.store(EXIT_FAILURE);
     if (shutdown && !(*shutdown)()) {
-        LogPrintf("Error: failed to send shutdown signal\n");
+        LogError("Failed to send shutdown signal\n");
     };
 }
 } // namespace node
