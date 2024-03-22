@@ -1,0 +1,22 @@
+commit cb2026239c2a3aff393952ccb0ee1c448189402d
+Author: fanquake <fanquake@gmail.com>
+Date:   Fri Mar 22 14:03:54 2024 +0000
+
+    build: add MINIUPNPC_GET_SRC_ADDR to CMake build
+    
+    This mirrors the autotools build.
+
+    See https://github.com/miniupnp/miniupnp/pull/721.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1aa95a8..0cacf3e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -31,6 +31,7 @@ endif ()
+ if (NOT WIN32)
+   target_compile_definitions(miniupnpc-private INTERFACE
+     MINIUPNPC_SET_SOCKET_TIMEOUT
++    MINIUPNPC_GET_SRC_ADDR
+     _BSD_SOURCE _DEFAULT_SOURCE)
+   if (NOT APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES ".*BSD" AND NOT CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+     # add_definitions (-D_POSIX_C_SOURCE=200112L)
