@@ -163,7 +163,7 @@ From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assura
 >  ecosystem, as it leads to a massive number of unnecessary rebuilds.
 
 Where possible, packages are built with Position Independant Code. Either using
-the autotools `--with-pic` flag, or `DCMAKE_POSITION_INDEPENDENT_CODE` with CMake.
+the Autotools `--with-pic` flag, or `CMAKE_POSITION_INDEPENDENT_CODE` with CMake.
 
 ## Secondary dependencies:
 
