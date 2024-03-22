@@ -168,7 +168,7 @@ public:
      * Read saved state of estimation data from a file and replace all internal data structures and
      * variables with this state.
      */
-    void Read(AutoFile& filein, int nFileVersion, size_t numBuckets);
+    void Read(AutoFile& filein, size_t numBuckets);
 };
 
 
@@ -414,7 +414,7 @@ void TxConfirmStats::Write(AutoFile& fileout) const
     fileout << Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(failAvg);
 }
 
-void TxConfirmStats::Read(AutoFile& filein, int nFileVersion, size_t numBuckets)
+void TxConfirmStats::Read(AutoFile& filein, size_t numBuckets)
 {
     // Read data file and do some very basic sanity checking
     // buckets and bucketMap are not updated yet, so don't access them
@@ -962,7 +962,7 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
     try {
         LOCK(m_cs_fee_estimator);
         fileout << 149900; // version required to read: 0.14.99 or later
-        fileout << CLIENT_VERSION; // version that wrote the file
+        fileout << int{0}; // Unused dummy field. Written files may contain any value in [0, 289900]
         fileout << nBestSeenHeight;
         if (BlockSpan() > HistoricalBlockSpan()/2) {
             fileout << firstRecordedHeight << nBestSeenHeight;
@@ -986,8 +986,8 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
 {
     try {
         LOCK(m_cs_fee_estimator);
-        int nVersionRequired, nVersionThatWrote;
-        filein >> nVersionRequired >> nVersionThatWrote;
+        int nVersionRequired, dummy;
+        filein >> nVersionRequired >> dummy;
         if (nVersionRequired > CLIENT_VERSION) {
             throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
         }
@@ -1015,9 +1015,9 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
             std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
             std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
             std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
-            fileFeeStats->Read(filein, nVersionThatWrote, numBuckets);
-            fileShortStats->Read(filein, nVersionThatWrote, numBuckets);
-            fileLongStats->Read(filein, nVersionThatWrote, numBuckets);
+            fileFeeStats->Read(filein, numBuckets);
+            fileShortStats->Read(filein, numBuckets);
+            fileLongStats->Read(filein, numBuckets);
 
             // Fee estimates file parsed correctly
             // Copy buckets from file and refresh our bucketmap
