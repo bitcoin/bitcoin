@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test p2p blocksonly"""
 
-from test_framework.messages import msg_tx, CTransaction, FromHex
+from test_framework.messages import msg_tx, tx_from_hex
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -40,7 +40,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         )['hex']
         assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], False)
         with self.nodes[0].assert_debug_log(['tx sent in violation of protocol peer=0']):
-            block_relay_peer.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
+            block_relay_peer.send_message(msg_tx(tx_from_hex(sigtx)))
             block_relay_peer.wait_for_disconnect()
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 0)
 
@@ -78,7 +78,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
             # But if, for some reason, first_peer decides to relay transactions to us anyway, we should relay them to
             # second_peer since we gave relay permission to first_peer.
             # See https://github.com/bitcoin/bitcoin/issues/19943 for details.
-            first_peer.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
+            first_peer.send_message(msg_tx(tx_from_hex(sigtx)))
             self.log.info('Check that the peer with relay-permission is still connected after sending the transaction')
             assert_equal(first_peer.is_connected, True)
             self.bump_mocktime(60)

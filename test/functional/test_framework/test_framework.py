@@ -27,12 +27,13 @@ from .authproxy import JSONRPCException
 from test_framework.blocktools import TIME_GENESIS_BLOCK
 from . import coverage
 from .messages import (
-    CTransaction,
-    FromHex,
     hash256,
     msg_isdlock,
     ser_compact_size,
     ser_string,
+    tx_from_hex,
+
+
 )
 from .script import hash160
 from .p2p import NetworkThread
@@ -1564,7 +1565,7 @@ class DashTestFramework(BitcoinTestFramework):
             raise AssertionError("waiting unexpectedly succeeded")
 
     def create_isdlock(self, hextx):
-        tx = FromHex(CTransaction(), hextx)
+        tx = tx_from_hex(hextx)
         tx.rehash()
 
         request_id_buf = ser_string(b"islock") + ser_compact_size(len(tx.vin))

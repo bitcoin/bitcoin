@@ -13,7 +13,7 @@ Checks conflict handling between ChainLocks and InstantSend
 import struct
 
 from test_framework.blocktools import create_block_with_mnpayments
-from test_framework.messages import CInv, CTransaction, FromHex, hash256, msg_clsig, msg_inv, ser_string, ToHex, uint256_from_str
+from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, tx_from_hex, uint256_from_str
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
@@ -88,8 +88,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # create three raw TXs, they will conflict with each other
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
-        rawtx1_obj = FromHex(CTransaction(), rawtx1)
-        rawtx2_obj = FromHex(CTransaction(), rawtx2)
+        rawtx1_obj = tx_from_hex(rawtx1)
+        rawtx2_obj = tx_from_hex(rawtx2)
 
         rawtx1_txid = self.nodes[0].sendrawtransaction(rawtx1)
         rawtx2_txid = hash256(hex_str_to_bytes(rawtx2))[::-1].hex()
@@ -114,7 +114,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         block = create_block_with_mnpayments(self.mninfo, self.nodes[0], [rawtx2_obj])
         if test_block_conflict:
             # The block shouldn't be accepted/connected but it should be known to node 0 now
-            submit_result = self.nodes[0].submitblock(ToHex(block))
+            submit_result = self.nodes[0].submitblock(block.serialize().hex())
             assert submit_result == "conflict-tx-lock"
 
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, block)
@@ -146,7 +146,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         # At this point all nodes should be in sync and have the same "best chainlock"
 
-        submit_result = self.nodes[1].submitblock(ToHex(block))
+        submit_result = self.nodes[1].submitblock(block.serialize().hex())
         if test_block_conflict:
             # Node 1 should receive the block from node 0 and should not accept it again via submitblock
             assert submit_result == "duplicate"
@@ -235,7 +235,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Create the block and the corresponding clsig but do not relay clsig yet
         cl_block = create_block_with_mnpayments(self.mninfo, self.nodes[0])
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, cl_block)
-        self.nodes[0].submitblock(ToHex(cl_block))
+        self.nodes[0].submitblock(cl_block.serialize().hex())
         self.sync_all()
         assert self.nodes[0].getbestblockhash() == cl_block.hash
 

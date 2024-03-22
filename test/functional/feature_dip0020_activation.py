@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2023 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_CAT, OP_DROP, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error, softfork_active, satoshi_round
@@ -38,7 +38,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"])))
         tx.vout.append(CTxOut(value, CScript([b'1', b'2', OP_CAT])))
-        tx_signed_hex = self.node.signrawtransactionwithwallet(ToHex(tx))["hex"]
+        tx_signed_hex = self.node.signrawtransactionwithwallet(tx.serialize().hex())["hex"]
         txid = self.node.sendrawtransaction(tx_signed_hex)
 
         # This tx should be completely valid, should be included in mempool and mined in the next block
@@ -52,7 +52,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx0.vin.append(CTxIn(COutPoint(int(txid, 16), 0)))
         tx0.vout.append(CTxOut(value, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
         tx0.rehash()
-        tx0_hex = ToHex(tx0)
+        tx0_hex = tx0.serialize().hex()
 
         # This tx isn't valid yet
         assert not softfork_active(self.nodes[0], 'dip0020')

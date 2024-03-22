@@ -7,7 +7,10 @@ import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import dashhash, hash256
+from test_framework.messages import (
+    dashhash,
+    hash256,
+)
 from test_framework.util import assert_equal
 from time import sleep
 

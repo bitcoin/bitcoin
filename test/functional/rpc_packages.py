@@ -10,9 +10,7 @@ import random
 from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
-    CTransaction,
-    FromHex,
-    ToHex,
+    tx_from_hex,
 )
 from test_framework.script import (
     CScript,
@@ -93,7 +91,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             "amount": parent_value,
         }] if parent_locking_script else None
         signedtx = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys, prevtxs=prevtxs)
-        tx = FromHex(CTransaction(), signedtx["hex"])
+        tx = tx_from_hex(signedtx["hex"])
         tx.rehash()
         assert signedtx["complete"]
         return (tx, signedtx["hex"], my_value, tx.vout[0].scriptPubKey.hex())
@@ -106,7 +104,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         self.log.info("Test an otherwise valid package with an extra garbage tx appended")
         garbage_tx = node.createrawtransaction([{"txid": "00" * 32, "vout": 5}], {self.address: 1})
-        tx = FromHex(CTransaction(), garbage_tx)
+        tx = tx_from_hex(garbage_tx)
         # Only the txid is returned because validation is incomplete for the independent txns.
         # Package validation is atomic: if the node cannot find a UTXO for any single tx in the package,
         # it terminates immediately to avoid unnecessary, expensive signature verification.
@@ -118,8 +116,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         coin = self.coins.pop()
         tx_bad_sig_hex = node.createrawtransaction([{"txid": coin["txid"], "vout": 0}],
                                            {self.address : coin["amount"] - Decimal("0.0001")})
-        tx_bad_sig = FromHex(CTransaction(), tx_bad_sig_hex)
-        tx_bad_sig_hex = ToHex(tx_bad_sig)
+        tx_bad_sig = tx_from_hex(tx_bad_sig_hex)
+        tx_bad_sig_hex = tx_bad_sig.serialize().hex()
         testres_bad_sig = node.testmempoolaccept(self.independent_txns_hex + [tx_bad_sig_hex])
         # By the time the signature for the last transaction is checked, all the other transactions
         # have been fully validated, which is why the node returns full validation results for all
@@ -136,7 +134,7 @@ class RPCPackagesTest(BitcoinTestFramework):
                                            {self.address : coin["amount"] - Decimal("0.999")})
         tx_high_fee_signed = node.signrawtransactionwithkey(hexstring=tx_high_fee_raw, privkeys=self.privkeys)
         assert tx_high_fee_signed["complete"]
-        tx_high_fee = FromHex(CTransaction(), tx_high_fee_signed["hex"])
+        tx_high_fee = tx_from_hex(tx_high_fee_signed["hex"])
         testres_high_fee = node.testmempoolaccept([tx_high_fee_signed["hex"]])
         assert_equal(testres_high_fee, [
             {"txid": tx_high_fee.rehash(), "allowed": False, "reject-reason": "max-fee-exceeded"}
@@ -192,7 +190,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         rawtx = node.createrawtransaction(inputs, outputs)
 
         parent_signed = node.signrawtransactionwithkey(hexstring=rawtx, privkeys=self.privkeys)
-        parent_tx = FromHex(CTransaction(), parent_signed["hex"])
+        parent_tx = tx_from_hex(parent_signed["hex"])
         assert parent_signed["complete"]
         parent_txid = parent_tx.rehash()
         assert node.testmempoolaccept([parent_signed["hex"]])[0]["allowed"]
@@ -206,9 +204,9 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         # Child B
         rawtx_b = node.createrawtransaction([{"txid": parent_txid, "vout": 1}], {self.address : child_value})
-        tx_child_b = FromHex(CTransaction(), rawtx_b)
+        tx_child_b = tx_from_hex(rawtx_b)
         tx_child_b.vin[0].scriptSig = CScript([CScript([OP_TRUE])])
-        tx_child_b_hex = ToHex(tx_child_b)
+        tx_child_b_hex = tx_child_b.serialize().hex()
         assert not node.testmempoolaccept([tx_child_b_hex])[0]["allowed"]
 
         self.log.info("Testmempoolaccept with entire package, should work with children in either order")
@@ -284,8 +282,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         rawtx2 = node.createrawtransaction(inputs, output2)
         signedtx1 = node.signrawtransactionwithkey(hexstring=rawtx1, privkeys=self.privkeys)
         signedtx2 = node.signrawtransactionwithkey(hexstring=rawtx2, privkeys=self.privkeys)
-        tx1 = FromHex(CTransaction(), signedtx1["hex"])
-        tx2 = FromHex(CTransaction(), signedtx2["hex"])
+        tx1 = tx_from_hex(signedtx1["hex"])
+        tx2 = tx_from_hex(signedtx2["hex"])
         assert signedtx1["complete"]
         assert signedtx2["complete"]
 

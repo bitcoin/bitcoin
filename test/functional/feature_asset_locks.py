@@ -23,7 +23,7 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    FromHex,
+    tx_from_hex,
     hash256,
     ser_string,
 )
@@ -84,7 +84,7 @@ class AssetLocksTest(DashTestFramework):
         lock_tx.vExtraPayload = lockTx_payload.serialize()
 
         lock_tx = node_wallet.signrawtransactionwithwallet(lock_tx.serialize().hex())
-        return FromHex(CTransaction(), lock_tx["hex"])
+        return tx_from_hex(lock_tx["hex"])
 
 
     def create_assetunlock(self, index, withdrawal, pubkey=None, fee=tiny_amount):
@@ -175,7 +175,7 @@ class AssetLocksTest(DashTestFramework):
         block = create_block(tip, cbb, block_time, version=4)
         # Add quorum commitments from block template
         for tx_obj in gbt["transactions"]:
-            tx = FromHex(CTransaction(), tx_obj["data"])
+            tx = tx_from_hex(tx_obj["data"])
             if tx.nType == 6:
                 block.vtx.append(tx)
         for tx in txes:
