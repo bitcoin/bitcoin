@@ -11,9 +11,15 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/pedersen_commitment.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
 #include <blsct/set_mem_proof/set_mem_proof_setup.h>
 #include <blsct/set_mem_proof/set_mem_proof.h>
+
+using Scalar = Mcl::Scalar;
+using Scalars = Elements<Scalar>;
+using MsgPair = std::pair<std::string, std::vector<unsigned char>>;
 
 BOOST_FIXTURE_TEST_SUITE(set_mem_proof_prover_tests, BasicTestingSetup)
 
@@ -83,10 +89,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_power_of_2)
     auto y4 = Point::MapToPoint("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.pedersen.Commit(m, f);
+    auto sigma = gen.G * m + gen.H * f;
 
     Points Ys;
     Ys.Add(y1);
@@ -112,10 +120,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_good_inputs_of_non_power_of_2)
     auto y2 = Point::MapToPoint("y2", Endianness::Little);
 
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.pedersen.Commit(m, f);
+    auto sigma = gen.G * m + gen.H * f;
 
     Points Ys;
     Ys.Add(y1);
@@ -141,10 +151,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
     auto y4 = Point::MapToPoint("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.pedersen.Commit(m, f);
+    auto sigma = gen.G * m + gen.H * f;
 
     Points prove_Ys;
     prove_Ys.Add(y1);
@@ -174,6 +186,8 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_not_included)
 BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inputs)
 {
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     // Commitment set includes A=g*f_a+h*m_a, B=g*f_b+h*m_b, and C=g*f_c+h*m_c
     Scalar m_a = Scalar::Rand();
@@ -202,7 +216,7 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_generated_from_other_inp
     // A proof over the membership of D=A+B=g*(f_a+f_b)+h*(m_a+m_b) should be deemed as invalid
     auto m_d = m_a + m_b;
     auto f_d = f_a + f_b;
-    auto D = setup.pedersen.Commit(m_d, f_d);
+    auto D = gen.G * m_d + gen.H * f_d;
 
     auto proof = Prover::Prove(
         setup, ys, D, m_d, f_d, eta_fiat_shamir, eta_phi
@@ -221,10 +235,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_sigma_in_different_pos)
     auto y3 = Point::MapToPoint("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.pedersen.Commit(m, f);
+    auto sigma = gen.G * m + gen.H * f;
 
     Points prove_Ys;
     prove_Ys.Add(y1);
@@ -258,10 +274,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_different_eta)
     auto y4 = Point::MapToPoint("y4", Endianness::Little);
 
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.pedersen.Commit(m, f);
+    auto sigma = gen.G * m + gen.H * f;
 
     Points ys;
     ys.Add(y1);
@@ -294,10 +312,12 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
     auto y4_2 = Point::MapToPoint("y4_2", Endianness::Little);
 
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
 
     Scalar m = Scalar::Rand();
     Scalar f = Scalar::Rand();
-    auto sigma = setup.pedersen.Commit(m, f);
+    auto sigma = gen.G * m + gen.H * f;
 
     Points prove_Ys;
     prove_Ys.Add(y1_1);
@@ -328,12 +348,14 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_small_size_same_sigma_different_ys)
 BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
 {
     auto setup = SetMemProofSetup<Arith>::Get();
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
+    Scalar m = Scalar::Rand();
+    Scalar f = Scalar::Rand();
+    auto sigma = gen.G * m + gen.H * f;
 
     const size_t NUM_INPUTS = setup.N;
     Points Ys;
-    Scalar m = Scalar::Rand();
-    Scalar f = Scalar::Rand();
-    Point sigma = setup.pedersen.Commit(m, f);
 
     for (size_t i=0; i<NUM_INPUTS; ++i) {
         if (i == NUM_INPUTS / 2) {
@@ -354,6 +376,73 @@ BOOST_AUTO_TEST_CASE(test_prove_verify_large_size_input)
     );
     auto res = Prover::Verify(
         setup, Ys, eta_fiat_shamir, eta_phi, proof
+    );
+
+    BOOST_CHECK_EQUAL(res, true);
+}
+
+static MsgPair GenMsgPair(std::string s)
+{
+    std::vector<unsigned char> message { s.begin(), s.end() };
+    return std::pair(s, message);
+}
+
+static bulletproofs::RangeProof<Arith> CreateTokenIdRangeProof(
+    Point nonce,
+    Scalar value
+) {
+    auto msg = GenMsgPair("test");
+
+    Scalars vs;
+    vs.Add(value);
+
+    bulletproofs::RangeProofLogic<Arith> rp;
+    auto proof = rp.Prove(vs, nonce, msg.second, TokenId());
+
+    return proof;
+}
+
+BOOST_AUTO_TEST_CASE(test_pos_scenario)
+{
+    auto setup = SetMemProofSetup<Arith>::Get();
+
+    auto value = Scalar(12345);
+    auto nonce = Point::Rand();
+    auto gamma = nonce.GetHashWithSalt(100);
+
+    auto range_proof = CreateTokenIdRangeProof(nonce, value);
+    auto stake_c = range_proof.Vs[0];
+
+    std::vector<Point> staked_commitments {
+        Point::MapToPoint("stake_a", Endianness::Little),
+        Point::MapToPoint("stake_b", Endianness::Little),
+        stake_c,
+        Point::MapToPoint("stake_d", Endianness::Little),
+    };
+
+    range_proof::Generators<Arith> gen =
+        setup.Gf().GetInstance(TokenId());
+    auto sigma = gen.G * value + gen.H * gamma;
+
+    Scalar eta_fiat_shamir = Scalar::Rand();
+    blsct::Message eta_phi { 1, 2, 3 };
+
+    auto proof = Prover::Prove(
+        setup,
+        staked_commitments,
+        sigma,
+        value,
+        gamma,
+        eta_fiat_shamir,
+        eta_phi
+    );
+
+    auto res = Prover::Verify(
+        setup,
+        staked_commitments,
+        eta_fiat_shamir,
+        eta_phi,
+        proof
     );
 
     BOOST_CHECK_EQUAL(res, true);
