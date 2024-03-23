@@ -93,24 +93,18 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     index.phashBlock = new uint256(InsecureRand256());
     CBlock block;
 
-    blsct::ProofOfStake posProof;
     bool fStop = false;
 
     while (!fStop) {
-        posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, index, block, m_node.chainman->GetConsensus());
-        arith_uint256 targetBn;
-        targetBn.SetCompact(blsct::GetNextTargetRequired(&index, m_node.chainman->GetConsensus()));
-        arith_uint256 kernelHash = UintToArith256(blsct::CalculateKernelHash(index.nTime, index.nStakeModifier, posProof.setMemProof.phi, block.nTime));
+        block.posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, index, block, m_node.chainman->GetConsensus());
 
-        std::cout << kernelHash.ToString() << " < " << targetBn.ToString() << " " << (kernelHash < targetBn) << " " << (out3.value.GetUint64() - (kernelHash / targetBn).GetLow64()) << "\n";
-
-        if (blsct::ProofOfStakeLogic(posProof).Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()))
+        if (blsct::ProofOfStakeLogic::Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()))
             fStop = true;
         else
             block.nTime += 1;
     }
 
-    blsct::ProofOfStakeLogic posProofLogic(posProof);
+    blsct::ProofOfStakeLogic posProofLogic(block.posProof);
 
     BOOST_CHECK(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
 }

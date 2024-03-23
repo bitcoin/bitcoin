@@ -446,6 +446,24 @@ BOOST_AUTO_TEST_CASE(test_pos_scenario)
     );
 
     BOOST_CHECK_EQUAL(res, true);
+
+    bulletproofs::RangeProofLogic<Arith> rp;
+    Scalars vs;
+    vs.Add(value);
+
+    Scalars gammas;
+    gammas.Add(gamma);
+
+    auto rproof = rp.Prove(vs, gammas, {}, eta_phi, value - Scalar(1));
+
+    BOOST_CHECK(rproof.Vs[0] == proof.phi);
+
+    std::vector<bulletproofs::RangeProofWithSeed<Arith>> rproofs;
+    rproofs.push_back({rproof, eta_phi, value - Scalar(1)});
+
+    res = rp.Verify(rproofs);
+
+    BOOST_CHECK_EQUAL(res, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

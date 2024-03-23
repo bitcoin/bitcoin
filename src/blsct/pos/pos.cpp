@@ -244,16 +244,6 @@ CalculateSetMemProofGeneratorSeed(const CBlockIndex& pindexPrev)
     return std::vector<unsigned char>(hash.begin(), hash.end());
 }
 
-uint256
-CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time)
-{
-    HashWriter ss{};
-
-    ss << prevTime << stakeModifier << phi << time;
-
-    return ss.GetHash();
-}
-
 uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block)
 {
     return CalculateKernelHash(pindexPrev.nTime, pindexPrev.nStakeModifier, block.posProof.setMemProof.phi, block.nTime);

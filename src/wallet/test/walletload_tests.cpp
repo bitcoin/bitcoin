@@ -260,7 +260,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         // Load the wallet and check that is encrypted
 
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", get_db(dbs)));
-        wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
         BOOST_CHECK(wallet->IsCrypted());
@@ -288,7 +287,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
 
         // Load the wallet and check that is encrypted
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
-        wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
         BOOST_CHECK(wallet->IsCrypted());
         BOOST_CHECK(HasAnyRecordOfType(wallet->GetDatabase(), DBKeys::CRYPTED_BLSCTKEY));
@@ -317,7 +315,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         }
 
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
-        wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
     }
 
@@ -334,7 +331,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         }
 
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
-        wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::CORRUPT);
     }
 
@@ -343,7 +339,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         // Verify that keys and addresses are not re-generated after encryption
         std::unique_ptr<WalletDatabase> db = get_db(dbs);
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(db)));
-        wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
         BOOST_CHECK_EQUAL(wallet->LoadWallet(), DBErrors::LOAD_OK);
 
         blsct::PrivateKey viewKey2, spendKey2, tokenKey2;

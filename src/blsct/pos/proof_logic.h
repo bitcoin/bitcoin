@@ -22,14 +22,8 @@ namespace blsct {
 class ProofOfStakeLogic : public blsct::ProofOfStake
 {
 public:
-    ProofOfStakeLogic(const blsct::ProofOfStake& posProof) : blsct::ProofOfStake(posProof.setMemProof, posProof.rangeProof)
-    {
-    }
-
     static ProofOfStake Create(const CCoinsViewCache& cache, const Scalar& m, const Scalar& f, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params);
-
-
-    bool Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const;
+    static bool Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params);
 };
 } // namespace blsct
 

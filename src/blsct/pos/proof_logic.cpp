@@ -22,7 +22,7 @@ ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const Scala
     return ProofOfStake(staked_commitments, eta_fiat_shamir, eta_phi, m, f, pindexPrev.nTime, pindexPrev.nStakeModifier, block.nTime, next_target);
 }
 
-bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params) const
+bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& pindexPrev, const CBlock& block, const Consensus::Params& params)
 {
     auto staked_commitments = cache.GetStakedCommitments().GetElements();
     auto eta_fiat_shamir = blsct::CalculateSetMemProofRandomness(pindexPrev);
@@ -31,9 +31,7 @@ bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex& 
     auto kernel_hash = blsct::CalculateKernelHash(pindexPrev, block);
     auto next_target = blsct::GetNextTargetRequired(&pindexPrev, params);
 
-    auto proof = ProofOfStake(setMemProof, rangeProof);
-
-    auto res = proof.Verify(staked_commitments, eta_fiat_shamir, eta_phi, kernel_hash, next_target);
+    auto res = block.posProof.Verify(staked_commitments, eta_fiat_shamir, eta_phi, kernel_hash, next_target);
 
     return res;
 }

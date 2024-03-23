@@ -172,10 +172,10 @@ SetMemProof<T> SetMemProofProver<T>::Prove(
     Point A2 = h2 * beta + (setup.hs.To(n) * bR).Sum();
     Point S1 = h2 * r_alpha + setup.h * r_beta + setup.g * r_tau;
     Point S2 = h2 * rho + (Ys * sL).Sum() + (setup.hs.To(n) * sR).Sum();
-    Point S3 = h3 * r_beta + g2 * r_tau;
+    Point S3 = h3 * r_tau + g2 * r_beta;
 
     // Set element image
-    Point phi = h3 * m + g2 * f;
+    Point phi = h3 * f + g2 * m;
 
     // Challenge 1
     auto fiat_shamir = GenInitialFiatShamir(
@@ -375,8 +375,8 @@ retry:
     //////// (21)
     {
         // LHS
-        verifier.AddPoint(LazyPoint(h3, proof.z_beta.Negate()));
-        verifier.AddPoint(LazyPoint(g2, proof.z_tau.Negate()));
+        verifier.AddPoint(LazyPoint(h3, proof.z_tau.Negate()));
+        verifier.AddPoint(LazyPoint(g2, proof.z_beta.Negate()));
 
         // RHS
         verifier.AddPoint(LazyPoint(proof.S3, One()));
