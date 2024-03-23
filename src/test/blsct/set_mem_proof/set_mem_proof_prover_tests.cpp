@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "blsct/range_proof/bulletproofs/range_proof.h"
 #define BOOST_UNIT_TEST
 
 #include <boost/test/unit_test.hpp>
@@ -12,6 +11,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/pedersen_commitment.h>
+#include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/set_mem_proof/set_mem_proof_prover.h>
 #include <blsct/set_mem_proof/set_mem_proof_setup.h>
