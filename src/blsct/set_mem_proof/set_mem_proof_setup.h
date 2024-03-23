@@ -55,7 +55,7 @@ private:
     static Point GenPoint(const std::vector<uint8_t>& msg, const uint64_t& i);
     static Points GenGenerators(const Point& base_point, const size_t& size);
 
-    inline static const GeneratorDeriver m_deriver = GeneratorDeriver<Point>("set_membership_proof");
+    inline static const GeneratorDeriver m_deriver = GeneratorDeriver<Point>("proof-of-stake");
 
     inline static range_proof::GeneratorsFactory<T>* m_gf;
     inline static std::mutex m_init_mutex;

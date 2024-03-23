@@ -65,13 +65,13 @@ range_proof::Generators<T> range_proof::GeneratorsFactory<T>::GetInstance(const 
     using Point = typename T::Point;
 
     // if G for the given seed hasn't been created, create and cache it
-    if (GeneratorsFactory<T>::m_G_cache.count(seed) == 0) {
-        const Point G = m_deriver.Derive(GeneratorsFactory<T>::m_H, 0, seed);
-        GeneratorsFactory<T>::m_G_cache.emplace(seed, G);
+    if (m_G_cache.count(seed) == 0) {
+        const Point G = m_deriver.Derive(m_H, 0, seed);
+        m_G_cache.emplace(seed, G);
     }
-    Point G = GeneratorsFactory<T>::m_G_cache[seed];
+    Point G = m_G_cache[seed];
 
-    Generators<T> gens(m_H, G, m_Gi, m_Hi);
+    Generators<T> gens(G, m_H, m_Gi, m_Hi);
     return gens;
 }
 template range_proof::Generators<Mcl> range_proof::GeneratorsFactory<Mcl>::GetInstance(const Seed&) const;
