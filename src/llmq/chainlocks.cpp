@@ -135,7 +135,7 @@ PeerMsgRet CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq
         return {};
     }
 
-    CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
+    const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
 
     {
         LOCK(cs);
@@ -428,7 +428,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
             }
 
             ret = std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>();
-            for (auto& tx : block.vtx) {
+            for (const auto& tx : block.vtx) {
                 if (tx->IsCoinBase() || tx->vin.empty()) {
                     continue;
                 }
@@ -495,9 +495,8 @@ void CChainLocksHandler::EnforceBestChainLock()
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- enforcing block %s via CLSIG (%s)\n", __func__, pindex->GetBlockHash().ToString(), clsig->ToString());
     m_chainstate.EnforceBlock(dummy_state, pindex);
 
-    bool activateNeeded = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex;
 
-    if (activateNeeded) {
+    if (/*activateNeeded =*/ WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight)) != currentBestChainLockBlockIndex) {
         if (!m_chainstate.ActivateBestChain(dummy_state)) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;

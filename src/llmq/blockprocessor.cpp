@@ -186,8 +186,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
         }
     }
 
-    for (const auto& p : qcs) {
-        const auto& qc = p.second;
+    for (const auto& [_, qc] : qcs) {
         if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, fBLSChecks)) {
             LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n", pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex, qc.quorumHash.ToString());
             return false;
@@ -317,8 +316,8 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
         return false;
     }
 
-    for (auto& p : qcs) {
-        auto& qc = p.second;
+    for (auto& [_, qc2] : qcs) {
+        auto& qc = qc2; // cannot capture structured binding into lambda
         if (qc.IsNull()) {
             continue;
         }
@@ -334,10 +333,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
             m_evoDb.Erase(BuildInversedHeightKey(qc.llmqType, pindex->nHeight));
         }
 
-        {
-            LOCK(minableCommitmentsCs);
-            mapHasMinedCommitmentCache[qc.llmqType].erase(qc.quorumHash);
-        }
+        WITH_LOCK(minableCommitmentsCs, mapHasMinedCommitmentCache[qc.llmqType].erase(qc.quorumHash));
 
         // if a reorg happened, we should allow to mine this commitment later
         AddMineableCommitment(qc);
@@ -452,11 +448,8 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(const Consensus::LLMQParams& l
 bool CQuorumBlockProcessor::HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
     bool fExists;
-    {
-        LOCK(minableCommitmentsCs);
-        if (mapHasMinedCommitmentCache[llmqType].get(quorumHash, fExists)) {
-            return fExists;
-        }
+    if (LOCK(minableCommitmentsCs); mapHasMinedCommitmentCache[llmqType].get(quorumHash, fExists)) {
+        return fExists;
     }
 
     fExists = m_evoDb.Exists(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash)));
@@ -646,28 +639,29 @@ bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const
 
 void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
 {
-    bool relay = false;
-    uint256 commitmentHash = ::SerializeHash(fqc);
+    const uint256 commitmentHash = ::SerializeHash(fqc);
 
-    {
+    const bool relay = [&]() {
         LOCK(minableCommitmentsCs);
 
         auto k = std::make_pair(fqc.llmqType, fqc.quorumHash);
-        auto ins = minableCommitmentsByQuorum.try_emplace(k, commitmentHash);
-        if (ins.second) {
+        auto [itInserted, successfullyInserted] = minableCommitmentsByQuorum.try_emplace(k, commitmentHash);
+        if (successfullyInserted) {
             minableCommitments.try_emplace(commitmentHash, fqc);
-            relay = true;
+            return true;
         } else {
-            const auto& oldFqc = minableCommitments.at(ins.first->second);
+            auto& insertedQuorumHash = itInserted->second;
+            const auto& oldFqc = minableCommitments.at(insertedQuorumHash);
             if (fqc.CountSigners() > oldFqc.CountSigners()) {
                 // new commitment has more signers, so override the known one
-                ins.first->second = commitmentHash;
-                minableCommitments.erase(ins.first->second);
+                insertedQuorumHash = commitmentHash;
+                minableCommitments.erase(insertedQuorumHash);
                 minableCommitments.try_emplace(commitmentHash, fqc);
-                relay = true;
+                return true;
             }
         }
-    }
+        return false;
+    }();
 
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
