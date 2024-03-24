@@ -293,7 +293,7 @@ static RPCHelpMan generatetoblsctaddress()
             const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
 
             CTxDestination destination = DecodeDestination(request.params[1].get_str());
-            if (!IsValidDestination(destination) || destination.index() != 7) {
+            if (!IsValidDestination(destination) || destination.index() != 8) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
             }
 
@@ -661,7 +661,7 @@ static RPCHelpMan getblocktemplate()
                                                                                                                                                                                                                                       {RPCResult::Type::ARR, "depends", "array of numbers", {
                                                                                                                                                                                                                                                                                                 {RPCResult::Type::NUM, "", "transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is"},
                                                                                                                                                                                                                                                                                             }},
-                                                                                                                                                                                                                                      {RPCResult::Type::NUM, "fee", "difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
+                                                                                                                                                                                                                                      {RPCResult::Type::NUM, "fee", true, "difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
                                                                                                                                                                                                                                       {RPCResult::Type::NUM, "sigops", "total SigOps cost, as counted for purposes of block limits; if key is not present, sigop cost is unknown and clients MUST NOT assume it is zero"},
                                                                                                                                                                                                                                       {RPCResult::Type::NUM, "weight", "total transaction weight, as counted for purposes of block limits"},
                                                                                                                                                                                                                                   }},
@@ -684,6 +684,11 @@ static RPCHelpMan getblocktemplate()
                                                                      {RPCResult::Type::STR, "bits", "compressed target of next block"},
                                                                      {RPCResult::Type::NUM, "height", "The height of the next block"},
                                                                      {RPCResult::Type::STR_HEX, "signet_challenge", /*optional=*/true, "Only on signet"},
+                                                                     {RPCResult::Type::STR_HEX, "eta_phi", /*optional=*/true, "Only on Proof of Stake"},
+                                                                     {RPCResult::Type::STR_HEX, "eta_fiat_shamir", /*optional=*/true, "Only on Proof of Stake"},
+                                                                     {RPCResult::Type::NUM, "modifier", /*optional=*/true, "Only on Proof of Stake"},
+                                                                     {RPCResult::Type::NUM, "prev_time", /*optional=*/true, "Only on Proof of Stake"},
+                                                                     {RPCResult::Type::ANY, "staked_commitments", /*optional=*/true, "Only on Proof of Stake"},
                                                                      {RPCResult::Type::STR_HEX, "default_witness_commitment", /*optional=*/true, "a valid witness commitment for the unmodified block template"},
                                                                  }},
         },
@@ -1006,6 +1011,8 @@ static RPCHelpMan getblocktemplate()
                 result.pushKV("staked_commitments", stakedCommitments);
                 result.pushKV("eta_fiat_shamir", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev)));
                 result.pushKV("eta_phi", HexStr(blsct::CalculateSetMemProofGeneratorSeed(*pindexPrev)));
+                result.pushKV("prev_time", pindexPrev->nTime);
+                result.pushKV("modifier", pindexPrev->nStakeModifier);
             }
 
             if (consensusParams.signet_blocks) {

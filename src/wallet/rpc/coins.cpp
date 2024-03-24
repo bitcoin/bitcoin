@@ -167,25 +167,8 @@ UniValue FormatStakedCommitmentInfo(const std::vector<StakedCommitmentInfo>& inf
     for (auto& it : info) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("commitment", HexStr(it.commitment.GetVch()));
-
-        range_proof::GeneratorsFactory<Mcl> gf;
-        range_proof::Generators<Arith> gen = gf.GetInstance(TokenId());
-
-        Point sigma = gen.G * it.value + gen.H * it.gamma;
-
-        obj.pushKV("commitment2", HexStr(sigma.GetVch()));
-        obj.pushKV("G", HexStr(gen.G.GetVch()));
-        obj.pushKV("H", HexStr(gen.H.GetVch()));
-
         obj.pushKV("value", HexStr(it.value.GetVch()));
-        auto val = MclScalar();
-        val.SetVch(ParseHex(HexStr(it.value.GetVch())));
-        obj.pushKV("value2", it.value.GetString());
         obj.pushKV("gamma", HexStr(it.gamma.GetVch()));
-
-        auto gam = MclScalar();
-        gam.SetVch(ParseHex(HexStr(it.gamma.GetVch())));
-        obj.pushKV("gamma2", it.gamma.GetString());
         ret.push_back(obj);
     }
 
@@ -500,67 +483,61 @@ RPCHelpMan getbalances()
         "Returns an object with all balances in " + CURRENCY_UNIT + ".\n",
         {},
         RPCResult{
-            RPCResult::Type::OBJ, "", "",
+            RPCResult::Type::OBJ, "", "", {
+                                              {RPCResult::Type::OBJ, "mine", "balances from outputs that the wallet can sign", {
+                                                                                                                                   {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
+                                                                                                                                   {RPCResult::Type::STR_AMOUNT, "staked_commitment_balance", "staked balance"},
+                                                                                                                                   {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
+                                                                                                                                   {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
+                                                                                                                                   {RPCResult::Type::STR_AMOUNT, "used", /*optional=*/true, "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
+                                                                                                                               }},
+                                              {RPCResult::Type::OBJ, "watchonly", /*optional=*/true, "watchonly balances (not present if wallet does not watch anything)", {
+                                                                                                                                                                               {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
+                                                                                                                                                                               {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
+                                                                                                                                                                               {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
+                                                                                                                                                                           }},
+                                              RESULT_LAST_PROCESSED_BLOCK,
+                                          }},
+        RPCExamples{HelpExampleCli("getbalances", "") + HelpExampleRpc("getbalances", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
+            if (!rpc_wallet) return UniValue::VNULL;
+            const CWallet& wallet = *rpc_wallet;
+
+            // Make sure the results are valid at least up to the most recent block
+            // the user could have gotten from another RPC command prior to now
+            wallet.BlockUntilSyncedToCurrentChain();
+
+            LOCK(wallet.cs_wallet);
+
+            const auto bal = GetBalance(wallet);
+            UniValue balances{UniValue::VOBJ};
             {
-                {RPCResult::Type::OBJ, "mine", "balances from outputs that the wallet can sign",
-                {
-                    {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
-                    {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
-                    {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
-                    {RPCResult::Type::STR_AMOUNT, "used", /*optional=*/true, "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
-                }},
-                {RPCResult::Type::OBJ, "watchonly", /*optional=*/true, "watchonly balances (not present if wallet does not watch anything)",
-                {
-                    {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
-                    {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
-                    {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
-                }},
-                RESULT_LAST_PROCESSED_BLOCK,
+                UniValue balances_mine{UniValue::VOBJ};
+                balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
+                balances_mine.pushKV("staked_commitment_balance", ValueFromAmount(bal.m_mine_staked_commitment));
+                balances_mine.pushKV("untrusted_pending", ValueFromAmount(bal.m_mine_untrusted_pending));
+                balances_mine.pushKV("immature", ValueFromAmount(bal.m_mine_immature));
+                if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
+                    // If the AVOID_REUSE flag is set, bal has been set to just the un-reused address balance. Get
+                    // the total balance, and then subtract bal to get the reused address balance.
+                    const auto full_bal = GetBalance(wallet, 0, false);
+                    balances_mine.pushKV("used", ValueFromAmount(full_bal.m_mine_trusted + full_bal.m_mine_untrusted_pending - bal.m_mine_trusted - bal.m_mine_untrusted_pending));
+                }
+                balances.pushKV("mine", balances_mine);
             }
-            },
-        RPCExamples{
-            HelpExampleCli("getbalances", "") +
-            HelpExampleRpc("getbalances", "")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
-    if (!rpc_wallet) return UniValue::VNULL;
-    const CWallet& wallet = *rpc_wallet;
+            auto spk_man = wallet.GetLegacyScriptPubKeyMan();
+            if (spk_man && spk_man->HaveWatchOnly()) {
+                UniValue balances_watchonly{UniValue::VOBJ};
+                balances_watchonly.pushKV("trusted", ValueFromAmount(bal.m_watchonly_trusted));
+                balances_watchonly.pushKV("untrusted_pending", ValueFromAmount(bal.m_watchonly_untrusted_pending));
+                balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
+                balances.pushKV("watchonly", balances_watchonly);
+            }
 
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
-
-    LOCK(wallet.cs_wallet);
-
-    const auto bal = GetBalance(wallet);
-    UniValue balances{UniValue::VOBJ};
-    {
-        UniValue balances_mine{UniValue::VOBJ};
-        balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
-        balances_mine.pushKV("staked_commitment_balance", ValueFromAmount(bal.m_mine_staked_commitment));
-        balances_mine.pushKV("untrusted_pending", ValueFromAmount(bal.m_mine_untrusted_pending));
-        balances_mine.pushKV("immature", ValueFromAmount(bal.m_mine_immature));
-        if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
-            // If the AVOID_REUSE flag is set, bal has been set to just the un-reused address balance. Get
-            // the total balance, and then subtract bal to get the reused address balance.
-            const auto full_bal = GetBalance(wallet, 0, false);
-            balances_mine.pushKV("used", ValueFromAmount(full_bal.m_mine_trusted + full_bal.m_mine_untrusted_pending - bal.m_mine_trusted - bal.m_mine_untrusted_pending));
-        }
-        balances.pushKV("mine", balances_mine);
-    }
-    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (spk_man && spk_man->HaveWatchOnly()) {
-        UniValue balances_watchonly{UniValue::VOBJ};
-        balances_watchonly.pushKV("trusted", ValueFromAmount(bal.m_watchonly_trusted));
-        balances_watchonly.pushKV("untrusted_pending", ValueFromAmount(bal.m_watchonly_untrusted_pending));
-        balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
-        balances.pushKV("watchonly", balances_watchonly);
-    }
-
-    AppendLastProcessedBlock(balances, wallet);
-    return balances;
-},
+            AppendLastProcessedBlock(balances, wallet);
+            return balances;
+        },
     };
 }
 

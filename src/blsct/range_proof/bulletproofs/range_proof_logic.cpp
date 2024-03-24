@@ -16,8 +16,6 @@
 #include <blsct/range_proof/msg_amt_cipher.h>
 #include <optional>
 #include <stdexcept>
-#include <tinyformat.h>
-#include <util/strencodings.h>
 #include <variant>
 
 namespace bulletproofs {

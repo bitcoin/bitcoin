@@ -4,6 +4,9 @@
 
 #include <blsct/pos/helpers.h>
 
+#include <iostream>
+#include <util/strencodings.h>
+
 namespace blsct {
 uint256
 CalculateKernelHash(const uint32_t& prevTime, const uint64_t& stakeModifier, const MclG1Point& phi, const uint32_t& time)

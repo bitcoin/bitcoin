@@ -7,6 +7,7 @@ src/navcoind
 src/navcoin-cli
 src/navcoin-gui
 src/navcoin-node
+src/navcoin-staker
 src/navcoin-tx
 src/navcoin-util
 src/navcoin-chainstate

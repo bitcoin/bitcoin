@@ -118,6 +118,7 @@ struct Params {
     uint256 posLimit;
     int64_t nPosTargetSpacing;
     int64_t nPosTargetTimespan;
+    bool fPosNoRetargeting;
     unsigned int nModifierInterval;
     CAmount nPePoSMinStakeAmount;
     /** Whether BLSCT is activated */
@@ -128,6 +129,7 @@ struct Params {
         return std::chrono::seconds{nPowTargetSpacing};
     }
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t DifficultyAdjustmentIntervalPos() const { return nPosTargetTimespan / nPosTargetSpacing; }
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */

@@ -12,10 +12,10 @@
 #include <util/strencodings.h>
 
 namespace blsct {
-bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward, const CAmount& minStake, CBlockIndex* pindexPrev)
+bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, TxValidationState& state, const CAmount& blockReward, const CAmount& minStake)
 {
     if (!view.HaveInputs(tx)) {
-        return false;
+        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-inputs-unknown");
     }
 
     range_proof::GeneratorsFactory<Mcl> gf;
@@ -35,7 +35,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
             Coin coin;
 
             if (!view.GetCoin(in.prevout, coin)) {
-                return false;
+                return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-input-unknown");
             }
 
             vPubKeys.emplace_back(coin.out.blsctData.spendingKey);
@@ -56,15 +56,17 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
             vProofs.emplace_back(bulletproofs::RangeProofWithSeed<Mcl>{out.blsctData.rangeProof, out.tokenId});
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
 
-            if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof) && pindexPrev) {
-                vProofs.push_back(bulletproofs::RangeProofWithSeed<Mcl>{stakedCommitmentRangeProof, blsct::CalculateSetMemProofGeneratorSeed(*pindexPrev), minStake});
+            if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof)) {
+                stakedCommitmentRangeProof.Vs.Clear();
+                stakedCommitmentRangeProof.Vs.Add(out.blsctData.rangeProof.Vs[0]);
+                vProofs.push_back(bulletproofs::RangeProofWithSeed<Mcl>{stakedCommitmentRangeProof, TokenId(), minStake});
             }
         } else {
             if (!out.scriptPubKey.IsUnspendable() && out.nValue > 0) {
-                return false;
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "spendable-output-with-public-value");
             }
             if (nFee > 0 || !MoneyRange(out.nValue)) {
-                return false;
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "more-than-one-fee-output");
             }
             if (out.nValue == 0) continue;
             nFee = out.nValue;
@@ -76,7 +78,16 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     vMessages.emplace_back(blsct::Common::BLSCTBALANCE);
     vPubKeys.emplace_back(balanceKey);
 
-    return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true) &&
-           rp.Verify(vProofs);
+    auto sigCheck = PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true);
+
+    if (!sigCheck)
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-signature-check");
+
+    auto rpCheck = rp.Verify(vProofs);
+
+    if (!rpCheck)
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-rangeproof-check");
+
+    return true;
 }
 } // namespace blsct

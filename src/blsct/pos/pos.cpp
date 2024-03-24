@@ -14,35 +14,60 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
     return pindex;
 }
 
-unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
 {
-    arith_uint256 bnTargetLimit = UintToArith256(params.posLimit);
+    assert(pindexLast != nullptr);
+    unsigned int nProofOfStakeLimit = UintToArith256(params.posLimit).GetCompact();
 
-    if (pindexLast == nullptr)
-        return bnTargetLimit.GetCompact(); // genesis block
+    // Only change once per difficulty adjustment interval
+    if ((pindexLast->nHeight + 1) % params.DifficultyAdjustmentIntervalPos() != 0) {
+        if (params.fPowAllowMinDifficultyBlocks) {
+            // Special difficulty rule for testnet:
+            // If the new block's timestamp is more than 2* 10 minutes
+            // then allow mining of a min-difficulty block.
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPosTargetSpacing * 2)
+                return nProofOfStakeLimit;
+            else {
+                // Return the last non-special-min-difficulty-rules-block
+                const CBlockIndex* pindex = pindexLast;
+                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentIntervalPos() != 0 && pindex->nBits == nProofOfStakeLimit)
+                    pindex = pindex->pprev;
+                return pindex->nBits;
+            }
+        }
+        return pindexLast->nBits;
+    }
 
-    const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, true);
-    if (pindexPrev->pprev == nullptr)
-        return bnTargetLimit.GetCompact(); // first block
+    // Go back by what we want to be 15 minutes worth of blocks
+    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentIntervalPos() - 1);
+    assert(nHeightFirst >= 0);
+    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+    assert(pindexFirst);
 
-    const CBlockIndex* pindexPrevPrev = GetLastBlockIndex(pindexPrev->pprev, true);
-    if (pindexPrevPrev->pprev == nullptr)
-        return bnTargetLimit.GetCompact(); // second block
+    return CalculateNextTargetRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+}
 
-    int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+{
+    if (params.fPosNoRetargeting)
+        return pindexLast->nBits;
 
-    if (nActualSpacing < 0)
-        nActualSpacing = params.nPosTargetSpacing;
+    // Limit adjustment step
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    if (nActualTimespan < params.nPosTargetTimespan / 4)
+        nActualTimespan = params.nPosTargetTimespan / 4;
+    if (nActualTimespan > params.nPosTargetTimespan * 4)
+        nActualTimespan = params.nPosTargetTimespan * 4;
 
+    // Retarget
+    const arith_uint256 bnPosLimit = UintToArith256(params.posLimit);
     arith_uint256 bnNew;
-    bnNew.SetCompact(pindexPrev->nBits);
+    bnNew.SetCompact(pindexLast->nBits);
+    bnNew *= nActualTimespan;
+    bnNew /= params.nPosTargetTimespan;
 
-    arith_uint256 nInterval = (params.nPosTargetTimespan) / (params.nPosTargetSpacing);
-    bnNew *= (((nInterval - 1)) * (params.nPosTargetSpacing) + (nActualSpacing) + (nActualSpacing));
-    bnNew /= (((nInterval + 1)) * (params.nPosTargetSpacing));
-
-    if (bnNew <= 0 || bnNew > bnTargetLimit)
-        bnNew = bnTargetLimit;
+    if (bnNew > bnPosLimit)
+        bnNew = bnPosLimit;
 
     return bnNew.GetCompact();
 }

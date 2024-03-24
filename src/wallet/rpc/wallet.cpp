@@ -52,6 +52,7 @@ static RPCHelpMan getwalletinfo()
                 {RPCResult::Type::NUM, "walletversion", "the wallet version"},
                 {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
                 {RPCResult::Type::STR_AMOUNT, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
+                {RPCResult::Type::STR_AMOUNT, "staked_commitment_balance", "DEPRECATED. Identical to getbalances().mine.staked_commitment_balance"},
                 {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
                 {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
                 {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},

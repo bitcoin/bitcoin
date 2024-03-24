@@ -5,9 +5,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/range_proof/msg_amt_cipher.h>
 #include <blsct/range_proof/setup.h>
-#include <iostream>
 #include <string>
-#include <util/strencodings.h>
 
 namespace range_proof {
 

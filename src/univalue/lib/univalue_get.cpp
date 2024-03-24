@@ -29,7 +29,7 @@ static bool ParsePrechecks(const std::string& str)
     return true;
 }
 
-bool ParseDouble(const std::string& str, double *out)
+bool ParseDouble(const std::string& str, double* out)
 {
     if (!ParsePrechecks(str))
         return false;
@@ -39,7 +39,21 @@ bool ParseDouble(const std::string& str, double *out)
     text.imbue(std::locale::classic());
     double result;
     text >> result;
-    if(out) *out = result;
+    if (out) *out = result;
+    return text.eof() && !text.fail();
+}
+
+bool ParseUint64(const std::string& str, uint64_t* out)
+{
+    if (!ParsePrechecks(str))
+        return false;
+    if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
+        return false;
+    std::istringstream text(str);
+    text.imbue(std::locale::classic());
+    uint64_t result;
+    text >> result;
+    if (out) *out = result;
     return text.eof() && !text.fail();
 }
 }
@@ -75,6 +89,15 @@ double UniValue::get_real() const
     double retval;
     if (!ParseDouble(getValStr(), &retval))
         throw std::runtime_error("JSON double out of range");
+    return retval;
+}
+
+uint64_t UniValue::get_uint64() const
+{
+    checkType(VNUM);
+    uint64_t retval;
+    if (!ParseUint64(getValStr(), &retval))
+        throw std::runtime_error("JSON uint64_t out of range");
     return retval;
 }
 

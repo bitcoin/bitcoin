@@ -62,7 +62,7 @@ static void ParseBLSCTRecipients(const UniValue& address_amounts, const UniValue
     int i = 0;
     for (const std::string& address : address_amounts.getKeys()) {
         CTxDestination dest = DecodeDestination(address);
-        if (!IsValidDestination(dest) || dest.index() != 7) {
+        if (!IsValidDestination(dest) || dest.index() != 8) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BLSCT address: ") + address);
         }
 

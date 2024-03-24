@@ -1104,7 +1104,7 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     }
 
     if (args.m_chainparams.GetConsensus().fBLSCT) {
-        if (!blsct::VerifyTx(tx, m_view, 0, args.m_chainparams.GetConsensus().nPePoSMinStakeAmount)) {
+        if (!blsct::VerifyTx(tx, m_view, state, 0, args.m_chainparams.GetConsensus().nPePoSMinStakeAmount)) {
             return Assume(false);
         }
     }
@@ -2184,7 +2184,7 @@ static int64_t num_blocks_total = 0;
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
 bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                               CCoinsViewCache& view, bool fJustCheck)
+                              CCoinsViewCache& view, bool fJustCheck, const bool& fCheckPOS)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
@@ -2270,6 +2270,41 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(time_1 - time_start),
              Ticks<SecondsDouble>(time_check),
              Ticks<MillisecondsDouble>(time_check) / num_blocks_total);
+
+    auto time_2_{SteadyClock::now()};
+
+    if (params.GetConsensus().fBLSCT && block.IsProofOfStake() && fCheckPOS) {
+        auto posProof = blsct::ProofOfStakeLogic(block.posProof);
+
+        if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
+
+        time_2_ = SteadyClock::now();
+        time_verify += time_2_ - time_1;
+        LogPrint(BCLog::BENCH, "    - Verify proof of stake proof: %.2fms [%.2fs (%.2fms/blk)]\n",
+                 Ticks<MillisecondsDouble>(time_2_ - time_1),
+                 Ticks<SecondsDouble>(time_verify),
+                 Ticks<MillisecondsDouble>(time_verify) / num_blocks_total);
+    }
+
+    pindex->SetStakeEntropyBit(block.GetStakeEntropyBit());
+
+    uint64_t nStakeModifier = 0;
+    bool fGeneratedStakeModifier = false;
+    if (!blsct::ComputeNextStakeModifier(pindex->pprev, nStakeModifier, fGeneratedStakeModifier, params.GetConsensus(), m_blockman))
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-stake-modifier");
+
+    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
+
+    if (block.IsProofOfStake())
+        pindex->SetKernelHash(blsct::CalculateKernelHash(*(pindex->pprev), block));
+
+    const auto time_2{SteadyClock::now()};
+    time_pos_calc += time_2 - time_2_;
+    LogPrint(BCLog::BENCH, "    - Calculate proof of stake values: %.2fms [%.2fs (%.2fms/blk)]\n",
+             Ticks<MillisecondsDouble>(time_2 - time_2_),
+             Ticks<SecondsDouble>(time_pos_calc),
+             Ticks<MillisecondsDouble>(time_pos_calc) / num_blocks_total);
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
@@ -2366,10 +2401,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // Get the script flags for this block
     unsigned int flags{GetBlockScriptFlags(*pindex, m_chainman)};
 
-    const auto time_2{SteadyClock::now()};
-    time_forks += time_2 - time_1;
+    const auto time_3{SteadyClock::now()};
+    time_forks += time_3 - time_2;
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n",
-             Ticks<MillisecondsDouble>(time_2 - time_1),
+             Ticks<MillisecondsDouble>(time_3 - time_2),
              Ticks<SecondsDouble>(time_forks),
              Ticks<MillisecondsDouble>(time_forks) / num_blocks_total);
 
@@ -2386,6 +2421,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     std::vector<int> prevheights;
     CAmount nFees = 0;
     int nInputs = 0;
+    int nOutputs = 0;
     int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -2393,6 +2429,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         const CTransaction &tx = *(block.vtx[i]);
 
         nInputs += tx.vin.size();
+        nOutputs += tx.vout.size();
 
         if (!tx.IsCoinBase())
         {
@@ -2450,9 +2487,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
             if (tx.IsBLSCT()) {
                 if (params.GetConsensus().fBLSCT) {
-                    if (!blsct::VerifyTx(tx, view, 0, params.GetConsensus().nPePoSMinStakeAmount, pindex)) {
-                        return error("ConnectBlock(): VerifyTx on transaction %s failed",
-                                     tx.GetHash().ToString());
+                    if (!blsct::VerifyTx(tx, view, tx_state, 0, params.GetConsensus().nPePoSMinStakeAmount)) {
+                        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                      tx_state.GetRejectReason(), tx_state.GetDebugMessage());
+                        return error("ConnectBlock(): VerifyTx on transaction %s failed with %s",
+                                     tx.GetHash().ToString(), state.ToString());
                     }
                 } else {
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "blsct-tx-not-allowed");
@@ -2470,18 +2509,23 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
-    const auto time_3{SteadyClock::now()};
-    time_connect += time_3 - time_2;
-    LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
-             Ticks<MillisecondsDouble>(time_3 - time_2), Ticks<MillisecondsDouble>(time_3 - time_2) / block.vtx.size(),
-             nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_3 - time_2) / (nInputs - 1),
+    const auto time_4{SteadyClock::now()};
+    time_connect += time_4 - time_3;
+    LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin, %.3fms/txout) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
+             Ticks<MillisecondsDouble>(time_4 - time_3), Ticks<MillisecondsDouble>(time_4 - time_3) / block.vtx.size(),
+             nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_4 - time_3) / (nInputs - 1),
+             nOutputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_4 - time_3) / (nOutputs - 1),
              Ticks<SecondsDouble>(time_connect),
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
     if (block.IsBLSCT()) {
-        if (!blsct::VerifyTx(*block.vtx[0], view, nFees + params.GetConsensus().nBLSCTBlockReward)) {
-            return error("ConnectBlock(): VerifyTx on coinbase of block %s failed (fees: %s reward: %s)\n%s",
+        TxValidationState tx_state;
+
+        if (!blsct::VerifyTx(*block.vtx[0], view, tx_state, nFees + params.GetConsensus().nBLSCTBlockReward)) {
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                          tx_state.GetRejectReason(), tx_state.GetDebugMessage());
+            return error("ConnectBlock(): VerifyTx on coinbase of block %s failed (fees: %s reward: %s)\n",
                          block.GetHash().ToString(), FormatMoney(nFees), FormatMoney(params.GetConsensus().nBLSCTBlockReward));
         }
     } else if (block.vtx[0]->GetValueOut() > blockReward) {
@@ -2493,11 +2537,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         LogPrintf("ERROR: %s: CheckQueue failed\n", __func__);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "block-validation-failed");
     }
-    const auto time_4{SteadyClock::now()};
-    time_verify += time_4 - time_2;
+    const auto time_5{SteadyClock::now()};
+    time_verify += time_5 - time_3;
     LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1,
-             Ticks<MillisecondsDouble>(time_4 - time_2),
-             nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_4 - time_2) / (nInputs - 1),
+             Ticks<MillisecondsDouble>(time_5 - time_3),
+             nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_5 - time_3) / (nInputs - 1),
              Ticks<SecondsDouble>(time_verify),
              Ticks<MillisecondsDouble>(time_verify) / num_blocks_total);
 
@@ -2508,10 +2552,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return false;
     }
 
-    const auto time_5{SteadyClock::now()};
-    time_undo += time_5 - time_4;
+    const auto time_6{SteadyClock::now()};
+    time_undo += time_6 - time_5;
     LogPrint(BCLog::BENCH, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n",
-             Ticks<MillisecondsDouble>(time_5 - time_4),
+             Ticks<MillisecondsDouble>(time_6 - time_5),
              Ticks<SecondsDouble>(time_undo),
              Ticks<MillisecondsDouble>(time_undo) / num_blocks_total);
 
@@ -2520,40 +2564,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
 
-    auto time_6{SteadyClock::now()};
-
-    if (params.GetConsensus().fBLSCT && block.IsProofOfStake()) {
-        auto posProof = blsct::ProofOfStakeLogic(block.posProof);
-
-        if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
-
-        time_6 = SteadyClock::now();
-        time_verify += time_6 - time_5;
-        LogPrint(BCLog::BENCH, "    - Verify proof of stake proof: %.2fms [%.2fs (%.2fms/blk)]\n",
-                 Ticks<MillisecondsDouble>(time_6 - time_5),
-                 Ticks<SecondsDouble>(time_verify),
-                 Ticks<MillisecondsDouble>(time_verify) / num_blocks_total);
-    }
-
-    pindex->SetStakeEntropyBit(block.GetStakeEntropyBit());
-
-    uint64_t nStakeModifier = 0;
-    bool fGeneratedStakeModifier = false;
-    if (!blsct::ComputeNextStakeModifier(pindex->pprev, nStakeModifier, fGeneratedStakeModifier, params.GetConsensus(), m_blockman))
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-stake-modifier");
-
-    pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
-
-    if (block.IsProofOfStake())
-        pindex->SetKernelHash(blsct::CalculateKernelHash(*(pindex->pprev), block));
-
-    const auto time_7{SteadyClock::now()};
-    time_pos_calc += time_7 - time_6;
-    LogPrint(BCLog::BENCH, "    - Calculate proof of stake values: %.2fms [%.2fs (%.2fms/blk)]\n",
-             Ticks<MillisecondsDouble>(time_7 - time_6),
-             Ticks<SecondsDouble>(time_pos_calc),
-             Ticks<MillisecondsDouble>(time_pos_calc) / num_blocks_total);
+    auto time_7{SteadyClock::now()};
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -3871,8 +3882,8 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // Check proof of work
     const Consensus::Params& consensusParams = chainman.GetConsensus();
     if (block.IsProofOfStake()) {
-        if (block.nBits != blsct::GetNextTargetRequired(pindexPrev, consensusParams))
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", strprintf("incorrect proof of stake (%08x should be %08x)", block.nBits, blsct::GetNextTargetRequired(pindexPrev, consensusParams)));
+        if (block.nBits != blsct::GetNextTargetRequired(pindexPrev, &block, consensusParams))
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", strprintf("incorrect proof of stake (%08x should be %08x)", block.nBits, blsct::GetNextTargetRequired(pindexPrev, &block, consensusParams)));
     } else if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 
@@ -4349,7 +4360,7 @@ bool TestBlockValidity(BlockValidationState& state,
         return error("%s: Consensus::CheckBlock: %s", __func__, state.ToString());
     if (!ContextualCheckBlock(block, state, chainstate.m_chainman, pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.ToString());
-    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
+    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true, fCheckPOW)) {
         return false;
     }
     assert(state.IsValid());

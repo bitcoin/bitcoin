@@ -66,6 +66,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     coin.out = out.out;
 
     auto tx = blsct::TxFactory(blsct_km);
+    TxValidationState tx_state;
 
     {
         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
@@ -82,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     auto finalTx = tx.BuildTx();
 
     BOOST_CHECK(finalTx.has_value());
-    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache, tx_state));
 
     bool fFoundChange = false;
 
@@ -140,9 +141,10 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     tx.AddOutput(recvAddress, 900 * COIN, "test");
 
     auto finalTx = tx.BuildTx();
+    TxValidationState tx_state;
 
     BOOST_CHECK(finalTx.has_value());
-    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache, tx_state));
 
     bool fFoundChange = false;
 

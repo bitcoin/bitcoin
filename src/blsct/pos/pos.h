@@ -11,7 +11,8 @@
 
 namespace blsct {
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);
-unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const Consensus::Params& params);
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params);
+unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params);
 static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModifier, int64_t& nModifierTime);
 static int64_t GetStakeModifierSelectionIntervalSection(int nSection, const Consensus::Params& params);
 static int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params);

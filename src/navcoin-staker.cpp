@@ -99,6 +99,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-walletpassphrase=<password>", "Specify the password to unlock the wallet", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-coinbasedest=<address>", "Specify the address to collect the staking rewards", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
 }
 
 /** libevent event log callback */
@@ -439,6 +440,7 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
 static std::string rpcPass = "";
 static std::string walletName = "";
 static std::string walletPassphrase = "";
+static std::string coinbase_dest = "";
 static bool mustUnlockWallet = false;
 
 void Setup()
@@ -480,6 +482,8 @@ void Setup()
     } else if (gArgs.IsArgSet("-rpcwalletpassphrase"))
         walletPassphrase = gArgs.GetArg("-rpcwalletpassphrase", {});
 
+    if (gArgs.IsArgSet("-coinbasedest"))
+        coinbase_dest = gArgs.GetArg("-coinbasedest", {});
 
     if (gArgs.IsArgSet("-wallet")) walletName = gArgs.GetArg("-wallet", {});
 
@@ -544,10 +548,7 @@ bool TestSetup()
                         return false;
                     }
 
-                    if (result["unlocked_until"].isNull())
-                        return true;
-
-                    if (result["unlocked_until"].get_real() == 0) {
+                    if (!result["unlocked_until"].isNull() && result["unlocked_until"].get_real() == 0) {
                         LogPrintf("Wallet is locked. Testing password.\n");
 
                         mustUnlockWallet = true;
@@ -562,10 +563,30 @@ bool TestSetup()
 
                         if (error.isNull()) {
                             LogPrintf("Wallet passphrase test: OK\n");
-                            return true;
                         } else {
                             ParseError(error, strError, nRet);
                             LogPrintf("Could not unlock wallet %s (%s)\n", walletName, strError);
+
+                            return false;
+                        }
+                    }
+
+                    if (coinbase_dest == "") {
+                        reply = ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{"Staking", "blsct"}, walletName);
+
+                        UniValue result = reply.find_value("result");
+                        const UniValue& error = reply.find_value("error");
+
+                        strError.clear();
+                        nRet = 0;
+
+                        if (error.isNull() || !result.isStr()) {
+                            coinbase_dest = result.get_str();
+                            LogPrintf("Rewards address: %s\n", coinbase_dest);
+                            return true;
+                        } else {
+                            ParseError(error, strError, nRet);
+                            LogPrintf("Could not get an address for rewards from wallet %s (%s)\n", walletName, strError);
 
                             return false;
                         }
@@ -614,6 +635,10 @@ UniValueArrayToStakedCommitments(const UniValue& array)
         ret.push_back({point, value, gamma});
     }
 
+    sort(ret.begin(), ret.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.point < rhs.point;
+    });
+
     return ret;
 }
 
@@ -659,24 +684,21 @@ std::vector<StakedCommitment> GetStakedCommitments(const std::unique_ptr<BaseReq
     return UniValueArrayToStakedCommitments(result.get_array());
 }
 
-CBlock GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh)
+std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh, const StakedCommitment& staked_commitment, const Elements<MclG1Point>& staked_elements)
 {
     CBlock proposal;
 
-    auto reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{}, walletName);
+    auto reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{"{\"rules\": [\"\"], \"coinbasedest\": \"" + coinbase_dest + "\"}"}, walletName);
     UniValue result = reply.find_value("result");
-
-    auto staked_commitments = GetStakedCommitments(rh);
-    auto staked_elments = StakedCommitmentsArrayToElements(staked_commitments);
 
     auto eta_fiat_shamir = ParseHex(result.find_value("eta_fiat_shamir").get_str());
     auto eta_phi = ParseHex(result.find_value("eta_phi").get_str());
 
-    MclScalar m = staked_commitments[0].value;
-    MclScalar f = staked_commitments[0].gamma;
+    MclScalar m = staked_commitment.value;
+    MclScalar f = staked_commitment.gamma;
 
     uint32_t prev_time = result.find_value("prev_time").get_real();
-    uint64_t modifier = result.find_value("modifier").get_real();
+    uint64_t modifier = result.find_value("modifier").get_uint64();
     uint64_t next_target = stoi(result.find_value("bits").get_str(), 0, 16);
 
     proposal.nVersion = result.find_value("version").get_real();
@@ -684,10 +706,15 @@ CBlock GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh)
     proposal.nBits = next_target;
     proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
     proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
-    proposal.posProof = blsct::ProofOfStake(staked_elments, eta_fiat_shamir, eta_phi, m, f, prev_time, proposal.nTime, modifier, next_target);
+
+    proposal.posProof = blsct::ProofOfStake(staked_elements, eta_fiat_shamir, eta_phi, m, f, prev_time, modifier, proposal.nTime, next_target);
     proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
 
-    return proposal;
+    auto valid = blsct::ProofOfStake(proposal.posProof).Verify(staked_elements, eta_fiat_shamir, eta_phi, blsct::CalculateKernelHash(prev_time, modifier, proposal.posProof.setMemProof.phi, proposal.nTime), next_target);
+
+    if (valid) return proposal;
+
+    return std::nullopt;
 }
 
 void Loop()
@@ -696,21 +723,50 @@ void Loop()
 
     rh.reset(new DefaultRequestHandler());
 
+    auto last_update{SteadyClock::now()};
+    auto nTries = 0;
+
+    LogPrintf("Starting staking...\n");
+
     while (true) {
-        CBlock proposal = GetBlockProposal(rh);
+        auto staked_commitments = GetStakedCommitments(rh);
+        auto staked_elements = StakedCommitmentsArrayToElements(staked_commitments);
+        CBlock proposal;
+        bool found = false;
 
-        UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal)}, walletName);
+        for (auto& it : staked_commitments) {
+            auto candidate = GetBlockProposal(rh, it, staked_elements);
+            nTries++;
 
-        UniValue result_submit = reply_submit.find_value("result");
-        UniValue error_submit = reply_submit.find_value("error");
+            found = candidate.has_value();
 
-        if (error_submit.isNull()) {
-            std::cout
-                << "Found block " << reply_submit.write(0, 0) << "\n";
+            if (found) {
+                proposal = candidate.value();
+                break;
+            }
         }
 
+        if (found) {
+            UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal)}, walletName);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50000));
+            UniValue result_submit = reply_submit.find_value("result");
+            UniValue error_submit = reply_submit.find_value("error");
+
+            if (error_submit.isNull()) {
+                LogPrintf("Found block %s (%s).\n", proposal.GetHash().ToString(), reply_submit.write(0, 0));
+                nTries = 0;
+                last_update = SteadyClock::now();
+                // exit(0);
+            }
+        }
+
+        if (Ticks<std::chrono::milliseconds>(SteadyClock::now() - last_update) > 60000) {
+            nTries = 0;
+            last_update = SteadyClock::now();
+            LogPrintf("Did not find a block yet.\n");
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
