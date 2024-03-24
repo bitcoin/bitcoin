@@ -1259,7 +1259,6 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
             : stats->nodeStats.fRelayTxes
                 ? tr("Outbound")
                 : tr("Outbound block-relay"));
-    ui->peerHeight->setText(QString::number(stats->nodeStats.nStartingHeight));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permissionFlags == PF_NONE) {
         ui->peerPermissions->setText(tr("N/A"));
@@ -1298,6 +1297,8 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
             ui->peerCommonHeight->setText(QString("%1").arg(stats->nodeStateStats.nCommonHeight));
         else
             ui->peerCommonHeight->setText(tr("Unknown"));
+
+        ui->peerHeight->setText(QString::number(stats->nodeStateStats.m_starting_height));
     }
 
     ui->detailWidget->show();

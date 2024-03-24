@@ -671,7 +671,6 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     }
     stats.fInbound = IsInboundConn();
     stats.m_manual_connection = IsManualConn();
-    X(nStartingHeight);
     {
         LOCK(cs_vSend);
         X(mapSendBytesPerMsgCmd);
@@ -4020,7 +4019,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
-    hashContinue = uint256();
 
     if (conn_type_in != ConnectionType::BLOCK_RELAY) {
         m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);

@@ -38,6 +38,7 @@ struct CNodeStateStats {
     int m_misbehavior_score = 0;
     int nSyncHeight = -1;
     int nCommonHeight = -1;
+    int m_starting_height = -1;
     std::vector<int> vHeightInFlight;
 };
 
