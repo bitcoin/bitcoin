@@ -4275,10 +4275,6 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     }
     local_wallet_batch.TxnCommit();
 
-    // Connect the SPKM signals
-    ConnectScriptPubKeyManNotifiers();
-    NotifyCanGetAddressesChanged();
-
     WalletLogPrintf("Wallet migration complete.\n");
 
     return true;
