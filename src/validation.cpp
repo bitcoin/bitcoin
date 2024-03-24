@@ -2276,8 +2276,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (params.GetConsensus().fBLSCT && block.IsProofOfStake() && fCheckPOS) {
         auto posProof = blsct::ProofOfStakeLogic(block.posProof);
 
-        if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
+        try {
+            if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
+        } catch (const std::runtime_error& e) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
+        }
 
         time_2_ = SteadyClock::now();
         time_verify += time_2_ - time_1;

@@ -385,7 +385,7 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
                 ret.m_mine_staked_commitment += tx_credit_staked_commitment;
             }
             if (!is_trusted && tx_depth == 0 && wtx.InMempool()) {
-                ret.m_mine_untrusted_pending += tx_credit_mine;
+                ret.m_mine_untrusted_pending += tx_credit_mine + tx_credit_staked_commitment;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
             }
             ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT);

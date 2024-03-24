@@ -620,7 +620,7 @@ struct StakedCommitment {
 };
 
 std::vector<StakedCommitment>
-UniValueArrayToStakedCommitments(const UniValue& array)
+UniValueArrayToStakedCommitmentsMine(const UniValue& array)
 {
     std::vector<StakedCommitment> ret;
 
@@ -634,22 +634,23 @@ UniValueArrayToStakedCommitments(const UniValue& array)
         gamma.SetVch(ParseHex(obj.find_value("gamma").get_str()));
         ret.push_back({point, value, gamma});
     }
-
-    sort(ret.begin(), ret.end(), [](const auto& lhs, const auto& rhs) {
-        return lhs.point < rhs.point;
-    });
-
     return ret;
 }
 
-Elements<MclG1Point>
-StakedCommitmentsArrayToElements(const std::vector<StakedCommitment>& commitments)
+std::vector<MclG1Point>
+UniValueArrayToStakedCommitments(const UniValue& array)
 {
-    Elements<MclG1Point> ret;
+    std::vector<MclG1Point> ret;
 
-    for (auto& it : commitments) {
-        ret.Add(it.point);
+    for (const UniValue& elementobject : array.getValues()) {
+        MclG1Point point;
+        point.SetVch(ParseHex(elementobject.get_str()));
+        ret.push_back(point);
     }
+
+    sort(ret.begin(), ret.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs < rhs;
+    });
 
     return ret;
 }
@@ -681,10 +682,10 @@ std::vector<StakedCommitment> GetStakedCommitments(const std::unique_ptr<BaseReq
 
     UniValue result = reply_staked.find_value("result");
 
-    return UniValueArrayToStakedCommitments(result.get_array());
+    return UniValueArrayToStakedCommitmentsMine(result.get_array());
 }
 
-std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh, const StakedCommitment& staked_commitment, const Elements<MclG1Point>& staked_elements)
+std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>& rh, const StakedCommitment& staked_commitment)
 {
     CBlock proposal;
 
@@ -706,6 +707,8 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
     proposal.nBits = next_target;
     proposal.hashPrevBlock = uint256S(result.find_value("previousblockhash").get_str());
     proposal.vtx = UniValueArrayToTransactions(result.find_value("transactions").get_array());
+
+    auto staked_elements = UniValueArrayToStakedCommitments(result.find_value("staked_commitments").get_array());
 
     proposal.posProof = blsct::ProofOfStake(staked_elements, eta_fiat_shamir, eta_phi, m, f, prev_time, modifier, proposal.nTime, next_target);
     proposal.hashMerkleRoot = BlockMerkleRoot(proposal);
@@ -730,12 +733,11 @@ void Loop()
 
     while (true) {
         auto staked_commitments = GetStakedCommitments(rh);
-        auto staked_elements = StakedCommitmentsArrayToElements(staked_commitments);
         CBlock proposal;
         bool found = false;
 
         for (auto& it : staked_commitments) {
-            auto candidate = GetBlockProposal(rh, it, staked_elements);
+            auto candidate = GetBlockProposal(rh, it);
             nTries++;
 
             found = candidate.has_value();
