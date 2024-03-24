@@ -70,8 +70,6 @@ static constexpr auto FEELER_INTERVAL = 2min;
 static const unsigned int MAX_INV_SZ = 50000;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
-/** The maximum number of addresses from our addrman to return in response to a getaddr message. */
-static constexpr size_t MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 3 MiB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 3 * 1024 * 1024;
 /** Maximum length of the user agent string in `version` message */
@@ -482,12 +480,6 @@ public:
     bool m_legacyWhitelisted{false};
     bool fClient{false}; // set by version message
     bool m_limited_node{false}; //after BIP159, set by version message
-
-    /**
-     * Whether the peer has signaled support for receiving ADDRv2 (BIP155)
-     * messages, implying a preference to receive ADDRv2 instead of ADDR ones.
-     */
-    std::atomic_bool m_wants_addrv2{false};
     /** fSuccessfullyConnected is set to true on receiving VERACK from the peer. */
     std::atomic_bool fSuccessfullyConnected{false};
     // Setting fDisconnect to true will cause the node to be disconnected the
@@ -496,7 +488,6 @@ public:
     std::atomic<int64_t> nDisconnectLingerTime{0};
     std::atomic_bool fSocketShutdown{false};
     std::atomic_bool fOtherSideDisconnected { false };
-    bool fSentAddr{false};
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
     std::atomic<bool> m_masternode_connection{false};
     /**
@@ -567,15 +558,6 @@ public:
         return m_conn_type == ConnectionType::INBOUND;
     }
 
-    /* Whether we send addr messages over this connection */
-    bool RelayAddrsWithConn() const
-    {
-        // Don't relay addr messages to peers that we connect to as block-relay-only
-        // peers (to prevent adversaries from inferring these links from addr
-        // traffic).
-        return m_conn_type != ConnectionType::BLOCK_RELAY;
-    }
-
     bool ExpectServicesFromConn() const {
         switch (m_conn_type) {
             case ConnectionType::INBOUND:
@@ -596,16 +578,6 @@ protected:
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 
 public:
-    // flood relay
-    std::vector<CAddress> vAddrToSend;
-    std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
-    bool fGetAddr{false};
-    Mutex m_addr_send_times_mutex;
-    std::chrono::microseconds m_next_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
-    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
-
-    bool IsBlockRelayOnly() const;
-
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
         // We use fRelayTxes for two purposes -
@@ -661,6 +633,8 @@ public:
     std::atomic<bool> fSendRecSigs{false};
     // If true, we will send him all quorum related messages, even if he is not a member of our quorums
     std::atomic<bool> qwatch{false};
+
+    bool IsBlockRelayOnly() const;
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn, ConnectionType conn_type_in, bool inbound_onion = false);
     ~CNode();
@@ -760,40 +734,6 @@ public:
     {
         nRefCount--;
     }
-
-
-
-    void AddAddressKnown(const CAddress& _addr)
-    {
-        assert(m_addr_known);
-        m_addr_known->insert(_addr.GetKey());
-    }
-
-    /**
-     * Whether the peer supports the address. For example, a peer that does not
-     * implement BIP155 cannot receive Tor v3 addresses because it requires
-     * ADDRv2 (BIP155) encoding.
-     */
-    bool IsAddrCompatible(const CAddress& addr) const
-    {
-        return m_wants_addrv2 || addr.IsAddrV1Compatible();
-    }
-
-    void PushAddress(const CAddress& _addr, FastRandomContext &insecure_rand)
-    {
-        // Known checking here is only to save space from duplicates.
-        // SendMessages will filter it again for knowns that were added
-        // after addresses were pushed.
-        assert(m_addr_known);
-        if (_addr.IsValid() && !m_addr_known->contains(_addr.GetKey()) && IsAddrCompatible(_addr)) {
-            if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
-                vAddrToSend[insecure_rand.randrange(vAddrToSend.size())] = _addr;
-            } else {
-                vAddrToSend.push_back(_addr);
-            }
-        }
-    }
-
 
     void AddKnownInventory(const uint256& hash)
     {

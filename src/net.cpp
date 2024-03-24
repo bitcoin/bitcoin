@@ -4047,10 +4047,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
 
-    if (conn_type_in != ConnectionType::BLOCK_RELAY) {
-        m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);
-    }
-
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
