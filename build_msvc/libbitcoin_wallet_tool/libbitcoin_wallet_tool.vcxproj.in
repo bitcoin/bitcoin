@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\common.init.vcxproj" />
-  <PropertyGroup Label="Globals">
+  <
+  
+  7c87e378-df58-482e-aa2f-1bc129bc19ce}</Label="Globals">
     <ProjectGuid>{F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
@@ -14,3 +16,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="..\common.vcxproj" />
 </Project>
+F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}
