@@ -96,8 +96,8 @@ public:
 class CDKGDebugManager
 {
 private:
-    mutable RecursiveMutex cs;
-    CDKGDebugStatus localStatus GUARDED_BY(cs);
+    mutable Mutex cs_lockStatus;
+    CDKGDebugStatus localStatus GUARDED_BY(cs_lockStatus);
 
 public:
     CDKGDebugManager();

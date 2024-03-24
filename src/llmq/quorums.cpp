@@ -93,7 +93,7 @@ bool CQuorum::SetVerificationVector(const std::vector<CBLSPublicKey>& quorumVecI
 {
     const auto quorumVecInSerialized = ::SerializeHash(quorumVecIn);
 
-    LOCK(cs);
+    LOCK(cs_vvec_shShare);
     if (quorumVecInSerialized != qc->quorumVvecHash) {
         return false;
     }
@@ -106,7 +106,7 @@ bool CQuorum::SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const CActi
     if (!secretKeyShare.IsValid() || (secretKeyShare.GetPublicKey() != GetPubKeyShare(GetMemberIndex(mn_activeman.GetProTxHash())))) {
         return false;
     }
-    LOCK(cs);
+    LOCK(cs_vvec_shShare);
     skShare = secretKeyShare;
     return true;
 }
@@ -131,8 +131,8 @@ bool CQuorum::IsValidMember(const uint256& proTxHash) const
 
 CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
 {
-    LOCK(cs);
-    if (!HasVerificationVector() || memberIdx >= members.size() || !qc->validMembers[memberIdx]) {
+    LOCK(cs_vvec_shShare);
+    if (!HasVerificationVectorInternal() || memberIdx >= members.size() || !qc->validMembers[memberIdx]) {
         return CBLSPublicKey();
     }
     const auto& m = members[memberIdx];
@@ -140,13 +140,18 @@ CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
 }
 
 bool CQuorum::HasVerificationVector() const {
-    LOCK(cs);
+    LOCK(cs_vvec_shShare);
+    return HasVerificationVectorInternal();
+}
+
+bool CQuorum::HasVerificationVectorInternal() const {
+    AssertLockHeld(cs_vvec_shShare);
     return quorumVvec != nullptr;
 }
 
 CBLSSecretKey CQuorum::GetSkShare() const
 {
-    LOCK(cs);
+    LOCK(cs_vvec_shShare);
     return skShare;
 }
 
@@ -165,8 +170,8 @@ void CQuorum::WriteContributions(CEvoDB& evoDb) const
 {
     uint256 dbKey = MakeQuorumKey(*this);
 
-    LOCK(cs);
-    if (HasVerificationVector()) {
+    LOCK(cs_vvec_shShare);
+    if (HasVerificationVectorInternal()) {
         CDataStream s(SER_DISK, CLIENT_VERSION);
         WriteCompactSize(s, quorumVvec->size());
         for (auto& pubkey : *quorumVvec) {
@@ -196,7 +201,7 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
         qv.emplace_back(pubkey);
     }
 
-    LOCK(cs);
+    LOCK(cs_vvec_shShare);
     quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(qv));
     // We ignore the return value here as it is ok if this fails. If it fails, it usually means that we are not a
     // member of the quorum but observed the whole DKG process to have the quorum verification vector.
@@ -434,17 +439,14 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitmentPtr& fqc, co
     }
 
     cxxtimer::Timer t2(true);
-    LOCK(quorum->cs);
-    quorum->quorumVvec = blsWorker.BuildQuorumVerificationVector(vvecs);
+    quorum->SetVerificationVector(blsWorker.BuildQuorumVerificationVector(vvecs));
     if (!quorum->HasVerificationVector()) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- failed to build quorumVvec\n", __func__);
         // without the quorum vvec, there can't be a skShare, so we fail here. Failure is not fatal here, as it still
         // allows to use the quorum as a non-member (verification through the quorum pub key)
         return false;
     }
-    quorum->skShare = blsWorker.AggregateSecretKeys(skContributions);
-    if (!quorum->skShare.IsValid()) {
-        quorum->skShare.Reset();
+    if (!quorum->SetSecretKeyShare(blsWorker.AggregateSecretKeys(skContributions), *m_mn_activeman)) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- failed to build skShare\n", __func__);
         // We don't bail out here as this is not a fatal error and still allows us to recover public key shares (as we
         // have a valid quorum vvec at this point)
@@ -747,7 +749,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
                 return sendQDATA(CQuorumDataRequest::Errors::QUORUM_VERIFICATION_VECTOR_MISSING, request_limit_exceeded);
             }
 
-            WITH_LOCK(pQuorum->cs, ssResponseData << *pQuorum->quorumVvec);
+            WITH_LOCK(pQuorum->cs_vvec_shShare, ssResponseData << *pQuorum->quorumVvec);
         }
 
         // Check if request wants ENCRYPTED_CONTRIBUTIONS data
@@ -821,7 +823,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, const std::string& msg_t
         if (request.GetDataMask() & CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
             assert(m_mn_activeman);
 
-            if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec->size() != size_t(pQuorum->params.threshold))) {
+            if (WITH_LOCK(pQuorum->cs_vvec_shShare, return pQuorum->quorumVvec->size() != size_t(pQuorum->params.threshold))) {
                 return errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
             }
 

@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <map>
+#include <utility>
 
 class CActiveMasternodeManager;
 class CBlockIndex;
@@ -182,10 +183,10 @@ private:
     mutable CBLSWorkerCache blsCache;
     mutable std::atomic<bool> fQuorumDataRecoveryThreadRunning{false};
 
-    mutable RecursiveMutex cs;
+    mutable Mutex cs_vvec_shShare;
     // These are only valid when we either participated in the DKG or fully watched it
-    BLSVerificationVectorPtr quorumVvec GUARDED_BY(cs);
-    CBLSSecretKey skShare GUARDED_BY(cs);
+    BLSVerificationVectorPtr quorumVvec GUARDED_BY(cs_vvec_shShare);
+    CBLSSecretKey skShare GUARDED_BY(cs_vvec_shShare);
 
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
@@ -193,9 +194,13 @@ public:
     void Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, Span<CDeterministicMNCPtr> _members);
 
     bool SetVerificationVector(const std::vector<CBLSPublicKey>& quorumVecIn);
+    void SetVerificationVector(BLSVerificationVectorPtr vvec_in) {
+        LOCK(cs_vvec_shShare);
+        quorumVvec = std::move(vvec_in);
+    }
     bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare, const CActiveMasternodeManager& mn_activeman);
 
-    bool HasVerificationVector() const;
+    bool HasVerificationVector() const LOCKS_EXCLUDED(cs_vvec_shShare);
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
     int GetMemberIndex(const uint256& proTxHash) const;
@@ -204,6 +209,7 @@ public:
     CBLSSecretKey GetSkShare() const;
 
 private:
+    bool HasVerificationVectorInternal() const EXCLUSIVE_LOCKS_REQUIRED(cs_vvec_shShare);
     void WriteContributions(CEvoDB& evoDb) const;
     bool ReadContributions(CEvoDB& evoDb);
 };

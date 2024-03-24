@@ -261,8 +261,6 @@ bool CDKGSession::PreVerifyMessage(const CDKGContribution& qc, bool& retBan) con
 
 void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
 {
-    LOCK(cs_pending);
-
     CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
@@ -336,15 +334,11 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
 
     logger.Batch("decrypted our contribution share. time=%d", t2.count());
 
-    bool verifyPending = false;
     receivedSkContributions[member->idx] = skContribution;
     vecEncryptedContributions[member->idx] = qc.contributions;
+    LOCK(cs_pending);
     pendingContributionVerifications.emplace_back(member->idx);
     if (pendingContributionVerifications.size() >= 32) {
-        verifyPending = true;
-    }
-
-    if (verifyPending) {
         VerifyPendingContributions();
     }
 }

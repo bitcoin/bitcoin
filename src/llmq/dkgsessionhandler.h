@@ -54,13 +54,13 @@ public:
     using BinaryMessage = std::pair<NodeId, std::shared_ptr<CDataStream>>;
 
 private:
-    mutable RecursiveMutex cs;
     std::atomic<PeerManager*> m_peerman{nullptr};
     const int invType;
-    size_t maxMessagesPerNode GUARDED_BY(cs);
-    std::list<BinaryMessage> pendingMessages GUARDED_BY(cs);
-    std::map<NodeId, size_t> messagesPerNode GUARDED_BY(cs);
-    std::set<uint256> seenMessages GUARDED_BY(cs);
+    const size_t maxMessagesPerNode;
+    mutable Mutex cs_messages;
+    std::list<BinaryMessage> pendingMessages GUARDED_BY(cs_messages);
+    std::map<NodeId, size_t> messagesPerNode GUARDED_BY(cs_messages);
+    std::set<uint256> seenMessages GUARDED_BY(cs_messages);
 
 public:
     explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
@@ -117,7 +117,6 @@ private:
     friend class CDKGSessionManager;
 
 private:
-    mutable RecursiveMutex cs;
     std::atomic<bool> stopRequested{false};
 
     CBLSWorker& blsWorker;
@@ -134,9 +133,10 @@ private:
     const Consensus::LLMQParams params;
     const int quorumIndex;
 
-    QuorumPhase phase GUARDED_BY(cs) {QuorumPhase::Idle};
-    int currentHeight GUARDED_BY(cs) {-1};
-    uint256 quorumHash GUARDED_BY(cs);
+    std::atomic<int> currentHeight {-1};
+    mutable Mutex cs_phase_qhash;
+    QuorumPhase phase GUARDED_BY(cs_phase_qhash) {QuorumPhase::Idle};
+    uint256 quorumHash GUARDED_BY(cs_phase_qhash);
 
     std::unique_ptr<CDKGSession> curSession;
     std::thread phaseHandlerThread;

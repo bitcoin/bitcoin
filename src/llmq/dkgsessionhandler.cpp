@@ -76,7 +76,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, PeerManager* peerman, 
         EraseObjectRequest(from, CInv(invType, hash));
     }
 
-    LOCK(cs);
+    LOCK(cs_messages);
 
     if (messagesPerNode[from] >= maxMessagesPerNode) {
         // TODO ban?
@@ -95,7 +95,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, PeerManager* peerman, 
 
 std::list<CDKGPendingMessages::BinaryMessage> CDKGPendingMessages::PopPendingMessages(size_t maxCount)
 {
-    LOCK(cs);
+    LOCK(cs_messages);
 
     std::list<BinaryMessage> ret;
     while (!pendingMessages.empty() && ret.size() < maxCount) {
@@ -108,7 +108,7 @@ std::list<CDKGPendingMessages::BinaryMessage> CDKGPendingMessages::PopPendingMes
 
 bool CDKGPendingMessages::HasSeen(const uint256& hash) const
 {
-    LOCK(cs);
+    LOCK(cs_messages);
     return seenMessages.count(hash) != 0;
 }
 
@@ -120,7 +120,7 @@ void CDKGPendingMessages::Misbehaving(const NodeId from, const int score)
 
 void CDKGPendingMessages::Clear()
 {
-    LOCK(cs);
+    LOCK(cs_messages);
     pendingMessages.clear();
     messagesPerNode.clear();
     seenMessages.clear();
@@ -135,7 +135,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
     if (quorumIndex > 0 && !IsQuorumRotationEnabled(params, pindexNew)) {
         return;
     }
-    LOCK(cs);
+    LOCK(cs_phase_qhash);
 
     int quorumStageInt = (pindexNew->nHeight - quorumIndex) % params.dkgInterval;
 
@@ -207,7 +207,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 
 std::pair<QuorumPhase, uint256> CDKGSessionHandler::GetPhaseAndQuorumHash() const
 {
-    LOCK(cs);
+    LOCK(cs_phase_qhash);
     return std::make_pair(phase, quorumHash);
 }
 
@@ -304,9 +304,8 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
 
     int64_t sleepTime = (int64_t)(adjustedPhaseSleepTimePerMember * curSession->GetMyMemberIndex().value_or(0));
     int64_t endTime = GetTimeMillis() + sleepTime;
-    int heightTmp{-1};
-    int heightStart{-1};
-    heightTmp = heightStart = WITH_LOCK(cs, return currentHeight);
+    int heightTmp{currentHeight.load()};
+    int heightStart{heightTmp};
 
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, quorumIndex, sleepTime, ToUnderlying(curPhase));
 
@@ -315,22 +314,20 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due to stop/shutdown requested\n", __func__, params.name, quorumIndex);
             throw AbortPhaseException();
         }
-        {
-            LOCK(cs);
-            if (currentHeight > heightTmp) {
-                // New block(s) just came in
-                int64_t expectedBlockTime = (currentHeight - heightStart) * Params().GetConsensus().nPowTargetSpacing * 1000;
-                if (expectedBlockTime > sleepTime) {
-                    // Blocks came faster than we expected, jump into the phase func asap
-                    break;
-                }
-                heightTmp = currentHeight;
+        auto cur_height = currentHeight.load();
+        if (cur_height > heightTmp) {
+            // New block(s) just came in
+            int64_t expectedBlockTime = (cur_height - heightStart) * Params().GetConsensus().nPowTargetSpacing * 1000;
+            if (expectedBlockTime > sleepTime) {
+                // Blocks came faster than we expected, jump into the phase func asap
+                break;
             }
-            if (phase != curPhase || quorumHash != expectedQuorumHash) {
-                // Something went wrong and/or we missed quite a few blocks and it's just too late now
-                LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due unexpected phase/expectedQuorumHash change\n", __func__, params.name, quorumIndex);
-                throw AbortPhaseException();
-            }
+            heightTmp = cur_height;
+        }
+        if (WITH_LOCK(cs_phase_qhash, return phase != curPhase || quorumHash != expectedQuorumHash)) {
+            // Something went wrong and/or we missed quite a few blocks and it's just too late now
+            LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s qi[%d] - aborting due unexpected phase/expectedQuorumHash change\n", __func__, params.name, quorumIndex);
+            throw AbortPhaseException();
         }
         if (!runWhileWaiting()) {
             UninterruptibleSleep(std::chrono::milliseconds{100});
@@ -505,18 +502,13 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
 
 void CDKGSessionHandler::HandleDKGRound()
 {
-    uint256 curQuorumHash;
-
     WaitForNextPhase(std::nullopt, QuorumPhase::Initialized);
 
-    {
-        LOCK(cs);
-        pendingContributions.Clear();
-        pendingComplaints.Clear();
-        pendingJustifications.Clear();
-        pendingPrematureCommitments.Clear();
-        curQuorumHash = quorumHash;
-    }
+    pendingContributions.Clear();
+    pendingComplaints.Clear();
+    pendingJustifications.Clear();
+    pendingPrematureCommitments.Clear();
+    uint256 curQuorumHash = WITH_LOCK(cs_phase_qhash, return quorumHash);
 
     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(curQuorumHash));
 
