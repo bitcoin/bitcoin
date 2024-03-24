@@ -269,9 +269,9 @@ static UniValue masternode_status(const JSONRPCRequest& request)
         LOCK(::activeMasternodeManager->cs);
 
         // keep compatibility with legacy status for now (might get deprecated/removed later)
-        mnObj.pushKV("outpoint", ::activeMasternodeManager->m_info.outpoint.ToStringShort());
-        mnObj.pushKV("service", ::activeMasternodeManager->m_info.service.ToString());
-        dmn = node.dmnman->GetListAtChainTip().GetMN(::activeMasternodeManager->m_info.proTxHash);
+        mnObj.pushKV("outpoint", ::activeMasternodeManager->GetOutPoint().ToStringShort());
+        mnObj.pushKV("service", ::activeMasternodeManager->GetService().ToString());
+        dmn = node.dmnman->GetListAtChainTip().GetMN(::activeMasternodeManager->GetProTxHash());
     }
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());

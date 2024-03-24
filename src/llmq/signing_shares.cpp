@@ -219,7 +219,7 @@ void CSigSharesManager::ProcessMessage(const CNode& pfrom, const CSporkManager& 
 {
     // non-masternodes are not interested in sigshares
     if (!fMasternodeMode) return;
-    if (WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash.IsNull())) return;
+    if (WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash().IsNull())) return;
 
     if (sporkman.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED) && msg_type == NetMsgType::QSIGSHARE) {
         std::vector<CSigShare> receivedSigShares;
@@ -464,7 +464,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         // quorum is too old
         return;
     }
-    if (!quorum->IsMember(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash))) {
+    if (!quorum->IsMember(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()))) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return;
     }
@@ -513,7 +513,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CQuorumManager& quorum_m
         // quorum is too old
         return false;
     }
-    if (!session.quorum->IsMember(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash))) {
+    if (!session.quorum->IsMember(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()))) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return false;
     }
@@ -697,7 +697,7 @@ void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, const CConnma
 
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
-    if (!IsAllMembersConnectedEnabled(llmqType, m_sporkman) && sigShare.getQuorumMember() == quorum->GetMemberIndex(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash))) {
+    if (!IsAllMembersConnectedEnabled(llmqType, m_sporkman) && sigShare.getQuorumMember() == quorum->GetMemberIndex(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()))) {
         quorumNodes = connman.GetMasternodeQuorumNodes(sigShare.getLlmqType(), sigShare.getQuorumHash());
     }
 
@@ -1488,7 +1488,7 @@ void CSigSharesManager::SignPendingSigShares()
 std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const
 {
     cxxtimer::Timer t(true);
-    auto activeMasterNodeProTxHash = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash);
+    auto activeMasterNodeProTxHash = WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash());
 
     if (!quorum->IsValidMember(activeMasterNodeProTxHash)) {
         return std::nullopt;

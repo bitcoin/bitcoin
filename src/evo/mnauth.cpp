@@ -27,7 +27,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     uint256 signHash;
     {
         LOCK(::activeMasternodeManager->cs);
-        if (::activeMasternodeManager->m_info.proTxHash.IsNull()) {
+        if (::activeMasternodeManager->GetProTxHash().IsNull()) {
             return;
         }
 
@@ -46,14 +46,15 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
             nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
         }
         const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-        const CBLSPublicKeyVersionWrapper pubKey(*::activeMasternodeManager->m_info.blsPubKeyOperator, !is_basic_scheme_active);
+        auto pk = ::activeMasternodeManager->GetPubKey();
+        const CBLSPublicKeyVersionWrapper pubKey(pk, !is_basic_scheme_active);
         if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
             signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
         } else {
             signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion));
         }
 
-        mnauth.proRegTxHash = ::activeMasternodeManager->m_info.proTxHash;
+        mnauth.proRegTxHash = ::activeMasternodeManager->GetProTxHash();
     } // ::activeMasternodeManager->cs
 
     mnauth.sig = ::activeMasternodeManager->Sign(signHash);
@@ -132,7 +133,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterm
     }
 
     const uint256 myProTxHash = fMasternodeMode ?
-                                WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash) :
+                                WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()) :
                                 uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {

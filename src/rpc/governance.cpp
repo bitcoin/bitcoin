@@ -319,11 +319,11 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     bool fMnFound{false};
     if (fMasternodeMode) {
         LOCK(::activeMasternodeManager->cs);
-        fMnFound = mnList.HasValidMNByCollateral(::activeMasternodeManager->m_info.outpoint);
+        fMnFound = mnList.HasValidMNByCollateral(::activeMasternodeManager->GetOutPoint());
 
         LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-                (::activeMasternodeManager->m_info.blsPubKeyOperator ? ::activeMasternodeManager->m_info.blsPubKeyOperator->ToString(::activeMasternodeManager->m_info.legacy) : "N/A"),
-                ::activeMasternodeManager->m_info.outpoint.ToStringShort(), request.params.size(), fMnFound);
+                (::activeMasternodeManager->GetPubKey().IsValid() ? ::activeMasternodeManager->GetPubKey().ToString(::activeMasternodeManager->IsLegacy()) : "N/A"),
+                ::activeMasternodeManager->GetOutPoint().ToStringShort(), request.params.size(), fMnFound);
     } else {
         LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = N/A, outpoint = N/A, params.size() = %lld, fMnFound = %d\n",
                  request.params.size(), fMnFound);

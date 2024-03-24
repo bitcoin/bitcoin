@@ -896,7 +896,7 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
 bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigSharesManager& shareman, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
 {
     if (!fMasternodeMode) return false;
-    if (WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->m_info.proTxHash.IsNull())) return false;
+    if (WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash().IsNull())) return false;
 
     const CQuorumCPtr quorum = [&]() {
         if (quorumHash.IsNull()) {
@@ -918,7 +918,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
         return false;
     }
 
-    if (!WITH_LOCK(::activeMasternodeManager->cs, return quorum->IsValidMember(::activeMasternodeManager->m_info.proTxHash))) {
+    if (!WITH_LOCK(::activeMasternodeManager->cs, return quorum->IsValidMember(::activeMasternodeManager->GetProTxHash()))) {
         return false;
     }
 

@@ -11,6 +11,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <protocol.h>
+#include <util/check.h>
 #include <validation.h>
 #include <warnings.h>
 
@@ -274,4 +275,11 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjec
 {
     AssertLockNotHeld(cs);
     return WITH_LOCK(cs, return Assert(m_info.blsKeyOperator)->Sign(hash, is_legacy));
+}
+
+// We need to pass a copy as opposed to a const ref because CBLSPublicKeyVersionWrapper
+// does not accept a const ref in its construction args
+[[nodiscard]] CBLSPublicKey CActiveMasternodeManager::GetPubKey() const
+{
+    return *Assert(m_info.blsPubKeyOperator);
 }
