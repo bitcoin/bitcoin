@@ -663,8 +663,9 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
             continue;
         }
 
-        const auto& qc = WITH_LOCK(invCs, return std::move(complaints.at(*m->complaints.begin())));
-        if (qc.complainForMembers[*myIdx]) {
+        LOCK(invCs);
+        if (const auto& qc = complaints.at(*m->complaints.begin());
+                qc.complainForMembers[*myIdx]) {
             justifyFor.emplace(qc.proTxHash);
         }
     }
