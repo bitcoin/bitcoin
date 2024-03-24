@@ -370,14 +370,13 @@ void PrepareShutdown(NodeContext& node)
     }
     if (fMasternodeMode) {
         UnregisterValidationInterface(activeMasternodeManager.get());
-        activeMasternodeManager.reset();
-    }
 
-    {
         LOCK(activeMasternodeInfoCs);
         // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
         activeMasternodeInfo.blsKeyOperator.reset();
         activeMasternodeInfo.blsPubKeyOperator.reset();
+
+        activeMasternodeManager.reset();
     }
 
     node.chain_clients.clear();
@@ -1606,34 +1605,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         StartScriptCheckWorkerThreads(script_threads);
     }
 
-    {
-        LOCK(activeMasternodeInfoCs);
-        assert(activeMasternodeInfo.blsKeyOperator == nullptr);
-        assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
-    }
-    fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-        fMasternodeMode = true;
-        {
-            LOCK(activeMasternodeInfoCs);
-            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
-            // We don't know the actual scheme at this point, print both
-            LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-                    activeMasternodeInfo.blsPubKeyOperator->ToString(true),
-                    activeMasternodeInfo.blsPubKeyOperator->ToString(false));
-        }
-    } else {
-        LOCK(activeMasternodeInfoCs);
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
-    }
-
     assert(!node.scheduler);
     node.scheduler = std::make_unique<CScheduler>();
 
@@ -1878,10 +1849,30 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
-    if (fMasternodeMode) {
-        // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
-        RegisterValidationInterface(activeMasternodeManager.get());
+    fMasternodeMode = false;
+    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
+    if (!strMasterNodeBLSPrivKey.empty()) {
+        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        fMasternodeMode = true;
+        {
+            // Create and register activeMasternodeManager, will init later in ThreadImport
+            activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
+
+            LOCK(activeMasternodeInfoCs);
+            assert(activeMasternodeInfo.blsKeyOperator == nullptr);
+            assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
+            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
+            // We don't know the actual scheme at this point, print both
+            LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
+                    activeMasternodeInfo.blsPubKeyOperator->ToString(true),
+                    activeMasternodeInfo.blsPubKeyOperator->ToString(false));
+
+            RegisterValidationInterface(activeMasternodeManager.get());
+        }
     }
 
     // ********************************************************* Step 7a: Load sporks

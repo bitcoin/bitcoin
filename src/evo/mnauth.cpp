@@ -21,10 +21,10 @@
 
 void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
 {
+    if (!fMasternodeMode) return;
+
     LOCK(activeMasternodeInfoCs);
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
-        return;
-    }
+    if (activeMasternodeInfo.proTxHash.IsNull()) return;
 
     uint256 signHash;
     const auto receivedMNAuthChallenge = peer.GetReceivedMNAuthChallenge();
@@ -127,7 +127,9 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterm
         }
     }
 
-    const uint256 myProTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
+    const uint256 myProTxHash = fMasternodeMode ?
+                                WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash) :
+                                uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {
         if (peer.fDisconnect) {

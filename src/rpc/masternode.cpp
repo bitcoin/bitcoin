@@ -257,8 +257,9 @@ static UniValue masternode_status(const JSONRPCRequest& request)
 {
     masternode_status_help(request);
 
-    if (!fMasternodeMode)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
+    if (!fMasternodeMode) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
+    }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 

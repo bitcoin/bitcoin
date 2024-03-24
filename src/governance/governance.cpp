@@ -719,7 +719,8 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
 void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman)
 {
     // only active masternodes can vote on triggers
-    if (!fMasternodeMode || WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) return;
+    if (!fMasternodeMode) return;
+    if (WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) return;
 
     LOCK2(cs_main, cs);
 

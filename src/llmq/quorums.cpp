@@ -250,7 +250,10 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
         const auto vecQuorums = ScanQuorums(params.type, pIndex, params.keepOldConnections);
 
         // First check if we are member of any quorum of this type
-        auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
+        const uint256 proTxHash = fMasternodeMode ?
+                                  WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash) :
+                                  uint256();
+
         bool fWeAreQuorumTypeMember = ranges::any_of(vecQuorums, [&proTxHash](const auto& pQuorum) {
             return pQuorum->IsValidMember(proTxHash);
         });
@@ -341,7 +344,10 @@ void CQuorumManager::CheckQuorumConnections(const Consensus::LLMQParams& llmqPar
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- llmqType[%d] h[%d] keeping mn quorum connections for quorum: [%d:%s]\n", __func__, ToUnderlying(llmqParams.type), pindexNew->nHeight, curDkgHeight, curDkgBlock.ToString());
     }
 
-    const auto myProTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
+    const uint256 myProTxHash = fMasternodeMode ?
+                                WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash) :
+                                uint256();
+
     bool isISType = llmqParams.type == Params().GetConsensus().llmqTypeDIP0024InstantSend;
 
     bool watchOtherISQuorums = isISType && !myProTxHash.IsNull() &&
