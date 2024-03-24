@@ -31,7 +31,7 @@ CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CCon
 
 std::string CActiveMasternodeManager::GetStateString() const
 {
-    switch (m_state) {
+    switch (WITH_LOCK(cs, return m_state)) {
     case MASTERNODE_WAITING_FOR_PROTX:
         return "WAITING_FOR_PROTX";
     case MASTERNODE_POSE_BANNED:
@@ -53,6 +53,7 @@ std::string CActiveMasternodeManager::GetStateString() const
 
 std::string CActiveMasternodeManager::GetStatus() const
 {
+    LOCK(cs);
     switch (m_state) {
     case MASTERNODE_WAITING_FOR_PROTX:
         return "Waiting for ProTx to appear on-chain";
@@ -75,7 +76,7 @@ std::string CActiveMasternodeManager::GetStatus() const
 
 void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 {
-    LOCK2(::cs_main, cs);
+    LOCK(cs);
 
     if (!fMasternodeMode) return;
 
@@ -148,44 +149,37 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    LOCK2(::cs_main, cs);
-
     if (!fMasternodeMode) return;
 
     if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus())) return;
 
-    if (m_state == MASTERNODE_READY) {
+    const auto [cur_state, cur_protx_hash] = WITH_LOCK(cs, return std::make_pair(m_state, m_info.proTxHash));
+    if (cur_state == MASTERNODE_READY) {
         auto oldMNList = Assert(m_dmnman)->GetListForBlock(pindexNew->pprev);
         auto newMNList = m_dmnman->GetListForBlock(pindexNew);
-        if (!newMNList.IsMNValid(m_info.proTxHash)) {
-            // MN disappeared from MN list
-            m_state = MASTERNODE_REMOVED;
+        auto reset = [this, pindexNew] (masternode_state_t state) -> void {
+            LOCK(cs);
+            m_state = state;
             m_info.proTxHash = uint256();
             m_info.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init(pindexNew);
-            return;
+        };
+
+        if (!newMNList.IsMNValid(cur_protx_hash)) {
+            // MN disappeared from MN list
+            return reset(MASTERNODE_REMOVED);
         }
 
-        auto oldDmn = oldMNList.GetMN(m_info.proTxHash);
-        auto newDmn = newMNList.GetMN(m_info.proTxHash);
+        auto oldDmn = oldMNList.GetMN(cur_protx_hash);
+        auto newDmn = newMNList.GetMN(cur_protx_hash);
         if (newDmn->pdmnState->pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
             // MN operator key changed or revoked
-            m_state = MASTERNODE_OPERATOR_KEY_CHANGED;
-            m_info.proTxHash = uint256();
-            m_info.outpoint.SetNull();
-            // MN might have reappeared in same block with a new ProTx
-            Init(pindexNew);
-            return;
+            return reset(MASTERNODE_OPERATOR_KEY_CHANGED);
         }
-
         if (newDmn->pdmnState->addr != oldDmn->pdmnState->addr) {
             // MN IP changed
-            m_state = MASTERNODE_PROTX_IP_CHANGED;
-            m_info.proTxHash = uint256();
-            m_info.outpoint.SetNull();
-            Init(pindexNew);
-            return;
+            return reset(MASTERNODE_PROTX_IP_CHANGED);
         }
     } else {
         // MN might have (re)appeared with a new ProTx or we've found some peers
@@ -222,6 +216,7 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         });
         // nothing and no live connections, can't do anything for now
         if (empty) {
+            LOCK(cs);
             m_error = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
             LogPrintf("CActiveMasternodeManager::GetLocalAddress -- ERROR: %s\n", m_error);
             return false;
