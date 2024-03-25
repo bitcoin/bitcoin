@@ -14,7 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-std::vector<std::pair<Wtxid, CTransactionRef>> extra_txn;
+std::vector<CTransactionRef> extra_txn;
 
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
