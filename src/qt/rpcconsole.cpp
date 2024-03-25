@@ -1249,7 +1249,6 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_ping_usec));
-    ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStats.m_ping_wait_usec));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_usec));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
     ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
@@ -1259,7 +1258,6 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
             : stats->nodeStats.fRelayTxes
                 ? tr("Outbound")
                 : tr("Outbound block-relay"));
-    ui->peerHeight->setText(QString::number(stats->nodeStats.nStartingHeight));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permissionFlags == PF_NONE) {
         ui->peerPermissions->setText(tr("N/A"));
@@ -1298,6 +1296,9 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
             ui->peerCommonHeight->setText(QString("%1").arg(stats->nodeStateStats.nCommonHeight));
         else
             ui->peerCommonHeight->setText(tr("Unknown"));
+
+        ui->peerHeight->setText(QString::number(stats->nodeStateStats.m_starting_height));
+        ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait_usec));
     }
 
     ui->detailWidget->show();

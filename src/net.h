@@ -40,6 +40,7 @@
 #include <thread>
 #include <optional>
 #include <queue>
+#include <vector>
 
 #ifndef WIN32
 #define USE_WAKEUP_PIPE
@@ -100,6 +101,8 @@ static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 
 static const bool DEFAULT_FORCEDNSSEED = false;
+static const bool DEFAULT_DNSSEED = true;
+static const bool DEFAULT_FIXEDSEEDS = true;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
@@ -278,7 +281,7 @@ public:
     std::string cleanSubVer;
     bool fInbound;
     bool m_manual_connection;
-    int nStartingHeight;
+    int m_starting_height;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     uint64_t nRecvBytes;
@@ -286,7 +289,6 @@ public:
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
     int64_t m_ping_usec;
-    int64_t m_ping_wait_usec;
     int64_t m_min_ping_usec;
     // Our address, as reported by the peer
     std::string addrLocal;
@@ -589,9 +591,6 @@ protected:
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 
 public:
-    uint256 hashContinue;
-    std::atomic<int> nStartingHeight{-1};
-
     // flood relay
     std::vector<CAddress> vAddrToSend;
     std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
@@ -600,24 +599,6 @@ public:
     std::chrono::microseconds m_next_local_addr_send GUARDED_BY(cs_sendProcessing){0};
 
     bool IsBlockRelayOnly() const;
-
-    // List of block ids we still have announce.
-    // There is no final sorting before sending, as they are always sent immediately
-    // and in the order requested.
-    std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
-    Mutex cs_inventory;
-    /** UNIX epoch time of the last block received from this peer that we had
-     * not yet seen (e.g. not already received from another peer), that passed
-     * preliminary validity checks and was saved to disk, even if we don't
-     * connect the block or it eventually fails connection. Used as an inbound
-     * peer eviction criterium in CConnman::AttemptToEvictConnection. */
-    std::atomic<int64_t> nLastBlockTime{0};
-
-    /** UNIX epoch time of the last transaction received from this peer that we
-     * had not yet seen (e.g. not already received from another peer) and that
-     * was accepted into our mempool. Used as an inbound peer eviction criterium
-     * in CConnman::AttemptToEvictConnection. */
-    std::atomic<int64_t> nLastTXTime{0};
 
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
@@ -647,20 +628,25 @@ public:
     // in dash: m_tx_relay should never be nullptr, use `RelayAddrsWithConn() == false` instead
     std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
-    // Used for headers announcements - unfiltered blocks to relay
-    std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
+    /** UNIX epoch time of the last block received from this peer that we had
+     * not yet seen (e.g. not already received from another peer), that passed
+     * preliminary validity checks and was saved to disk, even if we don't
+     * connect the block or it eventually fails connection. Used as an inbound
+     * peer eviction criterium in CConnman::AttemptToEvictConnection. */
+    std::atomic<int64_t> nLastBlockTime{0};
 
-    // Ping time measurement:
-    // The pong reply we're expecting, or 0 if no pong expected.
-    std::atomic<uint64_t> nPingNonceSent{0};
-    /** When the last ping was sent, or 0 if no ping was ever sent */
-    std::atomic<std::chrono::microseconds> m_ping_start{std::chrono::microseconds{0}};
-    // Last measured round-trip time.
-    std::atomic<int64_t> nPingUsecTime{0};
-    // Best measured round-trip time.
-    std::atomic<int64_t> nMinPingUsecTime{std::numeric_limits<int64_t>::max()};
-    // Whether a ping is requested.
-    std::atomic<bool> fPingQueued{false};
+    /** UNIX epoch time of the last transaction received from this peer that we
+     * had not yet seen (e.g. not already received from another peer) and that
+     * was accepted into our mempool. Used as an inbound peer eviction criterium
+     * in CConnman::AttemptToEvictConnection. */
+    std::atomic<int64_t> nLastTXTime{0};
+
+    /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
+    std::atomic<int64_t> m_last_ping_time{0};
+
+    /** Lowest measured round-trip time. Used as an inbound peer eviction
+     * criterium in CConnman::AttemptToEvictConnection. */
+    std::atomic<int64_t> m_min_ping_time{std::numeric_limits<int64_t>::max()};
 
     // If true, we will send him CoinJoin queue messages
     std::atomic<bool> fSendDSQueue{false};
@@ -845,6 +831,12 @@ public:
 
 
     std::string ConnectionTypeAsString() const;
+
+    /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
+    void PongReceived(std::chrono::microseconds ping_time) {
+        m_last_ping_time = count_microseconds(ping_time);
+        m_min_ping_time = std::min(m_min_ping_time.load(), count_microseconds(ping_time));
+    }
 
     /** Whether this peer is an inbound onion, e.g. connected via our Tor onion service. */
     bool IsInboundOnion() const { return m_inbound_onion; }
@@ -1296,6 +1288,9 @@ public:
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
+    /** Return true if the peer has been connected for long enough to do inactivity checks. */
+    bool RunInactivityChecks(const CNode& node) const;
+
 private:
     struct ListenSocket {
     public:
@@ -1591,6 +1586,23 @@ inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, 
 
 /** Dump binary message to file, with timestamp */
 void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);
+
+struct NodeEvictionCandidate
+{
+    NodeId id;
+    int64_t nTimeConnected;
+    int64_t m_min_ping_time;
+    int64_t nLastBlockTime;
+    int64_t nLastTXTime;
+    bool fRelevantServices;
+    bool fRelayTxes;
+    bool fBloomFilter;
+    uint64_t nKeyedNetGroup;
+    bool prefer_evict;
+    bool m_is_local;
+};
+
+[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
 
 class CExplicitNetCleanup
 {

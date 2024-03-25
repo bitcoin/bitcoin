@@ -38,6 +38,8 @@ struct CNodeStateStats {
     int m_misbehavior_score = 0;
     int nSyncHeight = -1;
     int nCommonHeight = -1;
+    int m_starting_height = -1;
+    int64_t m_ping_wait_usec;
     std::vector<int> vHeightInFlight;
 };
 
@@ -57,6 +59,9 @@ public:
 
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
+
+    /** Send ping message to all peers */
+    virtual void SendPings() = 0;
 
     /** Relay transaction to all peers. */
     virtual void RelayTransaction(const uint256& txid)
