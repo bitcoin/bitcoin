@@ -18,6 +18,7 @@
 #include <limitedmap.h>
 #include <net_permissions.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -931,17 +932,6 @@ class CConnman
 {
 friend class CNode;
 public:
-
-    enum NumConnections {
-        CONNECTIONS_NONE = 0,
-        CONNECTIONS_IN = (1U << 0),
-        CONNECTIONS_OUT = (1U << 1),
-        CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
-        CONNECTIONS_VERIFIED = (1U << 2),
-        CONNECTIONS_VERIFIED_IN = (CONNECTIONS_VERIFIED | CONNECTIONS_IN),
-        CONNECTIONS_VERIFIED_OUT = (CONNECTIONS_VERIFIED | CONNECTIONS_OUT),
-    };
-
     enum SocketEventsMode {
         SOCKETEVENTS_SELECT = 0,
         SOCKETEVENTS_POLL = 1,
@@ -1253,7 +1243,7 @@ public:
     bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
-    size_t GetNodeCount(NumConnections num);
+    size_t GetNodeCount(ConnectionDirection);
     size_t GetMaxOutboundNodeCount();
     void GetNodeStats(std::vector<CNodeStats>& vstats);
     bool DisconnectNode(const std::string& node);

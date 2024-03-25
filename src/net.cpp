@@ -3790,7 +3790,7 @@ void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
     masternodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
 }
 
-size_t CConnman::GetNodeCount(NumConnections flags)
+size_t CConnman::GetNodeCount(ConnectionDirection flags)
 {
     LOCK(cs_vNodes);
 
@@ -3799,12 +3799,12 @@ size_t CConnman::GetNodeCount(NumConnections flags)
         if (pnode->fDisconnect) {
             continue;
         }
-        if ((flags & CONNECTIONS_VERIFIED) && pnode->GetVerifiedProRegTxHash().IsNull()) {
+        if ((flags & ConnectionDirection::Verified) && pnode->GetVerifiedProRegTxHash().IsNull()) {
             continue;
         }
-        if (flags & (pnode->IsInboundConn() ? CONNECTIONS_IN : CONNECTIONS_OUT)) {
+        if (flags & (pnode->IsInboundConn() ? ConnectionDirection::In : ConnectionDirection::Out)) {
             nNum++;
-        } else if (flags == CONNECTIONS_VERIFIED) {
+        } else if (flags == ConnectionDirection::Verified) {
             nNum++;
         }
     }

@@ -58,7 +58,7 @@ static RPCHelpMan getconnectioncount()
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    return (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
+    return (int)node.connman->GetNodeCount(ConnectionDirection::Both);
 },
     };
 }
@@ -649,12 +649,12 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
-        obj.pushKV("connections_in",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_IN));
-        obj.pushKV("connections_out",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_OUT));
-        obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED));
-        obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED_IN));
-        obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED_OUT));
+        obj.pushKV("connections",   (int)node.connman->GetNodeCount(ConnectionDirection::Both));
+        obj.pushKV("connections_in",   (int)node.connman->GetNodeCount(ConnectionDirection::In));
+        obj.pushKV("connections_out",   (int)node.connman->GetNodeCount(ConnectionDirection::Out));
+        obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(ConnectionDirection::Verified));
+        obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedIn));
+        obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedOut));
         std::string strSocketEvents;
         switch (node.connman->GetSocketEventsMode()) {
             case CConnman::SOCKETEVENTS_SELECT:

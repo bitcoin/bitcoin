@@ -1316,7 +1316,7 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
     logger.Batch("RelayInvToParticipants inv[%s] relayMembers[%d] GetNodeCount[%d] GetNetworkActive[%d] HasMasternodeQuorumNodes[%d] for quorumHash[%s] forMember[%s] relayMembers[%s]",
                  inv.ToString(),
                  relayMembers.size(),
-                 connman.GetNodeCount(CConnman::CONNECTIONS_ALL),
+                 connman.GetNodeCount(ConnectionDirection::Both),
                  connman.GetNetworkActive(),
                  connman.HasMasternodeQuorumNodes(params.type, m_quorum_base_block_index->GetBlockHash()),
                  m_quorum_base_block_index->GetBlockHash().ToString(),
