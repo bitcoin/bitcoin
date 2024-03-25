@@ -16,7 +16,7 @@ load it.
 A pruned node can load a snapshot. To save space, it's possible to delete the
 snapshot file as soon as `loadtxoutset` finishes.
 
-The minimum `-dbcache` setting is 550 MiB, but this functionality ignores that
+The minimum `-prune` setting is 550 MiB, but this functionality ignores that
 minimum and uses at least 1100 MiB.
 
 As the background sync continues there will be temporarily two chainstate
@@ -51,18 +51,12 @@ The utility script
 
 ## Design notes
 
-- A new block index `nStatus` flag is introduced, `BLOCK_ASSUMED_VALID`, to mark block
-  index entries that are required to be assumed-valid by a chainstate created
-  from a UTXO snapshot. This flag is used as a way to modify certain
-  CheckBlockIndex() logic to account for index entries that are pending validation by a
-  chainstate running asynchronously in the background.
-
 - The concept of UTXO snapshots is treated as an implementation detail that lives
   behind the ChainstateManager interface. The external presentation of the changes
   required to facilitate the use of UTXO snapshots is the understanding that there are
-  now certain regions of the chain that can be temporarily assumed to be valid (using
-  the nStatus flag mentioned above). In certain cases, e.g. wallet rescanning, this is
-  very similar to dealing with a pruned chain.
+  now certain regions of the chain that can be temporarily assumed to be valid.
+  In certain cases, e.g. wallet rescanning, this is very similar to dealing with
+  a pruned chain.
 
   Logic outside ChainstateManager should try not to know about snapshots, instead
   preferring to work in terms of more general states like assumed-valid.

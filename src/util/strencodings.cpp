@@ -81,6 +81,8 @@ template <typename Byte>
 std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
 {
     std::vector<Byte> vch;
+    vch.reserve(str.size() / 2); // two hex characters form a single byte
+
     auto it = str.begin();
     while (it != str.end()) {
         if (IsSpace(*it)) {
@@ -444,6 +446,7 @@ bool ParseFixedPoint(std::string_view val, int decimals, int64_t *amount_out)
 std::string ToLower(std::string_view str)
 {
     std::string r;
+    r.reserve(str.size());
     for (auto ch : str) r += ToLower(ch);
     return r;
 }
@@ -451,6 +454,7 @@ std::string ToLower(std::string_view str)
 std::string ToUpper(std::string_view str)
 {
     std::string r;
+    r.reserve(str.size());
     for (auto ch : str) r += ToUpper(ch);
     return r;
 }

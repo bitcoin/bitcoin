@@ -9,11 +9,6 @@ $(package)_patches=clang_cxx_11.patch
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared --enable-cxx --disable-replication --enable-option-checking
 $(package)_config_opts_mingw32=--enable-mingw
-$(package)_config_opts_linux=--with-pic
-$(package)_config_opts_freebsd=--with-pic
-$(package)_config_opts_netbsd=--with-pic
-$(package)_config_opts_openbsd=--with-pic
-$(package)_config_opts_android=--with-pic
 $(package)_cflags+=-Wno-error=implicit-function-declaration -Wno-error=format-security -Wno-error=implicit-int
 $(package)_cppflags_freebsd=-D_XOPEN_SOURCE=600 -D__BSD_VISIBLE=1
 $(package)_cppflags_netbsd=-D_XOPEN_SOURCE=600

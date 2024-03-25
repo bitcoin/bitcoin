@@ -157,8 +157,10 @@ bool FillableSigningProvider::GetKey(const CKeyID &address, CKey &keyOut) const
 
 bool FillableSigningProvider::AddCScript(const CScript& redeemScript)
 {
-    if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
-        return error("FillableSigningProvider::AddCScript(): redeemScripts > %i bytes are invalid", MAX_SCRIPT_ELEMENT_SIZE);
+    if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+        LogError("FillableSigningProvider::AddCScript(): redeemScripts > %i bytes are invalid\n", MAX_SCRIPT_ELEMENT_SIZE);
+        return false;
+    }
 
     LOCK(cs_KeyStore);
     mapScripts[CScriptID(redeemScript)] = redeemScript;
@@ -368,8 +370,6 @@ TaprootBuilder& TaprootBuilder::Add(int depth, Span<const unsigned char> script,
     /* Construct NodeInfo object with leaf hash and (if track is true) also leaf information. */
     NodeInfo node;
     node.hash = ComputeTapleafHash(leaf_version, script);
-    // due to bug in clang-tidy-17:
-    // NOLINTNEXTLINE(modernize-use-emplace)
     if (track) node.leaves.emplace_back(LeafInfo{std::vector<unsigned char>(script.begin(), script.end()), leaf_version, {}});
     /* Insert into the branch. */
     Insert(std::move(node), depth);

@@ -128,7 +128,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.log.info("make sure we get an init error when starting the nodes again with the indices")
         filter_msg = "Error: basic block filter index best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"
         stats_msg = "Error: coinstatsindex best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"
-        end_msg = f"{os.linesep}Error: Failed to start indexes, shutting down.."
+        end_msg = f"{os.linesep}Error: A fatal internal error occurred, see debug.log for details: Failed to start indexes, shutting down.."
         for i, msg in enumerate([filter_msg, stats_msg, filter_msg]):
             self.nodes[i].assert_start_raises_init_error(extra_args=self.extra_args[i], expected_msg=msg+end_msg)
 
