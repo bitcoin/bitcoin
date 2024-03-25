@@ -1,11 +1,11 @@
-26.1rc1 Release Notes
+26.1 Release Notes
 ==================
 
-Bitcoin Core version 26.1rc1 is now available from:
+Bitcoin Core version 26.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-26.1/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-26.1/>
 
-This release includes new features, various bug fixes and performance
+This release includes various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -71,6 +71,7 @@ Notable changes
 
 - #28992 ci: Use Ubuntu 24.04 Noble for asan,tsan,tidy,fuzz
 - #29080 ci: Set HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK to avoid unrelated failures
+- #29610 ci: Fix "macOS native" job
 
 ### Miscellaneous
 
