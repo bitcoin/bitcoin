@@ -401,7 +401,7 @@ namespace GUIUtil
     QString ConnectionTypeToQString(ConnectionType conn_type);
 
     /** Convert seconds into a QString with days, hours, mins, secs */
-    QString formatDurationStr(int secs);
+    QString formatDurationStr(std::chrono::seconds dur);
 
     /** Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);

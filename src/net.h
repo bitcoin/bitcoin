@@ -63,7 +63,7 @@ static const bool DEFAULT_WHITELISTRELAY = true;
 static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
-static const int TIMEOUT_INTERVAL = 20 * 60;
+static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 /** Time to wait since nTimeConnected before disconnecting a probe node. **/
 static const int PROBE_WAIT_INTERVAL = 5;
 /** Minimum time between warnings printed to log. */
@@ -275,8 +275,8 @@ public:
     NodeId nodeid;
     ServiceFlags nServices;
     bool fRelayTxes;
-    int64_t nLastSend;
-    int64_t nLastRecv;
+    std::chrono::seconds m_last_send;
+    std::chrono::seconds m_last_recv;
     int64_t nLastTXTime;
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
@@ -459,8 +459,8 @@ public:
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
-    std::atomic<int64_t> nLastSend{0};
-    std::atomic<int64_t> nLastRecv{0};
+    std::atomic<std::chrono::seconds> m_last_send{0s};
+    std::atomic<std::chrono::seconds> m_last_recv{0s};
     //! Unix epoch time at peer connection, in seconds.
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
@@ -926,7 +926,7 @@ public:
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
-        m_peer_connect_timeout = connOptions.m_peer_connect_timeout;
+        m_peer_connect_timeout = std::chrono::seconds{connOptions.m_peer_connect_timeout};
         {
             LOCK(cs_totalBytesSent);
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
@@ -1235,7 +1235,7 @@ public:
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const CNode& node, int64_t secs_now) const;
+    bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
 private:
     struct ListenSocket {
@@ -1351,7 +1351,7 @@ private:
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
-    int64_t m_peer_connect_timeout;
+    std::chrono::seconds m_peer_connect_timeout;
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).

@@ -660,8 +660,8 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     } else {
         stats.fRelayTxes = false;
     }
-    X(nLastSend);
-    X(nLastRecv);
+    X(m_last_send);
+    X(m_last_recv);
     X(nLastTXTime);
     X(nLastBlockTime);
     X(nTimeConnected);
@@ -710,7 +710,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
     // TODO: use mocktime here after bitcoin#19499 is backported
     const auto time = std::chrono::microseconds(GetTimeMicros());
     LOCK(cs_vRecv);
-    nLastRecv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
+    m_last_recv = std::chrono::duration_cast<std::chrono::seconds>(time);
     nRecvBytes += msg_bytes.size();
     while (msg_bytes.size() > 0) {
         // absorb network data
@@ -881,7 +881,7 @@ size_t CConnman::SocketSendData(CNode& node)
             nBytes = send(node.hSocket, reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         }
         if (nBytes > 0) {
-            node.nLastSend = GetTimeSeconds();
+            node.m_last_send = GetTime<std::chrono::seconds>();
             node.nSendBytes += nBytes;
             node.nSendOffset += nBytes;
             nSentSize += nBytes;
@@ -1524,31 +1524,33 @@ void CConnman::CalculateNumConnectionsChangedStats()
     statsClient.gauge("peers.torConnections", torNodes, 1.0f);
 }
 
-bool CConnman::ShouldRunInactivityChecks(const CNode& node, int64_t now) const
+bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const
 {
-    return node.nTimeConnected + m_peer_connect_timeout < now;
+    return std::chrono::seconds{node.nTimeConnected} + m_peer_connect_timeout < now;
 }
 
 bool CConnman::InactivityCheck(const CNode& node) const
 {
-    // Use non-mockable system time (otherwise these timers will pop when we
-    // use setmocktime in the tests).
-    int64_t now = GetTimeSeconds();
+    // Tests that see disconnects after using mocktime can start nodes with a
+    // large timeout. For example, -peertimeout=999999999.
+    const auto now{GetTime<std::chrono::seconds>()};
+    const auto last_send{node.m_last_send.load()};
+    const auto last_recv{node.m_last_recv.load()};
 
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
-    if (node.nLastRecv == 0 || node.nLastSend == 0) {
-        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
+    if (last_recv.count() == 0 || last_send.count() == 0) {
+        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, node.GetId());
         return true;
     }
 
-    if (now > node.nLastSend + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", now - node.nLastSend, node.GetId());
+    if (now > last_send + TIMEOUT_INTERVAL) {
+        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", count_seconds(now - last_send), node.GetId());
         return true;
     }
 
-    if (now > node.nLastRecv + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", now - node.nLastRecv, node.GetId());
+    if (now > last_recv + TIMEOUT_INTERVAL) {
+        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", count_seconds(now - last_recv), node.GetId());
         return true;
     }
 

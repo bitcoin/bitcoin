@@ -1152,7 +1152,7 @@ void RPCConsole::on_sldGraphRange_valueChanged(int value)
 void RPCConsole::setTrafficGraphRange(TrafficGraphData::GraphRange range)
 {
     ui->trafficGraph->setGraphRangeMins(range);
-    ui->lblGraphRange->setText(GUIUtil::formatDurationStr(TrafficGraphData::RangeMinutes[range] * 60));
+    ui->lblGraphRange->setText(GUIUtil::formatDurationStr(std::chrono::minutes{TrafficGraphData::RangeMinutes[range]}));
 }
 
 void RPCConsole::peerLayoutAboutToChange()
@@ -1237,12 +1237,12 @@ void RPCConsole::updateDetailWidget()
     ui->peerHeading->setText(peerAddrDetails);
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
     ui->peerRelayTxes->setText(stats->nodeStats.fRelayTxes ? "Yes" : "No");
-    const int64_t time_now{GetTimeSeconds()};
-    ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.nTimeConnected));
-    ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.nLastBlockTime));
-    ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.nLastTXTime));
-    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.nLastSend));
-    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.nLastRecv));
+    const auto time_now{GetTime<std::chrono::seconds>()};
+    ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - std::chrono::seconds{stats->nodeStats.nTimeConnected}));
+    ui->peerLastBlock->setText(TimeDurationField(time_now, std::chrono::seconds{stats->nodeStats.nLastBlockTime}));
+    ui->peerLastTx->setText(TimeDurationField(time_now, std::chrono::seconds{stats->nodeStats.nLastTXTime}));
+    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.m_last_send));
+    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.m_last_recv));
     ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));
