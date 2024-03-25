@@ -1617,7 +1617,7 @@ public:
     //! Produce a witness for this script, if possible and given the information available in the context.
     //! The non-malleable satisfaction is guaranteed to be valid if it exists, and ValidSatisfaction()
     //! is true. If IsSane() holds, this satisfaction is guaranteed to succeed in case the node's
-    //! conditions are satisfied (private keys and hash preimages available, locktimes satsified).
+    //! conditions are satisfied (private keys and hash preimages available, locktimes satisfied).
     template<typename Ctx>
     Availability Satisfy(const Ctx& ctx, std::vector<std::vector<unsigned char>>& stack, bool nonmalleable = true) const {
         auto ret = ProduceInput(ctx);
