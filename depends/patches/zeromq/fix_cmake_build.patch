@@ -1,0 +1,66 @@
+Changes to the CMake build system:
+
+    build: fix mkdtemp check on macOS
+
+    On macOS, mkdtemp is in unistd.h. Fix the CMake check so that is works.
+    This was discovered when comparing the output of the Autotools an CMake
+    build systems.
+
+    Upstreamed in https://github.com/zeromq/libzmq/pull/4668.
+
+    cmake: don't use builtin sha1 if not using ws
+
+    The builtin SHA1 (ZMQ_USE_BUILTIN_SHA1) is only used in the websocket
+    engine (ws_engine.cpp), so if websockets are disabled, i.e
+    -DENABLE_DRAFTS=OFF, don't add sha1.c to the sources list.
+
+    Upstream in https://github.com/zeromq/libzmq/pull/4670.
+
+    Set a sane minimum (3.5), and fix the ordering of the cmake_minimum_required
+    call.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6b62cc1e..e0c5c772 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,11 +1,7 @@
+ # CMake build script for ZeroMQ
++cmake_minimum_required(VERSION 3.5)
+ project(ZeroMQ)
+ 
+-if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+-  cmake_minimum_required(VERSION 3.0.2)
+-else()
+-  cmake_minimum_required(VERSION 2.8.12)
+-endif()
+ 
+ include(CheckIncludeFiles)
+ include(CheckCCompilerFlag)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c124a6a4..200a82e5 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -605,7 +605,7 @@ if(NOT MSVC)
+ 
+   check_cxx_symbol_exists(fork unistd.h HAVE_FORK)
+   check_cxx_symbol_exists(gethrtime sys/time.h HAVE_GETHRTIME)
+-  check_cxx_symbol_exists(mkdtemp stdlib.h HAVE_MKDTEMP)
++  check_cxx_symbol_exists(mkdtemp "stdlib.h;unistd.h" HAVE_MKDTEMP)
+   check_cxx_symbol_exists(accept4 sys/socket.h HAVE_ACCEPT4)
+   check_cxx_symbol_exists(strnlen string.h HAVE_STRNLEN)
+ else()
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 200a82e5..6b62cc1e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -234,7 +234,7 @@ if(NOT ZMQ_USE_GNUTLS)
+       endif()
+     endif()
+   endif()
+-  if(NOT ZMQ_USE_NSS)
++  if(ENABLE_WS AND NOT ZMQ_USE_NSS)
+     list(APPEND sources ${CMAKE_CURRENT_SOURCE_DIR}/external/sha1/sha1.c
+          ${CMAKE_CURRENT_SOURCE_DIR}/external/sha1/sha1.h)
+     message(STATUS "Using builtin sha1")
