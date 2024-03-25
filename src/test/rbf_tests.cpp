@@ -393,6 +393,9 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     BOOST_CHECK(res2.value().second == "insufficient feerate: does not improve feerate diagram");
     pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/-1);
 
+    // With one less vB it does
+    BOOST_CHECK(ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee, tx1_size + tx2_size - 1) == std::nullopt);
+
     // Adding a grandchild makes the cluster size 3, which is uncalculable
     const auto tx3 = make_tx(/*inputs=*/ {tx2}, /*output_values=*/ {995 * CENT});
     pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx3));
