@@ -385,6 +385,14 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     // With one more satoshi it does
     BOOST_CHECK(ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee + 1, tx1_size + tx2_size) == std::nullopt);
 
+    // With prioritisation of in-mempool conflicts, it affects the results of the comparison using the same args as just above
+    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/1);
+    const auto res2 = ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee + 1, tx1_size + tx2_size);
+    BOOST_CHECK(res2.has_value());
+    BOOST_CHECK(res2.value().first == DiagramCheckError::FAILURE);
+    BOOST_CHECK(res2.value().second == "insufficient feerate: does not improve feerate diagram");
+    pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/-1);
+
     // Adding a grandchild makes the cluster size 3, which is uncalculable
     const auto tx3 = make_tx(/*inputs=*/ {tx2}, /*output_values=*/ {995 * CENT});
     pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx3));
