@@ -1244,11 +1244,14 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerHeading->setText(peerAddrDetails);
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
     ui->peerRelayTxes->setText(stats->nodeStats.fRelayTxes ? "Yes" : "No");
-    ui->peerLastSend->setText(stats->nodeStats.nLastSend ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastSend) : tr("never"));
-    ui->peerLastRecv->setText(stats->nodeStats.nLastRecv ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastRecv) : tr("never"));
+    const int64_t time_now{GetSystemTimeInSeconds()};
+    ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.nTimeConnected));
+    ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.nLastBlockTime));
+    ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.nLastTXTime));
+    ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.nLastSend));
+    ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.nLastRecv));
     ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
     ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
-    ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_ping_usec));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_usec));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
