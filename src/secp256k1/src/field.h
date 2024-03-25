@@ -255,8 +255,8 @@ static void secp256k1_fe_add(secp256k1_fe *r, const secp256k1_fe *a);
 /** Multiply two field elements.
  *
  * On input, a and b must be valid field elements; r does not need to be initialized.
- * r and a may point to the same object, but neither can be equal to b. The magnitudes
- * of a and b must not exceed 8.
+ * r and a may point to the same object, but neither may point to the object pointed
+ * to by b. The magnitudes of a and b must not exceed 8.
  * Performs {r = a * b}
  * On output, r will have magnitude 1, but won't be normalized.
  */
