@@ -92,7 +92,7 @@ bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingM
     if (!fKeySet)
         return false;
 
-    // plaintext will always be equal to or lesser than length of ciphertext
+    // plaintext will always be equal to or less than length of ciphertext
     int nLen = vchCiphertext.size();
 
     vchPlaintext.resize(nLen);
