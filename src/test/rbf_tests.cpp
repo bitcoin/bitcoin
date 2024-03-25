@@ -420,31 +420,25 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     const auto entry_low = pool.GetIter(low_tx->GetHash()).value();
     const auto low_size = entry_low->GetTxSize();
 
-    std::vector<FeeFrac> old_diagram, new_diagram;
-
     // Replacement of size 1
-    const auto replace_one{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/0, /*replacement_vsize=*/1, {entry_low}, {entry_low})};
-    BOOST_CHECK(replace_one.has_value());
-    old_diagram = replace_one->first;
-    new_diagram = replace_one->second;
-    BOOST_CHECK(old_diagram.size() == 2);
-    BOOST_CHECK(new_diagram.size() == 2);
-    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee, low_size));
-    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(new_diagram[1] == FeeFrac(0, 1));
+    {
+        const auto replace_one{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/0, /*replacement_vsize=*/1, {entry_low}, {entry_low})};
+        BOOST_CHECK(replace_one.has_value());
+        std::vector<FeeFrac> expected_old_diagram{FeeFrac(0, 0), FeeFrac(low_fee, low_size)};
+        BOOST_CHECK(replace_one->first == expected_old_diagram);
+        std::vector<FeeFrac> expected_new_diagram{FeeFrac(0, 0), FeeFrac(0, 1)};
+        BOOST_CHECK(replace_one->second == expected_new_diagram);
+    }
 
     // Non-zero replacement fee/size
-    const auto replace_one_fee{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_low}, {entry_low})};
-    BOOST_CHECK(replace_one_fee.has_value());
-    old_diagram = replace_one_fee->first;
-    new_diagram = replace_one_fee->second;
-    BOOST_CHECK(old_diagram.size() == 2);
-    BOOST_CHECK(new_diagram.size() == 2);
-    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee, low_size));
-    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size));
+    {
+        const auto replace_one_fee{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_low}, {entry_low})};
+        BOOST_CHECK(replace_one_fee.has_value());
+        std::vector<FeeFrac> expected_old_diagram{FeeFrac(0, 0), FeeFrac(low_fee, low_size)};
+        BOOST_CHECK(replace_one_fee->first == expected_old_diagram);
+        std::vector<FeeFrac> expected_new_diagram{FeeFrac(0, 0), FeeFrac(high_fee, low_size)};
+        BOOST_CHECK(replace_one_fee->second == expected_new_diagram);
+    }
 
     // Add a second transaction to the cluster that will make a single chunk, to be evicted in the RBF
     const auto high_tx = make_tx(/*inputs=*/ {low_tx}, /*output_values=*/ {995 * CENT});
@@ -452,29 +446,24 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     const auto entry_high = pool.GetIter(high_tx->GetHash()).value();
     const auto high_size = entry_high->GetTxSize();
 
-    const auto replace_single_chunk{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_low}, {entry_low, entry_high})};
-    BOOST_CHECK(replace_single_chunk.has_value());
-    old_diagram = replace_single_chunk->first;
-    new_diagram = replace_single_chunk->second;
-    BOOST_CHECK(old_diagram.size() == 2);
-    BOOST_CHECK(new_diagram.size() == 2);
-    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee + high_fee, low_size + high_size));
-    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size));
+    {
+        const auto replace_single_chunk{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_low}, {entry_low, entry_high})};
+        BOOST_CHECK(replace_single_chunk.has_value());
+        std::vector<FeeFrac> expected_old_diagram{FeeFrac(0, 0), FeeFrac(low_fee + high_fee, low_size + high_size)};
+        BOOST_CHECK(replace_single_chunk->first == expected_old_diagram);
+        std::vector<FeeFrac> expected_new_diagram{FeeFrac(0, 0), FeeFrac(high_fee, low_size)};
+        BOOST_CHECK(replace_single_chunk->second == expected_new_diagram);
+    }
 
     // Conflict with the 2nd tx, resulting in new diagram with three entries
-    const auto replace_cpfp_child{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_high}, {entry_high})};
-    BOOST_CHECK(replace_cpfp_child.has_value());
-    old_diagram = replace_cpfp_child->first;
-    new_diagram = replace_cpfp_child->second;
-    BOOST_CHECK(old_diagram.size() == 2);
-    BOOST_CHECK(new_diagram.size() == 3);
-    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee + high_fee, low_size + high_size));
-    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size));
-    BOOST_CHECK(new_diagram[2] == FeeFrac(low_fee + high_fee, low_size + low_size));
+    {
+        const auto replace_cpfp_child{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_high}, {entry_high})};
+        BOOST_CHECK(replace_cpfp_child.has_value());
+        std::vector<FeeFrac> expected_old_diagram{FeeFrac(0, 0), FeeFrac(low_fee + high_fee, low_size + high_size)};
+        BOOST_CHECK(replace_cpfp_child->first == expected_old_diagram);
+        std::vector<FeeFrac> expected_new_diagram{FeeFrac(0, 0), FeeFrac(high_fee, low_size), FeeFrac(low_fee + high_fee, low_size + low_size)};
+        BOOST_CHECK(replace_cpfp_child->second == expected_new_diagram);
+    }
 
     // third transaction causes the topology check to fail
     const auto normal_tx = make_tx(/*inputs=*/ {high_tx}, /*output_values=*/ {995 * CENT});
@@ -482,11 +471,11 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     const auto entry_normal = pool.GetIter(normal_tx->GetHash()).value();
     const auto normal_size = entry_normal->GetTxSize();
 
-    const auto replace_too_large{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/normal_fee, /*replacement_vsize=*/normal_size, {entry_low}, {entry_low, entry_high, entry_normal})};
-    BOOST_CHECK(!replace_too_large.has_value());
-    BOOST_CHECK_EQUAL(util::ErrorString(replace_too_large).original, strprintf("%s has 2 descendants, max 1 allowed", low_tx->GetHash().GetHex()));
-    old_diagram.clear();
-    new_diagram.clear();
+    {
+        const auto replace_too_large{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/normal_fee, /*replacement_vsize=*/normal_size, {entry_low}, {entry_low, entry_high, entry_normal})};
+        BOOST_CHECK(!replace_too_large.has_value());
+        BOOST_CHECK_EQUAL(util::ErrorString(replace_too_large).original, strprintf("%s has 2 descendants, max 1 allowed", low_tx->GetHash().GetHex()));
+    }
 
     // Make a size 2 cluster that is itself two chunks; evict both txns
     const auto high_tx_2 = make_tx(/*inputs=*/ {m_coinbase_txns[1]}, /*output_values=*/ {10 * COIN});
@@ -499,17 +488,14 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     const auto entry_low_2 = pool.GetIter(low_tx_2->GetHash()).value();
     const auto low_size_2 = entry_low_2->GetTxSize();
 
-    const auto replace_two_chunks_single_cluster{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_high_2}, {entry_high_2, entry_low_2})};
-    BOOST_CHECK(replace_two_chunks_single_cluster.has_value());
-    old_diagram = replace_two_chunks_single_cluster->first;
-    new_diagram = replace_two_chunks_single_cluster->second;
-    BOOST_CHECK(old_diagram.size() == 3);
-    BOOST_CHECK(new_diagram.size() == 2);
-    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(old_diagram[1] == FeeFrac(high_fee, high_size_2));
-    BOOST_CHECK(old_diagram[2] == FeeFrac(low_fee + high_fee, low_size_2 + high_size_2));
-    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
-    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size_2));
+    {
+        const auto replace_two_chunks_single_cluster{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_high_2}, {entry_high_2, entry_low_2})};
+        BOOST_CHECK(replace_two_chunks_single_cluster.has_value());
+        std::vector<FeeFrac> expected_old_diagram{FeeFrac(0, 0), FeeFrac(high_fee, high_size_2), FeeFrac(low_fee + high_fee, low_size_2 + high_size_2)};
+        BOOST_CHECK(replace_two_chunks_single_cluster->first == expected_old_diagram);
+        std::vector<FeeFrac> expected_new_diagram{FeeFrac(0, 0), FeeFrac(high_fee, low_size_2)};
+        BOOST_CHECK(replace_two_chunks_single_cluster->second == expected_new_diagram);
+    }
 
     // You can have more than two direct conflicts if the there are multiple effected clusters, all of size 2 or less
     const auto conflict_1 = make_tx(/*inputs=*/ {m_coinbase_txns[2]}, /*output_values=*/ {10 * COIN});
@@ -524,40 +510,37 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_3));
     const auto conflict_3_entry = pool.GetIter(conflict_3->GetHash()).value();
 
-    const auto replace_multiple_clusters{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry})};
-
-    BOOST_CHECK(replace_multiple_clusters.has_value());
-    old_diagram = replace_multiple_clusters->first;
-    new_diagram = replace_multiple_clusters->second;
-    BOOST_CHECK(old_diagram.size() == 4);
-    BOOST_CHECK(new_diagram.size() == 2);
+    {
+        const auto replace_multiple_clusters{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry})};
+        BOOST_CHECK(replace_multiple_clusters.has_value());
+        BOOST_CHECK(replace_multiple_clusters->first.size() == 4);
+        BOOST_CHECK(replace_multiple_clusters->second.size() == 2);
+    }
 
     // Add a child transaction to conflict_1 and make it cluster size 2, still one chunk due to same feerate
     const auto conflict_1_child = make_tx(/*inputs=*/{conflict_1}, /*output_values=*/ {995 * CENT});
     pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_1_child));
     const auto conflict_1_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
 
-    const auto replace_multiple_clusters_2{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry})};
+    {
+        const auto replace_multiple_clusters_2{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry})};
 
-    BOOST_CHECK(replace_multiple_clusters_2.has_value());
-    old_diagram = replace_multiple_clusters_2->first;
-    new_diagram = replace_multiple_clusters_2->second;
-    BOOST_CHECK(old_diagram.size() == 4);
-    BOOST_CHECK(new_diagram.size() == 2);
-    old_diagram.clear();
-    new_diagram.clear();
+        BOOST_CHECK(replace_multiple_clusters_2.has_value());
+        BOOST_CHECK(replace_multiple_clusters_2->first.size() == 4);
+        BOOST_CHECK(replace_multiple_clusters_2->second.size() == 2);
+    }
 
     // Add another descendant to conflict_1, making the cluster size > 2 should fail at this point.
     const auto conflict_1_grand_child = make_tx(/*inputs=*/{conflict_1_child}, /*output_values=*/ {995 * CENT});
     pool.addUnchecked(entry.Fee(high_fee).FromTx(conflict_1_grand_child));
     const auto conflict_1_grand_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
 
-    const auto replace_cluster_size_3{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry, conflict_1_grand_child_entry})};
+    {
+        const auto replace_cluster_size_3{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry, conflict_1_grand_child_entry})};
 
-    BOOST_CHECK(!replace_cluster_size_3.has_value());
-    BOOST_CHECK_EQUAL(util::ErrorString(replace_cluster_size_3).original, strprintf("%s has 2 descendants, max 1 allowed", conflict_1->GetHash().GetHex()));
-    BOOST_CHECK(old_diagram.empty());
-    BOOST_CHECK(new_diagram.empty());
+        BOOST_CHECK(!replace_cluster_size_3.has_value());
+        BOOST_CHECK_EQUAL(util::ErrorString(replace_cluster_size_3).original, strprintf("%s has 2 descendants, max 1 allowed", conflict_1->GetHash().GetHex()));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(feerate_diagram_utilities)
