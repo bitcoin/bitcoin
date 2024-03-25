@@ -503,18 +503,21 @@ BOOST_AUTO_TEST_CASE(feerate_diagram_utilities)
     std::vector<FeeFrac> new_diagram{{FeeFrac{0, 0}, FeeFrac{1000, 300}, FeeFrac{1050, 400}}};
 
     BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+    BOOST_CHECK(std::is_gt(CompareFeerateDiagram(new_diagram, old_diagram)));
 
     // Incomparable diagrams
     old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
     new_diagram = {FeeFrac{0, 0}, FeeFrac{1000, 300}, FeeFrac{1000, 400}};
 
     BOOST_CHECK(CompareFeerateDiagram(old_diagram, new_diagram) == std::partial_ordering::unordered);
+    BOOST_CHECK(CompareFeerateDiagram(new_diagram, old_diagram) == std::partial_ordering::unordered);
 
     // Strictly better but smaller size.
     old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
     new_diagram = {FeeFrac{0, 0}, FeeFrac{1100, 300}};
 
     BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+    BOOST_CHECK(std::is_gt(CompareFeerateDiagram(new_diagram, old_diagram)));
 
     // New diagram is strictly better due to the first chunk, even though
     // second chunk contributes no fees
@@ -522,24 +525,28 @@ BOOST_AUTO_TEST_CASE(feerate_diagram_utilities)
     new_diagram = {FeeFrac{0, 0}, FeeFrac{1100, 100}, FeeFrac{1100, 200}};
 
     BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+    BOOST_CHECK(std::is_gt(CompareFeerateDiagram(new_diagram, old_diagram)));
 
     // Feerate of first new chunk is better with, but second chunk is worse
     old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
     new_diagram = {FeeFrac{0, 0}, FeeFrac{750, 100}, FeeFrac{999, 350}, FeeFrac{1150, 1000}};
 
     BOOST_CHECK(CompareFeerateDiagram(old_diagram, new_diagram) == std::partial_ordering::unordered);
+    BOOST_CHECK(CompareFeerateDiagram(new_diagram, old_diagram) == std::partial_ordering::unordered);
 
     // If we make the second chunk slightly better, the new diagram now wins.
     old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
     new_diagram = {FeeFrac{0, 0}, FeeFrac{750, 100}, FeeFrac{1000, 350}, FeeFrac{1150, 500}};
 
     BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+    BOOST_CHECK(std::is_gt(CompareFeerateDiagram(new_diagram, old_diagram)));
 
     // Identical diagrams, cannot be strictly better
     old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
     new_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
 
     BOOST_CHECK(std::is_eq(CompareFeerateDiagram(old_diagram, new_diagram)));
+    BOOST_CHECK(std::is_eq(CompareFeerateDiagram(new_diagram, old_diagram)));
 
     // Same aggregate fee, but different total size (trigger single tail fee check step)
     old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 399}};
@@ -547,8 +554,6 @@ BOOST_AUTO_TEST_CASE(feerate_diagram_utilities)
 
     // No change in evaluation when tail check needed.
     BOOST_CHECK(std::is_gt(CompareFeerateDiagram(old_diagram, new_diagram)));
-
-    // Padding works on either argument
     BOOST_CHECK(std::is_lt(CompareFeerateDiagram(new_diagram, old_diagram)));
 
     // Trigger multiple tail fee check steps
@@ -561,6 +566,7 @@ BOOST_AUTO_TEST_CASE(feerate_diagram_utilities)
     // Multiple tail fee check steps, unordered result
     new_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}, FeeFrac{1050, 401}, FeeFrac{1050, 402}, FeeFrac{1051, 403}};
     BOOST_CHECK(CompareFeerateDiagram(old_diagram, new_diagram) == std::partial_ordering::unordered);
+    BOOST_CHECK(CompareFeerateDiagram(new_diagram, old_diagram) == std::partial_ordering::unordered);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
