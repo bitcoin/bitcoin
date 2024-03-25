@@ -1432,7 +1432,8 @@ private:
     std::set<uint256> masternodePendingProbes GUARDED_BY(cs_vPendingMasternodes);
     std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
     std::list<CNode*> vNodesDisconnected;
-    std::unordered_map<SOCKET, CNode*> mapSocketToNode;
+    mutable Mutex cs_mapSocketToNode;
+    std::unordered_map<SOCKET, CNode*> mapSocketToNode GUARDED_BY(cs_mapSocketToNode);
     mutable RecursiveMutex cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
@@ -1542,9 +1543,9 @@ private:
     int epollfd{-1};
 #endif
 
-    /** Protected by cs_vNodes */
-    std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_vNodes);
-    std::unordered_map<NodeId, CNode*> mapSendableNodes GUARDED_BY(cs_vNodes);
+    Mutex cs_sendable_receivable_nodes;
+    std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_sendable_receivable_nodes);
+    std::unordered_map<NodeId, CNode*> mapSendableNodes GUARDED_BY(cs_sendable_receivable_nodes);
     /** Protected by cs_mapNodesWithDataToSend */
     std::unordered_map<NodeId, CNode*> mapNodesWithDataToSend GUARDED_BY(cs_mapNodesWithDataToSend);
     mutable RecursiveMutex cs_mapNodesWithDataToSend;
