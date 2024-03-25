@@ -32,6 +32,7 @@ env:
   ECDH: 'no'
   RECOVERY: 'no'
   SCHNORRSIG: 'no'
+  MUSIG: 'no'
   ELLSWIFT: 'no'
   ### test options
   SECP256K1_TEST_ITERS:
@@ -71,18 +72,18 @@ jobs:
       matrix:
         configuration:
           - env_vars: { WIDEMUL: 'int64',  RECOVERY: 'yes' }
-          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - env_vars: { WIDEMUL: 'int128' }
-          - env_vars: { WIDEMUL: 'int128_struct',                                           ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                   ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128_struct',                                                         ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                                 ELLSWIFT: 'yes' }
           - env_vars: {                    RECOVERY: 'yes',              SCHNORRSIG: 'yes' }
           - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', CPPFLAGS: '-DVERIFY' }
           - env_vars: { BUILD: 'distcheck', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no' }
           - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
           - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
-          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - env_vars: { ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
           - env_vars: { ECMULTGENPRECISION: 8, ECMULTWINDOW: 4 }
         cc:
@@ -140,6 +141,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CC: ${{ matrix.cc }}
 
@@ -184,6 +186,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -235,6 +238,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -280,6 +284,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -335,6 +340,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -387,6 +393,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
       SECP256K1_TEST_ITERS: 2
@@ -438,6 +445,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
       CFLAGS: '-fsanitize=undefined,address -g'
@@ -495,6 +503,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'yes'
       CC: 'clang'
@@ -542,6 +551,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -599,15 +609,15 @@ jobs:
       fail-fast: false
       matrix:
         env_vars:
-          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
-          - { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
           - BUILD: 'distcheck'
 
     steps:
@@ -717,6 +727,7 @@ jobs:
       ECDH: 'yes'
       RECOVERY: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
 
     steps:
