@@ -37,6 +37,37 @@ static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs
     return MakeTransactionRef(tx);
 }
 
+// Make two child transactions from parent (which must have at least 2 outputs).
+// Each tx will have the same outputs, using the amounts specified in output_values.
+static inline std::pair<CTransactionRef, CTransactionRef> make_two_siblings(const CTransactionRef parent,
+                                      const std::vector<CAmount>& output_values)
+{
+    assert(parent->vout.size() >= 2);
+
+    // First tx takes first parent output
+    CMutableTransaction tx1 = CMutableTransaction();
+    tx1.vin.resize(1);
+    tx1.vout.resize(output_values.size());
+
+    tx1.vin[0].prevout.hash = parent->GetHash();
+    tx1.vin[0].prevout.n = 0;
+    // Add a witness so wtxid != txid
+    CScriptWitness witness;
+    witness.stack.emplace_back(10);
+    tx1.vin[0].scriptWitness = witness;
+
+    for (size_t i = 0; i < output_values.size(); ++i) {
+        tx1.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+        tx1.vout[i].nValue = output_values[i];
+    }
+
+    // Second tx takes second parent output
+    CMutableTransaction tx2 = tx1;
+    tx2.vin[0].prevout.n = 1;
+
+    return std::make_pair(MakeTransactionRef(tx1), MakeTransactionRef(tx2));
+}
+
 static CTransactionRef add_descendants(const CTransactionRef& tx, int32_t num_descendants, CTxMemPool& pool)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs)
 {
@@ -65,6 +96,20 @@ static CTransactionRef add_descendant_to_parents(const std::vector<CTransactionR
     pool.addUnchecked(entry.FromTx(child_tx));
     // Return last created tx
     return child_tx;
+}
+
+// Makes two children for a single parent
+static std::pair<CTransactionRef, CTransactionRef> add_children_to_parent(const CTransactionRef parent, CTxMemPool& pool)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs)
+{
+    AssertLockHeld(::cs_main);
+    AssertLockHeld(pool.cs);
+    TestMemPoolEntryHelper entry;
+    // Assumes this isn't already spent in mempool
+    auto children_tx = make_two_siblings(/*parent=*/parent, /*output_values=*/{50 * CENT});
+    pool.addUnchecked(entry.FromTx(children_tx.first));
+    pool.addUnchecked(entry.FromTx(children_tx.second));
+    return children_tx;
 }
 
 BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
@@ -116,6 +161,10 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     const auto tx12 = make_tx(/*inputs=*/ {m_coinbase_txns[8]}, /*output_values=*/ {995 * CENT});
     pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx12));
 
+    // Will make two children of this single parent
+    const auto tx13 = make_tx(/*inputs=*/ {m_coinbase_txns[9]}, /*output_values=*/ {995 * CENT, 995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx13));
+
     const auto entry1_normal = pool.GetIter(tx1->GetHash()).value();
     const auto entry2_normal = pool.GetIter(tx2->GetHash()).value();
     const auto entry3_low = pool.GetIter(tx3->GetHash()).value();
@@ -128,6 +177,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     const auto entry10_unchained = pool.GetIter(tx10->GetHash()).value();
     const auto entry11_unchained = pool.GetIter(tx11->GetHash()).value();
     const auto entry12_unchained = pool.GetIter(tx12->GetHash()).value();
+    const auto entry13_unchained = pool.GetIter(tx13->GetHash()).value();
 
     BOOST_CHECK_EQUAL(entry1_normal->GetFee(), normal_fee);
     BOOST_CHECK_EQUAL(entry2_normal->GetFee(), normal_fee);
@@ -292,6 +342,14 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry11_unchained}).value(), strprintf("%s is not the only parent of child %s", entry11_unchained->GetSharedTx()->GetHash().ToString(), entry_two_parent_child->GetSharedTx()->GetHash().ToString()));
     BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry12_unchained}).value(), strprintf("%s is not the only parent of child %s", entry12_unchained->GetSharedTx()->GetHash().ToString(), entry_two_parent_child->GetSharedTx()->GetHash().ToString()));
     BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry_two_parent_child}).value(), strprintf("%s has 2 ancestors, max 1 allowed", entry_two_parent_child->GetSharedTx()->GetHash().ToString()));
+
+    // Single parent with two children, we will conflict with the siblings directly only
+    const auto two_siblings = add_children_to_parent(tx13, pool);
+    const auto entry_sibling_1 = pool.GetIter(two_siblings.first->GetHash()).value();
+    const auto entry_sibling_2 = pool.GetIter(two_siblings.second->GetHash()).value();
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry_sibling_1}).value(), strprintf("%s is not the only child of parent %s", entry_sibling_1->GetSharedTx()->GetHash().ToString(), entry13_unchained->GetSharedTx()->GetHash().ToString()));
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry_sibling_2}).value(), strprintf("%s is not the only child of parent %s", entry_sibling_2->GetSharedTx()->GetHash().ToString(), entry13_unchained->GetSharedTx()->GetHash().ToString()));
+
 }
 
 BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
