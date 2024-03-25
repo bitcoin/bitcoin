@@ -39,6 +39,9 @@ private:
 
     std::variant<bilingual_str, T> m_variant;
 
+    //! Disallow copy constructor, require Result to be moved for efficiency.
+    Result(const Result&) = delete;
+
     //! Disallow operator= to avoid confusion in the future when the Result
     //! class gains support for richer error reporting, and callers should have
     //! ability to set a new result value without clearing existing error
@@ -53,7 +56,6 @@ public:
     Result() : m_variant{std::in_place_index_t<1>{}, std::monostate{}} {}  // constructor for void
     Result(T obj) : m_variant{std::in_place_index_t<1>{}, std::move(obj)} {}
     Result(Error error) : m_variant{std::in_place_index_t<0>{}, std::move(error.message)} {}
-    Result(const Result&) = default;
     Result(Result&&) = default;
     ~Result() = default;
 
