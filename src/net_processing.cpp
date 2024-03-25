@@ -550,7 +550,7 @@ private:
      *  @return   True if address relay is enabled with peer
      *            False if address relay is disallowed
      */
-    bool SetupAddressRelay(CNode& node, Peer& peer);
+    bool SetupAddressRelay(const CNode& node, Peer& peer);
 
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted GUARDED_BY(cs_main) = 0;
@@ -5138,7 +5138,7 @@ public:
 };
 }
 
-bool PeerManagerImpl::SetupAddressRelay(CNode& node, Peer& peer)
+bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
 {
     // We don't participate in addr relay with outbound block-relay-only
     // connections to prevent providing adversaries with the additional
