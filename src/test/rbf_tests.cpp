@@ -416,7 +416,8 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
     const CAmount normal_fee{CENT/10};
     const CAmount high_fee{CENT};
 
-    // low -> high -> medium fee transactions that would result in two chunks together
+    // low -> high -> medium fee transactions that would result in two chunks together since they
+    // are all same size
     const auto low_tx = make_tx(/*inputs=*/ {m_coinbase_txns[0]}, /*output_values=*/ {10 * COIN});
     pool.addUnchecked(entry.Fee(low_fee).FromTx(low_tx));
 
