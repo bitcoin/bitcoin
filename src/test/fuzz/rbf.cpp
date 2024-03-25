@@ -127,6 +127,10 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         }
         mempool_txs.emplace_back(*child);
         pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back()));
+
+        if (fuzzed_data_provider.ConsumeBool()) {
+            pool.PrioritiseTransaction(mempool_txs.back().GetHash().ToUint256(), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(-100000, 100000));
+        }
     }
 
     // Pick some transactions at random to be the direct conflicts
