@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <musig.h>
+#include <support/allocators/secure.h>
 
 #include <secp256k1_musig.h>
 
@@ -61,4 +62,44 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey)
     extpub.chaincode = MUSIG_CHAINCODE;
     extpub.pubkey = pubkey;
     return extpub;
+}
+
+class MuSig2SecNonceImpl
+{
+private:
+    //! The actual secnonce itself
+    secure_unique_ptr<secp256k1_musig_secnonce> m_nonce;
+
+public:
+    MuSig2SecNonceImpl() : m_nonce{make_secure_unique<secp256k1_musig_secnonce>()} {}
+
+    // Delete copy constructors
+    MuSig2SecNonceImpl(const MuSig2SecNonceImpl&) = delete;
+    MuSig2SecNonceImpl& operator=(const MuSig2SecNonceImpl&) = delete;
+
+    secp256k1_musig_secnonce* Get() const { return m_nonce.get(); }
+    void Invalidate() { m_nonce.reset(); }
+    bool IsValid() { return m_nonce != nullptr; }
+};
+
+MuSig2SecNonce::MuSig2SecNonce() : m_impl{std::make_unique<MuSig2SecNonceImpl>()} {}
+
+MuSig2SecNonce::MuSig2SecNonce(MuSig2SecNonce&&) noexcept = default;
+MuSig2SecNonce& MuSig2SecNonce::operator=(MuSig2SecNonce&&) noexcept = default;
+
+MuSig2SecNonce::~MuSig2SecNonce() = default;
+
+secp256k1_musig_secnonce* MuSig2SecNonce::Get() const
+{
+    return m_impl->Get();
+}
+
+void MuSig2SecNonce::Invalidate()
+{
+    return m_impl->Invalidate();
+}
+
+bool MuSig2SecNonce::IsValid()
+{
+    return m_impl->IsValid();
 }
