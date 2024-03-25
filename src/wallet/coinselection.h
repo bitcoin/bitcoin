@@ -15,6 +15,7 @@
 #include <util/insert.h>
 #include <util/result.h>
 
+#include <bitset>
 #include <optional>
 
 
@@ -134,6 +135,16 @@ public:
     bool HasEffectiveValue() const { return effective_value.has_value(); }
 };
 
+enum class SelectionAlgorithm : uint8_t
+{
+    BNB = 0,
+    KNAPSACK = 1,
+    SRD = 2,
+    CG = 3,
+    MANUAL = 4,
+    NUM_ELEMENTS
+};
+
 struct UtxoTarget {
     CAmount start_satoshis;
     CAmount end_satoshis;
@@ -185,6 +196,11 @@ struct CoinSelectionParams {
      * Maximum of excess value added to the input that does not count as waste and can be added to the target value.
     */
     CAmount m_max_excess{0};
+    /***
+     * The array of disabled coin selection algorithms. A disabled algorithms will have the index corresponding
+     * to its SelectionAlgorithm enum value set to false. By default none are disabled.
+    */
+    std::bitset<size_t(SelectionAlgorithm::NUM_ELEMENTS)> m_disable_algos;
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
@@ -317,16 +333,9 @@ typedef std::map<CoinEligibilityFilter, OutputGroupTypeMap> FilteredOutputGroups
  */
 [[nodiscard]] CAmount GenerateChangeTarget(const CAmount payment_value, const CAmount change_fee, FastRandomContext& rng);
 
-enum class SelectionAlgorithm : uint8_t
-{
-    BNB = 0,
-    KNAPSACK = 1,
-    SRD = 2,
-    CG = 3,
-    MANUAL = 4,
-};
-
 std::string GetAlgorithmName(const SelectionAlgorithm algo);
+
+std::optional<size_t> GetAlgorithmIndex(const std::string name);
 
 struct SelectionResult
 {

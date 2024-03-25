@@ -11,8 +11,10 @@
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
+#include <wallet/coinselection.h>
 
 #include <algorithm>
+#include <bitset>
 #include <map>
 #include <optional>
 #include <set>
@@ -119,6 +121,9 @@ public:
     std::optional<CAmount> m_change_target;
     //! Maximum of excess value added to the input that does not count as waste and can be added to the target value.
     std::optional<CAmount> m_max_excess;
+    //! Disable corresponding coin selection algorithms
+    std::bitset<size_t(SelectionAlgorithm::NUM_ELEMENTS)> m_disable_algos;
+    
     CCoinControl();
 
     /**

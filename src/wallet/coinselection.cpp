@@ -977,9 +977,20 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     case SelectionAlgorithm::SRD: return "srd";
     case SelectionAlgorithm::CG: return "cg";
     case SelectionAlgorithm::MANUAL: return "manual";
+    case SelectionAlgorithm::NUM_ELEMENTS: assert(false);
     // No default case to allow for compiler to warn
     }
     assert(false);
+}
+
+std::optional<size_t> GetAlgorithmIndex(const std::string name)
+{
+    if (name == "bnb") return std::optional(size_t(SelectionAlgorithm::BNB));
+    if (name == "knapsack") return std::optional(size_t(SelectionAlgorithm::KNAPSACK));
+    if (name == "srd") return std::optional(size_t(SelectionAlgorithm::SRD));
+    if (name == "cg") return std::optional(size_t(SelectionAlgorithm::CG));
+    if (name == "manual") return std::optional(size_t(SelectionAlgorithm::MANUAL));
+    else return std::nullopt;
 }
 
 CAmount SelectionResult::GetChange(const CAmount min_viable_change, const CAmount change_fee) const

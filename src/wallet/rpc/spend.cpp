@@ -537,6 +537,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 {"input_weights", UniValueType(UniValue::VARR)},
                 {"change_target", UniValueType()}, // will be checked by AmountFromValue() below
                 {"max_excess", UniValueType()}, // will be checked by AmountFromValue() below
+                {"disable_algos", UniValueType(UniValue::VARR)},
             },
             true, true);
 
@@ -619,6 +620,18 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
             }
         }
         SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
+
+        if (options.exists("disable_algos")) {
+            for (const UniValue& algo_name : options["disable_algos"].get_array().getValues()) {
+                auto algo_index = GetAlgorithmIndex(algo_name.get_str());
+                if (algo_index) {
+                    coinControl.m_disable_algos[algo_index.value()] = true;
+                }
+                else {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("'%s' is not a valid coin selection algorithm name.", algo_name.get_str()));
+                }
+            }
+        }
       }
     } else {
         // if options is null and not a bool
@@ -1253,6 +1266,11 @@ RPCHelpMan send()
                     },
                     {"change_target", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify a target change amount in " + CURRENCY_UNIT + "."},
                     {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, always match target exactly"}, "When no change added, may exceed the target payment by this amount in " + CURRENCY_UNIT + "."},
+                    {"disable_algos", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The coin selection algorithms to disable.",
+                        {
+                            {"algo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "One of: \"bnb\", \"cg\", \"knapsack\" or \"srd\"."},
+                        }
+                    },
                 },
                 FundTxDoc()),
                 RPCArgOptions{.oneline_description="options"}},
