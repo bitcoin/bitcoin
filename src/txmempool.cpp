@@ -1317,7 +1317,7 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
             // We'll add chunks for either the ancestor by itself and this tx
             // by itself, or for a combined package.
             FeeFrac package{txiter->GetModFeesWithAncestors(), static_cast<int32_t>(txiter->GetSizeWithAncestors())};
-            if (individual > package) {
+            if (individual >> package) {
                 // The individual feerate is higher than the package, and
                 // therefore higher than the parent's fee. Chunk these
                 // together.

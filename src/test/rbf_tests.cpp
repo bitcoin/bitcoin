@@ -520,7 +520,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         BOOST_CHECK(replace_multiple_clusters->second.size() == 2);
     }
 
-    // Add a child transaction to conflict_1 and make it cluster size 2, still one chunk due to same feerate
+    // Add a child transaction to conflict_1 and make it cluster size 2, two chunks due to same feerate
     const auto conflict_1_child = make_tx(/*inputs=*/{conflict_1}, /*output_values=*/ {995 * CENT});
     pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_1_child));
     const auto conflict_1_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
@@ -529,7 +529,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_multiple_clusters_2{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry})};
 
         BOOST_CHECK(replace_multiple_clusters_2.has_value());
-        BOOST_CHECK(replace_multiple_clusters_2->first.size() == 4);
+        BOOST_CHECK(replace_multiple_clusters_2->first.size() == 5);
         BOOST_CHECK(replace_multiple_clusters_2->second.size() == 2);
     }
 
