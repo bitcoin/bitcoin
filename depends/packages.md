@@ -162,6 +162,9 @@ From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assura
 >  creates. This leads to massive overlinking, which is toxic to the Gentoo
 >  ecosystem, as it leads to a massive number of unnecessary rebuilds.
 
+Where possible, packages are built with Position Independant Code. Either using
+the autotools `--with-pic` flag, or `DCMAKE_POSITION_INDEPENDENT_CODE` with CMake.
+
 ## Secondary dependencies:
 
 Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.

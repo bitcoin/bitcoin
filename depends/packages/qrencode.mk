@@ -8,8 +8,6 @@ define $(package)_set_vars
 $(package)_config_opts=--disable-shared --without-tools --without-tests --without-png
 $(package)_config_opts += --disable-gprof --disable-gcov --disable-mudflap
 $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
-$(package)_config_opts_linux=--with-pic
-$(package)_config_opts_android=--with-pic
 $(package)_cflags += -Wno-int-conversion -Wno-implicit-function-declaration
 endef
 
