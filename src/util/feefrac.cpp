@@ -53,7 +53,6 @@ std::partial_ordering CompareFeerateDiagram(Span<const FeeFrac> dia0, Span<const
         const FeeFrac& point_p = next_point(unproc_side);
         const FeeFrac& point_a = prev_point(!unproc_side);
 
-        // Slope of AP can be negative, unlike AB
         const auto slope_ap = point_p - point_a;
         Assume(slope_ap.size > 0);
         std::weak_ordering cmp = std::weak_ordering::equivalent;
