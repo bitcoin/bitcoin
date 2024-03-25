@@ -1263,7 +1263,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
                 ? tr("Outbound")
                 : tr("Outbound block-relay"));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
-    if (stats->nodeStats.m_permissionFlags == PF_NONE) {
+    if (stats->nodeStats.m_permissionFlags == NetPermissionFlags::None) {
         ui->peerPermissions->setText(tr("N/A"));
     } else {
         QStringList permissions;
