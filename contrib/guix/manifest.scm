@@ -423,6 +423,7 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-initfini-array=yes",
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
+                  "--enable-standard-branch-protection=yes",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
