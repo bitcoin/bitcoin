@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -52,6 +53,31 @@ fn get_pathspecs_exclude_subtrees() -> Vec<String> {
     get_subtrees()
         .iter()
         .map(|s| format!(":(exclude){}", s))
+        .collect()
+}
+
+fn get_expected_boost_includes() -> Vec<String> {
+    vec![
+       "boost/date_time/posix_time/posix_time.hpp",
+       "boost/multi_index/detail/hash_index_iterator.hpp",
+       "boost/multi_index/hashed_index.hpp",
+       "boost/multi_index/identity.hpp",
+       "boost/multi_index/indexed_by.hpp",
+       "boost/multi_index/ordered_index.hpp",
+       "boost/multi_index/sequenced_index.hpp",
+       "boost/multi_index/tag.hpp",
+       "boost/multi_index_container.hpp",
+       "boost/operators.hpp",
+       "boost/process.hpp",
+       "boost/signals2/connection.hpp",
+       "boost/signals2/optional_last_value.hpp",
+       "boost/signals2/signal.hpp",
+       "boost/test/included/unit_test.hpp",
+       "boost/test/unit_test.hpp",
+       "boost/tuple/tuple.hpp",
+    ]
+        .iter()
+        .map(|s| format!("#include <{s}>"))
         .collect()
 }
 
@@ -255,6 +281,152 @@ One or more include guards are missing.
     }
 }
 
+/// Return the pathspecs for includes check related excludes
+fn get_pathspecs_exclude_includes() -> Vec<String> {
+    let mut list = get_pathspecs_exclude_subtrees();
+    list.extend(
+        [
+            "contrib/devtools/bitcoin-tidy",
+        ]
+        .iter()
+        .map(|s| format!(":(exclude){}", s)),
+    );
+    list
+}
+
+// Check for duplicate includes, and includes of .cpp files.
+// Guard against accidental introduction of new Boost dependencies.
+// Enforce bracket syntax includes.
+fn lint_includes() -> LintResult {
+    let mut includes_error = false;
+    let source_files = String::from_utf8(
+        git()
+            .args(["ls-files", "src/*.h", "src/*.cpp", "--"])
+            .args(get_pathspecs_exclude_includes())
+            .output()
+            .expect("command error")
+            .stdout
+    ).expect("error reading stdout");
+
+    // Ensure any include only appears once in a source file.
+    for source_file in source_files.lines() {
+        let source_file_body = fs::read_to_string(source_file)
+            .expect("Failure opening source file");
+
+        let mut include_set = HashSet::new();
+        for source_line in source_file_body.lines() {
+            if source_line.starts_with("#include"){
+                if !include_set.insert(source_line){
+                    includes_error = true;
+                    println!("Duplicate include found in {source_file}:");
+                    println!("{source_line}\n");
+                }
+            }
+        }
+    }
+
+    // Ensure no `.cpp` files are included.
+    let cpp_includes = String::from_utf8(
+        git()
+            .args(["grep", "-E"])
+            .args([r#"^#include [<\"][^>\"]+\.cpp[>\"]"#])
+            .args(["--", "*.cpp", "*.h"])
+            .args(get_pathspecs_exclude_includes())
+            .output()
+            .expect("command error")
+            .stdout
+    ).expect("error reading stdout");
+
+    for cpp_include in cpp_includes.lines() {
+        includes_error = true;
+        println!(".cpp file was used in an #include directive:");
+        println!("{cpp_include}\n");
+    }
+
+    // Enforce bracket syntax includes.
+    let quote_syntax_includes = String::from_utf8(
+        git()
+            .args(["grep", "-E"])
+            .args([r#"^#include \""#])
+            .args(["--", "*.cpp", "*.h"])
+            .args(get_pathspecs_exclude_includes())
+            .output()
+            .expect("command error")
+            .stdout
+    ).expect("error reading stdout");
+
+    for quote_syntax_include in quote_syntax_includes.lines() {
+        includes_error = true;
+        println!(r#"
+Please use bracket syntax includes ("\#include <foo.h>") instead of quote syntax includes:
+{quote_syntax_include}
+        "#);
+    }
+
+    let expected_boost_includes = get_expected_boost_includes();
+
+    // Ensure no new Boost dependencies are introduced
+    let boost_includes = String::from_utf8(
+        git()
+            .args(["grep", "-E"])
+            .args([r#"^#include <boost/"#])
+            .args(["--", "*.cpp", "*.h"])
+            .args(get_pathspecs_exclude_includes())
+            .output()
+            .expect("command error")
+            .stdout
+    ).expect("error reading stdout");
+
+
+    for boost_include in boost_includes.lines() {
+        // Trim to "#include <...>"
+        let trimmed_boost_include = boost_include
+            .trim_start_matches(|c| c != '#')
+            .trim_end_matches(|c| c != '>')
+            .to_string();
+
+        if !expected_boost_includes.contains(&trimmed_boost_include) {
+            includes_error = true;
+            println!(r#"
+A new boost dependency {trimmed_boost_include} was introduced:
+{boost_include}
+            "#);
+        }
+    }
+
+    // Check if a Boost dependency has been removed
+    for expected_boost_include in &expected_boost_includes {
+        let expected_boost_include_status = git()
+            .args(["grep", "-q"])
+            .args([format!("^{expected_boost_include}")])
+            .args(["--", "*.cpp", "*.h"])
+            .args(get_pathspecs_exclude_includes())
+            .status()
+            .expect("command error");
+
+        // git grep -q signals that a match exists with an exit code of zero,
+        // Otherwise it exits with non-zero code.
+        if !expected_boost_include_status.success() {
+            includes_error = true;
+            println!(r#"
+Good job! The Boost dependency "{expected_boost_include}" is no longer used.
+Please remove it from get_expected_boost_includes` in `test/lint/test_runner/src/main.rs`
+to make sure this dependency is not accidentally reintroduced.\n)
+            "#);
+        }
+    }
+
+    if includes_error {
+        Err(r#"
+^^^
+The linter found one or more errors related to the use of includes.
+        "#
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
 fn lint_includes_build_config() -> LintResult {
     let config_path = "./src/config/bitcoin-config.h.in";
     let include_directive = "#include <config/bitcoin-config.h>";
@@ -395,6 +567,7 @@ fn main() -> ExitCode {
         ("trailing whitespace check", lint_trailing_whitespace),
         ("no-tabs check", lint_tabs_whitespace),
         ("include guard check", lint_include_guards),
+        ("includes check", lint_includes),
         ("build config includes check", lint_includes_build_config),
         ("-help=1 documentation check", lint_doc),
         ("lint-*.py scripts", lint_all),
