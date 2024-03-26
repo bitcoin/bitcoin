@@ -38,8 +38,9 @@ static RPCHelpMan coinjoin()
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    if (fMasternodeMode)
+    if (fMasternodeMode) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
+    }
 
     if (!CCoinJoinClientOptions::IsEnabled()) {
         if (!gArgs.GetBoolArg("-enablecoinjoin", true)) {

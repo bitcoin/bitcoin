@@ -257,20 +257,22 @@ static UniValue masternode_status(const JSONRPCRequest& request)
 {
     masternode_status_help(request);
 
-    if (!fMasternodeMode)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
+    if (!fMasternodeMode) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
+    }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.mn_activeman);
 
     UniValue mnObj(UniValue::VOBJ);
     CDeterministicMNCPtr dmn;
     {
-        LOCK(activeMasternodeInfoCs);
+        LOCK(node.mn_activeman->cs);
 
         // keep compatibility with legacy status for now (might get deprecated/removed later)
-        mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
-        mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
-        dmn = node.dmnman->GetListAtChainTip().GetMN(activeMasternodeInfo.proTxHash);
+        mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
+        mnObj.pushKV("service", node.mn_activeman->GetService().ToString());
+        dmn = node.dmnman->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
     }
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
@@ -279,8 +281,8 @@ static UniValue masternode_status(const JSONRPCRequest& request)
         mnObj.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
         mnObj.pushKV("dmnState", dmn->pdmnState->ToJson(dmn->nType));
     }
-    mnObj.pushKV("state", activeMasternodeManager->GetStateString());
-    mnObj.pushKV("status", activeMasternodeManager->GetStatus());
+    mnObj.pushKV("state", node.mn_activeman->GetStateString());
+    mnObj.pushKV("status", node.mn_activeman->GetStatus());
 
     return mnObj;
 }

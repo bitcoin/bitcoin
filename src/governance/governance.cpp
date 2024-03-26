@@ -692,14 +692,14 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
     }
 
     {
-        LOCK(activeMasternodeInfoCs);
-        if (mn_payees.front()->proTxHash != activeMasternodeInfo.proTxHash) {
+        LOCK(::activeMasternodeManager->cs);
+        if (mn_payees.front()->proTxHash != ::activeMasternodeManager->GetProTxHash()) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s we are not the payee, skipping\n", __func__);
             return std::nullopt;
         }
-        gov_sb.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-        gov_sb.Sign( *activeMasternodeInfo.blsKeyOperator);
-    } // activeMasternodeInfoCs
+        gov_sb.SetMasternodeOutpoint(::activeMasternodeManager->GetOutPoint());
+    } // ::activeMasternodeManager->cs
+    gov_sb.Sign(*::activeMasternodeManager);
 
     if (std::string strError; !gov_sb.IsValidLocally(m_dmnman->GetListAtChainTip(), strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
@@ -719,7 +719,8 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
 void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman)
 {
     // only active masternodes can vote on triggers
-    if (!fMasternodeMode || WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) return;
+    if (!fMasternodeMode) return;
+    if (WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash().IsNull())) return;
 
     LOCK2(cs_main, cs);
 
@@ -762,9 +763,9 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
 
 bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman)
 {
-    CGovernanceVote vote(WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint), nHash, VOTE_SIGNAL_FUNDING, outcome);
+    CGovernanceVote vote(WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetOutPoint()), nHash, VOTE_SIGNAL_FUNDING, outcome);
     vote.SetTime(GetAdjustedTime());
-    vote.Sign(WITH_LOCK(activeMasternodeInfoCs, return *activeMasternodeInfo.blsKeyOperator));
+    vote.Sign(*::activeMasternodeManager);
 
     CGovernanceException exception;
     if (!ProcessVoteAndRelay(vote, exception, connman)) {

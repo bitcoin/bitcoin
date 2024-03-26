@@ -11,6 +11,7 @@
 
 #include <memory>
 
+class CActiveMasternodeManager;
 class CBlockPolicyEstimator;
 class CChainState;
 class CCoinJoinServer;
@@ -29,7 +30,7 @@ struct CJContext {
     CJContext() = delete;
     CJContext(const CJContext&) = delete;
     CJContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CTxMemPool& mempool,
-              const CMasternodeSync& mn_sync, bool relay_txes);
+              const CActiveMasternodeManager* mn_activeman, const CMasternodeSync& mn_sync, bool relay_txes);
     ~CJContext();
 
     const std::unique_ptr<CDSTXManager> dstxman;

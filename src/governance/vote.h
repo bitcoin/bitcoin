@@ -8,11 +8,11 @@
 #include <primitives/transaction.h>
 #include <uint256.h>
 
-class CGovernanceVote;
+class CActiveMasternodeManager;
 class CBLSPublicKey;
-class CBLSSecretKey;
 class CConnman;
 class CDeterministicMNList;
+class CGovernanceVote;
 class CKey;
 class CKeyID;
 
@@ -101,7 +101,7 @@ public:
 
     bool Sign(const CKey& key, const CKeyID& keyID);
     bool CheckSignature(const CKeyID& keyID) const;
-    bool Sign(const CBLSSecretKey& key);
+    bool Sign(const CActiveMasternodeManager& mn_activeman);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
     void Relay(CConnman& connman, const CDeterministicMNList& tip_mn_list) const;

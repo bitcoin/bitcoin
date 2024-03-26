@@ -369,15 +369,9 @@ void PrepareShutdown(NodeContext& node)
         pdsNotificationInterface = nullptr;
     }
     if (fMasternodeMode) {
-        UnregisterValidationInterface(activeMasternodeManager.get());
-        activeMasternodeManager.reset();
-    }
-
-    {
-        LOCK(activeMasternodeInfoCs);
-        // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-        activeMasternodeInfo.blsKeyOperator.reset();
-        activeMasternodeInfo.blsPubKeyOperator.reset();
+        UnregisterValidationInterface(node.mn_activeman);
+        node.mn_activeman = nullptr;
+        ::activeMasternodeManager.reset();
     }
 
     node.chain_clients.clear();
@@ -1606,31 +1600,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         StartScriptCheckWorkerThreads(script_threads);
     }
 
-    assert(activeMasternodeInfo.blsKeyOperator == nullptr);
-    assert(activeMasternodeInfo.blsPubKeyOperator == nullptr);
-    fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-        fMasternodeMode = true;
-        {
-            LOCK(activeMasternodeInfoCs);
-            activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-            activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(keyOperator.GetPublicKey());
-        }
-        // We don't know the actual scheme at this point, print both
-        LogPrintf("MASTERNODE:\n  blsPubKeyOperator legacy: %s\n  blsPubKeyOperator basic: %s\n",
-                activeMasternodeInfo.blsPubKeyOperator->ToString(true),
-                activeMasternodeInfo.blsPubKeyOperator->ToString(false));
-    } else {
-        LOCK(activeMasternodeInfoCs);
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
-    }
-
     assert(!node.scheduler);
     node.scheduler = std::make_unique<CScheduler>();
 
@@ -1875,10 +1844,20 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
-    if (fMasternodeMode) {
-        // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman, ::deterministicMNManager);
-        RegisterValidationInterface(activeMasternodeManager.get());
+    fMasternodeMode = false;
+    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
+    if (!strMasterNodeBLSPrivKey.empty()) {
+        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        fMasternodeMode = true;
+        {
+            // Create and register activeMasternodeManager, will init later in ThreadImport
+            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
+            node.mn_activeman = ::activeMasternodeManager.get();
+            RegisterValidationInterface(node.mn_activeman);
+        }
     }
 
     // ********************************************************* Step 7a: Load sporks
@@ -1975,7 +1954,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.mn_activeman, node.peerman, false, fReset || fReindexChainState));
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 
@@ -2220,7 +2199,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 7c: Setup CoinJoin
 
-    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mempool, *node.mn_sync, !ignores_incoming_txs);
+    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mempool, node.mn_activeman,
+                                              *node.mn_sync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);

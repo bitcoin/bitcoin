@@ -15,11 +15,13 @@
 
 #include <optional>
 
-class UniValue;
+class CActiveMasternodeManager;
 class CInv;
 class CConnman;
 class CDeterministicMN;
 class CSporkManager;
+class UniValue;
+
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
@@ -273,6 +275,7 @@ private:
     CDeterministicMNManager& m_dmnman;
     CDKGSessionManager& dkgManager;
     CDKGDebugManager& dkgDebugManager;
+    const CActiveMasternodeManager* m_mn_activeman;
     const CSporkManager& m_sporkman;
 
     const CBlockIndex* m_quorum_base_block_index{nullptr};
@@ -314,8 +317,11 @@ private:
     std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager, CConnman& _connman, const CSporkManager& sporkman) :
-        params(_params), blsWorker(_blsWorker), cache(_blsWorker), m_dmnman(dmnman), dkgManager(_dkgManager), dkgDebugManager(_dkgDebugManager), m_sporkman(sporkman), connman(_connman) {}
+    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDeterministicMNManager& dmnman,
+                CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager, CConnman& _connman,
+                const CActiveMasternodeManager* mn_activeman, const CSporkManager& sporkman) :
+        params(_params), blsWorker(_blsWorker), cache(_blsWorker), m_dmnman(dmnman), dkgManager(_dkgManager),
+        dkgDebugManager(_dkgDebugManager), m_mn_activeman(mn_activeman), m_sporkman(sporkman), connman(_connman) {}
 
     bool Init(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex);
 

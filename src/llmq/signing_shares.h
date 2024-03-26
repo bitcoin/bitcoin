@@ -401,6 +401,7 @@ private:
 
     CConnman& connman;
     CSigningManager& sigman;
+    const CActiveMasternodeManager* m_mn_activeman;
     const CQuorumManager& qman;
     const CSporkManager& m_sporkman;
 
@@ -410,8 +411,9 @@ private:
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    explicit CSigSharesManager(CConnman& _connman, CSigningManager& _sigman, const CQuorumManager& _qman, const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
-        connman(_connman), sigman(_sigman), qman(_qman), m_sporkman(sporkman), m_peerman(peerman)
+    explicit CSigSharesManager(CConnman& _connman, CSigningManager& _sigman, const CActiveMasternodeManager* mn_activeman,
+                               const CQuorumManager& _qman, const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
+        connman(_connman), sigman(_sigman), m_mn_activeman(mn_activeman), qman(_qman), m_sporkman(sporkman), m_peerman(peerman)
     {
         workInterrupt.reset();
     };
@@ -443,7 +445,8 @@ private:
     void ProcessMessageSigShare(NodeId fromId, const CSigShare& sigShare);
 
     static bool VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv& inv);
-    static bool PreVerifyBatchedSigShares(const CQuorumManager& quorum_manager, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
+    static bool PreVerifyBatchedSigShares(const CActiveMasternodeManager& mn_activeman, const CQuorumManager& quorum_manager,
+                                          const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,

@@ -22,6 +22,7 @@
 #include <optional>
 #include <utility>
 
+class CActiveMasternodeManager;
 class CChainState;
 class CConnman;
 class CBLSPublicKey;
@@ -213,7 +214,7 @@ public:
      *     3) we signed the message successfully, and
      *     4) we verified the message successfully
      */
-    bool Sign();
+    bool Sign(const CActiveMasternodeManager& mn_activeman);
     /// Check if we have a valid Masternode address
     [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
@@ -284,7 +285,7 @@ public:
 
     [[nodiscard]] uint256 GetSignatureHash() const;
 
-    bool Sign();
+    bool Sign(const CActiveMasternodeManager& mn_activeman);
     [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     void SetConfirmedHeight(std::optional<int> nConfirmedHeightIn) { assert(nConfirmedHeightIn == std::nullopt || *nConfirmedHeightIn > 0); nConfirmedHeight = nConfirmedHeightIn; }

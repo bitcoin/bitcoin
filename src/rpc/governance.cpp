@@ -315,11 +315,23 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     auto mnList = node.dmnman->GetListAtChainTip();
-    bool fMnFound = WITH_LOCK(activeMasternodeInfoCs, return mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint));
 
-    LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString(activeMasternodeInfo.legacy) : "N/A")),
-            WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.outpoint.ToStringShort()), request.params.size(), fMnFound);
+    if (fMasternodeMode) {
+        CHECK_NONFATAL(node.mn_activeman);
+
+        LOCK(node.mn_activeman->cs);
+        const bool fMnFound = mnList.HasValidMNByCollateral(node.mn_activeman->GetOutPoint());
+
+        LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
+                 node.mn_activeman->GetPubKey().ToString(node.mn_activeman->IsLegacy()),
+                 node.mn_activeman->GetOutPoint().ToStringShort(),
+                 request.params.size(),
+                 fMnFound);
+    } else {
+        LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = N/A, outpoint = N/A, params.size() = %lld, fMnFound = %d\n",
+                 request.params.size(),
+                 false);
+    }
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 

@@ -21,40 +21,45 @@
 
 void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
 {
-    LOCK(activeMasternodeInfoCs);
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
-        return;
-    }
-
-    uint256 signHash;
-    const auto receivedMNAuthChallenge = peer.GetReceivedMNAuthChallenge();
-    if (receivedMNAuthChallenge.IsNull()) {
-        return;
-    }
-    // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM). This way
-    // we protect ourselves against MITM in this form:
-    //   node1 <- Eve -> node2
-    // It does not protect against:
-    //   node1 -> Eve -> node2
-    // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
-    int nOurNodeVersion{PROTOCOL_VERSION};
-    if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
-        nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
-    }
-    const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    const CBLSPublicKeyVersionWrapper pubKey(*activeMasternodeInfo.blsPubKeyOperator, !is_basic_scheme_active);
-    if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
-    } else {
-        signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion));
-    }
+    if (!fMasternodeMode) return;
 
     CMNAuth mnauth;
-    mnauth.proRegTxHash = activeMasternodeInfo.proTxHash;
-    mnauth.sig = activeMasternodeInfo.blsKeyOperator->Sign(signHash);
+    uint256 signHash;
+    {
+        LOCK(::activeMasternodeManager->cs);
+        if (::activeMasternodeManager->GetProTxHash().IsNull()) {
+            return;
+        }
+
+        const auto receivedMNAuthChallenge = peer.GetReceivedMNAuthChallenge();
+        if (receivedMNAuthChallenge.IsNull()) {
+            return;
+        }
+        // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM). This way
+        // we protect ourselves against MITM in this form:
+        //   node1 <- Eve -> node2
+        // It does not protect against:
+        //   node1 -> Eve -> node2
+        // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
+        int nOurNodeVersion{PROTOCOL_VERSION};
+        if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+            nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+        }
+        const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+        auto pk = ::activeMasternodeManager->GetPubKey();
+        const CBLSPublicKeyVersionWrapper pubKey(pk, !is_basic_scheme_active);
+        if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
+            signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
+        } else {
+            signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion));
+        }
+
+        mnauth.proRegTxHash = ::activeMasternodeManager->GetProTxHash();
+    } // ::activeMasternodeManager->cs
+
+    mnauth.sig = ::activeMasternodeManager->Sign(signHash);
 
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, peer.GetId());
-
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
@@ -127,7 +132,9 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterm
         }
     }
 
-    const uint256 myProTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
+    const uint256 myProTxHash = fMasternodeMode ?
+                                WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()) :
+                                uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {
         if (peer.fDisconnect) {
