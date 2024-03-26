@@ -20,7 +20,7 @@ from test_framework.util import (
 class AddrReceiver(P2PInterface):
     def on_addr(self, message):
         for addr in message.addrs:
-            assert_equal(addr.nServices, 9)
+            assert_equal(addr.nServices, 1)
             assert addr.ip.startswith('123.123.123.')
             assert (8333 <= addr.port < 8343)
 
