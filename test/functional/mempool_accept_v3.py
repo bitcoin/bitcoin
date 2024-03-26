@@ -262,6 +262,16 @@ class MempoolAcceptV3(BitcoinTestFramework):
         result = node.testmempoolaccept([tx_v3_parent["hex"], tx_v3_child["hex"], tx_v3_grandchild["hex"]])
         assert all([txresult["package-error"] == f"v3-violation, tx {tx_v3_grandchild['txid']} (wtxid={tx_v3_grandchild['wtxid']}) would have too many ancestors" for txresult in result])
 
+        # Check that if parent is in mempool and child->grandchild package(as a single chunk) is submitted, this also fails limit checks
+        tx_v3_child = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent["new_utxo"], fee_rate = 0, version=3)
+        tx_v3_grandchild = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_child["new_utxo"], version=3)
+
+        node.sendrawtransaction(tx_v3_parent["hex"])
+        self.check_mempool([tx_v3_parent["txid"]])
+
+        result = node.submitpackage([tx_v3_child["hex"], tx_v3_grandchild["hex"]])
+        assert_equal(result["package_msg"], f"v3-violation, tx {tx_v3_grandchild['txid']} (wtxid={tx_v3_grandchild['wtxid']}) would have too many ancestors")
+
     @cleanup(extra_args=["-acceptnonstdtxn=1"])
     def test_v3_ancestors_package_and_mempool(self):
         """
