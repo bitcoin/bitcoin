@@ -181,7 +181,7 @@ static RPCHelpMan testmempoolaccept()
             Chainstate& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*max_sane_feerate=*/{});
+                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{});
                 return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
                                                   chainman.ProcessTransaction(txns[0], /*test_accept=*/true));
             }();
@@ -873,10 +873,10 @@ static RPCHelpMan submitpackage()
 
             // Fee check needs to be run with chainstate and package context
             const CFeeRate max_raw_tx_fee_rate = ParseFeeRate(self.Arg<UniValue>(1));
-            std::optional<CFeeRate> max_sane_feerate{max_raw_tx_fee_rate};
+            std::optional<CFeeRate> client_maxfeerate{max_raw_tx_fee_rate};
             // 0-value is special; it's mapped to no sanity check
             if (max_raw_tx_fee_rate == CFeeRate(0)) {
-                max_sane_feerate = std::nullopt;
+                client_maxfeerate = std::nullopt;
             }
 
             // Burn sanity check is run with no context
@@ -906,7 +906,7 @@ static RPCHelpMan submitpackage()
             NodeContext& node = EnsureAnyNodeContext(request.context);
             CTxMemPool& mempool = EnsureMemPool(node);
             Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
-            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false, max_sane_feerate));
+            const auto package_result = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/ false, client_maxfeerate));
 
             std::string package_msg = "success";
 
