@@ -79,6 +79,7 @@
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
+using kernel::FlushResult;
 using kernel::Notifications;
 
 using fsbridge::FopenFn;
@@ -2769,6 +2770,7 @@ bool Chainstate::FlushStateToDisk(
 {
     LOCK(cs_main);
     assert(this->CanFlushToDisk());
+    FlushResult<> result; // TODO Return this result!
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
 
@@ -2846,8 +2848,10 @@ bool Chainstate::FlushStateToDisk(
                 // First make sure all block and undo data is flushed to disk.
                 // TODO: Handle return error, or add detailed comment why it is
                 // safe to not return an error upon failure.
-                if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
-                    LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Warning, "%s: Failed to flush block file.\n", __func__);
+                if (!(m_blockman.FlushChainstateBlockFile(m_chain.Height()) >> result)) {
+                    auto warning{Untranslated({"Failed to flush block file."})};
+                    LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Warning, "%s: %s\n", __func__, warning.original);
+                    result.AddWarning(std::move(warning));
                 }
             }
 
