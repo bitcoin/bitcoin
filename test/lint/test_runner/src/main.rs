@@ -176,6 +176,85 @@ Please add any false positives, such as subtrees, or externally sourced files to
     }
 }
 
+/// Return the pathspecs for include guard related excludes
+fn get_pathspecs_exclude_include_guards() -> Vec<String> {
+    let mut list = get_pathspecs_exclude_subtrees();
+    list.extend(
+        [
+            "contrib/devtools/bitcoin-tidy",
+            "src/crypto/ctaes",
+            "src/tinyformat.h",
+            "src/bench/nanobench.h",
+            "src/test/fuzz/FuzzedDataProvider.h",
+        ]
+        .iter()
+        .map(|s| format!(":(exclude){}", s)),
+    );
+    list
+}
+
+// Check include guards
+fn lint_include_guards() -> LintResult {
+    let mut include_guard_error = false;
+    let header_files = String::from_utf8(
+        git()
+            .args(["ls-files", "--", "*.h"])
+            .args(get_pathspecs_exclude_include_guards())
+            .output()
+            .expect("command error")
+            .stdout
+    ).expect("error reading stdout");
+
+    for header_file in header_files.lines() {
+        // src/wallet/fees.h -> BITCOIN_WALLET_FEES_H
+        let header_id = format!("BITCOIN_{}",
+            header_file
+                .split('/').collect::<Vec<_>>()[1..]
+                .join("_")
+                .replace("-", "_").replace(".", "_")
+                .to_uppercase()
+        );
+
+        let header_file_body = fs::read_to_string(header_file)
+            .expect("Failure opening header file");
+
+        let include_guards = [
+            format!("#ifndef {header_id}"),
+            format!("#define {header_id}"),
+            format!("#endif // {header_id}")
+        ];
+
+        let mut guard_index = 0;
+        for header_file_line in header_file_body.lines() {
+            if guard_index >= 3 {
+                break;
+            }
+            if header_file_line  == include_guards[guard_index] {
+                guard_index += 1;
+            }
+        }
+
+        if guard_index != 3 {
+            include_guard_error = true;
+            println!(r#"
+{header_file} seems to be missing the expected include guard:
+{}
+{}
+{}
+            "#, include_guards[0], include_guards[1], include_guards[2])
+        }
+    }
+
+    if include_guard_error {
+            Err(r#"
+^^^
+One or more include guards are missing.
+            "#.to_string())
+    } else {
+        Ok(())
+    }
+}
+
 fn lint_includes_build_config() -> LintResult {
     let config_path = "./src/config/bitcoin-config.h.in";
     let include_directive = "#include <config/bitcoin-config.h>";
@@ -315,6 +394,7 @@ fn main() -> ExitCode {
         ("std::filesystem check", lint_std_filesystem),
         ("trailing whitespace check", lint_trailing_whitespace),
         ("no-tabs check", lint_tabs_whitespace),
+        ("include guard check", lint_include_guards),
         ("build config includes check", lint_includes_build_config),
         ("-help=1 documentation check", lint_doc),
         ("lint-*.py scripts", lint_all),
