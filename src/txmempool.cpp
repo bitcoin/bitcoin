@@ -1294,9 +1294,10 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     // direct_conflicts that is at its own fee/size, along with the replacement
     // tx/package at its own fee/size
 
-    // old diagram will consist of each element of all_conflicts either at
-    // its own feerate (followed by any descendant at its own feerate) or as a
-    // single chunk at its descendant's ancestor feerate.
+    // old diagram will consist of the ancestors and descendants of each element of
+    // all_conflicts.  every such transaction will either be at its own feerate (followed
+    // by any descendant at its own feerate), or as a single chunk at the descendant's
+    // ancestor feerate.
 
     std::vector<FeeFrac> old_chunks;
     // Step 1: build the old diagram.
