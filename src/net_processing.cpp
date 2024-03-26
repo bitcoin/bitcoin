@@ -2006,7 +2006,23 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid)
     });
 }
 
-static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& connman)
+/**
+ * Relay (gossip) an address to a few randomly chosen nodes.
+ * We choose the same nodes within a given 24h window (if the list of connected
+ * nodes does not change) and we don't relay to nodes that already know an
+ * address. So within 24h we will likely relay a given address once. This is to
+ * prevent a peer from unjustly giving their address better propagation by sending
+ * it to us repeatedly.
+ * @param[in] originator The peer that sent us the address. We don't want to relay it back.
+ * @param[in] addr Address to relay.
+ * @param[in] fReachable Whether the address' network is reachable. We relay unreachable
+ * addresses less.
+ * @param[in] connman Connection manager to choose nodes to relay to.
+ */
+static void RelayAddress(const CNode& originator,
+                         const CAddress& addr,
+                         bool fReachable,
+                         const CConnman& connman)
 {
     if (!fReachable && !addr.IsRelayable()) return;
 
@@ -2023,8 +2039,8 @@ static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& 
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
 
-    auto sortfunc = [&best, &hasher, nRelayNodes, addr](CNode* pnode) {
-        if (pnode->RelayAddrsWithConn() && pnode->IsAddrCompatible(addr)) {
+    auto sortfunc = [&best, &hasher, nRelayNodes, &originator, &addr](CNode* pnode) {
+        if (pnode->RelayAddrsWithConn() && pnode != &originator && pnode->IsAddrCompatible(addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                 if (hashKey > best[i].first) {
@@ -3329,7 +3345,8 @@ void PeerManagerImpl::ProcessMessage(
             bool fReachable = IsReachable(addr);
             if (addr.nTime > nSince && !pfrom.fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
-                RelayAddress(addr, fReachable, m_connman);
+                // Relay to a limited number of other nodes
+                RelayAddress(pfrom, addr, fReachable, m_connman);
             }
             // Do not store addresses outside our network
             if (fReachable)
