@@ -93,6 +93,7 @@ BITCOIN_TESTS =\
   test/denialofservice_tests.cpp \
   test/descriptor_tests.cpp \
   test/disconnected_transactions.cpp \
+  test/feefrac_tests.cpp \
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
@@ -313,7 +314,9 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/descriptor_parse.cpp \
  test/fuzz/deserialize.cpp \
  test/fuzz/eval_script.cpp \
+ test/fuzz/feefrac.cpp \
  test/fuzz/fee_rate.cpp \
+ test/fuzz/feeratediagram.cpp \
  test/fuzz/fees.cpp \
  test/fuzz/flatfile.cpp \
  test/fuzz/float.cpp \

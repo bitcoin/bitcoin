@@ -37,7 +37,7 @@ static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs
     return MakeTransactionRef(tx);
 }
 
-static void add_descendants(const CTransactionRef& tx, int32_t num_descendants, CTxMemPool& pool)
+static CTransactionRef add_descendants(const CTransactionRef& tx, int32_t num_descendants, CTxMemPool& pool)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs)
 {
     AssertLockHeld(::cs_main);
@@ -50,6 +50,21 @@ static void add_descendants(const CTransactionRef& tx, int32_t num_descendants, 
         pool.addUnchecked(entry.FromTx(next_tx));
         tx_to_spend = next_tx;
     }
+    // Return last created tx
+    return tx_to_spend;
+}
+
+static CTransactionRef add_descendant_to_parents(const std::vector<CTransactionRef>& parents, CTxMemPool& pool)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs)
+{
+    AssertLockHeld(::cs_main);
+    AssertLockHeld(pool.cs);
+    TestMemPoolEntryHelper entry;
+    // Assumes this isn't already spent in mempool
+    auto child_tx = make_tx(/*inputs=*/parents, /*output_values=*/{50 * CENT});
+    pool.addUnchecked(entry.FromTx(child_tx));
+    // Return last created tx
+    return child_tx;
 }
 
 BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
@@ -89,28 +104,46 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     const auto tx8 = make_tx(/*inputs=*/ {m_coinbase_txns[4]}, /*output_values=*/ {999 * CENT});
     pool.addUnchecked(entry.Fee(high_fee).FromTx(tx8));
 
-    const auto entry1 = pool.GetIter(tx1->GetHash()).value();
-    const auto entry2 = pool.GetIter(tx2->GetHash()).value();
-    const auto entry3 = pool.GetIter(tx3->GetHash()).value();
-    const auto entry4 = pool.GetIter(tx4->GetHash()).value();
-    const auto entry5 = pool.GetIter(tx5->GetHash()).value();
-    const auto entry6 = pool.GetIter(tx6->GetHash()).value();
-    const auto entry7 = pool.GetIter(tx7->GetHash()).value();
-    const auto entry8 = pool.GetIter(tx8->GetHash()).value();
+    // Normal txs, will chain txns right before CheckConflictTopology test
+    const auto tx9 = make_tx(/*inputs=*/ {m_coinbase_txns[5]}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx9));
+    const auto tx10 = make_tx(/*inputs=*/ {m_coinbase_txns[6]}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx10));
 
-    BOOST_CHECK_EQUAL(entry1->GetFee(), normal_fee);
-    BOOST_CHECK_EQUAL(entry2->GetFee(), normal_fee);
-    BOOST_CHECK_EQUAL(entry3->GetFee(), low_fee);
-    BOOST_CHECK_EQUAL(entry4->GetFee(), high_fee);
-    BOOST_CHECK_EQUAL(entry5->GetFee(), low_fee);
-    BOOST_CHECK_EQUAL(entry6->GetFee(), low_fee);
-    BOOST_CHECK_EQUAL(entry7->GetFee(), high_fee);
-    BOOST_CHECK_EQUAL(entry8->GetFee(), high_fee);
+    // Will make these two parents of single child
+    const auto tx11 = make_tx(/*inputs=*/ {m_coinbase_txns[7]}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx11));
+    const auto tx12 = make_tx(/*inputs=*/ {m_coinbase_txns[8]}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx12));
 
-    CTxMemPool::setEntries set_12_normal{entry1, entry2};
-    CTxMemPool::setEntries set_34_cpfp{entry3, entry4};
-    CTxMemPool::setEntries set_56_low{entry5, entry6};
-    CTxMemPool::setEntries all_entries{entry1, entry2, entry3, entry4, entry5, entry6, entry7, entry8};
+    const auto entry1_normal = pool.GetIter(tx1->GetHash()).value();
+    const auto entry2_normal = pool.GetIter(tx2->GetHash()).value();
+    const auto entry3_low = pool.GetIter(tx3->GetHash()).value();
+    const auto entry4_high = pool.GetIter(tx4->GetHash()).value();
+    const auto entry5_low = pool.GetIter(tx5->GetHash()).value();
+    const auto entry6_low_prioritised = pool.GetIter(tx6->GetHash()).value();
+    const auto entry7_high = pool.GetIter(tx7->GetHash()).value();
+    const auto entry8_high = pool.GetIter(tx8->GetHash()).value();
+    const auto entry9_unchained = pool.GetIter(tx9->GetHash()).value();
+    const auto entry10_unchained = pool.GetIter(tx10->GetHash()).value();
+    const auto entry11_unchained = pool.GetIter(tx11->GetHash()).value();
+    const auto entry12_unchained = pool.GetIter(tx12->GetHash()).value();
+
+    BOOST_CHECK_EQUAL(entry1_normal->GetFee(), normal_fee);
+    BOOST_CHECK_EQUAL(entry2_normal->GetFee(), normal_fee);
+    BOOST_CHECK_EQUAL(entry3_low->GetFee(), low_fee);
+    BOOST_CHECK_EQUAL(entry4_high->GetFee(), high_fee);
+    BOOST_CHECK_EQUAL(entry5_low->GetFee(), low_fee);
+    BOOST_CHECK_EQUAL(entry6_low_prioritised->GetFee(), low_fee);
+    BOOST_CHECK_EQUAL(entry7_high->GetFee(), high_fee);
+    BOOST_CHECK_EQUAL(entry8_high->GetFee(), high_fee);
+
+    CTxMemPool::setEntries set_12_normal{entry1_normal, entry2_normal};
+    CTxMemPool::setEntries set_34_cpfp{entry3_low, entry4_high};
+    CTxMemPool::setEntries set_56_low{entry5_low, entry6_low_prioritised};
+    CTxMemPool::setEntries set_78_high{entry7_high, entry8_high};
+    CTxMemPool::setEntries all_entries{entry1_normal, entry2_normal, entry3_low, entry4_high,
+                                       entry5_low, entry6_low_prioritised, entry7_high, entry8_high};
     CTxMemPool::setEntries empty_set;
 
     const auto unused_txid{GetRandHash()};
@@ -118,29 +151,29 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     // Tests for PaysMoreThanConflicts
     // These tests use feerate, not absolute fee.
     BOOST_CHECK(PaysMoreThanConflicts(/*iters_conflicting=*/set_12_normal,
-                                      /*replacement_feerate=*/CFeeRate(entry1->GetModifiedFee() + 1, entry1->GetTxSize() + 2),
+                                      /*replacement_feerate=*/CFeeRate(entry1_normal->GetModifiedFee() + 1, entry1_normal->GetTxSize() + 2),
                                       /*txid=*/unused_txid).has_value());
     // Replacement must be strictly greater than the originals.
-    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1->GetModifiedFee(), entry1->GetTxSize()), unused_txid).has_value());
-    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1->GetModifiedFee() + 1, entry1->GetTxSize()), unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1_normal->GetModifiedFee(), entry1_normal->GetTxSize()), unused_txid).has_value());
+    BOOST_CHECK(PaysMoreThanConflicts(set_12_normal, CFeeRate(entry1_normal->GetModifiedFee() + 1, entry1_normal->GetTxSize()), unused_txid) == std::nullopt);
     // These tests use modified fees (including prioritisation), not base fees.
-    BOOST_CHECK(PaysMoreThanConflicts({entry5}, CFeeRate(entry5->GetModifiedFee() + 1, entry5->GetTxSize()), unused_txid) == std::nullopt);
-    BOOST_CHECK(PaysMoreThanConflicts({entry6}, CFeeRate(entry6->GetFee() + 1, entry6->GetTxSize()), unused_txid).has_value());
-    BOOST_CHECK(PaysMoreThanConflicts({entry6}, CFeeRate(entry6->GetModifiedFee() + 1, entry6->GetTxSize()), unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysMoreThanConflicts({entry5_low}, CFeeRate(entry5_low->GetModifiedFee() + 1, entry5_low->GetTxSize()), unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysMoreThanConflicts({entry6_low_prioritised}, CFeeRate(entry6_low_prioritised->GetFee() + 1, entry6_low_prioritised->GetTxSize()), unused_txid).has_value());
+    BOOST_CHECK(PaysMoreThanConflicts({entry6_low_prioritised}, CFeeRate(entry6_low_prioritised->GetModifiedFee() + 1, entry6_low_prioritised->GetTxSize()), unused_txid) == std::nullopt);
     // PaysMoreThanConflicts checks individual feerate, not ancestor feerate. This test compares
-    // replacement_feerate and entry4's feerate, which are the same. The replacement_feerate is
-    // considered too low even though entry4 has a low ancestor feerate.
-    BOOST_CHECK(PaysMoreThanConflicts(set_34_cpfp, CFeeRate(entry4->GetModifiedFee(), entry4->GetTxSize()), unused_txid).has_value());
+    // replacement_feerate and entry4_high's feerate, which are the same. The replacement_feerate is
+    // considered too low even though entry4_high has a low ancestor feerate.
+    BOOST_CHECK(PaysMoreThanConflicts(set_34_cpfp, CFeeRate(entry4_high->GetModifiedFee(), entry4_high->GetTxSize()), unused_txid).has_value());
 
     // Tests for EntriesAndTxidsDisjoint
     BOOST_CHECK(EntriesAndTxidsDisjoint(empty_set, {tx1->GetHash()}, unused_txid) == std::nullopt);
     BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx3->GetHash()}, unused_txid) == std::nullopt);
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx2->GetHash()}, unused_txid).has_value());
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2_normal}, {tx2->GetHash()}, unused_txid).has_value());
     BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx1->GetHash()}, unused_txid).has_value());
     BOOST_CHECK(EntriesAndTxidsDisjoint(set_12_normal, {tx2->GetHash()}, unused_txid).has_value());
     // EntriesAndTxidsDisjoint does not calculate descendants of iters_conflicting; it uses whatever
-    // the caller passed in. As such, no error is returned even though entry2 is a descendant of tx1.
-    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2}, {tx1->GetHash()}, unused_txid) == std::nullopt);
+    // the caller passed in. As such, no error is returned even though entry2_normal is a descendant of tx1.
+    BOOST_CHECK(EntriesAndTxidsDisjoint({entry2_normal}, {tx1->GetHash()}, unused_txid) == std::nullopt);
 
     // Tests for PaysForRBF
     const CFeeRate incremental_relay_feerate{DEFAULT_INCREMENTAL_RELAY_FEE};
@@ -163,8 +196,8 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(PaysForRBF(low_fee, high_fee + 99999999, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
 
     // Tests for GetEntriesForConflicts
-    CTxMemPool::setEntries all_parents{entry1, entry3, entry5, entry7, entry8};
-    CTxMemPool::setEntries all_children{entry2, entry4, entry6};
+    CTxMemPool::setEntries all_parents{entry1_normal, entry3_low, entry5_low, entry7_high, entry8_high};
+    CTxMemPool::setEntries all_children{entry2_normal, entry4_high, entry6_low_prioritised};
     const std::vector<CTransactionRef> parent_inputs({m_coinbase_txns[0], m_coinbase_txns[1], m_coinbase_txns[2],
                                                 m_coinbase_txns[3], m_coinbase_txns[4]});
     const auto conflicts_with_parents = make_tx(parent_inputs, {50 * CENT});
@@ -215,15 +248,319 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(HasNoNewUnconfirmed(/*tx=*/ *spends_unconfirmed.get(),
                                     /*pool=*/ pool,
                                     /*iters_conflicting=*/ all_entries) == std::nullopt);
-    BOOST_CHECK(HasNoNewUnconfirmed(*spends_unconfirmed.get(), pool, {entry2}) == std::nullopt);
+    BOOST_CHECK(HasNoNewUnconfirmed(*spends_unconfirmed.get(), pool, {entry2_normal}) == std::nullopt);
     BOOST_CHECK(HasNoNewUnconfirmed(*spends_unconfirmed.get(), pool, empty_set).has_value());
 
     const auto spends_new_unconfirmed = make_tx({tx1, tx8}, {36 * CENT});
-    BOOST_CHECK(HasNoNewUnconfirmed(*spends_new_unconfirmed.get(), pool, {entry2}).has_value());
+    BOOST_CHECK(HasNoNewUnconfirmed(*spends_new_unconfirmed.get(), pool, {entry2_normal}).has_value());
     BOOST_CHECK(HasNoNewUnconfirmed(*spends_new_unconfirmed.get(), pool, all_entries).has_value());
 
     const auto spends_conflicting_confirmed = make_tx({m_coinbase_txns[0], m_coinbase_txns[1]}, {45 * CENT});
-    BOOST_CHECK(HasNoNewUnconfirmed(*spends_conflicting_confirmed.get(), pool, {entry1, entry3}) == std::nullopt);
+    BOOST_CHECK(HasNoNewUnconfirmed(*spends_conflicting_confirmed.get(), pool, {entry1_normal, entry3_low}) == std::nullopt);
+
+    // Tests for CheckConflictTopology
+
+    // Tx4 has 23 descendants
+    BOOST_CHECK(pool.CheckConflictTopology(set_34_cpfp).has_value());
+
+    // No descendants yet
+    BOOST_CHECK(pool.CheckConflictTopology({entry9_unchained}) == std::nullopt);
+
+    // Add 1 descendant, still ok
+    add_descendants(tx9, 1, pool);
+    BOOST_CHECK(pool.CheckConflictTopology({entry9_unchained}) == std::nullopt);
+
+    // N direct conflicts; ok
+    BOOST_CHECK(pool.CheckConflictTopology({entry9_unchained, entry10_unchained, entry11_unchained}) == std::nullopt);
+
+    // Add 1 descendant, still ok, even if it's considered a direct conflict as well
+    const auto child_tx = add_descendants(tx10, 1, pool);
+    const auto entry10_child = pool.GetIter(child_tx->GetHash()).value();
+    BOOST_CHECK(pool.CheckConflictTopology({entry9_unchained, entry10_unchained, entry11_unchained}) == std::nullopt);
+    BOOST_CHECK(pool.CheckConflictTopology({entry9_unchained, entry10_unchained, entry11_unchained, entry10_child}) == std::nullopt);
+
+    // One more, size 3 cluster too much
+    const auto grand_child_tx = add_descendants(child_tx, 1, pool);
+    const auto entry10_grand_child = pool.GetIter(grand_child_tx->GetHash()).value();
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry9_unchained, entry10_unchained, entry11_unchained}).value(), strprintf("%s has 2 descendants, max 1 allowed", entry10_unchained->GetSharedTx()->GetHash().ToString()));
+    // even if direct conflict is descendent itself
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry9_unchained, entry10_grand_child, entry11_unchained}).value(), strprintf("%s has 2 ancestors, max 1 allowed", entry10_grand_child->GetSharedTx()->GetHash().ToString()));
+
+    // Make a single child from two singleton parents
+    const auto two_parent_child_tx = add_descendant_to_parents({tx11, tx12}, pool);
+    const auto entry_two_parent_child = pool.GetIter(two_parent_child_tx->GetHash()).value();
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry11_unchained}).value(), strprintf("%s is not the only parent of child %s", entry11_unchained->GetSharedTx()->GetHash().ToString(), entry_two_parent_child->GetSharedTx()->GetHash().ToString()));
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry12_unchained}).value(), strprintf("%s is not the only parent of child %s", entry12_unchained->GetSharedTx()->GetHash().ToString(), entry_two_parent_child->GetSharedTx()->GetHash().ToString()));
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology({entry_two_parent_child}).value(), strprintf("%s has 2 ancestors, max 1 allowed", entry_two_parent_child->GetSharedTx()->GetHash().ToString()));
+}
+
+BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    LOCK2(::cs_main, pool.cs);
+    TestMemPoolEntryHelper entry;
+
+    const CAmount low_fee{CENT/100};
+    const CAmount normal_fee{CENT/10};
+
+    // low feerate parent with normal feerate child
+    const auto tx1 = make_tx(/*inputs=*/ {m_coinbase_txns[0]}, /*output_values=*/ {10 * COIN});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(tx1));
+    const auto tx2 = make_tx(/*inputs=*/ {tx1}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx2));
+
+    const auto entry1 = pool.GetIter(tx1->GetHash()).value();
+    const auto tx1_fee = entry1->GetModifiedFee();
+    const auto tx1_size = entry1->GetTxSize();
+    const auto entry2 = pool.GetIter(tx2->GetHash()).value();
+    const auto tx2_fee = entry2->GetModifiedFee();
+    const auto tx2_size = entry2->GetTxSize();
+
+    // Now test ImprovesFeerateDiagram with various levels of "package rbf" feerates
+
+    // It doesn't improve itself
+    const auto res1 = ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee, tx1_size + tx2_size);
+    BOOST_CHECK(res1.has_value());
+    BOOST_CHECK(res1.value().first == DiagramCheckError::FAILURE);
+    BOOST_CHECK(res1.value().second == "insufficient feerate: does not improve feerate diagram");
+
+    // With one more satoshi it does
+    BOOST_CHECK(ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee + 1, tx1_size + tx2_size) == std::nullopt);
+
+    // Adding a grandchild makes the cluster size 3, which is uncalculable
+    const auto tx3 = make_tx(/*inputs=*/ {tx2}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(tx3));
+    const auto res3 = ImprovesFeerateDiagram(pool, {entry1}, {entry1, entry2}, tx1_fee + tx2_fee + 1, tx1_size + tx2_size);
+    BOOST_CHECK(res3.has_value());
+    BOOST_CHECK(res3.value().first == DiagramCheckError::UNCALCULABLE);
+    BOOST_CHECK(res3.value().second == strprintf("%s has 2 descendants, max 1 allowed", tx1->GetHash().GetHex()));
+
+}
+
+BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    LOCK2(::cs_main, pool.cs);
+    TestMemPoolEntryHelper entry;
+
+    const CAmount low_fee{CENT/100};
+    const CAmount normal_fee{CENT/10};
+    const CAmount high_fee{CENT};
+
+    // low -> high -> medium fee transactions that would result in two chunks together
+    const auto low_tx = make_tx(/*inputs=*/ {m_coinbase_txns[0]}, /*output_values=*/ {10 * COIN});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(low_tx));
+
+    const auto entry_low = pool.GetIter(low_tx->GetHash()).value();
+    const auto low_size = entry_low->GetTxSize();
+
+    std::vector<FeeFrac> old_diagram, new_diagram;
+
+    // Replacement of size 1
+    const auto replace_one{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/0, /*replacement_vsize=*/1, {entry_low}, {entry_low})};
+    BOOST_CHECK(replace_one.has_value());
+    old_diagram = replace_one->first;
+    new_diagram = replace_one->second;
+    BOOST_CHECK(old_diagram.size() == 2);
+    BOOST_CHECK(new_diagram.size() == 2);
+    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee, low_size));
+    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(new_diagram[1] == FeeFrac(0, 1));
+
+    // Non-zero replacement fee/size
+    const auto replace_one_fee{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_low}, {entry_low})};
+    BOOST_CHECK(replace_one_fee.has_value());
+    old_diagram = replace_one_fee->first;
+    new_diagram = replace_one_fee->second;
+    BOOST_CHECK(old_diagram.size() == 2);
+    BOOST_CHECK(new_diagram.size() == 2);
+    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee, low_size));
+    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size));
+
+    // Add a second transaction to the cluster that will make a single chunk, to be evicted in the RBF
+    const auto high_tx = make_tx(/*inputs=*/ {low_tx}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(high_fee).FromTx(high_tx));
+    const auto entry_high = pool.GetIter(high_tx->GetHash()).value();
+    const auto high_size = entry_high->GetTxSize();
+
+    const auto replace_single_chunk{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_low}, {entry_low, entry_high})};
+    BOOST_CHECK(replace_single_chunk.has_value());
+    old_diagram = replace_single_chunk->first;
+    new_diagram = replace_single_chunk->second;
+    BOOST_CHECK(old_diagram.size() == 2);
+    BOOST_CHECK(new_diagram.size() == 2);
+    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee + high_fee, low_size + high_size));
+    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size));
+
+    // Conflict with the 2nd tx, resulting in new diagram with three entries
+    const auto replace_cpfp_child{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_high}, {entry_high})};
+    BOOST_CHECK(replace_cpfp_child.has_value());
+    old_diagram = replace_cpfp_child->first;
+    new_diagram = replace_cpfp_child->second;
+    BOOST_CHECK(old_diagram.size() == 2);
+    BOOST_CHECK(new_diagram.size() == 3);
+    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(old_diagram[1] == FeeFrac(low_fee + high_fee, low_size + high_size));
+    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size));
+    BOOST_CHECK(new_diagram[2] == FeeFrac(low_fee + high_fee, low_size + low_size));
+
+    // third transaction causes the topology check to fail
+    const auto normal_tx = make_tx(/*inputs=*/ {high_tx}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(normal_fee).FromTx(normal_tx));
+    const auto entry_normal = pool.GetIter(normal_tx->GetHash()).value();
+    const auto normal_size = entry_normal->GetTxSize();
+
+    const auto replace_too_large{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/normal_fee, /*replacement_vsize=*/normal_size, {entry_low}, {entry_low, entry_high, entry_normal})};
+    BOOST_CHECK(!replace_too_large.has_value());
+    BOOST_CHECK_EQUAL(util::ErrorString(replace_too_large).original, strprintf("%s has 2 descendants, max 1 allowed", low_tx->GetHash().GetHex()));
+    old_diagram.clear();
+    new_diagram.clear();
+
+    // Make a size 2 cluster that is itself two chunks; evict both txns
+    const auto high_tx_2 = make_tx(/*inputs=*/ {m_coinbase_txns[1]}, /*output_values=*/ {10 * COIN});
+    pool.addUnchecked(entry.Fee(high_fee).FromTx(high_tx_2));
+    const auto entry_high_2 = pool.GetIter(high_tx_2->GetHash()).value();
+    const auto high_size_2 = entry_high_2->GetTxSize();
+
+    const auto low_tx_2 = make_tx(/*inputs=*/ {high_tx_2}, /*output_values=*/ {9 * COIN});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(low_tx_2));
+    const auto entry_low_2 = pool.GetIter(low_tx_2->GetHash()).value();
+    const auto low_size_2 = entry_low_2->GetTxSize();
+
+    const auto replace_two_chunks_single_cluster{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {entry_high_2}, {entry_high_2, entry_low_2})};
+    BOOST_CHECK(replace_two_chunks_single_cluster.has_value());
+    old_diagram = replace_two_chunks_single_cluster->first;
+    new_diagram = replace_two_chunks_single_cluster->second;
+    BOOST_CHECK(old_diagram.size() == 3);
+    BOOST_CHECK(new_diagram.size() == 2);
+    BOOST_CHECK(old_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(old_diagram[1] == FeeFrac(high_fee, high_size_2));
+    BOOST_CHECK(old_diagram[2] == FeeFrac(low_fee + high_fee, low_size_2 + high_size_2));
+    BOOST_CHECK(new_diagram[0] == FeeFrac(0, 0));
+    BOOST_CHECK(new_diagram[1] == FeeFrac(high_fee, low_size_2));
+
+    // You can have more than two direct conflicts if the there are multiple effected clusters, all of size 2 or less
+    const auto conflict_1 = make_tx(/*inputs=*/ {m_coinbase_txns[2]}, /*output_values=*/ {10 * COIN});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_1));
+    const auto conflict_1_entry = pool.GetIter(conflict_1->GetHash()).value();
+
+    const auto conflict_2 = make_tx(/*inputs=*/ {m_coinbase_txns[3]}, /*output_values=*/ {10 * COIN});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_2));
+    const auto conflict_2_entry = pool.GetIter(conflict_2->GetHash()).value();
+
+    const auto conflict_3 = make_tx(/*inputs=*/ {m_coinbase_txns[4]}, /*output_values=*/ {10 * COIN});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_3));
+    const auto conflict_3_entry = pool.GetIter(conflict_3->GetHash()).value();
+
+    const auto replace_multiple_clusters{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry})};
+
+    BOOST_CHECK(replace_multiple_clusters.has_value());
+    old_diagram = replace_multiple_clusters->first;
+    new_diagram = replace_multiple_clusters->second;
+    BOOST_CHECK(old_diagram.size() == 4);
+    BOOST_CHECK(new_diagram.size() == 2);
+
+    // Add a child transaction to conflict_1 and make it cluster size 2, still one chunk due to same feerate
+    const auto conflict_1_child = make_tx(/*inputs=*/{conflict_1}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(low_fee).FromTx(conflict_1_child));
+    const auto conflict_1_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
+
+    const auto replace_multiple_clusters_2{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry})};
+
+    BOOST_CHECK(replace_multiple_clusters_2.has_value());
+    old_diagram = replace_multiple_clusters_2->first;
+    new_diagram = replace_multiple_clusters_2->second;
+    BOOST_CHECK(old_diagram.size() == 4);
+    BOOST_CHECK(new_diagram.size() == 2);
+    old_diagram.clear();
+    new_diagram.clear();
+
+    // Add another descendant to conflict_1, making the cluster size > 2 should fail at this point.
+    const auto conflict_1_grand_child = make_tx(/*inputs=*/{conflict_1_child}, /*output_values=*/ {995 * CENT});
+    pool.addUnchecked(entry.Fee(high_fee).FromTx(conflict_1_grand_child));
+    const auto conflict_1_grand_child_entry = pool.GetIter(conflict_1_child->GetHash()).value();
+
+    const auto replace_cluster_size_3{pool.CalculateFeerateDiagramsForRBF(/*replacement_fees=*/high_fee, /*replacement_vsize=*/low_size, {conflict_1_entry, conflict_2_entry, conflict_3_entry}, {conflict_1_entry, conflict_2_entry, conflict_3_entry, conflict_1_child_entry, conflict_1_grand_child_entry})};
+
+    BOOST_CHECK(!replace_cluster_size_3.has_value());
+    BOOST_CHECK_EQUAL(util::ErrorString(replace_cluster_size_3).original, strprintf("%s has 2 descendants, max 1 allowed", conflict_1->GetHash().GetHex()));
+    BOOST_CHECK(old_diagram.empty());
+    BOOST_CHECK(new_diagram.empty());
+}
+
+BOOST_AUTO_TEST_CASE(feerate_diagram_utilities)
+{
+    // Sanity check the correctness of the feerate diagram comparison.
+
+    // A strictly better case.
+    std::vector<FeeFrac> old_diagram{{FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}}};
+    std::vector<FeeFrac> new_diagram{{FeeFrac{0, 0}, FeeFrac{1000, 300}, FeeFrac{1050, 400}}};
+
+    BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+
+    // Incomparable diagrams
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{1000, 300}, FeeFrac{1000, 400}};
+
+    BOOST_CHECK(CompareFeerateDiagram(old_diagram, new_diagram) == std::partial_ordering::unordered);
+
+    // Strictly better but smaller size.
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{1100, 300}};
+
+    BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+
+    // New diagram is strictly better due to the first chunk, even though
+    // second chunk contributes no fees
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{1100, 100}, FeeFrac{1100, 200}};
+
+    BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+
+    // Feerate of first new chunk is better with, but second chunk is worse
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{750, 100}, FeeFrac{999, 350}, FeeFrac{1150, 1000}};
+
+    BOOST_CHECK(CompareFeerateDiagram(old_diagram, new_diagram) == std::partial_ordering::unordered);
+
+    // If we make the second chunk slightly better, the new diagram now wins.
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{750, 100}, FeeFrac{1000, 350}, FeeFrac{1150, 500}};
+
+    BOOST_CHECK(std::is_lt(CompareFeerateDiagram(old_diagram, new_diagram)));
+
+    // Identical diagrams, cannot be strictly better
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+
+    BOOST_CHECK(std::is_eq(CompareFeerateDiagram(old_diagram, new_diagram)));
+
+    // Same aggregate fee, but different total size (trigger single tail fee check step)
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 399}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}};
+
+    // No change in evaluation when tail check needed.
+    BOOST_CHECK(std::is_gt(CompareFeerateDiagram(old_diagram, new_diagram)));
+
+    // Padding works on either argument
+    BOOST_CHECK(std::is_lt(CompareFeerateDiagram(new_diagram, old_diagram)));
+
+    // Trigger multiple tail fee check steps
+    old_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 399}};
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}, FeeFrac{1050, 401}, FeeFrac{1050, 402}};
+
+    BOOST_CHECK(std::is_gt(CompareFeerateDiagram(old_diagram, new_diagram)));
+    BOOST_CHECK(std::is_lt(CompareFeerateDiagram(new_diagram, old_diagram)));
+
+    // Multiple tail fee check steps, unordered result
+    new_diagram = {FeeFrac{0, 0}, FeeFrac{950, 300}, FeeFrac{1050, 400}, FeeFrac{1050, 401}, FeeFrac{1050, 402}, FeeFrac{1051, 403}};
+    BOOST_CHECK(CompareFeerateDiagram(old_diagram, new_diagram) == std::partial_ordering::unordered);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
