@@ -2340,8 +2340,19 @@ DBErrors CWallet::LoadWallet()
 util::Result<void> CWallet::RemoveTxs(std::vector<uint256>& txs_to_remove)
 {
     AssertLockHeld(cs_wallet);
-    WalletBatch batch(GetDatabase());
-    if (!batch.TxnBegin()) return util::Error{_("Error starting db txn for wallet transactions removal")};
+    util::Result<void> res{util::Error{}};
+    bool was_txn_committed = RunWithinTxn(GetDatabase(), /*process_desc=*/"remove transactions", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+        return (res = RemoveTxs(batch, txs_to_remove)).has_value();
+    });
+    if (!res) return util::Error{util::ErrorString(res)};
+    if (!was_txn_committed) return util::Error{_("Error starting/committing db txn for wallet transactions removal process")};
+    return res;
+}
+
+util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<uint256>& txs_to_remove)
+{
+    AssertLockHeld(cs_wallet);
+    if (!batch.HasActiveTxn()) return util::Error{strprintf(_("The transactions removal process can only be executed within a db txn"))};
 
     // Check for transaction existence and remove entries from disk
     using TxIterator = std::unordered_map<uint256, CWalletTx, SaltedTxidHasher>::const_iterator;
@@ -2350,38 +2361,30 @@ util::Result<void> CWallet::RemoveTxs(std::vector<uint256>& txs_to_remove)
     for (const uint256& hash : txs_to_remove) {
         auto it_wtx = mapWallet.find(hash);
         if (it_wtx == mapWallet.end()) {
-            str_err = strprintf(_("Transaction %s does not belong to this wallet"), hash.GetHex());
-            break;
+            return util::Error{strprintf(_("Transaction %s does not belong to this wallet"), hash.GetHex())};
         }
         if (!batch.EraseTx(hash)) {
-            str_err = strprintf(_("Failure removing transaction: %s"), hash.GetHex());
-            break;
+            return util::Error{strprintf(_("Failure removing transaction: %s"), hash.GetHex())};
         }
         erased_txs.emplace_back(it_wtx);
     }
 
-    // Roll back removals in case of an error
-    if (!str_err.empty()) {
-        batch.TxnAbort();
-        return util::Error{str_err};
-    }
+    // Register callback to update the memory state only when the db txn is actually dumped to disk
+    batch.RegisterTxnListener({.on_commit=[&, erased_txs]() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+        // Update the in-memory state and notify upper layers about the removals
+        for (const auto& it : erased_txs) {
+            const uint256 hash{it->first};
+            wtxOrdered.erase(it->second.m_it_wtxOrdered);
+            for (const auto& txin : it->second.tx->vin)
+                mapTxSpends.erase(txin.prevout);
+            mapWallet.erase(it);
+            NotifyTransactionChanged(hash, CT_DELETED);
+        }
 
-    // Dump changes to disk
-    if (!batch.TxnCommit()) return util::Error{_("Error committing db txn for wallet transactions removal")};
+        MarkDirty();
+    }, .on_abort={}});
 
-    // Update the in-memory state and notify upper layers about the removals
-    for (const auto& it : erased_txs) {
-        const uint256 hash{it->first};
-        wtxOrdered.erase(it->second.m_it_wtxOrdered);
-        for (const auto& txin : it->second.tx->vin)
-            mapTxSpends.erase(txin.prevout);
-        mapWallet.erase(it);
-        NotifyTransactionChanged(hash, CT_DELETED);
-    }
-
-    MarkDirty();
-
-    return {}; // all good
+    return {};
 }
 
 bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& new_purpose)
