@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_RESULT_H
 
 #include <attributes.h>
+#include <util/messages.h> // IWYU pragma: export
 #include <util/translation.h>
 
 #include <cassert>
@@ -17,11 +18,6 @@
 #include <vector>
 
 namespace util {
-
-struct Error {
-    bilingual_str message;
-};
-
 //! The Result<SuccessType, ErrorType, MessagesType> class provides
 //! an efficient way for functions to return structured result information, as
 //! well as descriptive error messages.
@@ -58,18 +54,63 @@ struct Error {
 //! The `Result` class is superset of `std::expected`, providing additional
 //! features for combining results from different functions and returning error
 //! messages for users instead of just error values for callers.
-template <typename SuccessType = void, typename ErrorType = void, typename MessagesType = bilingual_str>
+//!
+//! It provides an >> operator to move messages between results without
+//! affecting success and error values.
+//!
+//!    Result<void> result;
+//!    auto r1 = DoSomething() >> result;
+//!    auto r2 = DoSomethingElse() >> result;
+//!    ...
+//!    return result;
+//!
+//! It also provides an update() method which is useful for returning early on
+//! failures and for combining results of the same type.
+//!
+//!    Result<Value> result;
+//!    if (!(DoSomething() >> result)) {
+//!        result.update(Error{_("DoSomething failed.")});
+//!        return result;
+//!    }
+//!    if (!result.update(DoSomethingElse())) {
+//!        result.update(Error{_("DoSomethingElse failed.")});
+//!        return result;
+//!    }
+//!    result.update(...);
+//!    return result;
+//!
+//! Semantically, the update() method merges state from different results,
+//! appending data instead of overwriting it where possible.
+template <typename SuccessType = void, typename ErrorType = void, typename MessagesType = Messages>
 class Result;
 
 //! Traits class that can be specialized to control the way result types are
-//! combined and constructed. Specializations provide a construct() method to be
-//! accepted as special arguments to the Result constructor, and a
-//! construct_error bool member indicating whether to construct error values
-//! instead of success values on use.
+//! combined and constructed. Specializations can provide an update() method
+//! merging information from a source object to a destination object. They can
+//! also define and empty() method to avoid updates if a source object contains
+//! no data.  They can also define a construct() method to be accepted as
+//! special arguments to the Result constructor, and a construct_error bool
+//! member indicating whether to construct error values instead of success
+//! values on use.
 template<typename T>
 struct ResultTraits {};
 
 namespace detail {
+//! Helper to use ResultTraits and update dst if src is nonempty.
+template<typename T>
+void ResultUpdate(auto&& dst_fn, T& src)
+{
+    using Traits = ResultTraits<T>;
+    if constexpr (requires { Traits::empty; }) {
+        if (Traits::empty(src)) return;
+    }
+    if constexpr (requires { Traits::update; }) {
+        Traits::update(dst_fn(), std::move(src));
+    } else {
+        dst_fn() = std::move(src);
+    }
+}
+
 //! Substitute for std::monostate that doesn't depend on std::variant.
 struct Monostate{};
 
@@ -176,7 +217,10 @@ public:
         move</*DstConstructed=*/false>(*this, other);
     }
 
-    //! Update this result by moving from another result object.
+    //! Update this result by moving from another result object. Existing
+    //! success, error, and messages values are updated using
+    //! ResultTraits::update calls so state can be combined instead of
+    //! overwritten.
     Result& update(Result&& other) LIFETIMEBOUND
     {
         move</*DstConstructed=*/true>(*this, other);
@@ -184,9 +228,7 @@ public:
     }
 
     //! Disallow operator= and require explicit Result::update() calls to avoid
-    //! confusion in the future when the Result class gains support for richer
-    //! error reporting, and callers should have ability to set a new result
-    //! value without clearing existing error messages.
+    //! accidentally clearing messages when combining results.
     Result& operator=(Result&&) = delete;
 
 protected:
@@ -225,7 +267,9 @@ protected:
     }
 
     //! Move success, error, and message values from source Result object to
-    //! destination object.
+    //! destination object. Existing values are updated using
+    //! ResultTraits::update calls so state can be combined instead of
+    //! overwritten.
     //! The source and destination results are not required to have the same
     //! types, and assigning void source types to non-void destinations type is
     //! allowed, since no source information is lost. But assigning non-void
@@ -234,16 +278,27 @@ protected:
     template <bool DstConstructed, typename DstResult, typename SrcResult>
     static void move(DstResult& dst, SrcResult& src)
     {
-        // Move messages values first, then move success or error value below.
-        if (src.messages_ptr() && !src.messages_ptr()->empty()) {
-            dst.messages() = std::move(*src.messages_ptr());
-        }
+        // Use operator>> to move messages values first, then move
+        // success or error value below.
+        src >> dst;
         // If DstConstructed is true, it means dst has either a success value or
-        // a error value set, which needs to be destroyed and replaced. If
+        // a error value set, which needs to be updated or replaced. If
         // DstConstructed is false, then dst is being constructed now and has no
         // values set.
         if constexpr (DstConstructed) {
-            if (dst) {
+            if (dst && src) {
+                // dst and src both hold success values, so update dst from src and return
+                if constexpr (!std::is_same_v<typename DstResult::SuccessType, void>) {
+                    detail::ResultUpdate([&]()->auto& { return *dst; }, *src);
+                }
+                return;
+            } else if (!dst && !src) {
+                // dst and src both hold error values, so update dst from src and return
+                if constexpr (!std::is_same_v<typename DstResult::ErrorType, void>) {
+                    detail::ResultUpdate([&]()->auto& { return dst.error(); }, src.error());
+                }
+                return;
+            } else if (dst) {
                 // dst has a success value, so destroy it before replacing it with src error value
                 if constexpr (!std::is_same_v<typename DstResult::SuccessType, void>) {
                     using DstSuccess = typename DstResult::SuccessType;
@@ -281,6 +336,33 @@ protected:
     }
 };
 
+//! Move information from a source Result object to a destination object. It
+//! only moves InfoType and MessagesType values without affecting SuccessType or
+//! ErrorType values of either Result object.
+template <typename SrcResult, typename DstResult>
+requires (std::decay_t<SrcResult>::is_result)
+decltype(auto) operator>>(SrcResult&& src LIFETIMEBOUND, DstResult&& dst)
+{
+    using SrcType = std::decay_t<SrcResult>;
+    if (src.messages_ptr()) {
+        detail::ResultUpdate([&]()->auto& { return dst.messages(); }, src.messages());
+    }
+    return static_cast<SrcType&&>(src);
+}
+
+//! ResultTraits specialization for Messages struct.
+template<>
+struct ResultTraits<Messages> {
+    static void update(Messages& dst, Messages&& src)
+    {
+        MoveMessages(dst, src);
+    }
+    static bool empty(const Messages& src)
+    {
+        return src.errors.empty() && src.warnings.empty();
+    }
+};
+
 //! ResultTraits specialization for Error struct.
 template<>
 struct ResultTraits<Error> {
@@ -289,15 +371,19 @@ struct ResultTraits<Error> {
     template<typename ResultType>
     static void construct(ResultType& dst, Error&& src)
     {
-       dst.messages() = std::move(src.message);
+       dst.messages().errors.push_back(std::move(src.message));
     }
 };
 
-template <typename Result>
-bilingual_str ErrorString(const Result& result)
-{
-    return !result && result.messages_ptr() ? *result.messages_ptr() : bilingual_str{};
-}
+//! ResultTraits specialization for Warning struct.
+template<>
+struct ResultTraits<Warning> {
+    template<typename ResultType>
+    static void construct(ResultType& dst, Warning&& src)
+    {
+       dst.messages().warnings.push_back(std::move(src.message));
+    }
+};
 } // namespace util
 
 #endif // BITCOIN_UTIL_RESULT_H
