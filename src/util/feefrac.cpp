@@ -76,10 +76,12 @@ std::partial_ordering CompareFeerateDiagram(Span<const FeeFrac> dia0, Span<const
         if (std::is_gt(cmp)) better_somewhere[unproc_side] = true;
         if (std::is_lt(cmp)) better_somewhere[!unproc_side] = true;
         ++next_index[unproc_side];
+
+        // If both diagrams are better somewhere, they are incomparable.
+        if (better_somewhere[0] && better_somewhere[1]) return std::partial_ordering::unordered;
+
     } while(true);
 
-    // If both diagrams are better somewhere, they are incomparable.
-    if (better_somewhere[0] && better_somewhere[1]) return std::partial_ordering::unordered;
     // Otherwise compare the better_somewhere values.
     return better_somewhere[0] <=> better_somewhere[1];
 }
