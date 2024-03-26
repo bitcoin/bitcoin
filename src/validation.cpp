@@ -995,7 +995,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // already calculated.
     if (const auto err{SingleV3Checks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
         // Disabled within package validation.
-        if (err->second != nullptr && args.m_allow_replacement) {
+        if (err->second != nullptr && args.m_allow_replacement && !args.m_package_feerates) {
             // Potential sibling eviction. Add the sibling to our list of mempool conflicts to be
             // included in RBF checks.
             ws.m_conflicts.insert(err->second->GetHash());
