@@ -6,9 +6,6 @@
 # Data races from zmq namespace
 race:zmq::*
 
-# race (TODO fix)
-race:validation_chainstatemanager_tests
-
 # double locks (TODO fix)
 mutex:g_genesis_wait_mutex
 mutex:Interrupt
