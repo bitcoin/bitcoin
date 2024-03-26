@@ -36,7 +36,7 @@ namespace util {
 template<>
 struct ResultTraits<kernel::FlushStatus>
 {
-    static void MergeInto(kernel::FlushStatus& dst, kernel::FlushStatus& src)
+    static void Update(kernel::FlushStatus& dst, kernel::FlushStatus& src)
     {
         using kernel::FlushStatus;
         if (dst == FlushStatus::FAILURE || src == FlushStatus::FAILURE) {
@@ -52,7 +52,7 @@ struct ResultTraits<kernel::FlushStatus>
 template<>
 struct ResultTraits<kernel::AbortFailure>
 {
-    static void MergeInto(kernel::AbortFailure& dst, kernel::AbortFailure& src)
+    static void Update(kernel::AbortFailure& dst, kernel::AbortFailure& src)
     {
         dst.fatal |= src.fatal;
     }
