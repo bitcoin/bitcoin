@@ -13,6 +13,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
+#include <kernel/result.h>
 #include <primitives/block.h>
 #include <streams.h>
 #include <sync.h>
@@ -150,13 +151,13 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return false if block file or undo file flushing fails. */
-    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo);
+    [[nodiscard]] kernel::FlushResult<> FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo);
 
     /** Return false if undo file flushing fails. */
-    [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
+    [[nodiscard]] kernel::FlushResult<> FlushUndoFile(int block_file, bool finalize = false);
 
     [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
-    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
+    [[nodiscard]] kernel::FlushResult<> FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     FlatFileSeq BlockFileSeq() const;
