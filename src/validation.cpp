@@ -82,6 +82,7 @@ using kernel::CCoinsStats;
 using kernel::ChainstateRole;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
+using kernel::FlushResult;
 using kernel::Notifications;
 
 using fsbridge::FopenFn;
@@ -2778,6 +2779,7 @@ bool Chainstate::FlushStateToDisk(
 {
     LOCK(cs_main);
     assert(this->CanFlushToDisk());
+    FlushResult<> result; // TODO Return this result!
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
 
@@ -2853,7 +2855,7 @@ bool Chainstate::FlushStateToDisk(
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
 
                 // First make sure all block and undo data is flushed to disk.
-                if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
+                if (!(m_blockman.FlushChainstateBlockFile(m_chain.Height()) >> result)) {
                     // FlushChainstateBlockFile() already reported the specific error through flushError()
                     return state.Error("Failed to flush block or undo file");
                 }
