@@ -115,6 +115,7 @@ public:
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }
+    bool HasActiveTxn() override { return false; }
 };
 
 //! Return object giving access to Berkeley Read Only database at specified path.
