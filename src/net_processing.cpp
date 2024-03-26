@@ -3342,7 +3342,7 @@ void PeerManagerImpl::ProcessMessage(
 
     if (pfrom.nTimeFirstMessageReceived == 0) {
         // First message after VERSION/VERACK
-        pfrom.nTimeFirstMessageReceived = GetSystemTimeInSeconds();
+        pfrom.nTimeFirstMessageReceived = GetTimeSeconds();
         pfrom.fFirstMessageIsMNAUTH = msg_type == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 

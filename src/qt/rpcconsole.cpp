@@ -1244,7 +1244,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerHeading->setText(peerAddrDetails);
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
     ui->peerRelayTxes->setText(stats->nodeStats.fRelayTxes ? "Yes" : "No");
-    const int64_t time_now{GetSystemTimeInSeconds()};
+    const int64_t time_now{GetTimeSeconds()};
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - stats->nodeStats.nTimeConnected));
     ui->peerLastBlock->setText(TimeDurationField(time_now, stats->nodeStats.nLastBlockTime));
     ui->peerLastTx->setText(TimeDurationField(time_now, stats->nodeStats.nLastTXTime));

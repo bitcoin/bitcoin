@@ -426,7 +426,7 @@ private:
             "See this help\n"
             "> dash-cli -netinfo help\n"};
     }
-    const int64_t m_time_now{GetSystemTimeInSeconds()};
+    const int64_t m_time_now{GetTimeSeconds()};
 
 public:
     static constexpr int ID_PEERINFO = 0;
