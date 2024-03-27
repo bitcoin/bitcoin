@@ -31,7 +31,7 @@ CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CCon
 
 std::string CActiveMasternodeManager::GetStateString() const
 {
-    switch (WITH_LOCK(cs, return m_state)) {
+    switch (WITH_READ_LOCK(cs, return m_state)) {
     case MASTERNODE_WAITING_FOR_PROTX:
         return "WAITING_FOR_PROTX";
     case MASTERNODE_POSE_BANNED:
@@ -53,7 +53,7 @@ std::string CActiveMasternodeManager::GetStateString() const
 
 std::string CActiveMasternodeManager::GetStatus() const
 {
-    LOCK(cs);
+    READ_LOCK(cs);
     switch (m_state) {
     case MASTERNODE_WAITING_FOR_PROTX:
         return "Waiting for ProTx to appear on-chain";
@@ -74,9 +74,9 @@ std::string CActiveMasternodeManager::GetStatus() const
     }
 }
 
-void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
+void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 {
-    LOCK(cs);
+    AssertLockHeld(cs);
 
     if (!fMasternodeMode) return;
 
@@ -153,7 +153,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
     if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus())) return;
 
-    const auto [cur_state, cur_protx_hash] = WITH_LOCK(cs, return std::make_pair(m_state, m_info.proTxHash));
+    const auto [cur_state, cur_protx_hash] = WITH_READ_LOCK(cs, return std::make_pair(m_state, m_info.proTxHash));
     if (cur_state == MASTERNODE_READY) {
         auto oldMNList = Assert(m_dmnman)->GetListForBlock(pindexNew->pprev);
         auto newMNList = m_dmnman->GetListForBlock(pindexNew);
@@ -163,7 +163,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
             m_info.proTxHash = uint256();
             m_info.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
-            Init(pindexNew);
+            InitInternal(pindexNew);
         };
 
         if (!newMNList.IsMNValid(cur_protx_hash)) {
@@ -190,6 +190,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
 bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
 {
+    AssertLockHeld(cs);
     // First try to find whatever our own local address is known internally.
     // Addresses could be specified via externalip or bind option, discovered via UPnP
     // or added by TorController. Use some random dummy IPv4 peer to prefer the one
@@ -207,7 +208,7 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
     if (!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        auto service = WITH_LOCK(cs, return m_info.service);
+        auto service = m_info.service;
         m_connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
@@ -216,7 +217,6 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         });
         // nothing and no live connections, can't do anything for now
         if (empty) {
-            LOCK(cs);
             m_error = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
             LogPrintf("CActiveMasternodeManager::GetLocalAddress -- ERROR: %s\n", m_error);
             return false;
@@ -238,7 +238,7 @@ template <template <typename> class EncryptedObj, typename Obj>
                                                      int version) const
 {
     AssertLockNotHeld(cs);
-    return WITH_LOCK(cs, return obj.Decrypt(idx, m_info.blsKeyOperator, ret_obj, version));
+    return WITH_READ_LOCK(cs, return obj.Decrypt(idx, m_info.blsKeyOperator, ret_obj, version));
 }
 template bool CActiveMasternodeManager::Decrypt(const CBLSIESEncryptedObject<CBLSSecretKey>& obj, size_t idx,
                                                 CBLSSecretKey& ret_obj, int version) const;
@@ -248,18 +248,19 @@ template bool CActiveMasternodeManager::Decrypt(const CBLSIESMultiRecipientObjec
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash) const
 {
     AssertLockNotHeld(cs);
-    return WITH_LOCK(cs, return m_info.blsKeyOperator.Sign(hash));
+    return WITH_READ_LOCK(cs, return m_info.blsKeyOperator.Sign(hash));
 }
 
 [[nodiscard]] CBLSSignature CActiveMasternodeManager::Sign(const uint256& hash, const bool is_legacy) const
 {
     AssertLockNotHeld(cs);
-    return WITH_LOCK(cs, return m_info.blsKeyOperator.Sign(hash, is_legacy));
+    return WITH_READ_LOCK(cs, return m_info.blsKeyOperator.Sign(hash, is_legacy));
 }
 
 // We need to pass a copy as opposed to a const ref because CBLSPublicKeyVersionWrapper
 // does not accept a const ref in its construction args
 [[nodiscard]] CBLSPublicKey CActiveMasternodeManager::GetPubKey() const
 {
+    READ_LOCK(cs);
     return m_info.blsPubKeyOperator;
 }

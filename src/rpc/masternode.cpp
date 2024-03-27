@@ -265,15 +265,10 @@ static UniValue masternode_status(const JSONRPCRequest& request)
     CHECK_NONFATAL(node.mn_activeman);
 
     UniValue mnObj(UniValue::VOBJ);
-    CDeterministicMNCPtr dmn;
-    {
-        LOCK(node.mn_activeman->cs);
-
-        // keep compatibility with legacy status for now (might get deprecated/removed later)
-        mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
-        mnObj.pushKV("service", node.mn_activeman->GetService().ToString());
-        dmn = node.dmnman->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
-    }
+    // keep compatibility with legacy status for now (might get deprecated/removed later)
+    mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
+    mnObj.pushKV("service", node.mn_activeman->GetService().ToString());
+    CDeterministicMNCPtr dmn = node.dmnman->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("type", std::string(GetMnType(dmn->nType).description));

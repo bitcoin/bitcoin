@@ -41,9 +41,8 @@ public:
         MASTERNODE_ERROR,
     };
 
-    mutable RecursiveMutex cs;
-
 private:
+    mutable SharedMutex cs;
     masternode_state_t m_state GUARDED_BY(cs) {MASTERNODE_WAITING_FOR_PROTX};
     CActiveMasternodeInfo m_info GUARDED_BY(cs);
     std::string m_error GUARDED_BY(cs);
@@ -56,7 +55,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
-    void Init(const CBlockIndex* pindex);
+    void Init(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs) { LOCK(cs); InitInternal(pindex); };
 
     std::string GetStateString() const;
     std::string GetStatus() const;
@@ -70,14 +69,15 @@ public:
     [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const LOCKS_EXCLUDED(cs);
 
     /* TODO: Reconsider external locking */
-    [[nodiscard]] const COutPoint& GetOutPoint() const EXCLUSIVE_LOCKS_REQUIRED(cs) { return m_info.outpoint; }
-    [[nodiscard]] const uint256& GetProTxHash() const EXCLUSIVE_LOCKS_REQUIRED(cs) { return m_info.proTxHash; }
-    [[nodiscard]] const CService& GetService() const EXCLUSIVE_LOCKS_REQUIRED(cs) { return m_info.service; }
-    [[nodiscard]] CBLSPublicKey GetPubKey() const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    [[nodiscard]] bool IsLegacy() const EXCLUSIVE_LOCKS_REQUIRED(cs) { return m_info.legacy; }
+    [[nodiscard]] COutPoint GetOutPoint() const { READ_LOCK(cs); return m_info.outpoint; }
+    [[nodiscard]] uint256 GetProTxHash() const { READ_LOCK(cs); return m_info.proTxHash; }
+    [[nodiscard]] CService GetService() const { READ_LOCK(cs); return m_info.service; }
+    [[nodiscard]] CBLSPublicKey GetPubKey() const;
+    [[nodiscard]] bool IsLegacy() const { READ_LOCK(cs); return m_info.legacy; }
 
 private:
-    bool GetLocalAddress(CService& addrRet);
+    void InitInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool GetLocalAddress(CService& addrRet) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;

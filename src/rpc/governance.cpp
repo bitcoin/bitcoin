@@ -319,7 +319,6 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     if (fMasternodeMode) {
         CHECK_NONFATAL(node.mn_activeman);
 
-        LOCK(node.mn_activeman->cs);
         const bool fMnFound = mnList.HasValidMNByCollateral(node.mn_activeman->GetOutPoint());
 
         LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",

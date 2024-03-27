@@ -299,7 +299,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMN
     const uint256 proTxHash = [&mn_activeman]() {
         if (!fMasternodeMode) return uint256();
         CHECK_NONFATAL(mn_activeman);
-        return WITH_LOCK(mn_activeman->cs, return mn_activeman->GetProTxHash());
+        return mn_activeman->GetProTxHash();
     }();
 
     UniValue minableCommitments(UniValue::VARR);
