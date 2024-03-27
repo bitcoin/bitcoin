@@ -276,8 +276,14 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
         // (the package is a test accept and ATMP is a submission).
         auto single_submit = txs.size() == 1 && fuzzed_data_provider.ConsumeBool();
 
+        // Exercise client_maxfeerate logic
+        std::optional<CFeeRate> client_maxfeerate{};
+        if (fuzzed_data_provider.ConsumeBool()) {
+            client_maxfeerate = CFeeRate(fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1, 50 * COIN), 100);
+        }
+
         const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, /*client_maxfeerate=*/{}));
+                                    return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, client_maxfeerate));
 
         // Always set bypass_limits to false because it is not supported in ProcessNewPackage and
         // can be a source of divergence.
