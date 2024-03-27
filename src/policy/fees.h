@@ -266,7 +266,7 @@ protected:
     /** Overridden from CValidationInterface. */
     void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& /*unused*/, uint64_t /*unused*/) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);

@@ -66,7 +66,7 @@ struct OutpointsUpdater final : public CValidationInterface {
         }
     }
 
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason, uint64_t /* mempool_sequence */) override
     {
         // outpoints spent by this tx are now available
         for (const auto& input : tx->vin) {
@@ -92,7 +92,7 @@ struct TransactionsDelta final : public CValidationInterface {
         m_added.insert(tx.info.m_tx);
     }
 
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason, uint64_t /* mempool_sequence */) override
     {
         // Transactions may be entered and booted any number of times
          m_added.erase(tx);

@@ -65,7 +65,7 @@ struct TransactionsDelta final : public CValidationInterface {
         Assert(m_added.insert(tx.info.m_tx).second);
     }
 
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t /* mempool_sequence */) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason, uint64_t /* mempool_sequence */) override
     {
         Assert(m_removed.insert(tx).second);
     }
@@ -101,7 +101,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
     const auto info_all = tx_pool.infoAll();
     if (!info_all.empty()) {
         const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
-        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, MemPoolRemovalReason::BLOCK /* dummy */));
+        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, BlockReason{} /* dummy */));
         assert(tx_pool.size() < info_all.size());
         WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     }
