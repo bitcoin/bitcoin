@@ -207,6 +207,7 @@ RPCHelpMan importprivkey()
                 pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, /*timestamp=*/0);
             }
         }
+        pwallet->RefreshAllTXOs();
     }
     if (fRescan) {
         RescanWallet(*pwallet, reserver);
@@ -307,6 +308,7 @@ RPCHelpMan importaddress()
         } else {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
         }
+        pwallet->RefreshAllTXOs();
     }
     if (fRescan)
     {
@@ -478,6 +480,8 @@ RPCHelpMan importpubkey()
         pwallet->ImportScriptPubKeys(strLabel, script_pub_keys, /*have_solving_data=*/true, /*apply_label=*/true, /*timestamp=*/1);
 
         pwallet->ImportPubKeys({pubKey.GetID()}, {{pubKey.GetID(), pubKey}} , /*key_origins=*/{}, /*add_keypool=*/false, /*internal=*/false, /*timestamp=*/1);
+
+        pwallet->RefreshAllTXOs();
     }
     if (fRescan)
     {
@@ -625,6 +629,7 @@ RPCHelpMan importwallet()
 
             progress++;
         }
+        pwallet->RefreshAllTXOs();
         pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
     }
     pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
@@ -1400,6 +1405,8 @@ RPCHelpMan importmulti()
                 nLowestTimestamp = timestamp;
             }
         }
+
+        pwallet->RefreshAllTXOs();
     }
     if (fRescan && fRunScan && requests.size()) {
         int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, /*update=*/true);
@@ -1692,6 +1699,7 @@ RPCHelpMan importdescriptors()
             }
         }
         pwallet->ConnectScriptPubKeyManNotifiers();
+        pwallet->RefreshAllTXOs();
     }
 
     // Rescan the blockchain using the lowest timestamp

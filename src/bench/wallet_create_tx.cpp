@@ -46,10 +46,17 @@ void generateFakeBlock(const CChainParams& params,
     coinbase_tx.vin[0].prevout.SetNull();
     coinbase_tx.vout.resize(2);
     coinbase_tx.vout[0].scriptPubKey = coinbase_out_script;
-    coinbase_tx.vout[0].nValue = 49 * COIN;
+    coinbase_tx.vout[0].nValue = 48 * COIN;
     coinbase_tx.vin[0].scriptSig = CScript() << ++tip.tip_height << OP_0;
     coinbase_tx.vout[1].scriptPubKey = coinbase_out_script; // extra output
     coinbase_tx.vout[1].nValue = 1 * COIN;
+
+    // Fill the coinbase with outputs that don't belong to the wallet in order to benchmark
+    // AvailableCoins' behavior with unnecessary TXOs
+    for (int i = 0; i < 50; ++i) {
+        coinbase_tx.vout.emplace_back(1 * COIN / 50, CScript(OP_TRUE));
+    }
+
     block.vtx = {MakeTransactionRef(std::move(coinbase_tx))};
 
     block.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
@@ -104,14 +111,14 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
 
     wallet::CCoinControl coin_control;
     coin_control.m_allow_other_inputs = allow_other_inputs;
 
     CAmount target = 0;
     if (preset_inputs) {
-        // Select inputs, each has 49 BTC
+        // Select inputs, each has 48 BTC
         wallet::CoinFilterParams filter_coins;
         filter_coins.max_count = preset_inputs->num_of_internal_inputs;
         const auto& res = WITH_LOCK(wallet.cs_wallet,
@@ -164,7 +171,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
 
     bench.epochIterations(2).run([&] {
         LOCK(wallet.cs_wallet);
