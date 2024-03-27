@@ -92,7 +92,8 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         # Wait until the full_node is headers-wise sync
         best_block_hash = pruned_node.getbestblockhash()
-        self.wait_until(lambda: next(filter(lambda x: x['hash'] == best_block_hash, full_node.getchaintips()))['status'] == "headers-only")
+        default_value = {'status': ''}  # No status
+        self.wait_until(lambda: next(filter(lambda x: x['hash'] == best_block_hash, full_node.getchaintips()), default_value)['status'] == "headers-only")
 
         # Now, since the node aims to download a window of 1024 blocks,
         # ensure it requests the blocks below the threshold only (with a
