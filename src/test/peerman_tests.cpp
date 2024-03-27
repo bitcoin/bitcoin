@@ -3,8 +3,9 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <node/miner.h>
+#include <kernel/fatal_error.h>
 #include <net_processing.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -16,22 +17,22 @@ BOOST_FIXTURE_TEST_SUITE(peerman_tests, RegTestingSetup)
 /** Window, in blocks, for connecting to NODE_NETWORK_LIMITED peers */
 static constexpr int64_t NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS = 144;
 
-static void mineBlock(const node::NodeContext& node, std::chrono::seconds block_time)
+static void mineBlock(node::NodeContext& node, std::chrono::seconds block_time)
 {
     auto curr_time = GetTime<std::chrono::seconds>();
     SetMockTime(block_time); // update time so the block is created with it
-    CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr}.CreateNewBlock(CScript() << OP_TRUE)->block;
+    CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr, node.shutdown, node.exit_status}.CreateNewBlock(CScript() << OP_TRUE)->block;
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
     block.fChecked = true; // little speedup
     SetMockTime(curr_time); // process block at current time
-    Assert(node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    Assert(UnwrapFatalError(node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)));
     node.validation_signals->SyncWithValidationInterfaceQueue(); // drain events queue
 }
 
 // Verifying when network-limited peer connections are desirable based on the node's proximity to the tip
 BOOST_AUTO_TEST_CASE(connections_desirable_service_flags)
 {
-    std::unique_ptr<PeerManager> peerman = PeerManager::make(*m_node.connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
+    std::unique_ptr<PeerManager> peerman = PeerManager::make(*m_node.connman, *m_node.addrman, nullptr, *m_node.chainman, m_node.shutdown, m_node.exit_status, *m_node.mempool, {});
     auto consensus = m_node.chainman->GetParams().GetConsensus();
 
     // Check we start connecting to full nodes

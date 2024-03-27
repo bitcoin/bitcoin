@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "fatal_error.h"
 #include "logprintf.h"
 
 #include <clang-tidy/ClangTidyModule.h>
@@ -13,6 +14,7 @@ public:
     void addCheckFactories(clang::tidy::ClangTidyCheckFactories& CheckFactories) override
     {
         CheckFactories.registerCheck<bitcoin::LogPrintfCheck>("bitcoin-unterminated-logprintf");
+        CheckFactories.registerCheck<bitcoin::FatalErrorCheck>("bitcoin-fatal-error");
     }
 };
 

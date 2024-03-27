@@ -16,6 +16,7 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <logging.h>
+#include <node/abort.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -64,10 +65,12 @@ static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
     return options;
 }
 
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
+BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options, util::SignalInterrupt* shutdown, std::atomic<int>& exit_status)
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{mempool},
       m_chainstate{chainstate},
+      m_shutdown{shutdown},
+      m_exit_status{exit_status},
       m_options{ClampOptions(options)}
 {
 }
@@ -87,8 +90,8 @@ static BlockAssembler::Options ConfiguredOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool)
-    : BlockAssembler(chainstate, mempool, ConfiguredOptions()) {}
+BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, util::SignalInterrupt* shutdown, std::atomic<int>& exit_status)
+    : BlockAssembler(chainstate, mempool, ConfiguredOptions(), shutdown, exit_status) {}
 
 void BlockAssembler::resetBlock()
 {
@@ -170,8 +173,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    if (m_options.test_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev,
-                                                            /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
+    if (m_options.test_block_validity && !CheckFatal(TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev,
+                                                            /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false), m_shutdown, m_exit_status)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
     const auto time_2{SteadyClock::now()};

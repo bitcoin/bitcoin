@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_UTIL_CHAINSTATE_H
 
 #include <clientversion.h>
+#include <kernel/fatal_error.h>
 #include <logging.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
@@ -76,14 +77,14 @@ CreateAndActivateUTXOSnapshot(
             node.chainman->ResetChainstates();
             node.chainman->InitializeChainstate(node.mempool.get());
             Chainstate& chain = node.chainman->ActiveChainstate();
-            Assert(chain.LoadGenesisBlock());
+            Assert(UnwrapFatalError(chain.LoadGenesisBlock()));
             // These cache values will be corrected shortly in `MaybeRebalanceCaches`.
             chain.InitCoinsDB(1 << 20, true, false, "");
             chain.InitCoinsCache(1 << 20);
             chain.CoinsTip().SetBestBlock(gen_hash);
             chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
-            node.chainman->MaybeRebalanceCaches();
+            UnwrapFatalError(node.chainman->MaybeRebalanceCaches());
 
             // Reset the HAVE_DATA flags below the snapshot height, simulating
             // never-having-downloaded them in the first place.
@@ -105,7 +106,7 @@ CreateAndActivateUTXOSnapshot(
             }
         }
         BlockValidationState state;
-        if (!node.chainman->ActiveChainstate().ActivateBestChain(state)) {
+        if (!UnwrapFatalError(node.chainman->ActiveChainstate().ActivateBestChain(state))) {
             throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
         }
         Assert(
@@ -124,7 +125,7 @@ CreateAndActivateUTXOSnapshot(
         new_active.m_chain.SetTip(*(tip->pprev));
     }
 
-    bool res = node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+    bool res = UnwrapFatalError(node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate));
 
     // Restore the old tip.
     new_active.m_chain.SetTip(*tip);

@@ -377,7 +377,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 editStatus = WALLET_UNLOCK_FAILURE;
                 return QString();
             }
-            op_dest = walletModel->wallet().getNewDestination(address_type, strLabel);
+            op_dest.Set(walletModel->wallet().getNewDestination(address_type, strLabel));
             if (!op_dest) {
                 editStatus = KEY_GENERATION_FAILURE;
                 return QString();

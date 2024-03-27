@@ -22,6 +22,7 @@
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <kernel/fatal_error.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <net.h>
@@ -284,14 +285,14 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
     options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");
-    auto [status, error] = LoadChainstate(chainman, m_cache_sizes, options);
-    assert(status == node::ChainstateLoadStatus::SUCCESS);
+    auto result = LoadChainstate(chainman, m_cache_sizes, options);
+    assert(result);
 
-    std::tie(status, error) = VerifyLoadedChainstate(chainman, options);
-    assert(status == node::ChainstateLoadStatus::SUCCESS);
+    result = VerifyLoadedChainstate(chainman, options);
+    assert(result);
 
     BlockValidationState state;
-    if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
+    if (!UnwrapFatalError(chainman.ActiveChainstate().ActivateBestChain(state))) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 }
@@ -322,6 +323,7 @@ TestingSetup::TestingSetup(
     peerman_opts.deterministic_rng = true;
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
+                                       m_node.shutdown, m_node.exit_status,
                                        *m_node.mempool, peerman_opts);
 
     {
@@ -370,7 +372,7 @@ CBlock TestChain100Setup::CreateBlock(
     const CScript& scriptPubKey,
     Chainstate& chainstate)
 {
-    CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler{chainstate, nullptr, m_node.shutdown, m_node.exit_status}.CreateNewBlock(scriptPubKey)->block;
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
@@ -394,7 +396,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 
     CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    (void)UnwrapFatalError(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr));
 
     return block;
 }
@@ -475,7 +477,7 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(const std::
     // If submit=true, add transaction to the mempool.
     if (submit) {
         LOCK(cs_main);
-        const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn));
+        const MempoolAcceptResult result = UnwrapFatalError(m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn)));
         assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
     }
     return mempool_txn;

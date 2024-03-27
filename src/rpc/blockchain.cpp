@@ -25,6 +25,7 @@
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/abort.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/transaction.h>
@@ -59,6 +60,8 @@ using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 
 using node::BlockManager;
+using node::CheckFatal;
+using node::HandleFatalError;
 using node::NodeContext;
 using node::SnapshotMetadata;
 
@@ -797,6 +800,7 @@ static RPCHelpMan pruneblockchain()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!chainman.m_blockman.IsPruneMode()) {
         throw JSONRPCError(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode.");
@@ -833,7 +837,7 @@ static RPCHelpMan pruneblockchain()
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(active_chainstate, height);
+    (void)CheckFatal(PruneBlockFilesManual(active_chainstate, height), node.shutdown, node.exit_status);
     const CBlockIndex& block{*CHECK_NONFATAL(active_chain.Tip())};
     return block.nStatus & BLOCK_HAVE_DATA ? active_chainstate.m_blockman.GetFirstStoredBlock(block)->nHeight - 1 : block.nHeight;
 },
@@ -947,7 +951,7 @@ static RPCHelpMan gettxoutsetinfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    active_chainstate.ForceFlushStateToDisk();
+    (void)CheckFatal(active_chainstate.ForceFlushStateToDisk(), node.shutdown, node.exit_status);
 
     CCoinsView* coins_view;
     BlockManager* blockman;
@@ -1140,12 +1144,16 @@ static RPCHelpMan verifychain()
     const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].getInt<int>()};
 
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
 
     Chainstate& active_chainstate = chainman.ActiveChainstate();
-    return CVerifyDB(chainman.GetNotifications()).VerifyDB(
-               active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth) == VerifyDBResult::SUCCESS;
+    auto res{HandleFatalError(
+        CVerifyDB(chainman.GetNotifications()).VerifyDB(active_chainstate, chainman.GetParams().GetConsensus(), active_chainstate.CoinsTip(), check_level, check_depth),
+        node.shutdown,
+        node.exit_status)};
+    return res && res.value() == VerifyDBResult::SUCCESS;
 },
     };
 }
@@ -1519,6 +1527,7 @@ static RPCHelpMan preciousblock()
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CBlockIndex* pblockindex;
 
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     {
         LOCK(cs_main);
@@ -1529,7 +1538,7 @@ static RPCHelpMan preciousblock()
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().PreciousBlock(state, pblockindex);
+    (void)CheckFatal(chainman.ActiveChainstate().PreciousBlock(state, pblockindex), node.shutdown, node.exit_status);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -1557,6 +1566,7 @@ static RPCHelpMan invalidateblock()
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     BlockValidationState state;
 
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     CBlockIndex* pblockindex;
     {
@@ -1566,10 +1576,10 @@ static RPCHelpMan invalidateblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
+    (void)CheckFatal(chainman.ActiveChainstate().InvalidateBlock(state, pblockindex), node.shutdown, node.exit_status);
 
     if (state.IsValid()) {
-        chainman.ActiveChainstate().ActivateBestChain(state);
+        (void)CheckFatal(chainman.ActiveChainstate().ActivateBestChain(state), node.shutdown, node.exit_status);
     }
 
     if (!state.IsValid()) {
@@ -1596,6 +1606,7 @@ static RPCHelpMan reconsiderblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
@@ -1610,7 +1621,7 @@ static RPCHelpMan reconsiderblock()
     }
 
     BlockValidationState state;
-    chainman.ActiveChainstate().ActivateBestChain(state);
+    (void)CheckFatal(chainman.ActiveChainstate().ActivateBestChain(state), node.shutdown, node.exit_status);
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
@@ -2229,7 +2240,7 @@ static RPCHelpMan scantxoutset()
             ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
             Chainstate& active_chainstate = chainman.ActiveChainstate();
-            active_chainstate.ForceFlushStateToDisk();
+            (void)CheckFatal(active_chainstate.ForceFlushStateToDisk(), node.shutdown, node.exit_status);
             pcursor = CHECK_NONFATAL(active_chainstate.CoinsDB().Cursor());
             tip = CHECK_NONFATAL(active_chainstate.m_chain.Tip());
         }
@@ -2674,7 +2685,7 @@ UniValue CreateUTXOSnapshot(
         //
         LOCK(::cs_main);
 
-        chainstate.ForceFlushStateToDisk();
+        (void)CheckFatal(chainstate.ForceFlushStateToDisk(), node.shutdown, node.exit_status);
 
         maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, node.rpc_interruption_point);
         if (!maybe_stats) {
@@ -2787,7 +2798,7 @@ static RPCHelpMan loadtxoutset()
             strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call this RPC again.",
                       base_blockhash.ToString()));
     }
-    if (!chainman.ActivateSnapshot(afile, metadata, false)) {
+    if (!CheckFatal(chainman.ActivateSnapshot(afile, metadata, false), node.shutdown, node.exit_status)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to load UTXO snapshot " + fs::PathToString(path));
     }
 

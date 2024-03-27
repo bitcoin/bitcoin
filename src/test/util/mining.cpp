@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <pow.h>
@@ -96,7 +97,7 @@ COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
     bool new_block;
     BlockValidationStateCatcher bvsc{block->GetHash()};
     node.validation_signals->RegisterValidationInterface(&bvsc);
-    const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block)};
+    const bool processed{UnwrapFatalError(chainman.ProcessNewBlock(block, true, true, &new_block))};
     const bool duplicate{!new_block && processed};
     assert(!duplicate);
     node.validation_signals->UnregisterValidationInterface(&bvsc);
@@ -112,7 +113,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node, const CScript& coi
                                      const BlockAssembler::Options& assembler_options)
 {
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options}
+        BlockAssembler{Assert(node.chainman)->ActiveChainstate(), Assert(node.mempool.get()), assembler_options, node.shutdown, node.exit_status}
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 

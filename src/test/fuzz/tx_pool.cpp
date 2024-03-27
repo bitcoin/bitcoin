@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
@@ -87,14 +88,14 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
-void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate)
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate, const NodeContext& node)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
         BlockAssembler::Options options;
         options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
         options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-        auto assembler = BlockAssembler{chainstate, &tx_pool, options};
+        auto assembler = BlockAssembler{chainstate, &tx_pool, options, node.shutdown, node.exit_status};
         auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
         Assert(block_template->block.vtx.size() >= 1);
     }
@@ -291,7 +292,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         // Make sure ProcessNewPackage on one transaction works.
         // The result is not guaranteed to be the same as what is returned by ATMP.
         const auto result_package = WITH_LOCK(::cs_main,
-                                    return ProcessNewPackage(chainstate, tx_pool, {tx}, true, /*client_maxfeerate=*/{}));
+                                    return UnwrapFatalError(ProcessNewPackage(chainstate, tx_pool, {tx}, true, /*client_maxfeerate=*/{})));
         // If something went wrong due to a package-specific policy, it might not return a
         // validation result for the transaction.
         if (result_package.m_state.GetResult() != PackageValidationResult::PCKG_POLICY) {
@@ -301,7 +302,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
                    it->second.m_result_type == MempoolAcceptResult::ResultType::INVALID);
         }
 
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
+        const auto res = WITH_LOCK(::cs_main, return UnwrapFatalError(AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false)));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         node.validation_signals->SyncWithValidationInterfaceQueue();
         node.validation_signals->UnregisterSharedValidationInterface(txr);
@@ -355,7 +356,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
             }
         }
     }
-    Finish(fuzzed_data_provider, tx_pool, chainstate);
+    Finish(fuzzed_data_provider, tx_pool, chainstate, g_setup->m_node);
 }
 
 FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
@@ -403,13 +404,13 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
         const auto tx = MakeTransactionRef(mut_tx);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
-        const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
+        const auto res = WITH_LOCK(::cs_main, return UnwrapFatalError(AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false)));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
             CheckMempoolV3Invariants(tx_pool);
         }
     }
-    Finish(fuzzed_data_provider, tx_pool, chainstate);
+    Finish(fuzzed_data_provider, tx_pool, chainstate, g_setup->m_node);
 }
 } // namespace

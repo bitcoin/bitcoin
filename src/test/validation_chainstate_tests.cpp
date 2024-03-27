@@ -4,6 +4,7 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <kernel/fatal_error.h>
 #include <random.h>
 #include <rpc/blockchain.h>
 #include <sync.h>
@@ -30,7 +31,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
     c1.InitCoinsDB(
         /*cache_size_bytes=*/1 << 23, /*in_memory=*/true, /*should_wipe=*/false);
     WITH_LOCK(::cs_main, c1.InitCoinsCache(1 << 23));
-    BOOST_REQUIRE(c1.LoadGenesisBlock()); // Need at least one block loaded to be able to flush caches
+    BOOST_REQUIRE(UnwrapFatalError(c1.LoadGenesisBlock())); // Need at least one block loaded to be able to flush caches
 
     // Add a coin to the in-memory cache, upsize once, then downsize.
     {
@@ -43,18 +44,18 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));
 
-        c1.ResizeCoinsCaches(
+        (void)UnwrapFatalError(c1.ResizeCoinsCaches(
             1 << 24,  // upsizing the coinsview cache
             1 << 22  // downsizing the coinsdb cache
-        );
+        ));
 
         // View should still have the coin cached, since we haven't destructed the cache on upsize.
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));
 
-        c1.ResizeCoinsCaches(
+        (void)UnwrapFatalError(c1.ResizeCoinsCaches(
             1 << 22,  // downsizing the coinsview cache
             1 << 23  // upsizing the coinsdb cache
-        );
+        ));
 
         // The view cache should be empty since we had to destruct to downsize.
         BOOST_CHECK(!c1.CoinsTip().HaveCoinInCache(outpoint));
@@ -123,13 +124,13 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         LOCK(::cs_main);
         bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
         BOOST_CHECK(checked);
-        bool accepted = chainman.AcceptBlock(
-            pblockone, state, &pindex, true, nullptr, &newblock, true);
+        bool accepted = UnwrapFatalError(chainman.AcceptBlock(
+            pblockone, state, &pindex, true, nullptr, &newblock, true));
         BOOST_CHECK(accepted);
     }
 
     // UpdateTip is called here
-    bool block_added = background_cs.ActivateBestChain(state, pblockone);
+    bool block_added = UnwrapFatalError(background_cs.ActivateBestChain(state, pblockone));
 
     // Ensure tip is as expected
     BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHash());

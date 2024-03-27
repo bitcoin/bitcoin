@@ -6,6 +6,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <kernel/coinstats.h>
+#include <kernel/fatal_error.h>
 #include <node/miner.h>
 #include <script/interpreter.h>
 #include <streams.h>
@@ -79,7 +80,7 @@ FUZZ_TARGET(utxo_total_supply)
     };
     const auto UpdateUtxoStats = [&]() {
         LOCK(chainman.GetMutex());
-        chainman.ActiveChainstate().ForceFlushStateToDisk();
+        UnwrapFatalError(chainman.ActiveChainstate().ForceFlushStateToDisk());
         utxo_stats = std::move(
             *Assert(kernel::ComputeUTXOStats(kernel::CoinStatsHashType::NONE, &chainman.ActiveChainstate().CoinsDB(), chainman.m_blockman, {})));
         // Check that miner can't print more money than they are allowed to

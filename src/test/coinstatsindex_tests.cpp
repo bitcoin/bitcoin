@@ -6,6 +6,7 @@
 #include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
 #include <kernel/coinstats.h>
+#include <kernel/fatal_error.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
@@ -98,9 +99,9 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
             LOCK(cs_main);
             BlockValidationState state;
             BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
-            BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+            BOOST_CHECK(UnwrapFatalError(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true)));
             CCoinsViewCache view(&chainstate.CoinsTip());
-            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+            BOOST_CHECK(UnwrapFatalError(chainstate.ConnectBlock(block, state, new_block_index, view)));
         }
         // Send block connected notification, then stop the index without
         // sending a chainstate flushed notification. Prior to #24138, this

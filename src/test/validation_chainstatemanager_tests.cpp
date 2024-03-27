@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/disconnected_transactions.h>
+#include <kernel/fatal_error.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
@@ -25,6 +26,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using kernel::CheckFatalFailure;
+using kernel::FatalError;
 using node::BlockManager;
 using node::KernelNotifications;
 using node::SnapshotMetadata;
@@ -78,7 +81,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
         c2.LoadChainTip();
     }
     BlockValidationState _;
-    BOOST_CHECK(c2.ActivateBestChain(_, nullptr));
+    BOOST_CHECK(UnwrapFatalError(c2.ActivateBestChain(_, nullptr)));
 
     BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
     BOOST_CHECK(manager.IsSnapshotActive());
@@ -123,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     {
         LOCK(::cs_main);
         c1.InitCoinsCache(1 << 23);
-        manager.MaybeRebalanceCaches();
+        UnwrapFatalError(manager.MaybeRebalanceCaches());
     }
 
     BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, max_cache);
@@ -149,7 +152,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     {
         LOCK(::cs_main);
         c2.InitCoinsCache(1 << 23);
-        manager.MaybeRebalanceCaches();
+        UnwrapFatalError(manager.MaybeRebalanceCaches());
     }
 
     BOOST_CHECK_CLOSE(c1.m_coinstip_cache_size_bytes, max_cache * 0.05, 1);
@@ -368,7 +371,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             for (Chainstate* cs : chainman.GetAll()) {
                 LOCK(::cs_main);
-                cs->ForceFlushStateToDisk();
+                UnwrapFatalError(cs->ForceFlushStateToDisk());
             }
             // Process all callbacks referring to the old manager before wiping it.
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
@@ -444,7 +447,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
             BOOST_CHECK(cs->setBlockIndexCandidates.empty());
         }
 
-        WITH_LOCK(::cs_main, chainman.LoadBlockIndex());
+        WITH_LOCK(::cs_main, (void)UnwrapFatalError(chainman.LoadBlockIndex()));
     };
 
     // Ensure that without any assumed-valid BlockIndex entries, only the current tip is
@@ -573,7 +576,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     BlockValidationState unused_state;
     {
         LOCK2(::cs_main, bg_chainstate.MempoolMutex());
-        BOOST_CHECK(bg_chainstate.DisconnectTip(unused_state, &unused_pool));
+        BOOST_CHECK(UnwrapFatalError(bg_chainstate.DisconnectTip(unused_state, &unused_pool)));
         unused_pool.clear();  // to avoid queuedTx assertion errors on teardown
     }
     BOOST_CHECK_EQUAL(bg_chainstate.m_chain.Height(), 109);
@@ -635,7 +638,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+    res = WITH_LOCK(::cs_main, return UnwrapFatalError(chainman.MaybeCompleteSnapshotValidation()));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
 
     WITH_LOCK(::cs_main, BOOST_CHECK(chainman.IsSnapshotValidated()));
@@ -651,7 +654,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     BOOST_CHECK_EQUAL(all_chainstates[0], &active_cs);
 
     // Trying completion again should return false.
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+    res = WITH_LOCK(::cs_main, return UnwrapFatalError(chainman.MaybeCompleteSnapshotValidation()));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SKIPPED);
 
     // The invalid snapshot path should not have been used.
@@ -703,7 +706,6 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     auto chainstates = this->SetupSnapshot();
     Chainstate& validation_chainstate = *std::get<0>(chainstates);
     ChainstateManager& chainman = *Assert(m_node.chainman);
-    SnapshotCompletionResult res;
     m_node.notifications->m_shutdown_on_fatal_error = false;
 
     // Test tampering with the IBD UTXO set with an extra coin to ensure it causes
@@ -722,8 +724,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 
     {
         ASSERT_DEBUG_LOG("failed to validate the -assumeutxo snapshot state");
-        res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
-        BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
+        BOOST_CHECK(WITH_LOCK(::cs_main, return CheckFatalFailure(chainman.MaybeCompleteSnapshotValidation(), FatalError::SnapshotHashMismatch)));
     }
 
     auto all_chainstates = chainman.GetAll();

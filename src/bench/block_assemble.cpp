@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <kernel/fatal_error.h>
 #include <node/miner.h>
 #include <random.h>
 #include <test/util/mining.h>
@@ -38,7 +39,7 @@ static void AssembleBlock(benchmark::Bench& bench)
         LOCK(::cs_main);
 
         for (const auto& txr : txs) {
-            const MempoolAcceptResult res = test_setup->m_node.chainman->ProcessTransaction(txr);
+            const MempoolAcceptResult res = UnwrapFatalError(test_setup->m_node.chainman->ProcessTransaction(txr));
             assert(res.m_result_type == MempoolAcceptResult::ResultType::VALID);
         }
     }

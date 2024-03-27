@@ -15,6 +15,7 @@
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
+#include <kernel/fatal_error.h>
 #include <kernel/validation_cache_sizes.h>
 
 #include <consensus/validation.h>
@@ -89,14 +90,6 @@ int main(int argc, char* argv[])
         {
             std::cout << "Warning: " << warning.original << std::endl;
         }
-        void flushError(const bilingual_str& message) override
-        {
-            std::cerr << "Error flushing block data to disk: " << message.original << std::endl;
-        }
-        void fatalError(const bilingual_str& message) override
-        {
-            std::cerr << "Error: " << message.original << std::endl;
-        }
     };
     auto notifications = std::make_unique<KernelNotifications>();
 
@@ -122,13 +115,13 @@ int main(int argc, char* argv[])
     cache_sizes.coins_db = 2 << 22;
     cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
     node::ChainstateLoadOptions options;
-    auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
-    if (status != node::ChainstateLoadStatus::SUCCESS) {
+    auto result = node::LoadChainstate(chainman, cache_sizes, options);
+    if (!result) {
         std::cerr << "Failed to load Chain state from your datadir." << std::endl;
         goto epilogue;
     } else {
-        std::tie(status, error) = node::VerifyLoadedChainstate(chainman, options);
-        if (status != node::ChainstateLoadStatus::SUCCESS) {
+        result = node::VerifyLoadedChainstate(chainman, options);
+        if (!result) {
             std::cerr << "Failed to verify loaded Chain state from your datadir." << std::endl;
             goto epilogue;
         }
@@ -136,7 +129,7 @@ int main(int argc, char* argv[])
 
     for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
         BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
+        if (!UnwrapFatalError(chainstate->ActivateBestChain(state, nullptr))) {
             std::cerr << "Failed to connect best block (" << state.ToString() << ")" << std::endl;
             goto epilogue;
         }
@@ -226,7 +219,7 @@ int main(int argc, char* argv[])
         bool new_block;
         auto sc = std::make_shared<submitblock_StateCatcher>(block.GetHash());
         validation_signals.RegisterSharedValidationInterface(sc);
-        bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+        bool accepted = UnwrapFatalError(chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block));
         validation_signals.UnregisterSharedValidationInterface(sc);
         if (!new_block && accepted) {
             std::cerr << "duplicate" << std::endl;
@@ -284,7 +277,7 @@ epilogue:
         LOCK(cs_main);
         for (Chainstate* chainstate : chainman.GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                UnwrapFatalError(chainstate->ForceFlushStateToDisk());
                 chainstate->ResetCoinsViews();
             }
         }
