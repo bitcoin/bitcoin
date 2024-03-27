@@ -600,6 +600,13 @@ class P2PInterface(P2PConnection):
 
     # Message receiving helper methods
 
+    def check_last_getdata(self, hash_list):
+        with p2p_lock:
+            last_data = self.last_message.get("getdata")
+            if last_data is None:
+                return False
+            return [x.hash for x in last_data.inv] == hash_list
+
     def wait_for_tx(self, txid, *, timeout=60):
         def test_function():
             if not self.last_message.get('tx'):

@@ -189,8 +189,6 @@ class TestP2PConn(P2PInterface):
             assert not self.last_message.get("getdata")
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
-        with p2p_lock:
-            self.last_message.pop("getdata", None)
         msg = msg_headers()
         msg.headers = [CBlockHeader(block)]
         if use_header:
@@ -2050,8 +2048,6 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx2.sha256)])
 
         # Send tx2 through; it's an orphan so won't be accepted
-        with p2p_lock:
-            self.wtx_node.last_message.pop("getdata", None)
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
 
         # Expect a request for parent (tx) by txid despite use of WTX peer

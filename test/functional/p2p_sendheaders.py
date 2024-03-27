@@ -453,12 +453,10 @@ class SendHeadersTest(BitcoinTestFramework):
             inv_node.send_message(msg_block(blocks[-1]))
 
         inv_node.sync_with_ping()  # Make sure blocks are processed
-        test_node.last_message.pop("getdata", None)
         test_node.send_header_for_blocks(blocks)
         test_node.sync_with_ping()
         # should not have received any getdata messages
-        with p2p_lock:
-            assert "getdata" not in test_node.last_message
+        assert not test_node.check_last_getdata(blocks)
 
         # This time, direct fetch should work
         blocks = []
@@ -492,11 +490,9 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Announcing one block on fork should not trigger direct fetch
         # (less work than tip)
-        test_node.last_message.pop("getdata", None)
         test_node.send_header_for_blocks(blocks[0:1])
         test_node.sync_with_ping()
-        with p2p_lock:
-            assert "getdata" not in test_node.last_message
+        assert not test_node.check_last_getdata(blocks[0:1])
 
         # Announcing one more block on fork should trigger direct fetch for
         # both blocks (same work as tip)
@@ -511,11 +507,9 @@ class SendHeadersTest(BitcoinTestFramework):
         test_node.wait_for_getdata([x.sha256 for x in blocks[2:16]], timeout=DIRECT_FETCH_RESPONSE_TIME)
 
         # Announcing 1 more header should not trigger any response
-        test_node.last_message.pop("getdata", None)
         test_node.send_header_for_blocks(blocks[18:19])
         test_node.sync_with_ping()
-        with p2p_lock:
-            assert "getdata" not in test_node.last_message
+        assert not test_node.check_last_getdata(blocks[18:19])
 
         self.log.info("Part 4: success!")
 
@@ -528,7 +522,6 @@ class SendHeadersTest(BitcoinTestFramework):
         expected_hash = tip
         for i in range(10):
             self.log.debug("Part 5.{}: starting...".format(i))
-            test_node.last_message.pop("getdata", None)
             blocks = []
             # Create two more blocks.
             for _ in range(2):
@@ -587,7 +580,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Finally, check that the inv node never received a getdata request,
         # throughout the test
-        assert "getdata" not in inv_node.last_message
+        assert inv_node.last_message.get("getdata") is None
 
 if __name__ == '__main__':
     SendHeadersTest().main()
