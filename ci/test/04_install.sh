@@ -6,9 +6,6 @@
 
 export LC_ALL=C.UTF-8
 
-if [[ $DOCKER_NAME_TAG == centos* ]]; then
-  export LC_ALL=en_US.utf8
-fi
 if [[ $QEMU_USER_CMD == qemu-s390* ]]; then
   export LC_ALL=C
 fi

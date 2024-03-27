@@ -102,7 +102,7 @@ def main():
     # Iterate through commits
     while True:
 
-        # Log a message to prevent Travis from timing out
+        # Log a message to prevent CI from timing out
         logging.debug("verify-commits: [in-progress] processing commit {}".format(current_commit[:8]))
 
         if current_commit == verified_root:

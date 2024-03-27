@@ -1,6 +1,6 @@
 FROM phusion/baseimage:focal-1.0.0
 LABEL maintainer="Dash Developers <dev@dash.org>"
-LABEL description="Dockerised DashCore, built from Travis"
+LABEL description="Dockerised DashCore, built from CI"
 
 ARG USER_ID
 ARG GROUP_ID
