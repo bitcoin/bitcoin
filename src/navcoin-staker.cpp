@@ -420,16 +420,16 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
         const UniValue& err_code = error.find_value("code");
         const UniValue& err_msg = error.find_value("message");
         if (!err_code.isNull()) {
-            strPrint = "error code: " + err_code.getValStr() + "\n";
+            strPrint = "error code: " + err_code.getValStr() + " ";
         }
         if (err_msg.isStr()) {
-            strPrint += ("error message:\n" + err_msg.get_str());
+            strPrint += ("error message: " + err_msg.get_str());
         }
         if (err_code.isNum() && (err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED || err_code.getInt<int>() == RPC_WALLET_NOT_FOUND)) {
-            strPrint += "\nTry adding \"-wallet=<filename>\" option to navcoin-staker command line.";
+            strPrint += " Try adding \"-wallet=<filename>\" option to navcoin-staker command line.";
         }
         if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_PASSPHRASE_INCORRECT) {
-            strPrint += "\nThe wallet passphrase is incorrect.";
+            strPrint += " The wallet passphrase is incorrect.";
         }
     } else {
         strPrint = "error: " + error.write();
@@ -442,6 +442,7 @@ static std::string walletName = "";
 static std::string walletPassphrase = "";
 static std::string coinbase_dest = "";
 static bool mustUnlockWallet = false;
+static arith_uint256 currentDifficulty;
 
 void Setup()
 {
@@ -513,7 +514,7 @@ bool TestSetup()
         int nRet;
 
         if (error.isNull()) {
-            LogPrintf("Test connection to RPC: OK\n");
+            LogPrintf("%s: [%s] Test connection to RPC: OK\n", __func__, walletName);
 
             reply = ConnectAndCallRPC(rh.get(), "loadwallet", /* args=*/{walletName});
 
@@ -528,7 +529,7 @@ bool TestSetup()
             }
 
             if (error.isNull() || nRet == 35) {
-                LogPrintf("Test load wallet %s: OK\n", walletName);
+                LogPrintf("%s: [%s] Test load wallet: OK\n", __func__, walletName);
 
                 reply = ConnectAndCallRPC(rh.get(), "getwalletinfo", /* args=*/{}, walletName);
 
@@ -544,12 +545,12 @@ bool TestSetup()
 
                 if (error.isNull()) {
                     if (!result["blsct"].get_bool()) {
-                        LogPrintf("Wallet %s is not of type blsct\n", walletName);
+                        LogPrintf("%s: [%s] Wallet is not of type blsct\n", __func__, walletName);
                         return false;
                     }
 
                     if (!result["unlocked_until"].isNull() && result["unlocked_until"].get_real() == 0) {
-                        LogPrintf("Wallet is locked. Testing password.\n");
+                        LogPrintf("%s: [%s] Wallet is locked. Testing password.\n", __func__, walletName);
 
                         mustUnlockWallet = true;
 
@@ -562,51 +563,78 @@ bool TestSetup()
                         nRet = 0;
 
                         if (error.isNull()) {
-                            LogPrintf("Wallet passphrase test: OK\n");
+                            LogPrintf("%s: [%s] Wallet passphrase test: OK\n", __func__, walletName);
                         } else {
                             ParseError(error, strError, nRet);
-                            LogPrintf("Could not unlock wallet %s (%s)\n", walletName, strError);
+                            LogPrintf("%s: [%s] Could not unlock wallet (%s)\n", __func__, walletName, strError);
 
                             return false;
                         }
                     }
 
                     if (coinbase_dest == "") {
-                        reply = ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{"Staking", "blsct"}, walletName);
+                        reply = ConnectAndCallRPC(rh.get(), "getaddressesbylabel", /* args=*/{"Staking"}, walletName);
 
                         UniValue result = reply.find_value("result");
                         const UniValue& error = reply.find_value("error");
 
-                        strError.clear();
-                        nRet = 0;
+                        if (error.isNull() && result.isObject()) {
+                            auto array = result.get_obj();
 
-                        if (error.isNull() || !result.isStr()) {
-                            coinbase_dest = result.get_str();
-                            LogPrintf("Rewards address: %s\n", coinbase_dest);
-                            return true;
+                            for (auto& it : array.getKeys()) {
+                                auto obj = array.find_value(it);
+
+                                if (obj.isObject()) {
+                                    if (obj.get_obj().find_value("purpose").get_str() == "receive") {
+                                        coinbase_dest = it;
+                                        break;
+                                    }
+                                }
+                            }
                         } else {
                             ParseError(error, strError, nRet);
-                            LogPrintf("Could not get an address for rewards from wallet %s (%s)\n", walletName, strError);
+                            LogPrintf("%s: [%s] Could not find an address by label\n", __func__, walletName, walletName, strError);
 
                             return false;
                         }
+
+                        if (coinbase_dest == "") {
+                            reply = ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{"Staking", "blsct"}, walletName);
+
+                            UniValue result = reply.find_value("result");
+                            const UniValue& error = reply.find_value("error");
+
+                            strError.clear();
+                            nRet = 0;
+
+                            if (error.isNull() || !result.isStr()) {
+                                coinbase_dest = result.get_str();
+                            } else {
+                                ParseError(error, strError, nRet);
+                                LogPrintf("%s: [%s] Could not get an address for rewards from wallet (%s)\n", __func__, walletName, strError);
+
+                                return false;
+                            }
+                        }
                     }
+
+                    LogPrintf("%s: [%s] Rewards address: %s\n", __func__, walletName, coinbase_dest);
 
                     return true;
                 } else {
-                    LogPrintf("Could not get wallet %s info (%s)\n", walletName, strError);
+                    LogPrintf("%s: [%s] Could not get wallet info (%s)\n", __func__, walletName, strError);
                     return false;
                 }
             } else {
-                LogPrintf("Could not load wallet %s (%s)\n", walletName, strError);
+                LogPrintf("%s: [%s] Could not load wallet (%s)\n", __func__, walletName, strError);
                 return false;
             }
         } else {
-            LogPrintf("Could not connect to RPC node: %s\n", error.getValStr());
+            LogPrintf("%s: [%s] Could not connect to RPC node: %s\n", __func__, walletName, error.getValStr());
             return false;
         }
     } catch (const std::exception& e) {
-        LogPrintf("error: %s\n", e.what());
+        LogPrintf("%s: [%s] error: %s\n", __func__, walletName, e.what());
         return false;
     }
 
@@ -691,6 +719,19 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
 
     auto reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{"{\"rules\": [\"\"], \"coinbasedest\": \"" + coinbase_dest + "\"}"}, walletName);
     UniValue result = reply.find_value("result");
+    const UniValue& error = reply.find_value("error");
+
+    std::string strError = "";
+    auto nRet = 0;
+
+    if (!error.isNull()) {
+        ParseError(error, strError, nRet);
+        LogPrintf("%s: [%s] Could not get block template (%s)\n", __func__, walletName, strError);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+        return std::nullopt;
+    }
 
     auto eta_fiat_shamir = ParseHex(result.find_value("eta_fiat_shamir").get_str());
     auto eta_phi = ParseHex(result.find_value("eta_phi").get_str());
@@ -701,6 +742,7 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
     uint32_t prev_time = result.find_value("prev_time").get_real();
     uint64_t modifier = result.find_value("modifier").get_uint64();
     uint64_t next_target = stoi(result.find_value("bits").get_str(), 0, 16);
+    currentDifficulty.SetCompact(next_target);
 
     proposal.nVersion = result.find_value("version").get_real();
     proposal.nTime = result.find_value("curtime").get_real();
@@ -720,6 +762,7 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
     return std::nullopt;
 }
 
+
 void Loop()
 {
     std::unique_ptr<BaseRequestHandler> rh;
@@ -727,24 +770,29 @@ void Loop()
     rh.reset(new DefaultRequestHandler());
 
     auto last_update{SteadyClock::now()};
+    auto start{SteadyClock::now()};
     auto nTries = 0;
+    double nFound = 0;
 
-    LogPrintf("Starting staking...\n");
+    LogPrintf("%s: [%s] Starting staking...\n", __func__, walletName);
 
     while (true) {
         auto staked_commitments = GetStakedCommitments(rh);
         CBlock proposal;
+        CAmount nTotalMoney = 0;
         bool found = false;
 
         for (auto& it : staked_commitments) {
-            auto candidate = GetBlockProposal(rh, it);
-            nTries++;
+            nTotalMoney += it.value.GetUint64();
 
-            found = candidate.has_value();
+            if (!found) {
+                auto candidate = GetBlockProposal(rh, it);
 
-            if (found) {
-                proposal = candidate.value();
-                break;
+                found = candidate.has_value();
+                if (found)
+                    proposal = candidate.value();
+
+                nTries++;
             }
         }
 
@@ -755,17 +803,25 @@ void Loop()
             UniValue error_submit = reply_submit.find_value("error");
 
             if (error_submit.isNull()) {
-                LogPrintf("Found block %s (%s).\n", proposal.GetHash().ToString(), reply_submit.write(0, 0));
+                if (result_submit.isNull()) {
+                    nFound++;
+                    last_update = SteadyClock::now();
+                }
+                LogPrintf("%s: [%s] Found block %s (%s%s). Current difficulty: %s\n", __func__, walletName, proposal.GetHash().ToString(), result_submit.isNull() ? "ACCEPTED" : "REJECTED: ", result_submit.isNull() ? "" : reply_submit.write(0, 0), currentDifficulty.ToString());
                 nTries = 0;
-                last_update = SteadyClock::now();
-                // exit(0);
+
+                auto elapsed = Ticks<std::chrono::minutes>(SteadyClock::now() - start);
+
+                if (elapsed > 60) {
+                    LogPrintf("%s: [%s] Stake rate: %.4f blocks/hour. Staking balance: %s\n", __func__, walletName, (nFound / elapsed) * 60.0f, FormatMoney(nTotalMoney));
+                }
             }
         }
 
         if (Ticks<std::chrono::milliseconds>(SteadyClock::now() - last_update) > 60000) {
             nTries = 0;
             last_update = SteadyClock::now();
-            LogPrintf("Did not find a block yet.\n");
+            LogPrintf("%s: [%s] Did not find a block yet. Current difficulty: %s\n", __func__, walletName, currentDifficulty.ToString());
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));

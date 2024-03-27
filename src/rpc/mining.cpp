@@ -177,7 +177,11 @@ static UniValue generateBlsctBlocks(ChainstateManager& chainman, const CTxMemPoo
     const Consensus::Params& consensusParams = chainman.GetParams().GetConsensus();
     UniValue blockHashes(UniValue::VARR);
     while (nGenerate > 0 && !chainman.m_interrupt) {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler{chainman.ActiveChainstate(), &mempool}.CreateNewBLSCTBlock(blsct::SubAddress(destination), consensusParams.nBLSCTBlockReward, {}));
+        auto pindexBest = chainman.ActiveChainstate().m_chain.Tip();
+
+        auto blockReward = (pindexBest->nHeight + 1 == 1) ? consensusParams.nBLSCTFirstBlockReward : consensusParams.nBLSCTBlockReward;
+
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler{chainman.ActiveChainstate(), &mempool}.CreateNewBLSCTBlock(blsct::SubAddress(destination), blockReward, {}));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
 
@@ -839,7 +843,9 @@ static RPCHelpMan getblocktemplate()
                             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid coinbase destination");
                     }
 
-                    pblocktemplate = BlockAssembler{active_chainstate, &mempool}.CreateNewBLSCTBlock(dest, consensusParams.nBLSCTBlockReward, {}, true);
+                    auto blockReward = (pindexPrevNew->nHeight + 1) == 1 ? consensusParams.nBLSCTFirstBlockReward : consensusParams.nBLSCTBlockReward;
+
+                    pblocktemplate = BlockAssembler{active_chainstate, &mempool}.CreateNewBLSCTBlock(dest, blockReward, {}, true);
                 } else {
                     CScript scriptDummy = CScript() << OP_TRUE;
                     pblocktemplate = BlockAssembler{active_chainstate, &mempool}.CreateNewBlock(scriptDummy);
@@ -967,6 +973,9 @@ static RPCHelpMan getblocktemplate()
                 }
                 }
             }
+
+            auto blockReward = (int64_t)(pindexPrev->nHeight + 1) == 1 ? consensusParams.nBLSCTFirstBlockReward : consensusParams.nBLSCTBlockReward;
+
             result.pushKV("version", pblock->nVersion);
             result.pushKV("rules", aRules);
             result.pushKV("vbavailable", vbavailable);
@@ -975,7 +984,7 @@ static RPCHelpMan getblocktemplate()
             result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
             result.pushKV("transactions", transactions);
             result.pushKV("coinbaseaux", aux);
-            result.pushKV("coinbasevalue", !consensusParams.fBLSCT ? (int64_t)pblock->vtx[0]->vout[0].nValue : (consensusParams.nBLSCTBlockReward - pblocktemplate->vTxFees[0]));
+            result.pushKV("coinbasevalue", !consensusParams.fBLSCT ? (int64_t)pblock->vtx[0]->vout[0].nValue : (blockReward - pblocktemplate->vTxFees[0]));
             result.pushKV("longpollid", active_chain.Tip()->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
             result.pushKV("target", hashTarget.GetHex());
             result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast() + 1);

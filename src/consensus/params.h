@@ -76,6 +76,7 @@ struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
     CAmount nBLSCTBlockReward;
+    CAmount nBLSCTFirstBlockReward;
     /**
      * Hashes of blocks that
      * - are known to be consensus valid, and

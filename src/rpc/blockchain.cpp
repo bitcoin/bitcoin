@@ -93,6 +93,23 @@ double GetDifficulty(const CBlockIndex& blockindex)
     return dDiff;
 }
 
+/* Calculate the average block spacing time.
+ */
+double GetAverageSpacing(CBlockIndex& blockindex, const size_t& nCount = 100)
+{
+    size_t i = 0;
+    CBlockIndex* index = &blockindex;
+    uint64_t nSum = 0;
+
+    while (index->pprev && i < nCount) {
+        nSum += index->nTime - index->pprev->nTime;
+        index = index->pprev;
+        i++;
+    }
+
+    return i == 0 ? 0 : nSum / i;
+}
+
 static int ComputeNextBlockAndDepth(const CBlockIndex& tip, const CBlockIndex& blockindex, const CBlockIndex*& next)
 {
     next = tip.GetAncestor(blockindex.nHeight + 1);
@@ -1214,68 +1231,66 @@ static void SoftForkDescPushBack(const CBlockIndex* blockindex, UniValue& softfo
 // used by rest.cpp:rest_chaininfo, so cannot be static
 RPCHelpMan getblockchaininfo()
 {
-    return RPCHelpMan{"getblockchaininfo",
+    return RPCHelpMan{
+        "getblockchaininfo",
         "Returns an object containing various state info regarding blockchain processing.\n",
         {},
         RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "chain", "current network name (main, test, signet, regtest)"},
-                {RPCResult::Type::NUM, "blocks", "the height of the most-work fully-validated chain. The genesis block has height 0"},
-                {RPCResult::Type::NUM, "headers", "the current number of headers we have validated"},
-                {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block"},
-                {RPCResult::Type::NUM, "difficulty", "the current difficulty"},
-                {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
-                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
-                {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
-                {RPCResult::Type::BOOL, "initialblockdownload", "(debug information) estimate of whether this node is in Initial Block Download mode"},
-                {RPCResult::Type::STR_HEX, "chainwork", "total amount of work in active chain, in hexadecimal"},
-                {RPCResult::Type::NUM, "size_on_disk", "the estimated size of the block and undo files on disk"},
-                {RPCResult::Type::BOOL, "pruned", "if the blocks are subject to pruning"},
-                {RPCResult::Type::NUM, "pruneheight", /*optional=*/true, "height of the last block pruned, plus one (only present if pruning is enabled)"},
-                {RPCResult::Type::BOOL, "automatic_pruning", /*optional=*/true, "whether automatic pruning is enabled (only present if pruning is enabled)"},
-                {RPCResult::Type::NUM, "prune_target_size", /*optional=*/true, "the target size used by pruning (only present if automatic pruning is enabled)"},
-                {RPCResult::Type::STR, "warnings", "any network and blockchain warnings"},
-            }},
-        RPCExamples{
-            HelpExampleCli("getblockchaininfo", "")
-            + HelpExampleRpc("getblockchaininfo", "")
+            RPCResult::Type::OBJ, "", "", {
+                                              {RPCResult::Type::STR, "chain", "current network name (main, test, signet, regtest)"},
+                                              {RPCResult::Type::NUM, "blocks", "the height of the most-work fully-validated chain. The genesis block has height 0"},
+                                              {RPCResult::Type::NUM, "headers", "the current number of headers we have validated"},
+                                              {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block"},
+                                              {RPCResult::Type::NUM, "difficulty", "the current difficulty"},
+                                              {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
+                                              {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
+                                              {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
+                                              {RPCResult::Type::NUM, "averageblockspacing", "average spacing for the last 100 blocks"},
+                                              {RPCResult::Type::BOOL, "initialblockdownload", "(debug information) estimate of whether this node is in Initial Block Download mode"},
+                                              {RPCResult::Type::STR_HEX, "chainwork", "total amount of work in active chain, in hexadecimal"},
+                                              {RPCResult::Type::NUM, "size_on_disk", "the estimated size of the block and undo files on disk"},
+                                              {RPCResult::Type::BOOL, "pruned", "if the blocks are subject to pruning"},
+                                              {RPCResult::Type::NUM, "pruneheight", /*optional=*/true, "height of the last block pruned, plus one (only present if pruning is enabled)"},
+                                              {RPCResult::Type::BOOL, "automatic_pruning", /*optional=*/true, "whether automatic pruning is enabled (only present if pruning is enabled)"},
+                                              {RPCResult::Type::NUM, "prune_target_size", /*optional=*/true, "the target size used by pruning (only present if automatic pruning is enabled)"},
+                                              {RPCResult::Type::STR, "warnings", "any network and blockchain warnings"},
+                                          }},
+        RPCExamples{HelpExampleCli("getblockchaininfo", "") + HelpExampleRpc("getblockchaininfo", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            ChainstateManager& chainman = EnsureAnyChainman(request.context);
+            LOCK(cs_main);
+            Chainstate& active_chainstate = chainman.ActiveChainstate();
+
+            const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
+            const int height{tip.nHeight};
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
+            obj.pushKV("blocks", height);
+            obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
+            obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
+            obj.pushKV("difficulty", GetDifficulty(tip));
+            obj.pushKV("time", tip.GetBlockTime());
+            obj.pushKV("mediantime", tip.GetMedianTimePast());
+            obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
+            obj.pushKV("averageblockspacing", GetAverageSpacing(*CHECK_NONFATAL(active_chainstate.m_chain.Tip())));
+            obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
+            obj.pushKV("chainwork", tip.nChainWork.GetHex());
+            obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
+            obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
+            if (chainman.m_blockman.IsPruneMode()) {
+                bool has_tip_data = tip.nStatus & BLOCK_HAVE_DATA;
+                obj.pushKV("pruneheight", has_tip_data ? chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight : tip.nHeight + 1);
+
+                const bool automatic_pruning{chainman.m_blockman.GetPruneTarget() != BlockManager::PRUNE_TARGET_MANUAL};
+                obj.pushKV("automatic_pruning", automatic_pruning);
+                if (automatic_pruning) {
+                    obj.pushKV("prune_target_size", chainman.m_blockman.GetPruneTarget());
+                }
+            }
+
+            obj.pushKV("warnings", GetWarnings(false).original);
+            return obj;
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
-    Chainstate& active_chainstate = chainman.ActiveChainstate();
-
-    const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
-    const int height{tip.nHeight};
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
-    obj.pushKV("blocks", height);
-    obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
-    obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
-    obj.pushKV("difficulty", GetDifficulty(tip));
-    obj.pushKV("time", tip.GetBlockTime());
-    obj.pushKV("mediantime", tip.GetMedianTimePast());
-    obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
-    obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
-    obj.pushKV("chainwork", tip.nChainWork.GetHex());
-    obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
-    obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
-    if (chainman.m_blockman.IsPruneMode()) {
-        bool has_tip_data = tip.nStatus & BLOCK_HAVE_DATA;
-        obj.pushKV("pruneheight", has_tip_data ? chainman.m_blockman.GetFirstStoredBlock(tip)->nHeight : tip.nHeight + 1);
-
-        const bool automatic_pruning{chainman.m_blockman.GetPruneTarget() != BlockManager::PRUNE_TARGET_MANUAL};
-        obj.pushKV("automatic_pruning",  automatic_pruning);
-        if (automatic_pruning) {
-            obj.pushKV("prune_target_size", chainman.m_blockman.GetPruneTarget());
-        }
-    }
-
-    obj.pushKV("warnings", GetWarnings(false).original);
-    return obj;
-},
     };
 }
 

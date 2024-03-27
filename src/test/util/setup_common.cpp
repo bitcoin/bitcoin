@@ -309,7 +309,9 @@ CBlock TestBLSCTChain100Setup::CreateBlock(
     Chainstate& chainstate,
     const std::optional<blsct::SubAddress>& dest)
 {
-    CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTBlock(dest.has_value() ? dest.value() : coinbaseDest, m_node.chainman->GetConsensus().nBLSCTBlockReward, txns)->block;
+    auto blockReward = (int64_t)(chainstate.m_chain.Tip()->nHeight + 1) == 1 ? m_node.chainman->GetConsensus().nBLSCTFirstBlockReward : m_node.chainman->GetConsensus().nBLSCTBlockReward;
+
+    CBlock block = BlockAssembler{chainstate, nullptr}.CreateNewBLSCTBlock(dest.has_value() ? dest.value() : coinbaseDest, blockReward, txns)->block;
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus()))

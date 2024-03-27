@@ -1105,7 +1105,8 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
 
     if (args.m_chainparams.GetConsensus().fBLSCT) {
         if (!blsct::VerifyTx(tx, m_view, state, 0, args.m_chainparams.GetConsensus().nPePoSMinStakeAmount)) {
-            return Assume(false);
+            return error("MemPoolAccept::ConsensusScriptChecks(): VerifyTx on transaction %s failed with %s",
+                         tx.GetHash().ToString(), state.ToString());
         }
     }
 
@@ -2526,11 +2527,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (block.IsBLSCT()) {
         TxValidationState tx_state;
 
-        if (!blsct::VerifyTx(*block.vtx[0], view, tx_state, nFees + params.GetConsensus().nBLSCTBlockReward)) {
+        auto blockReward = pindex->nHeight == 1 ? params.GetConsensus().nBLSCTFirstBlockReward : params.GetConsensus().nBLSCTBlockReward;
+
+        if (!blsct::VerifyTx(*block.vtx[0], view, tx_state, nFees + blockReward)) {
             state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                           tx_state.GetRejectReason(), tx_state.GetDebugMessage());
             return error("ConnectBlock(): VerifyTx on coinbase of block %s failed (fees: %s reward: %s)\n",
-                         block.GetHash().ToString(), FormatMoney(nFees), FormatMoney(params.GetConsensus().nBLSCTBlockReward));
+                         block.GetHash().ToString(), FormatMoney(nFees), FormatMoney(blockReward));
         }
     } else if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
