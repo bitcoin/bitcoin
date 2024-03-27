@@ -814,6 +814,9 @@ static void secp256k1_scalar_mul_512(uint64_t l[8], const secp256k1_scalar *a, c
     : "+d"(pb)
     : "S"(l), "D"(a->d)
     : "rax", "rbx", "rcx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "cc", "memory");
+
+    SECP256K1_CHECKMEM_MSAN_DEFINE(l, sizeof(l[0]) * 8);
+
 #else
     /* 160 bit accumulator. */
     uint64_t c0 = 0, c1 = 0;
