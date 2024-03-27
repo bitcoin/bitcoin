@@ -175,42 +175,31 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, cons
 
     // For generated transactions, determine maturity
     if (type == TransactionRecord::Generated) {
-        if (wtx.blocks_to_maturity > 0)
-        {
+        if (wtx.blocks_to_maturity > 0) {
             status.status = TransactionStatus::Immature;
 
-            if (wtx.is_in_main_chain)
-            {
+            if (wtx.is_in_main_chain) {
                 status.matures_in = wtx.blocks_to_maturity;
-            }
-            else
-            {
+            } else {
                 status.status = TransactionStatus::NotAccepted;
             }
-        }
-        else
-        {
+        } else {
             status.status = TransactionStatus::Confirmed;
         }
-    }
-    else
-    {
-        if (status.depth < 0)
-        {
+    } else {
+        if (status.depth < 0) {
             status.status = TransactionStatus::Conflicted;
         }
-        else if (status.depth == 0)
-        {
+        else if (status.depth == 0) {
             status.status = TransactionStatus::Unconfirmed;
-            if (wtx.is_abandoned)
+            if (wtx.is_abandoned) {
                 status.status = TransactionStatus::Abandoned;
-        }
-        else if (status.depth < RecommendedNumConfirmations)
-        {
+            }
+        } else if (wtx.is_assumed) {
+            status.status = TransactionStatus::AssumedConfirmed;
+        } else if (status.depth < RecommendedNumConfirmations) {
             status.status = TransactionStatus::Confirming;
-        }
-        else
-        {
+        } else {
             status.status = TransactionStatus::Confirmed;
         }
     }
