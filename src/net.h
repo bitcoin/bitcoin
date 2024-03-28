@@ -71,6 +71,8 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
+/** Maximum number of private broadcast connections */
+static constexpr size_t MAX_PRIVATE_BROADCAST_CONNECTIONS{64};
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain. */
@@ -766,6 +768,7 @@ public:
             case ConnectionType::MANUAL:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::FEELER:
+            case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         } // no default case, so the compiler can warn about missing cases
 
@@ -787,6 +790,7 @@ public:
         case ConnectionType::FEELER:
         case ConnectionType::BLOCK_RELAY:
         case ConnectionType::ADDR_FETCH:
+        case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
         case ConnectionType::MANUAL:
@@ -808,6 +812,10 @@ public:
         return m_conn_type == ConnectionType::ADDR_FETCH;
     }
 
+    bool IsPrivateBroadcastConn() const {
+        return m_conn_type == ConnectionType::PRIVATE_BROADCAST;
+    }
+
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
     }
@@ -821,6 +829,7 @@ public:
             case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
+            case ConnectionType::PRIVATE_BROADCAST:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 
@@ -1121,6 +1130,25 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant&& grant_outbound, const char* strDest, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+
+    /**
+     * Increment by `n` the number of new connections of type `ConnectionType::PRIVATE_BROADCAST`
+     * to be opened by `CConnman::ThreadOpenConnections()`.
+     */
+    void PrivateBroadcastAdd(size_t n);
+
+    /**
+     * Decrement by `n` the number of new connections of type `ConnectionType::PRIVATE_BROADCAST`
+     * to be opened by `CConnman::ThreadOpenConnections()`. Will not go negative, for example a
+     * value of 4 is ok to be decremented by 5 and will result in 0.
+     */
+    void PrivateBroadcastSub(size_t n);
+
+    /**
+     * Get the number of `ConnectionType::PRIVATE_BROADCAST` that are to be opened.
+     */
+    size_t NumPrivateBroadcastToOpen() const;
+
     bool CheckIncomingNonce(uint64_t nonce);
     void ASMapHealthCheck();
 
@@ -1489,6 +1517,7 @@ private:
     int m_max_outbound_block_relay;
 
     int m_max_addnode{MAX_ADDNODE_CONNECTIONS};
+    int m_max_private_broadcast{MAX_PRIVATE_BROADCAST_CONNECTIONS};
     int m_max_feeler{MAX_FEELER_CONNECTIONS};
     int m_max_automatic_outbound;
     int m_max_inbound;
@@ -1547,6 +1576,12 @@ private:
      *  as these connections are intended to be short-lived and low-bandwidth.
      */
     std::atomic_bool m_start_extra_block_relay_peers{false};
+
+    /**
+     * Number of `ConnectionType::PRIVATE_BROADCAST` connections to open.
+     * Whenever such a connection is opened this is decremented with 1.
+     */
+    std::atomic_size_t m_private_broadcast_connections_to_open{0};
 
     /**
      * A vector of -bind=<address>:<port>=onion arguments each of which is

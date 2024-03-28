@@ -634,7 +634,7 @@ public:
     void SetNextResend() { m_next_resend = GetDefaultNextResend(); }
     /** Return true if all conditions for periodically resending transactions are met. */
     bool ShouldResend() const;
-    void ResubmitWalletTransactions(bool relay, bool force);
+    void ResubmitWalletTransactions(TxBroadcastMethod broadcast_method, bool force);
 
     OutputType TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const;
 
@@ -678,8 +678,8 @@ public:
      */
     void CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm);
 
-    /** Pass this transaction to node for mempool insertion and relay to peers if flag set to true */
-    bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, bool relay) const
+    /** Pass this transaction to node for optional mempool insertion and relay to peers. */
+    bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, TxBroadcastMethod broadcast_method) const
         EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

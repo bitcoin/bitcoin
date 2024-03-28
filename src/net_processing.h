@@ -23,6 +23,8 @@ static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
 static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
 static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
+/** Default for -privatebroadcast. */
+static const bool DEFAULT_PRIVATE_BROADCAST{false};
 /** Threshold for marking a node to be discouraged, e.g. disconnected and added to the discouragement filter. */
 static const int DISCOURAGEMENT_THRESHOLD{100};
 /** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
@@ -86,8 +88,14 @@ public:
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
 
-    /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
+    /** Schedule a transaction to be broadcast to all peers at a later time. */
+    virtual void ScheduleTxForBroadcastToAll(const uint256& txid, const uint256& wtxid) = 0;
+
+    /**
+     * Schedule a transaction to be privately broadcasted. This is done
+     * asynchronously via short-lived connections to peers on privacy networks.
+     */
+    virtual void ScheduleTxForPrivateBroadcast(const CTransactionRef& tx) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
