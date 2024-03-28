@@ -390,7 +390,6 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
 
 bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
 {
-    LOCK(contributionsCacheCs);
     auto members = utils::GetAllQuorumMembers(llmqType, m_dmnman, pQuorumBaseBlockIndex);
 
     memberIndexesRet.clear();
@@ -399,6 +398,9 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
     memberIndexesRet.reserve(members.size());
     vvecsRet.reserve(members.size());
     skContributionsRet.reserve(members.size());
+
+    // NOTE: the `cs_main` should not be locked under scope of `contributionsCacheCs`
+    LOCK(contributionsCacheCs);
     for (const auto i : irange::range(members.size())) {
         if (validMembers[i]) {
             const uint256& proTxHash = members[i]->proTxHash;
