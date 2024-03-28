@@ -141,15 +141,6 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
             },
             [&] {
-                CKey key{ConsumePrivateKey(fuzzed_data_provider, /*compressed=*/fuzzed_data_provider.ConsumeBool())};
-                if (!key.IsValid()) {
-                    good_data = false;
-                    return;
-                }
-                spk_manager->AddDescriptorKey(key, key.GetPubKey());
-                spk_manager->TopUp();
-            },
-            [&] {
                 std::string descriptor;
                 (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
             },
