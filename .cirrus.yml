@@ -8,25 +8,42 @@ env:  # Global defaults
   CCACHE_DIR: "/tmp/ccache_dir"
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
+# A self-hosted machine(s) can be used via Cirrus CI. It can be configured with
+# multiple users to run tasks in parallel. No sudo permission is required.
+#
 # https://cirrus-ci.org/guide/persistent-workers/
 #
-# It is possible to select a specific persistent worker by label. Refer to the
+# Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
+#
+# The following specific types should exist, with the following requirements:
+# - small: For an x86_64 machine, recommended to have 2 CPU cores and 8 GB of memory.
+# - medium: For an x86_64 machine, recommended to have 4 CPU cores and 16 GB of memory.
+# - noble: For a machine running the Linux kernel shipped with exactly Ubuntu Noble 24.04. The machine is recommended to have 4 CPU cores and 16 GB of memory.
+# - arm64: For an aarch64 machine, recommended to have 2 CPU cores and 8 GB of memory.
+#
+# CI jobs for the latter two configurations can be skipped by setting NO_ARM=1 or
+# NO_NOBLE=1 as a custom env variable in Cirrus.
+#
+# The above machine types are matched to each job by their label. Refer to the
 # Cirrus CI docs for more details.
 #
-# Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
-# Specifically,
+# On machines that are persisted between CI jobs, RESTART_CI_DOCKER_BEFORE_RUN=1
+# ensures that previous containers and artifacts are cleared before each run.
+# This requires installing Podman instead of Docker.
+#
+# Futhermore:
 # - apt-get is required due to PACKAGE_MANAGER_INSTALL
-# - podman-docker-4.1+ is required due to the use of `podman` when
-#   RESTART_CI_DOCKER_BEFORE_RUN is set and 4.1+ due to the bugfix in 4.1
+# - podman-docker-4.1+ is required due to the bugfix in 4.1
 #   (https://github.com/bitcoin/bitcoin/pull/21652#issuecomment-1657098200)
-# - The ./ci/ depedencies (with cirrus-cli) should be installed:
+# - The ./ci/ dependencies (with cirrus-cli) should be installed. One-liner example
+#   for a single user setup with sudo permission:
 #
 #   ```
 #   apt update && apt install git screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
 #   ```
 #
-# - There are no strict requirements on the hardware, because having less CPUs
-#   runs the same CI script (maybe slower). To avoid rare and intermittent OOM
+# - There are no strict requirements on the hardware, because having fewer CPU threads
+#   run the same CI script (maybe slower). To avoid rare and intermittent OOM
 #   due to short memory usage spikes, it is recommended to add (and persist)
 #   swap:
 #
@@ -40,15 +57,15 @@ env:  # Global defaults
 #   RESTART_CI_DOCKER_BEFORE_RUN=1 screen cirrus worker run --labels type=todo_fill_in_type --token todo_fill_in_token
 #   ```
 #
-# The following specific types should exist, with the following requirements:
-# - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
-# - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
-# - noble: For a machine running the Linux kernel shipped with exaclty Ubuntu Noble 24.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
-# - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
-
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  # No need to run on the read-only mirror, unless it is a PR.
+  # https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""
+  # Allow forks to skip CI runs when a branch is pushed.
+  # Use only_if rather than skip, because otherwise all jobs are marked as
+  # skipped when a pull request is first opened.
+  only_if: $NO_BRANCH != "true" || $CIRRUS_PR != ""
   stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
 base_template: &BASE_TEMPLATE
@@ -106,7 +123,9 @@ task:
 
 task:
   name: 'ARM, unit tests, no functional tests'
+  # Skip if no ARM worker exists (for a fork)
   << : *GLOBAL_TASK_TEMPLATE
+  skip: $NO_ARM == "true"
   persistent_worker:
     labels:
       type: arm64  # Use arm64 worker to sidestep qemu and avoid a slow CI: https://github.com/bitcoin/bitcoin/pull/28087#issuecomment-1649399453
@@ -161,11 +180,13 @@ task:
 
 task:
   name: 'ASan + LSan + UBSan + integer, no depends, USDT'
+  # Skip if no Noble worker exists (for a fork)
   enable_bpfcc_script:
     # In the image build step, no external environment variables are available,
     # so any settings will need to be written to the settings env file:
     - sed -i "s|\${CIRRUS_CI}|true|g" ./ci/test/00_setup_env_native_asan.sh
   << : *GLOBAL_TASK_TEMPLATE
+  skip: $NO_NOBLE == "true"
   persistent_worker:
     labels:
       type: noble  # Must use this specific worker (needed for USDT functional tests)
