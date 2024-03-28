@@ -400,7 +400,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def sendrawtransaction_testmempoolaccept_tests(self):
         self.log.info("Test sendrawtransaction/testmempoolaccept with maxfeerate")
-        fee_exceeds_max = "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)"
+        fee_exceeds_max = "Fee rate exceeds maximum configured by user (maxfeerate)"
 
         # Test a transaction with a small fee.
         # Fee rate is 0.00100000 BTC/kvB

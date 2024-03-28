@@ -227,7 +227,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         // Reject absurdly high fee. (This can never happen because the
         // wallet never creates transactions with fee greater than
-        // m_default_max_tx_fee. This merely a belt-and-suspenders check).
+        // m_max_tx_fee. This merely a belt-and-suspenders check).
         if (nFeeRequired > m_wallet->getDefaultMaxTxFee()) {
             return AbsurdFee;
         }

@@ -136,6 +136,8 @@ static const bool DEFAULT_DISABLE_WALLET = false;
 static const bool DEFAULT_WALLETCROSSCHAIN = false;
 //! -maxtxfee default
 constexpr CAmount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
+//! maxfeerate default
+const CFeeRate DEFAULT_MAX_TRANSACTION_FEERATE(CFeeRate(COIN / 10));
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
 constexpr CAmount HIGH_TX_FEE_PER_KB{COIN / 100};
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
@@ -726,8 +728,10 @@ public:
      */
     std::optional<OutputType> m_default_change_type{};
     /** Absolute maximum transaction fee (in satoshis) used by default for the wallet */
-    CAmount m_default_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
+    CAmount m_max_tx_fee{DEFAULT_TRANSACTION_MAXFEE};
 
+    /** Maximum transaction fee rate used for the wallet */
+    CFeeRate m_max_tx_fee_rate{DEFAULT_MAX_TRANSACTION_FEERATE};
     /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
     int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
 

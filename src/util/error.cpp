@@ -32,7 +32,9 @@ bilingual_str TransactionErrorString(const TransactionError err)
         case TransactionError::SIGHASH_MISMATCH:
             return Untranslated("Specified sighash value does not match value stored in PSBT");
         case TransactionError::MAX_FEE_EXCEEDED:
-            return Untranslated("Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)");
+            return Untranslated("Fee exceeds maximum configured by user (maxtxfee)");
+        case TransactionError::MAX_FEE_RATE_EXCEEDED:
+            return Untranslated("Fee rate exceeds maximum configured by user (maxfeerate)");
         case TransactionError::MAX_BURN_EXCEEDED:
             return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
         case TransactionError::EXTERNAL_SIGNER_NOT_FOUND:

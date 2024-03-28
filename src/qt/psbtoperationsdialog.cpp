@@ -8,6 +8,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/psbt.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <qt/bitcoinunits.h>
 #include <qt/forms/ui_psbtoperationsdialog.h>
@@ -116,7 +117,7 @@ void PSBTOperationsDialog::broadcastTransaction()
     CTransactionRef tx = MakeTransactionRef(mtx);
     std::string err_string;
     TransactionError error =
-        m_client_model->node().broadcastTransaction(tx, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), err_string);
+        m_client_model->node().broadcastTransaction(tx, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), CFeeRate(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK()), err_string);
 
     if (error == TransactionError::OK) {
         showStatus(tr("Transaction broadcast successfully! Transaction ID: %1")

@@ -28,6 +28,7 @@ constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
     TransactionError::PSBT_MISMATCH,
     TransactionError::SIGHASH_MISMATCH,
     TransactionError::MAX_FEE_EXCEEDED,
+    TransactionError::MAX_FEE_RATE_EXCEEDED,
 };
 }; // namespace
 

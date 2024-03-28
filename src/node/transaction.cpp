@@ -9,6 +9,7 @@
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <policy/feerate.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -30,7 +31,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, bool relay, bool wait_callback)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -68,14 +69,16 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             wtxid = mempool_tx->GetWitnessHash();
         } else {
             // Transaction is not already in the mempool.
-            if (max_tx_fee > 0) {
+            if (max_tx_fee > 0 || max_tx_fee_rate > CFeeRate(0)) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
                 const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
-                } else if (result.m_base_fees.value() > max_tx_fee) {
+                } else if (max_tx_fee > 0 && result.m_base_fees.value() > max_tx_fee) {
                     return TransactionError::MAX_FEE_EXCEEDED;
+                } else if (max_tx_fee_rate > CFeeRate(0) && CFeeRate(result.m_base_fees.value(), result.m_vsize.value()) > max_tx_fee_rate) {
+                    return TransactionError::MAX_FEE_RATE_EXCEEDED;
                 }
             }
             // Try to submit the transaction to the mempool.
