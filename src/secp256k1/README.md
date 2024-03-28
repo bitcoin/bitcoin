@@ -20,6 +20,7 @@ Features:
 * Optional module for public key recovery.
 * Optional module for ECDH key exchange.
 * Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki).
+* Optional module for the MuSig2 multi-signature scheme according to [BIP-327](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki).
 
 Implementation details
 ----------------------
@@ -79,9 +80,9 @@ To maintain a pristine source tree, CMake encourages to perform an out-of-source
 
     $ mkdir build && cd build
     $ cmake ..
-    $ make
-    $ make check  # run the test suite
-    $ sudo make install  # optional
+    $ cmake --build .
+    $ ctest  # run the test suite
+    $ sudo cmake --build . --target install  # optional
 
 To compile optional modules (such as Schnorr signatures), you need to run `cmake` with additional flags (such as `-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON`). Run `cmake .. -LH` to see the full list of available flags.
 

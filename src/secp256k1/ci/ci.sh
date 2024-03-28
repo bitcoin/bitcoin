@@ -13,11 +13,12 @@ print_environment() {
     # does not rely on bash.
     for var in WERROR_CFLAGS MAKEFLAGS BUILD \
             ECMULTWINDOW ECMULTGENPRECISION ASM WIDEMUL WITH_VALGRIND EXTRAFLAGS \
-            EXPERIMENTAL ECDH RECOVERY SCHNORRSIG ELLSWIFT \
+            EXPERIMENTAL ECDH RECOVERY SCHNORRSIG MUSIG ELLSWIFT \
             SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS\
             EXAMPLES \
             HOST WRAPPER_CMD \
-            CC CFLAGS CPPFLAGS AR NM
+            CC CFLAGS CPPFLAGS AR NM \
+            UBSAN_OPTIONS ASAN_OPTIONS LSAN_OPTIONS
     do
         eval "isset=\${$var+x}"
         if [ -n "$isset" ]; then
@@ -77,6 +78,7 @@ esac
     --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" \
     --enable-module-ellswift="$ELLSWIFT" \
     --enable-module-schnorrsig="$SCHNORRSIG" \
+    --enable-module-musig="$MUSIG" \
     --enable-examples="$EXAMPLES" \
     --enable-ctime-tests="$CTIMETESTS" \
     --with-valgrind="$WITH_VALGRIND" \

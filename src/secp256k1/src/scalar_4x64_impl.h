@@ -462,6 +462,14 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar *r, const uint64_t *l) 
     : "S"(l), "i"(SECP256K1_N_C_0), "i"(SECP256K1_N_C_1)
     : "rax", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "cc");
 
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m0, sizeof(m0));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m1, sizeof(m1));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m2, sizeof(m2));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m3, sizeof(m3));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m4, sizeof(m4));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m5, sizeof(m5));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&m6, sizeof(m6));
+
     /* Reduce 385 bits into 258. */
     __asm__ __volatile__(
     /* Preload */
@@ -541,6 +549,12 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar *r, const uint64_t *l) 
     : "g"(m0), "g"(m1), "g"(m2), "g"(m3), "g"(m4), "g"(m5), "g"(m6), "i"(SECP256K1_N_C_0), "i"(SECP256K1_N_C_1)
     : "rax", "rdx", "r8", "r9", "r10", "r11", "r12", "r13", "cc");
 
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&p0, sizeof(p0));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&p1, sizeof(p1));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&p2, sizeof(p2));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&p3, sizeof(p3));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&p4, sizeof(p4));
+
     /* Reduce 258 bits into 256. */
     __asm__ __volatile__(
     /* Preload */
@@ -586,6 +600,10 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar *r, const uint64_t *l) 
     : "=g"(c)
     : "g"(p0), "g"(p1), "g"(p2), "g"(p3), "g"(p4), "D"(r), "i"(SECP256K1_N_C_0), "i"(SECP256K1_N_C_1)
     : "rax", "rdx", "r8", "r9", "r10", "cc", "memory");
+
+    SECP256K1_CHECKMEM_MSAN_DEFINE(r, sizeof(*r));
+    SECP256K1_CHECKMEM_MSAN_DEFINE(&c, sizeof(c));
+
 #else
     secp256k1_uint128 c128;
     uint64_t c, c0, c1, c2;

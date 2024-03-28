@@ -36,6 +36,10 @@ runs:
         load: true
         cache-from: type=gha
 
+    - # Workaround for https://github.com/google/sanitizers/issues/1614 .
+      run: sudo sysctl -w vm.mmap_rnd_bits=28
+      shell: bash
+
     - # Tell Docker to pass environment variables in `env` into the container.
       run: >
         docker run \
