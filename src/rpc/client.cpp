@@ -185,6 +185,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gettxoutproof", 0, "txids" },
     { "gettxoutsetinfo", 1, "hash_or_height" },
     { "gettxoutsetinfo", 2, "use_index"},
+    { "dumptxoutset", 1, "height"},
     { "lockunspent", 0, "unlock" },
     { "lockunspent", 1, "transactions" },
     { "lockunspent", 2, "persistent" },
