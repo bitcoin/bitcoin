@@ -874,6 +874,7 @@ RPCHelpMan send();
 RPCHelpMan sendall();
 RPCHelpMan walletprocesspsbt();
 RPCHelpMan walletcreatefundedpsbt();
+RPCHelpMan walletdeniabilizecoin();
 RPCHelpMan signrawtransactionwithwallet();
 
 // signmessage
@@ -961,6 +962,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &walletpassphrase},
         {"wallet", &walletpassphrasechange},
         {"wallet", &walletprocesspsbt},
+        {"wallet", &walletdeniabilizecoin},
     };
     return commands;
 }
