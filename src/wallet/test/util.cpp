@@ -93,11 +93,6 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
-// BytePrefix compares equality with other byte spans that begin with the same prefix.
-struct BytePrefix { Span<const std::byte> prefix; };
-bool operator<(BytePrefix a, Span<const std::byte> b) { return a.prefix < b.subspan(0, std::min(a.prefix.size(), b.size())); }
-bool operator<(Span<const std::byte> a, BytePrefix b) { return a.subspan(0, std::min(a.size(), b.prefix.size())) < b.prefix; }
-
 MockableCursor::MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix)
 {
     m_pass = pass;
