@@ -51,7 +51,7 @@ void LogPrintfCheck::check(const clang::ast_matchers::MatchFinder::MatchResult& 
 {
     if (const clang::StringLiteral* lit = Result.Nodes.getNodeAs<clang::StringLiteral>("logstring")) {
         const clang::ASTContext& ctx = *Result.Context;
-        const auto user_diag = diag(lit->getEndLoc(), "Unterminated format string used with LogPrintf");
+        const auto user_diag = diag(lit->getEndLoc(), "Unterminated format string used with LogInfo");
         const auto& loc = lit->getLocationOfByte(lit->getByteLength(), *Result.SourceManager, ctx.getLangOpts(), ctx.getTargetInfo());
         user_diag << clang::FixItHint::CreateInsertion(loc, "\\n");
     }
