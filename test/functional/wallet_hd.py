@@ -7,6 +7,7 @@
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -29,6 +30,60 @@ class WalletHDTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def test_addhdkey(self):
+        if not self.options.descriptors:
+            return
+
+        self.log.info("Test addhdkey")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.nodes[0].createwallet("hdkey")
+        wallet = self.nodes[0].get_wallet_rpc("hdkey")
+
+        assert_equal(len(wallet.gethdkeys()), 1)
+
+        wallet.addhdkey()
+        xpub_info = wallet.gethdkeys()
+        assert_equal(len(xpub_info), 2)
+        for x in xpub_info:
+            if len(x["descriptors"]) == 1 and x["descriptors"][0]["desc"].startswith("unused("):
+                break
+        else:
+            assert False, "Did not find HD key with no descriptors"
+
+        imp_xpub_info = def_wallet.gethdkeys(private=True)[0]
+        imp_xpub = imp_xpub_info["xpub"]
+        imp_xprv = imp_xpub_info["xprv"]
+
+        assert_raises_rpc_error(-5, "Could not parse HD key", wallet.addhdkey, imp_xpub)
+        add_res = wallet.addhdkey(imp_xprv)
+        expected_void_desc = descsum_create(f"unused({imp_xpub})")
+        assert_equal(add_res["xpub"], imp_xpub)
+        xpub_info = wallet.gethdkeys()
+        assert_equal(len(xpub_info), 3)
+        for x in xpub_info:
+            if x["xpub"] == imp_xpub:
+                assert_equal(len(x["descriptors"]), 1)
+                assert_equal(x["descriptors"][0]["desc"], expected_void_desc)
+                break
+        else:
+            assert False, "Added HD key was not found in wallet"
+
+        wallet.listdescriptors()
+        for d in wallet.listdescriptors()["descriptors"]:
+            if d["desc"] == expected_void_desc:
+                assert_equal(d["active"], False)
+                break
+        else:
+            assert False, "Added HD key's descriptor was not found in wallet"
+
+        assert_raises_rpc_error(-4, "HD key already exists", wallet.addhdkey, imp_xprv)
+
+    def test_addhdkey_noprivs(self):
+        self.log.info("Test addhdkey is not available for wallets without privkeys")
+        self.nodes[0].createwallet("hdkey_noprivs")
+        wallet = self.nodes[0].get_wallet_rpc("hdkey_noprivs")
+        assert_raises_rpc_error(-4, "addhdkey is not available for wallets without private keys", wallet.addhdkey)
 
     def run_test(self):
         # Make sure we use hd, keep masterkeyid
@@ -278,6 +333,7 @@ class WalletHDTest(BitcoinTestFramework):
             info = restore2_rpc.getaddressinfo(addr)
             assert_equal(info['ismine'], False)
 
+        self.test_addhdkey()
 
 if __name__ == '__main__':
     WalletHDTest().main()
