@@ -128,6 +128,14 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
 
+    // Use h as derivation marker:
+    BOOST_CHECK(ParseHDKeypath("m/0h/0h", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0/0h", keypath));
+
+    // Hardened derivation marker consistency is not checked by default:
+    BOOST_CHECK(ParseHDKeypath("m/0'/0h", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0'/0h", keypath, /*check_hardened_marker=*/true));
+
     BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
     BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
 
