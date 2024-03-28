@@ -258,7 +258,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         const CTxOut& output = txouts.at(i);
         CTxDestination dest;
         ExtractDestination(output.scriptPubKey, dest);
-        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
+        if (original_change_index.has_value() ?  original_change_index.value() == i : ScriptIsChange(wallet, output.scriptPubKey)) {
             new_coin_control.destChange = dest;
         } else {
             CRecipient recipient = {dest, output.nValue, false};

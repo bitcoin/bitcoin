@@ -22,7 +22,7 @@ static void import_descriptor(CWallet& wallet, const std::string& descriptor)
     std::string error;
     std::unique_ptr<Descriptor> desc = Parse(descriptor, provider, error, /* require_checksum=*/ false);
     assert(desc);
-    WalletDescriptor w_desc(std::move(desc), 0, 0, 10, 0);
+    WalletDescriptor w_desc(std::move(desc), 0, 0, 10, 0, /*_internal=*/false);
     wallet.AddWalletDescriptor(w_desc, provider, "", false);
 }
 

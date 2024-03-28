@@ -479,7 +479,7 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& 
 
     const CTransaction* ptx = wtx->tx.get();
     int n = outpoint.n;
-    while (OutputIsChange(wallet, ptx->vout[n]) && ptx->vin.size() > 0) {
+    while (IsOutputChange(wallet, *ptx, n) && ptx->vin.size() > 0) {
         const COutPoint& prevout = ptx->vin[0].prevout;
         const CWalletTx* it = wallet.GetWalletTx(prevout.hash);
         if (!it || it->tx->vout.size() <= prevout.n ||

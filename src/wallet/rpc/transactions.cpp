@@ -362,7 +362,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
         for (const COutputEntry& r : listReceived)
         {
             std::string label;
-            const auto* address_book_entry = wallet.FindAddressBookEntry(r.destination);
+            const auto* address_book_entry = wallet.FindAddressBookEntry(r.destination, /*allow_change=*/include_change);
             if (address_book_entry) {
                 label = address_book_entry->GetLabel();
             }
@@ -448,6 +448,7 @@ RPCHelpMan listtransactions()
                     {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
                     {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
+                    {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also add entries for change outputs.\n"},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -511,6 +512,8 @@ RPCHelpMan listtransactions()
         filter |= ISMINE_WATCH_ONLY;
     }
 
+    bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
+
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
@@ -526,7 +529,7 @@ RPCHelpMan listtransactions()
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter, filter_label);
+            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter, filter_label, include_change);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -701,6 +704,7 @@ RPCHelpMan gettransaction()
                             "Whether to include watch-only addresses in balance calculation and details[]"},
                     {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false},
                             "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
+                    {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also include change output/s.\n"},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
@@ -788,7 +792,8 @@ RPCHelpMan gettransaction()
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, filter, /*filter_label=*/std::nullopt);
+    bool include_change = (!request.params[3].isNull() && request.params[3].get_bool());
+    ListTransactions(*pwallet, wtx, 0, false, details, filter, /*filter_label=*/std::nullopt, include_change);
     entry.pushKV("details", details);
 
     entry.pushKV("hex", EncodeHexTx(*wtx.tx));
