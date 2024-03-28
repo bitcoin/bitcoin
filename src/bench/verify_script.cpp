@@ -13,6 +13,7 @@
 #endif
 #include <script/script.h>
 #include <script/interpreter.h>
+#include <script/sigversion.h>
 #include <streams.h>
 #include <test/util/transaction_utils.h>
 

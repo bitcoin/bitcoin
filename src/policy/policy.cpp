@@ -15,6 +15,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/sigversion.h>
 #include <script/solver.h>
 #include <serialize.h>
 #include <span.h>

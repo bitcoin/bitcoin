@@ -23,6 +23,7 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     ANNEX_TAG,
+    LEAF_VERSION_TAPSCRIPT_64BIT,
     BIP341_sha_amounts,
     BIP341_sha_outputs,
     BIP341_sha_prevouts,
@@ -656,7 +657,7 @@ def spenders_taproot_active():
     # These are primarily tested through the test vectors implemented in libsecp256k1, and in src/tests/key_tests.cpp.
     # Some things are tested programmatically as well here.
 
-    tap = taproot_construct(pubs[0])
+    tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT)
     # Test with key with bit flipped.
     add_spender(spenders, "sig/key", tap=tap, key=secs[0], failure={"key_tweaked": bitflipper(default_key_tweaked)}, **ERR_SIG_SCHNORR)
     # Test with sighash with bit flipped.
@@ -699,11 +700,11 @@ def spenders_taproot_active():
 
     # Implement a test case that detects validation logic which maps invalid public keys to the
     # point at infinity in the tweaking logic.
-    tap = taproot_construct(invalid_pub, [("true", CScript([OP_1]))], treat_internal_as_infinity=True)
+    tap = taproot_construct(invalid_pub, LEAF_VERSION_TAPSCRIPT, [("true", CScript([OP_1]))], treat_internal_as_infinity=True)
     add_spender(spenders, "output/invalid_x", tap=tap, key_tweaked=tap.tweak, failure={"leaf": "true", "inputs": []}, **ERR_WITNESS_PROGRAM_MISMATCH)
 
     # Do the same thing without invalid point, to make sure there is no mistake in the test logic.
-    tap = taproot_construct(pubs[0], [("true", CScript([OP_1]))])
+    tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, [("true", CScript([OP_1]))])
     add_spender(spenders, "output/invalid_x_mock", tap=tap, key=secs[0], leaf="true", inputs=[])
 
     # == Tests for signature hashing ==
@@ -718,12 +719,12 @@ def spenders_taproot_active():
             common = {"annex": annex, "hashtype": hashtype, "standard": no_annex}
 
             # Pure pubkey
-            tap = taproot_construct(pubs[0])
+            tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT)
             add_spender(spenders, "sighash/purepk", tap=tap, key=secs[0], **common, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
 
             # Pubkey/P2PK script combination
             scripts = [("s0", CScript(random_checksig_style(pubs[1])))]
-            tap = taproot_construct(pubs[0], scripts)
+            tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
             add_spender(spenders, "sighash/keypath_hashtype_%x" % hashtype, tap=tap, key=secs[0], **common, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
             add_spender(spenders, "sighash/scriptpath_hashtype_%x" % hashtype, tap=tap, leaf="s0", key=secs[1], **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
 
@@ -745,7 +746,7 @@ def spenders_taproot_active():
             # pushes (e.g. `OP_PUSH1 1` instead of `OP_1`), we set a minimum data size of 2 bytes.
         ]
         random.shuffle(scripts)
-        tap = taproot_construct(pubs[0], scripts)
+        tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
         add_spender(spenders, "sighash/pk_codesep", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
         add_spender(spenders, "sighash/codesep_pk", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
         add_spender(spenders, "sighash/branched_codesep/left", tap=tap, leaf="branched_codesep", key=secs[0], codeseppos=3, **common, inputs=[getter("sign"), b'\x01'], **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
@@ -785,7 +786,7 @@ def spenders_taproot_active():
             ("csa_neg", CScript([OP_2, pubs[2], OP_CHECKSIGADD, OP_2, OP_EQUAL]))
         ]
         random.shuffle(scripts)
-        tap = taproot_construct(pubs[3], scripts)
+        tap = taproot_construct(pubs[3], LEAF_VERSION_TAPSCRIPT, scripts)
         # Empty signatures
         add_spender(spenders, "siglen/empty_keypath", tap=tap, key=secs[3], hashtype=hashtype, failure={"sign": b""}, **ERR_SIG_SIZE)
         add_spender(spenders, "siglen/empty_csv", tap=tap, key=secs[2], leaf="csv", hashtype=hashtype, **SINGLE_SIG, failure={"sign": b""}, **ERR_CHECKSIGVERIFY)
@@ -825,7 +826,7 @@ def spenders_taproot_active():
                         prog += bytes([0 for _ in range(witlen - 32)])
                     return CScript([CScriptOp.encode_op_n(witver), prog])
                 scripts = [("s0", CScript([pubs[0], OP_CHECKSIG])), ("dummy", CScript([OP_RETURN]))]
-                tap = taproot_construct(pubs[1], scripts)
+                tap = taproot_construct(pubs[1], LEAF_VERSION_TAPSCRIPT, scripts)
                 if not p2sh and witver == 1 and witlen == 32:
                     add_spender(spenders, "applic/keypath", p2sh=p2sh, spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[1], **SIGHASH_BITFLIP, **ERR_SIG_SCHNORR)
                     add_spender(spenders, "applic/scriptpath", p2sh=p2sh, leaf="s0", spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[0], **SINGLE_SIG, failure={"leaf": "dummy"}, **ERR_OP_RETURN)
@@ -861,7 +862,7 @@ def spenders_taproot_active():
     # Add 127 nodes on top of that tree, so that "128deep" and "129deep" end up at their designated depths.
     for _ in range(127):
         scripts = [scripts, random.choice(PARTNER_MERKLE_FN)]
-    tap = taproot_construct(pubs[0], scripts)
+    tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
     # Test that spends with a depth of 128 work, but 129 doesn't (even with a tree with weird Merkle branches in it).
     add_spender(spenders, "spendpath/merklelimit", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"leaf": "129deep"}, **ERR_CONTROLBLOCK_SIZE)
     # Test that flipping the negation bit invalidates spends.
@@ -878,7 +879,7 @@ def spenders_taproot_active():
     add_spender(spenders, "spendpath/trunclongcontrol", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"controlblock": lambda ctx: default_merklebranch(ctx)[0:random.randrange(1, 32)]}, **ERR_CONTROLBLOCK_SIZE)
 
     scripts = [("s", CScript([pubs[0], OP_CHECKSIG]))]
-    tap = taproot_construct(pubs[1], scripts)
+    tap = taproot_construct(pubs[1], LEAF_VERSION_TAPSCRIPT, scripts)
     # Test that adding garbage to the control block invalidates it.
     add_spender(spenders, "spendpath/padshortcontrol", tap=tap, leaf="s", **SINGLE_SIG, key=secs[0], failure={"controlblock": lambda ctx: default_controlblock(ctx) + random.randbytes(random.randrange(1, 32))}, **ERR_CONTROLBLOCK_SIZE)
     # Test that truncating the control block invalidates it.
@@ -997,7 +998,7 @@ def spenders_taproot_active():
     for j in range(100000):
         scripts.append((None, CScript([OP_RETURN, random.randrange(100000)])))
     random.shuffle(scripts)
-    tap = taproot_construct(pubs[0], scripts)
+    tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
     common = {
         "hashtype": hashtype,
         "key": secs[1],
@@ -1106,13 +1107,13 @@ def spenders_taproot_active():
                     scripts = [("s", fn(n, pubkey)[0])]
                     for _ in range(merkledepth):
                         scripts = [scripts, random.choice(PARTNER_MERKLE_FN)]
-                    tap = taproot_construct(pubs[0], scripts)
+                    tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
                     standard = annex is None and dummylen <= 80 and len(pubkey) == 32
                     add_spender(spenders, "tapscript/sigopsratio_%i" % fn_num, tap=tap, leaf="s", annex=annex, hashtype=hashtype, key=secs[1], inputs=[getter("sign"), random.randbytes(dummylen)], standard=standard, failure={"inputs": [getter("sign"), random.randbytes(dummylen - 1)]}, **ERR_SIGOPS_RATIO)
 
     # Future leaf versions
     for leafver in range(0, 0x100, 2):
-        if leafver == LEAF_VERSION_TAPSCRIPT or leafver == ANNEX_TAG:
+        if leafver == LEAF_VERSION_TAPSCRIPT or leafver == LEAF_VERSION_TAPSCRIPT_64BIT or leafver == ANNEX_TAG:
             # Skip the defined LEAF_VERSION_TAPSCRIPT, and the ANNEX_TAG which is not usable as leaf version
             continue
         scripts = [
@@ -1128,7 +1129,7 @@ def spenders_taproot_active():
             ("1001push_unkver", CScript([OP_0] * 1001), leafver),
         ]
         random.shuffle(scripts)
-        tap = taproot_construct(pubs[0], scripts)
+        tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
         add_spender(spenders, "unkver/bare", standard=False, tap=tap, leaf="bare_unkver", failure={"leaf": "bare_c0"}, **ERR_CLEANSTACK)
         add_spender(spenders, "unkver/return", standard=False, tap=tap, leaf="return_unkver", failure={"leaf": "return_c0"}, **ERR_OP_RETURN)
         add_spender(spenders, "unkver/undecodable", standard=False, tap=tap, leaf="undecodable_unkver", failure={"leaf": "undecodable_c0"}, **ERR_UNDECODABLE)
@@ -1140,7 +1141,7 @@ def spenders_taproot_active():
     hashtype = lambda _: random.choice(VALID_SIGHASHES_TAPROOT)
     for opval in range(76, 0x100):
         opcode = CScriptOp(opval)
-        if not is_op_success(opcode):
+        if not is_op_success(opcode, LEAF_VERSION_TAPSCRIPT):
             continue
         scripts = [
             ("bare_success", CScript([opcode])),
@@ -1158,7 +1159,7 @@ def spenders_taproot_active():
             ("1001push_nop", CScript([OP_0] * 1001 + [OP_NOP])),
         ]
         random.shuffle(scripts)
-        tap = taproot_construct(pubs[0], scripts)
+        tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
         add_spender(spenders, "opsuccess/bare", standard=False, tap=tap, leaf="bare_success", failure={"leaf": "bare_nop"}, **ERR_CLEANSTACK)
         add_spender(spenders, "opsuccess/unexecif", standard=False, tap=tap, leaf="unexecif_success", failure={"leaf": "unexecif_nop"}, **ERR_CLEANSTACK)
         add_spender(spenders, "opsuccess/return", standard=False, tap=tap, leaf="return_success", failure={"leaf": "return_nop"}, **ERR_OP_RETURN)
@@ -1171,19 +1172,19 @@ def spenders_taproot_active():
     # Non-OP_SUCCESSx (verify that those aren't accidentally treated as OP_SUCCESSx)
     for opval in range(0, 0x100):
         opcode = CScriptOp(opval)
-        if is_op_success(opcode):
+        if is_op_success(opcode, LEAF_VERSION_TAPSCRIPT):
             continue
         scripts = [
             ("normal", CScript([OP_RETURN, opcode] + [OP_NOP] * 75)),
             ("op_success", CScript([OP_RETURN, CScriptOp(0x50)]))
         ]
-        tap = taproot_construct(pubs[0], scripts)
+        tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, scripts)
         add_spender(spenders, "alwaysvalid/notsuccessx", tap=tap, leaf="op_success", inputs=[], standard=False, failure={"leaf": "normal"}) # err_msg differs based on opcode
 
     # == Test case for https://github.com/bitcoin/bitcoin/issues/24765 ==
 
     zero_fn = lambda h: bytes([0 for _ in range(32)])
-    tap = taproot_construct(pubs[0], [("leaf", CScript([pubs[1], OP_CHECKSIG, pubs[1], OP_CHECKSIGADD, OP_2, OP_EQUAL])), zero_fn])
+    tap = taproot_construct(pubs[0], LEAF_VERSION_TAPSCRIPT, [("leaf", CScript([pubs[1], OP_CHECKSIG, pubs[1], OP_CHECKSIGADD, OP_2, OP_EQUAL])), zero_fn])
     add_spender(spenders, "case24765", tap=tap, leaf="leaf", inputs=[getter("sign"), getter("sign")], key=secs[1], no_fail=True)
 
     # == Legacy tests ==
@@ -1220,7 +1221,7 @@ def spenders_taproot_nonstandard():
         ("future_leaf", CScript([pub, OP_CHECKSIG]), 0xc2),
         ("op_success", CScript([pub, OP_CHECKSIG, OP_0, OP_IF, CScriptOp(0x50), OP_ENDIF])),
     ]
-    tap = taproot_construct(pub, scripts)
+    tap = taproot_construct(pub, LEAF_VERSION_TAPSCRIPT, scripts)
 
     # Test that features like annex, leaf versions, or OP_SUCCESS are valid but non-standard
     add_spender(spenders, "inactive/scriptpath_valid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")])
@@ -1566,7 +1567,7 @@ class TaprootTest(BitcoinTestFramework):
                 [("1", CScript([pubs[58], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT), ("2", CScript([pubs[59], OP_CHECKSIG]), LEAF_VERSION_TAPSCRIPT)]
             ],
         ]
-        taps = [taproot_construct(inner_keys[i], script_lists[i]) for i in range(len(inner_keys))]
+        taps = [taproot_construct(inner_keys[i], LEAF_VERSION_TAPSCRIPT, script_lists[i]) for i in range(len(inner_keys))]
 
         # Require negated taps[0]
         assert taps[0].negflag

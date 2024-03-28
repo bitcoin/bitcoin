@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+enum class SigVersion;
+
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
@@ -207,6 +209,22 @@ enum opcodetype
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
+
+    // Arithmetic opcodes
+    OP_ADD64 = 0xd7,
+    OP_SUB64 = 0xd8,
+    OP_MUL64 = 0xd9,
+    OP_DIV64 = 0xda,
+    OP_NEG64 = 0xdb,
+    OP_LESSTHAN64 = 0xdc,
+    OP_LESSTHANOREQUAL64 = 0xdd,
+    OP_GREATERTHAN64 = 0xde,
+    OP_GREATERTHANOREQUAL64 = 0xdf,
+
+    // Conversion opcodes
+    OP_SCRIPTNUMTOLE64 = 0xe0,
+    OP_LE64TOSCRIPTNUM = 0xe1,
+    OP_LE32TOLE64 = 0xe2,
 
     OP_INVALIDOPCODE = 0xff,
 };
@@ -588,7 +606,7 @@ public:
 };
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
-bool IsOpSuccess(const opcodetype& opcode);
+bool IsOpSuccess(const opcodetype& opcode, SigVersion sigVersion);
 
 bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
 
