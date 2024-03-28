@@ -23,4 +23,21 @@ void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
         }
     }
 }
+
+void GetCoins(const NodeContext& node, std::set<CScript>& output_scripts, std::map<COutPoint, Coin>& coins)
+{
+    assert(node.chainman);
+    LOCK(cs_main);
+    std::unique_ptr<CCoinsViewCursor> cursor = node.chainman->ActiveChainstate().CoinsDB().Cursor();
+    while (cursor->Valid()) {
+        COutPoint key;
+        Coin coin;
+        if (cursor->GetKey(key) && cursor->GetValue(coin)) {
+            if (output_scripts.count(coin.out.scriptPubKey)) {
+                coins.emplace(key, coin);
+            }
+        }
+        cursor->Next();
+    }
+}
 } // namespace node
