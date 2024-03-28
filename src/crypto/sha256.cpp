@@ -32,6 +32,11 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
 #endif
 
+namespace sha256_sse41
+{
+void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
+}
+
 namespace sha256d64_sse41
 {
 void Transform_4way(unsigned char* out, const unsigned char* in);
@@ -581,6 +586,15 @@ bool AVXEnabled()
     return (a & 6) == 6;
 }
 #endif
+
+#if defined(_MSC_VER) && defined(_M_X64)
+#include <intrin.h>
+bool AVXEnabled()
+{
+    auto a = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+    return (a & 6) == 6;
+}
+#endif  // defined(_MSC_VER) && defined(_M_X64)
 #endif // DISABLE_OPTIMIZED_SHA256
 } // namespace
 
@@ -641,6 +655,10 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         ret = "sse4(1way)";
 #endif
 #if defined(ENABLE_SSE41)
+#if defined(_MSC_VER)
+        Transform = sha256_sse41::Transform;
+        ret = "sse41(1way)";
+#endif
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret += ",sse41(4way)";
 #endif
