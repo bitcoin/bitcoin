@@ -11,9 +11,6 @@ The assumeutxo value generated and used here is committed to in
 
 ## Possible test improvements
 
-- TODO: test what happens with -reindex and -reindex-chainstate before the
-      snapshot is validated, and make sure it's deleted successfully.
-
 Interesting test cases could be loading an assumeutxo snapshot file with:
 
 - TODO: Valid hash but invalid snapshot file (bad coin height or
@@ -378,6 +375,17 @@ class AssumeutxoTest(BitcoinTestFramework):
         loaded = n2.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        for reindex_arg in ['-reindex=1', '-reindex-chainstate=1']:
+            self.log.info(f"Check that restarting with {reindex_arg} will delete the snapshot chainstate")
+            self.restart_node(2, extra_args=[reindex_arg, *self.extra_args[2]])
+            assert_equal(1, len(n2.getchainstates()["chainstates"]))
+            for i in range(1, 300):
+                block = n0.getblock(n0.getblockhash(i), 0)
+                n2.submitheader(block)
+            loaded = n2.loadtxoutset(dump_output['path'])
+            assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
+            assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = n2.getchainstates()['chainstates']
         assert_equal(normal['blocks'], START_HEIGHT)
