@@ -326,6 +326,7 @@ BITCOIN_CORE_H = \
   util/syserror.h \
   util/task_runner.h \
   util/thread.h \
+  util/threadpool.h \
   util/threadinterrupt.h \
   util/threadnames.h \
   util/time.h \

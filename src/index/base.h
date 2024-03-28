@@ -10,15 +10,25 @@
 #include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
+#include <any>
 #include <string>
 
 class CBlock;
 class CBlockIndex;
 class Chainstate;
 class ChainstateManager;
+class ThreadPool;
 namespace interfaces {
 class Chain;
 } // namespace interfaces
+namespace Consensus {
+    struct Params;
+}
+
+/** Number of concurrent jobs during the initial sync process */
+static constexpr int16_t INDEX_WORKERS_COUNT = 0;
+/** Number of tasks processed by each worker */
+static constexpr int16_t INDEX_WORK_PER_CHUNK = 1000;
 
 struct IndexSummary {
     std::string name;
@@ -78,6 +88,9 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
+    std::shared_ptr<ThreadPool> m_thread_pool;
+    uint16_t m_tasks_per_worker{INDEX_WORK_PER_CHUNK};
+
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
     /// Recommendations for error handling:
@@ -90,6 +103,9 @@ private:
 
     /// Loop over disconnected blocks and call CustomRewind.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
+
+    std::any ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+    std::vector<std::any> ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end);
 
     virtual bool AllowPrune() const = 0;
 
@@ -119,10 +135,33 @@ protected:
     /// be an ancestor of the current best block.
     [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) { return true; }
 
+    /// Whether the child class requires to receive block undo data inside 'CustomAppend'.
+    virtual bool RequiresBlockUndoData() const { return false; }
+
     virtual DB& GetDB() const = 0;
 
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
+
+    /// If 'AllowParallelSync()' retrieves true, 'ProcessBlock()' will run concurrently in batches.
+    /// The 'std::any' result will be passed to 'PostProcessBlocks()' so the index can process
+    /// async result batches in a synchronous fashion (if required).
+    [[nodiscard]] virtual std::any CustomProcessBlock(const interfaces::BlockInfo& block_info) {
+        // If parallel sync is enabled, the child class must implement this method.
+        if (AllowParallelSync()) return std::any();
+
+        // Default, synchronous write
+        if (!CustomAppend(block_info)) {
+            throw std::runtime_error(strprintf("%s: Failed to write block %s to index database",
+                                               __func__, block_info.hash.ToString()));
+        }
+        return true;
+    }
+
+    /// 'PostProcessBlocks()' is called in a synchronous manner after a batch of async 'ProcessBlock()'
+    /// calls have completed.
+    /// Here the index usually links and dump information that cannot be processed in an asynchronous fashion.
+    [[nodiscard]] virtual bool CustomPostProcessBlocks(const std::any& obj) { return true; };
 
 public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
@@ -131,6 +170,8 @@ public:
 
     /// Get the name of the index for display in logs.
     const std::string& GetName() const LIFETIMEBOUND { return m_name; }
+
+    void SetThreadPool(const std::shared_ptr<ThreadPool>& thread_pool) { m_thread_pool = thread_pool; }
 
     /// Blocks the current thread until the index is caught up to the current
     /// state of the block chain. This only blocks if the index has gotten in
@@ -157,6 +198,11 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
+
+    void SetTasksPerWorker(int16_t count) { m_tasks_per_worker = count; }
+
+    /// True if the child class allows concurrent sync.
+    virtual bool AllowParallelSync() { return false; }
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
