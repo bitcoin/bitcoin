@@ -41,6 +41,7 @@
 typedef std::vector<unsigned char> valtype;
 
 static CFeeRate g_dust{DUST_RELAY_TX_FEE};
+static bool g_bare_pubkey{DEFAULT_PERMIT_BAREPUBKEY};
 static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
 
 static std::map<std::string, unsigned int> mapFlagNames = {
@@ -758,12 +759,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     constexpr auto CheckIsStandard = [](const auto& t) {
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_pubkey, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
     constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in) {
         std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+        BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_pubkey, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
     };
 
