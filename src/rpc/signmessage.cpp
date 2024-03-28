@@ -38,9 +38,9 @@ static RPCHelpMan verifymessage()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::string strAddress = request.params[0].get_str();
-            std::string strSign = request.params[1].get_str();
-            std::string strMessage = request.params[2].get_str();
+            std::string strAddress = self.Arg<std::string>("address");
+            std::string strSign = self.Arg<std::string>("signature");
+            std::string strMessage = self.Arg<std::string>("message");
 
             switch (MessageVerify(strAddress, strSign, strMessage)) {
             case MessageVerificationResult::ERR_INVALID_ADDRESS:

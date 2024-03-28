@@ -194,15 +194,12 @@ RPCHelpMan getbalance()
 
     LOCK(pwallet->cs_wallet);
 
-    const auto dummy_value{self.MaybeArg<std::string>(0)};
+    const auto dummy_value{self.MaybeArg<std::string>("dummy")};
     if (dummy_value && *dummy_value != "*") {
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
     }
 
-    int min_depth = 0;
-    if (!request.params[1].isNull()) {
-        min_depth = request.params[1].getInt<int>();
-    }
+    const auto min_depth{self.Arg<int>("minconf")};
 
     bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
 
