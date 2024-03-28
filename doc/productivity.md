@@ -44,7 +44,7 @@ base_dir = /home/yourname  # or wherever you keep your source files
 
 Note: base_dir is required for ccache to share cached compiles of the same file across different repositories / paths; it will only do this for paths under base_dir. So this option is required for effective use of ccache with git worktrees (described below).
 
-You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).
+You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the [ccache docs](https://ccache.dev/manual/latest.html#_configuration_options)), since doing this will make ccache also rewrite paths to system header files, which typically is counterproductive.
 
 ### Disable features with `./configure`
 
