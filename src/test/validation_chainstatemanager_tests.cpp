@@ -281,7 +281,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         const auto& au_data = ::Params().AssumeutxoForHeight(snapshot_height);
         const CBlockIndex* tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
 
-        BOOST_CHECK_EQUAL(tip->nChainTx, au_data->nChainTx);
+        BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
 
         // To be checked against later when we try loading a subsequent snapshot.
         uint256 loaded_snapshot_blockhash{*chainman.SnapshotBlockhash()};
@@ -461,7 +461,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
         if (i < last_assumed_valid_idx && i >= assumed_valid_start_idx) {
             index->nStatus = BlockStatus::BLOCK_VALID_TREE;
             index->nTx = 0;
-            index->nChainTx = 0;
+            index->m_chain_tx_count = 0;
         }
 
         ++num_indexes;
