@@ -45,21 +45,11 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         // Create datadir if it does not exist.
         const auto base_path{args.GetDataDirBase()};
         if (!fs::exists(base_path)) {
-            // When creating a *new* datadir, also create a "wallets" subdirectory,
-            // whether or not the wallet is enabled now, so if the wallet is enabled
-            // in the future, it will use the "wallets" subdirectory for creating
-            // and listing wallets, rather than the top-level directory where
-            // wallets could be mixed up with other files. For backwards
-            // compatibility, wallet code will use the "wallets" subdirectory only
-            // if it already exists, but never create it itself. There is discussion
-            // in https://github.com/bitcoin/bitcoin/issues/16220 about ways to
-            // change wallet code so it would no longer be necessary to create
-            // "wallets" subdirectories here.
-            fs::create_directories(base_path / "wallets");
+            fs::create_directories(base_path);
         }
         const auto net_path{args.GetDataDirNet()};
         if (!fs::exists(net_path)) {
-            fs::create_directories(net_path / "wallets");
+            fs::create_directories(net_path);
         }
 
         // Show an error or warning if there is a bitcoin.conf file in the
