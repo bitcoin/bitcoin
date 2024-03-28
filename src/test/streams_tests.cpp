@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.GetPos() <= 30U);
 
     // We can explicitly close the file, or the destructor will do it.
-    file.fclose();
+    (void)file.fclose();
 
     fs::remove(streams_test_filename);
 }
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     bf.SkipTo(13);
     BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
 
-    file.fclose();
+    (void)file.fclose();
     fs::remove(streams_test_filename);
 }
 
