@@ -358,6 +358,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         LOCK(wallet->cs_wallet);
         const auto result10 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
+        auto algo_name = GetAlgorithmName(result10->GetAlgo());
+        BOOST_CHECK_EQUAL(algo_name, "bnb");
         BOOST_CHECK(result10);
     }
     {
@@ -365,6 +367,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         LOCK(wallet->cs_wallet); // Every 'SelectCoins' call requires it
 
         CoinsResult available_coins;
+        std::string algo_name;
 
         // single coin should be selected when effective fee > long term fee
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
@@ -380,6 +383,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(10 * CENT + input_fee, 2, expected_result);
         CCoinControl coin_control;
         const auto result11 = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, 10 * CENT, coin_control, coin_selection_params_bnb);
+        algo_name = GetAlgorithmName(result11->GetAlgo());
+        BOOST_CHECK_EQUAL(algo_name, "bnb");
         BOOST_CHECK(EquivalentResult(expected_result, *result11));
         available_coins.Clear();
 
@@ -397,6 +402,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         add_coin(9 * CENT + input_fee, 2, expected_result);
         add_coin(1 * CENT + input_fee, 2, expected_result);
         const auto result12 = SelectCoins(*wallet, available_coins, /*pre_set_inputs=*/{}, 10 * CENT, coin_control, coin_selection_params_bnb);
+        algo_name = GetAlgorithmName(result12->GetAlgo());
+        BOOST_CHECK_EQUAL(algo_name, "bnb");
         BOOST_CHECK(EquivalentResult(expected_result, *result12));
         available_coins.Clear();
 
@@ -420,6 +427,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         selected_input.Insert(select_coin, coin_selection_params_bnb.m_subtract_fee_outputs);
         available_coins.Erase({(++available_coins.coins[OutputType::BECH32].begin())->outpoint});
         const auto result13 = SelectCoins(*wallet, available_coins, selected_input, 10 * CENT, coin_control, coin_selection_params_bnb);
+        algo_name = GetAlgorithmName(result13->GetAlgo());
+        BOOST_CHECK_EQUAL(algo_name, "bnb");
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
     }
 
