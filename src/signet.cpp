@@ -4,10 +4,6 @@
 
 #include <signet.h>
 
-#include <array>
-#include <cstdint>
-#include <vector>
-
 #include <common/system.h>
 #include <consensus/merkle.h>
 #include <consensus/params.h>
@@ -22,6 +18,11 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/strencodings.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <vector>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
@@ -38,7 +39,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     std::vector<uint8_t> pushdata;
     while (witness_commitment.GetOp(pc, opcode, pushdata)) {
         if (pushdata.size() > 0) {
-            if (!found_header && pushdata.size() > (size_t)header.size() && Span{pushdata}.first(header.size()) == header) {
+            if (!found_header && pushdata.size() > header.size() && std::ranges::equal(Span{pushdata}.first(header.size()), header)) {
                 // pushdata only counts if it has the header _and_ some data
                 result.insert(result.end(), pushdata.begin() + header.size(), pushdata.end());
                 pushdata.erase(pushdata.begin() + header.size(), pushdata.end());
