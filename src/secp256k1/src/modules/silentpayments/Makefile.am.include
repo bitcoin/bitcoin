@@ -1,0 +1,4 @@
+include_HEADERS += include/secp256k1_silentpayments.h
+noinst_HEADERS += src/modules/silentpayments/main_impl.h
+noinst_HEADERS += src/modules/silentpayments/tests_impl.h
+noinst_HEADERS += src/modules/silentpayments/vectors.h

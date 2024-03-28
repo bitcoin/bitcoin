@@ -370,11 +370,11 @@ std::string Encode(Encoding encoding, const std::string& hrp, const data& values
 }
 
 /** Decode a Bech32 or Bech32m string. */
-DecodeResult Decode(const std::string& str) {
+DecodeResult Decode(const std::string& str, CharLimit limit) {
     std::vector<int> errors;
     if (!CheckCharacters(str, errors)) return {};
     size_t pos = str.rfind('1');
-    if (str.size() > 90 || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
+    if (str.size() > limit || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
         return {};
     }
     data values(str.size() - 1 - pos);
@@ -397,12 +397,12 @@ DecodeResult Decode(const std::string& str) {
 }
 
 /** Find index of an incorrect character in a Bech32 string. */
-std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str) {
+std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str, CharLimit limit) {
     std::vector<int> error_locations{};
 
-    if (str.size() > 90) {
-        error_locations.resize(str.size() - 90);
-        std::iota(error_locations.begin(), error_locations.end(), 90);
+    if (str.size() > limit) {
+        error_locations.resize(str.size() - limit);
+        std::iota(error_locations.begin(), error_locations.end(), static_cast<int>(limit));
         return std::make_pair("Bech32 string too long", std::move(error_locations));
     }
 

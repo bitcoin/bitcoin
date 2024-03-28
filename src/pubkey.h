@@ -300,6 +300,8 @@ public:
     SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
 };
 
+extern const XOnlyPubKey NUMS_H;
+
 /** An ElligatorSwift-encoded public key. */
 struct EllSwiftPubKey
 {
