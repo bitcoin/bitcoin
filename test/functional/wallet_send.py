@@ -432,10 +432,10 @@ class WalletSendTest(BitcoinTestFramework):
         assert res["complete"]
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address, change_position=0)
         assert res["complete"]
-        assert_equal(self.nodes[0].decodepsbt(res["psbt"])["tx"]["vout"][0]["scriptPubKey"]["address"], change_address)
+        assert_equal(self.nodes[0].decodepsbt(res["psbt"])["outputs"][0]["script"]["address"], change_address)
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_type="legacy", change_position=0)
         assert res["complete"]
-        change_address = self.nodes[0].decodepsbt(res["psbt"])["tx"]["vout"][0]["scriptPubKey"]["address"]
+        change_address = self.nodes[0].decodepsbt(res["psbt"])["outputs"][0]["script"]["address"]
         assert change_address[0] == "m" or change_address[0] == "n"
 
         self.log.info("Set lock time...")
@@ -538,11 +538,9 @@ class WalletSendTest(BitcoinTestFramework):
         assert signed["complete"]
 
         dec = self.nodes[0].decodepsbt(signed["psbt"])
-        for i, txin in enumerate(dec["tx"]["vin"]):
-            if txin["txid"] == ext_utxo["txid"] and txin["vout"] == ext_utxo["vout"]:
-                input_idx = i
+        for psbt_in in dec["inputs"]:
+            if psbt_in["previous_txid"] == ext_utxo["txid"] and psbt_in["previous_vout"] == ext_utxo["vout"]:
                 break
-        psbt_in = dec["inputs"][input_idx]
         # Calculate the input weight
         # (prevout + sequence + length of scriptSig + scriptsig) * WITNESS_SCALE_FACTOR + len of num scriptWitness stack items + (length of stack item + stack item) * N stack items
         # Note that occasionally this weight estimate may be slightly larger or smaller than the real weight

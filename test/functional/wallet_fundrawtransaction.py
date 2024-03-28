@@ -1178,10 +1178,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         tx = wallet.send(outputs=[{addr1: 8}], **options)
         assert tx["complete"]
         # Check that only the preset inputs were added to the tx
-        decoded_psbt_inputs = self.nodes[0].decodepsbt(tx["psbt"])['tx']['vin']
+        decoded_psbt_inputs = self.nodes[0].decodepsbt(tx["psbt"])["inputs"]
         assert_equal(len(decoded_psbt_inputs), 2)
         for input in decoded_psbt_inputs:
-            assert_equal(input["txid"], source_tx["txid"])
+            assert_equal(input["previous_txid"], source_tx["txid"])
 
         # Case (5), assert that inputs are added to the tx by explicitly setting add_inputs=true
         options = {"add_inputs": True, "add_to_wallet": True}
@@ -1220,10 +1220,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         })
         psbt_tx = wallet.walletcreatefundedpsbt(outputs=[{addr1: 8}], inputs=inputs, **options)
         # Check that only the preset inputs were added to the tx
-        decoded_psbt_inputs = self.nodes[0].decodepsbt(psbt_tx["psbt"])['tx']['vin']
+        decoded_psbt_inputs = self.nodes[0].decodepsbt(psbt_tx["psbt"])["inputs"]
         assert_equal(len(decoded_psbt_inputs), 2)
         for input in decoded_psbt_inputs:
-            assert_equal(input["txid"], source_tx["txid"])
+            assert_equal(input["previous_txid"], source_tx["txid"])
 
         # Case (5), 'walletcreatefundedpsbt' command
         # Explicit add_inputs=true, no preset inputs
