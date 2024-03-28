@@ -43,6 +43,10 @@ class MaxTipAgeTest(BitcoinTestFramework):
         self.generate(node_miner, 1)
         assert_equal(node_ibd.getblockchaininfo()['initialblockdownload'], False)
 
+        # reset time to system time so we don't have a time offset with the ibd node the next
+        # time we connect to it, ensuring TimeOffsets::WarnIfOutOfSync() doesn't output to stderr
+        node_miner.setmocktime(0)
+
     def run_test(self):
         self.log.info("Test IBD with maximum tip age of 24 hours (default).")
         self.test_maxtipage(DEFAULT_MAX_TIP_AGE, set_parameter=False)

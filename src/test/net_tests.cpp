@@ -19,7 +19,6 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
-#include <timedata.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
@@ -902,10 +901,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     chainman.ResetIbd();
     m_node.args->ForceSetArg("-capturemessages", "0");
     m_node.args->ForceSetArg("-bind", "");
-    // PeerManager::ProcessMessage() calls AddTimeData() which changes the internal state
-    // in timedata.cpp and later confuses the test "timedata_tests/addtimedata". Thus reset
-    // that state as it was before our test was run.
-    TestOnlyResetTimeData();
 }
 
 

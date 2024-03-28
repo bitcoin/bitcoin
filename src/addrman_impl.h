@@ -11,7 +11,6 @@
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
-#include <timedata.h>
 #include <uint256.h>
 #include <util/time.h>
 
