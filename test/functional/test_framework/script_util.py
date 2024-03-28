@@ -3,10 +3,13 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful Script constants and utils."""
+import unittest
+
 from test_framework.script import (
     CScript,
-    CScriptOp,
     OP_0,
+    OP_15,
+    OP_16,
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DUP,
@@ -49,10 +52,8 @@ def keys_to_multisig_script(keys, *, k=None):
     if k is None:  # n-of-n multisig by default
         k = n
     assert k <= n
-    op_k = CScriptOp.encode_op_n(k)
-    op_n = CScriptOp.encode_op_n(n)
     checked_keys = [check_key(key) for key in keys]
-    return CScript([op_k] + checked_keys + [op_n, OP_CHECKMULTISIG])
+    return CScript([k] + checked_keys + [n, OP_CHECKMULTISIG])
 
 
 def keyhash_to_p2pkh_script(hash):
@@ -125,3 +126,19 @@ def check_script(script):
     if isinstance(script, bytes) or isinstance(script, CScript):
         return script
     assert False
+
+
+class TestFrameworkScriptUtil(unittest.TestCase):
+    def test_multisig(self):
+        fake_pubkey = bytes([0]*33)
+        # check correct encoding of P2MS script with n,k <= 16
+        normal_ms_script = keys_to_multisig_script([fake_pubkey]*16, k=15)
+        self.assertEqual(len(normal_ms_script), 1 + 16*34 + 1 + 1)
+        self.assertTrue(normal_ms_script.startswith(bytes([OP_15])))
+        self.assertTrue(normal_ms_script.endswith(bytes([OP_16, OP_CHECKMULTISIG])))
+
+        # check correct encoding of P2MS script with n,k > 16
+        max_ms_script = keys_to_multisig_script([fake_pubkey]*20, k=19)
+        self.assertEqual(len(max_ms_script), 2 + 20*34 + 2 + 1)
+        self.assertTrue(max_ms_script.startswith(bytes([1, 19])))  # using OP_PUSH1
+        self.assertTrue(max_ms_script.endswith(bytes([1, 20, OP_CHECKMULTISIG])))
