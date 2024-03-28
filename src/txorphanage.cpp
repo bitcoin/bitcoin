@@ -241,3 +241,27 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
         LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
 }
+
+std::vector<CTransactionRef> TxOrphanage::GetChildren(const CTransactionRef& parent) const
+{
+    LOCK(m_mutex);
+
+    // First construct a set of iterators to ensure we do not return duplicates of the same tx.
+    std::set<OrphanMap::iterator, IteratorComparator> set_child_iterators;
+
+    // For each input, get all entries spending this prevout.
+    for (unsigned int i = 0; i < parent->vout.size(); i++) {
+        const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(parent->GetHash(), i));
+        if (it_by_prev != m_outpoint_to_orphan_it.end()) {
+            for (const auto& elem : it_by_prev->second) {
+                set_child_iterators.insert(elem);
+            }
+        }
+    }
+
+    std::vector<CTransactionRef> children_found;
+    for (const auto child_iter : set_child_iterators) {
+        children_found.emplace_back(child_iter->second.tx);
+    }
+    return children_found;
+}
