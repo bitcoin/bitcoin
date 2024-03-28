@@ -32,6 +32,9 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
         bp::std_out > stdout_stream,
         bp::std_err > stderr_stream,
         bp::std_in < stdin_stream
+#ifdef HAVE_BPE_CLOSE_EXCESS_FDS
+        , bpe_close_excess_fds()
+#endif
     );
     if (!str_std_in.empty()) {
         stdin_stream << str_std_in << std::endl;
