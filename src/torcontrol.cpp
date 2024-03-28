@@ -328,10 +328,10 @@ TorController::TorController(struct event_base* _base, const std::string& tor_co
         LogPrintf("tor: Initiating connection to Tor control port %s failed\n", m_tor_control_center);
     }
     // Read service private key if cached
-    std::pair<bool,std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
-    if (pkf.first) {
+    auto data{ReadBinaryFile<std::string>(GetPrivateKeyFile())};
+    if (data) {
         LogPrint(BCLog::TOR, "Reading cached private key from %s\n", fs::PathToString(GetPrivateKeyFile()));
-        private_key = pkf.second;
+        private_key = data.value();
     }
 }
 
@@ -586,15 +586,15 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
         } else if (methods.count("SAFECOOKIE")) {
             // Cookie: hexdump -e '32/1 "%02x""\n"'  ~/.tor/control_auth_cookie
             LogPrint(BCLog::TOR, "Using SAFECOOKIE authentication, reading cookie authentication from %s\n", cookiefile);
-            std::pair<bool,std::string> status_cookie = ReadBinaryFile(fs::PathFromString(cookiefile), TOR_COOKIE_SIZE);
-            if (status_cookie.first && status_cookie.second.size() == TOR_COOKIE_SIZE) {
-                // _conn.Command("AUTHENTICATE " + HexStr(status_cookie.second), std::bind(&TorController::auth_cb, this, std::placeholders::_1, std::placeholders::_2));
-                cookie = std::vector<uint8_t>(status_cookie.second.begin(), status_cookie.second.end());
+            auto status_cookie = ReadBinaryFile<std::string>(fs::PathFromString(cookiefile), TOR_COOKIE_SIZE);
+            if (status_cookie && status_cookie->size() == TOR_COOKIE_SIZE) {
+                // _conn.Command("AUTHENTICATE " + HexStr(status_cookie), std::bind(&TorController::auth_cb, this, std::placeholders::_1, std::placeholders::_2));
+                cookie = std::vector<uint8_t>(status_cookie->begin(), status_cookie->end());
                 clientNonce = std::vector<uint8_t>(TOR_NONCE_SIZE, 0);
                 GetRandBytes(clientNonce);
                 _conn.Command("AUTHCHALLENGE SAFECOOKIE " + HexStr(clientNonce), std::bind(&TorController::authchallenge_cb, this, std::placeholders::_1, std::placeholders::_2));
             } else {
-                if (status_cookie.first) {
+                if (status_cookie) {
                     LogPrintf("tor: Authentication cookie %s is not exactly %i bytes, as is required by the spec\n", cookiefile, TOR_COOKIE_SIZE);
                 } else {
                     LogPrintf("tor: Authentication cookie %s could not be opened (check permissions)\n", cookiefile);
