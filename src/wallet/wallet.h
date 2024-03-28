@@ -1293,6 +1293,12 @@ public:
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
 
+    /** Return whether transaction can be rebroadcast */
+    bool TransactionCanBeRebroadcast(const uint256& hashTx) const;
+
+    /* Rebroadcast a transaction. */
+    bool RebroadcastTransaction(const uint256& hashTx);
+
     /** Mark a transaction as replaced by another transaction (e.g., BIP 125). */
     bool MarkReplaced(const uint256& originalHash, const uint256& newHash);
 

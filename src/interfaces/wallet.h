@@ -185,6 +185,12 @@ public:
         std::vector<bilingual_str>& errors,
         uint256& bumped_txid) = 0;
 
+    //! Return whether transaction can be rebroadcast.
+    virtual bool transactionCanBeRebroadcast(const uint256& txid) = 0;
+
+    //! Rebroadcast transaction.
+    virtual bool rebroadcastTransaction(const uint256& txid) = 0;
+
     //! Get a transaction.
     virtual CTransactionRef getTx(const uint256& txid) = 0;
 

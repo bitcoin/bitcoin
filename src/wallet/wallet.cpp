@@ -1175,6 +1175,49 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
     return true;
 }
 
+bool CWallet::TransactionCanBeRebroadcast(const uint256& hashTx) const
+{
+    LOCK(cs_wallet);
+
+    // Can't relay if wallet is not broadcasting
+    if (!GetBroadcastTransactions()) return false;
+
+    const CWalletTx* wtx = GetWalletTx(hashTx);
+    return wtx && !wtx->isAbandoned() && wtx->GetDepthInMainChain() == 0;
+}
+
+bool CWallet::RebroadcastTransaction(const uint256& hashTx)
+{
+    LOCK(cs_wallet);
+
+    // Can't relay if wallet is not broadcasting
+    if (!GetBroadcastTransactions()) return false;
+
+    // Can't mark abandoned if confirmed or in mempool
+    auto it = mapWallet.find(hashTx);
+    assert(it != mapWallet.end());
+    const CWalletTx& wtx = it->second;
+
+    // Don't relay abandoned transactions
+    if (wtx.isAbandoned()) return false;
+    // Don't try to submit coinbase or HogEx transactions. These would fail anyway but would
+    // cause log spam.
+    if (wtx.IsCoinBase() || wtx.IsHogEx()) return false;
+    // Don't try to submit conflicted or confirmed transactions.
+    if (wtx.GetDepthInMainChain() != 0) return false;
+
+    // Submit transaction to mempool for relay
+    WalletLogPrintf("Submitting wtx %s to mempool for relay\n", wtx.GetHash().ToString());
+
+    std::string err_string;
+    const bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, true, err_string);
+    if (!ret) {
+        WalletLogPrintf("RebroadcastTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+    }
+
+    return ret;
+}
+
 void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx)
 {
     LOCK(cs_wallet);

@@ -368,6 +368,12 @@ public:
         return feebumper::CommitTransaction(*m_wallet.get(), txid, std::move(mtx), errors, bumped_txid) ==
                feebumper::Result::OK;
     }
+    bool transactionCanBeRebroadcast(const uint256& txid) override { return m_wallet->TransactionCanBeRebroadcast(txid); }
+    bool rebroadcastTransaction(const uint256& txid) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->RebroadcastTransaction(txid);
+    }
     CTransactionRef getTx(const uint256& txid) override
     {
         LOCK(m_wallet->cs_wallet);
