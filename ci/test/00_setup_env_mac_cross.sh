@@ -9,9 +9,15 @@ export LC_ALL=C.UTF-8
 export SDK_URL=${SDK_URL:-https://bitcoincore.org/depends-sources/sdks}
 
 export CONTAINER_NAME=ci_macos_cross
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:22.04"
+export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
 export HOST=x86_64-apple-darwin
-export PACKAGES="zip"
+export MAC_CROSS_LLVM_V="17"
+export DEP_OPTS="CC=clang-${MAC_CROSS_LLVM_V} CXX=clang++-${MAC_CROSS_LLVM_V}"
+export PACKAGES="clang-${MAC_CROSS_LLVM_V} lld-${MAC_CROSS_LLVM_V} llvm-${MAC_CROSS_LLVM_V} zip"
+export AR=llvm-ar-${MAC_CROSS_LLVM_V}
+export OBJDUMP=llvm-objdump-${MAC_CROSS_LLVM_V}
+export RANLIB=llvm-ranlib-${MAC_CROSS_LLVM_V}
+export STRIP=llvm-strip-${MAC_CROSS_LLVM_V}
 export XCODE_VERSION=15.0
 export XCODE_BUILD_ID=15A240d
 export RUN_UNIT_TESTS=false

@@ -477,6 +477,9 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n"))))))))))))
 
+(define-public lld-as-ld-wrapper-17
+  (make-lld-wrapper lld-17 #:lld-as-ld? #t))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -528,12 +531,11 @@ inspecting signatures in Mach-O binaries.")
                  (list gcc-toolchain-12 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 binutils
-                 clang-toolchain-17
+           (list binutils
+                 clang-17
                  cmake-minimal
+                 lld-17
+                 lld-as-ld-wrapper-17
                  python-signapple
                  zip))
           (else '())))))
