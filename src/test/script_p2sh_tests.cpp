@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(switchover)
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EQUALVERIFY, ScriptErrorString(err));
 }
 
-BOOST_AUTO_TEST_CASE(AreInputsStandard)
+BOOST_AUTO_TEST_CASE(HasNonStandardInput)
 {
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         keys.push_back(key[i].GetPubKey());
 
     CMutableTransaction txFrom;
-    txFrom.vout.resize(7);
+    txFrom.vout.resize(10);
 
     // First three are standard:
     CScript pay1 = GetScriptForDestination(PKHash(key[0].GetPubKey()));
@@ -332,7 +332,23 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     CScript twentySigops; twentySigops << OP_CHECKMULTISIG;
     BOOST_CHECK(keystore.AddCScript(twentySigops));
     txFrom.vout[6].scriptPubKey = GetScriptForDestination(ScriptHash(twentySigops));
-    txFrom.vout[6].nValue = 6000;
+    txFrom.vout[6].nValue = 3000;
+
+    // vout[7] is non-standard because it lacks sigops, therefore failing Solver
+    CScript no_sigops;
+    txFrom.vout[7].scriptPubKey = no_sigops;
+    txFrom.vout[7].nValue = 1000;
+
+    // vout [8] is non-standard because it contains OP_RETURN in its scriptSig.
+    static const unsigned char op_return[] = {OP_RETURN};
+    txFrom.vout[8].scriptPubKey = GetScriptForDestination(ScriptHash(CScript(op_return, op_return + sizeof(op_return))));
+    txFrom.vout[8].nValue = 1000;
+
+    // vout[9] is non-standard because its witness is unknown
+    CScript witnessUnknown;
+    witnessUnknown << OP_16 << ToByteVector(uint256::ONE);
+    txFrom.vout[9].scriptPubKey = witnessUnknown;
+    txFrom.vout[9].nValue = 1000;
 
     AddCoins(coins, CTransaction(txFrom), 0);
 
@@ -358,10 +374,11 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << std::vector<unsigned char>(oneAndTwo.begin(), oneAndTwo.end());
     txTo.vin[4].scriptSig << std::vector<unsigned char>(fifteenSigops.begin(), fifteenSigops.end());
 
-    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins));
+    BOOST_CHECK(::HasNonStandardInput(CTransaction(txTo), coins).IsValid());
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txTo), coins), 22U);
 
+    // TxoutType::SCRIPTHASH
     CMutableTransaction txToNonStd1;
     txToNonStd1.vout.resize(1);
     txToNonStd1.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
@@ -371,7 +388,11 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd1.vin[0].scriptSig << std::vector<unsigned char>(sixteenSigops.begin(), sixteenSigops.end());
 
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd1), coins));
+    const auto txToNonStd1_res = ::HasNonStandardInput(CTransaction(txToNonStd1), coins);
+    BOOST_CHECK(txToNonStd1_res.IsInvalid());
+    BOOST_CHECK_EQUAL(txToNonStd1_res.GetRejectReason(), "bad-txns-input-p2sh-redeemscript-sigops");
+    BOOST_CHECK_EQUAL(txToNonStd1_res.GetDebugMessage(), "input 0: 16 > 15");
+
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd1), coins), 16U);
 
     CMutableTransaction txToNonStd2;
@@ -383,8 +404,79 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd2.vin[0].scriptSig << std::vector<unsigned char>(twentySigops.begin(), twentySigops.end());
 
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd2), coins));
+    std::vector<std::vector<unsigned char>> vSolutions;
+    BOOST_CHECK_EQUAL(Solver(txFrom.vout[6].scriptPubKey, vSolutions), TxoutType::SCRIPTHASH);
+    const auto txToNonStd2_res = ::HasNonStandardInput(CTransaction(txToNonStd2), coins);
+    BOOST_CHECK(txToNonStd2_res.IsInvalid());
+    BOOST_CHECK_EQUAL(txToNonStd2_res.GetRejectReason(), "bad-txns-input-p2sh-redeemscript-sigops");
+    BOOST_CHECK_EQUAL(txToNonStd2_res.GetDebugMessage(), "input 0: 20 > 15");
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
+
+    CMutableTransaction txToNonStd2_no_scriptSig;
+    txToNonStd2_no_scriptSig.vout.resize(1);
+    txToNonStd2_no_scriptSig.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
+    txToNonStd2_no_scriptSig.vout[0].nValue = 1000;
+    txToNonStd2_no_scriptSig.vin.resize(1);
+    txToNonStd2_no_scriptSig.vin[0].prevout.n = 6;
+    txToNonStd2_no_scriptSig.vin[0].prevout.hash = txFrom.GetHash();
+
+    BOOST_CHECK_EQUAL(Solver(txFrom.vout[6].scriptPubKey, vSolutions), TxoutType::SCRIPTHASH);
+    const auto txToNonStd2_no_scriptSig_res = ::HasNonStandardInput(CTransaction(txToNonStd2_no_scriptSig), coins);
+    BOOST_CHECK(txToNonStd2_no_scriptSig_res.IsInvalid());
+    BOOST_CHECK_EQUAL(txToNonStd2_no_scriptSig_res.GetRejectReason(), "bad-txns-input-scriptcheck-missing");
+    BOOST_CHECK_EQUAL(txToNonStd2_no_scriptSig_res.GetDebugMessage(), "input 0");
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
+
+    // TxoutType::NONSTANDARD
+    CMutableTransaction txToNonStd3;
+    txToNonStd3.vout.resize(1);
+    txToNonStd3.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
+    txToNonStd3.vout[0].nValue = 1000;
+    txToNonStd3.vin.resize(1);
+    txToNonStd3.vin[0].prevout.n = 7;
+    txToNonStd3.vin[0].prevout.hash = txFrom.GetHash();
+
+    BOOST_CHECK_EQUAL(Solver(txFrom.vout[7].scriptPubKey, vSolutions), TxoutType::NONSTANDARD);
+    const auto txToNonStd3_res = ::HasNonStandardInput(CTransaction(txToNonStd3), coins);
+    BOOST_CHECK(txToNonStd3_res.IsInvalid());
+    BOOST_CHECK_EQUAL(txToNonStd3_res.GetRejectReason(), "bad-txns-input-script-unknown");
+    BOOST_CHECK_EQUAL(txToNonStd3_res.GetDebugMessage(), "input 0");
+
+    // TxoutType::INCORRECT_SCRIPTSIG
+    CMutableTransaction txToNonStd4;
+    txToNonStd4.vout.resize(1);
+    txToNonStd4.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
+    txToNonStd4.vout[0].nValue = 1000;
+    txToNonStd4.vin.resize(1);
+    txToNonStd4.vin[0].prevout.n = 8;
+    txToNonStd4.vin[0].prevout.hash = txFrom.GetHash();
+    txToNonStd4.vin[0].scriptSig = CScript(op_return, op_return + sizeof(op_return));
+
+    // out args for EvalScript
+    std::vector<std::vector<unsigned char>> stack;
+    ScriptError serror;
+
+    BOOST_CHECK_EQUAL(Solver(txFrom.vout[8].scriptPubKey, vSolutions), TxoutType::SCRIPTHASH);
+    BOOST_CHECK(!EvalScript(stack, txToNonStd4.vin[0].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE, &serror));
+    BOOST_CHECK_EQUAL(serror, SCRIPT_ERR_OP_RETURN);
+    const auto txToNonStd4_res = ::HasNonStandardInput(CTransaction(txToNonStd4), coins);
+    BOOST_CHECK(txToNonStd4_res.IsInvalid());
+    BOOST_CHECK_EQUAL(txToNonStd4_res.GetRejectReason(), "bad-txns-input-p2sh-scriptsig-malformed");
+    BOOST_CHECK_EQUAL(txToNonStd4_res.GetDebugMessage(), "input 0: OP_RETURN was encountered");
+
+    // TxoutType::WITNESS_UNKNOWN
+    CMutableTransaction txWitnessUnknown;
+    txWitnessUnknown.vout.resize(1);
+    txWitnessUnknown.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[1].GetPubKey()));
+    txWitnessUnknown.vout[0].nValue = 1000;
+    txWitnessUnknown.vin.resize(1);
+    txWitnessUnknown.vin[0].prevout.n = 9;
+    txWitnessUnknown.vin[0].prevout.hash = txFrom.GetHash();
+    BOOST_CHECK_EQUAL(Solver(txFrom.vout[9].scriptPubKey, vSolutions), TxoutType::WITNESS_UNKNOWN);
+    const auto txWitnessUnknown_res = ::HasNonStandardInput(CTransaction(txWitnessUnknown), coins);
+    BOOST_CHECK(txWitnessUnknown_res.IsInvalid());
+    BOOST_CHECK_EQUAL(txWitnessUnknown_res.GetRejectReason(), "bad-txns-input-witness-unknown");
+    BOOST_CHECK_EQUAL(txWitnessUnknown_res.GetDebugMessage(), "input 0");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
