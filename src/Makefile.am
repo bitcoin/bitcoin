@@ -125,6 +125,7 @@ BITCOIN_CORE_H = \
   attributes.h \
   banman.h \
   base58.h \
+	batchverify.h \
   bech32.h \
   bip324.h \
   blockencodings.h \
@@ -671,6 +672,7 @@ libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   addresstype.cpp \
   base58.cpp \
+	batchverify.cpp \
   bech32.cpp \
   chainparams.cpp \
   coins.cpp \

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGCACHE_H
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
+#include <batchverify.h>
 #include <script/interpreter.h>
 #include <span.h>
 #include <util/hasher.h>
@@ -26,6 +27,8 @@ private:
     bool store;
 
 public:
+    bool GetStore() const { return store; }
+
     CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn) {}
 
     bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
@@ -33,5 +36,16 @@ public:
 };
 
 [[nodiscard]] bool InitSignatureCache(size_t max_size_bytes);
+
+class BatchingCachingTransactionSignatureChecker : public CachingTransactionSignatureChecker
+{
+private:
+    BatchSchnorrVerifier* m_batch;
+
+public:
+    BatchingCachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, PrecomputedTransactionData& txdataIn, BatchSchnorrVerifier* batchIn) : CachingTransactionSignatureChecker(txToIn, nInIn, amountIn, storeIn, txdataIn), m_batch(batchIn) {}
+
+    bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
+};
 
 #endif // BITCOIN_SCRIPT_SIGCACHE_H

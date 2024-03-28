@@ -5,6 +5,7 @@
 
 #include <script/sigcache.h>
 
+#include <batchverify.h>
 #include <common/system.h>
 #include <logging.h>
 #include <pubkey.h>
@@ -126,4 +127,13 @@ bool CachingTransactionSignatureChecker::VerifySchnorrSignature(Span<const unsig
     if (!TransactionSignatureChecker::VerifySchnorrSignature(sig, pubkey, sighash)) return false;
     if (store) signatureCache.Set(entry);
     return true;
+}
+
+bool BatchingCachingTransactionSignatureChecker::VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const
+{
+    uint256 entry;
+    signatureCache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);
+    if (signatureCache.Get(entry, !GetStore())) return true;
+
+    return m_batch->Add(sig, pubkey, sighash);
 }

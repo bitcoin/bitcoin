@@ -229,7 +229,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
  * <=   {triangle inequality}
  *    a1*|k*b2/n - c1| + a2*|k*(-b1)/n - c2|
  * <    {Lemma 1 and Lemma 2}
- *    a1*(2^-1 + epslion1) + a2*(2^-1 + epsilon2)
+ *    a1*(2^-1 + epsilon1) + a2*(2^-1 + epsilon2)
  * <    {rounding up to an integer}
  *    (a1 + a2 + 1)/2
  * <    {rounding up to a power of 2}
@@ -247,7 +247,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
  * <=   {triangle inequality}
  *    (-b1)*|k*b2/n - c1| + b2*|k*(-b1)/n - c2|
  * <    {Lemma 1 and Lemma 2}
- *    (-b1)*(2^-1 + epslion1) + b2*(2^-1 + epsilon2)
+ *    (-b1)*(2^-1 + epsilon1) + b2*(2^-1 + epsilon2)
  * <    {rounding up to an integer}
  *    (-b1 + b2)/2 + 1
  * <    {rounding up to a power of 2}
