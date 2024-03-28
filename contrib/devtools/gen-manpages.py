@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import configparser
 
 BINARIES = [
 'src/bitcoind',
@@ -56,6 +57,30 @@ if any(verstr.endswith('-dirty') for (_, verstr, _) in versions):
     print('man pages generated from dirty binaries should NOT be committed.')
     print('To properly generate man pages, please commit your changes (or discard them), rebuild, then run this script again.')
     print()
+
+# Check enabled build options
+config = configparser.ConfigParser()
+conffile = os.path.join(builddir, 'test/config.ini')
+config.read(conffile)
+
+error_message = "Aborting generating manpages…\nError: {component} support is not enabled.\nPlease enable it and try again."
+
+if not config['components'].getboolean('HAVE_SYSTEM'):
+    print(error_message.format(component="System components"))
+    sys.exit(1)
+
+if not config['components'].getboolean('ENABLE_WALLET'):
+    print(error_message.format(component="Wallet functionality"))
+    sys.exit(1)
+
+if not config['components'].getboolean('USE_UPNP'):
+    print(error_message.format(component="UPnP"))
+    sys.exit(1)
+
+if not config['components'].getboolean('ENABLE_ZMQ'):
+    print(error_message.format(component="ZMQ"))
+    sys.exit(1)
+
 
 with tempfile.NamedTemporaryFile('w', suffix='.h2m') as footer:
     # Create copyright footer, and write it to a temporary include file.
