@@ -15,7 +15,6 @@
     <ClCompile Include="..\..\src\primitives\block.cpp" />
     <ClCompile Include="..\..\src\primitives\transaction.cpp" />
     <ClCompile Include="..\..\src\pubkey.cpp" />
-    <ClCompile Include="..\..\src\script\bitcoinconsensus.cpp" />
     <ClCompile Include="..\..\src\script\interpreter.cpp" />
     <ClCompile Include="..\..\src\script\script.cpp" />
     <ClCompile Include="..\..\src\script\script_error.cpp" />
