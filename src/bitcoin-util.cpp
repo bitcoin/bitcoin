@@ -60,7 +60,9 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "Usage:  bitcoin-util [options] [commands]  Do stuff\n";
+                "The bitcoin-util tool is used to grind proof of work on a hex-formatted bitcoin block header.\n"
+                "\n"
+                "Usage:  bitcoin-util [options] [commands]\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
 
