@@ -70,7 +70,7 @@ static void addCoin(CoinsResult& coins,
             /*long_term_feerate=*/ CFeeRate(0),
             /*discard_feerate=*/ CFeeRate(0),
             /*tx_noinputs_size=*/ 0,
-            /*avoid_partial=*/ avoid_partial_spends,
+            /*avoid_partial=*/ avoid_partial_spends
     };
 }
 

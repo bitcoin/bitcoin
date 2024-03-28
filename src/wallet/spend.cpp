@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <common/args.h>
+#include <common/settings.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -14,6 +15,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
@@ -197,6 +199,20 @@ std::vector<COutput> CoinsResult::All() const
         all.insert(all.end(), it.second.begin(), it.second.end());
     }
     return all;
+}
+
+std::optional<COutput> CoinsResult::Max() const
+{
+    std::optional<COutput> max_out;
+    for (const auto& it : coins) {
+        const auto out_it = std::max_element(it.second.begin(), it.second.end(), [max_out](const COutput& a, const COutput& b) {
+            return a.txout.nValue < b.txout.nValue;
+        });
+        if (out_it != it.second.end() && (!max_out || out_it->txout.nValue > max_out->txout.nValue)) {
+            max_out = *out_it;
+        }
+    }
+    return max_out;
 }
 
 void CoinsResult::Clear() {
@@ -696,7 +712,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
 
     // SFFO frequently causes issues in the context of changeless input sets: skip BnB when SFFO is active
     if (!coin_selection_params.m_subtract_fee_outputs) {
-        if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_inputs_weight)}) {
+        if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_inputs_weight, coin_selection_params.m_max_excess)}) {
             results.push_back(*bnb_result);
         } else append_error(bnb_result);
     }
@@ -797,6 +813,83 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
                                                 coin_selection_params.m_change_fee);
     }
     return op_selection_result;
+}
+
+/** Returns UTXO targets and compute their current count from available coins */
+std::vector<UtxoTarget> UtxoTargetsFromJson(const UniValue& utxo_targets_json, const CoinsResult& available_coins)
+{
+    std::vector<UtxoTarget> utxo_targets;
+    for (const auto& bucket : utxo_targets_json.getValues()) {
+        UtxoTarget target = {
+            bucket["start_satoshis"].getInt<CAmount>(),
+            bucket["end_satoshis"].getInt<CAmount>(),
+            bucket["target_utxo_count"].getInt<uint32_t>()};
+        utxo_targets.push_back(target);
+    }
+    for (const auto& [type, outputs] : available_coins.coins) {
+        for (const wallet::COutput& output : outputs) {
+            for (UtxoTarget& target : utxo_targets) {
+                if (output.txout.nValue >= target.start_satoshis && output.txout.nValue <= target.end_satoshis) {
+                    target.current_utxo_count++;
+                    break;
+                }
+            }
+        }
+    }
+
+    return utxo_targets;
+}
+
+/** Returns a random change amount in the range of the most depleted Utxo bucket and sets `capacity`
+ * to the capacity of that change target, if any.
+ */
+std::optional<CAmount> GenerateChangeTargetFromUtxoTargets(const std::vector<UtxoTarget>& utxo_targets, const CAmount change_fee, double& capacity, FastRandomContext& rng)
+{
+    // Refill the most depleted utxo targets first.
+    auto target_iter = std::min_element(utxo_targets.begin(), utxo_targets.end(), [](const UtxoTarget& a, const UtxoTarget& b) {
+        return (double(a.current_utxo_count) / a.target_utxo_count) < (double(b.current_utxo_count) / b.target_utxo_count);
+    });
+    std::optional<CAmount> change_target;
+    if (target_iter != utxo_targets.end()) {
+        // Adjust the range of the target bucket based on the current fee rate.
+        change_target = rng.randrange(target_iter->end_satoshis - target_iter->start_satoshis - change_fee) + target_iter->start_satoshis + change_fee;
+        capacity = double(target_iter->current_utxo_count) / target_iter->target_utxo_count;
+    }
+    return change_target;
+}
+
+std::list<CTxOut> SplitChangeFromUtxoTargets(CAmount change_amount, std::vector<UtxoTarget> utxo_targets, CAmount change_target, const CAmount change_fee, FastRandomContext& rng, CScript script_change)
+{
+    // add initial change target
+    std::list<CTxOut> change_outputs(1, {change_target, script_change});
+    change_amount -= change_target;
+    // increment matching utxo target bucket for initial change target
+    auto target_iter = std::find_if(utxo_targets.begin(), utxo_targets.end(), [change_target](const UtxoTarget& a) {
+        return (change_target < a.end_satoshis && change_target >= a.start_satoshis);
+    });
+    if (target_iter != utxo_targets.end()) {
+        target_iter->current_utxo_count++;
+    }
+    do {
+        target_iter = std::min_element(utxo_targets.begin(), utxo_targets.end(), [](const UtxoTarget& a, const UtxoTarget& b) {
+            return (double(a.current_utxo_count) / a.target_utxo_count) < (double(b.current_utxo_count) / b.target_utxo_count);
+        });
+        if (target_iter->current_utxo_count >= target_iter->target_utxo_count) {
+            break;
+        }
+        CAmount target_amount = rng.randrange(target_iter->end_satoshis - target_iter->start_satoshis) + target_iter->start_satoshis;
+        if (change_amount < change_fee + target_amount) {
+            break;
+        }
+        change_amount -= change_fee + target_amount;
+        target_iter->current_utxo_count++;
+        change_outputs.emplace_back(target_amount, script_change);
+    } while (1);
+
+    // remaining change goes into the last change output
+    change_outputs.back().nValue += change_amount;
+
+    return change_outputs;
 }
 
 util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
@@ -1077,7 +1170,15 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
     coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
 
-    coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
+    if (coin_control.m_change_target) {
+        coin_selection_params.m_min_change_target = coin_control.m_change_target.value();
+    } else {
+        coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
+    }
+
+    if (coin_control.m_max_excess) {
+        coin_selection_params.m_max_excess = coin_control.m_max_excess.value();
+    }
 
     // The smallest change amount should be:
     // 1. at least equal to dust threshold
@@ -1128,6 +1229,40 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
     }
 
+    // Load a json file that describes a target utxo set
+    std::vector<UtxoTarget> utxo_targets;
+    CFeeRate bucket_refill_feerate{0};
+    const fs::path utxo_targets_file_path{gArgs.GetPathArg("-utxotargetsfile", fs::path{})};
+    if (utxo_targets_file_path.empty() == false) {
+        std::map<std::string, common::SettingsValue> utxo_targets_json;
+        std::vector<std::string> read_errors;
+        common::ReadSettings(utxo_targets_file_path, utxo_targets_json, read_errors);
+        // calculate targets from both confirmed and unconfirmed coins, but only spend from confirmed coins
+        CCoinControl tmp_coin_control = coin_control;
+        tmp_coin_control.m_min_depth = 0;
+        CoinsResult tmp_available_coins = AvailableCoins(wallet, &tmp_coin_control, coin_selection_params.m_effective_feerate);
+        utxo_targets = UtxoTargetsFromJson(utxo_targets_json["buckets"], tmp_available_coins);
+        bucket_refill_feerate = CFeeRate(utxo_targets_json["bucket_refill_feerate"].getInt<CAmount>());
+    }
+
+    if (utxo_targets.size() > 0) {
+        // Set the target change to refill the utxo target bucket with the smallest current capacity, if any.
+        double capacity{1.0};
+        auto change_target = GenerateChangeTargetFromUtxoTargets(utxo_targets, coin_selection_params.m_change_fee, capacity, rng_fast);
+        if (change_target) {
+            coin_selection_params.m_min_change_target = change_target.value();
+            // Proactively refill target buckets when a utxo target bucket is very low, or fees are low.
+            bool refill = coin_selection_params.m_effective_feerate < bucket_refill_feerate;
+            if (capacity < 0.3 || (refill && capacity < 0.7)) {
+                // Adding our largest available UTXO creates extra change that can be split into target buckets.
+                auto largest_utxo = available_coins.Max();
+                if (largest_utxo) {
+                    preset_inputs.Insert(largest_utxo.value(), coin_selection_params.m_subtract_fee_outputs);
+                }
+            }
+        }
+    }
+
     // Choose coins to use
     auto select_coins_res = SelectCoins(wallet, available_coins, preset_inputs, /*nTargetValue=*/selection_target, coin_control, coin_selection_params);
     if (!select_coins_res) {
@@ -1143,16 +1278,33 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
            result.GetWaste(),
            result.GetSelectedValue());
 
-    const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
+    // TODO: only adjust target amount when there is a single recipient
+    if (result.GetTarget() != selection_target) {
+        txNew.vout[0].nValue += result.GetTarget() - selection_target;
+        recipients_sum += result.GetTarget() - selection_target;
+    }
+
+    CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
-        CTxOut newTxOut(change_amount, scriptChange);
+        std::optional<std::list<CTxOut>> change_txouts;
+        if (utxo_targets.size() > 0) {
+            change_txouts = SplitChangeFromUtxoTargets(change_amount, utxo_targets, coin_selection_params.m_min_change_target, coin_selection_params.m_change_fee, rng_fast, scriptChange);
+            change_amount = std::accumulate(change_txouts->begin(), change_txouts->end(), CAmount(0), [](CAmount sum, CTxOut& tx_out) { return sum + tx_out.nValue; });
+        }
         if (!change_pos) {
             // Insert change txn at random position:
-            change_pos = rng_fast.randrange(txNew.vout.size() + 1);
+            change_pos = rng_fast.randrange(txNew.vout.size() + (change_txouts.has_value() ? change_txouts->size() : 1));
         } else if ((unsigned int)*change_pos > txNew.vout.size()) {
             return util::Error{_("Transaction change output index out of range")};
         }
-        txNew.vout.insert(txNew.vout.begin() + *change_pos, newTxOut);
+        if (change_txouts) {
+            txNew.vout.insert(txNew.vout.end(), change_txouts->begin(), change_txouts->end());
+            // first changeTxOut element is used as our change output
+            std::swap(txNew.vout[*change_pos], txNew.vout[txNew.vout.size() - change_txouts->size()]);
+        } else {
+            CTxOut newTxOut(change_amount, scriptChange);
+            txNew.vout.insert(txNew.vout.begin() + *change_pos, newTxOut);
+        }
     } else {
         change_pos = std::nullopt;
     }

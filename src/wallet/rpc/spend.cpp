@@ -535,6 +535,8 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 {"minconf", UniValueType(UniValue::VNUM)},
                 {"maxconf", UniValueType(UniValue::VNUM)},
                 {"input_weights", UniValueType(UniValue::VARR)},
+                {"change_target", UniValueType()}, // will be checked by AmountFromValue() below
+                {"max_excess", UniValueType()}, // will be checked by AmountFromValue() below
             },
             true, true);
 
@@ -701,6 +703,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
             coinControl.SetInputWeight(COutPoint(txid, vout), weight);
         }
     }
+    if (options.exists("change_target")) {
+        coinControl.m_change_target = CAmount(AmountFromValue(options["change_target"]));
+    }
+    if (options.exists("max_excess")) {
+        coinControl.m_max_excess = CAmount(AmountFromValue(options["max_excess"]));
+    }
 
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
@@ -787,6 +795,8 @@ RPCHelpMan fundrawtransaction()
                                     },
                                 },
                              },
+                             {"change_target", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify a target change amount in " + CURRENCY_UNIT + "."},
+                             {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, always match target exactly"}, "When no change added, may exceed the target payment by this amount in " + CURRENCY_UNIT + "."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{
@@ -1241,6 +1251,8 @@ RPCHelpMan send()
                             {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                         },
                     },
+                    {"change_target", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify a target change amount in " + CURRENCY_UNIT + "."},
+                    {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, always match target exactly"}, "When no change added, may exceed the target payment by this amount in " + CURRENCY_UNIT + "."},
                 },
                 FundTxDoc()),
                 RPCArgOptions{.oneline_description="options"}},
@@ -1690,6 +1702,8 @@ RPCHelpMan walletcreatefundedpsbt()
                                     {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
                                 },
                             },
+                            {"change_target", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to default wallet behavior"}, "Specify a target change amount in " + CURRENCY_UNIT + "."},
+                            {"max_excess", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, always match target exactly"}, "When no change added, may exceed the target payment by this amount in " + CURRENCY_UNIT + "."},
                         },
                         FundTxDoc()),
                         RPCArgOptions{.oneline_description="options"}},

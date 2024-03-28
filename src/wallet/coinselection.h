@@ -134,6 +134,13 @@ public:
     bool HasEffectiveValue() const { return effective_value.has_value(); }
 };
 
+struct UtxoTarget {
+    CAmount start_satoshis;
+    CAmount end_satoshis;
+    uint32_t target_utxo_count;
+    uint32_t current_utxo_count = 0;
+};
+
 /** Parameters for one iteration of Coin Selection. */
 struct CoinSelectionParams {
     /** Randomness to use in the context of coin selection. */
@@ -174,6 +181,10 @@ struct CoinSelectionParams {
      * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
      */
     bool m_include_unsafe_inputs = false;
+    /**
+     * Maximum of excess value added to the input that does not count as waste and can be added to the target value.
+    */
+    CAmount m_max_excess{0};
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
@@ -387,6 +398,9 @@ public:
     /** How much individual inputs overestimated the bump fees for shared ancestries */
     void SetBumpFeeDiscount(const CAmount discount);
 
+    /** Target the current amount if it is less than max_target */
+    void SetTargetToCurrentAmount(const CAmount max_target);
+
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
     void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
     [[nodiscard]] CAmount GetWaste() const;
@@ -445,8 +459,8 @@ public:
 };
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_weight);
-
+                                             int max_weight, const CAmount& max_excess = CAmount{0});
+                                             
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight);
 
 /** Select coins by Single Random Draw. OutputGroups are selected randomly from the eligible
