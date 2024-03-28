@@ -38,12 +38,36 @@ public:
     }
 };
 
-static void MakeNewKeyWithFastRandomContext(CKey& key)
+static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx = g_insecure_rand_ctx)
 {
     std::vector<unsigned char> keydata;
-    keydata = g_insecure_rand_ctx.randbytes(32);
+    keydata = rand_ctx.randbytes(32);
     key.Set(keydata.data(), keydata.data() + keydata.size(), /*fCompressedIn=*/true);
     assert(key.IsValid());
+}
+
+// Creates a transaction with 2 outputs. Spends all outpoints. If outpoints is empty, spends a random one.
+static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& outpoints, FastRandomContext& det_rand)
+{
+    CKey key;
+    MakeNewKeyWithFastRandomContext(key, det_rand);
+    CMutableTransaction tx;
+    // If no outpoints are given, create a random one.
+    if (outpoints.empty()) {
+        tx.vin.emplace_back(CTxIn{COutPoint{Txid::FromUint256(det_rand.rand256()), 0}});
+    } else {
+        for (const auto& outpoint : outpoints) {
+            tx.vin.emplace_back(CTxIn(outpoint));
+        }
+    }
+    // Ensure txid != wtxid
+    tx.vin[0].scriptWitness.stack.push_back({1});
+    tx.vout.resize(2);
+    tx.vout[0].nValue = CENT;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    tx.vout[1].nValue = 3 * CENT;
+    tx.vout[1].scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(key.GetPubKey()));
+    return MakeTransactionRef(tx);
 }
 
 BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
@@ -136,6 +160,51 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     BOOST_CHECK(orphanage.CountOrphans() <= 10);
     orphanage.LimitOrphans(0, rng);
     BOOST_CHECK(orphanage.CountOrphans() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(get_children)
+{
+    FastRandomContext det_rand{true};
+    TxOrphanage orphanage;
+    const NodeId node{0};
+    std::vector<COutPoint> empty_outpoints;
+
+    auto parent1 = MakeTransactionSpending(empty_outpoints, det_rand);
+    auto parent2 = MakeTransactionSpending(empty_outpoints, det_rand);
+    auto parent3 = MakeTransactionSpending(empty_outpoints, det_rand);
+
+    // Make sure these parents have different txids otherwise this test won't make sense.
+    BOOST_CHECK(parent1->GetHash() != parent2->GetHash());
+    BOOST_CHECK(parent1->GetHash() != parent3->GetHash());
+    BOOST_CHECK(parent2->GetHash() != parent3->GetHash());
+
+    // Create children to go into orphanage.
+    auto child_p1n0 = MakeTransactionSpending({{parent1->GetHash(), 0}}, det_rand);
+    auto child_p2n1 = MakeTransactionSpending({{parent2->GetHash(), 1}}, det_rand);
+    // Spends the same tx twice. Should not cause duplicates in GetChildren.
+    auto child_p1n0_p1n1 = MakeTransactionSpending({{parent1->GetHash(), 0}, {parent1->GetHash(), 1}}, det_rand);
+    // Spends the same outpoint as previous tx. Should still be returned; don't assume outpoints are unique.
+    auto child_p1n0_p2n0 = MakeTransactionSpending({{parent1->GetHash(), 0}, {parent2->GetHash(), 0}}, det_rand);
+
+    BOOST_CHECK(orphanage.AddTx(child_p1n0, node));
+    BOOST_CHECK(orphanage.AddTx(child_p2n1, node));
+    BOOST_CHECK(orphanage.AddTx(child_p1n0_p1n1, node));
+    BOOST_CHECK(orphanage.AddTx(child_p1n0_p2n0, node));
+
+    // Check that GetChildren returns what is expected.
+    std::set<Wtxid> expected_parent1_children{child_p1n0->GetWitnessHash(), child_p1n0_p2n0->GetWitnessHash(), child_p1n0_p1n1->GetWitnessHash()};
+    std::set<Wtxid> expected_parent2_children{child_p2n1->GetWitnessHash(), child_p1n0_p2n0->GetWitnessHash()};
+
+    auto parent1_children{orphanage.GetChildren(parent1)};
+    BOOST_CHECK_EQUAL(parent1_children.size(), expected_parent1_children.size());
+    for (const auto& child : parent1_children) {
+        BOOST_CHECK(expected_parent1_children.count(child->GetWitnessHash()) > 0);
+    }
+    auto parent2_children{orphanage.GetChildren(parent2)};
+    BOOST_CHECK_EQUAL(parent2_children.size(), expected_parent2_children.size());
+    for (const auto& child : parent2_children) {
+        BOOST_CHECK(expected_parent2_children.count(child->GetWitnessHash()) > 0);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

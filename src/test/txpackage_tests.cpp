@@ -190,17 +190,28 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "package-not-sorted");
         BOOST_CHECK(IsChildWithParents({tx_parent, tx_child}));
         BOOST_CHECK(IsChildWithParentsTree({tx_parent, tx_child}));
+        BOOST_CHECK_EQUAL(GetPackageHash({tx_child}), GetCombinedHash({tx_child->GetWitnessHash()}));
+        BOOST_CHECK_EQUAL(GetPackageHash({tx_child, tx_parent}), GetPackageHash({tx_parent, tx_child}));
+        BOOST_CHECK_EQUAL(GetCombinedHash({tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()}),
+                          GetCombinedHash({tx_child->GetWitnessHash(), tx_parent->GetWitnessHash()}));
+        BOOST_CHECK_EQUAL(GetCombinedHash({tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()}),
+                          GetPackageHash({tx_parent, tx_child}));
+        BOOST_CHECK(GetPackageHash({tx_parent}) != GetPackageHash({tx_child}));
+        BOOST_CHECK(GetPackageHash({tx_child, tx_child}) != GetPackageHash({tx_child}));
+        BOOST_CHECK(GetPackageHash({tx_child, tx_parent}) != GetPackageHash({tx_child, tx_child}));
     }
 
     // 24 Parents and 1 Child
     {
         Package package;
+        std::vector<Wtxid> package_wtxids;
         CMutableTransaction child;
         for (int i{0}; i < 24; ++i) {
             auto parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[i + 1],
                                              0, 0, coinbaseKey, spk, CAmount(48 * COIN), false));
             package.emplace_back(parent);
             child.vin.emplace_back(COutPoint(parent->GetHash(), 0));
+            package_wtxids.emplace_back(parent->GetWitnessHash());
         }
         child.vout.emplace_back(47 * COIN, spk2);
 
@@ -210,7 +221,10 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
         // The parents can be in any order.
         FastRandomContext rng;
         Shuffle(package.begin(), package.end(), rng);
-        package.push_back(MakeTransactionRef(child));
+        auto tx_child = MakeTransactionRef(child);
+        package.emplace_back(tx_child);
+        package_wtxids.push_back(tx_child->GetWitnessHash());
+        BOOST_CHECK_EQUAL(GetCombinedHash(package_wtxids), GetPackageHash(package));
 
         PackageValidationState state;
         BOOST_CHECK(IsWellFormedPackage(package, state, /*require_sorted=*/true));
@@ -450,6 +464,8 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(ptx_child1->GetHash(), ptx_child2->GetHash());
     // child1 and child2 have different wtxids
     BOOST_CHECK(ptx_child1->GetWitnessHash() != ptx_child2->GetWitnessHash());
+    // package1 and package2 have different packageids
+    BOOST_CHECK(GetPackageHash({ptx_parent, ptx_child1}) != GetPackageHash({ptx_parent, ptx_child2}));
 
     // Try submitting Package1{parent, child1} and Package2{parent, child2} where the children are
     // same-txid-different-witness.
@@ -503,7 +519,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
                                                         /*output_destination=*/grandchild_locking_script,
                                                         /*output_amount=*/CAmount(47 * COIN), /*submit=*/false);
     CTransactionRef ptx_grandchild = MakeTransactionRef(mtx_grandchild);
-
+    BOOST_CHECK(GetPackageHash({ptx_child1, ptx_grandchild}) != GetPackageHash({ptx_child2, ptx_grandchild}));
     // We already submitted child1 above.
     {
         Package package_child2_grandchild{ptx_child2, ptx_grandchild};

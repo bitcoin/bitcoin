@@ -147,3 +147,17 @@ bool IsChildWithParentsTree(const Package& package)
         return true;
     });
 }
+
+uint256 GetCombinedHash(const std::vector<Wtxid>& wtxids)
+{
+    std::vector<Wtxid> wtxids_copy(wtxids.cbegin(), wtxids.cend());
+    std::sort(wtxids_copy.begin(), wtxids_copy.end());
+    return (HashWriter() << wtxids_copy).GetHash();
+}
+uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions)
+{
+    std::vector<Wtxid> wtxids_copy;
+    std::transform(transactions.cbegin(), transactions.cend(), std::back_inserter(wtxids_copy),
+        [](const auto& tx){ return tx->GetWitnessHash(); });
+    return GetCombinedHash(wtxids_copy);
+}
