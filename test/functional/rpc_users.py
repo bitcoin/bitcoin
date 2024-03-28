@@ -101,9 +101,35 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
         init_error = 'Error: Unable to start HTTP server. See debug log for details.'
 
+        self.log.info('Check blank -rpcauth is ignored')
+        rpcauth_abc = '-rpcauth=abc:$2e32c2f20c67e29c328dd64a4214180f18da9e667d67c458070fd856f1e9e5e7'
+        rpcauth_def = '-rpcauth=def:$fd7adb152c05ef80dccf50a1fa4c05d5a3ec6da95575fc312ae7c5d091836351'
+        self.restart_node(0, extra_args=['-rpcauth'])
+        self.restart_node(0, extra_args=['-rpcauth=', rpcauth_abc])
+        self.restart_node(0, extra_args=[rpcauth_def, '-rpcauth='])
+        # ...without disrupting usage of other -rpcauth tokens
+        assert_equal(200, call_with_auth(self.nodes[0], 'def', 'abc').status)
+        assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+
+        self.log.info('Check -norpcauth disables all previous -rpcauth params')
+        self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth'])
+        assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
+        assert_equal(401, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+
+        self.log.info('Check -norpcauth can be reversed with -rpcauth')
+        self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', '-rpcauth'])
+        # FIXME: assert_equal(200, call_with_auth(self.nodes[0], 'def', 'abc').status)
+        assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+
+        self.log.info('Check -norpcauth followed by a specific -rpcauth=* restores config file -rpcauth=* values too')
+        self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', rpcauth_abc])
+        assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
+        assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', '-rpcauth='])
+        assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
+        assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+
         self.log.info('Check -rpcauth are validated')
-        # Empty -rpcauth= are ignored
-        self.restart_node(0, extra_args=['-rpcauth='])
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo'])
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=foo:bar'])
