@@ -912,7 +912,8 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
             strPrint += ("error message:\n" + err_msg.get_str());
         }
         if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED) {
-            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+            strPrint += "\nUsing \"bitcoin-cli\", add the \"-rpcwallet=<filename>\" option before the command.";
+            strPrint += "\nRun \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see which wallets are currently loaded.";
         }
     } else {
         strPrint = "error: " + error.write();
@@ -1105,6 +1106,67 @@ static UniValue GetNewAddress()
 }
 
 /**
+ * IsExclusivelyCliCommand checks if a string is a cli-command that needs to run exclusively
+ * @param[in] cli_command The string to check if it is a cli-command that needs to run exclusively.
+ * @returns true if cli_command is included in the set of the exclusively_commands.
+ */
+bool IsExclusivelyCliCommand(const std::string_view cli_command)
+{
+    // Initialize set with cli-commands that run exclusively
+    const std::set<std::string_view> exclusively_commands{"-generate", "-netinfo", "-addrinfo", "-getinfo"};
+
+    // return if element was found or not
+    return (exclusively_commands.find(cli_command) != exclusively_commands.end());
+}
+
+/**
+ * ValidateCliCommand checks for:
+ *  1. duplicate command line arguments
+ *  2. multiple bitcoin-cli commands that need to run exclusively
+ *  3. unrecognized cli-commands or other arguments starting with a slash
+ * @throws std::runtime_error if any of the conditions above are met.
+ */
+static void ValidateCliCommand(int argc, char *argv[])
+{
+    std::set<std::string_view> commands;
+    std::string_view exclusively_command;
+    for (int i = 1; i < argc; ++i) {
+        if (IsSwitchChar(argv[i][0])) {
+            std::string_view command(argv[i]);
+            // Check if the command line argument has an =, in that case, ignore what's after;
+            // e.g.: -color=never; we just want to check "-color"
+            std::size_t pos = command.find('=');
+            if (pos != std::string::npos) {
+                command = command.substr(0, pos);
+            }
+
+            // Check if this command has already been seen
+            if (commands.find(command) != commands.end()) {
+                throw std::runtime_error(strprintf("Error: duplicate command line argument %s", command));
+            }
+
+            // Check if it's a cli-command that runs exclusively e.g. a user could run:
+            // "bitcoin-cli -regtest -generate -netinfo -addrinfo -getinfo" but it's confusing,
+            // only the last one will be executed so we make sure the user specify only one
+            if (IsExclusivelyCliCommand(command)) {
+                if (!exclusively_command.empty()) {
+                    throw std::runtime_error(strprintf("Error: you can only run one cli-command at a time, either %s or %s", exclusively_command, command));
+                }
+                exclusively_command = command;
+            }
+
+            // Check if the "-" command was recognised by the ArgsManager or interpreted as a parameter
+            // e.g.: bitcoin-cli -generate 1 -rpcwallet=xxx, is an invalid call
+            if (!gArgs.IsArgSet(std::string(command)) && !exclusively_command.empty()) {
+                throw std::runtime_error(strprintf("Error: invalid cli-command argument. If \"%s\" is a valid option try passing it before the \"%s\" command.", argv[i], exclusively_command));
+            }
+
+            commands.insert(command);
+        }
+    }
+}
+
+/**
  * Check bounds and set up args for RPC generatetoaddress params: nblocks, address, maxtries.
  * @param[in] address  Reference to const string address to insert into the args.
  * @param     args     Reference to vector of string args to modify.
@@ -1125,6 +1187,7 @@ static int CommandLineRPC(int argc, char *argv[])
     std::string strPrint;
     int nRet = 0;
     try {
+        ValidateCliCommand(argc, argv);
         // Skip switches
         while (argc > 1 && IsSwitchChar(argv[1][0])) {
             argc--;
