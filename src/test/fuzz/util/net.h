@@ -103,6 +103,18 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
 }
 
+inline std::vector<CService> ConsumeServiceVector(FuzzedDataProvider& fuzzed_data_provider,
+                                                  size_t max_vector_size) noexcept
+{
+    std::vector<CService> ret;
+    const size_t size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
+    ret.reserve(size);
+    for (size_t i = 0; i < size; ++i) {
+        ret.emplace_back(ConsumeService(fuzzed_data_provider));
+    }
+    return ret;
+}
+
 CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 template <bool ReturnUniquePtr = false>
