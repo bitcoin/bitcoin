@@ -1175,6 +1175,8 @@ public:
 
     void StartExtraBlockRelayPeers();
 
+    // Count the number of full-relay peer we have.
+    int GetFullOutboundConnCount() const;
     // Return the number of outbound peers we have in excess of our target (eg,
     // if we previously called SetTryNewOutboundPeer(true), and have since set
     // to false, we may have extra peers that we wish to disconnect). This may
@@ -1423,6 +1425,8 @@ private:
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
+    // Collection of seed nodes, populated by connOptions.vSeedNodes
+    std::vector<std::string> m_seed_nodes;
 
     // Stores number of full-tx connections (outbound and manual) per network
     std::array<unsigned int, Network::NET_MAX> m_network_conn_counts GUARDED_BY(m_nodes_mutex) = {};
