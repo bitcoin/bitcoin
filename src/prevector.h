@@ -5,13 +5,13 @@
 #ifndef BITCOIN_PREVECTOR_H
 #define BITCOIN_PREVECTOR_H
 
-#include <assert.h>
-#include <cstdlib>
-#include <stdint.h>
-#include <string.h>
-
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <iterator>
 #include <type_traits>
 #include <utility>
 
@@ -50,7 +50,6 @@ public:
         T* ptr{};
     public:
         typedef Diff difference_type;
-        typedef T value_type;
         typedef T* pointer;
         typedef T& reference;
         using element_type = T;
@@ -102,7 +101,6 @@ public:
         const T* ptr{};
     public:
         typedef Diff difference_type;
-        typedef const T value_type;
         typedef const T* pointer;
         typedef const T& reference;
         using element_type = const T;
@@ -212,7 +210,7 @@ private:
         std::fill_n(dst, count, value);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     void fill(T* dst, InputIterator first, InputIterator last) {
         while (first != last) {
             new(static_cast<void*>(dst)) T(*first);
@@ -231,7 +229,7 @@ public:
         fill(item_ptr(0), n, val);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     void assign(InputIterator first, InputIterator last) {
         size_type n = last - first;
         clear();
@@ -254,7 +252,7 @@ public:
         fill(item_ptr(0), n, val);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     prevector(InputIterator first, InputIterator last) {
         size_type n = last - first;
         change_capacity(n);
@@ -383,7 +381,7 @@ public:
         fill(item_ptr(p), count, value);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     void insert(iterator pos, InputIterator first, InputIterator last) {
         size_type p = pos - begin();
         difference_type count = last - first;

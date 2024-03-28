@@ -429,11 +429,11 @@ protected:
         }
         return *this;
     }
+
 public:
     CScript() { }
-    CScript(const_iterator pbegin, const_iterator pend) : CScriptBase(pbegin, pend) { }
-    CScript(std::vector<unsigned char>::const_iterator pbegin, std::vector<unsigned char>::const_iterator pend) : CScriptBase(pbegin, pend) { }
-    CScript(const unsigned char* pbegin, const unsigned char* pend) : CScriptBase(pbegin, pend) { }
+    template <std::input_iterator InputIterator>
+    CScript(InputIterator first, InputIterator last) : CScriptBase{first, last} { }
 
     SERIALIZE_METHODS(CScript, obj) { READWRITE(AsBase<CScriptBase>(obj)); }
 
