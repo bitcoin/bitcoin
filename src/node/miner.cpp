@@ -64,9 +64,8 @@ static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
     return options;
 }
 
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
+BlockAssembler::BlockAssembler(Chainstate& chainstate, const Options& options)
     : chainparams{chainstate.m_chainman.GetParams()},
-      m_mempool{mempool},
       m_chainstate{chainstate},
       m_options{ClampOptions(options)}
 {
@@ -87,8 +86,8 @@ static BlockAssembler::Options ConfiguredOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool)
-    : BlockAssembler(chainstate, mempool, ConfiguredOptions()) {}
+BlockAssembler::BlockAssembler(Chainstate& chainstate)
+    : BlockAssembler(chainstate, ConfiguredOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
@@ -103,7 +102,7 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, const CTxMemPool* mempool)
 {
     const auto time_start{SteadyClock::now()};
 
@@ -138,9 +137,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    if (m_mempool) {
-        LOCK(m_mempool->cs);
-        addPackageTxs(*m_mempool, nPackagesSelected, nDescendantsUpdated);
+    if (mempool) {
+        LOCK(mempool->cs);
+        addPackageTxs(*mempool, nPackagesSelected, nDescendantsUpdated);
     }
 
     const auto time_1{SteadyClock::now()};

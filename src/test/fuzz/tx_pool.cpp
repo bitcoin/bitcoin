@@ -94,8 +94,8 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         BlockAssembler::Options options;
         options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
         options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
-        auto assembler = BlockAssembler{chainstate, &tx_pool, options};
-        auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
+        auto assembler = BlockAssembler{chainstate, options};
+        auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE, &tx_pool);
         Assert(block_template->block.vtx.size() >= 1);
     }
     const auto info_all = tx_pool.infoAll();
