@@ -21,13 +21,12 @@
 
 namespace {
 
-std::vector<std::string> g_all_messages;
+auto g_all_messages = g_all_net_message_types;
 
 void initialize_p2p_transport_serialization()
 {
     ECC_Start();
     SelectParams(ChainType::REGTEST);
-    g_all_messages = getAllNetMessageTypes();
     std::sort(g_all_messages.begin(), g_all_messages.end());
 }
 
@@ -150,7 +149,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
             return ret;
         } else {
             // Otherwise, use it as index into the list of known messages.
-            return g_all_messages[v % g_all_messages.size()];
+            return std::string{g_all_messages[v % g_all_messages.size()]};
         }
     };
 
