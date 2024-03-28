@@ -190,9 +190,7 @@ std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(
                                                 CAmount replacement_fees,
                                                 int64_t replacement_vsize)
 {
-    // Require that the replacement strictly improve the mempool's feerate diagram.
-    std::vector<FeeFrac> old_diagram, new_diagram;
-
+    // Require that the replacement strictly improves the mempool's feerate diagram.
     const auto diagram_results{pool.CalculateFeerateDiagramsForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
 
     if (!diagram_results.has_value()) {

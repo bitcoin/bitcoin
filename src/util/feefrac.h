@@ -31,7 +31,7 @@
  * A FeeFrac is considered "better" if it sorts after another, by this ordering. All standard
  * comparison operators (<=>, ==, !=, >, <, >=, <=) respect this ordering.
  *
- * The CompareFeeFrac, and >> and << operators only compare feerate and treat equal feerate but
+ * The FeeRateCompare, and >> and << operators only compare feerate and treat equal feerate but
  * different size as equivalent. The empty FeeFrac is neither lower or higher in feerate than any
  * other.
  */

@@ -127,6 +127,10 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         }
         mempool_txs.emplace_back(*child);
         pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back()));
+
+        if (fuzzed_data_provider.ConsumeBool()) {
+            pool.PrioritiseTransaction(mempool_txs.back().GetHash().ToUint256(), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(-100000, 100000));
+        }
     }
 
     // Pick some transactions at random to be the direct conflicts
@@ -174,5 +178,16 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 
     // If internals report error, wrapper should too
     auto err_tuple{ImprovesFeerateDiagram(pool, direct_conflicts, all_conflicts, replacement_fees, replacement_vsize)};
-    if (!calc_results.has_value()) assert(err_tuple.has_value());
+    if (!calc_results.has_value()) {
+         assert(err_tuple.value().first == DiagramCheckError::UNCALCULABLE);
+    } else {
+        // Diagram check succeeded
+        if (!err_tuple.has_value()) {
+            // New diagram's final fee should always match or exceed old diagram's
+            assert(calc_results->first.back().fee <= calc_results->second.back().fee);
+        } else if (calc_results->first.back().fee > calc_results->second.back().fee) {
+            // Or it failed, and if old diagram had higher fees, it should be a failure
+            assert(err_tuple.value().first == DiagramCheckError::FAILURE);
+        }
+    }
 }
