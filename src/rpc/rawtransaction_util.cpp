@@ -181,7 +181,7 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
     vErrorsRet.push_back(entry);
 }
 
-void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keystore, std::map<COutPoint, Coin>& coins)
+void ParsePrevouts(const UniValue& prevTxsUnival, FlatSigningProvider* keystore, std::map<COutPoint, Coin>& coins)
 {
     if (!prevTxsUnival.isNull()) {
         const UniValue& prevTxs = prevTxsUnival.get_array();
@@ -247,11 +247,11 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 // work from witnessScript when possible
                 std::vector<unsigned char> scriptData(!ws.isNull() ? ParseHexV(ws, "witnessScript") : ParseHexV(rs, "redeemScript"));
                 CScript script(scriptData.begin(), scriptData.end());
-                keystore->AddCScript(script);
+                keystore->scripts.emplace(CScriptID(script), script);
                 // Automatically also add the P2WSH wrapped version of the script (to deal with P2SH-P2WSH).
                 // This is done for redeemScript only for compatibility, it is encouraged to use the explicit witnessScript field instead.
                 CScript witness_output_script{GetScriptForDestination(WitnessV0ScriptHash(script))};
-                keystore->AddCScript(witness_output_script);
+                keystore->scripts.emplace(CScriptID(witness_output_script), witness_output_script);
 
                 if (!ws.isNull() && !rs.isNull()) {
                     // if both witnessScript and redeemScript are provided,

@@ -785,7 +785,7 @@ static RPCHelpMan signrawtransactionwithkey()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
     }
 
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     const UniValue& keys = request.params[1].get_array();
     for (unsigned int idx = 0; idx < keys.size(); ++idx) {
         UniValue k = keys[idx];
@@ -793,7 +793,11 @@ static RPCHelpMan signrawtransactionwithkey()
         if (!key.IsValid()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
         }
-        keystore.AddKey(key);
+
+        CPubKey pubkey = key.GetPubKey();
+        CKeyID key_id = pubkey.GetID();
+        keystore.pubkeys.emplace(key_id, pubkey);
+        keystore.keys.emplace(key_id, key);
     }
 
     // Fetch previous transactions (inputs):
