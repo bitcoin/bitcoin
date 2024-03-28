@@ -411,7 +411,7 @@ class P2PConnection(asyncio.Protocol):
             tmsg = self.magic_bytes
             tmsg += msgtype
             tmsg += b"\x00" * (12 - len(msgtype))
-            tmsg += struct.pack("<I", len(data))
+            tmsg += len(data).to_bytes(4, "little")
             th = sha256(data)
             h = sha256(th)
             tmsg += h[:4]
