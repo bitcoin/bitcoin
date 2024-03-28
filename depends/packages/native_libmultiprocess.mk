@@ -6,13 +6,13 @@ $(package)_sha256_hash=030f4d393d2ac9deba98d2e1973e22fc439ffc009d5f8ae3225c90639
 $(package)_dependencies=native_capnp
 
 define $(package)_config_cmds
-  $($(package)_cmake) .
+  $($(package)_cmake) -B build
 endef
 
 define $(package)_build_cmds
-  $(MAKE)
+  $(MAKE) -C build mpgen
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) DESTDIR=$($(package)_staging_dir) install-bin
+  cmake --install build --prefix $($(package)_staging_prefix_dir) --component bin
 endef
