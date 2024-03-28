@@ -108,9 +108,9 @@ struct FuzzedWallet {
         auto type{fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)};
         util::Result<CTxDestination> op_dest{util::Error{}};
         if (fuzzed_data_provider.ConsumeBool()) {
-            op_dest = wallet->GetNewDestination(type, "");
+            op_dest.Update(wallet->GetNewDestination(type, ""));
         } else {
-            op_dest = wallet->GetNewChangeDestination(type);
+            op_dest.Update(wallet->GetNewChangeDestination(type));
         }
         return *Assert(op_dest);
     }
