@@ -379,6 +379,18 @@ class SendallTest(BitcoinTestFramework):
         assert_equal(len(self.wallet.listunspent()), 1)
         assert_equal(self.wallet.listunspent()[0]['confirmations'], 6)
 
+    @cleanup
+    def sendall_anti_fee_sniping(self):
+        self.log.info("Testing sendall does anti-fee-sniping when locktime is not specified")
+        self.add_utxos([10,11])
+        tx_from_wallet = self.test_sendall_success(sendall_args = [self.remainder_target])
+
+        assert_greater_than(tx_from_wallet["decoded"]["locktime"], tx_from_wallet["blockheight"] - 100)
+
+        self.add_utxos([10,11])
+        txid = self.wallet.sendall(recipients=[self.remainder_target], options={"locktime":0})["txid"]
+        assert_equal(self.wallet.gettransaction(txid=txid, verbose=True)["decoded"]["locktime"], 0)
+
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
         self.log.info("Test that sendall fails if resulting transaction is too large")
@@ -459,6 +471,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall only uses outputs with less than a given number of confirmation when using minconf
         self.sendall_with_maxconf()
+
+        # Sendall discourages fee-sniping when a locktime is not specified
+        self.sendall_anti_fee_sniping()
 
         # Sendall fails when many inputs result to too large transaction
         self.sendall_fails_with_transaction_too_large()
