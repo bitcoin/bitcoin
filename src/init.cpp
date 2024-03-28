@@ -115,6 +115,8 @@
 #endif
 
 using kernel::DumpMempool;
+using kernel::FlushResult;
+using kernel::InterruptResult;
 using kernel::LoadMempool;
 using kernel::ValidationCacheSizes;
 
@@ -323,7 +325,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                (void)chainstate->ForceFlushStateToDisk();
             }
         }
     }
@@ -349,7 +351,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                (void)chainstate->ForceFlushStateToDisk();
                 chainstate->ResetCoinsViews();
             }
         }
@@ -998,7 +1000,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // ********************************************************* Step 3: parameter-to-internal-flags
     auto result = init::SetLoggingCategories(args);
     if (!result) return InitError(util::ErrorString(result));
-    result = init::SetLoggingLevel(args);
+    result.Update(init::SetLoggingLevel(args));
     if (!result) return InitError(util::ErrorString(result));
 
     nConnectTimeout = args.GetIntArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
@@ -1576,33 +1578,36 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         uiInterface.InitMessage(_("Loading block index…").translated);
         const auto load_block_index_start_time{SteadyClock::now()};
-        auto catch_exceptions = [](auto&& f) {
+        auto catch_exceptions = [](auto&& f) -> FlushResult<InterruptResult, node::ChainstateLoadError> {
             try {
                 return f();
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
-                return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error opening block database"));
+                return {util::Error{_("Error opening block database")}, node::ChainstateLoadError::FAILURE};
             }
         };
-        auto [status, error] = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
-        if (status == node::ChainstateLoadStatus::SUCCESS) {
+        auto result = catch_exceptions([&]{ return LoadChainstate(chainman, cache_sizes, options); });
+        if (result && !IsInterrupted(*result)) {
             uiInterface.InitMessage(_("Verifying blocks…").translated);
             if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
                 LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                   MIN_BLOCKS_TO_KEEP);
             }
-            std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
-            if (status == node::ChainstateLoadStatus::SUCCESS) {
+            result.Update(catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);}));
+            if (result && !IsInterrupted(*result)) {
                 fLoaded = true;
                 LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
             }
         }
 
-        if (status == node::ChainstateLoadStatus::FAILURE_FATAL || status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB || status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE) {
-            return InitError(error);
+        if (!result && (result.GetFailure() == node::ChainstateLoadError::FAILURE_FATAL ||
+                        result.GetFailure() == node::ChainstateLoadError::FAILURE_INCOMPATIBLE_DB ||
+                        result.GetFailure() == node::ChainstateLoadError::FAILURE_INSUFFICIENT_DBCACHE)) {
+            return InitError(util::ErrorString(result));
         }
 
         if (!fLoaded && !ShutdownRequested(node)) {
+            bilingual_str error{util::ErrorString(result)};
             // first suggest a reindex
             if (!options.reindex) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
@@ -1676,7 +1681,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LOCK(cs_main);
             for (Chainstate* chainstate : chainman.GetAll()) {
                 uiInterface.InitMessage(_("Pruning blockstore…").translated);
-                chainstate->PruneAndFlush();
+                (void)chainstate->PruneAndFlush();
             }
         }
     } else {
@@ -1745,7 +1750,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     chainman.m_thread_load = std::thread(&util::TraceThread, "initload", [=, &chainman, &args, &node] {
         // Import blocks
-        ImportBlocks(chainman, vImportFiles);
+        (void)ImportBlocks(chainman, vImportFiles);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogPrintf("Stopping after block import\n");
             if (!(*Assert(node.shutdown))()) {
