@@ -88,7 +88,7 @@ LockData& GetLockData() {
     return lock_data;
 }
 
-static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
+[[noreturn]] static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
@@ -124,7 +124,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
+[[noreturn]] static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
     LogPrintf("DOUBLE LOCK DETECTED\n");
     LogPrintf("Lock order:\n");
@@ -152,7 +152,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
         std::is_base_of<std::recursive_mutex, MutexType>::value;
 
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    std::unique_lock lock{lockdata.dd_mutex};
 
     LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     lock_stack.emplace_back(c, locklocation);
@@ -168,6 +168,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
             // same thread as that results in an undefined behavior.
             auto lock_stack_copy = lock_stack;
             lock_stack.pop_back();
+            lock.unlock();
             double_lock_detected(c, lock_stack_copy);
             // double_lock_detected() does not return.
         }
@@ -178,9 +179,11 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
 
         const LockPair p2 = std::make_pair(c, i.first);
         if (lockdata.lockorders.count(p2)) {
-            auto lock_stack_copy = lock_stack;
+            auto lock_stack_current = lock_stack;
             lock_stack.pop_back();
-            potential_deadlock_detected(p1, lockdata.lockorders[p2], lock_stack_copy);
+            auto lock_stack_previous = lockdata.lockorders[p2];
+            lock.unlock();
+            potential_deadlock_detected(p1, lock_stack_previous, lock_stack_current);
             // potential_deadlock_detected() does not return.
         }
 
