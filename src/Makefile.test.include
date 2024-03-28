@@ -165,6 +165,7 @@ BITCOIN_TESTS =\
   test/uint256_tests.cpp \
   test/util_tests.cpp \
   test/util_threadnames_tests.cpp \
+  test/util_trace_tests.cpp \
   test/validation_block_tests.cpp \
   test/validation_chainstate_tests.cpp \
   test/validation_chainstatemanager_tests.cpp \

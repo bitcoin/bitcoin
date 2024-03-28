@@ -9,6 +9,10 @@
 #include <random.h>
 #include <util/trace.h>
 
+TRACEPOINT_SEMAPHORE(utxocache, add);
+TRACEPOINT_SEMAPHORE(utxocache, spent);
+TRACEPOINT_SEMAPHORE(utxocache, uncache);
+
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
@@ -98,7 +102,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     it->second.coin = std::move(coin);
     it->second.flags |= CCoinsCacheEntry::DIRTY | (fresh ? CCoinsCacheEntry::FRESH : 0);
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
-    TRACE5(utxocache, add,
+    TRACEPOINT(utxocache, add,
            outpoint.hash.data(),
            (uint32_t)outpoint.n,
            (uint32_t)it->second.coin.nHeight,
@@ -129,7 +133,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-    TRACE5(utxocache, spent,
+    TRACEPOINT(utxocache, spent,
            outpoint.hash.data(),
            (uint32_t)outpoint.n,
            (uint32_t)it->second.coin.nHeight,
@@ -285,7 +289,7 @@ void CCoinsViewCache::Uncache(const COutPoint& hash)
     CCoinsMap::iterator it = cacheCoins.find(hash);
     if (it != cacheCoins.end() && it->second.flags == 0) {
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-        TRACE5(utxocache, uncache,
+        TRACEPOINT(utxocache, uncache,
                hash.hash.data(),
                (uint32_t)hash.n,
                (uint32_t)it->second.coin.nHeight,
