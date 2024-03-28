@@ -43,6 +43,7 @@ Test related fixes
 Qt
 --------------------------
 - `f1c0ecf`: reverts tempfix where macOS 14+ unexpectedly uses Fusion UI theme
+- `917312b`: Add context menu option for rebroadcasting unconfirmed transactions
 
 Credits
 =======
