@@ -13,7 +13,7 @@
             "value": 1.00000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "OP_HASH160 1c6fbaf46d64221e80cbae182c33ddf81b9294ac OP_EQUAL",
+                "asm": "HASH160 <1c6fbaf46d64221e80cbae182c33ddf81b9294ac> EQUAL",
                 "desc": "addr(34HNh57oBCRKkxNyjTuWAJkTbuGh6jg2Ms)#ngnz8933",
                 "hex": "a9141c6fbaf46d64221e80cbae182c33ddf81b9294ac87",
                 "address": "34HNh57oBCRKkxNyjTuWAJkTbuGh6jg2Ms",

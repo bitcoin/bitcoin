@@ -2,7 +2,7 @@
     [
         "5120eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         {
-            "asm": "1 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "asm": "1 <eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee>",
             "address": "bcrt1pamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqz6nvlh",
             "desc": "rawtr(eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee)#jk7c6kys",
             "type": "witness_v1_taproot"
@@ -20,7 +20,7 @@
     [
         "0020eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         {
-            "asm": "0 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "asm": "0 <eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee>",
             "address": "bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t",
             "desc": "addr(bcrt1qamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhwamhqgdn98t)#afaecevx",
             "type": "witness_v0_scripthash",
@@ -30,7 +30,7 @@
     [
         "a914eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee87",
         {
-            "asm": "OP_HASH160 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee OP_EQUAL",
+            "asm": "HASH160 <eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee> EQUAL",
             "address": "2NF2b3KS8xXb9XHvbRMXdZh8s5g92rUZHtp",
             "desc": "addr(2NF2b3KS8xXb9XHvbRMXdZh8s5g92rUZHtp)#ywfcpmh9",
             "type": "scripthash"
@@ -39,7 +39,7 @@
     [
         "6a00",
         {
-            "asm": "OP_RETURN 0",
+            "asm": "RETURN 0",
             "desc": "raw(6a00)#ncfmkl43",
             "type": "nulldata"
         }
@@ -47,7 +47,7 @@
     [
         "6aee",
         {
-            "asm": "OP_RETURN OP_UNKNOWN",
+            "asm": "RETURN UNKNOWN_238",
             "desc": "raw(6aee)#vsyzgqdt",
             "type": "nonstandard"
         }
@@ -55,7 +55,7 @@
     [
         "6a02ee",
         {
-            "asm": "OP_RETURN [error]",
+            "asm": "RETURN UNPARSABLE(02ee)",
             "desc": "raw(6a02ee)#gvdwnlzl",
             "type": "nonstandard"
         }
@@ -68,7 +68,7 @@
             "type": "nonstandard",
             "p2sh": "2N34iiGoUUkVSPiaaTFpJjB1FR9TXQu3PGM",
             "segwit": {
-                "asm": "0 96c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
+                "asm": "0 <96c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42>",
                 "desc": "addr(bcrt1qjmprdr7rq522gw9ghkgfly7yng25n4m3nrxtmdujqsakvm9jfapqk795l5)#5akkdska",
                 "hex": "002096c2368fc30514a438a8bd909f93c49a1549d77198ccbdb792043b666cb24f42",
                 "address": "bcrt1qjmprdr7rq522gw9ghkgfly7yng25n4m3nrxtmdujqsakvm9jfapqk795l5",
@@ -80,7 +80,7 @@
     [
         "ba",
         {
-            "asm": "OP_CHECKSIGADD",
+            "asm": "CHECKSIGADD",
             "desc": "raw(ba)#yy0eg44l",
             "type": "nonstandard"
         }
@@ -88,7 +88,7 @@
     [
         "50",
         {
-            "asm": "OP_RESERVED",
+            "asm": "RESERVED",
             "desc": "raw(50)#a7tu03xf",
             "type": "nonstandard"
         }
