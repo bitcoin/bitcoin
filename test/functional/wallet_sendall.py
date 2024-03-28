@@ -68,6 +68,7 @@ class SendallTest(BitcoinTestFramework):
         assert_equal(remaining_balance, self.wallet.getbalances()["mine"]["trusted"])
 
         assert_equal(sendall_tx_receipt["complete"], True)
+        assert_greater_than(sendall_tx_receipt["weight"], 0)
         return self.wallet.gettransaction(txid = sendall_tx_receipt["txid"], verbose = True)
 
     @cleanup
