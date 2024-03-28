@@ -30,10 +30,12 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
 
     // Serialization to Script.
     DescriptorCache cache;
-    std::vector<CScript> out_scripts;
-    (void)desc.Expand(0, sig_provider, out_scripts, sig_provider, &cache);
-    (void)desc.ExpandPrivate(0, sig_provider, sig_provider);
-    (void)desc.ExpandFromCache(0, cache, out_scripts, sig_provider);
+    std::vector<CScript> out_scripts, out_scripts_cache;
+    FlatSigningProvider provider, provider_cached;
+    const bool expand{desc.Expand(0, sig_provider, out_scripts, provider, &cache)};
+    (void)desc.ExpandFromCache(0, cache, out_scripts_cache, provider_cached);
+    if (expand) assert(out_scripts == out_scripts_cache);
+    (void)desc.ExpandPrivate(0, sig_provider, provider);
 
     // If we could serialize to script we must be able to infer using the same provider.
     if (!out_scripts.empty()) {
