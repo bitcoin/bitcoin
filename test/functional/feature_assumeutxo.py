@@ -120,6 +120,13 @@ class AssumeutxoTest(BitcoinTestFramework):
                                     node.loadtxoutset,
                                     valid_snapshot_path)
 
+        self.log.info("  - snapshot file with invalid size, too small")
+        with open(bad_snapshot_path, "wb") as f:
+            f.write(b'z' * 1)
+        expected_error_msg = (f", couldn't read snapshot metadata from file {bad_snapshot_path}.\n"
+            "The file may be corrupted or it was crafted in an incompatible format.")
+        expected_error(rpc_details=expected_error_msg)
+
     def test_invalid_chainstate_scenarios(self):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
 
