@@ -96,9 +96,10 @@ def do_decode_psbt(b64psbt):
     return from_binary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK]), ser_string(scriptSig) + scriptWitness
 
 def finish_block(block, signet_solution, grind_cmd):
-    block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
-    block.vtx[0].rehash()
-    block.hashMerkleRoot = block.calc_merkle_root()
+    if signet_solution is not None:
+        block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
+        block.vtx[0].rehash()
+        block.hashMerkleRoot = block.calc_merkle_root()
     if grind_cmd is None:
         block.solve()
     else:
@@ -110,10 +111,12 @@ def finish_block(block, signet_solution, grind_cmd):
         block.rehash()
     return block
 
-def generate_psbt(tmpl, reward_spk, *, blocktime=None):
-    signet_spk = tmpl["signet_challenge"]
+def generate_psbt(block, signet_spk):
     signet_spk_bin = bytes.fromhex(signet_spk)
+    signme, spendme = signet_txs(block, signet_spk_bin)
+    return do_createpsbt(block, signme, spendme)
 
+def new_block(tmpl, reward_spk, blocktime=None):
     cbtx = create_coinbase(height=tmpl["height"], value=tmpl["coinbasevalue"], spk=reward_spk)
     cbtx.vin[0].nSequence = 2**32-2
     cbtx.rehash()
@@ -135,9 +138,10 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None):
     block.vtx[0].wit.vtxinwit = [cbwit]
     block.vtx[0].vout.append(CTxOut(0, bytes(get_witness_script(witroot, witnonce))))
 
-    signme, spendme = signet_txs(block, signet_spk_bin)
+    block.vtx[0].rehash()
+    block.hashMerkleRoot = block.calc_merkle_root()
 
-    return do_createpsbt(block, signme, spendme)
+    return block
 
 def get_reward_address(args, height):
     if args.address is not None:
@@ -177,8 +181,10 @@ def get_reward_addr_spk(args, height):
 
 def do_genpsbt(args):
     tmpl = json.load(sys.stdin)
+    signet_spk = tmpl["signet_challenge"]
     _, reward_spk = get_reward_addr_spk(args, tmpl["height"])
-    psbt = generate_psbt(tmpl, reward_spk)
+    block = new_block(tmpl, reward_spk)
+    psbt = generate_psbt(block, signet_spk)
     print(psbt)
 
 def do_solvepsbt(args):
@@ -407,14 +413,23 @@ def do_generate(args):
         # mine block
         logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
         mined_blocks += 1
-        psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
-        input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
-        psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=input_stream))
-        if not psbt_signed.get("complete",False):
-            logging.debug("Generated PSBT: %s" % (psbt,))
-            sys.stderr.write("PSBT signing failed\n")
-            return 1
-        block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
+        block = new_block(tmpl, reward_spk, blocktime=mine_time)
+
+        # BIP325 allows omitting the signet commitment when scriptSig and
+        # scriptWitness are both empty. This is the case for trivial
+        # challenges such as OP_TRUE
+        signet_solution = None
+        signet_spk = tmpl["signet_challenge"]
+        if signet_spk != "51":
+            psbt = generate_psbt(block, signet_spk)
+            input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
+            psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=input_stream))
+            if not psbt_signed.get("complete",False):
+               logging.debug("Generated PSBT: %s" % (psbt,))
+               sys.stderr.write("PSBT signing failed\n")
+               return 1
+            block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
+
         block = finish_block(block, signet_solution, args.grind_cmd)
 
         # submit block
