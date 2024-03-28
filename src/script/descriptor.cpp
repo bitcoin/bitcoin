@@ -570,6 +570,7 @@ public:
         COMPAT, // string calculation that mustn't change over time to stay compatible with previous software versions
     };
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     bool IsSolvable() const override
     {
         for (const auto& arg : m_subdescriptor_args) {
@@ -578,6 +579,7 @@ public:
         return true;
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     bool IsRange() const final
     {
         for (const auto& pubkey : m_pubkey_args) {
@@ -589,6 +591,7 @@ public:
         return false;
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const
     {
         size_t pos = 0;
@@ -601,6 +604,7 @@ public:
         return true;
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     virtual bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type, const DescriptorCache* cache = nullptr) const
     {
         std::string extra = ToStringExtra();
@@ -653,6 +657,7 @@ public:
         return ret;
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     bool ExpandHelper(int pos, const SigningProvider& arg, const DescriptorCache* read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache) const
     {
         std::vector<std::pair<CPubKey, KeyOriginInfo>> entries;
@@ -694,6 +699,7 @@ public:
         return ExpandHelper(pos, DUMMY_SIGNING_PROVIDER, &read_cache, output_scripts, out, nullptr);
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const final
     {
         for (const auto& p : m_pubkey_args) {
@@ -1537,6 +1543,7 @@ struct KeyParser {
 };
 
 /** Parse a script in a particular context. */
+// NOLINTNEXTLINE(misc-no-recursion)
 std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     using namespace spanparsing;
@@ -1844,6 +1851,7 @@ std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptCo
     return std::make_unique<MultiADescriptor>(match->first, std::move(keys));
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptContext ctx, const SigningProvider& provider)
 {
     if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {

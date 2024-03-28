@@ -115,6 +115,9 @@ code.
     Use `reinterpret_cast` and `const_cast` as appropriate.
   - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Res-list) where possible.
     For example `int x{0};` instead of `int x = 0;` or `int x(0);`
+  - Recursive functions are generally discouraged, and checked for by
+    clang-tidy. When recursiveness is the best approach, use
+    `NOLINTNEXTLINE(misc-no-recursion)` to suppress the check.
 
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
