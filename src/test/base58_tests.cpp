@@ -35,8 +35,9 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
         std::vector<unsigned char> sourcedata = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
         BOOST_CHECK_MESSAGE(
-                    EncodeBase58(sourcedata) == base58string,
-                    strTest);
+            EncodeBase58(sourcedata) == base58string,
+            strTest << "\nEncoding failed for test #" << idx << ": expected " << base58string << ", got " << EncodeBase58(sourcedata)
+        );
     }
 }
 
@@ -56,8 +57,11 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
         }
         std::vector<unsigned char> expected = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
-        BOOST_CHECK_MESSAGE(DecodeBase58(base58string, result, 256), strTest);
-        BOOST_CHECK_MESSAGE(result.size() == expected.size() && std::equal(result.begin(), result.end(), expected.begin()), strTest);
+        BOOST_CHECK_MESSAGE(DecodeBase58(base58string, result, 256), strTest << "\nDecoding failed for test #" << idx << ": " << base58string);
+        BOOST_CHECK_MESSAGE(
+            result.size() == expected.size() && std::equal(result.begin(), result.end(), expected.begin()),
+            strTest << "\nMismatch for test #" << idx << ": expected " << HexStr(expected) << ", got " << HexStr(result)
+        );
     }
 
     BOOST_CHECK(!DecodeBase58("invalid"s, result, 100));
@@ -81,19 +85,31 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     BOOST_CHECK(!DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh\0" "0IOl"s, result, 100));
 }
 
-BOOST_AUTO_TEST_CASE(base58_random_encode_decode)
+BOOST_AUTO_TEST_CASE(base58_random_encode_decode_with_optional_spaces)
 {
     for (int n = 0; n < 1000; ++n) {
-        unsigned int len = 1 + InsecureRandBits(8);
-        unsigned int zeroes = InsecureRandBool() ? InsecureRandRange(len + 1) : 0;
+        auto len = 1 + InsecureRandBits(8);
+        auto zeroes = InsecureRandBool() ? InsecureRandRange(len + 1) : 0;
         auto data = Cat(std::vector<unsigned char>(zeroes, '\000'), g_insecure_rand_ctx.randbytes(len - zeroes));
-        auto encoded = EncodeBase58Check(data);
+
+        auto leadingSpaces = InsecureRandBool() ? std::string(InsecureRandRange(10), ' ') : "";
+        auto trailingSpaces = InsecureRandBool() ? std::string(InsecureRandRange(10), ' ') : "";
+        auto encoded = leadingSpaces + EncodeBase58Check(data) + trailingSpaces;
+
         std::vector<unsigned char> decoded;
         auto ok_too_small = DecodeBase58Check(encoded, decoded, InsecureRandRange(len));
-        BOOST_CHECK(!ok_too_small);
+        BOOST_CHECK_MESSAGE(!ok_too_small, "Decoding should fail for smaller maxRetLen");
+
         auto ok = DecodeBase58Check(encoded, decoded, len + InsecureRandRange(257 - len));
-        BOOST_CHECK(ok);
-        BOOST_CHECK(data == decoded);
+        BOOST_CHECK_MESSAGE(ok, "Decoding should succeed within valid length range");
+
+        if (data != decoded) {
+            std::ostringstream msg;
+            msg << "Decoded data does not match original data.\n"
+                << "Original data (size " << data.size() << "): " << HexStr(Span<const uint8_t>(data.data(), data.size())) << "\n"
+                << "Decoded data (size " << decoded.size() << "): " << HexStr(Span<const uint8_t>(decoded.data(), decoded.size()));
+            BOOST_FAIL(msg.str());
+        }
     }
 }
 
