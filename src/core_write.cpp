@@ -202,6 +202,21 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", o);
+            if ((int*)txundo && txundo->vprevout.size() && txundo->vprevout[txin.prevout.n].out.scriptPubKey.IsPayToScriptHash()) {
+                UniValue redeemScript(UniValue::VOBJ);
+                opcodetype opcode;
+                std::vector<unsigned char> vch;
+                CScript::const_iterator pc = txin.scriptSig.begin();
+                while (true) {
+                    if (!txin.scriptSig.GetOp(pc, opcode, vch))
+                        break;
+                }
+                CScript script;
+                std::vector<unsigned char> scriptData(ParseHex(HexStr(vch)));
+                script = CScript(scriptData.begin(), scriptData.end());
+                ScriptToUniv(script, /*out=*/redeemScript, /*include_hex=*/false, /*include_address=*/true);
+                in.pushKV("redeemScript", redeemScript);
+            }
         }
         if (!tx.vin[i].scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
