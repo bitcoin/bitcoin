@@ -82,16 +82,13 @@ static fs::path GetAuthCookieFile(bool temp=false)
 
 static bool g_generated_cookie = false;
 
-bool GenerateAuthCookie(std::string *cookie_out)
+bool GenerateAuthCookie(std::string* cookie_out, fs::perms cookie_perms)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
     GetRandBytes(rand_pwd);
     std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
 
-    /** the umask determines what permissions are used to create this file -
-     * these are set to 0077 in common/system.cpp.
-     */
     std::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
@@ -99,6 +96,14 @@ bool GenerateAuthCookie(std::string *cookie_out)
         LogPrintf("Unable to open cookie authentication file %s for writing\n", fs::PathToString(filepath_tmp));
         return false;
     }
+
+    std::error_code code;
+    fs::permissions(filepath_tmp, cookie_perms, fs::perm_options::replace, code);
+    if (code) {
+        LogPrintf("Unable to set permissions on cookie authentication file %s\n", fs::PathToString(filepath_tmp));
+        return false;
+    }
+
     file << cookie;
     file.close();
 
@@ -109,6 +114,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     }
     g_generated_cookie = true;
     LogPrintf("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
+    LogPrintf("Permissions used for cookie: %s\n", PermsToString(fs::status(filepath).permissions()));
 
     if (cookie_out)
         *cookie_out = cookie;

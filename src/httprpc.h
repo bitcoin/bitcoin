@@ -6,6 +6,14 @@
 #define BITCOIN_HTTPRPC_H
 
 #include <any>
+#include <util/fs.h>
+
+/** Default permissions for cookie file.
+ * On Windows, as long as no fs::perms::*_write bits are set, the file will be
+ * marked as read-only, as is the case here.
+ * Differs from defaults derived from umask in util/system.cpp
+ */
+const fs::perms DEFAULT_COOKIE_PERMS{fs::perms::owner_read};
 
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.

@@ -62,6 +62,10 @@ void ReleaseDirectoryLocks();
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 
+std::string PermsToString(fs::perms p);
+unsigned int PermsToOctal(fs::perms p);
+std::string PermsToOctalString(fs::perms p);
+
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
