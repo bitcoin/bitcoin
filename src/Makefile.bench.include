@@ -12,6 +12,7 @@ GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_bitcoin_SOURCES = \
   $(RAW_BENCH_FILES) \
+  bench/check_input_scrips.cpp \
   bench/addrman.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
