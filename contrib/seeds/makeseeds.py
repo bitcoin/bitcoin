@@ -9,11 +9,14 @@
 import argparse
 import collections
 import ipaddress
+from pathlib import Path
 import re
 import sys
 from typing import Union
 
-from asmap import ASMap, net_to_prefix
+asmap_dir = Path(__file__).parent.parent / "asmap"
+sys.path.append(str(asmap_dir))
+from asmap import ASMap, net_to_prefix  # noqa: E402
 
 NSEEDS=512
 
