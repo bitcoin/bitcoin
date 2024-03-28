@@ -62,6 +62,10 @@ with tempfile.NamedTemporaryFile('w', suffix='.h2m') as footer:
     # Copyright is the same for all binaries, so just use the first.
     footer.write('[COPYRIGHT]\n')
     footer.write('\n'.join(versions[0][2]).strip())
+    # Create SEE ALSO section
+    footer.write('\n[SEE ALSO]\n')
+    footer.write(', '.join(s.rpartition('/')[2] + '(1)' for s in BINARIES))
+    footer.write('\n')
     footer.flush()
 
     # Call the binaries through help2man to produce a manual page for each of them.
