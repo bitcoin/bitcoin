@@ -325,6 +325,7 @@ public:
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
     bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool CanRelayAddrs(NodeId pnode) const override;
 
 private:
     /** Helper to process result of external handlers of message */
@@ -1628,6 +1629,14 @@ bool PeerManagerImpl::IsBanned(NodeId pnode)
         return true;
     }
     return false;
+}
+
+bool PeerManagerImpl::CanRelayAddrs(NodeId pnode) const
+{
+    PeerRef peer = GetPeerRef(pnode);
+    if (peer == nullptr)
+        return false;
+    return RelayAddrsWithPeer(*peer);
 }
 
 bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,

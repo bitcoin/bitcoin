@@ -87,6 +87,9 @@ public:
 
     virtual bool IsBanned(NodeId pnode) = 0;
 
+    /* Can we send addr messages to a peer. Used by InstantSend. */
+    virtual bool CanRelayAddrs(NodeId pnode) const = 0;
+
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
     bool m_initial_sync_finished{false};
