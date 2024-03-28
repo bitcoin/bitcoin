@@ -10,6 +10,7 @@
 #include <streams.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
+#include <util/result.h>
 
 #include <atomic>
 #include <memory>
@@ -193,8 +194,7 @@ struct DatabaseOptions {
     int64_t max_log_mb = 100;       //!< Max log size to allow before consolidating.
 };
 
-enum class DatabaseStatus {
-    SUCCESS,
+enum class DatabaseError {
     FAILED_BAD_PATH,
     FAILED_BAD_FORMAT,
     FAILED_ALREADY_LOADED,
@@ -211,7 +211,7 @@ enum class DatabaseStatus {
 std::vector<fs::path> ListDatabases(const fs::path& path);
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
-std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeDatabase(const fs::path& path, const DatabaseOptions& options);
 
 fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);

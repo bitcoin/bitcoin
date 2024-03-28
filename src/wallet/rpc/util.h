@@ -7,6 +7,7 @@
 
 #include <rpc/util.h>
 #include <script/script.h>
+#include <util/result.h>
 #include <wallet/wallet.h>
 
 #include <any>
@@ -20,7 +21,7 @@ struct bilingual_str;
 
 namespace wallet {
 class LegacyScriptPubKeyMan;
-enum class DatabaseStatus;
+enum class DatabaseError;
 struct WalletContext;
 
 extern const std::string HELP_REQUIRING_PASSPHRASE;
@@ -50,7 +51,7 @@ std::string LabelFromValue(const UniValue& value);
 //! Fetch parent descriptors of this scriptPubKey.
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
 
-void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
+void HandleWalletError(const util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError>& wallet);
 int64_t ParseISO8601DateTime(const std::string& str);
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } //  namespace wallet

@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     tx10.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
     tx10.vout[0].nValue = 10 * COIN;
 
-    ancestors_calculated = pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(NodeSeconds{4s}).FromTx(tx10), CTxMemPool::Limits::NoLimits());
+    ancestors_calculated.Set(pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(NodeSeconds{4s}).FromTx(tx10), CTxMemPool::Limits::NoLimits()));
     BOOST_REQUIRE(ancestors_calculated);
     BOOST_CHECK(*ancestors_calculated == setAncestors);
 

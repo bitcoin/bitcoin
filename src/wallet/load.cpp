@@ -56,12 +56,10 @@ bool VerifyWallets(WalletContext& context)
     // wallets directory, include it in the default list of wallets to load.
     if (!args.IsArgSet("wallet")) {
         DatabaseOptions options;
-        DatabaseStatus status;
         ReadDatabaseArgs(args, options);
-        bilingual_str error_string;
         options.require_existing = true;
         options.verify = false;
-        if (MakeWalletDatabase("", options, status, error_string)) {
+        if (MakeWalletDatabase("", options)) {
             common::SettingsValue wallets(common::SettingsValue::VARR);
             wallets.push_back(""); // Default wallet name is ""
             // Pass write=false because no need to write file and probably
@@ -84,16 +82,15 @@ bool VerifyWallets(WalletContext& context)
         }
 
         DatabaseOptions options;
-        DatabaseStatus status;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
         options.verify = true;
-        bilingual_str error_string;
-        if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
-            if (status == DatabaseStatus::FAILED_NOT_FOUND) {
-                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
+        auto result = MakeWalletDatabase(wallet_file, options);
+        if (!result) {
+            if (result.GetFailure() == DatabaseError::FAILED_NOT_FOUND) {
+                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", util::ErrorString(result).original)));
             } else {
-                chain.initError(error_string);
+                chain.initError(util::ErrorString(result));
                 return false;
             }
         }
@@ -113,26 +110,24 @@ bool LoadWallets(WalletContext& context)
                 continue;
             }
             DatabaseOptions options;
-            DatabaseStatus status;
             ReadDatabaseArgs(*context.args, options);
             options.require_existing = true;
             options.verify = false; // No need to verify, assuming verified earlier in VerifyWallets()
-            bilingual_str error;
-            std::vector<bilingual_str> warnings;
-            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
-            if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
+            util::Result<void> result;
+            auto database = MakeWalletDatabase(name, options) >> result;
+            if (!database && database.GetFailure() == DatabaseError::FAILED_NOT_FOUND) {
                 continue;
             }
             chain.initMessage(_("Loading wallet…").translated);
-            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings) : nullptr;
-            if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
+            auto pwallet = database ? CWallet::Create(context, name, std::move(database.value()), options.create_flags) >> result : nullptr;
+            if (!result.GetWarnings().empty()) chain.initWarning(Join(result.GetWarnings(), Untranslated("\n")));
             if (!pwallet) {
-                chain.initError(error);
+                chain.initError(Join(result.GetErrors(), Untranslated(" ")));
                 return false;
             }
 
-            NotifyWalletLoaded(context, pwallet);
-            AddWallet(context, pwallet);
+            NotifyWalletLoaded(context, pwallet.value());
+            AddWallet(context, pwallet.value());
         }
         return true;
     } catch (const std::runtime_error& e) {
@@ -174,8 +169,7 @@ void UnloadWallets(WalletContext& context)
     while (!wallets.empty()) {
         auto wallet = wallets.back();
         wallets.pop_back();
-        std::vector<bilingual_str> warnings;
-        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt, warnings);
+        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
         UnloadWallet(std::move(wallet));
     }
 }
