@@ -73,8 +73,11 @@ static std::vector<std::vector<std::string>> g_rpcauth;
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
+static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const JSONRPCRequest& jreq)
 {
+    // Sending HTTP errors is a legacy JSON-RPC behavior.
+    Assume(jreq.m_json_version != JSONVersion::JSON_2_0);
+
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
@@ -84,7 +87,7 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
 
-    std::string strReply = JSONRPCReply(NullUniValue, objError, id);
+    std::string strReply = JSONRPCReply(NullUniValue, objError, jreq);
 
     req->WriteHeader("Content-Type", "application/json");
     req->WriteReply(nStatus, strReply);
@@ -185,7 +188,7 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         // Set the URI
         jreq.URI = req->GetURI();
 
-        std::string strReply;
+        UniValue reply;
         bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
             LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
@@ -200,13 +203,17 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                 req->WriteReply(HTTP_FORBIDDEN);
                 return false;
             }
-            UniValue result = tableRPC.execute(jreq);
 
-            // Send reply
-            strReply = JSONRPCReply(result, NullUniValue, jreq.id);
+            reply = JSONRPCExec(jreq);
+            if (jreq.IsNotification()) {
+                // Even though we do execute notifications, we do not respond to them
+                req->WriteReply(HTTP_NO_CONTENT);
+                return true;
+            }
 
         // array of requests
         } else if (valRequest.isArray()) {
+            // Check authorization for each request's method
             if (user_has_whitelist) {
                 for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
                     if (!valRequest[reqIdx].isObject()) {
@@ -223,18 +230,43 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                     }
                 }
             }
-            strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
+
+            // Execute each request
+            reply = UniValue{UniValue::VARR};
+            bool all_notifications = true;
+            for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
+                // Batches never throw HTTP errors, they are always just included
+                // in "HTTP OK" responses. Notifications never get any response.
+                UniValue response;
+                try {
+                    jreq.parse(valRequest[reqIdx]);
+                    response = JSONRPCExec(jreq);
+                } catch (const UniValue& objError) {
+                    response = JSONRPCReplyObj(NullUniValue, objError, jreq.id, jreq.m_json_version);
+                } catch (const std::exception& e) {
+                    response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version);
+                }
+                if (!jreq.IsNotification()) {
+                    reply.push_back(std::move(response));
+                    all_notifications = false;
+                }
+            }
+            // All-notification batch expects no response
+            if (all_notifications && valRequest.size() > 0) {
+                req->WriteReply(HTTP_NO_CONTENT);
+                return true;
+            }
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
         req->WriteHeader("Content-Type", "application/json");
-        req->WriteReply(HTTP_OK, strReply);
+        req->WriteReply(HTTP_OK, reply.write() + "\n");
     } catch (const UniValue& objError) {
-        JSONErrorReply(req, objError, jreq.id);
+        JSONErrorReply(req, objError, jreq);
         return false;
     } catch (const std::exception& e) {
-        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
+        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq);
         return false;
     }
     return true;

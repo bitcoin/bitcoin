@@ -26,6 +26,17 @@
  *
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ *
+ * If the server receives a request with the JSON-RPC 2.0 marker `{"jsonrpc": "2.0"}`
+ * then Bitcoin will respond with a strictly specified response.
+ * It will only return an HTTP error code if an actual HTTP error is encountered
+ * such as the endpoint is not found (404) or the request is not formatted correctly (500).
+ * Otherwise the HTTP code is always OK (200) and RPC errors will be included in the
+ * response body.
+ *
+ * 2.0 spec: https://www.jsonrpc.org/specification
+ *
+ * Also see http://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
  */
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
@@ -37,21 +48,28 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, const std::optional<UniValue>& id, JSONVersion json_version)
 {
     UniValue reply(UniValue::VOBJ);
-    if (!error.isNull())
-        reply.pushKV("result", NullUniValue);
-    else
+    // Add JSON-RPC version number field in v2 only.
+    if (json_version == JSONVersion::JSON_2_0) reply.pushKV("jsonrpc", "2.0");
+
+    // Add both result and error fields in v1, even though one will be null.
+    // Omit the null field in v2.
+    if (error.isNull()) {
         reply.pushKV("result", result);
-    reply.pushKV("error", error);
-    reply.pushKV("id", id);
+        if (json_version == JSONVersion::JSON_1_BTC) reply.pushKV("error", NullUniValue);
+    } else {
+        if (json_version == JSONVersion::JSON_1_BTC) reply.pushKV("result", NullUniValue);
+        reply.pushKV("error", error);
+    }
+    if (id.has_value()) reply.pushKV("id", id.value());
     return reply;
 }
 
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
+std::string JSONRPCReply(const UniValue& result, const UniValue& error, const JSONRPCRequest& jreq)
 {
-    UniValue reply = JSONRPCReplyObj(result, error, id);
+    UniValue reply = JSONRPCReplyObj(result, error, jreq.id, jreq.m_json_version);
     return reply.write() + "\n";
 }
 
@@ -170,8 +188,33 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
     const UniValue& request = valRequest.get_obj();
 
-    // Parse id now so errors from here on will have the id
-    id = request.find_value("id");
+    // Check for JSON-RPC 2.0 (default 1.1)
+    // We must do this before looking for the id field
+    m_json_version = JSONVersion::JSON_1_BTC;
+    const UniValue& valJsonRPC = request.find_value("jsonrpc");
+    if (!valJsonRPC.isNull()) {
+        if (!valJsonRPC.isStr()) {
+            throw JSONRPCError(RPC_INVALID_REQUEST, "jsonrpc field must be a string");
+        }
+        if (valJsonRPC.get_str() == "1.0") {
+            m_json_version = JSONVersion::JSON_1_BTC;
+        } else if (valJsonRPC.get_str() == "2.0") {
+            m_json_version = JSONVersion::JSON_2_0;
+        } else {
+            throw JSONRPCError(RPC_INVALID_REQUEST, "JSON-RPC version not supported");
+        }
+    }
+
+    // Parse id now so errors from here on will have the id.
+    // In 1.1 a default null value is inserted if no id field was present in the request
+    // In 2.0 a missing id field is a notification, but `"id": null` is not
+    if (m_json_version != JSONVersion::JSON_2_0 || request.exists("id")) {
+        id = request.find_value("id");
+    } else {
+        // Because we reuse JSONRPCRequest objects with multiple valRequests in
+        // a batch request, we may need to reset this optional value.
+        id.reset();
+    }
 
     // Parse method
     const UniValue& valMethod{request.find_value("method")};
