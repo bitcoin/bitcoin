@@ -527,7 +527,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
     return LoadRecords(pwallet, batch, key, prefix, load_func);
 }
 
-static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, WalletBatch& w_batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
     DBErrors result = DBErrors::LOAD_OK;
@@ -602,13 +602,13 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
 
     // Load keymeta
     std::map<uint160, CHDChain> hd_chains;
+    std::vector<CPubKey> updated_metas;
     LoadResult keymeta_res = LoadRecords(pwallet, batch, DBKeys::KEYMETA,
-        [&hd_chains] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+        [&hd_chains, &updated_metas] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
         CPubKey vchPubKey;
         key >> vchPubKey;
         CKeyMetadata keyMeta;
         value >> keyMeta;
-        pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKeyMetadata(vchPubKey.GetID(), keyMeta);
 
         // Extract some CHDChain info from this metadata if it has any
         if (keyMeta.nVersion >= CKeyMetadata::VERSION_WITH_HDDATA && !keyMeta.hd_seed_id.IsNull() && keyMeta.hdKeypath.size() > 0) {
@@ -619,13 +619,32 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
             uint32_t index = 0;
             if (keyMeta.hdKeypath != "s" && keyMeta.hdKeypath != "m") {
                 std::vector<uint32_t> path;
-                if (keyMeta.has_key_origin) {
-                    // We have a key origin, so pull it from its path vector
-                    path = keyMeta.key_origin.path;
-                } else {
-                    // No key origin, have to parse the string
-                    if (!ParseHDKeypath(keyMeta.hdKeypath, path)) {
-                        strErr = "Error reading wallet database: keymeta with invalid HD keypath";
+                // Always parse the path string
+                if (!ParseHDKeypath(keyMeta.hdKeypath, path)) {
+                    strErr = "Error reading wallet database: keymeta with invalid HD keypath";
+                    return DBErrors::NONCRITICAL_ERROR;
+                }
+                // If there is a key origin, make sure that path matches
+                if (keyMeta.has_key_origin && path != keyMeta.key_origin.path) {
+                    // Detect if this metadata has a bad derivation path from a bug in inactive hd key derivation that was present in 0.21 and 22.x
+                    // See https://github.com/bitcoin/bitcoin/issues/29109
+                    // Markers for bad derivation:
+                    // - 6 indexes
+                    // - path[5] == path[2] + 1
+                    // - path[0:2] == path[3:5]
+                    // - path[3:6] matches hdKeypath
+                    if (keyMeta.key_origin.path.size() == 6
+                        && keyMeta.key_origin.path[5] == keyMeta.key_origin.path[2] + 1
+                        && keyMeta.key_origin.path[0] == keyMeta.key_origin.path[3]
+                        && keyMeta.key_origin.path[1] == keyMeta.key_origin.path[4]
+                        && std::equal(keyMeta.key_origin.path.begin() + 3, keyMeta.key_origin.path.end(), path.begin(), path.end())
+                    ) {
+                        // Matches the pattern, just reset it to the parsed path
+                        pwallet->WalletLogPrintf("Repairing derivation path for %s\n", HexStr(vchPubKey));
+                        keyMeta.key_origin.path = path;
+                        updated_metas.push_back(vchPubKey);
+                    } else {
+                        strErr = "keymeta with mismatched hdkeypath string and key origin derivation path";
                         return DBErrors::NONCRITICAL_ERROR;
                     }
                 }
@@ -669,9 +688,22 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
                 chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index + 1);
             }
         }
+
+        pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKeyMetadata(vchPubKey.GetID(), keyMeta);
+
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, keymeta_res.m_result);
+
+    // Update any changed metadata
+    if (updated_metas.size()) {
+        LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
+        Assert(spkm);
+        LOCK(spkm->cs_KeyStore);
+        for (const auto& pubkey : updated_metas) {
+            w_batch.WriteKeyMetadata(spkm->mapKeyMetadata.at(pubkey.GetID()), pubkey, true);
+        }
+    }
 
     // Set inactive chains
     if (!hd_chains.empty()) {
@@ -1175,7 +1207,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #endif
 
         // Load legacy wallet keys
-        result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, last_client), result);
+        result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, *this, last_client), result);
 
         // Load descriptors
         result = std::max(LoadDescriptorWalletRecords(pwallet, *m_batch, last_client), result);
