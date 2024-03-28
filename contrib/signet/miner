@@ -225,7 +225,7 @@ def seconds_to_hms(s):
         out = "-" + out
     return out
 
-def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson, max_interval):
+def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson, max_interval, target_spacing):
     # strategy:
     #  1) work out how far off our desired target we are
     #  2) cap it to a factor of 4 since that's the best we can do in a single retarget period
@@ -233,7 +233,7 @@ def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson, max_int
     #  4) if doing poisson, use the last hash to pick a uniformly random number in [0,1), and work out a random multiplier to vary the average by
     #  5) cap the resulting interval between 1 second and 1 hour to avoid extremes
 
-    INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
+    INTERVAL = float(target_spacing)*2016/2015 # 10 minutes, adjusted for the off-by-one bug
 
     current_target = nbits_to_target(last_nbits)
     retarget_factor = ultimate_target / current_target
@@ -308,8 +308,9 @@ def do_generate(args):
             return 1
         my_blocks = (start-1, stop, total)
 
-    if args.max_interval < 960:
-        logging.error("--max-interval must be at least 960 (16 minutes)")
+    max_interval_limit = args.target_spacing * 16 / 10
+    if args.max_interval < max_interval_limit:
+        logging.error("--max-interval must be at least %d (%f minutes)" % (max_interval_limit, max_interval_limit/60))
         return 1
 
     ultimate_target = nbits_to_target(int(args.nbits,16))
@@ -328,7 +329,7 @@ def do_generate(args):
         if lastheader is None:
             lastheader = bestheader["hash"]
         elif bestheader["hash"] != lastheader:
-            next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson, args.max_interval)
+            next_delta = next_block_delta(int(bestheader["bits"], 16), bestheader["hash"], ultimate_target, args.poisson, args.max_interval, args.target_spacing)
             next_delta += bestheader["time"] - time.time()
             next_is_mine = next_block_is_mine(bestheader["hash"], my_blocks)
             logging.info("Received new block at height %d; next in %s (%s)", bestheader["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
@@ -342,14 +343,14 @@ def do_generate(args):
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
-            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval, args.target_spacing)
             time_delta *= 100 # 100 blocks
             logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
             mine_time = now - time_delta
             action_time = now
             is_mine = True
         else:
-            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval, args.target_spacing)
             mine_time = bestheader["time"] + time_delta
 
             is_mine = next_block_is_mine(bci["bestblockhash"], my_blocks)
@@ -423,7 +424,7 @@ def do_generate(args):
         # report
         bstr = "block" if is_mine else "backup block"
 
-        next_delta = next_block_delta(block.nBits, block.hash, ultimate_target, args.poisson, args.max_interval)
+        next_delta = next_block_delta(block.nBits, block.hash, ultimate_target, args.poisson, args.max_interval, args.target_spacing)
         next_delta += block.nTime - time.time()
         next_is_mine = next_block_is_mine(block.hash, my_blocks)
 
@@ -502,6 +503,7 @@ def main():
     generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
     generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
     generate.add_argument("--max-interval", default=1800, type=int, help="Maximum interblock interval (seconds)")
+    generate.add_argument("--target-spacing", default=600, type=int, help="Target interval between blocks (seconds), property of the network (default 600)")
 
     calibrate = cmds.add_parser("calibrate", help="Calibrate difficulty")
     calibrate.set_defaults(fn=do_calibrate)
