@@ -15,7 +15,7 @@
 #include <set>
 #include <string>
 
-// This module enforces rules for transactions with nVersion=3 ("v3 transactions") which help make
+// This module enforces rules for transactions with version=3 ("v3 transactions") which help make
 // RBF abilities more robust.
 
 // v3 only allows 1 parent and 1 child when unconfirmed.
