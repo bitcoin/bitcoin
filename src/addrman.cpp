@@ -810,6 +810,12 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     AssertLockHeld(cs);
 
     size_t nNodes = vRandom.size();
+    if (network) {
+        auto it = m_network_counts.find(*network);
+        if (it == m_network_counts.end()) return {};
+        const auto counts{it->second};
+        nNodes = counts.n_new + counts.n_tried;
+    }
     if (max_pct != 0) {
         nNodes = max_pct * nNodes / 100;
     }
@@ -820,6 +826,7 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     // gather a list of random nodes, skipping those of low quality
     const auto now{Now<NodeSeconds>()};
     std::vector<CAddress> addresses;
+    addresses.reserve(nNodes);
     for (unsigned int n = 0; n < vRandom.size(); n++) {
         if (addresses.size() >= nNodes)
             break;
