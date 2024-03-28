@@ -10,7 +10,9 @@
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/txhash.h>
 #include <uint256.h>
+#include <vector>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -591,7 +593,54 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     break;
                 }
 
-                case OP_NOP1: case OP_NOP4: case OP_NOP5:
+                case OP_TXHASH: case OP_CHECKTXHASHVERIFY:
+                {
+                    // if flags not enabled; treat as a NOP4
+                    if (!(flags & SCRIPT_VERIFY_TXHASH)) {
+                        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+                            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
+                        break;
+                    }
+
+                    if (stack.size() < 1) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    Span<const unsigned char> tx_field_selector { stack.back() };
+                    if (opcode == OP_CHECKTXHASHVERIFY) {
+                        if (stack.back().size() < 32) {
+                            return set_error(serror, SCRIPT_ERR_CHECKTXHASHVERIFY);
+                        }
+                        tx_field_selector = tx_field_selector.subspan(32);
+                    }
+
+                    if (sigversion == SigVersion::TAPSCRIPT) {
+                        assert(execdata.m_validation_weight_left_init);
+                        execdata.m_validation_weight_left -= VALIDATION_WEIGHT_PER_TXHASH;
+                        if (execdata.m_validation_weight_left < 0) {
+                            return set_error(serror, SCRIPT_ERR_TAPSCRIPT_VALIDATION_WEIGHT);
+                        }
+                    }
+
+                    uint256 txhash;
+                    if (!checker.CalculateTxHash(txhash, tx_field_selector, execdata)) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_TXFIELDSELECTOR);
+                    }
+
+                    if (opcode == OP_CHECKTXHASHVERIFY) {
+                        if (!memcmp(txhash.begin(), stack.back().data(), 32)) {
+                            return set_error(serror, SCRIPT_ERR_CHECKTXHASHVERIFY);
+                        }
+                        // nothing more to do, leave item on stack
+                    } else {
+                        popstack(stack);
+                        valtype vch(txhash.begin(), txhash.end());
+                        stack.push_back(vch);
+                    }
+                }
+                break;
+
+                case OP_NOP1: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 {
                     if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
@@ -1779,6 +1828,31 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
         return false;
 
     return true;
+}
+
+template <class T>
+bool GenericTransactionSignatureChecker<T>::CalculateTxHash(
+    uint256& hash_out, const Span<const unsigned char>& tx_field_selector, ScriptExecutionData& execdata
+) const
+{
+    assert(txTo != nullptr);
+    assert(txhash_cache != nullptr);
+    assert(txdata != nullptr && txdata->m_spent_outputs_ready);
+
+    uint32_t codeseparator_pos = 0xFFFFFFFFUL;
+    if (execdata.m_codeseparator_pos_init) {
+        codeseparator_pos = execdata.m_codeseparator_pos;
+    }
+
+    return calculate_txhash(
+        hash_out,
+        tx_field_selector,
+        *txhash_cache,
+        *txTo,
+        txdata->m_spent_outputs,
+        codeseparator_pos,
+        (uint32_t) nIn
+    );
 }
 
 // explicit instantiation

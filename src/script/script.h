@@ -59,8 +59,27 @@ static constexpr unsigned int ANNEX_TAG = 0x50;
 // Validation weight per passing signature (Tapscript only, see BIP 342).
 static constexpr int64_t VALIDATION_WEIGHT_PER_SIGOP_PASSED{50};
 
+// Validation weight per TransactionHash execution (Tapscript only, see BIP-txhash).
+static constexpr int64_t VALIDATION_WEIGHT_PER_TXHASH{10};
+
 // How much weight budget is added to the witness size (Tapscript only, see BIP 342).
 static constexpr int64_t VALIDATION_WEIGHT_OFFSET{50};
+
+/** Output script sizes */
+static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
+static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
+
+/// Maximum size in bytes of the TXHASH tx field selector.
+///
+/// Consists of:
+/// - 1 global field byte
+/// - 1 input/output field byte
+/// - 1 input selector byte
+/// - max 2^5 individual input indices of 2 bytes each
+/// - 1 output selector byte
+/// - max 2^5 individual output indices of 2 bytes each
+static const unsigned int MAX_TX_FIELD_SELECTOR_SIZE = 1 + 1 + 2 * (1 + (1 << 5) * 2); // 132
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
@@ -197,7 +216,8 @@ enum opcodetype
     OP_NOP2 = OP_CHECKLOCKTIMEVERIFY,
     OP_CHECKSEQUENCEVERIFY = 0xb2,
     OP_NOP3 = OP_CHECKSEQUENCEVERIFY,
-    OP_NOP4 = 0xb3,
+    OP_CHECKTXHASHVERIFY = 0xb3,
+    OP_NOP4 = OP_CHECKTXHASHVERIFY,
     OP_NOP5 = 0xb4,
     OP_NOP6 = 0xb5,
     OP_NOP7 = 0xb6,
@@ -207,6 +227,8 @@ enum opcodetype
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
+
+    OP_TXHASH = 0xbd,
 
     OP_INVALIDOPCODE = 0xff,
 };
@@ -533,8 +555,10 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsPayToBareCheckTxHashVerify() const;
     bool IsPayToScriptHash() const;
     bool IsPayToWitnessScriptHash() const;
+    bool IsPayToTaproot() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */

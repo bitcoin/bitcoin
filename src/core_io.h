@@ -15,6 +15,7 @@ class CBlock;
 class CBlockHeader;
 class CScript;
 class CTransaction;
+class CTxOut;
 struct CMutableTransaction;
 class SigningProvider;
 class uint256;
@@ -34,6 +35,7 @@ enum class TxVerbosity {
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
 [[nodiscard]] bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
+[[nodiscard]] bool DecodeHexTxOut(CTxOut& txout, const std::string& hex);
 [[nodiscard]] bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 

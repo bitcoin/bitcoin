@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/txhash.h>
 
 namespace {
 
@@ -105,12 +106,13 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
         set_error(err, bitcoinconsensus_ERR_OK);
 
         PrecomputedTransactionData txdata(tx);
+        TxHashCache txhash_cache;
 
         if (spentOutputs != nullptr && flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT) {
             txdata.Init(tx, std::move(spent_outputs));
         }
 
-        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata, MissingDataBehavior::FAIL), nullptr);
+        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), &tx.vin[nIn].scriptWitness, flags, TransactionSignatureChecker(&tx, nIn, amount, txdata, &txhash_cache, MissingDataBehavior::FAIL), nullptr);
     } catch (const std::exception&) {
         return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }

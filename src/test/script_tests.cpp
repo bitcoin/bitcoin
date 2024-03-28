@@ -19,6 +19,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <script/txhash.h>
 #include <streams.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
@@ -1715,8 +1716,9 @@ static void AssetTest(const UniValue& test)
         mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["success"]["witness"]);
         CTransaction tx(mtx);
         PrecomputedTransactionData txdata;
+        TxHashCache txhash_cache;
         txdata.Init(tx, std::vector<CTxOut>(prevouts));
-        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
+        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata, &txhash_cache);
 
 #if defined(HAVE_CONSENSUS_LIB)
         DataStream stream;
@@ -1749,8 +1751,9 @@ static void AssetTest(const UniValue& test)
         mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["failure"]["witness"]);
         CTransaction tx(mtx);
         PrecomputedTransactionData txdata;
+        TxHashCache txhash_cache;
         txdata.Init(tx, std::vector<CTxOut>(prevouts));
-        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata);
+        CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, txdata, &txhash_cache);
 
 #if defined(HAVE_CONSENSUS_LIB)
         DataStream stream;

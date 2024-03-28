@@ -18,6 +18,7 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
+#include <script/txhash.h>
 #include <span.h>
 #include <streams.h>
 #include <uint256.h>
@@ -140,8 +141,9 @@ bool CheckSignetBlockSolution(const CBlock& block, const Consensus::Params& cons
     const CScriptWitness& witness = signet_txs->m_to_sign.vin[0].scriptWitness;
 
     PrecomputedTransactionData txdata;
+    TxHashCache txhash_cache; //TODO(stevenroose) can we pass nullptr here because signet block checks shouldn't do txhash?
     txdata.Init(signet_txs->m_to_sign, {signet_txs->m_to_spend.vout[0]});
-    TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /* nInIn= */ 0, /* amountIn= */ signet_txs->m_to_spend.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL);
+    TransactionSignatureChecker sigcheck(&signet_txs->m_to_sign, /* nInIn= */ 0, /* amountIn= */ signet_txs->m_to_spend.vout[0].nValue, txdata, &txhash_cache, MissingDataBehavior::ASSERT_FAIL);
 
     if (!VerifyScript(scriptSig, signet_txs->m_to_spend.vout[0].scriptPubKey, &witness, BLOCK_SCRIPT_VERIFY_FLAGS, sigcheck)) {
         LogPrint(BCLog::VALIDATION, "CheckSignetBlockSolution: Errors in block (block solution invalid)\n");

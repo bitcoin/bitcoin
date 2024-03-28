@@ -556,6 +556,8 @@ static RPCHelpMan decodescript()
         case TxoutType::SCRIPTHASH:
         case TxoutType::WITNESS_UNKNOWN:
         case TxoutType::WITNESS_V1_TAPROOT:
+        // don't wrap TXHASH because P2SH TXHASH is a hash cycle
+        case TxoutType::BARE_CHECK_TXHASH_VERIFY:
             // Should not be wrapped
             return false;
         } // no default case, so the compiler can warn about missing cases
@@ -598,6 +600,8 @@ static RPCHelpMan decodescript()
             case TxoutType::WITNESS_V0_KEYHASH:
             case TxoutType::WITNESS_V0_SCRIPTHASH:
             case TxoutType::WITNESS_V1_TAPROOT:
+            // don't wrap TXHASH because P2SH TXHASH is a hash cycle
+            case TxoutType::BARE_CHECK_TXHASH_VERIFY:
                 // Should not be wrapped
                 return false;
             } // no default case, so the compiler can warn about missing cases

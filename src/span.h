@@ -250,6 +250,16 @@ template <typename T> Span(T&&) -> Span<std::enable_if_t<!std::is_lvalue_referen
 // For (lvalue) references, supporting mutable output.
 template <typename T> Span(T&) -> Span<std::enable_if_t<!std::is_void_v<DataResult<T&>>, DataResult<T&>>>;
 
+/** Pop the first element off a span, and return a reference to that element. */
+template <typename T>
+T& SpanPopFront(Span<T>& span)
+{
+    ASSERT_IF_DEBUG(span.size() > 0);
+    T& back = span[0];
+    span = span.subspan(1);
+    return back;
+}
+
 /** Pop the last element off a span, and return a reference to that element. */
 template <typename T>
 T& SpanPopBack(Span<T>& span)
@@ -257,7 +267,7 @@ T& SpanPopBack(Span<T>& span)
     size_t size = span.size();
     ASSERT_IF_DEBUG(size > 0);
     T& back = span[size - 1];
-    span = Span<T>(span.data(), size - 1);
+    span = span.subspan(0, size - 1);
     return back;
 }
 

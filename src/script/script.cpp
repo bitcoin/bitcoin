@@ -138,7 +138,7 @@ std::string GetOpName(opcodetype opcode)
     case OP_NOP1                   : return "OP_NOP1";
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
     case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
-    case OP_NOP4                   : return "OP_NOP4";
+    case OP_CHECKTXHASHVERIFY      : return "OP_CHECKTXHASHVERIFY";
     case OP_NOP5                   : return "OP_NOP5";
     case OP_NOP6                   : return "OP_NOP6";
     case OP_NOP7                   : return "OP_NOP7";
@@ -204,6 +204,40 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToBareCheckTxHashVerify() const
+{
+    // Extra-fast test for pay-to-bare-check-txhash-verify CScripts:
+
+    // NB parsing the script using GetScriptOp would result in an allocation
+    // of the byte push. To avoid this, we see what the size of the push would
+    // be based on the size of the script and then make sure that the script
+    // is correct.
+    // Since MAX_TXFS_SIZE is 132, the push should this always fit into either
+    // a single PUSHBYTES or PUSHDATA1.
+
+    assert(MAX_TX_FIELD_SELECTOR_SIZE == 132);
+    if (this->size() < 34 || this->size() > 3 + MAX_TX_FIELD_SELECTOR_SIZE) {
+        return false;
+    }
+    if ((*this)[this->size() - 1] != OP_CHECKTXHASHVERIFY) {
+        return false;
+    }
+
+    size_t max_push_size = this->size() - 2;
+    if (max_push_size < OP_PUSHDATA1) {
+        size_t push_size = max_push_size;
+        if ((*this)[0] != (unsigned char)push_size) {
+            return false;
+        }
+    } else {
+        size_t push_size = max_push_size - 1;
+        if ((*this)[0] != OP_PUSHDATA1 || (*this)[1] != (unsigned char)push_size) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
@@ -218,6 +252,14 @@ bool CScript::IsPayToWitnessScriptHash() const
     // Extra-fast test for pay-to-witness-script-hash CScripts:
     return (this->size() == 34 &&
             (*this)[0] == OP_0 &&
+            (*this)[1] == 0x20);
+}
+
+bool CScript::IsPayToTaproot() const
+{
+    // Extra-fast test for pay-to-taproot CScripts:
+    return (this->size() == 34 &&
+            (*this)[0] == OP_1 &&
             (*this)[1] == 0x20);
 }
 
@@ -343,7 +385,7 @@ bool IsOpSuccess(const opcodetype& opcode)
     return opcode == 80 || opcode == 98 || (opcode >= 126 && opcode <= 129) ||
            (opcode >= 131 && opcode <= 134) || (opcode >= 137 && opcode <= 138) ||
            (opcode >= 141 && opcode <= 142) || (opcode >= 149 && opcode <= 153) ||
-           (opcode >= 187 && opcode <= 254);
+           (opcode >= 187 && opcode <= 188) || (opcode >= 190 && opcode <= 254);
 }
 
 bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode) {

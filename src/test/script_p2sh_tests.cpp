@@ -10,6 +10,7 @@
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/txhash.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -115,11 +116,12 @@ BOOST_AUTO_TEST_CASE(sign)
     // Check to make sure signature verification fails if we use the wrong ScriptSig:
     for (int i = 0; i < 8; i++) {
         PrecomputedTransactionData txdata(txTo[i]);
+        TxHashCache txhash_cache;
         for (int j = 0; j < 8; j++)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
-            bool sigOK = CScriptCheck(txFrom.vout[txTo[i].vin[0].prevout.n], CTransaction(txTo[i]), 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata)();
+            bool sigOK = CScriptCheck(txFrom.vout[txTo[i].vin[0].prevout.n], CTransaction(txTo[i]), 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, false, &txdata, &txhash_cache)();
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else
