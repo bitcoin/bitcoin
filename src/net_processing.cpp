@@ -1798,6 +1798,8 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
 {
+    // Note: If package evaluation is exposed, we need to make sure the same
+    // tx isn't added multiple times in one invocation.
     if (m_opts.max_extra_txs <= 0)
         return;
     if (!vExtraTxnForCompact.size())

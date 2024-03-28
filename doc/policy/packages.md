@@ -48,8 +48,13 @@ The following rules are enforced for all packages:
      heavily connected, i.e. some transaction in the package is the ancestor or descendant of all
      the other transactions.
 
-The following rules are only enforced for packages to be submitted to the mempool (not enforced for
-test accepts):
+* [CPFP Carve Out](./mempool-limits.md#CPFP-Carve-Out) is disabled. (#21800)
+
+   - *Rationale*: This carve out cannot be accurately applied when there are multiple transactions'
+     ancestors and descendants being considered at the same time.
+
+The following rules are only enforced for packages to be submitted to the mempool (not
+enforced for test accepts):
 
 * Packages must be child-with-unconfirmed-parents packages. This also means packages must contain at
   least 2 transactions. (#22674)
