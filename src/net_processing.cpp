@@ -110,6 +110,8 @@ static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
 static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
 /** Maximum timeout for stalling block download. */
 static constexpr auto BLOCK_STALLING_TIMEOUT_MAX{64s};
+/** Timeout for stalling when close to the tip, after which we may add additional peers to download from */
+static constexpr auto BLOCK_NEARTIP_TIMEOUT_MAX{30s};
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
@@ -745,7 +747,10 @@ private:
     std::atomic<int> m_best_height{-1};
     /** The time of the best chain tip block */
     std::atomic<std::chrono::seconds> m_best_block_time{0s};
-
+    /** The last time we requested a block from any peer */
+    std::atomic<std::chrono::seconds> m_last_block_requested{0s};
+    /** The last time we received a block from any peer */
+    std::atomic<std::chrono::seconds> m_last_block_received{0s};
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
 
@@ -1270,6 +1275,7 @@ bool PeerManagerImpl::BlockRequested(NodeId nodeid, const CBlockIndex& block, st
     if (pit) {
         *pit = &itInFlight->second.second;
     }
+    m_last_block_requested = GetTime<std::chrono::seconds>();
     return true;
 }
 
@@ -1506,6 +1512,29 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 if (waitingfor == -1) {
                     // This is the first already-in-flight block.
                     waitingfor = mapBlocksInFlight.lower_bound(pindex->GetBlockHash())->second.first;
+
+                    // Decide whether to request this block from additional peers in parallel.
+                    // This is done if we are close (<=1024 blocks) from the tip, so that the usual
+                    // stalling mechanism doesn't work. To reduce excessive waste of bandwith, do this only
+                    // 30 seconds (BLOCK_NEARTIP_TIMEOUT_MAX) after a block was requested or received from any peer,
+                    // and only with up to 3 peers in parallel.
+                    bool already_requested_from_peer{false};
+                    auto range{mapBlocksInFlight.equal_range(pindex->GetBlockHash())};
+                    while (range.first != range.second) {
+                        if (range.first->second.first == peer.m_id) {
+                            already_requested_from_peer = true;
+                            break;
+                        }
+                        range.first++;
+                    }
+                    if (nMaxHeight <= nWindowEnd && // we have 1024 or less blocks left to download
+                        GetTime<std::chrono::microseconds>() > m_last_block_requested.load() + BLOCK_NEARTIP_TIMEOUT_MAX &&
+                        GetTime<std::chrono::microseconds>() > m_last_block_received.load() + BLOCK_NEARTIP_TIMEOUT_MAX &&
+                        !already_requested_from_peer &&
+                        mapBlocksInFlight.count(pindex->GetBlockHash()) <= 2) {
+                        LogDebug(BCLog::NET, "Possible stalling close to tip: Requesting block %s additionally from peer %d\n", pindex->GetBlockHash().ToString(), peer.m_id);
+                        vBlocks.push_back(pindex);
+                    }
                 }
                 continue;
             }
@@ -3360,6 +3389,7 @@ void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
     m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
     if (new_block) {
         node.m_last_block_time = GetTime<std::chrono::seconds>();
+        m_last_block_received = GetTime<std::chrono::seconds>();
         // In case this block came from a different peer than we requested
         // from, we can erase the block request now anyway (as we just stored
         // this block to disk).
