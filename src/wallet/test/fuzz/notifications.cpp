@@ -166,7 +166,7 @@ struct FuzzedWallet {
         // Clear tx.vout since it is not meant to be used now that we are passing outputs directly.
         // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
         tx.vout.clear();
-        (void)FundTransaction(*wallet, tx, recipients, change_position, /*lockUnspents=*/false, coin_control);
+        (void)FundTransaction(*wallet, tx.vin, recipients, change_position, /*lockUnspents=*/false, coin_control);
     }
 };
 
