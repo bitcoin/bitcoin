@@ -49,6 +49,13 @@ void initialize_spkm()
     MOCKED_DESC_CONVERTER.Init();
 }
 
+void initialize_spkm_migration()
+{
+    static const auto testing_setup{MakeNoLogFileContext<const TestingSetup>()};
+    g_setup = testing_setup.get();
+    SelectParams(ChainType::MAIN);
+}
+
 /**
  * Key derivation is expensive. Deriving deep derivation paths take a lot of compute and we'd rather spend time
  * elsewhere in this target, like on actually fuzzing the DescriptorScriptPubKeyMan. So rule out strings which could
@@ -194,6 +201,70 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
             }
         );
     }
+}
+
+FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    const auto& node{g_setup->m_node};
+    Chainstate& chainstate{node.chainman->ActiveChainstate()};
+    std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
+    CWallet& wallet{*wallet_ptr};
+    wallet.m_keypool_size = 1;
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.SetLastBlockProcessed(chainstate.m_chain.Height(), chainstate.m_chain.Tip()->GetBlockHash());
+    }
+
+    std::vector<CKey> keys;
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30) {
+        const auto key{ConsumePrivateKey(fuzzed_data_provider)};
+        if (!key.IsValid()) return;
+        keys.push_back(key);
+    }
+
+    if (keys.empty()) return;
+
+    auto& legacy_spkm{*wallet.GetOrCreateLegacyScriptPubKeyMan()};
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        const auto key_index{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, keys.size() - 1)};
+        const auto seed{legacy_spkm.DeriveNewSeed(keys[key_index])};
+        (void)legacy_spkm.SetHDSeed(seed);
+        (void)legacy_spkm.NewKeyPool();
+    }
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30) {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                const auto key_index{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, keys.size() - 1)};
+                if (legacy_spkm.HaveKey(keys[key_index].GetPubKey().GetID())) return;
+                (void)legacy_spkm.LoadKey(keys[key_index], keys[key_index].GetPubKey());
+            },
+            [&] {
+                CScript script{ConsumeScript(fuzzed_data_provider)};
+                const auto key_index{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, keys.size() - 1)};
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 2) {
+                    CallOneOf(
+                        fuzzed_data_provider,
+                        [&] {
+                            script = GetScriptForDestination(PKHash(keys[key_index].GetPubKey()));
+                        },
+                        [&] {
+                            script = GetScriptForDestination(WitnessV0KeyHash(keys[key_index].GetPubKey()));
+                        },
+                        [&] {
+                            script = GetScriptForDestination(WitnessV0ScriptHash(script));
+                        }
+                    );
+                }
+                (void)legacy_spkm.AddCScript(script);
+            }
+        );
+    }
+
+    (void)legacy_spkm.MigrateToDescriptor();
 }
 
 } // namespace
