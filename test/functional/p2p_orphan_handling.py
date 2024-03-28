@@ -25,6 +25,7 @@ from test_framework.p2p import (
     TXID_RELAY_DELAY,
 )
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -106,7 +107,7 @@ class PeerTxRelayer(P2PTxInvStore):
         """Check that the node has never sent us a getdata for this hash (int type)"""
         for getdata in self.getdata_received:
             for request in getdata.inv:
-                assert request.hash != txhash
+                assert_not_equal(request.hash, txhash)
 
 class OrphanHandlingTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -373,8 +374,8 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert_equal(parent_low_fee_nonsegwit["txid"], parent_low_fee_nonsegwit["tx"].getwtxid())
         child = self.wallet.create_self_transfer(utxo_to_spend=parent_low_fee_nonsegwit["new_utxo"])
         grandchild = self.wallet.create_self_transfer(utxo_to_spend=child["new_utxo"])
-        assert child["txid"] != child["tx"].getwtxid()
-        assert grandchild["txid"] != grandchild["tx"].getwtxid()
+        assert_not_equal(child["txid"], child["tx"].getwtxid())
+        assert_not_equal(grandchild["txid"], grandchild["tx"].getwtxid())
 
         # Relay the parent. It should be rejected because it pays 0 fees.
         self.relay_transaction(peer1, parent_low_fee_nonsegwit["tx"])
