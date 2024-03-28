@@ -38,9 +38,10 @@ class HeadersSyncTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Adding a peer to node0")
         peer1 = self.nodes[0].add_p2p_connection(P2PInterface())
+        best_block_hash = int(self.nodes[0].getbestblockhash(), 16)
 
         # Wait for peer1 to receive a getheaders
-        peer1.wait_for_getheaders()
+        peer1.wait_for_getheaders(block_hash=best_block_hash)
         # An empty reply will clear the outstanding getheaders request,
         # allowing additional getheaders requests to be sent to this peer in
         # the future.
@@ -60,17 +61,12 @@ class HeadersSyncTest(BitcoinTestFramework):
             assert "getheaders" not in peer2.last_message
             assert "getheaders" not in peer3.last_message
 
-        with p2p_lock:
-            peer1.last_message.pop("getheaders", None)
-
         self.log.info("Have all peers announce a new block")
         self.announce_random_block(all_peers)
 
         self.log.info("Check that peer1 receives a getheaders in response")
-        peer1.wait_for_getheaders()
+        peer1.wait_for_getheaders(block_hash=best_block_hash)
         peer1.send_message(msg_headers()) # Send empty response, see above
-        with p2p_lock:
-            peer1.last_message.pop("getheaders", None)
 
         self.log.info("Check that exactly 1 of {peer2, peer3} received a getheaders in response")
         count = 0
@@ -80,7 +76,6 @@ class HeadersSyncTest(BitcoinTestFramework):
                 if "getheaders" in p.last_message:
                     count += 1
                     peer_receiving_getheaders = p
-                    p.last_message.pop("getheaders", None)
                     p.send_message(msg_headers()) # Send empty response, see above
 
         assert_equal(count, 1)
@@ -89,14 +84,14 @@ class HeadersSyncTest(BitcoinTestFramework):
         self.announce_random_block(all_peers)
 
         self.log.info("Check that peer1 receives a getheaders in response")
-        peer1.wait_for_getheaders()
+        peer1.wait_for_getheaders(block_hash=best_block_hash)
 
         self.log.info("Check that the remaining peer received a getheaders as well")
         expected_peer = peer2
         if peer2 == peer_receiving_getheaders:
             expected_peer = peer3
 
-        expected_peer.wait_for_getheaders()
+        expected_peer.wait_for_getheaders(block_hash=best_block_hash)
 
         self.log.info("Success!")
 
