@@ -213,7 +213,6 @@ void WalletControllerActivity::showProgressDialog(const QString& title_text, con
 CreateWalletActivity::CreateWalletActivity(WalletController* wallet_controller, QWidget* parent_widget)
     : WalletControllerActivity(wallet_controller, parent_widget)
 {
-    m_passphrase.reserve(MAX_PASSPHRASE_SIZE);
 }
 
 CreateWalletActivity::~CreateWalletActivity()

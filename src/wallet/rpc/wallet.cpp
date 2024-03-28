@@ -383,15 +383,11 @@ static RPCHelpMan createwallet()
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
-    SecureString passphrase;
-    passphrase.reserve(100);
+    const SecureString passphrase{!request.params[3].isNull() ? request.params[3].get_str() : ""};
     std::vector<bilingual_str> warnings;
-    if (!request.params[3].isNull()) {
-        passphrase = std::string_view{request.params[3].get_str()};
-        if (passphrase.empty()) {
-            // Empty string means unencrypted
-            warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
-        }
+    if (!request.params[3].isNull() && passphrase.empty()) {
+        // Empty string means unencrypted
+        warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
     }
 
     if (!request.params[4].isNull() && request.params[4].get_bool()) {
@@ -790,11 +786,7 @@ static RPCHelpMan migratewallet()
                 wallet_name = request.params[0].get_str();
             }
 
-            SecureString wallet_pass;
-            wallet_pass.reserve(100);
-            if (!request.params[1].isNull()) {
-                wallet_pass = std::string_view{request.params[1].get_str()};
-            }
+            const SecureString wallet_pass{!request.params[1].isNull() ? request.params[1].get_str() : ""};
 
             WalletContext& context = EnsureWalletContext(request.context);
             util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context);

@@ -47,9 +47,7 @@ RPCHelpMan walletpassphrase()
         }
 
         // Note that the walletpassphrase is stored in request.params[0] which is not mlock()ed
-        SecureString strWalletPass;
-        strWalletPass.reserve(100);
-        strWalletPass = std::string_view{request.params[0].get_str()};
+        const SecureString strWalletPass{request.params[0].get_str()};
 
         // Get the timeout
         nSleepTime = request.params[1].getInt<int64_t>();
@@ -140,13 +138,8 @@ RPCHelpMan walletpassphrasechange()
 
     LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
 
-    SecureString strOldWalletPass;
-    strOldWalletPass.reserve(100);
-    strOldWalletPass = std::string_view{request.params[0].get_str()};
-
-    SecureString strNewWalletPass;
-    strNewWalletPass.reserve(100);
-    strNewWalletPass = std::string_view{request.params[1].get_str()};
+    const SecureString strOldWalletPass{request.params[0].get_str()};
+    const SecureString strNewWalletPass{request.params[1].get_str()};
 
     if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
@@ -260,9 +253,7 @@ RPCHelpMan encryptwallet()
 
     LOCK2(pwallet->m_relock_mutex, pwallet->cs_wallet);
 
-    SecureString strWalletPass;
-    strWalletPass.reserve(100);
-    strWalletPass = std::string_view{request.params[0].get_str()};
+    const SecureString strWalletPass{request.params[0].get_str()};
 
     if (strWalletPass.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
