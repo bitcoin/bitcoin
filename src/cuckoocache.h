@@ -359,7 +359,7 @@ public:
      * @param bytes the approximate number of bytes to use for this data
      * structure
      * @returns A pair of the maximum number of elements storable (see setup()
-     * documentation for more detail) and the approxmiate total size of these
+     * documentation for more detail) and the approximate total size of these
      * elements in bytes or std::nullopt if the size requested is too large.
      */
     std::optional<std::pair<uint32_t, size_t>> setup_bytes(size_t bytes)

@@ -5784,7 +5784,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     CBlockIndex* index = nullptr;
 
     // Don't make any modifications to the genesis block since it shouldn't be
-    // neccessary, and since the genesis block doesn't have normal flags like
+    // necessary, and since the genesis block doesn't have normal flags like
     // BLOCK_VALID_SCRIPTS set.
     constexpr int AFTER_GENESIS_START{1};
 

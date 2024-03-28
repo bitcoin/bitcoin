@@ -5,7 +5,7 @@ Date:   Fri May 6 11:03:04 2022 +0100
     build: use -fcommon to retain legacy behaviour with GCC 10
     
     GCC 10 started using -fno-common by default, which causes issues with
-    the powerpc builds using gibc 2.27. A patch was commited to glibc to fix
+    the powerpc builds using gibc 2.27. A patch was committed to glibc to fix
     the issue, 18363b4f010da9ba459b13310b113ac0647c2fcc but is non-trvial
     to backport, and was broken in at least one way, see the followup in
     commit 7650321ce037302bfc2f026aa19e0213b8d02fe6.
