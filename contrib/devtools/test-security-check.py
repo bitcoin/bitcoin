@@ -57,32 +57,36 @@ class TestSecurityChecks(unittest.TestCase):
         arch = get_arch(cc, source, executable)
 
         if arch == lief.ARCHITECTURES.X86:
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE NX RELRO Canary CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO Canary CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed RELRO CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,noseparate-code']),
-                    (1, executable+': failed separate_code CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed PIE NX RELRO Canary FORTIFY CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed PIE RELRO Canary FORTIFY CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed PIE RELRO FORTIFY CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-pie','-fPIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed RELRO FORTIFY CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,noseparate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed separate_code FORTIFY CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed FORTIFY CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full', '-D_FORTIFY_SOURCE=2']),
                     (0, ''))
         else:
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE NX RELRO Canary'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO Canary'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed RELRO'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,noseparate-code']),
-                    (1, executable+': failed separate_code'))
-            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code']),
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-zexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed PIE NX RELRO Canary FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fno-stack-protector','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed PIE RELRO Canary FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed PIE RELRO FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-znorelro','-pie','-fPIE', '-Wl,-z,separate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed RELRO FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,noseparate-code', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed separate_code FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full', '-U_FORTIFY_SOURCE']),
+                    (1, executable+': failed FORTIFY'))
+            self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-D_FORTIFY_SOURCE=2']),
                     (0, ''))
 
         clean_files(source, executable)
