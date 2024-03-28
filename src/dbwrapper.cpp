@@ -100,7 +100,7 @@ public:
 
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogPrintLevel(BCLog::LEVELDB, BCLog::Level::Debug, "%s", base); // NOLINT(bitcoin-unterminated-logprintf)
+                LogDebug(BCLog::LEVELDB, "%s", base); // NOLINT(bitcoin-unterminated-logprintf)
                 if (base != buffer) {
                     delete[] base;
                 }
