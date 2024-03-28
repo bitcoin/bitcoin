@@ -8,6 +8,7 @@
 #include <kernel/chain.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
+#include <netbase.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <validationinterface.h>
@@ -57,7 +58,10 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
     {
         std::string arg("-zmq" + entry.first);
         const auto& factory = entry.second;
-        for (const std::string& address : gArgs.GetArgs(arg)) {
+        for (std::string& address : gArgs.GetArgs(arg)) {
+            // libzmq uses prefix "ipc://" for UNIX domain sockets
+            ReplaceAll(address, ADDR_PREFIX_UNIX, ADDR_PREFIX_IPC);
+
             std::unique_ptr<CZMQAbstractNotifier> notifier = factory();
             notifier->SetType(entry.first);
             notifier->SetAddress(address);
