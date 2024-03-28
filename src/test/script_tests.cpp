@@ -11,6 +11,7 @@
 
 #include <common/system.h>
 #include <core_io.h>
+#include <deploymentinfo.h>
 #include <key.h>
 #include <rpc/util.h>
 #include <script/script.h>
@@ -26,6 +27,7 @@
 #include <test/util/transaction_utils.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>
@@ -46,7 +48,6 @@
 static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(std::string strFlags);
-std::string FormatScriptFlags(unsigned int flags);
 
 struct ScriptErrorDesc
 {
@@ -99,6 +100,11 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_OP_CODESEPARATOR, "OP_CODESEPARATOR"},
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
+
+std::string FormatScriptFlags(uint32_t flags)
+{
+    return Join(GetScriptFlagNames(flags), ",");
+}
 
 static std::string FormatScriptError(ScriptError_t err)
 {
@@ -1897,6 +1903,15 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
 
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, Span(script)), tlc0);
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, Span(script)), tlc2);
+}
+
+BOOST_AUTO_TEST_CASE(formatscriptflags)
+{
+    // quick check that FormatScriptFlags reports any unknown/unexpected bits
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH), "P2SH");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | (1u<<31)), "P2SH,0x80000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | (1u<<27)), "TAPROOT,0x08000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(1u<<26), "0x04000000");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
