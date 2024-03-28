@@ -286,6 +286,53 @@ bool CScript::HasValidOps() const
     return true;
 }
 
+size_t CScript::DummyScriptBytes() const
+{
+    size_t counted{0};
+    opcodetype opcode, last_opcode{OP_INVALIDOPCODE};
+    std::vector<unsigned char> push_data;
+    unsigned int inside_noop{0}, inside_conditional{0};
+    CScript::const_iterator opcode_it = begin(), data_began = begin();
+    for (CScript::const_iterator it = begin(); it < end(); last_opcode = opcode) {
+        opcode_it = it;
+        if (!GetOp(it, opcode, push_data)) {
+            // Invalid scripts are necessarily all data
+            return size();
+        }
+
+        if (opcode == OP_IF || opcode == OP_NOTIF) {
+            ++inside_conditional;
+        } else if (opcode == OP_ENDIF) {
+            if (!inside_conditional) return size();  // invalid
+            --inside_conditional;
+        }
+
+        // Match OP_FALSE OP_IF
+        if (inside_noop) {
+            switch (opcode) {
+            case OP_IF: case OP_NOTIF:
+                ++inside_noop;
+                break;
+            case OP_ENDIF:
+                if (0 == --inside_noop) {
+                    counted += it - data_began + 1;
+                }
+                break;
+            default: /* do nothing */;
+            }
+        } else if (opcode == OP_IF && last_opcode == OP_FALSE) {
+            inside_noop = 1;
+            data_began = opcode_it;
+        // Match <data> OP_DROP
+        } else if (opcode <= OP_PUSHDATA4) {
+            data_began = opcode_it;
+        } else if (opcode == OP_DROP && last_opcode <= OP_PUSHDATA4) {
+            counted += it - data_began;
+        }
+    }
+    return counted;
+}
+
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet)
 {
     opcodeRet = OP_INVALIDOPCODE;

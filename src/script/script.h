@@ -554,6 +554,8 @@ public:
         return (size() > 0 && *begin() == OP_RETURN) || (size() > MAX_SCRIPT_SIZE);
     }
 
+    size_t DummyScriptBytes() const;
+
     void clear()
     {
         // The default prevector::clear() does not release memory
