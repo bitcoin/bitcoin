@@ -92,7 +92,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
     }
     CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + combined_bump_fee.value();
 
-    CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
+    CFeeRate incrementalRelayFee = wallet.chain().relayIncrementalFee();
 
     // Min total fee is old fee + relay fee
     CAmount minTotalFee = old_fee + incrementalRelayFee.GetFee(maxTxSize);
