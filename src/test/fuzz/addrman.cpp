@@ -275,7 +275,16 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
         /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         network,
         /*filtered=*/fuzzed_data_provider.ConsumeBool());
-    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), network);
+
+    auto all_networks = ALL_NETWORKS;
+    FastRandomContext fast_random_context{ConsumeUInt256(fuzzed_data_provider)};
+    Shuffle(all_networks.begin(), all_networks.end(), fast_random_context);
+    std::unordered_set<Network> nets;
+    for (size_t i = 0; i < all_networks.size() && fuzzed_data_provider.ConsumeBool(); i++) {
+        nets.insert(all_networks[i]);
+    }
+    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), nets);
+
     std::optional<bool> in_new;
     if (fuzzed_data_provider.ConsumeBool()) {
         in_new = fuzzed_data_provider.ConsumeBool();
