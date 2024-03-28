@@ -289,7 +289,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetParams().m_base_format == BaseFormat::RAW) {
+        if (s.template GetParams<BaseFormat>().m_base_format == BaseFormat::RAW) {
             s << m_base_data;
         } else {
             s << Span{HexStr(Span{&m_base_data, 1})};
@@ -299,7 +299,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetParams().m_base_format == BaseFormat::RAW) {
+        if (s.template GetParams<BaseFormat>().m_base_format == BaseFormat::RAW) {
             s >> m_base_data;
         } else {
             std::string hex{"aa"};
@@ -327,8 +327,9 @@ class Derived : public Base
 public:
     std::string m_derived_data;
 
-    SERIALIZE_METHODS_PARAMS(Derived, obj, DerivedAndBaseFormat, fmt)
+    SERIALIZE_METHODS(Derived, obj)
     {
+        auto& fmt = SER_PARAMS(DerivedAndBaseFormat);
         READWRITE(fmt.m_base_format(AsBase<Base>(obj)));
 
         if (ser_action.ForRead()) {
@@ -342,6 +343,59 @@ public:
         }
     }
 };
+
+struct OtherParam {
+    uint8_t param;
+    SER_PARAMS_OPFUNC
+};
+
+//! Checker for value of OtherParam. When being serialized, serializes the
+//! param to the stream. When being unserialized, verifies the value in the
+//! stream matches the param.
+class OtherParamChecker
+{
+public:
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        const uint8_t param = s.template GetParams<OtherParam>().param;
+        s << param;
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s) const
+    {
+        const uint8_t param = s.template GetParams<OtherParam>().param;
+        uint8_t value;
+        s >> value;
+        BOOST_CHECK_EQUAL(value, param);
+    }
+};
+
+//! Test creating a stream with multiple parameters and making sure
+//! serialization code requiring different parameters can retrieve them. Also
+//! test that earlier parameters take precedence if the same parameter type is
+//! specified twice. (Choice of whether earlier or later values take precedence
+//! or multiple values of the same type are allowed was arbitrary, and just
+//! decided based on what would require smallest amount of ugly C++ template
+//! code. Intent of the test is to just ensure there is no unexpected behavior.)
+BOOST_AUTO_TEST_CASE(with_params_multi)
+{
+    const OtherParam other_param_used{.param = 0x10};
+    const OtherParam other_param_ignored{.param = 0x11};
+    const OtherParam other_param_override{.param = 0x12};
+    const OtherParamChecker check;
+    DataStream stream;
+    ParamsStream pstream{stream, RAW, other_param_used, other_param_ignored};
+
+    Base base1{0x20};
+    pstream << base1 << check << other_param_override(check);
+    BOOST_CHECK_EQUAL(stream.str(), "\x20\x10\x12");
+
+    Base base2;
+    pstream >> base2 >> check >> other_param_override(check);
+    BOOST_CHECK_EQUAL(base2.m_base_data, 0x20);
+}
 
 BOOST_AUTO_TEST_CASE(with_params_base)
 {
