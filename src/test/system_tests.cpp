@@ -11,7 +11,7 @@
 #include <univalue.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
-#include <boost/process.hpp>
+#include <util/subprocess.hpp>
 #endif // ENABLE_EXTERNAL_SIGNER
 
 #include <boost/test/unit_test.hpp>
@@ -34,20 +34,16 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(result.isNull());
     }
     {
-        const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
+        const UniValue result = RunCommandParseJSON("echo {\"success\": true}");
         BOOST_CHECK(result.isObject());
         const UniValue& success = result.find_value("success");
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.get_bool(), true);
     }
     {
-        // An invalid command is handled by Boost
-        const int expected_error{2};
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, [&](const boost::process::process_error& e) {
-            BOOST_CHECK(std::string(e.what()).find("RunCommandParseJSON error:") == std::string::npos);
-            BOOST_CHECK_EQUAL(e.code().value(), expected_error);
-            return true;
-        });
+        // An invalid command is handled by cpp-subprocess
+        const std::string expected{"execve failed: "};
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), subprocess::CalledProcessError, HasReason(expected));
     }
     {
         // Return non-zero exit code, no output to stderr
