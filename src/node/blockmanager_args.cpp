@@ -16,6 +16,7 @@
 namespace node {
 util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts)
 {
+    if (auto value{args.GetBoolArg("-blocksxor")}) opts.xor_key = *value;
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
     int64_t nPruneArg{args.GetIntArg("-prune", opts.prune_target)};
     if (nPruneArg < 0) {
