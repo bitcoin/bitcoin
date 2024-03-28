@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/v1_transport.h>
+#include <common/v2_transport.h>
 #include <hash.h>
 #include <net.h>
 #include <netmessagemaker.h>

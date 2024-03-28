@@ -152,6 +152,10 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
+  test/sv2_noise_tests.cpp \
+  test/sv2_messages_tests.cpp \
+  test/sv2_template_provider_tests.cpp \
+  test/sv2_transport_tests.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
@@ -165,6 +169,7 @@ BITCOIN_TESTS =\
   test/uint256_tests.cpp \
   test/util_tests.cpp \
   test/util_threadnames_tests.cpp \
+  test/v2_transport_tests.cpp \
   test/validation_block_tests.cpp \
   test/validation_chainstate_tests.cpp \
   test/validation_chainstatemanager_tests.cpp \
@@ -384,6 +389,8 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/string.cpp \
  test/fuzz/strprintf.cpp \
  test/fuzz/system.cpp \
+ test/fuzz/sv2_messages.cpp \
+ test/fuzz/sv2_noise.cpp \
  test/fuzz/timedata.cpp \
  test/fuzz/torcontrol.cpp \
  test/fuzz/transaction.cpp \
