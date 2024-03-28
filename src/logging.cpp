@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
 #include <util/threadnames.h>
@@ -95,7 +96,16 @@ void BCLog::Logger::DisconnectTestLogger()
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
-    m_categories |= flag;
+    switch (flag) {
+    case BCLog::NONE:
+        return;
+    case BCLog::ALL:
+        // with no argument, set() sets all the bits to true
+        m_categories.set();
+        return;
+    default: break;
+    }
+    if (Assume(flag < BCLog::ALL)) m_categories.set(flag);
 }
 
 bool BCLog::Logger::EnableCategory(const std::string& str)
@@ -108,7 +118,16 @@ bool BCLog::Logger::EnableCategory(const std::string& str)
 
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 {
-    m_categories &= ~flag;
+    switch (flag) {
+    case BCLog::NONE:
+        return;
+    case BCLog::ALL:
+        // set all the category flags to false
+        m_categories.reset();
+        return;
+    default: break;
+    }
+    if (Assume(flag < BCLog::ALL)) m_categories.reset(flag);
 }
 
 bool BCLog::Logger::DisableCategory(const std::string& str)
@@ -121,7 +140,10 @@ bool BCLog::Logger::DisableCategory(const std::string& str)
 
 bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 {
-    return (m_categories.load(std::memory_order_relaxed) & category) != 0;
+    if (Assume(category < BCLog::ALL)) {
+        return m_categories.test(category);
+    }
+    return false;
 }
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
@@ -139,7 +161,7 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return m_categories.is_none();
 }
 
 struct CLogCategoryDesc {
@@ -287,6 +309,8 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "scan";
     case BCLog::LogFlags::TXPACKAGES:
         return "txpackages";
+    // Add new entries before this line.
+
     case BCLog::LogFlags::ALL:
         return "all";
     }
