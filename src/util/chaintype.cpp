@@ -8,6 +8,20 @@
 #include <optional>
 #include <string>
 
+std::string ChainTypeToDisplayString(ChainType chain) {
+    switch (chain) {
+    case ChainType::MAIN:
+        return "Bitcoin";
+    case ChainType::TESTNET:
+        return "testnet";
+    case ChainType::SIGNET:
+        return "signet";
+    case ChainType::REGTEST:
+        return "regtest";
+    }
+    assert(false);
+}
+
 std::string ChainTypeToString(ChainType chain)
 {
     switch (chain) {

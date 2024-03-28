@@ -12,10 +12,10 @@ INVALID_DATA = [
     # BIP 173
     (
         "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # Invalid hrp
+        "Invalid or unsupported prefix for Bitcoin address (expected bc, got tc)",  # Invalid hrp
         [],
     ),
-    ("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5", "Invalid Bech32 checksum", [41]),
+    ("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5", "Bech32(m) address decoded with error: Invalid Bech32 checksum", [41]),
     (
         "BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2",
         "Version 1+ witness address must use Bech32m checksum",
@@ -33,18 +33,18 @@ INVALID_DATA = [
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
+        "Invalid SegWit v0 address program size (16 bytes), per BIP141",
         [],
     ),
     (
         "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Mixed case
+        "Address is not valid Base58 or Bech32",  # tb1, Mixed case
         [],
     ),
     (
         "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3t4",
-        "Invalid character or mixed case",  # bc1, Mixed case, not in BIP 173 test vectors
-        [40],
+        "Address is not valid Base58 or Bech32",  # bc1, Mixed case, not in BIP 173 test vectors
+        [],
     ),
     (
         "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
@@ -53,14 +53,14 @@ INVALID_DATA = [
     ),
     (
         "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Non-zero padding in 8-to-5 conversion
+        "Invalid or unsupported prefix for Bitcoin address (expected bc, got tb)",  # tb1, Non-zero padding in 8-to-5 conversion
         [],
     ),
     ("bc1gmk9yu", "Empty Bech32 data section", []),
     # BIP 350
     (
         "tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # Invalid human-readable part
+        "Invalid or unsupported prefix for Bitcoin address (expected bc, got tc)",  # Invalid human-readable part
         [],
     ),
     (
@@ -70,7 +70,7 @@ INVALID_DATA = [
     ),
     (
         "tb1z0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqglt7rf",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Invalid checksum (Bech32 instead of Bech32m)
+        "Invalid or unsupported prefix for Bitcoin address (expected bc, got tb)",  # tb1, Invalid checksum (Bech32 instead of Bech32m)
         [],
     ),
     (
@@ -85,13 +85,13 @@ INVALID_DATA = [
     ),
     (
         "tb1q0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq24jc47",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Invalid checksum (Bech32m instead of Bech32)
+        "Invalid or unsupported prefix for Bitcoin address (expected bc, got tb)",  # tb1, Invalid checksum (Bech32m instead of Bech32)
         [],
     ),
     (
         "bc1p38j9r5y49hruaue7wxjce0updqjuyyx0kh56v8s25huc6995vvpql3jow4",
-        "Invalid Base 32 character",  # Invalid character in checksum
-        [59],
+        "Address is not valid Base58 or Bech32",  # Invalid character in checksum
+        [],
     ),
     (
         "BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R",
@@ -106,12 +106,12 @@ INVALID_DATA = [
     ),
     (
         "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-        "Invalid Bech32 v0 address program size (16 bytes), per BIP141",
+        "Invalid SegWit v0 address program size (16 bytes), per BIP141",
         [],
     ),
     (
         "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Mixed case
+        "Address is not valid Base58 or Bech32",  # tb1, Mixed case
         [],
     ),
     (
@@ -121,7 +121,7 @@ INVALID_DATA = [
     ),
     (
         "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vpggkg4j",
-        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",  # tb1, Non-zero padding in 8-to-5 conversion
+        "Invalid or unsupported prefix for Bitcoin address (expected bc, got tb)",  # tb1, Non-zero padding in 8-to-5 conversion
         [],
     ),
     ("bc1gmk9yu", "Empty Bech32 data section", []),

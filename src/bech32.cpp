@@ -400,10 +400,23 @@ DecodeResult Decode(const std::string& str) {
 std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str) {
     std::vector<int> error_locations{};
 
-    if (str.size() > 90) {
-        error_locations.resize(str.size() - 90);
-        std::iota(error_locations.begin(), error_locations.end(), 90);
+    static constexpr uint8_t BECH32_MAX_LENGTH = 90;
+    static constexpr uint8_t BECH32_MIN_LENGTH = 8;
+
+    // Mark all error_locations >= BECH32_MAX_LENGTH
+    // (and ignore all potential errors in earlier positions).
+    if (str.size() > BECH32_MAX_LENGTH) {
+        error_locations.resize(str.size() - BECH32_MAX_LENGTH);
+        std::iota(error_locations.begin(), error_locations.end(), BECH32_MAX_LENGTH);
         return std::make_pair("Bech32 string too long", std::move(error_locations));
+    }
+
+    // Mark all error_locations <= BECH32_MIN_LENGTH
+    // (and ignore all potential errors in latter positions).
+    if (str.size() < BECH32_MIN_LENGTH) {
+        error_locations.resize(str.size());
+        std::iota(error_locations.begin(), error_locations.end(), 0);
+        return std::make_pair("Bech32 string too short", std::move(error_locations));
     }
 
     if (!CheckCharacters(str, error_locations)){
@@ -414,7 +427,17 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str) {
     if (pos == str.npos) {
         return std::make_pair("Missing separator", std::vector<int>{});
     }
-    if (pos == 0 || pos + 7 > str.size()) {
+
+    if (str.find('1') != pos) {
+        for(size_t search_idx = 0; search_idx < str.size(); ++search_idx) {
+            if(str[search_idx] == '1') {
+                error_locations.push_back(search_idx);
+            }
+        }
+        return std::make_pair("Multiple separators", std::move(error_locations));
+    }
+
+    if (pos == 0 || pos + BECH32_MIN_LENGTH - 1 > str.size()) {
         error_locations.push_back(pos);
         return std::make_pair("Invalid separator position", std::move(error_locations));
     }

@@ -20,7 +20,9 @@ BECH32_INVALID_BECH32M = 'bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7k35mrzd'
 BECH32_INVALID_VERSION = 'bcrt130xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqynjegk'
 BECH32_INVALID_SIZE = 'bcrt1s0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v8n0nx0muaewav25430mtr'
 BECH32_INVALID_V0_SIZE = 'bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kqqq5k3my'
-BECH32_INVALID_PREFIX = 'bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx'
+BECH32_INVALID_PREFIX_WRONG_CHAIN = 'bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx'
+BECH32_INVALID_PREFIX_NO_HRP = '1mk9q5tvu03k4qnfv6j2xjycx2ceah2zw5nek7czepflkd2a2xxrqk00j84'
+BECH32_TOO_SHORT = 'bcrt0rt'
 BECH32_TOO_LONG = 'bcrt1q049edschfnwystcqnsvyfpj23mpsg3jcedq9xv049edschfnwystcqnsvyfpj23mpsg3jcedq9xv049edschfnwystcqnsvyfpj23m'
 BECH32_ONE_ERROR = 'bcrt1q049edschfnwystcqnsvyfpj23mpsg3jcedq9xv'
 BECH32_ONE_ERROR_CAPITALS = 'BCRT1QPLMTZKC2XHARPPZDLNPAQL78RSHJ68U32RAH7R'
@@ -37,6 +39,7 @@ BASE58_INVALID_LENGTH = '2VKf7XKMrp4bVNVmuRbyCewkP8FhGLP2E54LHDPakr9Sq5mtU2'
 
 INVALID_ADDRESS = 'asfah14i8fajz0123f'
 INVALID_ADDRESS_2 = '1q049ldschfnwystcqnsvyfpj23mpsg3jcedq9xv'
+INVALID_ADDRESS_3 = '111111lllsy05pzs'
 
 class InvalidAddressErrorMessageTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -64,19 +67,21 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
     def test_validateaddress(self):
         # Invalid Bech32
         self.check_invalid(BECH32_INVALID_SIZE, "Invalid Bech32 address program size (41 bytes)")
-        self.check_invalid(BECH32_INVALID_PREFIX, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(BECH32_INVALID_PREFIX_WRONG_CHAIN, 'Invalid or unsupported prefix for regtest address (expected bcrt, got bc)')
+        self.check_invalid(BECH32_INVALID_PREFIX_NO_HRP, 'Bech32(m) address decoded with error: Invalid separator position',[0])
         self.check_invalid(BECH32_INVALID_BECH32, 'Version 1+ witness address must use Bech32m checksum')
         self.check_invalid(BECH32_INVALID_BECH32M, 'Version 0 witness address must use Bech32 checksum')
         self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
-        self.check_invalid(BECH32_INVALID_V0_SIZE, "Invalid Bech32 v0 address program size (21 bytes), per BIP141")
-        self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', list(range(90, 108)))
-        self.check_invalid(BECH32_ONE_ERROR, 'Invalid Bech32 checksum', [9])
-        self.check_invalid(BECH32_TWO_ERRORS, 'Invalid Bech32 checksum', [22, 43])
-        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid Bech32 checksum', [38])
-        self.check_invalid(BECH32_NO_SEPARATOR, 'Missing separator')
-        self.check_invalid(BECH32_INVALID_CHAR, 'Invalid Base 32 character', [8])
-        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Invalid Bech32 checksum', [19, 30])
-        self.check_invalid(BECH32_WRONG_VERSION, 'Invalid Bech32 checksum', [5])
+        self.check_invalid(BECH32_INVALID_V0_SIZE, "Invalid SegWit v0 address program size (21 bytes), per BIP141")
+        self.check_invalid(BECH32_TOO_LONG, 'Bech32(m) address decoded with error: Bech32 string too long', list(range(90, 108)))
+        self.check_invalid(BECH32_TOO_SHORT, 'Bech32(m) address decoded with error: Bech32 string too short', list(range(0, 7)))
+        self.check_invalid(BECH32_ONE_ERROR, 'Bech32(m) address decoded with error: Invalid Bech32 checksum', [9])
+        self.check_invalid(BECH32_TWO_ERRORS, 'Bech32(m) address decoded with error: Invalid Bech32 checksum', [22, 43])
+        self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid Base58 or Bech32(m) address', [38])
+        self.check_invalid(BECH32_NO_SEPARATOR, 'Bech32(m) address decoded with error: Missing separator')
+        self.check_invalid(BECH32_INVALID_CHAR, 'Address is not valid Base58 or Bech32', [])
+        self.check_invalid(BECH32_MULTISIG_TWO_ERRORS, 'Bech32(m) address decoded with error: Invalid Bech32 checksum', [19, 30])
+        self.check_invalid(BECH32_WRONG_VERSION, 'Bech32(m) address decoded with error: Invalid Bech32 checksum', [5])
 
         # Valid Bech32
         self.check_valid(BECH32_VALID)
@@ -84,7 +89,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_valid(BECH32_VALID_MULTISIG)
 
         # Invalid Base58
-        self.check_invalid(BASE58_INVALID_PREFIX, 'Invalid or unsupported Base58-encoded address.')
+        self.check_invalid(BASE58_INVALID_PREFIX, 'Invalid Base58 regtest address. Expected prefix 2, m, or n')
         self.check_invalid(BASE58_INVALID_CHECKSUM, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
         self.check_invalid(BASE58_INVALID_LENGTH, 'Invalid checksum or length of Base58 address (P2PKH or P2SH)')
 
@@ -92,8 +97,10 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_valid(BASE58_VALID)
 
         # Invalid address format
-        self.check_invalid(INVALID_ADDRESS, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
-        self.check_invalid(INVALID_ADDRESS_2, 'Invalid or unsupported Segwit (Bech32) or Base58 encoding.')
+        self.check_invalid(INVALID_ADDRESS, 'Bech32(m) address decoded with error: Multiple separators', [5,14])
+        self.check_invalid(INVALID_ADDRESS_2, 'Bech32(m) address decoded with error: Invalid separator position', [0])
+        self.check_invalid(INVALID_ADDRESS_3, 'Invalid or unsupported prefix for regtest address (expected bcrt, got 11111)')
+
 
         node = self.nodes[0]
 
@@ -106,9 +113,9 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         assert_raises_rpc_error(-5, "Invalid Bech32 address program size (41 bytes)", node.getaddressinfo, BECH32_INVALID_SIZE)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, BECH32_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", node.getaddressinfo, BASE58_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, INVALID_ADDRESS)
+        assert_raises_rpc_error(-5, "Invalid or unsupported prefix for regtest address (expected bcrt, got bc)", node.getaddressinfo, BECH32_INVALID_PREFIX_WRONG_CHAIN)
+        assert_raises_rpc_error(-5, "Invalid Base58 regtest address. Expected prefix 2, m, or n", node.getaddressinfo, BASE58_INVALID_PREFIX)
+        assert_raises_rpc_error(-5, "Bech32(m) address decoded with error: Multiple separators", node.getaddressinfo, INVALID_ADDRESS)
 
     def run_test(self):
         self.test_validateaddress()
