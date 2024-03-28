@@ -143,6 +143,15 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // CHECKTEMPLATEVERIFY, CHECKSIGFROMSTACK(VERIFY), INTERNALKEY validation (BIP-119, xxx, yyy)
+    SCRIPT_VERIFY_CHECKTEMPLATEVERIFY = (1U << 21),
+
+    // discourage upgradable OP_CHECKTEMPLATEVERIFY hashes
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_CHECKTEMPLATEVERIFY = (1U << 22),
+
+    // discourage OP_CHECKTEMPLATEVERIFY, OP_CHECKSIGFROMSTACK(VERIFY), OP_INTERNALKEY
+    SCRIPT_VERIFY_DISCOURAGE_CHECKTEMPLATEVERIFY = (1U << 23),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -152,6 +161,9 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
 
 struct PrecomputedTransactionData
 {
+    // Order of fields is packed below (uint256 is 32 bytes, vector is 24 bytes
+    // (3 ptrs), ready flags (1 byte each).
+
     // BIP341 precomputed data.
     // These are single-SHA256, see https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#cite_note-16.
     uint256 m_prevouts_single_hash;
@@ -159,15 +171,25 @@ struct PrecomputedTransactionData
     uint256 m_outputs_single_hash;
     uint256 m_spent_amounts_single_hash;
     uint256 m_spent_scripts_single_hash;
-    //! Whether the 5 fields above are initialized.
-    bool m_bip341_taproot_ready = false;
+
+    // BIP119 precomputed data (single SHA256).
+    uint256 m_scriptSigs_single_hash;
 
     // BIP143 precomputed data (double-SHA256).
     uint256 hashPrevouts, hashSequence, hashOutputs;
-    //! Whether the 3 fields above are initialized.
+
+    // BIP341 cached outputs.
+    std::vector<CTxOut> m_spent_outputs;
+
+    //! Whether the bip341 fields above are initialized.
+    bool m_bip341_taproot_ready = false;
+
+    //! Whether the bip119 fields above are initialized.
+    bool m_bip119_ctv_ready = false;
+
+    //! Whether the bip143 fields above are initialized.
     bool m_bip143_segwit_ready = false;
 
-    std::vector<CTxOut> m_spent_outputs;
     //! Whether m_spent_outputs is initialized.
     bool m_spent_outputs_ready = false;
 
@@ -186,6 +208,11 @@ struct PrecomputedTransactionData
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
 };
+
+/* Standard Template Hash Declarations */
+template<typename TxType>
+uint256 GetDefaultCheckTemplateVerifyHash(const TxType& tx, const uint256& outputs_hash, const uint256& sequences_hash,
+                                const uint32_t input_index);
 
 enum class SigVersion
 {
@@ -265,6 +292,11 @@ public:
          return false;
     }
 
+    virtual bool CheckDefaultCheckTemplateVerifyHash(const Span<const unsigned char>& hash) const
+    {
+        return false;
+    }
+
     virtual ~BaseSignatureChecker() {}
 };
 
@@ -301,6 +333,7 @@ public:
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CheckDefaultCheckTemplateVerifyHash(const Span<const unsigned char>& hash) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
