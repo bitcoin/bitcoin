@@ -896,6 +896,43 @@ class ImportMultiTest(BitcoinTestFramework):
         )
         assert result[0]['success']
 
+        self.log.info("Multipath descriptors")
+        self.nodes[1].createwallet(wallet_name="multipath", blank=True, disable_private_keys=True)
+        w_multipath = self.nodes[1].get_wallet_rpc("multipath")
+        self.nodes[1].createwallet(wallet_name="multipath_split", blank=True, disable_private_keys=True)
+        w_multisplit = self.nodes[1].get_wallet_rpc("multipath_split")
+
+        res = w_multipath.importmulti([{"desc": descsum_create(f"wpkh({xpub}/<10;20>/0/*)"),
+                              "keypool": True,
+                              "range": 10,
+                              "timestamp": "now",
+                              "internal": True}])
+        assert_equal(res[0]["success"], False)
+        assert_equal(res[0]["error"]["code"], -5)
+        assert_equal(res[0]["error"]["message"], "Cannot have multipath descriptor while also specifying 'internal'")
+
+        res = w_multipath.importmulti([{"desc": descsum_create(f"wpkh({xpub}/<10;20>/0/*)"),
+                              "keypool": True,
+                              "range": 10,
+                              "timestamp": "now"}])
+        assert_equal(res[0]["success"], True)
+
+        res = w_multisplit.importmulti([{"desc": descsum_create(f"wpkh({xpub}/10/0/*)"),
+                              "keypool": True,
+                              "range": 10,
+                              "timestamp": "now"}])
+        assert_equal(res[0]["success"], True)
+        res = w_multisplit.importmulti([{"desc": descsum_create(f"wpkh({xpub}/20/0/*)"),
+                              "keypool": True,
+                              "range": 10,
+                              "internal": True,
+                              "timestamp": timestamp}])
+        assert_equal(res[0]["success"], True)
+
+        for _ in range(0, 9):
+            assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
+            assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
+
 
 if __name__ == '__main__':
     ImportMultiTest().main()
