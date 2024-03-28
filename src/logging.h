@@ -65,11 +65,10 @@ namespace BCLog {
 #ifdef DEBUG_LOCKCONTENTION
         LOCK        = (1 << 24),
 #endif
-        UTIL        = (1 << 25),
-        BLOCKSTORAGE = (1 << 26),
-        TXRECONCILIATION = (1 << 27),
-        SCAN        = (1 << 28),
-        TXPACKAGES  = (1 << 29),
+        BLOCKSTORAGE = (1 << 25),
+        TXRECONCILIATION = (1 << 26),
+        SCAN        = (1 << 27),
+        TXPACKAGES  = (1 << 28),
         ALL         = ~(uint32_t)0,
     };
     enum class Level {
