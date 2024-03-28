@@ -50,6 +50,13 @@ IGNORE_EXPORTS = {
 'stdout', 'stderr',
 }
 
+# bitcoin-qt only
+IGNORE_EXPORTS.update({
+'xcb_xkb_id', 'xcb_xfixes_id', 'timezone', '__tzname', 'xcb_shm_id',
+'tzname', 'xcb_xinerama_id', '__timezone', 'xcb_render_id', 'xcb_shape_id',
+'xcb_randr_id', 'xcb_sync_id',
+})
+
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, str]] = {
