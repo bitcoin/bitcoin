@@ -336,9 +336,12 @@ public:
     bool CheckBlockDataAvailability(const CBlockIndex& upper_block LIFETIMEBOUND, const CBlockIndex& lower_block LIFETIMEBOUND) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Find the first stored ancestor of start_block immediately after the last
-    //! pruned ancestor. Return value will never be null. Caller is responsible
-    //! for ensuring that start_block has data is not pruned.
-    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND, const CBlockIndex* lower_block=nullptr) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! ancestor that does not match the status mask. Return value will never be
+    //! null. Caller is responsible for ensuring that start_block has the status
+    //! mask data. If the whole chain matched the status mask the genesis block
+    //! will be returned regardless of it's status match because, for example,
+    //! it can not have undo data by nature.
+    const CBlockIndex* GetFirstStoredBlock(const CBlockIndex& start_block LIFETIMEBOUND, const CBlockIndex* lower_block=nullptr, uint32_t status_mask=BLOCK_HAVE_DATA) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** True if any block files have ever been pruned. */
     bool m_have_pruned = false;
