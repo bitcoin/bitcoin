@@ -20,10 +20,10 @@ namespace
 typedef std::vector<uint8_t> data;
 
 /** The Bech32 and Bech32m character set for encoding. */
-const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+constexpr auto CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 /** The Bech32 and Bech32m character set for decoding. */
-const int8_t CHARSET_REV[128] = {
+constexpr int8_t CHARSET_REV[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -33,6 +33,8 @@ const int8_t CHARSET_REV[128] = {
     -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 };
+
+constexpr size_t CHECKSUM_SIZE = 6;
 
 /** We work with the finite field GF(1024) defined as a degree 2 extension of the base field GF(32)
  * The defining polynomial of the extension is x^2 + 9x + 23.
@@ -127,7 +129,7 @@ uint32_t EncodingConstant(Encoding encoding) {
 /** This function will compute what 6 5-bit values to XOR into the last 6 input values, in order to
  *  make the checksum 0. These 6 values are packed together in a single 30-bit integer. The higher
  *  bits correspond to earlier values. */
-uint32_t PolyMod(const data& v)
+uint32_t PolyMod(const data& enc)
 {
     // The input is interpreted as a list of coefficients of a polynomial over F = GF(32), with an
     // implicit 1 in front. If the input is [v0,v1,v2,v3,v4], that polynomial is v(x) =
@@ -175,7 +177,7 @@ uint32_t PolyMod(const data& v)
     // length 1023 and distance 4. See https://en.wikipedia.org/wiki/BCH_code for more details.
 
     uint32_t c = 1;
-    for (const auto v_i : v) {
+    for (const auto v_i : enc) {
         // We want to update `c` to correspond to a polynomial with one extra term. If the initial
         // value of `c` consists of the coefficients of c(x) = f(x) mod g(x), we modify it to
         // correspond to c'(x) = (f(x) * x + v_i) mod g(x), where v_i is the next input to
@@ -308,18 +310,18 @@ bool CheckCharacters(const std::string& str, std::vector<int>& errors)
     return errors.empty();
 }
 
-/** Expand a HRP for use in checksum computation. */
-data ExpandHRP(const std::string& hrp)
+std::vector<unsigned char> PreparePolynomialCoefficients(const std::string& hrp, const data& values, const size_t extra)
 {
     data ret;
-    ret.reserve(hrp.size() + 90);
-    ret.resize(hrp.size() * 2 + 1);
-    for (size_t i = 0; i < hrp.size(); ++i) {
-        unsigned char c = hrp[i];
-        ret[i] = c >> 5;
-        ret[i + hrp.size() + 1] = c & 0x1f;
-    }
-    ret[hrp.size()] = 0;
+    ret.reserve(hrp.size() + 1 + hrp.size() + values.size() + extra);
+
+    /** Expand a HRP for use in checksum computation. */
+    for (size_t i = 0; i < hrp.size(); ++i) ret.push_back(hrp[i] >> 5);
+    ret.push_back(0);
+    for (size_t i = 0; i < hrp.size(); ++i) ret.push_back(hrp[i] & 0x1f);
+
+    ret.insert(ret.end(), values.begin(), values.end());
+
     return ret;
 }
 
@@ -331,7 +333,8 @@ Encoding VerifyChecksum(const std::string& hrp, const data& values)
     // list of values would result in a new valid list. For that reason, Bech32 requires the
     // resulting checksum to be 1 instead. In Bech32m, this constant was amended. See
     // https://gist.github.com/sipa/14c248c288c3880a3b191f978a34508e for details.
-    const uint32_t check = PolyMod(Cat(ExpandHRP(hrp), values));
+    auto enc = PreparePolynomialCoefficients(hrp, values, 0);
+    const uint32_t check = PolyMod(enc);
     if (check == EncodingConstant(Encoding::BECH32)) return Encoding::BECH32;
     if (check == EncodingConstant(Encoding::BECH32M)) return Encoding::BECH32M;
     return Encoding::INVALID;
@@ -340,13 +343,14 @@ Encoding VerifyChecksum(const std::string& hrp, const data& values)
 /** Create a checksum. */
 data CreateChecksum(Encoding encoding, const std::string& hrp, const data& values)
 {
-    data enc = Cat(ExpandHRP(hrp), values);
-    enc.resize(enc.size() + 6); // Append 6 zeroes
+    auto enc = PreparePolynomialCoefficients(hrp, values, CHECKSUM_SIZE);
+    enc.insert(enc.end(), CHECKSUM_SIZE, 0x00);
     uint32_t mod = PolyMod(enc) ^ EncodingConstant(encoding); // Determine what to XOR into those 6 zeroes.
-    data ret(6);
-    for (size_t i = 0; i < 6; ++i) {
-        // Convert the 5-bit groups in mod to checksum values.
-        ret[i] = (mod >> (5 * (5 - i))) & 31;
+
+    data ret;
+    ret.reserve(CHECKSUM_SIZE);
+    for (size_t i = 0; i < CHECKSUM_SIZE; ++i) {
+        ret.push_back((mod >> (5 * (5 - i))) & 31); // Convert the 5-bit groups in mod to checksum values.
     }
     return ret;
 }
@@ -354,18 +358,19 @@ data CreateChecksum(Encoding encoding, const std::string& hrp, const data& value
 } // namespace
 
 /** Encode a Bech32 or Bech32m string. */
-std::string Encode(Encoding encoding, const std::string& hrp, const data& values) {
+std::string Encode(Encoding encoding, const std::string& hrp, const data& values)
+{
     // First ensure that the HRP is all lowercase. BIP-173 and BIP350 require an encoder
     // to return a lowercase Bech32/Bech32m string, but if given an uppercase HRP, the
     // result will always be invalid.
-    for (const char& c : hrp) assert(c < 'A' || c > 'Z');
-    data checksum = CreateChecksum(encoding, hrp, values);
-    data combined = Cat(values, checksum);
-    std::string ret = hrp + '1';
-    ret.reserve(ret.size() + combined.size());
-    for (const auto c : combined) {
-        ret += CHARSET[c];
-    }
+    for (auto& c : hrp) assert(c < 'A' || c > 'Z');
+
+    std::string ret;
+    ret.reserve(hrp.size() + 1 + values.size() + CHECKSUM_SIZE);
+    ret += hrp;
+    ret += '1';
+    for (auto c : values) ret += CHARSET[c];
+    for (auto c : CreateChecksum(encoding, hrp, values)) ret += CHARSET[c];
     return ret;
 }
 
@@ -388,12 +393,13 @@ DecodeResult Decode(const std::string& str) {
         values[i] = rev;
     }
     std::string hrp;
+    hrp.reserve(pos);
     for (size_t i = 0; i < pos; ++i) {
         hrp += LowerCase(str[i]);
     }
     Encoding result = VerifyChecksum(hrp, values);
     if (result == Encoding::INVALID) return {};
-    return {result, std::move(hrp), data(values.begin(), values.end() - 6)};
+    return {result, std::move(hrp), data(values.begin(), values.end() - CHECKSUM_SIZE)};
 }
 
 /** Find index of an incorrect character in a Bech32 string. */
@@ -420,6 +426,7 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str) {
     }
 
     std::string hrp;
+    hrp.reserve(pos);
     for (size_t i = 0; i < pos; ++i) {
         hrp += LowerCase(str[i]);
     }
@@ -441,9 +448,10 @@ std::pair<std::string, std::vector<int>> LocateErrors(const std::string& str) {
     std::optional<Encoding> error_encoding;
     for (Encoding encoding : {Encoding::BECH32, Encoding::BECH32M}) {
         std::vector<int> possible_errors;
-        // Recall that (ExpandHRP(hrp) ++ values) is interpreted as a list of coefficients of a polynomial
+        // Recall that (expanded hrp + values) is interpreted as a list of coefficients of a polynomial
         // over GF(32). PolyMod computes the "remainder" of this polynomial modulo the generator G(x).
-        uint32_t residue = PolyMod(Cat(ExpandHRP(hrp), values)) ^ EncodingConstant(encoding);
+        auto enc = PreparePolynomialCoefficients(hrp, values, 0);
+        uint32_t residue = PolyMod(enc) ^ EncodingConstant(encoding);
 
         // All valid codewords should be multiples of G(x), so this remainder (after XORing with the encoding
         // constant) should be 0 - hence 0 indicates there are no errors present.
