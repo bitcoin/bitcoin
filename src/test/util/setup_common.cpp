@@ -48,6 +48,7 @@
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/txmempool.h>
+#include <timedata.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/chaintype.h>
@@ -574,6 +575,110 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     m_node.mempool->TrimToSize(0);
     assert(m_node.mempool->GetMinFee() == target_feerate);
 }
+
+NetTestingSetup::NetTestingSetup(ChainType chain_type,
+                                 const std::vector<const char*>& extra_args,
+                                 const bool coins_db_in_memory,
+                                 const bool block_tree_db_in_memory)
+    : TestingSetup{chain_type, extra_args, coins_db_in_memory, block_tree_db_in_memory}
+{
+    CreateSock = [this](const sa_family_t&) {
+        auto pipes = std::make_shared<DynSock::Pipes>();
+
+        // Schedule VERSION, VERACK and PING to be returned by Recv() from the socket (initial handshake).
+        pipes->recv.PushNetMsg(NetMsgType::VERSION,
+                               /*version=*/PROTOCOL_VERSION,
+                               /*services=*/uint64_t{NODE_NETWORK | NODE_WITNESS},
+                               /*timestamp=*/count_seconds(GetTime<std::chrono::seconds>()),
+                               /*addr_recv services=*/uint64_t{NODE_NETWORK | NODE_WITNESS},
+                               /*addr_recv=*/CAddress::V2_NETWORK(CService{}),
+                               /*addr_trans services=*/uint64_t{NODE_NETWORK | NODE_WITNESS},
+                               /*addr_trans=*/CAddress::V2_NETWORK(CService{}),
+                               /*nonce=*/uint64_t{0},
+                               /*user_agent=*/std::string{},
+                               /*start_height=*/1,
+                               /*relay=*/false);
+        pipes->recv.PushNetMsg(NetMsgType::VERACK);
+        pipes->recv.PushNetMsg(NetMsgType::PING, /*nonce=*/uint64_t{123});
+
+        m_sockets_pipes.PushBack(pipes);
+
+        return std::make_unique<DynSock>(pipes);
+    };
+
+    fListen = false;
+    fNameLookup = false;
+    m_node.args->ForceSetArg("-dnsseed", "0");
+    m_node.args->ForceSetArg("-fixedseeds", "0");
+
+    // Add 1.2.3.4:8333 to addrman, sent to us by 5.6.7.8.
+    in_addr service_in_addr;
+    service_in_addr.s_addr = htonl(0x01020304);
+    const CService service{service_in_addr, 8333};
+    const CAddress addr{service, ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
+    in_addr source_in_addr;
+    source_in_addr.s_addr = htonl(0x05060708);
+    m_node.addrman->Add(std::vector<CAddress>{addr}, CNetAddr{source_in_addr});
+
+    CConnman::Options opts;
+    opts.m_max_automatic_connections = 1;
+    opts.nSendBufferMaxSize = 1000 * m_node.args->GetIntArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+    opts.nReceiveFloodSize = 1000 * m_node.args->GetIntArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    opts.m_banman = m_node.banman.get();
+    opts.m_msgproc = m_node.peerman.get();
+    opts.m_use_addrman_outgoing = true;
+
+    SetMockTime(GetTime());
+
+    if (!m_node.connman->Start(*m_node.scheduler, opts)) {
+        throw std::runtime_error{"Cannot start connman"};
+    }
+}
+
+NetTestingSetup::~NetTestingSetup()
+{
+    std::shared_ptr<DynSock::Pipes> pipes;
+    while ((pipes = m_sockets_pipes.PopFront(false)).get() != nullptr) {
+        pipes->recv.Eof();
+    }
+    m_node.connman->Interrupt();
+
+    SetMockTime(0s);
+
+    m_node.args->ForceSetArg("-fixedseeds", DEFAULT_FIXEDSEEDS ? "1" : "0");
+    m_node.args->ForceSetArg("-dnsseed", DEFAULT_DNSSEED ? "1" : "0");
+    fNameLookup = DEFAULT_NAME_LOOKUP;
+    fListen = true;
+    CreateSock = CreateSockOS;
+    // PeerManager::ProcessMessage() calls AddTimeData() which changes the internal state
+    // in timedata.cpp and later confuses the test "timedata_tests/addtimedata". Thus reset
+    // that state as it was before our test was run.
+    TestOnlyResetTimeData();
+}
+
+void NetTestingSetup::PipesFifo::PushBack(std::shared_ptr<DynSock::Pipes> pipes)
+{
+    LOCK(m_mutex);
+    m_list.push_back(pipes);
+    m_cond.notify_one();
+}
+
+std::shared_ptr<DynSock::Pipes> NetTestingSetup::PipesFifo::PopFront(bool wait)
+{
+    WAIT_LOCK(m_mutex, lock);
+    if (wait) {
+        m_cond.wait(lock, [this]() EXCLUSIVE_LOCKS_REQUIRED(m_mutex) {
+            AssertLockHeld(m_mutex);
+            return !m_list.empty();
+        });
+    } else if (m_list.empty()) {
+        return nullptr;
+    }
+    std::shared_ptr<DynSock::Pipes> ret{m_list.front()};
+    m_list.pop_front();
+    return ret;
+}
+
 /**
  * @returns a real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
  *      with 9 txs.

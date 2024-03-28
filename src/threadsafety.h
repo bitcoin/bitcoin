@@ -74,4 +74,13 @@ public:
     ~StdLockGuard() UNLOCK_FUNCTION() {}
 };
 
+// StdUniqueLock provides an annotated version of std::unique_lock for us,
+// and should only be used when sync.h Mutex/LOCK/etc are not usable.
+class SCOPED_LOCKABLE StdUniqueLock : public std::unique_lock<StdMutex>
+{
+public:
+    explicit StdUniqueLock(StdMutex& cs) EXCLUSIVE_LOCK_FUNCTION(cs) : std::unique_lock<StdMutex>(cs) {}
+    ~StdUniqueLock() UNLOCK_FUNCTION() {}
+};
+
 #endif // BITCOIN_THREADSAFETY_H
