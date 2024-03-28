@@ -114,21 +114,12 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-format") && command != "createfromdump") {
-        tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
-        return false;
-    }
-    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
-        tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
-        return false;
-    }
-    if (args.IsArgSet("-descriptors") && command != "create") {
-        tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
-        return false;
-    }
-    if (args.IsArgSet("-legacy") && command != "create") {
-        tfm::format(std::cerr, "The -legacy option can only be used with the 'create' command.\n");
-        return false;
+    {
+        std::vector<std::string> details;
+        if (!args.CheckCommandOptions(command, &details)) {
+            tfm::format(std::cerr, "Error: Invalid arguments provided:\n%s\n", MakeUnorderedList(details));
+            return false;
+        }
     }
     if (command == "create" && !args.IsArgSet("-wallet")) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");

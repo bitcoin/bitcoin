@@ -344,7 +344,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Dump file {} does not exist.'.format(non_exist_dump), '-wallet=todump', '-dumpfile={}'.format(non_exist_dump), 'createfromdump')
         wallet_path = self.nodes[0].wallets_path / "todump2"
         self.assert_raises_tool_error('Failed to create database path \'{}\'. Database already exists.'.format(wallet_path), '-wallet=todump2', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
-        self.assert_raises_tool_error("The -descriptors option can only be used with the 'create' command.", '-descriptors', '-wallet=todump2', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
+        self.assert_raises_tool_error("Error: Invalid arguments provided:\n- The -descriptors option cannot be used with the 'createfromdump' command.", '-descriptors', '-wallet=todump2', '-dumpfile={}'.format(wallet_dump), 'createfromdump')
 
         self.log.info('Checking createfromdump')
         self.do_tool_createfromdump("load", "wallet.dump")
