@@ -1818,13 +1818,21 @@ void PeerManagerImpl::Misbehaving(Peer& peer, int howmuch, const std::string& me
     const std::string message_prefixed = message.empty() ? "" : (": " + message);
     std::string warning;
 
-    if (score_now >= DISCOURAGEMENT_THRESHOLD && score_before < DISCOURAGEMENT_THRESHOLD) {
+    const bool discourage_threshold_exceeded = score_now >= DISCOURAGEMENT_THRESHOLD && score_before < DISCOURAGEMENT_THRESHOLD;
+    if (discourage_threshold_exceeded) {
         warning = " DISCOURAGE THRESHOLD EXCEEDED";
         peer.m_should_discourage = true;
     }
 
     LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s%s\n",
              peer.m_id, score_before, score_now, warning, message_prefixed);
+
+    TRACE5(net, misbehaving_connection,
+        peer.m_id,
+        score_before,
+        howmuch,
+        message.c_str(),
+        discourage_threshold_exceeded);
 }
 
 bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,

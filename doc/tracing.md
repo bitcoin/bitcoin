@@ -93,6 +93,65 @@ to user-space in full. Messages longer than a 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
 
+#### Tracepoint `net:inbound_connection`
+
+Is called when a new inbound connection is opened to us. Passes information about
+the peer and the number of inbound connections excluding the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing inbound connections as `uint64` excluding the newly opened inbound connection.
+
+#### Tracepoint `net:outbound_connection`
+
+Is called when a new outbound connection is opened by us. Passes information about
+the peer and the number of outbound connections excluding the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing outbound connections as `uint64` excluding the newly opened outbound connection.
+
+#### Tracepoint `net:evicted_inbound_connection`
+
+Is called when a inbound connection is evicted by us. Passes information about the evicted peer and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp as `uint64`.
+
+#### Tracepoint `net:misbehaving_connection`
+
+Is called when a connection is misbehaving. Passes the peer id, old misbehaving score,
+score increase and why the peer is misbehaving.
+
+Arguments passed:
+1. Peer ID as `int64`.
+2. Misbehaving score before being punished as `int32`. New peers start with a score of 0.
+3. Misbehaving score increase for this misbehavior as `int32`.
+4. Reason why the peer is misbehaving as `pointer to C-style String` (max. length 128 characters).
+5. If the discuragement threshold is exceeded as `bool`.
+
+#### Tracepoint `net:closed_connection`
+
+Is called when a connection is closed. Passes information about the closed peer
+and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp as `uint64`.
+
 ### Context `validation`
 
 #### Tracepoint `validation:block_connected`

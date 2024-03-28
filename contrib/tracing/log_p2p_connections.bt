@@ -1,0 +1,52 @@
+#!/usr/bin/env bpftrace
+
+BEGIN
+{
+  printf("Logging opened, closed, misbehaving, and evicted P2P connections\n")
+}
+
+usdt:./src/bitcoind:net:inbound_connection
+{
+  $id = (int64) arg0;
+  $addr = str(arg1);
+  $conn_type = str(arg2);
+  $network = (int32) arg3;
+  $existing = (uint64) arg4;
+  printf("INBOUND conn from %s: id=%ld, type=%s, network=%d, total=%d\n", $addr, $id, $conn_type, $network, $existing + 1);
+}
+
+usdt:./src/bitcoind:net:outbound_connection
+{
+  $id = (int64) arg0;
+  $addr = str(arg1);
+  $conn_type = str(arg2);
+  $network = (int32) arg3;
+  $existing = (uint64) arg4;
+  printf("OUTBOUND conn to %s: id=%ld, type=%s, network=%d, total=%d\n", $addr, $id, $conn_type, $network, $existing + 1);
+}
+
+usdt:./src/bitcoind:net:closed_connection
+{
+  $id = (int64) arg0;
+  $addr = str(arg1);
+  $conn_type = str(arg2);
+  $network = (int32) arg3;
+  printf("CLOSED conn to %s: id=%ld, type=%s, network=%d, established=%ld\n", $addr, $id, $conn_type, $network, arg4);
+}
+
+usdt:./src/bitcoind:net:evicted_inbound_connection
+{
+  $id = (int64) arg0;
+  $addr = str(arg1);
+  $conn_type = str(arg2);
+  $network = (int32) arg3;
+  printf("EVICTED conn to %s: id=%ld, type=%s, network=%d, established=%ld\n", $addr, $id, $conn_type, $network, arg4);
+}
+
+usdt:./src/bitcoind:net:misbehaving_connection
+{
+  $id = (int64) arg0;
+  $message = str(arg3);
+  $threshold = arg4;
+  printf("MISBEHAVING conn id=%ld, score_before=%d, score_increase=%d, message='%s', threshold_exceeded=%s\n", $id, arg1, arg2, $message, ($threshold ? "true" : "false"));
+}

@@ -540,6 +540,13 @@ void CNode::CloseSocketDisconnect()
     if (m_sock) {
         LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
         m_sock.reset();
+
+        TRACE5(net, closed_connection,
+            GetId(),
+            m_addr_name.c_str(),
+            ConnectionTypeAsString().c_str(),
+            ConnectedThroughNetwork(),
+            Ticks<std::chrono::seconds>(m_connected));
     }
     m_i2p_sam_session.reset();
 }
@@ -1679,6 +1686,14 @@ bool CConnman::AttemptToEvictConnection()
     for (CNode* pnode : m_nodes) {
         if (pnode->GetId() == *node_id_to_evict) {
             LogPrint(BCLog::NET, "selected %s connection for eviction peer=%d; disconnecting\n", pnode->ConnectionTypeAsString(), pnode->GetId());
+
+            TRACE5(net, evicted_inbound_connection,
+                pnode->GetId(),
+                pnode->m_addr_name.c_str(),
+                pnode->ConnectionTypeAsString().c_str(),
+                pnode->ConnectedThroughNetwork(),
+                Ticks<std::chrono::seconds>(pnode->m_connected));
+
             pnode->fDisconnect = true;
             return true;
         }
@@ -1800,6 +1815,13 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     m_msgproc->InitializeNode(*pnode, nLocalServices);
 
     LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
+
+    TRACE5(net, inbound_connection,
+        pnode->GetId(),
+        pnode->m_addr_name.c_str(),
+        pnode->ConnectionTypeAsString().c_str(),
+        pnode->ConnectedThroughNetwork(),
+        GetNodeCount(ConnectionDirection::In));
 
     {
         LOCK(m_nodes_mutex);
@@ -2866,6 +2888,13 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!pnode)
         return;
     pnode->grantOutbound = std::move(grant_outbound);
+
+    TRACE5(net, outbound_connection,
+        pnode->GetId(),
+        pnode->m_addr_name.c_str(),
+        pnode->ConnectionTypeAsString().c_str(),
+        pnode->ConnectedThroughNetwork(),
+        GetNodeCount(ConnectionDirection::Out));
 
     m_msgproc->InitializeNode(*pnode, nLocalServices);
     {
