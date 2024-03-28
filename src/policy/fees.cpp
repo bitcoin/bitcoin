@@ -5,7 +5,6 @@
 
 #include <policy/fees.h>
 
-#include <clientversion.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
@@ -168,7 +167,7 @@ public:
      * Read saved state of estimation data from a file and replace all internal data structures and
      * variables with this state.
      */
-    void Read(AutoFile& filein, int nFileVersion, size_t numBuckets);
+    void Read(AutoFile& filein, size_t numBuckets);
 };
 
 
@@ -414,7 +413,7 @@ void TxConfirmStats::Write(AutoFile& fileout) const
     fileout << Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(failAvg);
 }
 
-void TxConfirmStats::Read(AutoFile& filein, int nFileVersion, size_t numBuckets)
+void TxConfirmStats::Read(AutoFile& filein, size_t numBuckets)
 {
     // Read data file and do some very basic sanity checking
     // buckets and bucketMap are not updated yet, so don't access them
@@ -957,12 +956,16 @@ void CBlockPolicyEstimator::FlushFeeEstimates()
     }
 }
 
+// The current format written, and the version required to read. Must be
+// increased to at least 279900+1 on the next breaking change.
+constexpr int CURRENT_FILE_VERSION{149900};
+
 bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
 {
     try {
         LOCK(m_cs_fee_estimator);
-        fileout << 149900; // version required to read: 0.14.99 or later
-        fileout << CLIENT_VERSION; // version that wrote the file
+        fileout << CURRENT_FILE_VERSION;
+        fileout << 279900; // version that wrote the file. Used to be CLIENT_VERSION. Currently unused dummy field.
         fileout << nBestSeenHeight;
         if (BlockSpan() > HistoricalBlockSpan()/2) {
             fileout << firstRecordedHeight << nBestSeenHeight;
@@ -976,7 +979,7 @@ bool CBlockPolicyEstimator::Write(AutoFile& fileout) const
         longStats->Write(fileout);
     }
     catch (const std::exception&) {
-        LogPrintf("CBlockPolicyEstimator::Write(): unable to write policy estimator data (non-fatal)\n");
+        LogWarning("Unable to write policy estimator data (non-fatal)\n");
         return false;
     }
     return true;
@@ -986,9 +989,9 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
 {
     try {
         LOCK(m_cs_fee_estimator);
-        int nVersionRequired, nVersionThatWrote;
-        filein >> nVersionRequired >> nVersionThatWrote;
-        if (nVersionRequired > CLIENT_VERSION) {
+        int nVersionRequired, dummy_version_that_wrote;
+        filein >> nVersionRequired >> dummy_version_that_wrote;
+        if (nVersionRequired > CURRENT_FILE_VERSION) {
             throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
         }
 
@@ -997,9 +1000,9 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         unsigned int nFileBestSeenHeight;
         filein >> nFileBestSeenHeight;
 
-        if (nVersionRequired < 149900) {
-            LogPrintf("%s: incompatible old fee estimation data (non-fatal). Version: %d\n", __func__, nVersionRequired);
-        } else { // New format introduced in 149900
+        if (nVersionRequired < CURRENT_FILE_VERSION) {
+            LogWarning("Incompatible old fee estimation data (non-fatal). Version: %d\n", nVersionRequired);
+        } else { // nVersionRequired == CURRENT_FILE_VERSION
             unsigned int nFileHistoricalFirst, nFileHistoricalBest;
             filein >> nFileHistoricalFirst >> nFileHistoricalBest;
             if (nFileHistoricalFirst > nFileHistoricalBest || nFileHistoricalBest > nFileBestSeenHeight) {
@@ -1015,9 +1018,9 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
             std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
             std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
             std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
-            fileFeeStats->Read(filein, nVersionThatWrote, numBuckets);
-            fileShortStats->Read(filein, nVersionThatWrote, numBuckets);
-            fileLongStats->Read(filein, nVersionThatWrote, numBuckets);
+            fileFeeStats->Read(filein, numBuckets);
+            fileShortStats->Read(filein, numBuckets);
+            fileLongStats->Read(filein, numBuckets);
 
             // Fee estimates file parsed correctly
             // Copy buckets from file and refresh our bucketmap
@@ -1038,7 +1041,7 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         }
     }
     catch (const std::exception& e) {
-        LogPrintf("CBlockPolicyEstimator::Read(): unable to read policy estimator data (non-fatal): %s\n",e.what());
+        LogWarning("Unable to read policy estimator data (non-fatal): %s\n", e.what());
         return false;
     }
     return true;
