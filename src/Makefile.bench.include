@@ -91,6 +91,7 @@ bench_bench_bitcoin_SOURCES += bench/wallet_create.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_loading.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_create_tx.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_ismine.cpp
+bench_bench_bitcoin_SOURCES += bench/wallet_migration.cpp
 
 bench_bench_bitcoin_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
 endif
