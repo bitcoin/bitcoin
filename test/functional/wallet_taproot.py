@@ -11,7 +11,10 @@ from decimal import Decimal
 from test_framework.address import output_key_to_p2tr
 from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 from test_framework.descriptors import descsum_create
 from test_framework.script import (
     CScript,
@@ -300,7 +303,7 @@ class WalletTaprootTest(BitcoinTestFramework):
             test_balance = int(rpc_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            res = rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=200)
+            res = rpc_online.sendtoaddress(address=self.boring.getnewaddress(), amount=Decimal(ret_amnt) / 100000000, subtractfeefromamount=True, fee_rate=500)
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert rpc_online.gettransaction(res)["confirmations"] > 0
 
@@ -352,7 +355,7 @@ class WalletTaprootTest(BitcoinTestFramework):
             test_balance = int(psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
             # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['psbt']
+            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 500, "change_type": address_type})['psbt']
             res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
             for wallet in [psbt_offline, key_only_wallet]:
                 res = wallet.walletprocesspsbt(psbt=psbt, finalize=False)
@@ -386,6 +389,14 @@ class WalletTaprootTest(BitcoinTestFramework):
         assert psbt_online.gettransaction(txid)['confirmations'] > 0
         psbt_online.unloadwallet()
         psbt_offline.unloadwallet()
+
+    def do_test_k_of_n(self, k, n):
+        self.do_test(
+            f"tr(XPUB,multi_a({k},XPRV_1,...,XPRV_N)",
+            f"tr($2/*,multi_a({k}" + (",$1/*" * n) + "))",
+            [True, False],
+            lambda k1, k2: (key(k2), [multi_a(k, ([k1] * n))])
+        )
 
     def do_test(self, comment, pattern, privmap, treefn):
         nkeys = len(privmap)
@@ -499,6 +510,20 @@ class WalletTaprootTest(BitcoinTestFramework):
             [True, False],
             lambda k1, k2: (key(k2), [multi_a(1, ([H_POINT] * rnd_pos) + [k1] + ([H_POINT] * (MAX_PUBKEYS_PER_MULTI_A - 1 - rnd_pos)))])
         )
+
+        # Test 999-of-999
+        self.do_test_k_of_n(999, 999)
+        # Test that 1-of-0 raises exception
+        assert_raises_rpc_error(
+            -5, "Cannot have 0 keys in multi_a; must have between 1 and 999 keys, inclusive",
+            self.do_test_k_of_n, 1, 0
+        )
+        # Test that 1-of-1000 raises exception
+        assert_raises_rpc_error(
+            -5, "Cannot have 1000 keys in multi_a; must have between 1 and 999 keys, inclusive",
+            self.do_test_k_of_n, 1, 1000
+        )
+
         self.do_test(
             "rawtr(XPRV)",
             "rawtr($1/*)",
