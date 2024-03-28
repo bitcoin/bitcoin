@@ -1411,9 +1411,12 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
         return;
     }
 
-    if (state->pindexLastCommonBlock == nullptr) {
+    std::optional<int> snapshot_height{m_chainman.GetSnapshotBaseHeight()};
+    if (state->pindexLastCommonBlock == nullptr ||
+        (snapshot_height.has_value() && state->pindexLastCommonBlock->nHeight < snapshot_height.value())) {
         // Bootstrap quickly by guessing a parent of our best tip is the forking point.
         // Guessing wrong in either direction is not a problem.
+        // Also applies after loading a snapshot, when we want to prioritise loading the snapshot chain and therefore need to skip ahead.
         state->pindexLastCommonBlock = m_chainman.ActiveChain()[std::min(state->pindexBestKnownBlock->nHeight, m_chainman.ActiveChain().Height())];
     }
 
