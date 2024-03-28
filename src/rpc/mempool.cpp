@@ -238,7 +238,7 @@ static RPCHelpMan testmempoolaccept()
                     if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
                         result_inner.pushKV("reject-reason", "missing-inputs");
                     } else {
-                        result_inner.pushKV("reject-reason", state.GetRejectReason());
+                        result_inner.pushKV("reject-reason", state.ToString());
                     }
                 }
                 rpc_result.push_back(result_inner);

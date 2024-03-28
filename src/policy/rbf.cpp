@@ -167,7 +167,7 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
     // transactions it replaces, otherwise the bandwidth used by those conflicting transactions
     // would not be paid for.
     if (replacement_fees < original_fees) {
-        return strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
+        return strprintf("rejecting replacement %s; less fees than conflicting txs; %s < %s",
                          txid.ToString(), FormatMoney(replacement_fees), FormatMoney(original_fees));
     }
 
@@ -176,7 +176,7 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
     // increasing the fee by tiny amounts.
     CAmount additional_fees = replacement_fees - original_fees;
     if (additional_fees < relay_fee.GetFee(replacement_vsize)) {
-        return strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
+        return strprintf("rejecting replacement %s; not enough additional fees to relay; %s < %s",
                          txid.ToString(),
                          FormatMoney(additional_fees),
                          FormatMoney(relay_fee.GetFee(replacement_vsize)));
