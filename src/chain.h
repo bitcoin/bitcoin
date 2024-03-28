@@ -179,7 +179,7 @@ public:
     //! Verification status of this block. See enum BlockStatus
     //!
     //! Note: this value is modified to show BLOCK_OPT_WITNESS during UTXO snapshot
-    //! load to avoid the block index being spuriously rewound.
+    //! load to avoid a spurious startup failure requiring -reindex.
     //! @sa NeedsRedownload
     //! @sa ActivateSnapshot
     uint32_t nStatus GUARDED_BY(::cs_main){0};
