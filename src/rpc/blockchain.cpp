@@ -34,6 +34,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
@@ -2693,19 +2694,47 @@ UniValue CreateUTXOSnapshot(
 
     afile << metadata;
 
+    std::map<uint256, std::vector<std::pair<uint32_t, Coin>>> mapCoins;
     COutPoint key;
+    uint256 last_hash;
     Coin coin;
     unsigned int iter{0};
+    std::vector<std::pair<uint32_t, Coin>> coins;
 
+    // To reduce space the serialization format of the snapshot avoids
+    // duplication of tx hashes. The code takes advantage of the guarantee by
+    // leveldb that keys are lexicographically sorted.
+    // In the coins vector we collect all coins that belong to a certain tx hash
+    // (key.hash) and when we have them all (key.hash != last_hash) we write
+    // them to file using the below lambda function.
+    // See also https://github.com/bitcoin/bitcoin/issues/25675
+    auto write_coins_to_file = [&](AutoFile& afile, const uint256& last_hash, const std::vector<std::pair<uint32_t, Coin>>& coins) {
+        afile << last_hash;
+        WriteCompactSize(afile, coins.size());
+        for (auto [n, coin] : coins) {
+            WriteCompactSize(afile, n);
+            afile << coin;
+        }
+    };
+
+    pcursor->GetKey(key);
+    last_hash = key.hash;
     while (pcursor->Valid()) {
         if (iter % 5000 == 0) node.rpc_interruption_point();
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            afile << key;
-            afile << coin;
+            if (key.hash != last_hash) {
+                write_coins_to_file(afile, last_hash, coins);
+                last_hash = key.hash;
+                coins.clear();
+            }
+            coins.emplace_back(key.n, coin);
         }
-
         pcursor->Next();
+    }
+
+    if (!coins.empty()) {
+        write_coins_to_file(afile, last_hash, coins);
     }
 
     afile.fclose();
