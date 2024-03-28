@@ -45,6 +45,8 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
     // if true, allow duplicate input when constructing tx
     const bool duplicate_input = fuzzed_data_provider.ConsumeBool();
 
+    CTransactionRef ptx_potential_parent = nullptr;
+
     LIMITED_WHILE(outpoints.size() < 200'000 && fuzzed_data_provider.ConsumeBool(), 10 * DEFAULT_MAX_ORPHAN_TRANSACTIONS)
     {
         // construct transaction
@@ -78,6 +80,27 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             return new_tx;
         }();
 
+        // Trigger orphanage functions that are called using parents. ptx_potential_parent is a tx we constructed in a
+        // previous loop and potentially the parent of this tx.
+        if (ptx_potential_parent) {
+            // Set up future GetTxToReconsider call.
+            orphanage.AddChildrenToWorkSet(*ptx_potential_parent);
+
+            // Check that all txns returned from GetChildrenFrom* are indeed a direct child of this tx.
+            NodeId peer_id = fuzzed_data_provider.ConsumeIntegral<NodeId>();
+            for (const auto& child : orphanage.GetChildrenFromSamePeer(ptx_potential_parent, peer_id)) {
+                assert(std::any_of(child->vin.cbegin(), child->vin.cend(), [&](const auto& input) {
+                    return input.prevout.hash == ptx_potential_parent->GetHash();
+                }));
+            }
+            for (const auto& [child, peer] : orphanage.GetChildrenFromDifferentPeer(ptx_potential_parent, peer_id)) {
+                assert(std::any_of(child->vin.cbegin(), child->vin.cend(), [&](const auto& input) {
+                    return input.prevout.hash == ptx_potential_parent->GetHash();
+                }));
+                assert(peer != peer_id);
+            }
+        }
+
         // trigger orphanage functions
         LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10 * DEFAULT_MAX_ORPHAN_TRANSACTIONS)
         {
@@ -85,9 +108,6 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 
             CallOneOf(
                 fuzzed_data_provider,
-                [&] {
-                    orphanage.AddChildrenToWorkSet(*tx);
-                },
                 [&] {
                     {
                         CTransactionRef ref = orphanage.GetTxToReconsider(peer_id);
@@ -136,6 +156,12 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     orphanage.LimitOrphans(limit, limit_orphans_rng);
                     Assert(orphanage.Size() <= limit);
                 });
+
         }
+        // Set tx as potential parent to be used for future GetChildren() calls.
+        if (!ptx_potential_parent || fuzzed_data_provider.ConsumeBool()) {
+            ptx_potential_parent = tx;
+        }
+
     }
 }
