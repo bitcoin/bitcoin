@@ -220,6 +220,7 @@ public:
     virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return true; }
 
     virtual bool HavePrivateKeys() const { return false; }
+    virtual bool HaveCryptedKeys() const { return false; }
 
     //! The action to do when the DB needs rewrite
     virtual void RewriteDB() {}
@@ -403,6 +404,7 @@ public:
     bool Upgrade(int prev_version, int new_version, bilingual_str& error) override;
 
     bool HavePrivateKeys() const override;
+    bool HaveCryptedKeys() const override;
 
     void RewriteDB() override;
 
@@ -633,6 +635,7 @@ public:
     bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     bool HavePrivateKeys() const override;
+    bool HaveCryptedKeys() const override;
 
     std::optional<int64_t> GetOldestKeyPoolTime() const override;
     unsigned int GetKeyPoolSize() const override;
