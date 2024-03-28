@@ -14,6 +14,9 @@ from test_framework.test_framework import BitcoinTestFramework
 class CreateCache(BitcoinTestFramework):
     # Test network and test nodes are not required:
 
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 0
 
