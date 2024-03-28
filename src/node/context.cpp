@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <kernel/context.h>
+#include <key.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netgroup.h>
@@ -18,6 +19,14 @@
 #include <validation.h>
 
 namespace node {
-NodeContext::NodeContext() = default;
-NodeContext::~NodeContext() = default;
+NodeContext::NodeContext()
+{
+    ECC_Start();
+}
+
+NodeContext::~NodeContext()
+{
+    ECC_Stop();
+}
+
 } // namespace node

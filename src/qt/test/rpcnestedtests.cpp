@@ -46,6 +46,9 @@ void RPCNestedTests::rpcNestedTests()
         tableRPC.appendCommand(c.name, &c);
     }
 
+    // Call ECC_Stop before instantiating another NodeContext in TestingSetup
+    ECC_Stop();
+
     TestingSetup test;
     m_node.setContext(&test.m_node);
 
