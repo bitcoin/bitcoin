@@ -54,7 +54,7 @@ IGNORE_EXPORTS = {
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, str]] = {
     lief.ELF.ARCH.x86_64:  {
-        lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+        lief.ENDIANNESS.LITTLE: "",
     },
     lief.ELF.ARCH.ARM:     {
         lief.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
@@ -214,6 +214,10 @@ def check_exported_symbols(binary) -> bool:
 
 def check_ELF_libraries(binary) -> bool:
     ok: bool = True
+
+    if binary.header.machine_type == lief.ELF.ARCH.x86_64:
+        return len(binary.libraries) == 0
+
     for library in binary.libraries:
         if library not in ELF_ALLOWED_LIBRARIES:
             print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')

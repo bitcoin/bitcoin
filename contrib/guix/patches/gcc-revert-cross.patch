@@ -1,0 +1,25 @@
+commit a86709d737453c9ca13523ee1e49f73c017acb1a
+Author: fanquake <fanquake@gmail.com>
+Date:   Fri Mar 15 16:33:40 2024 +0000
+
+    Revert "Set CROSS_SYSTEM_HEADER_DIR according includedir"
+    
+    This reverts commit 59e4c98173a79fcaa2c33253261409f38856c384.
+
+diff --git a/gcc/Makefile.in b/gcc/Makefile.in
+index 775aaa1b3c4..06d192fa9ed 100644
+--- a/gcc/Makefile.in
++++ b/gcc/Makefile.in
+@@ -532,11 +532,7 @@ LINKER_PLUGIN_API_H = $(srcdir)/../include/plugin-api.h
+ # Default native SYSTEM_HEADER_DIR, to be overridden by targets.
+ NATIVE_SYSTEM_HEADER_DIR = @NATIVE_SYSTEM_HEADER_DIR@
+ # Default cross SYSTEM_HEADER_DIR, to be overridden by targets.
+-ifeq (@includedir@,$(prefix)/include)
+-  CROSS_SYSTEM_HEADER_DIR = @CROSS_SYSTEM_HEADER_DIR@
+-else
+-  CROSS_SYSTEM_HEADER_DIR = @includedir@
+-endif
++CROSS_SYSTEM_HEADER_DIR = @CROSS_SYSTEM_HEADER_DIR@
+ 
+ # autoconf sets SYSTEM_HEADER_DIR to one of the above.
+ # Purge it of unnecessary internal relative paths
