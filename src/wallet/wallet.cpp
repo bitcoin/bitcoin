@@ -2667,7 +2667,7 @@ void ReserveDestination::ReturnDestination()
     address = CNoDestination();
 }
 
-bool CWallet::DisplayAddress(const CTxDestination& dest)
+util::Result<void> CWallet::DisplayAddress(const CTxDestination& dest)
 {
     CScript scriptPubKey = GetScriptForDestination(dest);
     for (const auto& spk_man : GetScriptPubKeyMans(scriptPubKey)) {
@@ -2676,9 +2676,9 @@ bool CWallet::DisplayAddress(const CTxDestination& dest)
             continue;
         }
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
-        return signer_spk_man->DisplayAddress(scriptPubKey, signer);
+        return signer_spk_man->DisplayAddress(dest, signer);
     }
-    return false;
+    return util::Error{_("There is no ScriptPubKeyManager for this address")};
 }
 
 bool CWallet::LockCoin(const COutPoint& output, WalletBatch* batch)

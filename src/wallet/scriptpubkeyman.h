@@ -27,7 +27,6 @@
 #include <unordered_map>
 
 enum class OutputType;
-struct bilingual_str;
 
 namespace wallet {
 struct MigrationData;

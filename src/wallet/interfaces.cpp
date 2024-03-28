@@ -247,7 +247,7 @@ public:
         return value.empty() ? m_wallet->EraseAddressReceiveRequest(batch, dest, id)
                              : m_wallet->SetAddressReceiveRequest(batch, dest, id, value);
     }
-    bool displayAddress(const CTxDestination& dest) override
+    util::Result<void> displayAddress(const CTxDestination& dest) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->DisplayAddress(dest);

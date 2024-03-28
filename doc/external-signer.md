@@ -150,6 +150,9 @@ Example, display the first native SegWit receive address on Testnet:
 
 The command MUST be able to figure out the address type from the descriptor.
 
+The command MUST return an object containing `{"address": "[the address]"}`.
+As a sanity check, for devices that support this, it SHOULD ask the device to derive the address.
+
 If <descriptor> contains a master key fingerprint, the command MUST fail if it does not match the fingerprint known by the device.
 
 If <descriptor> contains an xpub, the command MUST fail if it does not match the xpub known by the device.
