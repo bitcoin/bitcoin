@@ -11,6 +11,10 @@
 #include <span.h>
 #include <util/check.h>
 
+#if defined(_MSC_VER) && defined(_M_X64)
+#  include <intrin.h>
+#endif
+
 /** Data structure storing a fee and size, ordered by increasing fee/size.
  *
  * The size of a FeeFrac cannot be zero unless the fee is also zero.
@@ -43,7 +47,7 @@ struct FeeFrac
      */
     static inline std::pair<int64_t, uint32_t> MulFallback(int64_t a, int32_t b) noexcept
     {
-        // Otherwise, emulate 96-bit multiplication using two 64-bit multiplies.
+        // Emulate 96-bit multiplication using two 64-bit multiplications.
         int64_t low = int64_t{static_cast<uint32_t>(a)} * b;
         int64_t high = (a >> 32) * b;
         return {high + (low >> 32), static_cast<uint32_t>(low)};
@@ -53,10 +57,19 @@ struct FeeFrac
 #ifdef __SIZEOF_INT128__
     static inline __int128 Mul(int64_t a, int32_t b) noexcept
     {
-        // If __int128 is available, use 128-bit wide multiply.
+        // If __int128 is available, use 128-bit wide multiplication.
         return __int128{a} * b;
     }
+#elif defined(_MSC_VER) && defined(_M_X64)
+    static inline std::pair<int64_t, uint64_t> Mul(int64_t a, int32_t b) noexcept
+    {
+        // On 64-bit MSVC, use _mul128 intrinsic for wide multiplication.
+        std::pair<int64_t, uint64_t> ret;
+        ret.second = _mul128(a, b, &ret.first);
+        return ret;
+    }
 #else
+    // Otherwise, use naive MulFallback implementation.
     static constexpr auto Mul = MulFallback;
 #endif
 
