@@ -143,6 +143,9 @@ if [[ "${RUN_TIDY}" == "true" ]]; then
   MAYBE_TOKEN="--"
 fi
 
+if [[ $HOST = *-darwin && $GOAL = deploy ]]; then
+  bash -c "${MAYBE_BEAR} ${MAYBE_TOKEN} make $MAKEJOBS deploydir" || ( echo "Build failure. Verbose build follows." && make deploydir V=1 ; false )
+fi
 bash -c "${MAYBE_BEAR} ${MAYBE_TOKEN} make $MAKEJOBS $GOAL" || ( echo "Build failure. Verbose build follows." && make "$GOAL" V=1 ; false )
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
