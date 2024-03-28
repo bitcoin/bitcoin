@@ -34,6 +34,7 @@ struct CBlockLocator;
 struct FeeCalculation;
 namespace node {
 struct NodeContext;
+struct PruneLockInfo;
 } // namespace node
 
 namespace interfaces {
@@ -136,6 +137,10 @@ public:
     //! Check that the block is available on disk (i.e. has not been
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
+
+    virtual bool pruneLockExists(const std::string& name) const = 0;
+    virtual bool updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info, bool sync=false) = 0;
+    virtual bool deletePruneLock(const std::string& name) = 0;
 
     //! Get locator for the current chain tip.
     virtual CBlockLocator getTipLocator() = 0;
