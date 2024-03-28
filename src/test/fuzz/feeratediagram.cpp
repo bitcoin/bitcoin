@@ -16,6 +16,20 @@
 
 namespace {
 
+/** Takes the pre-computed and topologically-valid chunks and generates a fee diagram which starts at FeeFrac of (0, 0) */
+std::vector<FeeFrac> BuildDiagramFromChunks(const Span<const FeeFrac> chunks)
+{
+    std::vector<FeeFrac> diagram;
+    diagram.reserve(chunks.size() + 1);
+
+    diagram.emplace_back(0, 0);
+    for (auto& chunk : chunks) {
+        diagram.emplace_back(diagram.back() + chunk);
+    }
+    return diagram;
+}
+
+
 /** Evaluate a diagram at a specific size, returning the fee as a fraction.
  *
  * Fees in diagram cannot exceed 2^32, as the returned evaluation could overflow
@@ -103,7 +117,7 @@ FUZZ_TARGET(build_and_compare_feerate_diagram)
     assert(diagram1.front() == empty);
     assert(diagram2.front() == empty);
 
-    auto real = CompareFeerateDiagram(diagram1, diagram2);
+    auto real = CompareChunks(chunks1, chunks2);
     auto sim = CompareDiagrams(diagram1, diagram2);
     assert(real == sim);
 

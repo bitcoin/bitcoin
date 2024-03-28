@@ -193,13 +193,13 @@ std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(
     // Require that the replacement strictly improve the mempool's feerate diagram.
     std::vector<FeeFrac> old_diagram, new_diagram;
 
-    const auto diagram_results{pool.CalculateFeerateDiagramsForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
+    const auto diagram_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
 
     if (!diagram_results.has_value()) {
         return std::make_pair(DiagramCheckError::UNCALCULABLE, util::ErrorString(diagram_results).original);
     }
 
-    if (!std::is_gt(CompareFeerateDiagram(diagram_results.value().second, diagram_results.value().first))) {
+    if (!std::is_gt(CompareChunks(diagram_results.value().second, diagram_results.value().first))) {
         return std::make_pair(DiagramCheckError::FAILURE, "insufficient feerate: does not improve feerate diagram");
     }
     return std::nullopt;

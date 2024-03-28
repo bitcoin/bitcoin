@@ -82,17 +82,6 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
     }
 }
 
-void CheckDiagramConcave(std::vector<FeeFrac>& diagram)
-{
-    // Diagrams are in monotonically-decreasing feerate order.
-    FeeFrac last_chunk = diagram.front();
-    for (size_t i = 1; i<diagram.size(); ++i) {
-        FeeFrac next_chunk = diagram[i] - diagram[i-1];
-        assert(next_chunk <= last_chunk);
-        last_chunk = next_chunk;
-    }
-}
-
 FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -145,31 +134,33 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 
     // Calculate the feerate diagrams for a replacement.
     CAmount replacement_fees = ConsumeMoney(fuzzed_data_provider);
-    int64_t replacement_vsize = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(1, 1000000);
-    auto calc_results{pool.CalculateFeerateDiagramsForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
+    int32_t replacement_vsize = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(1, 1000000);
+    auto calc_results{pool.CalculateChunksForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
 
     if (calc_results.has_value()) {
         // Sanity checks on the diagrams.
 
-        // Diagrams start at 0.
-        assert(calc_results->first.front().size == 0);
-        assert(calc_results->first.front().fee == 0);
-        assert(calc_results->second.front().size == 0);
-        assert(calc_results->second.front().fee == 0);
-
-        CheckDiagramConcave(calc_results->first);
-        CheckDiagramConcave(calc_results->second);
+        // Feerates are monotonically decreasing.
+        FeeFrac first_sum;
+        for (size_t i = 0; i < calc_results->first.size(); ++i) {
+            first_sum += calc_results->first[i];
+            if (i) assert(!(calc_results->first[i - 1] << calc_results->first[i]));
+        }
+        FeeFrac second_sum;
+        for (size_t i = 0; i < calc_results->second.size(); ++i) {
+            second_sum += calc_results->second[i];
+            if (i) assert(!(calc_results->second[i - 1] << calc_results->second[i]));
+        }
 
         CAmount replaced_fee{0};
-        int64_t replaced_size{0};
+        int32_t replaced_size{0};
         for (auto txiter : all_conflicts) {
             replaced_fee += txiter->GetModifiedFee();
             replaced_size += txiter->GetTxSize();
         }
         // The total fee of the new diagram should be the total fee of the old
         // diagram - replaced_fee + replacement_fees
-        assert(calc_results->first.back().fee - replaced_fee + replacement_fees == calc_results->second.back().fee);
-        assert(calc_results->first.back().size - replaced_size + replacement_vsize == calc_results->second.back().size);
+        assert((first_sum - FeeFrac{replaced_fee, replaced_size} + FeeFrac{replacement_fees, replacement_vsize}) == second_sum);
     }
 
     // If internals report error, wrapper should too
