@@ -96,24 +96,35 @@ def bool_from_env(key, default=False) -> bool:
     raise ValueError(f"Unrecognized environment value {key}={raw!r}")
 
 
-VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
-VERSION_EXAMPLE = "22.0-x86_64 or 23.1-rc1-darwin"
+VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-arch][-operating_system]"
+VERSION_EXAMPLE = "22.0-x86_64 or 23.1-rc1-apple-darwin or 25.0-x86_64-linux-gnu"
+VERSION_ARCHES = ["aarch64", "arm", "arm64", "osx", "osx64", "powerpc64", "powerpc64le", "riscv64", "x86_64"]
+VERSION_PLATFORMS = ["apple", "apple-darwin", "linux-gnu", "linux-gnueabihf", "win64"]
+
 
 def parse_version_string(version_str):
-    parts = version_str.split('-')
-    version_base = parts[0]
+    version_base = version_str.split('-')[0]
     version_rc = ""
-    version_os = ""
-    if len(parts) == 2:  # "<version>-rcN" or "version-platform"
-        if "rc" in parts[1]:
-            version_rc = parts[1]
-        else:
-            version_os = parts[1]
-    elif len(parts) == 3:  # "<version>-rcN-platform"
-        version_rc = parts[1]
-        version_os = parts[2]
+    version_arch = ""
+    version_platform = ""
 
-    return version_base, version_rc, version_os
+    def extract_segment(segment_list): # sort segment list by length in descending order to prioritize longer matches
+        segment_list = sorted(segment_list, key=len, reverse=True)
+        for s in segment_list:
+            if s in version_str_nonlocal[0]:
+                version_str_nonlocal[0] = version_str_nonlocal[0].replace(s, '').strip('-')
+                return s
+        return ""
+
+    version_str_nonlocal = [version_str]  # wrapped in list to make it non-local for inner functions
+    version_rc = extract_segment([f"rc{i}" for i in range(20)])  # assume rc doesn't increment above 20
+    version_arch = extract_segment(VERSION_ARCHES)
+    version_platform = extract_segment(VERSION_PLATFORMS)
+
+    if version_str_nonlocal[0] != version_base:
+        raise ValueError(f"Unmatched segments found in specifier string '{version_str}'.")
+
+    return version_base, version_rc, version_arch, version_platform
 
 
 def download_with_wget(remote_file, local_file):
@@ -290,6 +301,8 @@ def get_files_from_hosts_and_compare(
             "Have you specified the version number in the following format?\n"
             f"{VERSION_FORMAT} "
             f"(example: {VERSION_EXAMPLE})\n"
+            f"Supported architectures: {VERSION_ARCHES}\n"
+            f"Supported platforms: {VERSION_PLATFORMS}\n"
             f"wget output:\n{indent(output)}")
         return ReturnCode.FILE_GET_FAILED
     else:
@@ -433,7 +446,12 @@ def parse_sums_file(sums_file_path: str, filename_filter: list[str]) -> list[lis
     # extract hashes/filenames of binaries to verify from hash file;
     # each line has the following format: "<hash> <binary_filename>"
     with open(sums_file_path, 'r', encoding='utf8') as hash_file:
-        return [line.split()[:2] for line in hash_file if len(filename_filter) == 0 or any(f in line for f in filename_filter)]
+        # Check if a line contains all filter strings
+        def filter_func(line):
+            return all(f in line for f in filename_filter)
+
+        # Filter and split lines
+        return [line.split()[:2] for line in hash_file if filter_func(line)]
 
 
 def verify_binary_hashes(hashes_to_verify: list[list[str]]) -> tuple[ReturnCode, dict[str, str]]:
@@ -468,12 +486,14 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
 
     # determine remote dir dependent on provided version string
     try:
-        version_base, version_rc, os_filter = parse_version_string(args.version)
+        version_base, version_rc, version_arch, os_filter = parse_version_string(args.version)
         version_tuple = [int(i) for i in version_base.split('.')]
     except Exception as e:
         log.debug(e)
         log.error(f"unable to parse version; expected format is {VERSION_FORMAT}")
         log.error(f"  e.g. {VERSION_EXAMPLE}")
+        log.error(f"Supported architectures: {VERSION_ARCHES}")
+        log.error(f"Supported platforms: {VERSION_PLATFORMS}")
         return ReturnCode.BAD_VERSION
 
     remote_dir = f"/bin/{VERSIONPREFIX}{version_base}/"
@@ -512,9 +532,9 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
         return sigs_status
 
     # Extract hashes and filenames
-    hashes_to_verify = parse_sums_file(SUMS_FILENAME, [os_filter])
+    hashes_to_verify = parse_sums_file(SUMS_FILENAME, [version_arch, os_filter])
     if not hashes_to_verify:
-        log.error("no files matched the platform specified")
+        log.error("no files matched the platform specified. check available versions on bitcoincore.org/bin")
         return ReturnCode.NO_BINARIES_MATCH
 
     # remove binaries that are known not to be hosted by bitcoincore.org
