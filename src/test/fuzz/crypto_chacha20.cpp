@@ -28,11 +28,10 @@ FUZZ_TARGET(crypto_chacha20)
                 chacha20.SetKey(key);
             },
             [&] {
-                chacha20.Seek(
-                    {
-                        fuzzed_data_provider.ConsumeIntegral<uint32_t>(),
-                        fuzzed_data_provider.ConsumeIntegral<uint64_t>()
-                    }, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
+                ChaCha20::Nonce96 nonce{
+                    fuzzed_data_provider.ConsumeIntegral<uint32_t>(),
+                    fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+                chacha20.Seek(nonce, fuzzed_data_provider.ConsumeIntegral<uint32_t>());
             },
             [&] {
                 std::vector<uint8_t> output(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
