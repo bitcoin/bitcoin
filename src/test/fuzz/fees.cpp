@@ -2,16 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/messages.h>
 #include <consensus/amount.h>
 #include <policy/fees.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <util/fees.h>
 
 #include <cstdint>
 #include <string>
 #include <vector>
+
+using common::StringForFeeReason;
 
 FUZZ_TARGET(fees)
 {

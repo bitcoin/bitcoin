@@ -27,6 +27,9 @@
 #include <utility>
 #include <vector>
 
+using util::TrimString;
+using util::TrimStringView;
+
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
 {
     std::string str, prefix;

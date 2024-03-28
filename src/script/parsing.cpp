@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util/spanparsing.h>
+#include <script/parsing.h>
 
 #include <span.h>
 
@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <string>
 
-namespace spanparsing {
+namespace script {
 
 bool Const(const std::string& str, Span<const char>& sp)
 {
@@ -49,4 +49,4 @@ Span<const char> Expr(Span<const char>& sp)
     return ret;
 }
 
-} // namespace spanparsing
+} // namespace script

@@ -30,6 +30,7 @@
 #include <QTimer>
 #include <QWindow>
 
+using util::Join;
 using wallet::WALLET_FLAG_BLANK_WALLET;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 using wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS;

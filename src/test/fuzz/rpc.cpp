@@ -36,6 +36,9 @@
 #include <vector>
 enum class ChainType;
 
+using util::Join;
+using util::ToString;
+
 namespace {
 struct RPCFuzzTestingSetup : public TestingSetup {
     RPCFuzzTestingSetup(const ChainType chain_type, const std::vector<const char*>& extra_args) : TestingSetup{chain_type, extra_args}

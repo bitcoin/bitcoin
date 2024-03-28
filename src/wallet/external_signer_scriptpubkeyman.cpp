@@ -6,6 +6,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <external_signer.h>
+#include <node/types.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
 #include <iostream>
@@ -14,6 +15,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+using common::PSBTError;
 
 namespace wallet {
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor> desc)
@@ -63,7 +66,7 @@ bool ExternalSignerScriptPubKeyMan::DisplayAddress(const CScript scriptPubKey, c
 }
 
 // If sign is true, transaction must previously have been filled
-TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (!sign) {
         return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed, finalize);
@@ -75,14 +78,14 @@ TransactionError ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransact
         // TODO: for multisig wallets, we should only care if all _our_ inputs are signed
         complete &= PSBTInputSigned(input);
     }
-    if (complete) return TransactionError::OK;
+    if (complete) return {};
 
     std::string strFailReason;
     if(!GetExternalSigner().SignTransaction(psbt, strFailReason)) {
         tfm::format(std::cerr, "Failed to sign: %s\n", strFailReason);
-        return TransactionError::EXTERNAL_SIGNER_FAILED;
+        return PSBTError::EXTERNAL_SIGNER_FAILED;
     }
     if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
-    return TransactionError::OK;
+    return {};
 }
 } // namespace wallet

@@ -23,6 +23,9 @@
 #include <string>
 #include <vector>
 
+using util::SplitString;
+using util::TrimStringView;
+
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 

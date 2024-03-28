@@ -7,12 +7,15 @@
 #include <script/sign.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <optional>
 #include <string>
 #include <vector>
+
+using util::Split;
 
 namespace {
 
@@ -400,7 +403,6 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
         provider.pubkeys.emplace(origin_pubkey.GetID(), origin_pubkey);
 
         if (!origin_str.empty()) {
-            using namespace spanparsing;
             KeyOriginInfo info;
             Span<const char> origin_sp{origin_str};
             std::vector<Span<const char>> origin_split = Split(origin_sp, "/");
