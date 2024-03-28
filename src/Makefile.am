@@ -351,6 +351,7 @@ BITCOIN_CORE_H = \
   wallet/fees.h \
   wallet/load.h \
   wallet/receive.h \
+  wallet/logging.h \
   wallet/rpc/util.h \
   wallet/rpc/wallet.h \
   wallet/salvage.h \

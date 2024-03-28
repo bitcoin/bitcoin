@@ -29,6 +29,7 @@
 #include <util/ui_change_type.h>
 #include <wallet/crypter.h>
 #include <wallet/db.h>
+#include <wallet/logging.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
@@ -442,6 +443,8 @@ public:
      */
     mutable RecursiveMutex cs_wallet;
 
+    WalletLogSource m_log;
+
     WalletDatabase& GetDatabase() const override
     {
         assert(static_cast<bool>(m_database));
@@ -460,7 +463,8 @@ public:
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
           m_name(name),
-          m_database(std::move(database))
+          m_database(std::move(database)),
+          m_log{GetDisplayName()}
     {
     }
 
@@ -925,13 +929,7 @@ public:
         std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
         return strprintf("[%s]", wallet_name);
     };
-
-    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
-    template <typename... Params>
-    void WalletLogPrintf(const char* fmt, Params... parameters) const
-    {
-        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
-    };
+    const WalletLogSource& GetLogSource() const override { return m_log; }
 
     /** Upgrade the wallet */
     bool UpgradeWallet(int version, bilingual_str& error);

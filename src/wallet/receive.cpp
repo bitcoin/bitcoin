@@ -196,6 +196,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
                   std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter,
                   bool include_change)
 {
+    const BCLog::Source& log{wallet.m_log};
     nFee = 0;
     listReceived.clear();
     listSent.clear();
@@ -230,7 +231,7 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
         if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
         {
-            wallet.WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+            LogInfo(log, "CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                                     wtx.GetHash().ToString());
             address = CNoDestination();
         }
