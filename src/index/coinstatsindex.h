@@ -43,8 +43,6 @@ private:
     bool AllowPrune() const override { return true; }
 
 protected:
-    interfaces::Chain::NotifyOptions CustomOptions() override;
-
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
@@ -56,6 +54,8 @@ protected:
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
 public:
+    interfaces::Chain::NotifyOptions CustomOptions() override;
+
     // Constructs the index, which becomes available to be queried.
     explicit CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
