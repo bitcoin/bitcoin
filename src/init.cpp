@@ -1713,6 +1713,22 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman, *node.govman);
     node.mn_sync = ::masternodeSync.get();
 
+    fMasternodeMode = false;
+    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
+    if (!strMasterNodeBLSPrivKey.empty()) {
+        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        fMasternodeMode = true;
+        {
+            // Create and register activeMasternodeManager, will init later in ThreadImport
+            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
+            node.mn_activeman = ::activeMasternodeManager.get();
+            RegisterValidationInterface(node.mn_activeman);
+        }
+    }
+
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
                                      *node.scheduler, chainman, *node.mempool, *node.govman, *node.sporkman,
@@ -1843,22 +1859,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         *node.connman, *node.mn_sync, *node.govman, ::deterministicMNManager, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
-
-    fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-        fMasternodeMode = true;
-        {
-            // Create and register activeMasternodeManager, will init later in ThreadImport
-            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
-            node.mn_activeman = ::activeMasternodeManager.get();
-            RegisterValidationInterface(node.mn_activeman);
-        }
-    }
 
     // ********************************************************* Step 7a: Load sporks
 
