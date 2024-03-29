@@ -43,6 +43,9 @@ public:
     /// @param[out]  tx  The transaction itself.
     /// @return  true if transaction is found, false otherwise
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
+
+    /// Undo data is not needed in order for the index to be able to sync
+    bool RequiresUndoData() const override {return false;}
 };
 
 /// The global transaction index, used in GetTransaction. May be null.

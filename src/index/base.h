@@ -162,6 +162,9 @@ public:
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
+
+    /// Is undo data needed in order for the index to be able to sync
+    virtual bool RequiresUndoData() const = 0;
 };
 
 #endif // BITCOIN_INDEX_BASE_H
