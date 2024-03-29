@@ -149,7 +149,7 @@ task:
   persistent_worker:
     labels:
       type: medium
-  timeout_in: 300m  # Use longer timeout for the *rare* case where a full build (llvm + msan + depends + ...) needs to be done.
+  timeout_in: 500m  # Use longer timeout for the *rare* case where a full build (llvm + msan + depends + ...) needs to be done.
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
