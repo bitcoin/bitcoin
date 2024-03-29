@@ -2,9 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
+mod exclude;
+mod utils;
+
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use std::process::ExitCode;
 
@@ -12,54 +15,11 @@ type LintError = String;
 type LintResult = Result<(), LintError>;
 type LintFn = fn() -> LintResult;
 
-/// Return the git command
-fn git() -> Command {
-    let mut git = Command::new("git");
-    git.arg("--no-pager");
-    git
-}
-
-/// Return stdout
-fn check_output(cmd: &mut std::process::Command) -> Result<String, LintError> {
-    let out = cmd.output().expect("command error");
-    if !out.status.success() {
-        return Err(String::from_utf8_lossy(&out.stderr).to_string());
-    }
-    Ok(String::from_utf8(out.stdout)
-        .map_err(|e| format!("{e}"))?
-        .trim()
-        .to_string())
-}
-
-/// Return the git root as utf8, or panic
-fn get_git_root() -> PathBuf {
-    PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
-}
-
-/// Return all subtree paths
-fn get_subtrees() -> Vec<&'static str> {
-    vec![
-        "src/crc32c",
-        "src/crypto/ctaes",
-        "src/leveldb",
-        "src/minisketch",
-        "src/secp256k1",
-    ]
-}
-
-/// Return the pathspecs to exclude all subtrees
-fn get_pathspecs_exclude_subtrees() -> Vec<String> {
-    get_subtrees()
-        .iter()
-        .map(|s| format!(":(exclude){}", s))
-        .collect()
-}
-
 fn lint_subtree() -> LintResult {
     // This only checks that the trees are pure subtrees, it is not doing a full
     // check with -r to not have to fetch all the remotes.
     let mut good = true;
-    for subtree in get_subtrees() {
+    for subtree in utils::get_subtrees() {
         good &= Command::new("test/lint/git-subtree-check.sh")
             .arg(subtree)
             .status()
@@ -74,14 +34,10 @@ fn lint_subtree() -> LintResult {
 }
 
 fn lint_std_filesystem() -> LintResult {
-    let found = git()
-        .args([
-            "grep",
-            "std::filesystem",
-            "--",
-            "./src/",
-            ":(exclude)src/util/fs.h",
-        ])
+    let found = utils::git()
+        .args(["grep", "std::filesystem", "--"])
+        .args(["--", "./src"])
+        .args(exclude::get_pathspecs_exclude_std_filesystem())
         .status()
         .expect("command error")
         .success();
@@ -97,40 +53,10 @@ fs:: namespace, which has unsafe filesystem functions marked as deleted.
     }
 }
 
-/// Return the pathspecs for whitespace related excludes
-fn get_pathspecs_exclude_whitespace() -> Vec<String> {
-    let mut list = get_pathspecs_exclude_subtrees();
-    list.extend(
-        [
-            // Permanent excludes
-            "*.patch",
-            "src/qt/locale",
-            "contrib/windeploy/win-codesign.cert",
-            "doc/README_windows.txt",
-            // Temporary excludes, or existing violations
-            "doc/release-notes/release-notes-0.*",
-            "contrib/init/bitcoind.openrc",
-            "contrib/macdeploy/macdeployqtplus",
-            "src/crypto/sha256_sse4.cpp",
-            "src/qt/res/src/*.svg",
-            "test/functional/test_framework/crypto/ellswift_decode_test_vectors.csv",
-            "test/functional/test_framework/crypto/xswiftec_inv_test_vectors.csv",
-            "contrib/qos/tc.sh",
-            "contrib/verify-commits/gpg.sh",
-            "src/univalue/include/univalue_escapes.h",
-            "src/univalue/test/object.cpp",
-            "test/lint/git-subtree-check.sh",
-        ]
-        .iter()
-        .map(|s| format!(":(exclude){}", s)),
-    );
-    list
-}
-
 fn lint_trailing_whitespace() -> LintResult {
-    let trailing_space = git()
+    let trailing_space = utils::git()
         .args(["grep", "-I", "--line-number", "\\s$", "--"])
-        .args(get_pathspecs_exclude_whitespace())
+        .args(exclude::get_pathspecs_exclude_whitespace())
         .status()
         .expect("command error")
         .success();
@@ -153,10 +79,10 @@ sourced files to the exclude list.
 }
 
 fn lint_tabs_whitespace() -> LintResult {
-    let tabs = git()
+    let tabs = utils::git()
         .args(["grep", "-I", "--line-number", "--perl-regexp", "^\\t", "--"])
         .args(["*.cpp", "*.h", "*.md", "*.py", "*.sh"])
-        .args(get_pathspecs_exclude_whitespace())
+        .args(exclude::get_pathspecs_exclude_whitespace())
         .status()
         .expect("command error")
         .success();
@@ -187,7 +113,7 @@ fn lint_includes_build_config() -> LintResult {
     }
     let defines_regex = format!(
         r"^\s*(?!//).*({})",
-        check_output(Command::new("grep").args(["undef ", "--", config_path]))
+        utils::check_output(Command::new("grep").args(["undef ", "--", config_path]))
             .expect("grep failed")
             .lines()
             .map(|line| {
@@ -201,8 +127,8 @@ fn lint_includes_build_config() -> LintResult {
     let print_affected_files = |mode: bool| {
         // * mode==true: Print files which use the define, but lack the include
         // * mode==false: Print files which lack the define, but use the include
-        let defines_files = check_output(
-            git()
+        let defines_files = utils::check_output(
+            utils::git()
                 .args([
                     "grep",
                     "--perl-regexp",
@@ -216,18 +142,10 @@ fn lint_includes_build_config() -> LintResult {
                     "*.cpp",
                     "*.h",
                 ])
-                .args(get_pathspecs_exclude_subtrees())
-                .args([
-                    // These are exceptions which don't use bitcoin-config.h, rather the Makefile.am adds
-                    // these cppflags manually.
-                    ":(exclude)src/crypto/sha256_arm_shani.cpp",
-                    ":(exclude)src/crypto/sha256_avx2.cpp",
-                    ":(exclude)src/crypto/sha256_sse41.cpp",
-                    ":(exclude)src/crypto/sha256_x86_shani.cpp",
-                ]),
+                .args(exclude::get_pathspecs_exclude_includes_build_config()),
         )
         .expect("grep failed");
-        git()
+        utils::git()
             .args([
                 "grep",
                 if mode {
@@ -286,7 +204,7 @@ fn lint_doc() -> LintResult {
 
 fn lint_all() -> LintResult {
     let mut good = true;
-    let lint_dir = get_git_root().join("test/lint");
+    let lint_dir = utils::get_git_root().join("test/lint");
     for entry in fs::read_dir(lint_dir).unwrap() {
         let entry = entry.unwrap();
         let entry_fn = entry.file_name().into_string().unwrap();
@@ -320,7 +238,7 @@ fn main() -> ExitCode {
         ("lint-*.py scripts", lint_all),
     ];
 
-    let git_root = get_git_root();
+    let git_root = utils::get_git_root();
 
     let mut test_failed = false;
     for (lint_name, lint_fn) in test_list {
