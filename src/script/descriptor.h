@@ -158,6 +158,13 @@ struct Descriptor {
 
     /** Get the maximum size number of stack elements for satisfying this descriptor. */
     virtual std::optional<int64_t> MaxSatisfactionElems() const = 0;
+
+    /** Return all (extended) public keys for this descriptor, including any from subdescriptors.
+     *
+     * @param[out] pubkeys Any public keys
+     * @param[out] ext_pubs Any extended public keys
+     */
+    virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.

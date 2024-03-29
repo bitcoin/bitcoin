@@ -11,6 +11,7 @@
 #include <script/sign.h>
 #include <script/solver.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -2143,6 +2144,36 @@ std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
     return m_map_keys;
 }
 
+bool DescriptorScriptPubKeyMan::HasPrivKey(const CKeyID& keyid) const
+{
+    AssertLockHeld(cs_desc_man);
+    return m_map_keys.contains(keyid) || m_map_crypted_keys.contains(keyid);
+}
+
+std::optional<CKey> DescriptorScriptPubKeyMan::GetKey(const CKeyID& keyid) const
+{
+    AssertLockHeld(cs_desc_man);
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
+        const auto& it = m_map_crypted_keys.find(keyid);
+        if (it == m_map_crypted_keys.end()) {
+            return std::nullopt;
+        }
+        const std::vector<unsigned char>& crypted_secret = it->second.second;
+        CKey key;
+        if (!Assume(m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+            return DecryptKey(encryption_key, crypted_secret, it->second.first, key);
+        }))) {
+            return std::nullopt;
+        }
+        return key;
+    }
+    const auto& it = m_map_keys.find(keyid);
+    if (it == m_map_keys.end()) {
+        return std::nullopt;
+    }
+    return it->second;
+}
+
 bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 {
     WalletBatch batch(m_storage.GetDatabase());
@@ -2296,55 +2327,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, co
         return false;
     }
 
-    int64_t creation_time = GetTime();
-
-    std::string xpub = EncodeExtPubKey(master_key.Neuter());
-
-    // Build descriptor string
-    std::string desc_prefix;
-    std::string desc_suffix = "/*)";
-    switch (addr_type) {
-    case OutputType::LEGACY: {
-        desc_prefix = "pkh(" + xpub + "/44h";
-        break;
-    }
-    case OutputType::P2SH_SEGWIT: {
-        desc_prefix = "sh(wpkh(" + xpub + "/49h";
-        desc_suffix += ")";
-        break;
-    }
-    case OutputType::BECH32: {
-        desc_prefix = "wpkh(" + xpub + "/84h";
-        break;
-    }
-    case OutputType::BECH32M: {
-        desc_prefix = "tr(" + xpub + "/86h";
-        break;
-    }
-    case OutputType::UNKNOWN: {
-        // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
-        // so if we get to this point something is wrong
-        assert(false);
-    }
-    } // no default case, so the compiler can warn about missing cases
-    assert(!desc_prefix.empty());
-
-    // Mainnet derives at 0', testnet and regtest derive at 1'
-    if (Params().IsTestChain()) {
-        desc_prefix += "/1h";
-    } else {
-        desc_prefix += "/0h";
-    }
-
-    std::string internal_path = internal ? "/1" : "/0";
-    std::string desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
-
-    // Make the descriptor
-    FlatSigningProvider keys;
-    std::string error;
-    std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
-    WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
-    m_wallet_descriptor = w_desc;
+    m_wallet_descriptor = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
 
     // Store the master private key, and descriptor
     if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
