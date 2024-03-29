@@ -798,7 +798,7 @@ bool IsBadPort(uint16_t port)
     case 25:    // smtp
     case 37:    // time
     case 42:    // name
-    case 43:    // nicname
+    case 43:    // nickname
     case 53:    // domain
     case 69:    // tftp
     case 77:    // priv-rjs
