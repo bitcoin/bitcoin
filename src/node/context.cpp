@@ -15,6 +15,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
 #include <llmq/context.h>
+#include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>

@@ -80,9 +80,10 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
 {
 }
 
-bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const CGovernanceVote& vote, CGovernanceException& exception)
+bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list,
+                                    const CGovernanceVote& vote, CGovernanceException& exception)
 {
-    assert(::mmetaman->IsValid());
+    assert(mn_metaman.IsValid());
 
     LOCK(cs);
 
@@ -180,7 +181,7 @@ bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CDetermini
         return false;
     }
 
-    if (!mmetaman->AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
+    if (!mn_metaman.AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote"
              << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()

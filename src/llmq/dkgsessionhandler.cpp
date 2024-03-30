@@ -25,21 +25,22 @@ namespace llmq
 {
 
 CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
-                                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
-                                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const Consensus::LLMQParams& _params,
-                                       int _quorumIndex) :
+                                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
+                                       CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
+                                       const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex) :
         blsWorker(_blsWorker),
         m_chainstate(chainstate),
         connman(_connman),
         m_dmnman(dmnman),
         dkgDebugManager(_dkgDebugManager),
         dkgManager(_dkgManager),
+        m_mn_metaman(mn_metaman),
         quorumBlockProcessor(_quorumBlockProcessor),
         m_mn_activeman(mn_activeman),
         m_sporkman(sporkman),
         params(_params),
         quorumIndex(_quorumIndex),
-        curSession(std::make_unique<CDKGSession>(_params, _blsWorker, dmnman, _dkgManager, _dkgDebugManager, _connman, m_mn_activeman, sporkman)),
+        curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _connman, dmnman, _dkgManager, _dkgDebugManager, m_mn_metaman, m_mn_activeman, sporkman)),
         pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
         pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
         pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
@@ -187,7 +188,7 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
-    curSession = std::make_unique<CDKGSession>(params, blsWorker, m_dmnman, dkgManager, dkgDebugManager, connman, m_mn_activeman, m_sporkman);
+    curSession = std::make_unique<CDKGSession>(params, blsWorker, connman, m_dmnman, dkgManager, dkgDebugManager, m_mn_metaman, m_mn_activeman, m_sporkman);
 
     if (!DeploymentDIP0003Enforced(pQuorumBaseBlockIndex->nHeight, Params().GetConsensus())) {
         return false;
@@ -533,7 +534,7 @@ void CDKGSessionHandler::HandleDKGRound()
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
     utils::EnsureQuorumConnections(params, connman, m_dmnman, m_sporkman, tip_mn_list, pQuorumBaseBlockIndex, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
-        utils::AddQuorumProbeConnections(params, connman, m_dmnman, m_sporkman, tip_mn_list, pQuorumBaseBlockIndex, curSession->myProTxHash);
+        utils::AddQuorumProbeConnections(params, connman, m_dmnman, m_mn_metaman, m_sporkman, tip_mn_list, pQuorumBaseBlockIndex, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase::Initialized, QuorumPhase::Contribute, curQuorumHash);

@@ -14,6 +14,7 @@ class CConnman;
 class CDeterministicMNManager;
 class CDBWrapper;
 class CEvoDB;
+class CMasternodeMetaMan;
 class CMasternodeSync;
 class CMNHFManager;
 class CSporkManager;
@@ -36,8 +37,9 @@ struct LLMQContext {
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
     LLMQContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
-                CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-                const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
+                CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
+                const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
+                const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe);
     ~LLMQContext();
 
     void Interrupt();

@@ -62,10 +62,10 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
-                                   const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
+                                   const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
 {
-    assert(::mmetaman->IsValid());
+    assert(mn_metaman.IsValid());
 
     if (msg_type != NetMsgType::MNAUTH || !mn_sync.IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
@@ -125,7 +125,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CActive
     }
 
     if (!peer.IsInboundConn()) {
-        mmetaman->GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetTime<std::chrono::seconds>().count());
+        mn_metaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetTime<std::chrono::seconds>().count());
         if (peer.m_masternode_probe_connection) {
             LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
                      mnauth.proRegTxHash.ToString(), peer.GetId());

@@ -309,8 +309,7 @@ void PrepareShutdown(NodeContext& node)
     node.sporkman.reset();
     node.govman.reset();
     node.netfulfilledman.reset();
-    node.mn_metaman = nullptr;
-    ::mmetaman.reset();
+    node.mn_metaman.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -1677,15 +1676,14 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
-    assert(!::mmetaman);
-    ::mmetaman = std::make_unique<CMasternodeMetaMan>();
-    node.mn_metaman = ::mmetaman.get();
+    assert(!node.mn_metaman);
+    node.mn_metaman = std::make_unique<CMasternodeMetaMan>();
 
     assert(!node.netfulfilledman);
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
     assert(!node.govman);
-    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman, ::deterministicMNManager, node.mn_sync);
+    node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, ::deterministicMNManager, node.mn_sync);
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
@@ -1958,7 +1956,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx = std::make_unique<LLMQContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman,
+                node.llmq_ctx = std::make_unique<LLMQContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman,
                                                               *node.mempool, node.mn_activeman.get(), *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
@@ -2204,8 +2202,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 7c: Setup CoinJoin
 
-    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mempool, node.mn_activeman.get(),
-                                              *node.mn_sync, !ignores_incoming_txs);
+    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
+                                              node.mn_activeman.get(), *node.mn_sync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);

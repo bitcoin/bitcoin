@@ -111,11 +111,12 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 
     ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
     node.dmnman = ::deterministicMNManager.get();
-    node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.dmnman, *node.mempool, /* mn_activeman = */ nullptr, *node.mn_sync, /* relay_txes = */ true);
+    node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
+                                              /* mn_activeman = */ nullptr, *node.mn_sync, /* relay_txes = */ true);
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
-    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool,
+    node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman, *node.mempool,
                                                   /* mn_activeman = */ nullptr, *node.mn_sync, node.peerman, /* unit_tests = */ true, /* wipe = */ false);
     node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                             chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
@@ -227,11 +228,10 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
-    ::mmetaman = std::make_unique<CMasternodeMetaMan>();
-    m_node.mn_metaman = ::mmetaman.get();
+    m_node.mn_metaman = std::make_unique<CMasternodeMetaMan>();
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
-    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman, ::deterministicMNManager, m_node.mn_sync);
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.netfulfilledman, ::deterministicMNManager, m_node.mn_sync);
     m_node.mn_sync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
@@ -250,8 +250,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.govman.reset();
     m_node.sporkman.reset();
     m_node.netfulfilledman.reset();
-    m_node.mn_metaman = nullptr;
-    ::mmetaman.reset();
+    m_node.mn_metaman.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.args = nullptr;

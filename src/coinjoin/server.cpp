@@ -44,7 +44,7 @@ PeerMsgRet CCoinJoinServer::ProcessMessage(CNode& peer, std::string_view msg_typ
 void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
 {
     assert(m_mn_activeman);
-    assert(::mmetaman->IsValid());
+    assert(m_mn_metaman.IsValid());
 
     if (IsSessionReady()) {
         // too many users in this session already, reject new ones
@@ -81,9 +81,9 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
             }
         }
 
-        int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-        int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
-        if (nLastDsq != 0 && nDsqThreshold > mmetaman->GetDsqCount()) {
+        int64_t nLastDsq = m_mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+        int64_t nDsqThreshold = m_mn_metaman.GetDsqThreshold(dmn->proTxHash, mnList.GetValidMNsCount());
+        if (nLastDsq != 0 && nDsqThreshold > m_mn_metaman.GetDsqCount()) {
             if (fLogIPs) {
                 LogPrint(BCLog::COINJOIN, "DSACCEPT -- last dsq too recent, must wait: peer=%d, addr=%s\n", peer.GetId(), peer.addr.ToString());
             } else {
@@ -111,7 +111,7 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
 
 PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv)
 {
-    assert(::mmetaman->IsValid());
+    assert(m_mn_metaman.IsValid());
 
     CCoinJoinQueue dsq;
     vRecv >> dsq;
@@ -162,15 +162,15 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
     }
 
     if (!dsq.fReady) {
-        int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-        int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman->GetDsqCount());
+        int64_t nLastDsq = m_mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+        int64_t nDsqThreshold = m_mn_metaman.GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, m_mn_metaman.GetDsqCount());
         //don't allow a few nodes to dominate the queuing process
-        if (nLastDsq != 0 && nDsqThreshold > mmetaman->GetDsqCount()) {
+        if (nLastDsq != 0 && nDsqThreshold > m_mn_metaman.GetDsqCount()) {
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
             return {};
         }
-        mmetaman->AllowMixing(dmn->proTxHash);
+        m_mn_metaman.AllowMixing(dmn->proTxHash);
 
         LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
 

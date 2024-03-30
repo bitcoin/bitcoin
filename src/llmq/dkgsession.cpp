@@ -450,7 +450,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 {
-    assert(::mmetaman->IsValid());
+    assert(m_mn_metaman.IsValid());
 
     if (!IsQuorumPoseEnabled(params.type, m_sporkman)) {
         return;
@@ -482,7 +482,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
             logger.Batch("%s does not have min proto version %d (has %d)", m->dmn->proTxHash.ToString(), MIN_MASTERNODE_PROTO_VERSION, it->second);
         }
 
-        if (mmetaman->GetMetaInfo(m->dmn->proTxHash)->OutboundFailedTooManyTimes()) {
+        if (m_mn_metaman.GetMetaInfo(m->dmn->proTxHash)->OutboundFailedTooManyTimes()) {
             m->badConnection = true;
             logger.Batch("%s failed to connect to it too many times", m->dmn->proTxHash.ToString());
         }

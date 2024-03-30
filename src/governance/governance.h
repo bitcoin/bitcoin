@@ -25,6 +25,7 @@ class CDeterministicMNManager;
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CMasternodeMetaMan;
 class CMasternodeSync;
 class CNetFulfilledRequestManager;
 class CSporkManager;
@@ -255,6 +256,7 @@ private:
     const std::unique_ptr<db_type> m_db;
     bool is_valid{false};
 
+    CMasternodeMetaMan& m_mn_metaman;
     CNetFulfilledRequestManager& m_netfulfilledman;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
@@ -271,7 +273,7 @@ private:
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
 public:
-    explicit CGovernanceManager(CNetFulfilledRequestManager& netfulfilledman,
+    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
                                 const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                 const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CGovernanceManager();

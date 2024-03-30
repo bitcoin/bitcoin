@@ -19,6 +19,7 @@ class CDeterministicMNList;
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CMasternodeMetaMan;
 class CMasternodeSync;
 class CNode;
 
@@ -290,7 +291,8 @@ public:
     void LoadData();
     void GetData(UniValue& objResult) const;
 
-    bool ProcessVote(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const CGovernanceVote& vote, CGovernanceException& exception);
+    bool ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list,
+                     const CGovernanceVote& vote, CGovernanceException& exception);
 
     /// Called when MN's which have voted on this object have been removed
     void ClearMasternodeVotes(const CDeterministicMNList& tip_mn_list);

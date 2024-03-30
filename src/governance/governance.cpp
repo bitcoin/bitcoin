@@ -43,10 +43,11 @@ GovernanceStore::GovernanceStore() :
 {
 }
 
-CGovernanceManager::CGovernanceManager(CNetFulfilledRequestManager& netfulfilledman,
+CGovernanceManager::CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
                                        const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                        const std::unique_ptr<CMasternodeSync>& mn_sync) :
     m_db{std::make_unique<db_type>("governance.dat", "magicGovernanceCache")},
+    m_mn_metaman{mn_metaman},
     m_netfulfilledman{netfulfilledman},
     m_dmnman{dmnman},
     m_mn_sync{mn_sync},
@@ -275,7 +276,7 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CConnman& c
         CGovernanceException e;
         if (pairVote.second < nNow) {
             fRemove = true;
-        } else if (govobj.ProcessVote(*this, tip_mn_list, vote, e)) {
+        } else if (govobj.ProcessVote(m_mn_metaman, *this, tip_mn_list, vote, e)) {
             vote.Relay(connman, *Assert(m_mn_sync), tip_mn_list);
             fRemove = true;
         }
@@ -347,14 +348,14 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
 void CGovernanceManager::CheckAndRemove()
 {
-    assert(::mmetaman->IsValid());
+    assert(m_mn_metaman.IsValid());
 
     // Return on initial sync, spammed the debug.log and provided no use
     if (m_mn_sync == nullptr || !m_mn_sync->IsBlockchainSynced()) return;
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean\n");
 
-    std::vector<uint256> vecDirtyHashes = mmetaman->GetAndClearDirtyGovernanceObjectHashes();
+    std::vector<uint256> vecDirtyHashes = m_mn_metaman.GetAndClearDirtyGovernanceObjectHashes();
 
     const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
 
@@ -401,7 +402,7 @@ void CGovernanceManager::CheckAndRemove()
         if ((pObj->IsSetCachedDelete() || pObj->IsSetExpired()) &&
             (nTimeSinceDeletion >= GOVERNANCE_DELETION_DELAY)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- erase obj %s\n", (*it).first.ToString());
-            mmetaman->RemoveGovernanceObject(pObj->GetHash());
+            m_mn_metaman.RemoveGovernanceObject(pObj->GetHash());
 
             // Remove vote references
             const object_ref_cm_t::list_t& listItems = cmapVoteToObject.GetItemList();
@@ -1123,7 +1124,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         return false;
     }
 
-    bool fOk = govobj.ProcessVote(*this, Assert(m_dmnman)->GetListAtChainTip(), vote, exception) && cmapVoteToObject.Insert(nHashVote, &govobj);
+    bool fOk = govobj.ProcessVote(m_mn_metaman, *this, Assert(m_dmnman)->GetListAtChainTip(), vote, exception) && cmapVoteToObject.Insert(nHashVote, &govobj);
     LEAVE_CRITICAL_SECTION(cs);
     return fOk;
 }

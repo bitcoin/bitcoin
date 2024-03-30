@@ -20,8 +20,9 @@
 #include <masternode/sync.h>
 
 LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
-                         CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-                         const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe) :
+                         CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
+                         const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
+                         const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe) :
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     quorum_block_processor{[&]() -> llmq::CQuorumBlockProcessor* const {
@@ -29,7 +30,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
         llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, connman, dmnman, evo_db);
         return llmq::quorumBlockProcessor.get();
     }()},
-    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman, *quorum_block_processor, mn_activeman, sporkman, unit_tests, wipe)},
+    qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman, mn_metaman, *quorum_block_processor, mn_activeman, sporkman, unit_tests, wipe)},
     qman{[&]() -> llmq::CQuorumManager* const {
         assert(llmq::quorumManager == nullptr);
         llmq::quorumManager = std::make_unique<llmq::CQuorumManager>(*bls_worker, chainstate, connman, dmnman, *qdkgsman, evo_db, *quorum_block_processor, mn_activeman, mn_sync, sporkman);

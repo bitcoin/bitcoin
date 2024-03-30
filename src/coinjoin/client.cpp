@@ -42,7 +42,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::s
 
 PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream& vRecv)
 {
-    assert(::mmetaman->IsValid());
+    assert(m_mn_metaman.IsValid());
 
     CCoinJoinQueue dsq;
     vRecv >> dsq;
@@ -105,18 +105,18 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
                      dmn->pdmnState->addr.ToString());
             return {};
         } else {
-            int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-            int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
+            int64_t nLastDsq = m_mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+            int64_t nDsqThreshold = m_mn_metaman.GetDsqThreshold(dmn->proTxHash, tip_mn_list.GetValidMNsCount());
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq,
-                     nDsqThreshold, mmetaman->GetDsqCount());
+                     nDsqThreshold, m_mn_metaman.GetDsqCount());
             // don't allow a few nodes to dominate the queuing process
-            if (nLastDsq != 0 && nDsqThreshold > mmetaman->GetDsqCount()) {
+            if (nLastDsq != 0 && nDsqThreshold > m_mn_metaman.GetDsqCount()) {
                 LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n",
                          dmn->proTxHash.ToString());
                 return {};
             }
 
-            mmetaman->AllowMixing(dmn->proTxHash);
+            m_mn_metaman.AllowMixing(dmn->proTxHash);
 
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(),
                      dmn->pdmnState->addr.ToString());
@@ -155,12 +155,13 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, cons
     }
 }
 
-CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, const CMasternodeSync& mn_sync,
-                                               const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
+CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                               const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
     m_wallet(wallet),
     m_walletman(walletman),
     m_manager(*Assert(walletman.Get(wallet.GetName()))),
     m_dmnman(dmnman),
+    m_mn_metaman(mn_metaman),
     m_mn_sync(mn_sync),
     m_queueman(queueman)
 {}
@@ -990,7 +991,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, CTxMemPo
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     if (int(deqSessions.size()) < CCoinJoinClientOptions::GetSessions()) {
-        deqSessions.emplace_back(m_wallet, m_walletman, m_dmnman, m_mn_sync, m_queueman);
+        deqSessions.emplace_back(m_wallet, m_walletman, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman);
     }
     for (auto& session : deqSessions) {
         if (!CheckAutomaticBackup()) return false;
@@ -1119,7 +1120,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
 bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman)
 {
-    assert(::mmetaman->IsValid());
+    assert(m_mn_metaman.IsValid());
 
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
     if (nBalanceNeedsAnonymized <= 0) return false;
@@ -1156,13 +1157,13 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
             continue;
         }
 
-        int64_t nLastDsq = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastDsq();
-        int64_t nDsqThreshold = mmetaman->GetDsqThreshold(dmn->proTxHash, nMnCount);
-        if (nLastDsq != 0 && nDsqThreshold > mmetaman->GetDsqCount()) {
+        int64_t nLastDsq = m_mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
+        int64_t nDsqThreshold = m_mn_metaman.GetDsqThreshold(dmn->proTxHash, nMnCount);
+        if (nLastDsq != 0 && nDsqThreshold > m_mn_metaman.GetDsqCount()) {
             WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- Too early to mix on this masternode!" /* Continued */
                       " masternode=%s  addr=%s  nLastDsq=%d  nDsqThreshold=%d  nDsqCount=%d\n",
                 dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(), nLastDsq,
-                nDsqThreshold, mmetaman->GetDsqCount());
+                nDsqThreshold, m_mn_metaman.GetDsqCount());
             nTries++;
             continue;
         }
@@ -1892,7 +1893,7 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
 void CoinJoinWalletManager::Add(CWallet& wallet) {
     m_wallet_manager_map.try_emplace(
         wallet.GetName(),
-        std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_sync, m_queueman)
+        std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman)
     );
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
