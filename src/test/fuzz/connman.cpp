@@ -113,7 +113,7 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 }
             },
             [&] {
-                connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
+                connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool(), /* mn_sync = */ nullptr);
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());

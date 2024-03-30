@@ -3309,7 +3309,8 @@ void PeerManagerImpl::ProcessMessage(
             // Tell our peer that he should send us CoinJoin queue messages
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
             // Tell our peer that he should send us intra-quorum messages
-            if (llmq::IsWatchQuorumsEnabled() && m_connman.IsMasternodeQuorumNode(&pfrom)) {
+            const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
+            if (llmq::IsWatchQuorumsEnabled() && m_connman.IsMasternodeQuorumNode(&pfrom, tip_mn_list)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
             }
         }
@@ -3821,7 +3822,7 @@ void PeerManagerImpl::ProcessMessage(
         if (nInvType == MSG_DSTX) {
            // Validate DSTX and return bRet if we need to return from here
            uint256 hashTx = tx.GetHash();
-           const auto& [bRet, bDoReturn] = ValidateDSTX(*Assert(m_dmnman), *(m_cj_ctx->dstxman), m_chainman, m_mempool, dstx, hashTx);
+           const auto& [bRet, bDoReturn] = ValidateDSTX(*m_dmnman, *(m_cj_ctx->dstxman), m_chainman, m_mempool, dstx, hashTx);
            if (bDoReturn) {
                return;
            }
