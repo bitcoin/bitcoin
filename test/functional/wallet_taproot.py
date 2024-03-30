@@ -193,7 +193,7 @@ class WalletTaprootTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [['-keypool=100'], ['-keypool=100']]
+        self.extra_args = [['-acceptnonstdtxn', '-keypool=100'], ['-keypool=100']]
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
