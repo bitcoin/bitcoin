@@ -30,7 +30,7 @@ private:
     CDeterministicMNManager& m_dmnman;
     CDSTXManager& m_dstxman;
     CTxMemPool& mempool;
-    const CActiveMasternodeManager* m_mn_activeman;
+    const CActiveMasternodeManager* const m_mn_activeman;
     const CMasternodeSync& m_mn_sync;
 
     // Mixing uses collateral transactions to trust parties entering the pool
@@ -87,7 +87,7 @@ private:
 
 public:
     explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CDSTXManager& dstxman,
-                             CTxMemPool& mempool, const CActiveMasternodeManager* mn_activeman, const CMasternodeSync& mn_sync) :
+                             CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync) :
         m_chainstate(chainstate),
         connman(_connman),
         m_dmnman(dmnman),

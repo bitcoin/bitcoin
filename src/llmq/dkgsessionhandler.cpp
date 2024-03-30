@@ -26,7 +26,7 @@ namespace llmq
 
 CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                                        CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
-                                       const CActiveMasternodeManager* mn_activeman, const CSporkManager& sporkman, const Consensus::LLMQParams& _params,
+                                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const Consensus::LLMQParams& _params,
                                        int _quorumIndex) :
         blsWorker(_blsWorker),
         m_chainstate(chainstate),

@@ -275,7 +275,7 @@ static void quorum_dkgstatus_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const CActiveMasternodeManager* mn_activeman,
+static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const CActiveMasternodeManager* const mn_activeman,
                                  const ChainstateManager& chainman, const CSporkManager& sporkman, const LLMQContext& llmq_ctx)
 {
     quorum_dkgstatus_help(request);

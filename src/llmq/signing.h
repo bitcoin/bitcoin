@@ -163,7 +163,7 @@ private:
 
     CRecoveredSigsDb db;
     CConnman& connman;
-    const CActiveMasternodeManager* m_mn_activeman;
+    const CActiveMasternodeManager* const m_mn_activeman;
     const CQuorumManager& qman;
 
     std::atomic<PeerManager*> m_peerman{nullptr};
@@ -179,7 +179,7 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
-    CSigningManager(CConnman& _connman, const CActiveMasternodeManager* mn_activeman, const CQuorumManager& _qman, bool fMemory, bool fWipe);
+    CSigningManager(CConnman& _connman, const CActiveMasternodeManager* const mn_activeman, const CQuorumManager& _qman, bool fMemory, bool fWipe);
 
     bool AlreadyHave(const CInv& inv) const;
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;

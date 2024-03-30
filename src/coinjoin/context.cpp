@@ -14,7 +14,7 @@
 #include <coinjoin/server.h>
 
 CJContext::CJContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CTxMemPool& mempool,
-                     const CActiveMasternodeManager* mn_activeman, const CMasternodeSync& mn_sync, bool relay_txes) :
+                     const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync, bool relay_txes) :
     dstxman{std::make_unique<CDSTXManager>()},
 #ifdef ENABLE_WALLET
     walletman{std::make_unique<CoinJoinWalletManager>(connman, dmnman, mempool, mn_sync, queueman)},

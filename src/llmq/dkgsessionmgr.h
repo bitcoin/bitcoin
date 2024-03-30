@@ -67,7 +67,7 @@ private:
 
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
-                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* mn_activeman,
+                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
                        const CSporkManager& sporkman, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
