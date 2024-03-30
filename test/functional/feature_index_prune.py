@@ -5,12 +5,27 @@
 """Test indices in conjunction with prune."""
 import concurrent.futures
 import os
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import TestNode
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
 )
+
+from typing import List, Any
+
+def send_batch_request(node: TestNode, method: str, params: List[Any]) -> List[Any]:
+    """Send batch request and parse all results"""
+    data = [{"method": method, "params": p} for p in params]
+    response = node.batch(data)
+    result = []
+    for item in response:
+        assert item["error"] is None, item["error"]
+        result.append(item["result"])
+
+    return result
 
 
 class FeatureIndexPruneTest(BitcoinTestFramework):
@@ -56,6 +71,13 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
     def restart_without_indices(self):
         for i in range(3):
             self.restart_node(i, extra_args=["-fastprune", "-prune=1"])
+
+    def check_for_block(self, node, hash):
+        try:
+            self.nodes[node].getblock(hash)
+            return True
+        except JSONRPCException:
+            return False
 
     def run_test(self):
         filter_nodes = [self.nodes[0], self.nodes[2]]
@@ -135,6 +157,32 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         end_msg = f"{os.linesep}Error: A fatal internal error occurred, see debug.log for details: Failed to start indexes, shutting down…"
         for i, msg in enumerate([filter_msg, stats_msg, filter_msg]):
             self.nodes[i].assert_start_raises_init_error(extra_args=self.extra_args[i], expected_msg=msg+end_msg)
+
+        self.log.info("fetching the missing blocks with getblockfrompeer doesn't work for block filter index and coinstatsindex")
+        # Only checking the first two nodes since this test takes a long time
+        # and the third node is kind of redundant in this context
+        for i, msg in enumerate([filter_msg, stats_msg]):
+            self.restart_node(i, extra_args=["-prune=1", "-fastprune"])
+            node = self.nodes[i]
+            prune_height = node.getblockchaininfo()["pruneheight"]
+            self.connect_nodes(i, 3)
+            peers = node.getpeerinfo()
+            assert_equal(len(peers), 1)
+            peer_id = peers[0]["id"]
+
+            # 1500 is the height to where the indices were able to sync previously
+            hashes = send_batch_request(node, "getblockhash", [[a] for a in range(1500, prune_height)])
+            send_batch_request(node, "getblockfrompeer", [[bh, peer_id] for bh in hashes])
+            # Ensure all necessary blocks have been fetched before proceeding
+            for bh in hashes:
+                self.wait_until(lambda: self.check_for_block(i, bh), timeout=10)
+
+            # Upon restart we expect the same errors as previously although all
+            # necessary blocks have been fetched. Both indices need the undo
+            # data of the blocks to be available as well and getblockfrompeer
+            # can not provide that.
+            self.stop_node(i)
+            node.assert_start_raises_init_error(extra_args=self.extra_args[i], expected_msg=msg+end_msg)
 
         self.log.info("make sure the nodes start again with the indices and an additional -reindex arg")
         for i in range(3):
