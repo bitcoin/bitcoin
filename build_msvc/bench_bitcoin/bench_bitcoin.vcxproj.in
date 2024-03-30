@@ -10,6 +10,12 @@
   </PropertyGroup>
   <ItemGroup>
 @SOURCE_FILES@
+    <ClCompile Include="..\..\src\bench\coin_selection.cpp" />
+    <ClCompile Include="..\..\src\bench\wallet_balance.cpp" />
+    <ClCompile Include="..\..\src\bench\wallet_create.cpp" />
+    <ClCompile Include="..\..\src\bench\wallet_create_tx.cpp" />
+    <ClCompile Include="..\..\src\bench\wallet_ismine.cpp" />
+    <ClCompile Include="..\..\src\bench\wallet_loading.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoin_consensus\libbitcoin_consensus.vcxproj">
