@@ -19,12 +19,13 @@
 #include <util/time.h>
 #include <validation.h>
 
-void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
+void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternodeManager& mn_activeman,
+                         const CBlockIndex* tip)
 {
-    if (!fMasternodeMode) return;
+    assert(fMasternodeMode);
 
     CMNAuth mnauth;
-    if (::activeMasternodeManager->GetProTxHash().IsNull()) {
+    if (mn_activeman.GetProTxHash().IsNull()) {
         return;
     }
 
@@ -43,7 +44,7 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
     const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    auto pk = ::activeMasternodeManager->GetPubKey();
+    auto pk = mn_activeman.GetPubKey();
     const CBLSPublicKeyVersionWrapper pubKey(pk, !is_basic_scheme_active);
     uint256 signHash = [&]() {
         if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
@@ -53,15 +54,15 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
         }
     }();
 
-    mnauth.proRegTxHash = ::activeMasternodeManager->GetProTxHash();
+    mnauth.proRegTxHash = mn_activeman.GetProTxHash();
 
-    mnauth.sig = ::activeMasternodeManager->Sign(signHash);
+    mnauth.sig = mn_activeman.Sign(signHash);
 
     LogPrint(BCLog::NET_NETCONN, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, peer.GetId());
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CMasternodeSync& mn_sync,
+PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                                    const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
 {
     assert(::mmetaman->IsValid());
@@ -134,7 +135,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CMaster
     }
 
     const uint256 myProTxHash = fMasternodeMode ?
-                                ::activeMasternodeManager->GetProTxHash() :
+                                Assert(mn_activeman)->GetProTxHash() :
                                 uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {

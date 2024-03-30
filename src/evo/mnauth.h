@@ -9,6 +9,7 @@
 #include <net_types.h>
 #include <serialize.h>
 
+class CActiveMasternodeManager;
 class CBlockIndex;
 class CConnman;
 class CDataStream;
@@ -49,13 +50,14 @@ public:
         READWRITE(obj.proRegTxHash, obj.sig);
     }
 
-    static void PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip);
+    static void PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternodeManager& mn_activeman,
+                           const CBlockIndex* tip);
 
     /**
      * @pre CMasternodeMetaMan's database must be successfully loaded before
      *      attempting to call this function regardless of sync state
      */
-    static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, const CMasternodeSync& mn_sync,
+    static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                                      const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };

@@ -80,6 +80,4 @@ private:
     bool GetLocalAddress(CService& addrRet) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
-extern std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
-
 #endif // BITCOIN_MASTERNODE_NODE_H

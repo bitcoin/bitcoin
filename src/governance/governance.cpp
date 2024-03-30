@@ -671,8 +671,11 @@ std::optional<const CSuperblock> CGovernanceManager::CreateSuperblockCandidate(i
     return CSuperblock(nNextSuperblock, std::move(payments));
 }
 
-std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, CConnman& connman)
+std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, CConnman& connman,
+                                                                                   const CActiveMasternodeManager* const mn_activeman)
 {
+    if (!fMasternodeMode) return std::nullopt;
+
     // no sb_opt, no trigger
     if (!sb_opt.has_value()) return std::nullopt;
 
@@ -696,12 +699,12 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
         return std::nullopt;
     }
 
-    if (mn_payees.front()->proTxHash != ::activeMasternodeManager->GetProTxHash()) {
+    if (mn_payees.front()->proTxHash != Assert(mn_activeman)->GetProTxHash()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s we are not the payee, skipping\n", __func__);
         return std::nullopt;
     }
-    gov_sb.SetMasternodeOutpoint(::activeMasternodeManager->GetOutPoint());
-    gov_sb.Sign(*::activeMasternodeManager);
+    gov_sb.SetMasternodeOutpoint(mn_activeman->GetOutPoint());
+    gov_sb.Sign(*mn_activeman);
 
     if (std::string strError; !gov_sb.IsValidLocally(m_dmnman->GetListAtChainTip(), strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
@@ -718,11 +721,12 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
     return std::make_optional<CGovernanceObject>(gov_sb);
 }
 
-void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman)
+void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman,
+                                                const CActiveMasternodeManager* const mn_activeman)
 {
     // only active masternodes can vote on triggers
     if (!fMasternodeMode) return;
-    if (::activeMasternodeManager->GetProTxHash().IsNull()) return;
+    if (Assert(mn_activeman)->GetProTxHash().IsNull()) return;
 
     LOCK2(cs_main, cs);
 
@@ -731,7 +735,7 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
         assert(!votedFundingYesTriggerHash.has_value());
         // Vote YES-FUNDING for the trigger we like
         const uint256 gov_sb_hash = trigger_opt.value().GetHash();
-        if (!VoteFundingTrigger(gov_sb_hash, VOTE_OUTCOME_YES, connman)) {
+        if (!VoteFundingTrigger(gov_sb_hash, VOTE_OUTCOME_YES, connman, mn_activeman)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n", __func__, gov_sb_hash.ToString());
             // this should never happen, bail out
             return;
@@ -754,7 +758,7 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Not voting NO-FUNDING for trigger:%s, we voted yes for it already\n", __func__, trigger_hash.ToString());
             continue;
         }
-        if (!VoteFundingTrigger(trigger_hash, VOTE_OUTCOME_NO, connman)) {
+        if (!VoteFundingTrigger(trigger_hash, VOTE_OUTCOME_NO, connman, mn_activeman)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting NO-FUNDING for trigger:%s failed\n", __func__, trigger_hash.ToString());
             // failing here is ok-ish
             continue;
@@ -763,11 +767,14 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
     }
 }
 
-bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman)
+bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman,
+                                            const CActiveMasternodeManager* const mn_activeman)
 {
-    CGovernanceVote vote(::activeMasternodeManager->GetOutPoint(), nHash, VOTE_SIGNAL_FUNDING, outcome);
+    if (!fMasternodeMode) return false;
+
+    CGovernanceVote vote(Assert(mn_activeman)->GetOutPoint(), nHash, VOTE_SIGNAL_FUNDING, outcome);
     vote.SetTime(GetAdjustedTime());
-    vote.Sign(*::activeMasternodeManager);
+    vote.Sign(*mn_activeman);
 
     CGovernanceException exception;
     if (!ProcessVoteAndRelay(vote, exception, connman)) {
@@ -1466,7 +1473,7 @@ UniValue CGovernanceManager::ToJson() const
     return jsonObj;
 }
 
-void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman)
+void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman, const CActiveMasternodeManager* const mn_activeman)
 {
     // Note this gets called from ActivateBestChain without cs_main being held
     // so it should be safe to lock our mutex here without risking a deadlock
@@ -1478,8 +1485,8 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
     }
 
     const auto sb_opt = CreateSuperblockCandidate(pindex->nHeight);
-    const auto trigger_opt = CreateGovernanceTrigger(sb_opt, connman);
-    VoteGovernanceTriggers(trigger_opt, connman);
+    const auto trigger_opt = CreateGovernanceTrigger(sb_opt, connman, mn_activeman);
+    VoteGovernanceTriggers(trigger_opt, connman, mn_activeman);
 
     nCachedBlockHeight = pindex->nHeight;
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);

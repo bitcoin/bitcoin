@@ -368,9 +368,8 @@ void PrepareShutdown(NodeContext& node)
         pdsNotificationInterface = nullptr;
     }
     if (fMasternodeMode) {
-        UnregisterValidationInterface(node.mn_activeman);
-        node.mn_activeman = nullptr;
-        ::activeMasternodeManager.reset();
+        UnregisterValidationInterface(node.mn_activeman.get());
+        node.mn_activeman.reset();
     }
 
     node.chain_clients.clear();
@@ -1727,17 +1726,16 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         }
         fMasternodeMode = true;
         {
-            // Create and register activeMasternodeManager, will init later in ThreadImport
-            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
-            node.mn_activeman = ::activeMasternodeManager.get();
-            RegisterValidationInterface(node.mn_activeman);
+            // Create and register mn_activeman, will init later in ThreadImport
+            node.mn_activeman = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
+            RegisterValidationInterface(node.mn_activeman.get());
         }
     }
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
                                      *node.scheduler, chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
-                                     *node.govman, *node.sporkman, ::deterministicMNManager,
+                                     *node.govman, *node.sporkman, node.mn_activeman.get(), ::deterministicMNManager,
                                      node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
@@ -1862,7 +1860,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #endif
 
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *node.mn_sync, *node.govman, ::deterministicMNManager, node.llmq_ctx, node.cj_ctx
+        *node.connman, *node.mn_sync, *node.govman, node.mn_activeman.get(), ::deterministicMNManager, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -1961,7 +1959,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 }
                 node.llmq_ctx.reset();
                 node.llmq_ctx = std::make_unique<LLMQContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman,
-                                                              *node.mempool, node.mn_activeman, *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
+                                                              *node.mempool, node.mn_activeman.get(), *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 
@@ -2206,7 +2204,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     // ********************************************************* Step 7c: Setup CoinJoin
 
-    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mempool, node.mn_activeman,
+    node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mempool, node.mn_activeman.get(),
                                               *node.mn_sync, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
@@ -2379,7 +2377,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
-        ThreadImport(chainman, *node.dmnman, *pdsNotificationInterface, vImportFiles, args);
+        ThreadImport(chainman, *node.dmnman, *pdsNotificationInterface, vImportFiles, node.mn_activeman.get(), args);
     });
 
     // Wait for genesis block to be processed

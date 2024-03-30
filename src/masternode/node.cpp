@@ -15,9 +15,6 @@
 #include <validation.h>
 #include <warnings.h>
 
-// Keep track of the active Masternode
-std::unique_ptr<CActiveMasternodeManager> activeMasternodeManager;
-
 CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
     m_info(sk, sk.GetPublicKey()),
     m_connman{connman},

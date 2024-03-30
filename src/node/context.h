@@ -71,6 +71,7 @@ struct NodeContext {
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash
+    std::unique_ptr<CActiveMasternodeManager> mn_activeman;
     std::unique_ptr<CCreditPoolManager> cpoolman;
     std::unique_ptr<CEvoDB> evodb;
     std::unique_ptr<CChainstateHelper> chain_helper;
@@ -81,7 +82,6 @@ struct NodeContext {
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<LLMQContext> llmq_ctx;
-    CActiveMasternodeManager* mn_activeman{nullptr};
     CDeterministicMNManager* dmnman{nullptr};
     CMasternodeMetaMan* mn_metaman{nullptr};
 

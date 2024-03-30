@@ -884,7 +884,7 @@ static UniValue _quorum(const JSONRPCRequest& request)
     } else if (command == "quorumdkginfo") {
         return quorum_dkginfo(new_request, llmq_ctx, chainman);
     } else if (command == "quorumdkgstatus") {
-        return quorum_dkgstatus(new_request, *node.dmnman, node.mn_activeman, chainman, *node.sporkman, llmq_ctx);
+        return quorum_dkgstatus(new_request, *node.dmnman, node.mn_activeman.get(), chainman, *node.sporkman, llmq_ctx);
     } else if (command == "quorummemberof") {
         return quorum_memberof(new_request, chainman, node, llmq_ctx);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" || command == "quorumgetrecsig" || command == "quorumisconflicting") {
