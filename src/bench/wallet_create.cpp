@@ -51,9 +51,14 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
 static void WalletCreatePlain(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/false); }
 static void WalletCreateEncrypted(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/true); }
 
+#ifndef _MSC_VER
+// TODO: Being built with MSVC, the fs::remove_all() call in
+// the WalletCreate() fails with the error "The process cannot
+// access the file because it is being used by another process."
 #ifdef USE_SQLITE
 BENCHMARK(WalletCreatePlain, benchmark::PriorityLevel::LOW);
 BENCHMARK(WalletCreateEncrypted, benchmark::PriorityLevel::LOW);
+#endif
 #endif
 
 } // namespace wallet
