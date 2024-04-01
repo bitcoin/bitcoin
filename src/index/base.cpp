@@ -162,9 +162,9 @@ void BaseIndex::Sync()
             const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
             if (!pindex_next) {
                 SetBestBlockIndex(pindex);
-                m_synced = true;
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
+                m_synced = true;
                 break;
             }
             if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
