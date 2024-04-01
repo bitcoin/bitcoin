@@ -92,8 +92,6 @@ class ZMQTest (BitcoinTestFramework):
 
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)
-        self.import_deterministic_coinbase_privkeys()
-
 
         num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
