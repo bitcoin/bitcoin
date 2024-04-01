@@ -105,7 +105,6 @@ BASE_SCRIPTS = [
     'rpc_fundrawtransaction.py --legacy-wallet',
     'rpc_fundrawtransaction.py --legacy-wallet --nohd',
     'rpc_fundrawtransaction.py --descriptors',
-    'wallet_multiwallet.py --usecli',
     'p2p_quorum_data.py',
     # vv Tests less than 2m vv
     'p2p_instantsend.py',
@@ -174,6 +173,7 @@ BASE_SCRIPTS = [
     'mempool_persist.py',
     'wallet_multiwallet.py --legacy-wallet',
     'wallet_multiwallet.py --descriptors',
+    'wallet_multiwallet.py --usecli',
     'wallet_createwallet.py --legacy-wallet',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py --descriptors',
