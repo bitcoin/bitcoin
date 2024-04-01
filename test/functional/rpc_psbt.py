@@ -16,8 +16,6 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
-    WITNESS_SCALE_FACTOR,
-    ser_compact_size,
 )
 from test_framework.psbt import (
     PSBT,
@@ -42,6 +40,7 @@ from test_framework.util import (
     find_vout_for_address,
 )
 from test_framework.wallet_util import (
+    calculate_input_weight,
     generate_keypair,
     get_generate_key,
 )
@@ -752,17 +751,9 @@ class PSBTTest(BitcoinTestFramework):
                 input_idx = i
                 break
         psbt_in = dec["inputs"][input_idx]
-        # Calculate the input weight
-        # (prevout + sequence + length of scriptSig + scriptsig) * WITNESS_SCALE_FACTOR + len of num scriptWitness stack items + (length of stack item + stack item) * N stack items
-        # Note that occasionally this weight estimate may be slightly larger or smaller than the real weight
-        # as sometimes ECDSA signatures are one byte shorter than expected with a probability of 1/128
-        len_scriptsig = len(psbt_in["final_scriptSig"]["hex"]) // 2 if "final_scriptSig" in psbt_in else 0
-        len_scriptsig += len(ser_compact_size(len_scriptsig))
-        len_scriptwitness = (sum([(len(x) // 2) + len(ser_compact_size(len(x) // 2)) for x in psbt_in["final_scriptwitness"]]) + len(ser_compact_size(len(psbt_in["final_scriptwitness"])))) if "final_scriptwitness" in psbt_in else 0
-        len_prevout_txid = 32
-        len_prevout_index = 4
-        len_sequence = 4
-        input_weight = ((len_prevout_txid + len_prevout_index + len_sequence + len_scriptsig) * WITNESS_SCALE_FACTOR) + len_scriptwitness
+        scriptsig_hex = psbt_in["final_scriptSig"]["hex"] if "final_scriptSig" in psbt_in else ""
+        witness_stack_hex = psbt_in["final_scriptwitness"] if "final_scriptwitness" in psbt_in else None
+        input_weight = calculate_input_weight(scriptsig_hex, witness_stack_hex)
         low_input_weight = input_weight // 2
         high_input_weight = input_weight * 2
 

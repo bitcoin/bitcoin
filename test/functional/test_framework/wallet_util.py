@@ -15,6 +15,11 @@ from test_framework.address import (
     script_to_p2wsh,
 )
 from test_framework.key import ECKey
+from test_framework.messages import (
+    CTxIn,
+    CTxInWitness,
+    WITNESS_SCALE_FACTOR,
+)
 from test_framework.script_util import (
     key_to_p2pkh_script,
     key_to_p2wpkh_script,
@@ -122,6 +127,19 @@ def generate_keypair(compressed=True, wif=False):
     if wif:
         privkey = bytes_to_wif(privkey.get_bytes(), compressed)
     return privkey, pubkey
+
+def calculate_input_weight(scriptsig_hex, witness_stack_hex=None):
+    """Given a scriptSig and a list of witness stack items for an input in hex format,
+       calculate the total input weight. If the input has no witness data,
+       `witness_stack_hex` can be set to None."""
+    tx_in = CTxIn(scriptSig=bytes.fromhex(scriptsig_hex))
+    witness_size = 0
+    if witness_stack_hex is not None:
+        tx_inwit = CTxInWitness()
+        for witness_item_hex in witness_stack_hex:
+            tx_inwit.scriptWitness.stack.append(bytes.fromhex(witness_item_hex))
+        witness_size = len(tx_inwit.serialize())
+    return len(tx_in.serialize()) * WITNESS_SCALE_FACTOR + witness_size
 
 class WalletUnlock():
     """
