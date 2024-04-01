@@ -897,6 +897,8 @@ public:
 
     /** Interface for accessing CoinJoin state. */
     interfaces::CoinJoin::Loader& coinjoin_loader() { assert(m_coinjoin_loader); return *m_coinjoin_loader; }
+    /** Interface for availability status of CoinJoin. */
+    bool coinjoin_available() { return m_coinjoin_loader != nullptr; }
 
     const CWalletTx* GetWalletTx(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
