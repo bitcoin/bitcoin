@@ -80,9 +80,9 @@ struct RangeProof: public range_proof::ProofBase<T> {
 
 template <typename T>
 struct RangeProofWithSeed : public RangeProof<T> {
-    RangeProofWithSeed(const RangeProof<T>& proof, const GeneratorDeriver<T>::Seed& seed, const T::Scalar& min_value) : RangeProof<T>(proof), seed(seed), min_value(min_value){};
+    RangeProofWithSeed(const RangeProof<T>& proof, const typename GeneratorDeriver<T>::Seed& seed, const typename T::Scalar& min_value) : RangeProof<T>(proof), seed(seed), min_value(min_value){};
 
-    RangeProofWithSeed(const RangeProof<T>& proof, const GeneratorDeriver<T>::Seed& seed) : RangeProof<T>(proof), seed(seed), min_value(0){};
+    RangeProofWithSeed(const RangeProof<T>& proof, const typename GeneratorDeriver<T>::Seed& seed) : RangeProof<T>(proof), seed(seed), min_value(0){};
 
     RangeProofWithSeed(const RangeProof<T>& proof) : RangeProof<T>(proof), seed(TokenId()), min_value(0){};
 
