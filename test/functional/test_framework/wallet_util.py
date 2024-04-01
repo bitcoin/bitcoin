@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Useful util functions for testing the wallet"""
 from collections import namedtuple
+import unittest
 
 from test_framework.address import (
     byte_to_base58,
@@ -159,3 +160,42 @@ class WalletUnlock():
     def __exit__(self, *args):
         _ = args
         self.wallet.walletlock()
+
+
+class TestFrameworkWalletUtil(unittest.TestCase):
+    def test_calculate_input_weight(self):
+        SKELETON_BYTES = 32 + 4 + 4  # prevout-txid, prevout-index, sequence
+        SMALL_LEN_BYTES = 1  # bytes needed for encoding scriptSig / witness item lenghts < 253
+        LARGE_LEN_BYTES = 3  # bytes needed for encoding scriptSig / witness item lengths >= 253
+
+        # empty scriptSig, no witness
+        self.assertEqual(calculate_input_weight(""),
+                         (SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR)
+        self.assertEqual(calculate_input_weight("", None),
+                         (SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR)
+        # small scriptSig, no witness
+        scriptSig_small = "00"*252
+        self.assertEqual(calculate_input_weight(scriptSig_small, None),
+                         (SKELETON_BYTES + SMALL_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR)
+        # small scriptSig, empty witness stack
+        self.assertEqual(calculate_input_weight(scriptSig_small, []),
+                         (SKELETON_BYTES + SMALL_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR + SMALL_LEN_BYTES)
+        # large scriptSig, no witness
+        scriptSig_large = "00"*253
+        self.assertEqual(calculate_input_weight(scriptSig_large, None),
+                         (SKELETON_BYTES + LARGE_LEN_BYTES + 253) * WITNESS_SCALE_FACTOR)
+        # large scriptSig, empty witness stack
+        self.assertEqual(calculate_input_weight(scriptSig_large, []),
+                         (SKELETON_BYTES + LARGE_LEN_BYTES + 253) * WITNESS_SCALE_FACTOR + SMALL_LEN_BYTES)
+        # empty scriptSig, 5 small witness stack items
+        self.assertEqual(calculate_input_weight("", ["00", "11", "22", "33", "44"]),
+                         ((SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 5 * SMALL_LEN_BYTES + 5)
+        # empty scriptSig, 253 small witness stack items
+        self.assertEqual(calculate_input_weight("", ["00"]*253),
+                         ((SKELETON_BYTES + SMALL_LEN_BYTES) * WITNESS_SCALE_FACTOR) + LARGE_LEN_BYTES + 253 * SMALL_LEN_BYTES + 253)
+        # small scriptSig, 3 large witness stack items
+        self.assertEqual(calculate_input_weight(scriptSig_small, ["00"*253]*3),
+                         ((SKELETON_BYTES + SMALL_LEN_BYTES + 252) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 3 * LARGE_LEN_BYTES + 3*253)
+        # large scriptSig, 3 large witness stack items
+        self.assertEqual(calculate_input_weight(scriptSig_large, ["00"*253]*3),
+                         ((SKELETON_BYTES + LARGE_LEN_BYTES + 253) * WITNESS_SCALE_FACTOR) + SMALL_LEN_BYTES + 3 * LARGE_LEN_BYTES + 3*253)
