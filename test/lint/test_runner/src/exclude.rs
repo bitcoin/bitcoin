@@ -46,6 +46,11 @@ pub fn get_pathspecs_exclude_whitespace() -> Vec<String> {
     ]))
 }
 
+/// Return the pathspecs for includes check related excludes
+pub fn get_pathspecs_exclude_includes() -> Vec<String> {
+    get_pathspecs_exclude(Some(&["contrib/devtools/bitcoin-tidy"]))
+}
+
 /// Return the pathspecs for build config includes related excludes
 pub fn get_pathspecs_exclude_includes_build_config() -> Vec<String> {
     get_pathspecs_exclude(Some(&[

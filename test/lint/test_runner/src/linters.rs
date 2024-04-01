@@ -24,6 +24,11 @@ pub fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: doc::doc
         },
         &Linter {
+            description: "Check for duplicate includes, includes of .cpp files, new boost includes, and quote syntax includes.",
+            name: "includes",
+            lint_fn: includes::includes
+        },
+        &Linter {
             description: "Check that no symbol from bitcoin-config.h is used without the header being included",
             name: "includes_build_config",
             lint_fn: includes::includes_build_config
