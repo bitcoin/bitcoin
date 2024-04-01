@@ -4,6 +4,7 @@
 
 pub mod doc;
 pub mod includes;
+pub mod spelling;
 pub mod std_filesystem;
 pub mod subtree;
 pub mod whitespace;
@@ -37,6 +38,11 @@ pub fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check that header files have include guards",
             name: "include_guards",
             lint_fn: includes::include_guards
+        },
+        &Linter {
+            description: "Print warnings for spelling errors. (These will not cause lint check to fail)",
+            name: "spelling",
+            lint_fn: spelling::spelling
         },
         &Linter {
             description: "Check that subtrees are pure subtrees",

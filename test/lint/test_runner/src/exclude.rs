@@ -72,3 +72,16 @@ pub fn get_pathspecs_exclude_include_guards() -> Vec<String> {
         "src/test/fuzz/FuzzedDataProvider.h",
     ]))
 }
+
+/// Return the pathspecs for spelling check related excludes
+pub fn get_pathspecs_exclude_spelling() -> Vec<String> {
+    get_pathspecs_exclude(Some(&[
+        "build-aux/m4/",
+        "contrib/seeds/*.txt",
+        "depends/",
+        "doc/release-notes/",
+        "src/qt/locale/",
+        "src/qt/*.qrc",
+        "contrib/guix/patches",
+    ]))
+}
