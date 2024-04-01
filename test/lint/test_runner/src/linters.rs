@@ -29,6 +29,11 @@ pub fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: includes::includes_build_config
         },
         &Linter {
+            description: "Check that header files have include guards",
+            name: "include_guards",
+            lint_fn: includes::include_guards
+        },
+        &Linter {
             description: "Check that subtrees are pure subtrees",
             name: "subtree",
             lint_fn: subtree::subtree},

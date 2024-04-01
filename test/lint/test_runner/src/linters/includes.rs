@@ -4,8 +4,76 @@
 
 use crate::{exclude, utils, LintResult};
 
+use std::fs;
 use std::path::Path;
 use std::process::Command;
+
+// Check include guards
+pub fn include_guards() -> LintResult {
+    let mut include_guard_error = false;
+    let header_files = String::from_utf8(
+        utils::git()
+            .args(["ls-files", "--", "*.h"])
+            .args(exclude::get_pathspecs_exclude_include_guards())
+            .output()
+            .expect("command error")
+            .stdout,
+    )
+    .expect("error reading stdout");
+
+    for header_file in header_files.lines() {
+        // src/wallet/fees.h -> BITCOIN_WALLET_FEES_H
+        let header_id = format!(
+            "BITCOIN_{}",
+            header_file.split('/').collect::<Vec<_>>()[1..]
+                .join("_")
+                .replace(['-', '.'], "_")
+                .to_uppercase()
+        );
+
+        let header_file_body =
+            fs::read_to_string(header_file).expect("Failure opening header file");
+
+        let include_guards = [
+            format!("#ifndef {header_id}"),
+            format!("#define {header_id}"),
+            format!("#endif // {header_id}"),
+        ];
+
+        let mut guard_index = 0;
+        for header_file_line in header_file_body.lines() {
+            if guard_index >= 3 {
+                break;
+            }
+            if header_file_line == include_guards[guard_index] {
+                guard_index += 1;
+            }
+        }
+
+        if guard_index != 3 {
+            include_guard_error = true;
+            println!(
+                r#"
+{header_file} seems to be missing the expected include guard:
+{}
+{}
+{}
+                "#,
+                include_guards[0], include_guards[1], include_guards[2]
+            )
+        }
+    }
+
+    if include_guard_error {
+        Err(r#"
+^^^
+One or more include guards are missing.
+"#
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
 
 pub fn includes_build_config() -> LintResult {
     let config_path = "./src/config/bitcoin-config.h.in";
