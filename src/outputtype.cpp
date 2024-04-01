@@ -46,6 +46,7 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::BECH32: return OUTPUT_TYPE_STRING_BECH32;
     case OutputType::BECH32M: return OUTPUT_TYPE_STRING_BECH32M;
     case OutputType::BLSCT: return OUTPUT_TYPE_STRING_BLSCT;
+    case OutputType::BLSCT_STAKE: return OUTPUT_TYPE_STRING_BLSCT;
     case OutputType::UNKNOWN: return OUTPUT_TYPE_STRING_UNKNOWN;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -66,7 +67,8 @@ CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
             return witdest;
         }
     }
-    case OutputType::BLSCT: {
+    case OutputType::BLSCT:
+    case OutputType::BLSCT_STAKE: {
         return CNoDestination();
     }
     case OutputType::BECH32M:
@@ -111,6 +113,7 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
     }
     case OutputType::BECH32M:
     case OutputType::BLSCT:
+    case OutputType::BLSCT_STAKE:
     case OutputType::UNKNOWN: {
     } // This function should not be used for BECH32M or UNKNOWN, so let it assert
     } // no default case, so the compiler can warn about missing cases

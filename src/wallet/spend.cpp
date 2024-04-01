@@ -407,11 +407,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (params.only_blsct && !output.IsBLSCT()) {
                 continue;
             }
-
-            if (!params.include_staked_commitment && output.IsStakedCommitment()) {
+            if (params.include_staked_commitment && !output.IsStakedCommitment()) {
                 continue;
             }
-
             if (params.token_id != output.tokenId) {
                 continue;
             }
@@ -424,7 +422,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
             int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), can_grind_r, coinControl);
             bool solvable = provider ? InferDescriptor(output.scriptPubKey, *provider)->IsSolvable() : false;
-            bool spendable = ((mine & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT)) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
+            bool spendable = ((mine & (ISMINE_SPENDABLE | ISMINE_SPENDABLE_BLSCT | ISMINE_STAKED_COMMITMENT_BLSCT)) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
             // Filter by spendable outputs only
             if (!spendable && params.only_spendable) continue;

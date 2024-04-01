@@ -863,6 +863,7 @@ RPCHelpMan sendtoblsctaddress();
 RPCHelpMan sendmany();
 RPCHelpMan settxfee();
 RPCHelpMan stakelock();
+RPCHelpMan stakeunlock();
 RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
@@ -950,6 +951,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &simulaterawtransaction},
         {"wallet", &sendall},
         {"wallet", &stakelock},
+        {"wallet", &stakeunlock},
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},

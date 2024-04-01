@@ -81,7 +81,7 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
         DataStream ss{};
         ss << stakeRp;
 
-        ret.out.scriptPubKey << OP_TRUE << OP_STAKED_COMMITMENT << blsct::Common::DataStreamToVector(ss) << OP_DROP;
+        ret.out.scriptPubKey << OP_STAKED_COMMITMENT << blsct::Common::DataStreamToVector(ss) << OP_DROP << OP_TRUE;
     }
 
     auto p = rp.Prove(vs, nonce, memo, tokenId);

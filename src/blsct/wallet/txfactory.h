@@ -36,8 +36,8 @@ public:
 
     void AddOutput(const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const CreateOutputType& type = NORMAL, const CAmount& minStake = 0);
     bool AddInput(const CAmount& amount, const MclScalar& gamma, const blsct::PrivateKey& spendingKey, const TokenId& tokenId, const COutPoint& outpoint, const bool& rbf = false);
-    std::optional<CMutableTransaction> BuildTx(const blsct::DoublePublicKey& changeDestination);
-    static std::optional<CMutableTransaction> CreateTransaction(const std::vector<InputCandidates>& inputCandidates, const blsct::DoublePublicKey& changeDestination, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const CreateOutputType& type = NORMAL, const CAmount& minStake = 0);
+    std::optional<CMutableTransaction> BuildTx(const blsct::DoublePublicKey& changeDestination, const CAmount& minStake = 0, const bool& fUnstake = false, const bool& fSubtractedFee = false);
+    static std::optional<CMutableTransaction> CreateTransaction(const std::vector<InputCandidates>& inputCandidates, const blsct::DoublePublicKey& changeDestination, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const CreateOutputType& type = NORMAL, const CAmount& minStake = 0, const bool& fUnstake = false);
 };
 
 class TxFactory : public TxFactoryBase
@@ -51,7 +51,7 @@ public:
     bool AddInput(wallet::CWallet* wallet, const COutPoint& outpoint, const bool& rbf = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
     bool AddInput(const CCoinsViewCache& cache, const COutPoint& outpoint, const bool& rbf = false);
     std::optional<CMutableTransaction> BuildTx();
-    static std::optional<CMutableTransaction> CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const CreateOutputType& type = NORMAL, const CAmount& minStake = 0);
+    static std::optional<CMutableTransaction> CreateTransaction(wallet::CWallet* wallet, blsct::KeyMan* blsct_km, const SubAddress& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const CreateOutputType& type = NORMAL, const CAmount& minStake = 0, const bool& fUnstake = false);
 };
 } // namespace blsct
 

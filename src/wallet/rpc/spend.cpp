@@ -209,7 +209,6 @@ UniValue SendBLSCTMoney(CWallet& wallet, std::vector<CBLSCTRecipient>& recipient
     if (recipients.size() == 0)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: No recipients");
 
-    // This function is only used by sendtoaddress and sendmany.
     // This should always try to sign, if we don't have private keys, don't try to do anything here.
     if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
@@ -239,6 +238,42 @@ UniValue SendBLSCTMoney(CWallet& wallet, std::vector<CBLSCTRecipient>& recipient
     return tx->GetHash().GetHex();
 }
 
+
+UniValue UnstakeBLSCT(CWallet& wallet, std::vector<CBLSCTRecipient>& recipients, bool verbose, CAmount minStakeIn = 0)
+{
+    EnsureWalletIsUnlocked(wallet);
+
+    if (recipients.size() == 0)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: No recipients");
+
+    // This should always try to sign, if we don't have private keys, don't try to do anything here.
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+    }
+
+    // Shuffle recipient list
+    std::shuffle(recipients.begin(), recipients.end(), FastRandomContext());
+
+    // Send
+    auto outputType = blsct::CreateOutputType::NORMAL;
+    auto minStake = minStakeIn;
+
+    auto res = blsct::TxFactory::CreateTransaction(&wallet, wallet.GetBLSCTKeyMan(), recipients[0].destination, recipients[0].nAmount, recipients[0].sMemo, TokenId(), outputType, minStake, true);
+
+    if (!res) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Not enough funds available");
+    }
+
+    const CTransactionRef& tx = MakeTransactionRef(res.value());
+    mapValue_t map_value;
+    wallet.CommitTransaction(tx, std::move(map_value), /*orderForm=*/{});
+    if (verbose) {
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("txid", tx->GetHash().GetHex());
+        return entry;
+    }
+    return tx->GetHash().GetHex();
+}
 
 /**
  * Update coin control with fee estimation based on the given parameters
@@ -343,7 +378,7 @@ RPCHelpMan stakelock()
         "\nLock an amount in order to stake it." +
             HELP_REQUIRING_PASSPHRASE,
         {
-            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to stake. eg 0.1"},
             {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
         },
         {
@@ -387,6 +422,60 @@ RPCHelpMan stakelock()
             LOCK(cs_main);
 
             return SendBLSCTMoney(*pwallet, recipients, verbose, Params().GetConsensus().nPePoSMinStakeAmount);
+        },
+    };
+}
+
+
+RPCHelpMan stakeunlock()
+{
+    return RPCHelpMan{
+        "stakeunlock",
+        "\nUnlocks an staked amount." +
+            HELP_REQUIRING_PASSPHRASE,
+        {
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to unstake. eg 0.1"},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, return extra information about the transaction."},
+        },
+        {
+            RPCResult{"if verbose is not set or set to false",
+                      RPCResult::Type::STR_HEX, "txid", "The transaction id."},
+            RPCResult{
+                "if verbose is set to true",
+                RPCResult::Type::OBJ,
+                "",
+                "",
+                {{RPCResult::Type::STR_HEX, "txid", "The transaction id."}},
+            },
+        },
+        RPCExamples{
+            "\nLock 0.1 " + CURRENCY_UNIT + "\n" + HelpExampleCli("stakelock", "0.1")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+
+            // Make sure the results are valid at least up to the most recent block
+            // the user could have gotten from another RPC command prior to now
+            pwallet->BlockUntilSyncedToCurrentChain();
+
+            LOCK(pwallet->cs_wallet);
+
+            UniValue address_amounts(UniValue::VOBJ);
+            auto op_dest = pwallet->GetNewDestination(OutputType::BLSCT_STAKE, "");
+            if (!op_dest) {
+                throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
+            }
+
+            const std::string address = EncodeDestination(*op_dest);
+            address_amounts.pushKV(address, request.params[0]);
+
+            std::vector<CBLSCTRecipient> recipients;
+            ParseBLSCTRecipients(address_amounts, false, "", recipients);
+            const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
+
+            LOCK(cs_main);
+
+            return UnstakeBLSCT(*pwallet, recipients, verbose, Params().GetConsensus().nPePoSMinStakeAmount);
         },
     };
 }

@@ -307,10 +307,10 @@ public:
             return false;
         if (!tokenId.IsNull())
             return false;
-        if (!(*scriptPubKey.begin() == OP_TRUE && *(scriptPubKey.begin() + 1) == OP_STAKED_COMMITMENT && *(scriptPubKey.begin() + 2) == OP_PUSHDATA2 && *(scriptPubKey.end() - 1) == OP_DROP))
+        if (!(*(scriptPubKey.begin()) == OP_STAKED_COMMITMENT && *(scriptPubKey.begin() + 1) == OP_PUSHDATA2 && *(scriptPubKey.end() - 1) == OP_TRUE))
             return false;
         try {
-            auto commitment = std::vector<unsigned char>(scriptPubKey.begin() + 5, scriptPubKey.end());
+            auto commitment = std::vector<unsigned char>(scriptPubKey.begin() + 4, scriptPubKey.end());
 
             DataStream s(MakeByteSpan(commitment));
             s >> rangeProof;

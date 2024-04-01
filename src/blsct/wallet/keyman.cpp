@@ -268,7 +268,7 @@ bool KeyMan::SetupGeneration(bool force)
     }
 
     SetHDSeed(GenerateNewSeed());
-    if (!NewSubAddressPool() || !NewSubAddressPool(-1)) {
+    if (!NewSubAddressPool() || !NewSubAddressPool(-1) || !NewSubAddressPool(-2)) {
         return false;
     }
     return true;

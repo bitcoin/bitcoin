@@ -144,14 +144,12 @@ std::string GetOpName(opcodetype opcode)
     case OP_NOP7                   : return "OP_NOP7";
     case OP_NOP8                   : return "OP_NOP8";
     case OP_NOP9                   : return "OP_NOP9";
-    case OP_NOP10                  : return "OP_NOP10";
+    case OP_NOP10: return "OP_STAKED_COMMITMENT";
 
     // Opcode added by BIP 342 (Tapscript)
     case OP_CHECKSIGADD            : return "OP_CHECKSIGADD";
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
-
-    case OP_STAKED_COMMITMENT      : return "OP_STAKED_COMMITMENT";
 
     default:
         return "OP_UNKNOWN";

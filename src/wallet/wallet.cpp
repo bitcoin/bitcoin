@@ -2339,7 +2339,9 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
     std::string err_string;
     if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, true)) {
-        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        AbandonTransaction(tx->GetHash());
+        WalletLogPrintf("CommitTransaction(): Transaction broadcast failed, %s\n", err_string);
+        throw std::runtime_error(std::string(__func__) + ": Transaction broadcast failed: " + err_string);
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
 }
@@ -2512,13 +2514,13 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
 
     util::Result<CTxDestination> op_dest = CTxDestination{CNoDestination{}};
 
-    if (type == OutputType::BLSCT) {
+    if (type == OutputType::BLSCT || type == OutputType::BLSCT_STAKE) {
         auto blsct_man = GetBLSCTKeyMan();
         if (!blsct_man) {
             return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
         }
 
-        op_dest = blsct_man->GetNewDestination(m_current_account);
+        op_dest = blsct_man->GetNewDestination(type == OutputType::BLSCT_STAKE ? -2 : m_current_account);
         if (op_dest) {
             SetAddressBook(*op_dest, label, AddressPurpose::RECEIVE);
         }

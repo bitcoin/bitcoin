@@ -24,7 +24,7 @@
 #include <vector>
 
 // Maximum number of bytes pushable to the stack
-static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
+static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 1024;
 
 // Maximum number of non-push operations per script
 static const int MAX_OPS_PER_SCRIPT = 201;
@@ -202,13 +202,11 @@ enum opcodetype {
     OP_NOP7 = 0xb6,
     OP_NOP8 = 0xb7,
     OP_NOP9 = 0xb8,
-    OP_NOP10 = 0xb9,
+    OP_STAKED_COMMITMENT = 0xb9,
+    OP_NOP10 = OP_STAKED_COMMITMENT,
 
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
-
-    // Opcode added by Nav
-    OP_STAKED_COMMITMENT = 0xc1,
 
     OP_INVALIDOPCODE = 0xff,
 };
