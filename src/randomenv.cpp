@@ -13,6 +13,7 @@
 #include <compat/compat.h>
 #include <compat/cpuid.h>
 #include <crypto/sha512.h>
+#include <span.h>
 #include <support/cleanse.h>
 #include <util/time.h>
 
@@ -357,10 +358,19 @@ void RandAddStaticEnv(CSHA512& hasher)
     hasher << &hasher << &RandAddStaticEnv << &malloc << &errno << &environ;
 
     // Hostname
+#ifdef WIN32
+    constexpr DWORD max_size = MAX_COMPUTERNAME_LENGTH + 1;
+    char hname[max_size];
+    DWORD size = max_size;
+    if (GetComputerNameA(hname, &size) != 0) {
+        hasher.Write(UCharCast(hname), size);
+    }
+#else
     char hname[256];
     if (gethostname(hname, 256) == 0) {
         hasher.Write((const unsigned char*)hname, strnlen(hname, 256));
     }
+#endif
 
 #if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
     // Network interfaces
