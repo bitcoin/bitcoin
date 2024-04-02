@@ -305,8 +305,7 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    node.mn_sync = nullptr;
-    ::masternodeSync.reset();
+    node.mn_sync.reset();
     node.sporkman.reset();
     node.govman.reset();
     node.netfulfilledman.reset();
@@ -1687,7 +1686,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
     assert(!node.govman);
-    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman, ::deterministicMNManager);
+    node.govman = std::make_unique<CGovernanceManager>(*node.netfulfilledman, ::deterministicMNManager, node.mn_sync);
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
@@ -1716,9 +1715,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         }
     }
 
-    assert(!::masternodeSync);
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman, *node.govman);
-    node.mn_sync = ::masternodeSync.get();
+    assert(!node.mn_sync);
+    node.mn_sync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman, *node.govman);
 
     fMasternodeMode = false;
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
@@ -1962,7 +1960,8 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     node.llmq_ctx->Stop();
                 }
                 node.llmq_ctx.reset();
-                node.llmq_ctx.reset(new LLMQContext(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool, node.mn_activeman, node.peerman, false, fReset || fReindexChainState));
+                node.llmq_ctx = std::make_unique<LLMQContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman,
+                                                              *node.mempool, node.mn_activeman, *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 

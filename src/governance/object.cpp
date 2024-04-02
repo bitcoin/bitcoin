@@ -628,10 +628,10 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
     return true;
 }
 
-void CGovernanceObject::Relay(CConnman& connman) const
+void CGovernanceObject::Relay(CConnman& connman, const CMasternodeSync& mn_sync) const
 {
     // Do not relay until fully synced
-    if (!::masternodeSync->IsSynced()) {
+    if (!mn_sync.IsSynced()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::Relay -- won't relay until fully synced\n");
         return;
     }

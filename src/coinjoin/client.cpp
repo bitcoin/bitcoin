@@ -1890,7 +1890,6 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
 }
 
 void CoinJoinWalletManager::Add(CWallet& wallet) {
-    assert(::masternodeSync != nullptr);
     m_wallet_manager_map.try_emplace(
         wallet.GetName(),
         std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_sync, m_queueman)

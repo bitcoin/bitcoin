@@ -207,7 +207,7 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 
 CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                                CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                               const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
+                               const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync, const CSporkManager& sporkman) :
     blsWorker(_blsWorker),
     m_chainstate(chainstate),
     connman(_connman),
@@ -216,8 +216,8 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, 
     m_evoDb(_evoDb),
     quorumBlockProcessor(_quorumBlockProcessor),
     m_mn_activeman(mn_activeman),
-    m_sporkman(sporkman),
-    m_mn_sync(mn_sync)
+    m_mn_sync(mn_sync),
+    m_sporkman(sporkman)
 {
     utils::InitQuorumsCache(mapQuorumsCache, false);
     quorumThreadInterrupt.reset();
@@ -296,7 +296,7 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
 
 void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload) const
 {
-    if (!m_mn_sync->IsBlockchainSynced()) return;
+    if (!m_mn_sync.IsBlockchainSynced()) return;
 
     for (const auto& params : Params().GetConsensus().llmqs) {
         CheckQuorumConnections(params, pindexNew);
@@ -916,7 +916,7 @@ void CQuorumManager::StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, co
         };
         printLog("Start");
 
-        while (!m_mn_sync->IsBlockchainSynced() && !quorumThreadInterrupt) {
+        while (!m_mn_sync.IsBlockchainSynced() && !quorumThreadInterrupt) {
             quorumThreadInterrupt.sleep_for(std::chrono::seconds(nRequestTimeout));
         }
 

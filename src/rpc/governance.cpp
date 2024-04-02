@@ -399,7 +399,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     if (fMissingConfirmations) {
         node.govman->AddPostponedObject(govobj);
-        govobj.Relay(*node.connman);
+        govobj.Relay(*node.connman, *node.mn_sync);
     } else {
         node.govman->AddGovernanceObject(govobj, *node.connman);
     }

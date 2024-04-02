@@ -61,11 +61,12 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     connman.PushMessage(&peer, CNetMsgMaker(peer.GetCommonVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
 
-PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CMasternodeSync& mn_sync,
+                                   const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
 {
     assert(::mmetaman->IsValid());
 
-    if (msg_type != NetMsgType::MNAUTH || !::masternodeSync->IsBlockchainSynced()) {
+    if (msg_type != NetMsgType::MNAUTH || !mn_sync.IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
         return {};
     }

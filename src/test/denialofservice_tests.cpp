@@ -6,6 +6,7 @@
 
 #include <banman.h>
 #include <chainparams.h>
+#include <evo/deterministicmns.h>
 #include <llmq/context.h>
 #include <net.h>
 #include <net_processing.h>

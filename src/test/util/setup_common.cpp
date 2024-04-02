@@ -116,7 +116,7 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);
 #endif // ENABLE_WALLET
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.dmnman, *node.evodb, *node.mnhf_manager, *node.sporkman, *node.mempool,
-                                                  /* mn_activeman = */ nullptr, node.peerman, /* unit_tests = */ true, /* wipe = */ false);
+                                                  /* mn_activeman = */ nullptr, *node.mn_sync, node.peerman, /* unit_tests = */ true, /* wipe = */ false);
     node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                             chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
 }
@@ -231,9 +231,8 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.mn_metaman = ::mmetaman.get();
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
-    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman, ::deterministicMNManager);
-    ::masternodeSync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
-    m_node.mn_sync = ::masternodeSync.get();
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.netfulfilledman, ::deterministicMNManager, m_node.mn_sync);
+    m_node.mn_sync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
     constexpr int script_check_threads = 2;
@@ -247,8 +246,7 @@ ChainTestingSetup::~ChainTestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    m_node.mn_sync = nullptr;
-    ::masternodeSync.reset();
+    m_node.mn_sync.reset();
     m_node.govman.reset();
     m_node.sporkman.reset();
     m_node.netfulfilledman.reset();

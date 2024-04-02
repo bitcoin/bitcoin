@@ -19,6 +19,7 @@ class CDeterministicMNList;
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CMasternodeSync;
 class CNode;
 
 extern RecursiveMutex cs_main;
@@ -247,7 +248,7 @@ public:
 
     UniValue GetJSONObject() const;
 
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman& connman, const CMasternodeSync& mn_sync) const;
 
     uint256 GetHash() const;
     uint256 GetDataHash() const;

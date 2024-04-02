@@ -47,12 +47,12 @@ class CChainLocksHandler : public CRecoveredSigsListener
 private:
     CChainState& m_chainstate;
     CConnman& connman;
-    CMasternodeSync& m_mn_sync;
     CQuorumManager& qman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
+    const CMasternodeSync& m_mn_sync;
 
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
@@ -85,9 +85,9 @@ private:
     std::atomic<int64_t> lastCleanupTime{0};
 
 public:
-    explicit CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CMasternodeSync& mn_sync, CQuorumManager& _qman,
+    explicit CChainLocksHandler(CChainState& chainstate, CConnman& _connman, CQuorumManager& _qman,
                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
-                                CTxMemPool& _mempool);
+                                CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
     ~CChainLocksHandler();
 
     void Start();

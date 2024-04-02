@@ -122,10 +122,10 @@ std::string CGovernanceVote::ToString(const CDeterministicMNList& tip_mn_list) c
     return ostr.str();
 }
 
-void CGovernanceVote::Relay(CConnman& connman, const CDeterministicMNList& tip_mn_list) const
+void CGovernanceVote::Relay(CConnman& connman, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list) const
 {
     // Do not relay until fully synced
-    if (!::masternodeSync->IsSynced()) {
+    if (!mn_sync.IsSynced()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::Relay -- won't relay until fully synced\n");
         return;
     }
