@@ -27,7 +27,7 @@ struct RangeProof: public range_proof::ProofBase<T> {
     using Scalar = typename T::Scalar;
     using Points = Elements<Point>;
 
-    RangeProof<T>(){};
+    RangeProof(){};
 
     // RangeProof<T>(const RangeProof<T>& proof) : Vs(proof.Vs, proof.Ls, proof.Rs), A(proof.A), S(proof.S), T1(proof.T1), T2(proof.T2), mu(proof.mu), tau_x(proof.tau_x), a(proof.a), b(proof.b), t_hat(proof.t_hat){};
 
