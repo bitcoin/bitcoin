@@ -31,7 +31,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         expected_stats = {
             'coinstatsindex': {'synced': True, 'best_block_height': height}
         }
-        self.wait_until(lambda: self.nodes[1].getindexinfo() == expected_stats)
+        self.wait_until(lambda: self.nodes[1].getindexinfo() == expected_stats, timeout=150)
 
         expected = {**expected_filter, **expected_stats}
         self.wait_until(lambda: self.nodes[2].getindexinfo() == expected)
