@@ -58,6 +58,7 @@ namespace BCLog {
         LEVELDB     = (1 << 20),
         VALIDATION  = (1 << 21),
         I2P         = (1 << 22),
+        LOCK        = (1 << 24),
 
         //Start Dash
         CHAINLOCKS  = ((uint64_t)1 << 32),
