@@ -3,8 +3,9 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 use crate::LintError;
+use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 /// Return the git root as utf8, or panic
 pub fn get_git_root() -> PathBuf {
@@ -40,4 +41,31 @@ pub fn check_output(cmd: &mut std::process::Command) -> Result<String, LintError
             .trim()
             .to_string())
     }
+}
+
+/// Use the system grep to search for a pattern in a string of text.
+pub fn system_grep(pattern: &String, text: &String, options: &Vec<&str>) -> String {
+    let mut grep_cmd = Command::new("grep");
+    let grep_process = grep_cmd
+        .args(options)
+        .arg(pattern)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("command error");
+
+    grep_process
+        .stdin
+        .expect("error opening stdin")
+        .write_all(text.as_bytes())
+        .expect("error writing to stdin");
+
+    let mut output = String::new();
+    grep_process
+        .stdout
+        .expect("error opening stdout")
+        .read_to_string(&mut output)
+        .expect("error reading stdout to string");
+
+    output
 }
