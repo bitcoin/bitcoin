@@ -60,10 +60,9 @@ SecureString CMnemonic::FromData(const SecureVector& data, int len)
     int mlen = len * 3 / 4;
     SecureString mnemonic;
 
-    int i, j, idx;
-    for (i = 0; i < mlen; i++) {
-        idx = 0;
-        for (j = 0; j < 11; j++) {
+    for (int i = 0; i < mlen; i++) {
+        int idx = 0;
+        for (int j = 0; j < 11; j++) {
             idx <<= 1;
             idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
         }
@@ -76,7 +75,7 @@ SecureString CMnemonic::FromData(const SecureVector& data, int len)
     return mnemonic;
 }
 
-bool CMnemonic::Check(SecureString mnemonic)
+bool CMnemonic::Check(const SecureString& mnemonic)
 {
     if (mnemonic.empty()) {
         return false;
@@ -98,7 +97,7 @@ bool CMnemonic::Check(SecureString mnemonic)
     SecureString ssCurrentWord;
     SecureVector bits(32 + 1);
 
-    uint32_t nWordIndex, ki, nBitsCount{};
+    uint32_t ki, nBitsCount{};
 
     for (size_t i = 0; i < mnemonic.size(); ++i)
     {
@@ -110,7 +109,7 @@ bool CMnemonic::Check(SecureString mnemonic)
             ssCurrentWord += mnemonic[i + ssCurrentWord.size()];
         }
         i += ssCurrentWord.size();
-        nWordIndex = 0;
+        uint32_t nWordIndex = 0;
         for (;;) {
             if (!wordlist[nWordIndex]) { // word not found
                 return false;
@@ -140,8 +139,9 @@ bool CMnemonic::Check(SecureString mnemonic)
 }
 
 // passphrase must be at most 256 characters otherwise it would be truncated
-void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet)
+void CMnemonic::ToSeed(const SecureString& mnemonic, const SecureString& passphrase, SecureVector& seedRet)
 {
+
     SecureString ssSalt = SecureString("mnemonic") + passphrase;
     SecureVector vchSalt(ssSalt.begin(), ssSalt.begin() + strnlen(ssSalt.data(), 256));
     seedRet.resize(64);

@@ -33,6 +33,8 @@ IGNORED_WARNINGS=(
     "src/llmq/commitment.cpp.* warning: Consider using std::all_of or std::none_of algorithm instead of a raw loop. \[useStlAlgorithm\]"
     "src/rpc/.*cpp:.*: note: Function pointer used here."
     "src/masternode/sync.cpp:.*: warning: Variable 'pnode' can be declared as pointer to const \[constVariableReference\]"
+    "src/wallet/bip39.cpp.*: warning: The scope of the variable 'ssCurrentWord' can be reduced. \[variableScope\]"
+
 
     "src/stacktraces.cpp:.*: .*: Parameter 'info' can be declared as pointer to const"
     "src/stacktraces.cpp:.*: note: You might need to cast the function pointer here"
@@ -59,48 +61,7 @@ IGNORED_WARNINGS=(
 )
 
 # We should attempt to update this with all dash specific code
-FILES=$(git ls-files -- "src/batchedlogger.*" \
-                        "src/bench/bls*.cpp" \
-                        "src/bls/*.cpp" \
-                        "src/bls/*.h" \
-                        "src/cachemap.h" \
-                        "src/cachemultimap.h" \
-                        "src/coinjoin/*.cpp" \
-                        "src/coinjoin/*.h" \
-                        "src/ctpl_stl.h" \
-                        "src/cxxtimer.hpp" \
-                        "src/dsnotificationinterface.*" \
-                        "src/evo/*.cpp" \
-                        "src/evo/*.h" \
-                        "src/governance/*.cpp" \
-                        "src/governance/*.h" \
-                        "src/keepass.*" \
-                        "src/llmq/*.cpp" \
-                        "src/llmq/*.h" \
-                        "src/masternode/*.cpp" \
-                        "src/masternode/*.h" \
-                        "src/messagesigner.*" \
-                        "src/netfulfilledman.*" \
-                        "src/qt/governancelist.*" \
-                        "src/qt/masternodelist.*" \
-                        "src/rpc/coinjoin.cpp" \
-                        "src/rpc/evo.cpp" \
-                        "src/rpc/governance.cpp" \
-                        "src/rpc/masternode.cpp" \
-                        "src/rpc/quorums.cpp" \
-                        "src/saltedhasher.*" \
-                        "src/spork.*" \
-                        "src/stacktraces.*" \
-                        "src/statsd_client.*" \
-                        "src/test/block_reward_reallocation_tests.cpp" \
-                        "src/test/bls_tests.cpp" \
-                        "src/test/dip0020opcodes_tests.cpp" \
-                        "src/test/dynamic_activation*.cpp" \
-                        "src/test/evo*.cpp" \
-                        "src/test/governance*.cpp" \
-                        "src/wallet/hdchain.*" \
-                        "src/unordered_lru_cache.h" \
-                        )
+FILES=$(git ls-files -- $(cat test/util/data/non-backported.txt))
 
 
 if ! command -v cppcheck > /dev/null; then
