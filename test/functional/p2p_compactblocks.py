@@ -139,7 +139,7 @@ class TestP2PConn(P2PInterface):
         This is used when we want to send a message into the node that we expect
         will get us disconnected, eg an invalid block."""
         self.send_message(message)
-        self.wait_for_disconnect(timeout)
+        self.wait_for_disconnect(timeout=timeout)
 
 class CompactBlocksTest(BitcoinTestFramework):
     def set_test_params(self):
