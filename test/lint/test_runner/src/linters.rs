@@ -5,6 +5,7 @@
 pub mod doc;
 pub mod includes;
 pub mod locale;
+pub mod python;
 pub mod spelling;
 pub mod std_filesystem;
 pub mod subtree;
@@ -44,6 +45,11 @@ pub fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check that locale dependent functions are not used",
             name: "locale_dependent",
             lint_fn: locale::locale_dependent
+        },
+        &Linter {
+            description: "Check that Python's `open` and `check_output` are invoked with an `encoding=` arg.",
+            name: "python_encoding",
+            lint_fn: python::encoding
         },
         &Linter {
             description: "Print warnings for spelling errors. (These will not cause lint check to fail)",

@@ -78,6 +78,11 @@ pub fn get_pathspecs_exclude_include_guards() -> Vec<String> {
     ]))
 }
 
+/// Return the pathspecs for python encoding related excludes
+pub fn get_pathspecs_exclude_python_encoding() -> Vec<String> {
+    get_pathspecs_exclude(None)
+}
+
 /// Return the pathspecs for spelling check related excludes
 pub fn get_pathspecs_exclude_spelling() -> Vec<String> {
     get_pathspecs_exclude(Some(&[
