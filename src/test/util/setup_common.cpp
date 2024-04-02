@@ -283,8 +283,9 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
 
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
-                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.govman,
-                                       *m_node.sporkman, ::deterministicMNManager, m_node.cj_ctx, m_node.llmq_ctx, false);
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
+                                       *m_node.govman, *m_node.sporkman, ::deterministicMNManager, m_node.cj_ctx, m_node.llmq_ctx,
+                                       /* ignore_incoming_txs = */ false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
