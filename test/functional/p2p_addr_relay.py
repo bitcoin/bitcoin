@@ -54,6 +54,7 @@ class AddrTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log([
                 'Added 10 addresses from 127.0.0.1: 0 tried',
                 'received: addr (301 bytes) peer=0',
+                'sending addr (301 bytes) peer=1',
         ]):
             addr_source.send_and_ping(msg)
             self.bump_mocktime(30 * 60)
