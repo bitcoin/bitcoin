@@ -1173,8 +1173,7 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
-    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
-    std::vector<CNode*> CopyNodeVector();
+    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond = AllNodes);
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     void RelayTransaction(const CTransaction& tx, const bool is_dstx);

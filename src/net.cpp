@@ -4160,11 +4160,6 @@ std::vector<CNode*> CConnman::CopyNodeVector(std::function<bool(const CNode* pno
     return vecNodesCopy;
 }
 
-std::vector<CNode*> CConnman::CopyNodeVector()
-{
-    return CopyNodeVector(AllNodes);
-}
-
 void CConnman::ReleaseNodeVector(const std::vector<CNode*>& vecNodes)
 {
     for(size_t i = 0; i < vecNodes.size(); ++i) {
