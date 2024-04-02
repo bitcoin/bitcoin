@@ -323,11 +323,9 @@ mkdir -p "$DISTSRC"
 
     case "$HOST" in
         *darwin*)
-            make osx_volname ${V:+V=1}
             make deploydir ${V:+V=1}
             mkdir -p "unsigned-app-${HOST}"
             cp  --target-directory="unsigned-app-${HOST}" \
-                osx_volname \
                 contrib/macdeploy/detached-sig-create.sh \
                 "${BASEPREFIX}/${HOST}"/native/bin/dmg
             mv --target-directory="unsigned-app-${HOST}" dist
