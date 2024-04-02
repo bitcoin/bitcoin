@@ -1476,7 +1476,7 @@ public:
              SerializeOutput(s, nOutput);
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime);
-        if (txTo.nVersion == 3 && txTo.nType != TRANSACTION_NORMAL)
+        if (txTo.nVersion >= CTransaction::SPECIAL_VERSION && txTo.nType != TRANSACTION_NORMAL)
             ::Serialize(s, txTo.vExtraPayload);
     }
 };

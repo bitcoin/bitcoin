@@ -52,7 +52,7 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
     {
         const auto& tx = *block.vtx[i];
         const uint256& hash = tx.GetHash();
-        bool isAllowedType = tx.nVersion != 3 || allowedTxTypes.count(tx.nType) != 0;
+        bool isAllowedType = !tx.IsSpecialTxVersion() || allowedTxTypes.count(tx.nType) != 0;
 
         if (txids && txids->count(hash)) {
             vMatch.push_back(true);

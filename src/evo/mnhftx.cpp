@@ -102,7 +102,7 @@ bool MNHFTx::Verify(const uint256& quorumHash, const uint256& requestId, const u
 
 bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {
-    if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
+    if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_MNHF_SIGNAL) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-type");
     }
 
@@ -147,7 +147,7 @@ bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValida
 
 std::optional<uint8_t> extractEHFSignal(const CTransaction& tx)
 {
-    if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
+    if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_MNHF_SIGNAL) {
         // only interested in special TXs 'TRANSACTION_MNHF_SIGNAL'
         return std::nullopt;
     }
@@ -165,7 +165,7 @@ static bool extractSignals(const CBlock& block, const CBlockIndex* const pindex,
     for (size_t i = 1; i < block.vtx.size(); ++i) {
         const CTransaction& tx = *block.vtx[i];
 
-        if (tx.nVersion != 3 || tx.nType != TRANSACTION_MNHF_SIGNAL) {
+        if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_MNHF_SIGNAL) {
             // only interested in special TXs 'TRANSACTION_MNHF_SIGNAL'
             continue;
         }

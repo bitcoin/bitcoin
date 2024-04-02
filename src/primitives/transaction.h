@@ -184,12 +184,14 @@ class CTransaction
 public:
     // Default transaction version.
     static const int32_t CURRENT_VERSION=2;
+    // Special transaction version
+    static const int32_t SPECIAL_VERSION = 3;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=3;
+    static const int32_t MAX_STANDARD_VERSION = SPECIAL_VERSION;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -224,7 +226,7 @@ public:
         s << vin;
         s << vout;
         s << nLockTime;
-        if (this->nVersion == 3 && this->nType != TRANSACTION_NORMAL)
+        if (this->HasExtraPayloadField())
             s << vExtraPayload;
     }
 
@@ -265,6 +267,16 @@ public:
     }
 
     std::string ToString() const;
+
+    bool IsSpecialTxVersion() const noexcept
+    {
+        return nVersion >= SPECIAL_VERSION;
+    }
+
+    bool HasExtraPayloadField() const noexcept
+    {
+        return IsSpecialTxVersion() && nType != TRANSACTION_NORMAL;
+    }
 };
 
 /** A mutable version of CTransaction. */
@@ -288,7 +300,7 @@ struct CMutableTransaction
         SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
         SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
         READWRITE(obj.vin, obj.vout, obj.nLockTime);
-        if (obj.nVersion == 3 && obj.nType != TRANSACTION_NORMAL) {
+        if (obj.nVersion >= CTransaction::SPECIAL_VERSION && obj.nType != TRANSACTION_NORMAL) {
             READWRITE(obj.vExtraPayload);
         }
     }
