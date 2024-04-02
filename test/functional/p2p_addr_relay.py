@@ -17,6 +17,8 @@ from test_framework.util import (
     assert_equal,
 )
 
+ADDRS = []
+
 class AddrReceiver(P2PInterface):
     def on_addr(self, message):
         for addr in message.addrs:
@@ -30,7 +32,6 @@ class AddrTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        ADDRS = []
         for i in range(10):
             addr = CAddress()
             addr.time = int(self.mocktime) + i
