@@ -419,8 +419,6 @@ RPCHelpMan stakelock()
 
             recipients[0].fStakeCommitment = true;
 
-            LOCK(cs_main);
-
             return SendBLSCTMoney(*pwallet, recipients, verbose, Params().GetConsensus().nPePoSMinStakeAmount);
         },
     };
@@ -472,8 +470,6 @@ RPCHelpMan stakeunlock()
             std::vector<CBLSCTRecipient> recipients;
             ParseBLSCTRecipients(address_amounts, false, "", recipients);
             const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
-
-            LOCK(cs_main);
 
             return UnstakeBLSCT(*pwallet, recipients, verbose, Params().GetConsensus().nPePoSMinStakeAmount);
         },
