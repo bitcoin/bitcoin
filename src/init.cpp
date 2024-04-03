@@ -109,7 +109,7 @@
 
 #include <boost/signals2/signal.hpp>
 
-#if ENABLE_ZMQ
+#ifdef ENABLE_ZMQ
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
@@ -364,7 +364,7 @@ void Shutdown(NodeContext& node)
         client->stop();
     }
 
-#if ENABLE_ZMQ
+#ifdef ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         if (node.validation_signals) node.validation_signals->UnregisterValidationInterface(g_zmq_notification_interface.get());
         g_zmq_notification_interface.reset();
@@ -578,7 +578,7 @@ void SetupServerArgs(ArgsManager& argsman)
 
     g_wallet_init_interface.AddWalletOptions(argsman);
 
-#if ENABLE_ZMQ
+#ifdef ENABLE_ZMQ
     argsman.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
     argsman.AddArg("-zmqpubrawblock=<address>", "Enable publish raw block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -1200,7 +1200,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     for (const auto& client : node.chain_clients) {
         client->registerRpcs();
     }
-#if ENABLE_ZMQ
+#ifdef ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
 
@@ -1472,7 +1472,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
 
-#if ENABLE_ZMQ
+#ifdef ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create(
         [&chainman = node.chainman](std::vector<uint8_t>& block, const CBlockIndex& index) {
             assert(chainman);
