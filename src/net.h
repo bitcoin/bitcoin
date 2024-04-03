@@ -18,6 +18,7 @@
 #include <limitedmap.h>
 #include <net_permissions.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -63,14 +64,12 @@ static const int TIMEOUT_INTERVAL = 20 * 60;
 static const int PROBE_WAIT_INTERVAL = 5;
 /** Minimum time between warnings printed to log. */
 static const int WARNING_INTERVAL = 10 * 60;
-/** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
-static const int FEELER_INTERVAL = 120;
+/** Run the feeler connection loop once every 2 minutes. **/
+static constexpr auto FEELER_INTERVAL = 2min;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
-static const int EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 300;
-/** The maximum number of addresses from our addrman to return in response to a getaddr message. */
-static constexpr size_t MAX_ADDR_TO_SEND = 1000;
+static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
 /** Maximum length of incoming protocol messages (no message over 3 MiB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 3 * 1024 * 1024;
 /** Maximum length of the user agent string in `version` message */
@@ -288,8 +287,8 @@ public:
     mapMsgCmdSize mapRecvBytesPerMsgCmd;
     NetPermissionFlags m_permissionFlags;
     bool m_legacyWhitelisted;
-    int64_t m_ping_usec;
-    int64_t m_min_ping_usec;
+    std::chrono::microseconds m_last_ping_time;
+    std::chrono::microseconds m_min_ping_time;
     // Our address, as reported by the peer
     std::string addrLocal;
     // Address of this peer
@@ -432,7 +431,7 @@ public:
     std::unique_ptr<TransportDeserializer> m_deserializer;
     std::unique_ptr<TransportSerializer> m_serializer;
 
-    NetPermissionFlags m_permissionFlags{ PF_NONE };
+    NetPermissionFlags m_permissionFlags{ NetPermissionFlags::None };
     std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
     /** Total size of all vSendMsg entries */
@@ -481,12 +480,7 @@ public:
     bool m_legacyWhitelisted{false};
     bool fClient{false}; // set by version message
     bool m_limited_node{false}; //after BIP159, set by version message
-
-    /**
-     * Whether the peer has signaled support for receiving ADDRv2 (BIP155)
-     * messages, implying a preference to receive ADDRv2 instead of ADDR ones.
-     */
-    std::atomic_bool m_wants_addrv2{false};
+    /** fSuccessfullyConnected is set to true on receiving VERACK from the peer. */
     std::atomic_bool fSuccessfullyConnected{false};
     // Setting fDisconnect to true will cause the node to be disconnected the
     // next time DisconnectNodes() runs
@@ -494,7 +488,6 @@ public:
     std::atomic<int64_t> nDisconnectLingerTime{0};
     std::atomic_bool fSocketShutdown{false};
     std::atomic_bool fOtherSideDisconnected { false };
-    bool fSentAddr{false};
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
     std::atomic<bool> m_masternode_connection{false};
     /**
@@ -565,12 +558,6 @@ public:
         return m_conn_type == ConnectionType::INBOUND;
     }
 
-    /* Whether we send addr messages over this connection */
-    bool RelayAddrsWithConn() const
-    {
-        return m_conn_type != ConnectionType::BLOCK_RELAY;
-    }
-
     bool ExpectServicesFromConn() const {
         switch (m_conn_type) {
             case ConnectionType::INBOUND:
@@ -591,15 +578,6 @@ protected:
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 
 public:
-    // flood relay
-    std::vector<CAddress> vAddrToSend;
-    std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
-    bool fGetAddr{false};
-    std::chrono::microseconds m_next_addr_send GUARDED_BY(cs_sendProcessing){0};
-    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(cs_sendProcessing){0};
-
-    bool IsBlockRelayOnly() const;
-
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
         // We use fRelayTxes for two purposes -
@@ -625,7 +603,7 @@ public:
     };
 
     // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
-    // in dash: m_tx_relay should never be nullptr, use `RelayAddrsWithConn() == false` instead
+    // in dash: m_tx_relay should never be nullptr, use `!IsBlockOnlyConn() == false` instead
     std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
     /** UNIX epoch time of the last block received from this peer that we had
@@ -642,11 +620,11 @@ public:
     std::atomic<int64_t> nLastTXTime{0};
 
     /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
-    std::atomic<int64_t> m_last_ping_time{0};
+    std::atomic<std::chrono::microseconds> m_last_ping_time{0us};
 
     /** Lowest measured round-trip time. Used as an inbound peer eviction
      * criterium in CConnman::AttemptToEvictConnection. */
-    std::atomic<int64_t> m_min_ping_time{std::numeric_limits<int64_t>::max()};
+    std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
     // If true, we will send him CoinJoin queue messages
     std::atomic<bool> fSendDSQueue{false};
@@ -655,6 +633,8 @@ public:
     std::atomic<bool> fSendRecSigs{false};
     // If true, we will send him all quorum related messages, even if he is not a member of our quorums
     std::atomic<bool> qwatch{false};
+
+    bool IsBlockRelayOnly() const;
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn, ConnectionType conn_type_in, bool inbound_onion = false);
     ~CNode();
@@ -755,40 +735,6 @@ public:
         nRefCount--;
     }
 
-
-
-    void AddAddressKnown(const CAddress& _addr)
-    {
-        assert(m_addr_known);
-        m_addr_known->insert(_addr.GetKey());
-    }
-
-    /**
-     * Whether the peer supports the address. For example, a peer that does not
-     * implement BIP155 cannot receive Tor v3 addresses because it requires
-     * ADDRv2 (BIP155) encoding.
-     */
-    bool IsAddrCompatible(const CAddress& addr) const
-    {
-        return m_wants_addrv2 || addr.IsAddrV1Compatible();
-    }
-
-    void PushAddress(const CAddress& _addr, FastRandomContext &insecure_rand)
-    {
-        // Known checking here is only to save space from duplicates.
-        // SendMessages will filter it again for knowns that were added
-        // after addresses were pushed.
-        assert(m_addr_known);
-        if (_addr.IsValid() && !m_addr_known->contains(_addr.GetKey()) && IsAddrCompatible(_addr)) {
-            if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
-                vAddrToSend[insecure_rand.randrange(vAddrToSend.size())] = _addr;
-            } else {
-                vAddrToSend.push_back(_addr);
-            }
-        }
-    }
-
-
     void AddKnownInventory(const uint256& hash)
     {
         LOCK(m_tx_relay->cs_tx_inventory);
@@ -834,8 +780,8 @@ public:
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
     void PongReceived(std::chrono::microseconds ping_time) {
-        m_last_ping_time = count_microseconds(ping_time);
-        m_min_ping_time = std::min(m_min_ping_time.load(), count_microseconds(ping_time));
+        m_last_ping_time = ping_time;
+        m_min_ping_time = std::min(m_min_ping_time.load(), ping_time);
     }
 
     /** Whether this peer is an inbound onion, e.g. connected via our Tor onion service. */
@@ -927,17 +873,6 @@ class CConnman
 {
 friend class CNode;
 public:
-
-    enum NumConnections {
-        CONNECTIONS_NONE = 0,
-        CONNECTIONS_IN = (1U << 0),
-        CONNECTIONS_OUT = (1U << 1),
-        CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
-        CONNECTIONS_VERIFIED = (1U << 2),
-        CONNECTIONS_VERIFIED_IN = (CONNECTIONS_VERIFIED | CONNECTIONS_IN),
-        CONNECTIONS_VERIFIED_OUT = (CONNECTIONS_VERIFIED | CONNECTIONS_OUT),
-    };
-
     enum SocketEventsMode {
         SOCKETEVENTS_SELECT = 0,
         SOCKETEVENTS_POLL = 1,
@@ -1224,6 +1159,19 @@ public:
     bool RemoveAddedNode(const std::string& node);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
+    /**
+     * Attempts to open a connection. Currently only used from tests.
+     *
+     * @param[in]   address     Address of node to try connecting to
+     * @param[in]   conn_type   ConnectionType::OUTBOUND or ConnectionType::BLOCK_RELAY
+     * @return      bool        Returns false if there are no available
+     *                          slots for this connection:
+     *                          - conn_type not a supported ConnectionType
+     *                          - Max total outbound connection capacity filled
+     *                          - Max connection capacity for type is filled
+     */
+    bool AddConnection(const std::string& address, ConnectionType conn_type);
+
     bool AddPendingMasternode(const uint256& proTxHash);
     void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     void SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
@@ -1236,7 +1184,7 @@ public:
     bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
-    size_t GetNodeCount(NumConnections num);
+    size_t GetNodeCount(ConnectionDirection);
     size_t GetMaxOutboundNodeCount();
     void GetNodeStats(std::vector<CNodeStats>& vstats);
     bool DisconnectNode(const std::string& node);
@@ -1283,12 +1231,12 @@ public:
         Works assuming that a single interval is used.
         Variable intervals will result in privacy decrease.
     */
-    int64_t PoissonNextSendInbound(int64_t now, int average_interval_seconds);
+    std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
-    /** Return true if the peer has been connected for long enough to do inactivity checks. */
-    bool RunInactivityChecks(const CNode& node) const;
+    /** Return true if we should disconnect the peer for failing an inactivity check. */
+    bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
 
 private:
     struct ListenSocket {
@@ -1562,7 +1510,7 @@ private:
      */
     std::atomic_bool m_start_extra_block_relay_peers{false};
 
-    std::atomic<int64_t> m_next_send_inv_to_incoming{0};
+    std::atomic<std::chrono::microseconds> m_next_send_inv_to_incoming{0us};
 
     /**
      * A vector of -bind=<address>:<port>=onion arguments each of which is
@@ -1575,13 +1523,7 @@ private:
 };
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
-int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
-
-/** Wrapper to return mockable type */
-inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval)
-{
-    return std::chrono::microseconds{PoissonNextSend(now.count(), average_interval.count())};
-}
+std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
 /** Dump binary message to file, with timestamp */
 void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);
@@ -1590,7 +1532,7 @@ struct NodeEvictionCandidate
 {
     NodeId id;
     int64_t nTimeConnected;
-    int64_t m_min_ping_time;
+    std::chrono::microseconds m_min_ping_time;
     int64_t nLastBlockTime;
     int64_t nLastTXTime;
     bool fRelevantServices;

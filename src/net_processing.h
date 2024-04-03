@@ -39,7 +39,7 @@ struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
     int m_starting_height = -1;
-    int64_t m_ping_wait_usec;
+    std::chrono::microseconds m_ping_wait;
     std::vector<int> vHeightInFlight;
 };
 
@@ -86,6 +86,9 @@ public:
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
 
     virtual bool IsBanned(NodeId pnode) = 0;
+
+    /* Can we send addr messages to a peer. Used by InstantSend. */
+    virtual bool CanRelayAddrs(NodeId pnode) const = 0;
 
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */

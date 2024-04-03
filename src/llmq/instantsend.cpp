@@ -1068,7 +1068,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
         mempool.AddTransactionsUpdated(1);
     } else {
-        AskNodesForLockedTx(islock->txid, connman);
+        AskNodesForLockedTx(islock->txid, connman, *m_peerman.load());
     }
 }
 
@@ -1344,7 +1344,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
         for (const auto& p : toDelete) {
             RemoveConflictedTx(*p.second);
         }
-        AskNodesForLockedTx(islock.txid, connman);
+        AskNodesForLockedTx(islock.txid, connman, *m_peerman.load());
     }
 }
 
@@ -1449,16 +1449,16 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
     }
 }
 
-void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman)
+void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman)
 {
     std::vector<CNode*> nodesToAskFor;
     nodesToAskFor.reserve(4);
 
-    auto maybe_add_to_nodesToAskFor = [&nodesToAskFor, &txid](CNode* pnode) {
+    auto maybe_add_to_nodesToAskFor = [&peerman, &nodesToAskFor, &txid](CNode* pnode) {
         if (nodesToAskFor.size() >= 4) {
             return;
         }
-        if (pnode->RelayAddrsWithConn()) {
+        if (peerman.CanRelayAddrs(pnode->GetId())) {
             LOCK(pnode->m_tx_relay->cs_tx_inventory);
             if (pnode->m_tx_relay->filterInventoryKnown.contains(txid)) {
                 pnode->AddRef();

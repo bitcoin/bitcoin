@@ -6,6 +6,7 @@
 #include <rpc/server.h>
 
 #include <banman.h>
+#include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
 #include <net.h>
@@ -57,7 +58,7 @@ static RPCHelpMan getconnectioncount()
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    return (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
+    return (int)node.connman->GetNodeCount(ConnectionDirection::Both);
 },
     };
 }
@@ -145,6 +146,10 @@ static RPCHelpMan getpeerinfo()
                         {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                     }},
                     {RPCResult::Type::BOOL, "whitelisted", "Whether the peer is whitelisted"},
+                    {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
+                    {
+                        {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
+                    }},
                     {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                     {
                         {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
@@ -208,14 +213,14 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bytesrecv", stats.nRecvBytes);
         obj.pushKV("conntime", stats.nTimeConnected);
         obj.pushKV("timeoffset", stats.nTimeOffset);
-        if (stats.m_ping_usec > 0) {
-            obj.pushKV("pingtime", ((double)stats.m_ping_usec) / 1e6);
+        if (stats.m_last_ping_time > 0us) {
+            obj.pushKV("pingtime", CountSecondsDouble(stats.m_last_ping_time));
         }
-        if (stats.m_min_ping_usec < std::numeric_limits<int64_t>::max()) {
-            obj.pushKV("minping", ((double)stats.m_min_ping_usec) / 1e6);
+        if (stats.m_min_ping_time < std::chrono::microseconds::max()) {
+            obj.pushKV("minping", CountSecondsDouble(stats.m_min_ping_time));
         }
-        if (fStateStats && statestats.m_ping_wait_usec > 0) {
-            obj.pushKV("pingwait", ((double)statestats.m_ping_wait_usec) / 1e6);
+        if (fStateStats && statestats.m_ping_wait > 0s) {
+            obj.pushKV("pingwait", CountSecondsDouble(statestats.m_ping_wait));
         }
         obj.pushKV("version", stats.nVersion);
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
@@ -316,6 +321,61 @@ static RPCHelpMan addnode()
     }
 
     return NullUniValue;
+},
+    };
+}
+
+static RPCHelpMan addconnection()
+{
+    return RPCHelpMan{"addconnection",
+        "\nOpen an outbound connection to a specified node. This RPC is for testing only.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address and port to attempt connecting to."},
+            {"connection_type", RPCArg::Type::STR, RPCArg::Optional::NO, "Type of connection to open, either \"outbound-full-relay\" or \"block-relay-only\"."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                { RPCResult::Type::STR, "address", "Address of newly added connection." },
+                { RPCResult::Type::STR, "connection_type", "Type of connection opened." },
+            }},
+        RPCExamples{
+            HelpExampleCli("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\"")
+            + HelpExampleRpc("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
+    }
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
+    const std::string address = request.params[0].get_str();
+    const std::string conn_type_in{TrimString(request.params[1].get_str())};
+    ConnectionType conn_type{};
+    if (conn_type_in == "outbound-full-relay") {
+        conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+    } else if (conn_type_in == "block-relay-only") {
+        conn_type = ConnectionType::BLOCK_RELAY;
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, self.ToString());
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (!node.connman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled.");
+    }
+
+    const bool success = node.connman->AddConnection(address, conn_type);
+    if (!success) {
+        throw JSONRPCError(RPC_CLIENT_NODE_CAPACITY_REACHED, "Error: Already at capacity for specified connection type.");
+    }
+
+    UniValue info(UniValue::VOBJ);
+    info.pushKV("address", address);
+    info.pushKV("connection_type", conn_type_in);
+
+    return info;
 },
     };
 }
@@ -589,12 +649,12 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("timeoffset",    GetTimeOffset());
     if (node.connman) {
         obj.pushKV("networkactive", node.connman->GetNetworkActive());
-        obj.pushKV("connections",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
-        obj.pushKV("connections_in",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_IN));
-        obj.pushKV("connections_out",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_OUT));
-        obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED));
-        obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED_IN));
-        obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(CConnman::CONNECTIONS_VERIFIED_OUT));
+        obj.pushKV("connections",   (int)node.connman->GetNodeCount(ConnectionDirection::Both));
+        obj.pushKV("connections_in",   (int)node.connman->GetNodeCount(ConnectionDirection::In));
+        obj.pushKV("connections_out",   (int)node.connman->GetNodeCount(ConnectionDirection::Out));
+        obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(ConnectionDirection::Verified));
+        obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedIn));
+        obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedOut));
         std::string strSocketEvents;
         switch (node.connman->GetSocketEventsMode()) {
             case CConnman::SOCKETEVENTS_SELECT:
@@ -963,6 +1023,8 @@ static const CRPCCommand commands[] =
     { "network",            "cleardiscouraged",       &cleardiscouraged,        {} },
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
     { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
+
+    { "hidden",             "addconnection",          &addconnection,          {"address", "connection_type"} },
     { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
 };
 // clang-format on

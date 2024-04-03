@@ -86,14 +86,16 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 (void)connman.GetDeterministicRandomizer(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
             },
             [&] {
-                (void)connman.GetNodeCount(fuzzed_data_provider.PickValueInArray({CConnman::CONNECTIONS_NONE, CConnman::CONNECTIONS_IN, CConnman::CONNECTIONS_OUT, CConnman::CONNECTIONS_ALL}));
+                (void)connman.GetNodeCount(fuzzed_data_provider.PickValueInArray({ConnectionDirection::None, ConnectionDirection::In, ConnectionDirection::Out, ConnectionDirection::Both}));
             },
             [&] {
                 (void)connman.OutboundTargetReached(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
                 // Limit now to int32_t to avoid signed integer overflow
-                (void)connman.PoissonNextSendInbound(fuzzed_data_provider.ConsumeIntegral<int32_t>(), fuzzed_data_provider.ConsumeIntegral<int>());
+                (void)connman.PoissonNextSendInbound(
+                        std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int32_t>()},
+                        std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int>()});
             },
             [&] {
                 CSerializedNetMsg serialized_net_msg;
