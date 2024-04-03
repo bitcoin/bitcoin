@@ -410,6 +410,7 @@ static RPCHelpMan createwallet()
 
             if (!request.params[8].isNull() && request.params[8].get_bool()) {
                 flags |= WALLET_FLAG_BLSCT;
+                flags &= ~WALLET_FLAG_DESCRIPTORS;
             }
 
             DatabaseOptions options;
