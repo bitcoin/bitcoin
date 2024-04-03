@@ -898,7 +898,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
     if (!fMasternodeMode) return false;
 
     assert(m_mn_activeman);
-    if (WITH_LOCK(m_mn_activeman->cs, return m_mn_activeman->GetProTxHash().IsNull())) return false;
+    if (m_mn_activeman->GetProTxHash().IsNull()) return false;
 
     const CQuorumCPtr quorum = [&]() {
         if (quorumHash.IsNull()) {
@@ -920,7 +920,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
         return false;
     }
 
-    if (!WITH_LOCK(m_mn_activeman->cs, return quorum->IsValidMember(m_mn_activeman->GetProTxHash()))) {
+    if (!quorum->IsValidMember(m_mn_activeman->GetProTxHash())) {
         return false;
     }
 

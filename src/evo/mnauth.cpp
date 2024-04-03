@@ -24,38 +24,36 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
     if (!fMasternodeMode) return;
 
     CMNAuth mnauth;
-    uint256 signHash;
-    {
-        LOCK(::activeMasternodeManager->cs);
-        if (::activeMasternodeManager->GetProTxHash().IsNull()) {
-            return;
-        }
+    if (::activeMasternodeManager->GetProTxHash().IsNull()) {
+        return;
+    }
 
-        const auto receivedMNAuthChallenge = peer.GetReceivedMNAuthChallenge();
-        if (receivedMNAuthChallenge.IsNull()) {
-            return;
-        }
-        // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM). This way
-        // we protect ourselves against MITM in this form:
-        //   node1 <- Eve -> node2
-        // It does not protect against:
-        //   node1 -> Eve -> node2
-        // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
-        int nOurNodeVersion{PROTOCOL_VERSION};
-        if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
-            nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
-        }
-        const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-        auto pk = ::activeMasternodeManager->GetPubKey();
-        const CBLSPublicKeyVersionWrapper pubKey(pk, !is_basic_scheme_active);
+    const auto receivedMNAuthChallenge = peer.GetReceivedMNAuthChallenge();
+    if (receivedMNAuthChallenge.IsNull()) {
+        return;
+    }
+    // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM). This way
+    // we protect ourselves against MITM in this form:
+    //   node1 <- Eve -> node2
+    // It does not protect against:
+    //   node1 -> Eve -> node2
+    // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
+    int nOurNodeVersion{PROTOCOL_VERSION};
+    if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+        nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+    }
+    const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    auto pk = ::activeMasternodeManager->GetPubKey();
+    const CBLSPublicKeyVersionWrapper pubKey(pk, !is_basic_scheme_active);
+    uint256 signHash = [&]() {
         if (peer.nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-            signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
+            return ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn()));
         } else {
-            signHash = ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion));
+            return ::SerializeHash(std::make_tuple(pubKey, receivedMNAuthChallenge, peer.IsInboundConn(), nOurNodeVersion));
         }
+    }();
 
-        mnauth.proRegTxHash = ::activeMasternodeManager->GetProTxHash();
-    } // ::activeMasternodeManager->cs
+    mnauth.proRegTxHash = ::activeMasternodeManager->GetProTxHash();
 
     mnauth.sig = ::activeMasternodeManager->Sign(signHash);
 
@@ -133,7 +131,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterm
     }
 
     const uint256 myProTxHash = fMasternodeMode ?
-                                WITH_LOCK(::activeMasternodeManager->cs, return ::activeMasternodeManager->GetProTxHash()) :
+                                ::activeMasternodeManager->GetProTxHash() :
                                 uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {
