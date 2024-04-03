@@ -591,11 +591,6 @@ bool TestSetup()
                                     }
                                 }
                             }
-                        } else {
-                            ParseError(error, strError, nRet);
-                            LogPrintf("%s: [%s] Could not find an address by label: %s\n", __func__, walletName, strError);
-
-                            return false;
                         }
 
                         if (coinbase_dest == "") {
