@@ -119,7 +119,7 @@ namespace BCLog {
         std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> m_categories{0};
+        std::atomic<uint32_t> m_categories{BCLog::NONE};
 
         void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
@@ -131,6 +131,8 @@ namespace BCLog {
         /** Send a string to the log output (internal) */
         void LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+
+        std::string GetLogPrefix(LogFlags category, Level level) const;
 
     public:
         bool m_print_to_console = false;
@@ -144,8 +146,6 @@ namespace BCLog {
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
-
-        std::string GetLogPrefix(LogFlags category, Level level) const;
 
         /** Send a string to the log output */
         void LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)

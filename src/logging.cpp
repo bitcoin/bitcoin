@@ -248,7 +248,7 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
     assert(false);
 }
 
-std::string LogCategoryToStr(BCLog::LogFlags category)
+static std::string LogCategoryToStr(BCLog::LogFlags category)
 {
     if (category == BCLog::ALL) {
         return "all";
