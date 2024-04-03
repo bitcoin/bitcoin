@@ -219,10 +219,6 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
         flag = BCLog::ALL;
         return true;
     }
-    if (str == "0") {
-        flag = BCLog::NONE;
-        return true;
-    }
     auto it = LOG_CATEGORIES_BY_STR.find(str);
     if (it != LOG_CATEGORIES_BY_STR.end()) {
         flag = it->second;
