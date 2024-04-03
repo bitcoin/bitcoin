@@ -361,8 +361,7 @@ void CDKGSession::VerifyPendingContributions()
 
     cxxtimer::Timer t1(true);
 
-    std::vector<size_t> pend = std::move(pendingContributionVerifications);
-    if (pend.empty()) {
+    if (pendingContributionVerifications.empty()) {
         return;
     }
 
@@ -370,7 +369,7 @@ void CDKGSession::VerifyPendingContributions()
     std::vector<BLSVerificationVectorPtr> vvecs;
     std::vector<CBLSSecretKey> skContributions;
 
-    for (const auto& idx : pend) {
+    for (const auto& idx : pendingContributionVerifications) {
         const auto& m = members[idx];
         if (m->bad || m->weComplain) {
             continue;
@@ -404,7 +403,8 @@ void CDKGSession::VerifyPendingContributions()
         }
     }
 
-    logger.Batch("verified %d pending contributions. time=%d", pend.size(), t1.count());
+    logger.Batch("verified %d pending contributions. time=%d", pendingContributionVerifications.size(), t1.count());
+    pendingContributionVerifications.clear();
 }
 
 void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
@@ -663,8 +663,9 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
             continue;
         }
 
-        const auto& qc = WITH_LOCK(invCs, return std::move(complaints.at(*m->complaints.begin())));
-        if (qc.complainForMembers[*myIdx]) {
+        LOCK(invCs);
+        if (const auto& qc = complaints.at(*m->complaints.begin());
+                qc.complainForMembers[*myIdx]) {
             justifyFor.emplace(qc.proTxHash);
         }
     }
