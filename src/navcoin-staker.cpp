@@ -593,7 +593,7 @@ bool TestSetup()
                             }
                         } else {
                             ParseError(error, strError, nRet);
-                            LogPrintf("%s: [%s] Could not find an address by label\n", __func__, walletName, walletName, strError);
+                            LogPrintf("%s: [%s] Could not find an address by label: %s\n", __func__, walletName, strError);
 
                             return false;
                         }
