@@ -98,8 +98,6 @@ public:
     void SetCrypted(bool fCryptedIn);
     bool IsCrypted() const;
 
-    void Debug(const std::string& strName) const;
-
     bool SetMnemonic(const SecureVector& vchMnemonic, const SecureVector& vchMnemonicPassphrase, bool fUpdateID);
     bool SetMnemonic(const SecureString& ssMnemonic, const SecureString& ssMnemonicPassphrase, bool fUpdateID);
     bool GetMnemonic(SecureVector& vchMnemonicRet, SecureVector& vchMnemonicPassphraseRet) const;

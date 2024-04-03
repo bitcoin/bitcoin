@@ -4607,7 +4607,6 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
                     }
                     // add default account
                     newHdChain.AddAccount();
-                    newHdChain.Debug(__func__);
                 } else {
                     if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
                         walletInstance->WalletLogPrintf("%s -- Incorrect seed, generating a random mnemonic instead\n", __func__);

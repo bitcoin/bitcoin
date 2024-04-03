@@ -8,7 +8,6 @@
 #include <key_io.h>
 #include <tinyformat.h>
 #include <util/system.h>
-#include <util/strencodings.h>
 
 bool CHDChain::SetNull()
 {
@@ -39,33 +38,6 @@ bool CHDChain::IsCrypted() const
 {
     LOCK(cs);
     return fCrypted;
-}
-
-void CHDChain::Debug(const std::string& strName) const
-{
-    DBG(
-        LOCK(cs);
-        std::cout << __func__ << ": ---" << strName << "---" << std::endl;
-        if (fCrypted) {
-            std::cout << "mnemonic: ***CRYPTED***" << std::endl;
-            std::cout << "mnemonicpassphrase: ***CRYPTED***" << std::endl;
-            std::cout << "seed: ***CRYPTED***" << std::endl;
-        } else {
-            std::cout << "mnemonic: " << std::string(vchMnemonic.begin(), vchMnemonic.end()).c_str() << std::endl;
-            std::cout << "mnemonicpassphrase: " << std::string(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end()).c_str() << std::endl;
-            std::cout << "seed: " << HexStr(vchSeed).c_str() << std::endl;
-
-            CExtKey extkey;
-            extkey.SetSeed(vchSeed);
-
-            std::cout << "extended private masterkey: " << EncodeExtKey(extkey).c_str() << std::endl;
-
-            CExtPubKey extpubkey;
-            extpubkey = extkey.Neuter();
-
-            std::cout << "extended public masterkey: " << EncodeExtPubKey(extpubkey).c_str() << std::endl;
-        }
-    );
 }
 
 bool CHDChain::SetMnemonic(const SecureVector& vchMnemonic, const SecureVector& vchMnemonicPassphrase, bool fUpdateID)
