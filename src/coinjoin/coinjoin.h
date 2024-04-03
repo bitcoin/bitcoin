@@ -152,7 +152,7 @@ public:
     CService addr;
 
     CCoinJoinEntry() :
-        txCollateral(MakeTransactionRef())
+        txCollateral(MakeTransactionRef(CMutableTransaction{}))
     {
     }
 
@@ -246,9 +246,8 @@ public:
     uint256 m_protxHash;
     std::vector<unsigned char> vchSig;
     int64_t sigTime{0};
-
     CCoinJoinBroadcastTx() :
-        tx(MakeTransactionRef())
+        tx(MakeTransactionRef(CMutableTransaction{}))
     {
     }
 

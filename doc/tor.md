@@ -164,7 +164,6 @@ versions of Tor see [Section 4](#4-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/dashcore-service/
 	HiddenServicePort 9999 127.0.0.1:9996
-	HiddenServicePort 19999 127.0.0.1:19996
 
 The directory can be different of course, but virtual port numbers should be equal to
 your dashd's P2P listen port (9999 by default), and target addresses and ports

@@ -149,7 +149,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.12 [gui, no tests] [bionic]'
+  name: 'macOS 10.12 [gui, no tests] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal

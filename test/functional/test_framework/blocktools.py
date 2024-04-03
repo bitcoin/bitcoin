@@ -246,6 +246,17 @@ def get_legacy_sigopcount_tx(tx, accurate=True):
         count += CScript(j.scriptSig).GetSigOpCount(accurate)
     return count
 
+"""
+Dash chaintips rpc returns extra info in each tip (difficulty, chainwork, and
+forkpoint). Filter down to relevant ones checked in this test.
+"""
+def filter_tip_keys(chaintips):
+    check_keys = ["hash", "height", "branchlen", "status"]
+    filtered_tips = []
+    for tip in chaintips:
+        filtered_tips.append({k: tip[k] for k in check_keys})
+    return filtered_tips
+
 # Identical to GetMasternodePayment in C++ code
 def get_masternode_payment(nHeight, blockValue, fV20Active):
     ret = int(blockValue / 5)
