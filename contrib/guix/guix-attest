@@ -192,6 +192,7 @@ mkdir -p "$outsigdir"
 
     if (( ${#noncodesigned_fragments[@]} )); then
         cat "${noncodesigned_fragments[@]}" \
+            | grep -v apple-darwin-debug.tar \
             | sort -u \
             | sort -k2 \
             | basenameify_SHA256SUMS \
@@ -220,6 +221,7 @@ mkdir -p "$outsigdir"
         # Note: all.SHA256SUMS attests to all of $sha256sum_fragments, but is
         #       not needed if there are no $codesigned_fragments
         cat "${sha256sum_fragments[@]}" \
+            | grep -v apple-darwin-debug.tar \
             | sort -u \
             | sort -k2 \
             | basenameify_SHA256SUMS \
