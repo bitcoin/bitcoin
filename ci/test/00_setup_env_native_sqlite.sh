@@ -10,4 +10,4 @@ export CONTAINER_NAME=ci_native_sqlite
 export PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libdbus-1-dev libharfbuzz-dev"
 export DEP_OPTS="NO_BDB=1 NO_UPNP=1 DEBUG=1"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --with-sqlite --without-bdb LDFLAGS=-static-libstdc++"
+export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --with-sqlite --without-bdb"
