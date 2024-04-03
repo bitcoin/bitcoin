@@ -8,7 +8,6 @@ define $(package)_set_vars
 $(package)_config_opts=--disable-shared --disable-readline --disable-dynamic-extensions --enable-option-checking
 $(package)_config_opts+= --disable-rtree --disable-fts4 --disable-fts5
 # We avoid using `--enable-debug` because it overrides CFLAGS, a behavior we want to prevent.
-$(package)_cflags_debug += -g
 $(package)_cppflags_debug += -DSQLITE_DEBUG
 $(package)_cppflags+=-DSQLITE_DQS=0 -DSQLITE_DEFAULT_MEMSTATUS=0 -DSQLITE_OMIT_DEPRECATED
 $(package)_cppflags+=-DSQLITE_OMIT_SHARED_CACHE -DSQLITE_OMIT_JSON -DSQLITE_LIKE_DOESNT_MATCH_BLOBS
