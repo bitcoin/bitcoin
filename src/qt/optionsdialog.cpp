@@ -22,6 +22,7 @@
 #include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <util/strencodings.h>
 #include <util/underlying.h>
 
 #include <QButtonGroup>
@@ -588,7 +589,10 @@ QValidator(parent)
 QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the proxy
+    uint16_t port{0};
+    std::string hostname;
+    if (!SplitHostPort(input.toStdString(), port, hostname) || port != 0) return QValidator::Invalid;
+
     CService serv(LookupNumeric(input.toStdString(), DEFAULT_GUI_PROXY_PORT));
     Proxy addrProxy = Proxy(serv, true);
     if (addrProxy.IsValid())
