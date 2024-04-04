@@ -109,8 +109,9 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 {
     CChainState& chainstate = Assert(node.chainman)->ActiveChainstate();
 
-    ::deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
-    node.dmnman = ::deterministicMNManager.get();
+    node.dmnman = std::make_unique<CDeterministicMNManager>(chainstate, *node.connman, *node.evodb);
+    node.mempool->ConnectManagers(node.dmnman.get());
+
     node.cj_ctx = std::make_unique<CJContext>(chainstate, *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
                                               /* mn_activeman = */ nullptr, *node.mn_sync, /* relay_txes = */ true);
 #ifdef ENABLE_WALLET
@@ -131,8 +132,8 @@ void DashTestSetupClose(NodeContext& node)
 #ifdef ENABLE_WALLET
     node.coinjoin_loader.reset();
 #endif // ENABLE_WALLET
-    node.dmnman = nullptr;
-    ::deterministicMNManager.reset();
+    node.mempool->DisconnectManagers();
+    node.dmnman.reset();
     node.cj_ctx.reset();
 }
 
@@ -231,7 +232,7 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.mn_metaman = std::make_unique<CMasternodeMetaMan>();
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
     m_node.sporkman = std::make_unique<CSporkManager>();
-    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.netfulfilledman, ::deterministicMNManager, m_node.mn_sync);
+    m_node.govman = std::make_unique<CGovernanceManager>(*m_node.mn_metaman, *m_node.netfulfilledman, m_node.dmnman, m_node.mn_sync);
     m_node.mn_sync = std::make_unique<CMasternodeSync>(*m_node.connman, *m_node.netfulfilledman, *m_node.govman);
 
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
@@ -283,7 +284,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, ::deterministicMNManager,
+                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
                                        m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
     {
         CConnman::Options options;

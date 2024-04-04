@@ -347,6 +347,13 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator, int check_ratio)
     _clear(); //lock free clear
 }
 
+void CTxMemPool::ConnectManagers(CDeterministicMNManager* dmnman)
+{
+    // Do not allow double-initialization
+    assert(m_dmnman == nullptr);
+    m_dmnman = Assert(dmnman);
+}
+
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
 {
     LOCK(cs);
@@ -415,7 +422,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Invalid ProTxes should never get this far because transactions should be
     // fully checked by AcceptToMemoryPool() at this point, so we just assume that
     // everything is fine here.
-    if (::deterministicMNManager) {
+    if (m_dmnman) {
         addUncheckedProTx(newit, tx);
     }
 }
@@ -554,7 +561,7 @@ bool CTxMemPool::removeSpentIndex(const uint256 txhash)
 
 void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, const CTransaction& tx)
 {
-    assert(::deterministicMNManager);
+    assert(m_dmnman);
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         auto proTx = *Assert(GetTxPayload<CProRegTx>(tx));
@@ -577,7 +584,7 @@ void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, con
         auto proTx = *Assert(GetTxPayload<CProUpRegTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
-        auto dmn = Assert(deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash));
+        auto dmn = Assert(m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash));
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
             newit->isKeyChangeProTx = true;
@@ -585,7 +592,7 @@ void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, con
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         auto proTx = *Assert(GetTxPayload<CProUpRevTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-        auto dmn = Assert(deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash));
+        auto dmn = Assert(m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash));
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
             newit->isKeyChangeProTx = true;
@@ -623,7 +630,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     } else
         vTxHashes.clear();
 
-    if (::deterministicMNManager) {
+    if (m_dmnman) {
         removeUncheckedProTx(it->GetTx());
     }
 
@@ -844,7 +851,7 @@ void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const CO
 
 void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
 {
-    assert(::deterministicMNManager);
+    assert(m_dmnman);
 
     // Remove TXs that refer to a MN for which the collateral was spent
     auto removeSpentCollateralConflict = [&](const uint256& proTxHash) {
@@ -866,7 +873,7 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
             }
         }
     };
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mnList = m_dmnman->GetListAtChainTip();
     for (const auto& in : tx.vin) {
         auto collateralIt = mapProTxCollaterals.find(in.prevout);
         if (collateralIt != mapProTxCollaterals.end()) {
@@ -983,7 +990,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
         }
         removeConflicts(*tx);
-        if (::deterministicMNManager) {
+        if (m_dmnman) {
             removeProTxConflicts(*tx);
         }
         ClearPrioritisation(tx->GetHash());
@@ -1259,7 +1266,7 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
 }
 
 bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
-    assert(::deterministicMNManager);
+    assert(m_dmnman);
 
     LOCK(cs);
 
@@ -1314,7 +1321,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         auto& proTx = *opt_proTx;
 
         // this method should only be called with validated ProTxs
-        auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
+        auto dmn = m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
@@ -1336,7 +1343,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         }
         auto& proTx = *opt_proTx;
         // this method should only be called with validated ProTxs
-        auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
+        auto dmn = m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict

@@ -7,8 +7,9 @@
 #include <addrman.h>
 #include <banman.h>
 #include <coinjoin/context.h>
-#include <evo/creditpool.h>
 #include <evo/chainhelper.h>
+#include <evo/creditpool.h>
+#include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <governance/governance.h>

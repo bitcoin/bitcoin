@@ -27,8 +27,6 @@
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
 static const std::string DB_LIST_DIFF = "dmn_D3";
 
-std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
-
 uint64_t CDeterministicMN::GetInternalId() const
 {
     // can't get it if it wasn't set yet

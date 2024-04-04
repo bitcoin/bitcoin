@@ -343,8 +343,8 @@ void PrepareShutdown(NodeContext& node)
             node.llmq_ctx.reset();
         }
         llmq::quorumSnapshotManager.reset();
-        node.dmnman = nullptr;
-        deterministicMNManager.reset();
+        node.mempool->DisconnectManagers();
+        node.dmnman.reset();
         node.cpoolman.reset();
         node.mnhf_manager.reset();
         node.evodb.reset();
@@ -1683,7 +1683,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
     assert(!node.govman);
-    node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, ::deterministicMNManager, node.mn_sync);
+    node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, node.dmnman, node.mn_sync);
 
     assert(!node.sporkman);
     node.sporkman = std::make_unique<CSporkManager>();
@@ -1725,7 +1725,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         fMasternodeMode = true;
         {
             // Create and register mn_activeman, will init later in ThreadImport
-            node.mn_activeman = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
+            node.mn_activeman = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, node.dmnman);
             RegisterValidationInterface(node.mn_activeman.get());
         }
     }
@@ -1733,7 +1733,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
                                      *node.scheduler, chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
-                                     *node.govman, *node.sporkman, node.mn_activeman.get(), ::deterministicMNManager,
+                                     *node.govman, *node.sporkman, node.mn_activeman.get(), node.dmnman,
                                      node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
@@ -1858,7 +1858,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #endif
 
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *node.mn_sync, *node.govman, node.mn_activeman.get(), ::deterministicMNManager, node.llmq_ctx, node.cj_ctx
+        *node.connman, *node.mn_sync, *node.govman, node.mn_activeman.get(), node.dmnman, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -1943,11 +1943,13 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
                 // Same logic as above with pblocktree
-                deterministicMNManager.reset();
-                deterministicMNManager = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
-                node.dmnman = deterministicMNManager.get();
+                node.dmnman.reset();
+                node.dmnman = std::make_unique<CDeterministicMNManager>(chainman.ActiveChainstate(), *node.connman, *node.evodb);
+                node.mempool->ConnectManagers(node.dmnman.get());
+
                 node.cpoolman.reset();
                 node.cpoolman = std::make_unique<CCreditPoolManager>(*node.evodb);
+
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*node.evodb));
 

@@ -361,6 +361,7 @@ struct entry_time {};
 struct ancestor_score {};
 
 class CBlockPolicyEstimator;
+class CDeterministicMNManager;
 
 /**
  * Information about a mempool transaction.
@@ -472,6 +473,7 @@ protected:
     const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;
+    CDeterministicMNManager* m_dmnman{nullptr};
 
     uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx' byte sizes
     CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
@@ -598,6 +600,21 @@ public:
      * @param[in] check_ratio is the ratio used to determine how often sanity checks will run.
      */
     explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr, int check_ratio = 0);
+
+    /**
+     * Set CDeterministicMNManager pointer.
+     *
+     * Separated from constructor as it's initialized after CTxMemPool
+     * is created. Required for ProTx processing.
+     */
+    void ConnectManagers(CDeterministicMNManager* dmnman);
+
+    /**
+     * Reset CDeterministicMNManager pointer.
+     *
+     * @pre Must be called before CDeterministicMNManager is destroyed.
+     */
+    void DisconnectManagers() { m_dmnman = nullptr; }
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -759,7 +776,10 @@ public:
     TxMempoolInfo info(const uint256& hash) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
-    /** @pre Caller must ensure that CDeterministicMNManager exists */
+    /**
+     * @pre Caller must ensure that CDeterministicMNManager exists and has been
+     *      set using ConnectManagers() for the CTxMemPool instance.
+     */
     bool existsProviderTxConflict(const CTransaction &tx) const;
 
     size_t DynamicMemoryUsage() const;
