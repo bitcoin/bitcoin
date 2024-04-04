@@ -30,6 +30,8 @@
  * - SECP256K1_CHECKMEM_DEFINE(p, len):
  *   - marks the len-byte memory pointed to by p as defined data (public data, in the
  *     context of constant-time checking).
+ * - SECP256K1_CHECKMEM_MSAN_DEFINE(p, len):
+ *   - Like SECP256K1_CHECKMEM_DEFINE, but applies only to memory_sanitizer.
  *
  */
 
@@ -48,9 +50,14 @@
 #    define SECP256K1_CHECKMEM_ENABLED 1
 #    define SECP256K1_CHECKMEM_UNDEFINE(p, len) __msan_allocated_memory((p), (len))
 #    define SECP256K1_CHECKMEM_DEFINE(p, len) __msan_unpoison((p), (len))
+#    define SECP256K1_CHECKMEM_MSAN_DEFINE(p, len) __msan_unpoison((p), (len))
 #    define SECP256K1_CHECKMEM_CHECK(p, len) __msan_check_mem_is_initialized((p), (len))
 #    define SECP256K1_CHECKMEM_RUNNING() (1)
 #  endif
+#endif
+
+#if !defined SECP256K1_CHECKMEM_MSAN_DEFINE
+#  define SECP256K1_CHECKMEM_MSAN_DEFINE(p, len) SECP256K1_CHECKMEM_NOOP((p), (len))
 #endif
 
 /* If valgrind integration is desired (through the VALGRIND define), implement the

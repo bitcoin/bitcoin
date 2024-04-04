@@ -17,7 +17,8 @@ print_environment() {
             SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS\
             EXAMPLES \
             HOST WRAPPER_CMD \
-            CC CFLAGS CPPFLAGS AR NM
+            CC CFLAGS CPPFLAGS AR NM \
+            UBSAN_OPTIONS ASAN_OPTIONS LSAN_OPTIONS
     do
         eval "isset=\${$var+x}"
         if [ -n "$isset" ]; then

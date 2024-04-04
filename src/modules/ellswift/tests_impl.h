@@ -188,9 +188,9 @@ void run_ellswift_tests(void) {
             CHECK(ret == ((testcase->enc_bitmap >> c) & 1));
             if (ret) {
                 secp256k1_fe x2;
-                CHECK(check_fe_equal(&t, &testcase->encs[c]));
+                CHECK(fe_equal(&t, &testcase->encs[c]));
                 secp256k1_ellswift_xswiftec_var(&x2, &testcase->u, &testcase->encs[c]);
-                CHECK(check_fe_equal(&testcase->x, &x2));
+                CHECK(fe_equal(&testcase->x, &x2));
             }
         }
     }
@@ -203,7 +203,7 @@ void run_ellswift_tests(void) {
         CHECK(ret);
         ret = secp256k1_pubkey_load(CTX, &ge, &pubkey);
         CHECK(ret);
-        CHECK(check_fe_equal(&testcase->x, &ge.x));
+        CHECK(fe_equal(&testcase->x, &ge.x));
         CHECK(secp256k1_fe_is_odd(&ge.y) == testcase->odd_y);
     }
     for (i = 0; (unsigned)i < sizeof(ellswift_xdh_tests_bip324) / sizeof(ellswift_xdh_tests_bip324[0]); ++i) {
@@ -290,7 +290,7 @@ void run_ellswift_tests(void) {
         secp256k1_ecmult(&resj, &decj, &sec, NULL);
         secp256k1_ge_set_gej(&res, &resj);
         /* Compare. */
-        CHECK(check_fe_equal(&res.x, &share_x));
+        CHECK(fe_equal(&res.x, &share_x));
     }
     /* Verify the joint behavior of secp256k1_ellswift_xdh */
     for (i = 0; i < 200 * COUNT; i++) {
