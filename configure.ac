@@ -968,8 +968,6 @@ AC_CHECK_DECLS([setsid])
 
 AC_CHECK_DECLS([pipe2])
 
-AC_CHECK_FUNCS([timingsafe_bcmp])
-
 AC_MSG_CHECKING([for __builtin_clzl])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
  (void) __builtin_clzl(0);

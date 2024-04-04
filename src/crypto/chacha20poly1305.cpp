@@ -2,10 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <crypto/chacha20poly1305.h>
 
 #include <crypto/common.h>
@@ -30,10 +26,7 @@ void AEADChaCha20Poly1305::SetKey(Span<const std::byte> key) noexcept
 
 namespace {
 
-#ifndef HAVE_TIMINGSAFE_BCMP
-#define HAVE_TIMINGSAFE_BCMP
-
-int timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n) noexcept
+int timingsafe_bcmp_internal(const unsigned char* b1, const unsigned char* b2, size_t n) noexcept
 {
     const unsigned char *p1 = b1, *p2 = b2;
     int ret = 0;
@@ -41,8 +34,6 @@ int timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n) 
         ret |= *p1++ ^ *p2++;
     return (ret != 0);
 }
-
-#endif
 
 /** Compute poly1305 tag. chacha20 must be set to the right nonce, block 0. Will be at block 1 after. */
 void ComputeTag(ChaCha20& chacha20, Span<const std::byte> aad, Span<const std::byte> cipher, Span<std::byte> tag) noexcept
@@ -97,7 +88,7 @@ bool AEADChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std:
     m_chacha20.Seek(nonce, 0);
     std::byte expected_tag[EXPANSION];
     ComputeTag(m_chacha20, aad, cipher.first(cipher.size() - EXPANSION), expected_tag);
-    if (timingsafe_bcmp(UCharCast(expected_tag), UCharCast(cipher.last(EXPANSION).data()), EXPANSION)) return false;
+    if (timingsafe_bcmp_internal(UCharCast(expected_tag), UCharCast(cipher.last(EXPANSION).data()), EXPANSION)) return false;
 
     // Decrypt (starting at block 1).
     m_chacha20.Crypt(cipher.first(plain1.size()), plain1);
