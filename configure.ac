@@ -1059,8 +1059,6 @@ AC_CHECK_DECLS([setsid])
 
 AC_CHECK_DECLS([pipe2])
 
-AC_CHECK_FUNCS([timingsafe_bcmp])
-
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
 AC_MSG_CHECKING([for mallopt M_ARENA_MAX])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
