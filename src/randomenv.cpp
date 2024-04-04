@@ -42,15 +42,15 @@
 #if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
 #include <ifaddrs.h>
 #endif
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 #include <sys/sysctl.h>
-#if HAVE_VM_VM_PARAM_H
+#ifdef HAVE_VM_VM_PARAM_H
 #include <vm/vm_param.h>
 #endif
-#if HAVE_SYS_RESOURCES_H
+#ifdef HAVE_SYS_RESOURCES_H
 #include <sys/resources.h>
 #endif
-#if HAVE_SYS_VMMETER_H
+#ifdef HAVE_SYS_VMMETER_H
 #include <sys/vmmeter.h>
 #endif
 #endif
@@ -162,7 +162,7 @@ void AddPath(CSHA512& hasher, const char *path)
 }
 #endif
 
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 template<int... S>
 void AddSysctl(CSHA512& hasher)
 {
@@ -274,7 +274,7 @@ void RandAddDynamicEnv(CSHA512& hasher)
     AddFile(hasher, "/proc/self/status");
 #endif
 
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 #  ifdef CTL_KERN
 #    if defined(KERN_PROC) && defined(KERN_PROC_ALL)
     AddSysctl<CTL_KERN, KERN_PROC, KERN_PROC_ALL>(hasher);
@@ -419,7 +419,7 @@ void RandAddStaticEnv(CSHA512& hasher)
 
     // For MacOS/BSDs, gather data through sysctl instead of /proc. Not all of these
     // will exist on every system.
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 #  ifdef CTL_HW
 #    ifdef HW_MACHINE
     AddSysctl<CTL_HW, HW_MACHINE>(hasher);
