@@ -232,7 +232,7 @@ public:
      */
     bool IsRelayable() const
     {
-        return IsIPv4() || IsIPv6() || IsTor();
+        return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
     }
 
     /**
