@@ -87,7 +87,7 @@ SECP256K1_API const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_
  *  Returns: 1 always.
  *  Args:    ctx:        pointer to a context object
  *  Out:     ell64:      pointer to a 64-byte array to be filled
- *  In:      pubkey:     a pointer to a secp256k1_pubkey containing an
+ *  In:      pubkey:     pointer to a secp256k1_pubkey containing an
  *                       initialized public key
  *           rnd32:      pointer to 32 bytes of randomness
  *
@@ -169,7 +169,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ellswift_create(
  *                      (will not be NULL)
  *           ell_b64:   pointer to the 64-byte encoded public key of party B
  *                      (will not be NULL)
- *           seckey32:  a pointer to our 32-byte secret key
+ *           seckey32:  pointer to our 32-byte secret key
  *           party:     boolean indicating which party we are: zero if we are
  *                      party A, non-zero if we are party B. seckey32 must be
  *                      the private key corresponding to that party's ell_?64.
