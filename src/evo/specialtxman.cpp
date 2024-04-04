@@ -72,10 +72,10 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransact
     return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-tx-type-check");
 }
 
-bool CheckSpecialTx(CDeterministicMNManager& dmnman, const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
+bool CSpecialTxProcessor::CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
 {
     AssertLockHeld(cs_main);
-    return CheckSpecialTxInner(dmnman, tx, pindexPrev, view, std::nullopt, check_sigs, state);
+    return CheckSpecialTxInner(m_dmnman, tx, pindexPrev, view, std::nullopt, check_sigs, state);
 }
 
 [[nodiscard]] bool CSpecialTxProcessor::ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)

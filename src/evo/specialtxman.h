@@ -29,9 +29,6 @@ class CChainLocksHandler;
 
 extern RecursiveMutex cs_main;
 
-bool CheckSpecialTx(CDeterministicMNManager& dmnman, const CTransaction& tx, const CBlockIndex* pindexPrev,
-                    const CCoinsViewCache& view, bool check_sigs, TxValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
 class CSpecialTxProcessor
 {
 private:
@@ -51,6 +48,8 @@ public:
                                  const Consensus::Params& consensus_params, const llmq::CChainLocksHandler& clhandler) :
         m_cpoolman(cpoolman), m_dmnman{dmnman}, m_mnhfman{mnhfman}, m_qblockman{qblockman}, m_consensus_params{consensus_params}, m_clhandler{clhandler} {}
 
+    bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, const CCoinsViewCache& view, bool fJustCheck,
                                   bool fCheckCbTxMerkleRoots, BlockValidationState& state, std::optional<MNListUpdates>& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);

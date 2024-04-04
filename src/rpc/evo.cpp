@@ -8,6 +8,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <deploymentstatus.h>
+#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
 #include <evo/providertx.h>
@@ -324,13 +325,13 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     payload.sig = key.Sign(hash);
 }
 
-static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit = true)
+static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit = true)
 {
     {
     LOCK(cs_main);
 
     TxValidationState state;
-    if (!CheckSpecialTx(dmnman, CTransaction(tx), chainman.ActiveChain().Tip(), chainman.ActiveChainstate().CoinsTip(), true, state)) {
+    if (!chain_helper.special_tx->CheckSpecialTx(CTransaction(tx), chainman.ActiveChain().Tip(), chainman.ActiveChainstate().CoinsTip(), true, state)) {
         throw std::runtime_error(state.ToString());
     }
     } // cs_main
@@ -579,7 +580,7 @@ static void protx_register_prepare_evo_help(const JSONRPCRequest& request)
 }
 
 static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
-                                              CDeterministicMNManager& dmnman,
+                                              CChainstateHelper& chain_helper,
                                               const ChainstateManager& chainman,
                                               const bool specific_legacy_bls_scheme,
                                               const bool isExternalRegister,
@@ -739,7 +740,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         ptx.collateralOutpoint.n = collateralIndex;
 
         SetTxPayload(tx, ptx);
-        return SignAndSendSpecialTx(request, dmnman, chainman, tx, fSubmit);
+        return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
     } else {
         // referencing external collateral
 
@@ -787,7 +788,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 }
                 SignSpecialTxPayloadByString(tx, ptx, key);
                 SetTxPayload(tx, ptx);
-                return SignAndSendSpecialTx(request, dmnman, chainman, tx, fSubmit);
+                return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
             }
         } catch (...) {
             if (unlockOnError) {
@@ -798,7 +799,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 }
 
-static UniValue protx_register_evo(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_register_evo(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
 {
     bool isExternalRegister = request.strMethod == "protxregister_evo";
     bool isFundRegister = request.strMethod == "protxregister_fund_evo";
@@ -811,26 +812,26 @@ static UniValue protx_register_evo(const JSONRPCRequest& request, CDeterministic
         isFundRegister = request.strMethod == "protxregister_fund_hpmn";
         isPrepareRegister = request.strMethod == "protxregister_prepare_hpmn";
     }
-    return protx_register_common_wrapper(request, dmnman, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
+    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
 }
 
-static UniValue protx_register(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_register(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
 {
     bool isExternalRegister = request.strMethod == "protxregister";
     bool isFundRegister = request.strMethod == "protxregister_fund";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare";
-    return protx_register_common_wrapper(request, dmnman, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
 }
 
-static UniValue protx_register_legacy(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_register_legacy(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
 {
     bool isExternalRegister = request.strMethod == "protxregister_legacy";
     bool isFundRegister = request.strMethod == "protxregister_fund_legacy";
     bool isPrepareRegister = request.strMethod == "protxregister_prepare_legacy";
-    return protx_register_common_wrapper(request, dmnman, chainman, true, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, chain_helper, chainman, true, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
 }
 
-static UniValue protx_register_submit(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_register_submit(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
 {
     protx_register_submit_help(request);
 
@@ -863,7 +864,7 @@ static UniValue protx_register_submit(const JSONRPCRequest& request, CDeterminis
     }
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
 }
 
 static void protx_update_service_help(const JSONRPCRequest& request)
@@ -914,7 +915,7 @@ static void protx_update_service_evo_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const MnType mnType)
+static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, CChainstateHelper& chain_helper, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const MnType mnType)
 {
     if (request.strMethod.find("_hpmn") != std::string::npos) {
         if (!IsDeprecatedRPCEnabled("hpmn")) {
@@ -1026,7 +1027,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
 }
 
 static void protx_update_registrar_help(const JSONRPCRequest& request, bool legacy)
@@ -1056,7 +1057,7 @@ static void protx_update_registrar_help(const JSONRPCRequest& request, bool lega
     }.Check(request);
 }
 
-static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const bool specific_legacy_bls_scheme)
+static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, CChainstateHelper& chain_helper, CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const bool specific_legacy_bls_scheme)
 {
     protx_update_registrar_help(request, specific_legacy_bls_scheme);
 
@@ -1131,17 +1132,17 @@ static UniValue protx_update_registrar_wrapper(const JSONRPCRequest& request, CD
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
 }
 
-static UniValue protx_update_registrar(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_update_registrar(const JSONRPCRequest& request, CChainstateHelper& chain_helper, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
-    return protx_update_registrar_wrapper(request, dmnman, chainman, false);
+    return protx_update_registrar_wrapper(request, chain_helper, dmnman, chainman, false);
 }
 
-static UniValue protx_update_registrar_legacy(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_update_registrar_legacy(const JSONRPCRequest& request, CChainstateHelper& chain_helper, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
-    return protx_update_registrar_wrapper(request, dmnman, chainman, true);
+    return protx_update_registrar_wrapper(request, chain_helper, dmnman, chainman, true);
 }
 
 static void protx_revoke_help(const JSONRPCRequest& request)
@@ -1167,7 +1168,7 @@ static void protx_revoke_help(const JSONRPCRequest& request)
     }.Check(request);
 }
 
-static UniValue protx_revoke(const JSONRPCRequest& request, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
+static UniValue protx_revoke(const JSONRPCRequest& request, CChainstateHelper& chain_helper, CDeterministicMNManager& dmnman, const ChainstateManager& chainman)
 {
     protx_revoke_help(request);
 
@@ -1227,7 +1228,7 @@ static UniValue protx_revoke(const JSONRPCRequest& request, CDeterministicMNMana
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, dmnman, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
 }
 
 #endif//ENABLE_WALLET
@@ -1676,24 +1677,27 @@ static UniValue protx(const JSONRPCRequest& request)
     CMasternodeMetaMan& mn_metaman = *node.mn_metaman;
 
 #ifdef ENABLE_WALLET
+    CHECK_NONFATAL(node.chain_helper);
+    CChainstateHelper& chain_helper = *node.chain_helper;
+
     if (command == "protxregister" || command == "protxregister_fund" || command == "protxregister_prepare") {
-        return protx_register(new_request, dmnman, chainman);
+        return protx_register(new_request, chain_helper, chainman);
     } else if (command == "protxregister_evo" || command == "protxregister_fund_evo" || command == "protxregister_prepare_evo" || command == "protxregister_hpmn" || command == "protxregister_fund_hpmn" || command == "protxregister_prepare_hpmn") {
-        return protx_register_evo(new_request, dmnman, chainman);
+        return protx_register_evo(new_request, chain_helper, chainman);
     } else if (command == "protxregister_legacy" || command == "protxregister_fund_legacy" || command == "protxregister_prepare_legacy") {
-        return protx_register_legacy(new_request, dmnman, chainman);
+        return protx_register_legacy(new_request, chain_helper, chainman);
     } else if (command == "protxregister_submit") {
-        return protx_register_submit(new_request, dmnman, chainman);
+        return protx_register_submit(new_request, chain_helper, chainman);
     } else if (command == "protxupdate_service") {
-        return protx_update_service_common_wrapper(new_request, dmnman, chainman, MnType::Regular);
+        return protx_update_service_common_wrapper(new_request, chain_helper, dmnman, chainman, MnType::Regular);
     } else if (command == "protxupdate_service_evo" || command == "protxupdate_service_hpmn") {
-        return protx_update_service_common_wrapper(new_request, dmnman, chainman, MnType::Evo);
+        return protx_update_service_common_wrapper(new_request, chain_helper, dmnman, chainman, MnType::Evo);
     } else if (command == "protxupdate_registrar") {
-        return protx_update_registrar(new_request, dmnman, chainman);
+        return protx_update_registrar(new_request, chain_helper, dmnman, chainman);
     } else if (command == "protxupdate_registrar_legacy") {
-        return protx_update_registrar_legacy(new_request, dmnman, chainman);
+        return protx_update_registrar_legacy(new_request, chain_helper, dmnman, chainman);
     } else if (command == "protxrevoke") {
-        return protx_revoke(new_request, dmnman, chainman);
+        return protx_revoke(new_request, chain_helper, dmnman, chainman);
     } else
 #endif
     if (command == "protxlist") {

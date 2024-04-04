@@ -529,7 +529,12 @@ namespace {
 class MemPoolAccept
 {
 public:
-    explicit MemPoolAccept(CTxMemPool& mempool, CChainState& active_chainstate) : m_pool(mempool), m_view(&m_dummy), m_viewmempool(&active_chainstate.CoinsTip(), m_pool), m_active_chainstate(active_chainstate),
+    explicit MemPoolAccept(CTxMemPool& mempool, CChainState& active_chainstate) :
+        m_pool(mempool),
+        m_view(&m_dummy),
+        m_viewmempool(&active_chainstate.CoinsTip(), m_pool),
+        m_active_chainstate(active_chainstate),
+        m_chain_helper(active_chainstate.ChainHelper()),
         m_limit_ancestors(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT)),
         m_limit_ancestor_size(gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000),
         m_limit_descendants(gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT)),
@@ -621,6 +626,7 @@ private:
     CCoinsViewMemPool m_viewmempool;
     CCoinsView m_dummy;
     CChainState& m_active_chainstate;
+    CChainstateHelper& m_chain_helper;
 
     // The package limits in effect at the time of invocation.
     const size_t m_limit_ancestors;
@@ -830,7 +836,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
     // mined
     // NOTE: we use UTXO here and do NOT allow mempool txes as masternode collaterals
-    if (!CheckSpecialTx(*::deterministicMNManager, tx, m_active_chainstate.m_chain.Tip(), m_active_chainstate.CoinsTip(), true, state))
+    if (!m_chain_helper.special_tx->CheckSpecialTx(tx, m_active_chainstate.m_chain.Tip(), m_active_chainstate.CoinsTip(), true, state))
         return false;
 
     if (m_pool.existsProviderTxConflict(tx)) {
