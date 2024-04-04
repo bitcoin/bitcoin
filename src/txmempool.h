@@ -759,6 +759,7 @@ public:
     TxMempoolInfo info(const uint256& hash) const;
     std::vector<TxMempoolInfo> infoAll() const;
 
+    /** @pre Caller must ensure that CDeterministicMNManager exists */
     bool existsProviderTxConflict(const CTransaction &tx) const;
 
     size_t DynamicMemoryUsage() const;
@@ -816,6 +817,12 @@ private:
     /** Sever link between specified transaction and direct children. */
     void UpdateChildrenForRemoval(txiter entry) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /**
+     * addUnchecked extension for Dash-specific transactions (ProTx).
+     * Depends on CDeterministicMNManager.
+     */
+    void addUncheckedProTx(indexed_transaction_set::iterator& newit, const CTransaction& tx);
+
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
      *  of transactions being removed at the same time.  We use each
@@ -825,6 +832,8 @@ private:
      *  removal.
      */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void removeUncheckedProTx(const CTransaction& tx);
+
 public:
     /** visited marks a CTxMemPoolEntry as having been traversed
      * during the lifetime of the most recently created Epoch::Guard
