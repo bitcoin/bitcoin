@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
 # Only install BCC tracing packages in Cirrus CI.
 if [[ "${CIRRUS_CI}" == "true" ]]; then
-  BPFCC_PACKAGE="bpfcc-tools linux-headers-$(uname --kernel-release)"
+  BPFCC_PACKAGE="" # Temporarily disabled "bpfcc-tools linux-headers-$(uname --kernel-release)"
   export CI_CONTAINER_CAP="--privileged -v /sys/kernel:/sys/kernel:rw"
 else
   BPFCC_PACKAGE=""
