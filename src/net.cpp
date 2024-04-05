@@ -3934,52 +3934,49 @@ void CConnman::RelayTransaction(const CTransaction& tx, const bool is_dstx)
 }
 
 void CConnman::RelayInv(CInv &inv, const int minProtoVersion) {
-    LOCK(cs_vNodes);
-    for (const auto& pnode : vNodes) {
+    ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion < minProtoVersion || !pnode->CanRelay())
-            continue;
+            return;
         pnode->PushInventory(inv);
-    }
+    });
 }
 
 void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
 {
-    LOCK(cs_vNodes);
-    for (const auto& pnode : vNodes) {
+    ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
-            continue;
+            return;
         }
         {
             LOCK(pnode->m_tx_relay->cs_filter);
             if (!pnode->m_tx_relay->fRelayTxes) {
-                continue;
+                return;
             }
             if (pnode->m_tx_relay->pfilter && !pnode->m_tx_relay->pfilter->IsRelevantAndUpdate(relatedTx)) {
-                continue;
+                return;
             }
         }
         pnode->PushInventory(inv);
-    }
+    });
 }
 
 void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
 {
-    LOCK(cs_vNodes);
-    for (const auto& pnode : vNodes) {
+    ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
-            continue;
+            return;
         }
         {
             LOCK(pnode->m_tx_relay->cs_filter);
             if (!pnode->m_tx_relay->fRelayTxes) {
-                continue;
+                return;
             }
             if (pnode->m_tx_relay->pfilter && !pnode->m_tx_relay->pfilter->contains(relatedTxHash)) {
-                continue;
+                return;
             }
         }
         pnode->PushInventory(inv);
-    }
+    });
 }
 
 void CConnman::RecordBytesRecv(uint64_t bytes)
