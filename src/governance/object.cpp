@@ -651,7 +651,7 @@ void CGovernanceObject::Relay(CConnman& connman, const CMasternodeSync& mn_sync)
     }
 
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    connman.RelayInv(inv, minProtoVersion);
+    RelayInv(connman, inv, minProtoVersion);
 }
 
 void CGovernanceObject::UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list)

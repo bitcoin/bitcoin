@@ -139,7 +139,7 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
             LOCK(cs_main);
             const MempoolAcceptResult result = AcceptToMemoryPool(chainstate, mempool, tx_to_sent, /* bypass_limits */ false);
             if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                connman.RelayTransaction(*tx_to_sent, /*is_dstx=*/ false);
+                RelayTransaction(connman, *tx_to_sent, /*is_dstx=*/ false);
             } else {
                 LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", result.m_state.ToString());
             }

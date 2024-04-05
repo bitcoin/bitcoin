@@ -666,7 +666,7 @@ void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
         CInv inv(MSG_QUORUM_FINAL_COMMITMENT, commitmentHash);
-        connman.RelayInv(inv);
+        RelayInv(connman, inv);
     }
 }
 

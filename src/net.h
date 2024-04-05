@@ -1116,12 +1116,6 @@ public:
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond = AllNodes);
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
-    void RelayTransaction(const CTransaction& tx, const bool is_dstx);
-    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-    // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-
     // Addrman functions
     /**
      * Return all or many randomly selected addresses, optionally by network.
@@ -1529,6 +1523,17 @@ private:
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
 };
+
+void RelayInv(CConnman& connman, CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+void RelayInvFiltered(CConnman& connman, CInv &inv, const CTransaction &relatedTx,
+                      const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+/**
+ * This overload will not update node filters,  so use it only for the cases
+ * when other messages will update related transaction data in filters
+ */
+void RelayInvFiltered(CConnman& connman, CInv &inv, const uint256 &relatedTxHash,
+                      const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+void RelayTransaction(CConnman& connman, const CTransaction& tx, const bool is_dstx);
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval);

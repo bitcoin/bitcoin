@@ -454,5 +454,5 @@ std::optional<CKeyID> CSporkMessage::GetSignerKeyID() const
 void CSporkMessage::Relay(CConnman& connman) const
 {
     CInv inv(MSG_SPORK, GetHash());
-    connman.RelayInv(inv);
+    RelayInv(connman, inv);
 }

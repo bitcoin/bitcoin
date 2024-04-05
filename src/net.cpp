@@ -3926,24 +3926,17 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx, const bool is_dstx)
-{
-    uint256 hash = tx.GetHash();
-    CInv inv(is_dstx ? MSG_DSTX : MSG_TX, hash);
-    RelayInv(inv);
-}
-
-void CConnman::RelayInv(CInv &inv, const int minProtoVersion) {
-    ForEachNode([&](CNode* pnode) {
+void RelayInv(CConnman& connman, CInv &inv, const int minProtoVersion) {
+    connman.ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion < minProtoVersion || !pnode->CanRelay())
             return;
         pnode->PushInventory(inv);
     });
 }
 
-void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
+void RelayInvFiltered(CConnman& connman, CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
 {
-    ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
             return;
         }
@@ -3960,9 +3953,9 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
     });
 }
 
-void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
+void RelayInvFiltered(CConnman& connman, CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
 {
-    ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
             return;
         }
@@ -3977,6 +3970,13 @@ void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const i
         }
         pnode->PushInventory(inv);
     });
+}
+
+void RelayTransaction(CConnman& connman, const CTransaction& tx, const bool is_dstx)
+{
+    uint256 hash = tx.GetHash();
+    CInv inv(is_dstx ? MSG_DSTX : MSG_TX, hash);
+    RelayInv(connman, inv);
 }
 
 void CConnman::RecordBytesRecv(uint64_t bytes)
