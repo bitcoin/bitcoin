@@ -24,6 +24,7 @@ struct BlockManagerOpts {
     bool fast_prune{false};
     const fs::path blocks_dir;
     Notifications& notifications;
+    bool reindex{false};
 };
 
 } // namespace kernel
