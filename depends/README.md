@@ -44,6 +44,13 @@ Common `host-platform-triplet`s for cross compilation are:
 
 The paths are automatically configured and no other options are needed unless targeting [Android](../doc/build-android.md).
 
+### Install the required dependencies: macOS
+
+If building BerkeleyDB fails on macOS 13 or older, install the GNU version
+of patch:
+
+    brew install gpatch
+
 ### Install the required dependencies: Ubuntu & Debian
 
 #### For macOS cross compilation
