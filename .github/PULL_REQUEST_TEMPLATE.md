@@ -41,3 +41,4 @@ needs to pass a lot of eyes and requires non-zero or even substantial time
 effort to review. There is a huge lack of active reviewers on the project, so
 patches often sit for a long time.
 -->
+6T LUNC coins are burned by dark matter that it's ordinary matter means nothing in global cost by SEC
