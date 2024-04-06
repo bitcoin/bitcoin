@@ -51,13 +51,27 @@ static void print_buf_plain(const unsigned char *buf, size_t len) {
 #  define SECP256K1_INLINE inline
 # endif
 
+/** Assert statically that expr is true.
+ *
+ * This is a statement-like macro and can only be used inside functions.
+ */
+#define STATIC_ASSERT(expr) do { \
+    switch(0) { \
+        case 0: \
+        /* If expr evaluates to 0, we have two case labels "0", which is illegal. */ \
+        case /* ERROR: static assertion failed */ (expr): \
+        ; \
+    } \
+} while(0)
+
 /** Assert statically that expr is an integer constant expression, and run stmt.
  *
  * Useful for example to enforce that magnitude arguments are constant.
  */
 #define ASSERT_INT_CONST_AND_DO(expr, stmt) do { \
     switch(42) { \
-        case /* ERROR: integer argument is not constant */ expr: \
+        /* C allows only integer constant expressions as case labels. */ \
+        case /* ERROR: integer argument is not constant */ (expr): \
             break; \
         default: ; \
     } \
