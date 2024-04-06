@@ -27,7 +27,7 @@ static void BIP324_ECDH(benchmark::Bench& bench)
 
     bench.batch(1).unit("ecdh").run([&] {
         CKey key;
-        key.Set(UCharCast(key_data.data()), UCharCast(key_data.data()) + 32, true);
+        key.Set(key_data.data(), key_data.data() + 32, true);
         EllSwiftPubKey our_ellswift(our_ellswift_data);
         EllSwiftPubKey their_ellswift(their_ellswift_data);
 
