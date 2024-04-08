@@ -497,10 +497,20 @@ def check_node_connections(*, node, num_in, num_out):
     assert_equal(info["connections_out"], num_out)
 
 def fill_mempool(test_framework, node, miniwallet):
-    """Fill mempool until eviction."""
+    """Fill mempool until eviction.
+
+    Allows for simpler testing of scenarios with floating mempoolminfee > minrelay
+    Requires -datacarriersize=100000 and
+   -maxmempool=5.
+    It will not ensure mempools become synced as it
+    is based on a single node and assumes -minrelaytxfee
+    is 1 sat/vbyte.
+    """
     test_framework.log.info("Fill the mempool until eviction is triggered and the mempoolminfee rises")
     txouts = gen_return_txouts()
     relayfee = node.getnetworkinfo()['relayfee']
+
+    assert_equal(relayfee, Decimal('0.00001000'))
 
     tx_batch_size = 1
     num_of_batches = 75
