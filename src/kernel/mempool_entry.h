@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <core_memusage.h>
+#include <kernel/txgraph.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
@@ -62,7 +63,7 @@ struct CompareIteratorByHash {
  *
  */
 
-class CTxMemPoolEntry
+class CTxMemPoolEntry : public TxEntry
 {
 public:
     typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
@@ -87,7 +88,6 @@ private:
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
-    CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
     // Information about descendants of this transaction that are in the
@@ -110,7 +110,8 @@ public:
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
-        : tx{tx},
+        : TxEntry(GetVirtualTransactionSize(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp), fee),
+          tx{tx},
           nFee{fee},
           nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
@@ -119,7 +120,6 @@ public:
           entryHeight{entry_height},
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
-          m_modified_fee{nFee},
           lockPoints{lp},
           nSizeWithDescendants{GetTxSize()},
           nModFeesWithDescendants{nFee},
@@ -137,10 +137,6 @@ public:
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     const CAmount& GetFee() const { return nFee; }
-    int32_t GetTxSize() const
-    {
-        return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
-    }
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
@@ -185,7 +181,7 @@ public:
     Children& GetMemPoolChildren() const { return m_children; }
 
     mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
-    mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
+    mutable Epoch::Marker mempool_epoch_marker; //!< epoch when last touched
 };
 
 using CTxMemPoolEntryRef = CTxMemPoolEntry::CTxMemPoolEntryRef;
