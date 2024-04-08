@@ -391,6 +391,9 @@ public:
     mutable RecursiveMutex cs;
     indexed_transaction_set mapTx GUARDED_BY(cs);
 
+    // Clusters
+    TxGraph txgraph GUARDED_BY(cs);
+
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
     std::vector<CTransactionRef> txns_randomized GUARDED_BY(cs); //!< All transactions in mapTx, in random order
 
@@ -543,6 +546,9 @@ public:
      *     disconnected block that have been accepted back into the mempool.
      */
     void UpdateTransactionsFromBlock(const std::vector<uint256>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
+
+    /** Get the chidlren of a tx using mapNextTx (needed for reorgs) */
+    std::vector<TxEntry::TxEntryRef> GetChildrenOf(const TxEntry& tx);
 
     /**
      * Try to calculate all in-mempool ancestors of entry.
