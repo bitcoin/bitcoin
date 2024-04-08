@@ -95,6 +95,12 @@ public:
             return true;
         }
     }
+
+    bool is_visited(Marker& marker) const EXCLUSIVE_LOCKS_REQUIRED(*this)
+    {
+        assert(m_guarded);
+        return marker.m_marker == m_raw_epoch;
+    }
 };
 
 #define WITH_FRESH_EPOCH(epoch) const Epoch::Guard UNIQUE_NAME(epoch_guard_)(epoch)
