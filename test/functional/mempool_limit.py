@@ -47,8 +47,6 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Generate UTXOs to flood the mempool
         # 1 to create a tx initially that will be evicted from the mempool later
         # 75 transactions each with a fee rate higher than the previous one
-        # And 1 more to verify that this tx does not get added to the mempool with a fee rate less than the mempoolminfee
-        # And 2 more for the package cpfp test
         self.generate(miniwallet, 1 + (num_of_batches * tx_batch_size))
 
         # Mine 99 blocks so that the UTXOs are allowed to be spent
