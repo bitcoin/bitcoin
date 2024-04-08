@@ -809,7 +809,7 @@ public:
      */
     bool visited(const txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
     {
-        return m_epoch.visited(it->m_epoch_marker);
+        return m_epoch.visited(it->mempool_epoch_marker);
     }
 
     bool visited(std::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
