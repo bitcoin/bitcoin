@@ -147,9 +147,14 @@ enum class SelectionAlgorithm : uint8_t
 
 struct UtxoTarget {
     CAmount start_satoshis;
-    CAmount end_satoshis;
     uint32_t target_utxo_count;
     uint32_t current_utxo_count = 0;
+};
+
+struct EstimatedFeerateBin {
+    CFeeRate start; // per kvbyte
+    CFeeRate end; // per kvbyte
+    double probability;
 };
 
 /** Parameters for one iteration of Coin Selection. */

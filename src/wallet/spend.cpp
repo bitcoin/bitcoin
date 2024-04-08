@@ -214,6 +214,24 @@ std::optional<COutput> CoinsResult::Max() const
     }
     return max_out;
 }
+/* Return coin with amount greater than selection_target, but not more than max_excess greater */
+std::optional<COutput> CoinsResult::Nearest(const CAmount& selection_target, const CAmount& max_excess) const
+{
+    std::optional<COutput> nearest;
+    for (const auto& it : coins) {
+        const auto min_out = std::min_element(it.second.cbegin(), it.second.cend(), [selection_target] (COutput a, COutput b) {
+             if (a.GetEffectiveValue() < selection_target) return false;
+             if (b.GetEffectiveValue() < selection_target) return true;
+             return (a.GetEffectiveValue() < b.GetEffectiveValue()); 
+        });
+        if (min_out != it.second.cend() && (!nearest || (min_out->GetEffectiveValue() < nearest->GetEffectiveValue()))) {
+            nearest = *min_out;
+        }
+    }
+    if (nearest && (nearest->GetEffectiveValue() - selection_target) > max_excess) 
+        return std::nullopt;
+    return nearest;
+}
 
 void CoinsResult::Clear() {
     coins.clear();
@@ -824,20 +842,19 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
 }
 
 /** Returns UTXO targets and compute their current count from available coins */
-std::vector<UtxoTarget> UtxoTargetsFromJson(const UniValue& utxo_targets_json, const CoinsResult& available_coins)
+std::vector<UtxoTarget> UtxoTargetsFromJson(const UniValue& utxo_targets_json, const CAmount& min_fee, const CAmount& max_fee, const CoinsResult& available_coins)
 {
     std::vector<UtxoTarget> utxo_targets;
     for (const auto& bucket : utxo_targets_json.getValues()) {
         UtxoTarget target = {
             bucket["start_satoshis"].getInt<CAmount>(),
-            bucket["end_satoshis"].getInt<CAmount>(),
             bucket["target_utxo_count"].getInt<uint32_t>()};
         utxo_targets.push_back(target);
     }
     for (const auto& [type, outputs] : available_coins.coins) {
         for (const wallet::COutput& output : outputs) {
             for (UtxoTarget& target : utxo_targets) {
-                if (output.txout.nValue >= target.start_satoshis && output.txout.nValue <= target.end_satoshis) {
+                if (output.txout.nValue >= target.start_satoshis + min_fee && output.txout.nValue <= target.start_satoshis + max_fee) {
                     target.current_utxo_count++;
                     break;
                 }
@@ -848,10 +865,39 @@ std::vector<UtxoTarget> UtxoTargetsFromJson(const UniValue& utxo_targets_json, c
     return utxo_targets;
 }
 
-/** Returns a random change amount in the range of the most depleted Utxo bucket and sets `capacity`
- * to the capacity of that change target, if any.
+std::vector<EstimatedFeerateBin> EstimatedFeerateBinsFromJson(const UniValue& feerates_satoshis_per_kvbyte)
+{
+    std::vector<EstimatedFeerateBin> estimated_feerate_bins;
+    for (const auto& bin : feerates_satoshis_per_kvbyte.getValues()) {
+        estimated_feerate_bins.push_back({
+            CFeeRate(bin["start"].getInt<CAmount>()),
+            CFeeRate(bin["end"].getInt<CAmount>()),
+            bin["probability"].get_real()});
+    }
+
+    return estimated_feerate_bins;
+}
+
+CFeeRate GetNextFeeRate(const std::vector<EstimatedFeerateBin>& estimated_feerate_bins, FastRandomContext& rng) 
+{
+    double prob{double(rng.rand64())/rng.max()};
+    double accum{0};
+    for (const auto& feerate_bin : estimated_feerate_bins) {
+        if (accum > prob) {
+            uint64_t fee_range = feerate_bin.end.GetFeePerK() - feerate_bin.start.GetFeePerK(); 
+            return CFeeRate(feerate_bin.start.GetFeePerK() + rng.randrange(fee_range));
+        }
+        else {
+            accum += feerate_bin.probability;
+        }
+    }
+    uint64_t fee_range = estimated_feerate_bins.back().end.GetFeePerK() - estimated_feerate_bins.back().start.GetFeePerK(); 
+    return CFeeRate(estimated_feerate_bins.back().start.GetFeePerK() + rng.randrange(fee_range));
+}
+
+/** Returns a random change amount in the range of the most depleted Utxo bucket, if any.
  */
-std::optional<CAmount> GenerateChangeTargetFromUtxoTargets(const std::vector<UtxoTarget>& utxo_targets, const CAmount change_fee, double& capacity, FastRandomContext& rng)
+std::optional<CAmount> GenerateChangeTargetFromUtxoTargets(const std::vector<UtxoTarget>& utxo_targets, const std::vector<EstimatedFeerateBin>& estimated_feerate_bins, const size_t target_spend_size, FastRandomContext& rng)
 {
     // Refill the most depleted utxo targets first.
     auto target_iter = std::min_element(utxo_targets.begin(), utxo_targets.end(), [](const UtxoTarget& a, const UtxoTarget& b) {
@@ -859,21 +905,34 @@ std::optional<CAmount> GenerateChangeTargetFromUtxoTargets(const std::vector<Utx
     });
     std::optional<CAmount> change_target;
     if (target_iter != utxo_targets.end()) {
-        // Adjust the range of the target bucket based on the current fee rate.
-        change_target = rng.randrange(target_iter->end_satoshis - target_iter->start_satoshis - change_fee) + target_iter->start_satoshis + change_fee;
-        capacity = double(target_iter->current_utxo_count) / target_iter->target_utxo_count;
+        auto target_spend_fee = GetNextFeeRate(estimated_feerate_bins, rng).GetFee(target_spend_size);
+        change_target = target_iter->start_satoshis + target_spend_fee;
     }
     return change_target;
 }
 
-std::list<CTxOut> SplitChangeFromUtxoTargets(CAmount change_amount, std::vector<UtxoTarget> utxo_targets, CAmount change_target, const CAmount change_fee, FastRandomContext& rng, CScript script_change)
+std::vector<UtxoTarget>::iterator TargetIterFromAmount(const CAmount& amount, std::vector<UtxoTarget>& utxo_targets, const CAmount& min_fee, const CAmount& max_fee)
+{ 
+    for (auto bucket_iter = utxo_targets.begin(); bucket_iter != utxo_targets.end(); bucket_iter++) {
+        auto start_amount = bucket_iter->start_satoshis + min_fee;
+        auto end_amount = bucket_iter->start_satoshis + max_fee;
+        if (amount >= start_amount and amount <= end_amount) {
+            return bucket_iter;
+        }
+    }
+    return utxo_targets.end();
+}
+
+std::list<CTxOut> SplitChangeFromUtxoTargets(CAmount change_amount, CAmount output_fee, std::vector<UtxoTarget> utxo_targets, const CAmount& change_target, const std::vector<EstimatedFeerateBin>& estimated_feerate_bins, const size_t target_spend_size, FastRandomContext& rng, CScript script_change)
 {
+    auto min_fee = estimated_feerate_bins.front().start.GetFee(target_spend_size);
+    auto max_fee = estimated_feerate_bins.back().end.GetFee(target_spend_size);
     // add initial change target
     std::list<CTxOut> change_outputs(1, {change_target, script_change});
-    change_amount -= change_target;
+    change_amount -= change_target; // current change_fee has already been deducted from change_amount
     // increment matching utxo target bucket for initial change target
-    auto target_iter = std::find_if(utxo_targets.begin(), utxo_targets.end(), [change_target](const UtxoTarget& a) {
-        return (change_target < a.end_satoshis && change_target >= a.start_satoshis);
+    auto target_iter = std::find_if(utxo_targets.begin(), utxo_targets.end(), [change_target, min_fee, max_fee](const UtxoTarget& bucket) {
+        return (change_target <= bucket.start_satoshis + max_fee && change_target >= bucket.start_satoshis + min_fee);
     });
     if (target_iter != utxo_targets.end()) {
         target_iter->current_utxo_count++;
@@ -885,11 +944,11 @@ std::list<CTxOut> SplitChangeFromUtxoTargets(CAmount change_amount, std::vector<
         if (target_iter->current_utxo_count >= target_iter->target_utxo_count) {
             break;
         }
-        CAmount target_amount = rng.randrange(target_iter->end_satoshis - target_iter->start_satoshis) + target_iter->start_satoshis;
-        if (change_amount < change_fee + target_amount) {
+        CAmount target_amount = target_iter->start_satoshis + GetNextFeeRate(estimated_feerate_bins, rng).GetFee(target_spend_size);
+        if (change_amount < output_fee + target_amount) {
             break;
         }
-        change_amount -= change_fee + target_amount;
+        change_amount -= output_fee + target_amount;
         target_iter->current_utxo_count++;
         change_outputs.emplace_back(target_amount, script_change);
     } while (1);
@@ -899,6 +958,70 @@ std::list<CTxOut> SplitChangeFromUtxoTargets(CAmount change_amount, std::vector<
 
     return change_outputs;
 }
+
+/** split residual change that is less than the largest possible bucket value into useful buckets */
+std::list<CTxOut> SplitResidualChange(std::list<CTxOut> change_outputs, const CAmount& output_fee, std::vector<UtxoTarget> utxo_targets, const std::vector<EstimatedFeerateBin>& estimated_feerate_bins, const size_t change_spend_size, FastRandomContext& rng, CScript script_change)
+{
+    auto min_fee = estimated_feerate_bins.front().start.GetFee(change_spend_size);
+    auto max_fee = estimated_feerate_bins.back().end.GetFee(change_spend_size);
+    auto bucket_max = utxo_targets.back().start_satoshis + max_fee;
+    auto target_iter = TargetIterFromAmount(change_outputs.back().nValue, utxo_targets, min_fee, max_fee);
+    if (change_outputs.back().nValue <= bucket_max && target_iter == utxo_targets.end()) {
+        std::list<CAmount> change_targets;
+        while (change_targets.size() < 10) {
+            auto target_amount = GenerateChangeTargetFromUtxoTargets(utxo_targets, estimated_feerate_bins, change_spend_size, rng);
+            if (target_amount) {
+                change_targets.push_back(target_amount.value());
+                auto change_target_iter = TargetIterFromAmount(target_amount.value(), utxo_targets, min_fee, max_fee);
+                change_target_iter->current_utxo_count++;
+            }
+        }
+        if (!change_targets.empty()) {
+            CTxOut target = change_outputs.back();
+            for (size_t count = 1; count < change_targets.size(); count++) {
+                while (change_targets.size() > 1 && std::next_permutation(change_targets.begin(), change_targets.end())) {
+                    auto output_fees = (count-1) * output_fee; // one change fee already deducted to pay for target
+                    CAmount sum_change_targets = std::accumulate(change_targets.begin(), std::next(change_targets.begin(), count), 0) + output_fees;
+                    if (sum_change_targets > target.nValue) 
+                        break;
+                    if (sum_change_targets > target.nValue*0.98) {
+                        // replace last change output with new change targets
+                        change_outputs.pop_back();
+                        auto remainder = (target.nValue - sum_change_targets)/count;
+                        for (auto iter = change_targets.begin(); iter != std::next(change_targets.begin(), count); iter++) {
+                            change_outputs.push_back(CTxOut(*iter + remainder, script_change));
+                        }
+                        return change_outputs;
+                    }
+                }
+            }
+        }
+    }
+    return change_outputs;
+}
+
+/*
+        tmp_target_counts = target_counts
+        for _ in range(20):
+            bucket, _, target_amount = next_change_target(utxo_targets, tmp_target_counts, feerates_satoshis_per_kvbyte, tx_size_vbytes)
+            tmp_target_counts[bucket] += 1
+            numbers.append(target_amount + change_fee_sat)
+        target = change_outputs[-1]
+        result = [seq for i in range(len(numbers), 0, -1)
+        for seq in itertools.combinations(numbers, i)
+        if sum(seq) > target*0.98 and sum(seq) <= target]
+        best_combination = [change_outputs[-1]]
+        best_combination_diff = change_outputs.pop()
+        for seq in result:
+            if (target - sum(seq) < best_combination_diff):
+                best_combination = seq
+                best_combination_diff = target - sum(seq)
+        for output_amount in best_combination:
+            change_outputs.append(output_amount - change_fee_sat)
+    }
+
+    return change_outputs;
+    */
 
 util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
 {
@@ -1240,42 +1363,51 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
     }
 
-    // Load a json file that describes a target utxo set
+    // size of 1 input, 1 output tx (static overhead + input size + output size)
+    const CAmount spend_target_size = 10 + GetSizeOfCompactSize(1) + coin_selection_params.change_spend_size + coin_selection_params.change_output_size;
+
+    // Load a json file that describes a target utxo set and estimated feerates
     std::vector<UtxoTarget> utxo_targets;
     CFeeRate bucket_refill_feerate{0};
+    std::vector<EstimatedFeerateBin> estimated_feerate_bins;
+    CAmount min_spend_target_fee{0}, max_spend_target_fee{0};
     const fs::path utxo_targets_file_path{gArgs.GetPathArg("-utxotargetsfile", fs::path{})};
-    if (utxo_targets_file_path.empty() == false) {
+if (utxo_targets_file_path.empty() == false) {
         std::map<std::string, common::SettingsValue> utxo_targets_json;
         std::vector<std::string> read_errors;
         common::ReadSettings(utxo_targets_file_path, utxo_targets_json, read_errors);
+        estimated_feerate_bins = EstimatedFeerateBinsFromJson(utxo_targets_json["feerates_satoshis_per_kvbyte"]);
+        min_spend_target_fee = estimated_feerate_bins.front().start.GetFee(spend_target_size);
+        max_spend_target_fee = estimated_feerate_bins.back().end.GetFee(spend_target_size);
+
         // calculate targets from both confirmed and unconfirmed coins, but only spend from confirmed coins
         CCoinControl tmp_coin_control = coin_control;
         tmp_coin_control.m_min_depth = 0;
         CoinsResult tmp_available_coins = AvailableCoins(wallet, &tmp_coin_control, coin_selection_params.m_effective_feerate);
-        utxo_targets = UtxoTargetsFromJson(utxo_targets_json["buckets"], tmp_available_coins);
+        utxo_targets = UtxoTargetsFromJson(utxo_targets_json["buckets"], min_spend_target_fee, max_spend_target_fee, tmp_available_coins);
         bucket_refill_feerate = CFeeRate(utxo_targets_json["bucket_refill_feerate"].getInt<CAmount>());
     }
 
+    auto selection_target1 = selection_target; 
     if (utxo_targets.size() > 0) {
         // Set the target change to refill the utxo target bucket with the smallest current capacity, if any.
-        double capacity{1.0};
-        auto change_target = GenerateChangeTargetFromUtxoTargets(utxo_targets, coin_selection_params.m_change_fee, capacity, rng_fast);
-        if (change_target) {
-            coin_selection_params.m_min_change_target = change_target.value();
-            // Proactively refill target buckets when a utxo target bucket is very low, or fees are low.
-            bool refill = coin_selection_params.m_effective_feerate < bucket_refill_feerate;
-            if (capacity < 0.3 || (refill && capacity < 0.7)) {
-                // Adding our largest available UTXO creates extra change that can be split into target buckets.
-                auto largest_utxo = available_coins.Max();
-                if (largest_utxo) {
-                    preset_inputs.Insert(largest_utxo.value(), coin_selection_params.m_subtract_fee_outputs);
-                }
+        auto nearest_utxo = available_coins.Nearest(selection_target, coin_selection_params.m_max_excess);
+        if (nearest_utxo) {
+            // found a changeless solution
+            preset_inputs.Insert(nearest_utxo.value(), coin_selection_params.m_subtract_fee_outputs);
+            // increate selection target by any excess
+            selection_target1 = nearest_utxo.value().GetEffectiveValue();
+        } else {
+            // use our largest UTXO
+            auto largest_utxo = available_coins.Max();
+            if (largest_utxo) {
+                preset_inputs.Insert(largest_utxo.value(), coin_selection_params.m_subtract_fee_outputs);
             }
         }
     }
 
     // Choose coins to use
-    auto select_coins_res = SelectCoins(wallet, available_coins, preset_inputs, /*nTargetValue=*/selection_target, coin_control, coin_selection_params);
+    auto select_coins_res = SelectCoins(wallet, available_coins, preset_inputs, /*nTargetValue=*/selection_target1, coin_control, coin_selection_params);
     if (!select_coins_res) {
         // 'SelectCoins' either returns a specific error message or, if empty, means a general "Insufficient funds".
         const bilingual_str& err = util::ErrorString(select_coins_res);
@@ -1299,7 +1431,14 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if (change_amount > 0) {
         std::optional<std::list<CTxOut>> change_txouts;
         if (utxo_targets.size() > 0) {
-            change_txouts = SplitChangeFromUtxoTargets(change_amount, utxo_targets, coin_selection_params.m_min_change_target, coin_selection_params.m_change_fee, rng_fast, scriptChange);
+            change_txouts = std::list<CTxOut>(1, {change_amount, scriptChange});
+            if (bucket_refill_feerate >= coin_selection_params.m_effective_feerate) {
+                const auto target_amount = GenerateChangeTargetFromUtxoTargets(utxo_targets, estimated_feerate_bins, spend_target_size, rng_fast);
+                if (target_amount && change_amount > target_amount) {
+                    change_txouts = SplitChangeFromUtxoTargets(change_amount, coin_selection_params.m_change_fee, utxo_targets, target_amount.value(), estimated_feerate_bins, spend_target_size, rng_fast, scriptChange);
+                }
+            }
+            // change_txouts = SplitResidualChange(change_txouts.value(), coin_selection_params.m_change_fee, utxo_targets, estimated_feerate_bins, spend_target_size, rng_fast, scriptChange);
             change_amount = std::accumulate(change_txouts->begin(), change_txouts->end(), CAmount(0), [](CAmount sum, CTxOut& tx_out) { return sum + tx_out.nValue; });
         }
         if (!change_pos) {
