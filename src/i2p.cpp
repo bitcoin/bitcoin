@@ -202,7 +202,11 @@ bool Session::Accept(Connection& conn)
         return true;
     }
 
-    LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error accepting%s: %s\n", disconnect ? " (will close the session)" : "", errmsg);
+    if (*m_interrupt) {
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Accept was interrupted\n");
+    } else {
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Debug, "Error accepting%s: %s\n", disconnect ? " (will close the session)" : "", errmsg);
+    }
     if (disconnect) {
         LOCK(m_mutex);
         Disconnect();
