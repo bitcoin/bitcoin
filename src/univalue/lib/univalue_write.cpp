@@ -27,6 +27,7 @@ static std::string json_escape(const std::string& inS)
     return outS;
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 std::string UniValue::write(unsigned int prettyIndent,
                             unsigned int indentLevel) const
 {
@@ -66,6 +67,7 @@ static void indentStr(unsigned int prettyIndent, unsigned int indentLevel, std::
     s.append(prettyIndent * indentLevel, ' ');
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const
 {
     s += "[";
@@ -88,6 +90,7 @@ void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, s
     s += "]";
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const
 {
     s += "{";

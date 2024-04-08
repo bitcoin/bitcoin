@@ -65,6 +65,7 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
  * @param unary_op  Apply this operator to each item
  */
 template <typename C, typename S, typename UnaryOp>
+// NOLINTNEXTLINE(misc-no-recursion)
 auto Join(const C& container, const S& separator, UnaryOp unary_op)
 {
     decltype(unary_op(*container.begin())) ret;

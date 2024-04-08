@@ -854,6 +854,7 @@ enum class ScriptContext
 
 // Analyse the provided scriptPubKey, determining which keys and which redeem scripts from the ImportData struct are needed to spend it, and mark them as used.
 // Returns an error string, or the empty string for success.
+// NOLINTNEXTLINE(misc-no-recursion)
 static std::string RecurseImportData(const CScript& script, ImportData& import_data, const ScriptContext script_ctx)
 {
     // Use Solver to obtain script type and parsed pubkeys or hashes:
