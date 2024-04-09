@@ -162,7 +162,7 @@ PeerMsgRet CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq
 
     // Note: do not hold cs while calling RelayInv
     AssertLockNotHeld(cs);
-    m_peerman->RelayInv(clsigInv);
+    Assert(m_peerman)->RelayInv(clsigInv);
 
     if (pindex == nullptr) {
         // we don't know the block/header for this CLSIG yet, so bail out for now

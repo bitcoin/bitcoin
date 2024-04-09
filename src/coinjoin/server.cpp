@@ -349,7 +349,7 @@ void CCoinJoinServer::CommitFinalTransaction()
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
 
     CInv inv(MSG_DSTX, hashTx);
-    m_peerman->RelayInv(inv);
+    Assert(m_peerman)->RelayInv(inv);
 
     // Tell the clients it was successful
     RelayCompletedTransaction(MSG_SUCCESS);
@@ -460,7 +460,7 @@ void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
     if (!ATMPIfSaneFee(m_chainstate, mempool, txref, false /* bypass_limits */)) {
         LogPrint(BCLog::COINJOIN, "%s -- AcceptToMemoryPool failed\n", __func__);
     } else {
-        m_peerman->RelayTransaction(txref->GetHash());
+        Assert(m_peerman)->RelayTransaction(txref->GetHash());
         LogPrint(BCLog::COINJOIN, "%s -- Collateral was consumed\n", __func__);
     }
 }

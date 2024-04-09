@@ -951,7 +951,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         for (const auto& nodeId : batchVerifier.badSources) {
             // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
             // does not validate anymore due to changed quorums
-            m_peerman->Misbehaving(nodeId, 20);
+            Assert(m_peerman)->Misbehaving(nodeId, 20);
         }
     }
     for (const auto& p : pend) {
@@ -1045,11 +1045,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     CInv inv(MSG_ISDLOCK, hash);
     if (tx != nullptr) {
-        m_peerman->RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
+        Assert(m_peerman)->RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        m_peerman->RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
+        Assert(m_peerman)->RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);
