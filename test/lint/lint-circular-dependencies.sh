@@ -32,7 +32,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "governance/governance -> governance/object -> governance/governance"
     "governance/governance -> masternode/sync -> governance/governance"
     "llmq/chainlocks -> llmq/instantsend -> llmq/chainlocks"
-    "llmq/chainlocks -> llmq/instantsend -> net_processing -> llmq/chainlocks"
     "llmq/dkgsessionhandler -> net_processing -> llmq/dkgsessionmgr -> llmq/dkgsessionhandler"
     "llmq/instantsend -> net_processing -> llmq/instantsend"
     "llmq/instantsend -> txmempool -> llmq/instantsend"
@@ -51,7 +50,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/guiutil -> qt/optionsdialog -> qt/guiutil"
     "qt/guiutil -> qt/qvalidatedlineedit -> qt/guiutil"
     "core_io -> evo/cbtx -> evo/simplifiedmns -> core_io"
-    "core_io -> evo/assetlocktx -> llmq/signing -> net_processing -> governance/governance -> governance/object -> core_io"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsessionhandler -> llmq/dkgsession"
     "logging -> util/system -> sync -> logging"
     "logging -> util/system -> stacktraces -> logging"
@@ -60,12 +58,10 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil"
 
     "bloom -> evo/assetlocktx -> llmq/quorums -> net -> bloom"
-    "bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> governance/governance -> bloom"
     "bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> merkleblock -> bloom"
     "banman -> bloom -> evo/assetlocktx -> llmq/quorums -> net -> banman"
     "banman -> bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> banman"
 
-    "coinjoin/client -> coinjoin/coinjoin -> llmq/instantsend -> net_processing -> coinjoin/client"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
     "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
@@ -100,6 +96,15 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "coinjoin/server -> net_processing -> coinjoin/server"
     "llmq/context -> llmq/ehf_signals -> net_processing -> llmq/context"
     "coinjoin/client -> coinjoin/util -> wallet/wallet -> psbt -> node/transaction -> node/context -> coinjoin/context -> coinjoin/client"
+    "llmq/blockprocessor -> net_processing -> llmq/blockprocessor"
+    "llmq/chainlocks -> net_processing -> llmq/chainlocks"
+    "net_processing -> spork -> net_processing"
+    "evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> evo/simplifiedmns"
+    "governance/governance -> governance/object -> net_processing -> governance/governance"
+    "llmq/blockprocessor -> net_processing -> llmq/context -> llmq/blockprocessor"
+    "llmq/blockprocessor -> net_processing -> llmq/quorums -> llmq/blockprocessor"
+    "llmq/chainlocks -> net_processing -> llmq/context -> llmq/chainlocks"
+    "coinjoin/client -> coinjoin/coinjoin -> llmq/chainlocks -> net_processing -> coinjoin/client"
 )
 
 EXIT_CODE=0

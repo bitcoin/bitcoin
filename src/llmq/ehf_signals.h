@@ -11,7 +11,6 @@
 
 class CBlockIndex;
 class CChainState;
-class CConnman;
 class CMNHFManager;
 class CSporkManager;
 class CTxMemPool;

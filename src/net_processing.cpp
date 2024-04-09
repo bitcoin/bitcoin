@@ -358,6 +358,9 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override;
+    void RelayInv(CInv &inv, const int minProtoVersion) override;
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override;
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override;
     void RelayTransaction(const uint256& txid) override;
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override;
@@ -2107,6 +2110,52 @@ void PeerManagerImpl::SendPings()
 {
     LOCK(m_peer_mutex);
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
+}
+
+void PeerManagerImpl::RelayInv(CInv &inv, const int minProtoVersion) {
+    m_connman.ForEachNode([&](CNode* pnode) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay())
+            return;
+        pnode->PushInventory(inv);
+    });
+}
+
+void PeerManagerImpl::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
+{
+    m_connman.ForEachNode([&](CNode* pnode) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
+            return;
+        }
+        {
+            LOCK(pnode->m_tx_relay->cs_filter);
+            if (!pnode->m_tx_relay->fRelayTxes) {
+                return;
+            }
+            if (pnode->m_tx_relay->pfilter && !pnode->m_tx_relay->pfilter->IsRelevantAndUpdate(relatedTx)) {
+                return;
+            }
+        }
+        pnode->PushInventory(inv);
+    });
+}
+
+void PeerManagerImpl::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
+{
+    m_connman.ForEachNode([&](CNode* pnode) {
+        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
+            return;
+        }
+        {
+            LOCK(pnode->m_tx_relay->cs_filter);
+            if (!pnode->m_tx_relay->fRelayTxes) {
+                return;
+            }
+            if (pnode->m_tx_relay->pfilter && !pnode->m_tx_relay->pfilter->contains(relatedTxHash)) {
+                return;
+            }
+        }
+        pnode->PushInventory(inv);
+    });
 }
 
 void PeerManagerImpl::RelayTransaction(const uint256& txid)
@@ -4689,9 +4738,9 @@ void PeerManagerImpl::ProcessMessage(
         }
 #endif // ENABLE_WALLET
         ProcessPeerMsgRet(m_cj_ctx->server->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(m_sporkman.ProcessMessage(pfrom, m_connman, *this, msg_type, vRecv), pfrom);
         m_mn_sync.ProcessMessage(pfrom, msg_type, vRecv);
-        ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, *this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, m_mn_metaman, m_mn_activeman, m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, msg_type, vRecv), pfrom);

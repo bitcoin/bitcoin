@@ -349,7 +349,7 @@ void CCoinJoinServer::CommitFinalTransaction()
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
 
     CInv inv(MSG_DSTX, hashTx);
-    RelayInv(connman, inv);
+    m_peerman->RelayInv(inv);
 
     // Tell the clients it was successful
     RelayCompletedTransaction(MSG_SUCCESS);

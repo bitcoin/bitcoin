@@ -1860,7 +1860,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #endif
 
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *node.mn_sync, *node.govman, node.mn_activeman.get(), node.dmnman, node.llmq_ctx, node.cj_ctx
+        *node.connman, *node.mn_sync, *node.govman, *node.peerman, node.mn_activeman.get(), node.dmnman, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 

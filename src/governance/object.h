@@ -22,6 +22,7 @@ class CGovernanceVote;
 class CMasternodeMetaMan;
 class CMasternodeSync;
 class CNode;
+class PeerManager;
 
 extern RecursiveMutex cs_main;
 
@@ -249,7 +250,7 @@ public:
 
     UniValue GetJSONObject() const;
 
-    void Relay(CConnman& connman, const CMasternodeSync& mn_sync) const;
+    void Relay(PeerManager& peerman, const CMasternodeSync& mn_sync) const;
 
     uint256 GetHash() const;
     uint256 GetDataHash() const;

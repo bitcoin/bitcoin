@@ -25,7 +25,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     quorum_block_processor{[&]() -> llmq::CQuorumBlockProcessor* const {
         assert(llmq::quorumBlockProcessor == nullptr);
-        llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, connman, dmnman, evo_db);
+        llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db, peerman);
         return llmq::quorumBlockProcessor.get();
     }()},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman, mn_metaman, *quorum_block_processor, mn_activeman, sporkman, unit_tests, wipe)},
@@ -38,7 +38,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *llmq::quorumManager, sporkman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
-        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync);
+        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman);
         return llmq::chainLocksHandler.get();
     }()},
     isman{[&]() -> llmq::CInstantSendManager* const {

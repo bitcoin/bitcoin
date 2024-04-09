@@ -9,6 +9,7 @@
 #include <net.h>
 #include <sync.h>
 #include <validationinterface.h>
+#include <version.h>
 
 #include <atomic>
 
@@ -21,7 +22,9 @@ class CMasternodeSync;
 class ChainstateManager;
 class CCoinJoinServer;
 class CGovernanceManager;
+class CInv;
 class CSporkManager;
+class CTransaction;
 struct CJContext;
 struct LLMQContext;
 
@@ -70,6 +73,18 @@ public:
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
+
+    /** Relay inventories to all peers */
+    virtual void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;
+    virtual void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx,
+                                  const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;
+
+    /**
+     * This overload will not update node filters, use it only for the cases
+     * when other messages will update related transaction data in filters
+     */
+    virtual void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash,
+                                  const int minProtoVersion = MIN_PEER_PROTO_VERSION) = 0;
 
     /** Relay transaction to all peers. */
     virtual void RelayTransaction(const uint256& txid)

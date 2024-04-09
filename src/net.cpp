@@ -3926,52 +3926,6 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 
-void RelayInv(CConnman& connman, CInv &inv, const int minProtoVersion) {
-    connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay())
-            return;
-        pnode->PushInventory(inv);
-    });
-}
-
-void RelayInvFiltered(CConnman& connman, CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
-{
-    connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
-            return;
-        }
-        {
-            LOCK(pnode->m_tx_relay->cs_filter);
-            if (!pnode->m_tx_relay->fRelayTxes) {
-                return;
-            }
-            if (pnode->m_tx_relay->pfilter && !pnode->m_tx_relay->pfilter->IsRelevantAndUpdate(relatedTx)) {
-                return;
-            }
-        }
-        pnode->PushInventory(inv);
-    });
-}
-
-void RelayInvFiltered(CConnman& connman, CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
-{
-    connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion < minProtoVersion || !pnode->CanRelay() || pnode->IsBlockOnlyConn()) {
-            return;
-        }
-        {
-            LOCK(pnode->m_tx_relay->cs_filter);
-            if (!pnode->m_tx_relay->fRelayTxes) {
-                return;
-            }
-            if (pnode->m_tx_relay->pfilter && !pnode->m_tx_relay->pfilter->contains(relatedTxHash)) {
-                return;
-            }
-        }
-        pnode->PushInventory(inv);
-    });
-}
-
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);

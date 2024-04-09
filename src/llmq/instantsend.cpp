@@ -1051,11 +1051,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     CInv inv(MSG_ISDLOCK, hash);
     if (tx != nullptr) {
-        RelayInvFiltered(connman, inv, *tx, ISDLOCK_PROTO_VERSION);
+        m_peerman.load()->RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        RelayInvFiltered(connman, inv, islock->txid, ISDLOCK_PROTO_VERSION);
+        m_peerman.load()->RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);

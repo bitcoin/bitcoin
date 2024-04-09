@@ -25,6 +25,7 @@ template<typename T>
 class CFlatDB;
 class CNode;
 class CDataStream;
+class PeerManager;
 
 class CSporkMessage;
 class CSporkManager;
@@ -155,7 +156,7 @@ public:
     /**
      * Relay is used to send this spork message to other peers.
      */
-    void Relay(CConnman& connman) const;
+    void Relay(PeerManager& peerman) const;
 };
 
 class SporkStore
@@ -257,7 +258,7 @@ public:
     /**
      * ProcessMessage is used to call ProcessSpork and ProcessGetSporks. See below
      */
-    PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
+    PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
     /**
      * ProcessSpork is used to handle the 'spork' p2p message.
@@ -265,7 +266,7 @@ public:
      * For 'spork', it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    PeerMsgRet ProcessSpork(const CNode& peer, CConnman& connman, CDataStream& vRecv) LOCKS_EXCLUDED(cs);
+    PeerMsgRet ProcessSpork(const CNode& peer, PeerManager& peerman, CDataStream& vRecv) LOCKS_EXCLUDED(cs);
 
     /**
      * ProcessGetSporks is used to handle the 'getsporks' p2p message.
@@ -278,7 +279,7 @@ public:
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
      */
-    bool UpdateSpork(SporkId nSporkID, SporkValue nValue, CConnman& connman) LOCKS_EXCLUDED(cs);
+    bool UpdateSpork(PeerManager& peerman, SporkId nSporkID, SporkValue nValue) LOCKS_EXCLUDED(cs);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used

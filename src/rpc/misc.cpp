@@ -214,13 +214,13 @@ static RPCHelpMan sporkupdate()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CConnman& connman = EnsureConnman(node);
+    PeerManager& peerman = EnsurePeerman(node);
 
     // SPORK VALUE
     int64_t nValue = request.params[1].get_int64();
 
     // broadcast new spork
-    if (node.sporkman->UpdateSpork(nSporkID, nValue, connman)) {
+    if (node.sporkman->UpdateSpork(peerman, nSporkID, nValue)) {
         return "success";
     }
 
