@@ -13,7 +13,11 @@ linux_release_CXXFLAGS=$(linux_release_CFLAGS)
 linux_debug_CFLAGS=-O1 -g
 linux_debug_CXXFLAGS=$(linux_debug_CFLAGS)
 
-linux_debug_CPPFLAGS=-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_LIBCPP_ENABLE_DEBUG_MODE=1
+# https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html
+linux_debug_CPPFLAGS=-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
+
+# https://libcxx.llvm.org/Hardening.html
+linux_debug_CPPFLAGS+=-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
 
 ifeq (86,$(findstring 86,$(build_arch)))
 i686_linux_CC=gcc -m32
