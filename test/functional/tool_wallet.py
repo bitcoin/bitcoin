@@ -400,6 +400,16 @@ class ToolWalletTest(BitcoinTestFramework):
         assert not os.path.isdir(os.path.join(self.nodes[0].datadir, "regtest/wallets", "badload"))
 
 
+    def test_nonhd(self):
+        self.log.info('Check non-hd wallet')
+        self.start_node(0, ['-usehd=0', '-nowallet'])
+        self.nodes[0].createwallet("nohd")
+        assert_equal(False, 'hdchainid' in self.nodes[0].get_wallet_rpc('nohd').getwalletinfo())
+        self.restart_node(0, ['-usehd=1', '-nowallet'])
+        self.nodes[0].createwallet("hd")
+        assert_equal(True, 'hdchainid' in self.nodes[0].get_wallet_rpc('hd').getwalletinfo())
+        self.stop_node(0)
+
     def run_test(self):
         self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename)
         self.test_invalid_tool_commands_and_args()
@@ -412,6 +422,7 @@ class ToolWalletTest(BitcoinTestFramework):
             # Salvage is a legacy wallet only thing
             self.test_salvage()
             self.test_wipe()
+            self.test_nonhd()
         self.test_dump_createfromdump()
 
 if __name__ == '__main__':

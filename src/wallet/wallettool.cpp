@@ -22,10 +22,16 @@ static void WalletToolReleaseWallet(CWallet* wallet)
     delete wallet;
 }
 
+static const bool DEFAULT_USE_HD_WALLET{true};
+
 static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flags)
 {
     LOCK(wallet_instance->cs_wallet);
-    wallet_instance->SetMinVersion(FEATURE_LATEST);
+    if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET)) {
+        wallet_instance->SetMinVersion(FEATURE_LATEST);
+    } else {
+        wallet_instance->SetMinVersion(FEATURE_COMPRPUBKEY);
+    }
     wallet_instance->SetWalletFlag(wallet_creation_flags);
 
     if (!wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
@@ -33,7 +39,9 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
         // SetupGeneration is not backported yet
         wallet_instance->SetupLegacyScriptPubKeyMan();
         auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
-        spk_man->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"");
+        if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET)) {
+            spk_man->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"");
+        }
     } else {
         wallet_instance->SetupDescriptorScriptPubKeyMans();
     }
