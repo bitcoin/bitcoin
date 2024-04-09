@@ -426,7 +426,7 @@ bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, 
     case GovernanceObject::PROPOSAL: {
         CProposalValidator validator(GetDataAsHexString());
         // Note: It's ok to have expired proposals
-        // they are going to be cleared by CGovernanceManager::UpdateCachesAndClean()
+        // they are going to be cleared by CGovernanceManager::CheckAndRemove()
         // TODO: should they be tagged as "expired" to skip vote downloading?
         if (!validator.Validate(false)) {
             strError = strprintf("Invalid proposal data, error messages: %s", validator.GetErrorMessages());

@@ -2215,14 +2215,12 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (::ChainActive().Tip() != nullptr);
 
-    if (!fDisableGovernance) {
-        if (!node.govman->LoadCache(fLoadCacheFiles)) {
-            auto file_path = (GetDataDir() / "governance.dat").string();
-            if (fLoadCacheFiles && !fDisableGovernance) {
-                return InitError(strprintf(_("Failed to load governance cache from %s"), file_path));
-            }
-            return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
+    if (!node.netfulfilledman->LoadCache(fLoadCacheFiles)) {
+        auto file_path = (GetDataDir() / "netfulfilled.dat").string();
+        if (fLoadCacheFiles) {
+            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s"), file_path));
         }
+        return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s"), file_path));
     }
 
     if (!node.mn_metaman->LoadCache(fLoadCacheFiles)) {
@@ -2233,12 +2231,14 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         return InitError(strprintf(_("Failed to clear masternode cache at %s"), file_path));
     }
 
-    if (!node.netfulfilledman->LoadCache(fLoadCacheFiles)) {
-        auto file_path = (GetDataDir() / "netfulfilled.dat").string();
-        if (fLoadCacheFiles) {
-            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s"), file_path));
+    if (!fDisableGovernance) {
+        if (!node.govman->LoadCache(fLoadCacheFiles)) {
+            auto file_path = (GetDataDir() / "governance.dat").string();
+            if (fLoadCacheFiles && !fDisableGovernance) {
+                return InitError(strprintf(_("Failed to load governance cache from %s"), file_path));
+            }
+            return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
-        return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s"), file_path));
     }
 
     // ********************************************************* Step 8: start indexers

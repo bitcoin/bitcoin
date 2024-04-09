@@ -304,9 +304,7 @@ public:
 
     void AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, const CNode* pfrom = nullptr);
 
-    void UpdateCachesAndClean();
-
-    void CheckAndRemove() { UpdateCachesAndClean(); }
+    void CheckAndRemove();
 
     UniValue ToJson() const;
 

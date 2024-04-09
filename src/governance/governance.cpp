@@ -342,10 +342,9 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj.Object()));
 }
 
-void CGovernanceManager::UpdateCachesAndClean()
+void CGovernanceManager::CheckAndRemove()
 {
-    // Return if meta manager hasn't had a chance to load its database yet
-    if (!::mmetaman->IsValid()) return;
+    assert(::mmetaman->IsValid());
 
     // Return on initial sync, spammed the debug.log and provided no use
     if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
@@ -797,7 +796,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
     RequestOrphanObjects(connman);
 
     // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
-    UpdateCachesAndClean();
+    CheckAndRemove();
 }
 
 bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
