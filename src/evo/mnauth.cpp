@@ -63,6 +63,8 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip)
 
 PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
 {
+    assert(::mmetaman->IsValid());
+
     if (msg_type != NetMsgType::MNAUTH || !::masternodeSync->IsBlockchainSynced()) {
         // we can't verify MNAUTH messages when we don't have the latest MN list
         return {};

@@ -82,6 +82,8 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
 
 bool CGovernanceObject::ProcessVote(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const CGovernanceVote& vote, CGovernanceException& exception)
 {
+    assert(::mmetaman->IsValid());
+
     LOCK(cs);
 
     // do not process already known valid votes twice

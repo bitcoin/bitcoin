@@ -450,6 +450,8 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 {
+    assert(::mmetaman->IsValid());
+
     if (!IsQuorumPoseEnabled(params.type, m_sporkman)) {
         return;
     }

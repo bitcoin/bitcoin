@@ -344,6 +344,9 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
 void CGovernanceManager::UpdateCachesAndClean()
 {
+    // Return if meta manager hasn't had a chance to load its database yet
+    if (!::mmetaman->IsValid()) return;
+
     // Return on initial sync, spammed the debug.log and provided no use
     if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
 

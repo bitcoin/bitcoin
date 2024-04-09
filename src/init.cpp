@@ -305,13 +305,13 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    node.mn_metaman = nullptr;
-    ::mmetaman.reset();
     node.mn_sync = nullptr;
     ::masternodeSync.reset();
     node.sporkman.reset();
     node.govman.reset();
     node.netfulfilledman.reset();
+    node.mn_metaman = nullptr;
+    ::mmetaman.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -1676,6 +1676,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
+    assert(!::mmetaman);
+    ::mmetaman = std::make_unique<CMasternodeMetaMan>();
+    node.mn_metaman = ::mmetaman.get();
+
     assert(!node.netfulfilledman);
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
@@ -2221,10 +2225,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         }
     }
 
-    assert(!::mmetaman);
-    ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);
-    node.mn_metaman = ::mmetaman.get();
-    if (!node.mn_metaman->IsValid()) {
+    if (!node.mn_metaman->LoadCache(fLoadCacheFiles)) {
         auto file_path = (GetDataDir() / "mncache.dat").string();
         if (fLoadCacheFiles) {
             return InitError(strprintf(_("Failed to load masternode cache from %s"), file_path));

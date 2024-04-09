@@ -44,6 +44,7 @@ PeerMsgRet CCoinJoinServer::ProcessMessage(CNode& peer, std::string_view msg_typ
 void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
 {
     assert(m_mn_activeman);
+    assert(::mmetaman->IsValid());
 
     if (IsSessionReady()) {
         // too many users in this session already, reject new ones
@@ -110,6 +111,8 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode& peer, CDataStream& vRecv)
 
 PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv)
 {
+    assert(::mmetaman->IsValid());
+
     CCoinJoinQueue dsq;
     vRecv >> dsq;
 
