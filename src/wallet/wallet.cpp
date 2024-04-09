@@ -1492,34 +1492,16 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, const Mem
         m_unrelated_conflict_tx_watchlist.erase(iter);
     }
 
+    auto* conflict_reason = std::get_if<ConflictReason>(&reason);
+
     // Handle transactions that were removed from the mempool because they
     // conflict with transactions in a newly connected block.
-    if (IsReason<ConflictReason>(reason)) {
-        // Trigger external -walletnotify notifications for these transactions.
-        // Set Status::UNCONFIRMED instead of Status::CONFLICTED for a few reasons:
-        //
-        // 1. The transactionRemovedFromMempool callback does not currently
-        //    provide the conflicting block's hash and height, and for backwards
-        //    compatibility reasons it may not be not safe to store conflicted
-        //    wallet transactions with a null block hash. See
-        //    https://github.com/bitcoin/bitcoin/pull/18600#discussion_r420195993.
-        // 2. For most of these transactions, the wallet's internal conflict
-        //    detection in the blockConnected handler will subsequently call
-        //    MarkConflicted and update them with CONFLICTED status anyway. This
-        //    applies to any wallet transaction that has inputs spent in the
-        //    block, or that has ancestors in the wallet with inputs spent by
-        //    the block.
-        // 3. Longstanding behavior since the sync implementation in
-        //    https://github.com/bitcoin/bitcoin/pull/9371 and the prior sync
-        //    implementation before that was to mark these transactions
-        //    unconfirmed rather than conflicted.
-        //
-        // Nothing described above should be seen as an unchangeable requirement
-        // when improving this code in the future. The wallet's heuristics for
+    if (conflict_reason != nullptr && IsFromMe(*tx)) {
+        // The wallet's heuristics for
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
         // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
-        SyncTransaction(tx, TxStateInactive{});
+        SyncTransaction(tx, TxStateBlockConflicted(conflict_reason->conflicting_block_hash, conflict_reason->conflicting_block_height));
     }
 
     const Txid& txid = tx->GetHash();
