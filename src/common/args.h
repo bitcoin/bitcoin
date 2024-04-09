@@ -211,6 +211,14 @@ protected:
     std::optional<const Command> GetCommand() const;
 
     /**
+     * Get signet data directory path.
+     * If a signet-challange argument is provided, it is used in constructing the directory path.
+     *
+     * @return The path to the signet data directory.
+    */
+    fs::path GetSignetDataDir() const;
+
+    /**
      * Get blocks directory path
      *
      * @return Blocks path which is network specific

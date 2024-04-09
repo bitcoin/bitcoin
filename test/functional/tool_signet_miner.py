@@ -32,8 +32,8 @@ class SignetMinerTest(BitcoinTestFramework):
         privkey = ECKey()
         privkey.set(CHALLENGE_PRIVATE_KEY, True)
         pubkey = privkey.get_pubkey().get_bytes()
-        challenge = key_to_p2wpkh_script(pubkey)
-        self.extra_args = [[f'-signetchallenge={challenge.hex()}']]
+        self.challenge = key_to_p2wpkh_script(pubkey)
+        self.extra_args = [[f'-signetchallenge={self.challenge.hex()}']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
@@ -48,10 +48,11 @@ class SignetMinerTest(BitcoinTestFramework):
         # generate block with signet miner tool
         base_dir = self.config["environment"]["SRCDIR"]
         signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
+        # breakpoint()
         subprocess.run([
                 sys.executable,
                 signet_miner_path,
-                f'--cli={node.cli.binary} -datadir={node.cli.datadir}',
+                f'--cli={node.cli.binary} -datadir={node.cli.datadir} -signetchallenge={self.challenge.hex()}',
                 'generate',
                 f'--address={node.getnewaddress()}',
                 f'--grind-cmd={self.options.bitcoinutil} grind',
