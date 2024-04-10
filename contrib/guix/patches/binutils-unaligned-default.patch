@@ -1,0 +1,22 @@
+commit 6537181f59ed186a341db621812a6bc35e22eaf6
+Author: fanquake <fanquake@gmail.com>
+Date:   Wed Apr 10 12:15:52 2024 +0200
+
+    build: turn on -muse-unaligned-vector-move by default
+
+    This allows us to avoid (more invasively) patching GCC, to avoid
+    unaligned instruction use.
+
+diff --git a/gas/config/tc-i386.c b/gas/config/tc-i386.c
+index e0632681477..14a9653abdf 100644
+--- a/gas/config/tc-i386.c
++++ b/gas/config/tc-i386.c
+@@ -801,7 +801,7 @@ static unsigned int no_cond_jump_promotion = 0;
+ static unsigned int sse2avx;
+ 
+ /* Encode aligned vector move as unaligned vector move.  */
+-static unsigned int use_unaligned_vector_move;
++static unsigned int use_unaligned_vector_move = 1;
+ 
+ /* Encode scalar AVX instructions with specific vector length.  */
+ static enum
