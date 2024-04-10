@@ -77,9 +77,5 @@ class MiniWallet:
         self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
         from_node.sendrawtransaction(tx_hex)
         assert_equal(len(tx_hex) // 2, vsize)
-        # Dash doesn't have `fees` in this RPC result
-        # TODO drop this variable after 19940
-        b19940_done = False
-        if b19940_done:
-            assert_equal(tx_info['fees']['base'], fee)
+        assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'hex': tx_hex}
