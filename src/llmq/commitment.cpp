@@ -39,7 +39,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<con
     const uint16_t expected_nversion{CFinalCommitment::GetVersion(IsQuorumRotationEnabled(llmq_params, pQuorumBaseBlockIndex),
             DeploymentActiveAfter(pQuorumBaseBlockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V19))};
     if (nVersion == 0 || nVersion != expected_nversion) {
-        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid nVersion=%d expectednVersion\n", quorumHash.ToString(), nVersion, expected_nversion);
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid nVersion=%d expected=%d\n", quorumHash.ToString(), nVersion, expected_nversion);
         return false;
     }
 
@@ -78,7 +78,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, gsl::not_null<con
         return false;
     }
     if (!quorumSig.IsValid()) {
-        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid vvecSig\n");
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid vvecSig\n", quorumHash.ToString());
         return false;
     }
     auto members = utils::GetAllQuorumMembers(llmqType, dmnman, pQuorumBaseBlockIndex);
