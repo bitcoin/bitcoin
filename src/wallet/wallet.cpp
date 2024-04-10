@@ -1668,7 +1668,7 @@ void CWallet::NewKeyPoolCallback()
 {
     // Note: GetClient(*this) can return nullptr when this wallet is in the middle of its creation.
     // Skipping stopMixing() is fine in this case.
-    if (std::unique_ptr<interfaces::CoinJoin::Client> coinjoin_client = coinjoin_loader().GetClient(GetName())) {
+    if (std::unique_ptr<interfaces::CoinJoin::Client> coinjoin_client = coinjoin_available() ? coinjoin_loader().GetClient(GetName()) : nullptr) {
         coinjoin_client->stopMixing();
     }
     nKeysLeftSinceAutoBackup = 0;
@@ -4607,7 +4607,6 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
                     }
                     // add default account
                     newHdChain.AddAccount();
-                    newHdChain.Debug(__func__);
                 } else {
                     if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
                         walletInstance->WalletLogPrintf("%s -- Incorrect seed, generating a random mnemonic instead\n", __func__);

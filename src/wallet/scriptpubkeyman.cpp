@@ -273,11 +273,6 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
         CHDChain hdChainCrypted;
         assert(GetHDChain(hdChainCrypted));
 
-        DBG(
-            tfm::format(std::cout, "EncryptWallet -- current seed: '%s'\n", HexStr(hdChainCurrent.GetSeed()));
-            tfm::format(std::cout, "EncryptWallet -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
-        );
-
         // ids should match, seed hashes should not
         assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
         assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
@@ -396,7 +391,6 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
 
     // add default account
     hdChainTmp.AddAccount();
-    hdChainTmp.Debug(__func__);
 
     // We need to safe chain for validation further
     CHDChain hdChainPrev = hdChainTmp;
@@ -409,16 +403,9 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
     res = GetHDChain(hdChainCrypted);
     assert(res);
 
-    DBG(
-        tfm::format(std::cout, "GenerateNewCryptedHDChain -- current seed: '%s'\n", HexStr(hdChainTmp.GetSeed()));
-        tfm::format(std::cout, "GenerateNewCryptedHDChain -- crypted seed: '%s'\n", HexStr(hdChainCrypted.GetSeed()));
-    );
-
     // ids should match, seed hashes should not
     assert(hdChainPrev.GetID() == hdChainCrypted.GetID());
     assert(hdChainPrev.GetSeedHash() != hdChainCrypted.GetSeedHash());
-
-    hdChainCrypted.Debug(__func__);
 
     if (!SetHDChainSingle(hdChainCrypted, false)) {
         throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
@@ -438,7 +425,6 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
 
     // add default account
     newHdChain.AddAccount();
-    newHdChain.Debug(__func__);
 
     if (!SetHDChainSingle(newHdChain, false)) {
         throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
@@ -518,7 +504,6 @@ bool LegacyScriptPubKeyMan::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
         return false;
 
     CHDChain cryptedChain = chain;
-    cryptedChain.Debug(__func__);
     cryptedChain.SetCrypted(true);
 
     SecureVector vchSecureCryptedSeed(vchCryptedSeed.begin(), vchCryptedSeed.end());
@@ -595,7 +580,6 @@ bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
     }
 
     hdChainRet.SetCrypted(false);
-    hdChainRet.Debug(__func__);
 
     return true;
 }
