@@ -8,6 +8,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 struct bilingual_str;
 
@@ -15,12 +16,7 @@ void SetMiscWarning(const bilingual_str& warning);
 void SetfLargeWorkInvalidChainFound(bool flag);
 /** Pass std::nullopt to disable the warning */
 void SetMedianTimeOffsetWarning(std::optional<bilingual_str> warning);
-/** Format a string that describes several potential problems detected by the core.
- * @param[in] verbose bool
- * - if true, get all warnings separated by <hr />
- * - if false, get the most important warning
- * @returns the warning string
- */
-bilingual_str GetWarnings(bool verbose);
+/** Return potential problems detected by the node. */
+std::vector<bilingual_str> GetWarnings();
 
 #endif // BITCOIN_WARNINGS_H

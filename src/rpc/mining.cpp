@@ -39,7 +39,6 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <warnings.h>
 
 #include <memory>
 #include <stdint.h>
@@ -426,7 +425,14 @@ static RPCHelpMan getmininginfo()
                         {RPCResult::Type::NUM, "networkhashps", "The network hashes per second"},
                         {RPCResult::Type::NUM, "pooledtx", "The size of the mempool"},
                         {RPCResult::Type::STR, "chain", "current network name (main, test, signet, regtest)"},
-                        {RPCResult::Type::STR, "warnings", "any network and blockchain warnings"},
+                        (IsDeprecatedRPCEnabled("warnings") ?
+                            RPCResult{RPCResult::Type::STR, "warnings", "any network and blockchain warnings (DEPRECATED)"} :
+                            RPCResult{RPCResult::Type::ARR, "warnings", "any network and blockchain warnings (run with `-deprecatedrpc=warnings` to return the latest warning as a single string)",
+                            {
+                                {RPCResult::Type::STR, "", "warning"},
+                            }
+                            }
+                        ),
                     }},
                 RPCExamples{
                     HelpExampleCli("getmininginfo", "")
@@ -448,7 +454,7 @@ static RPCHelpMan getmininginfo()
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
-    obj.pushKV("warnings",         GetWarnings(false).original);
+    obj.pushKV("warnings", GetNodeWarnings(IsDeprecatedRPCEnabled("warnings")));
     return obj;
 },
     };
