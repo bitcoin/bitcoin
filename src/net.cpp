@@ -2256,7 +2256,11 @@ void CConnman::ThreadDNSAddressSeed()
             if (!resolveSource.SetInternal(host)) {
                 continue;
             }
-            unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
+            // Limit number of IPs learned from a single DNS seed. This limit exists to prevent the results from
+            // one DNS seed from dominating AddrMan. Note that the number of results from a UDP DNS query is
+            // bounded to 33 already, but it is possible for it to use TCP where a larger number of results can be
+            // returned.
+            unsigned int nMaxIPs = 32;
             const auto addresses{LookupHost(host, nMaxIPs, true)};
             if (!addresses.empty()) {
                 for (const CNetAddr& ip : addresses) {
