@@ -69,9 +69,6 @@ option(CRC32C_BUILD_BENCHMARKS "Build CRC32C's benchmarks" ON)
 option(CRC32C_USE_GLOG "Build CRC32C's tests with Google Logging" ON)
 option(CRC32C_INSTALL "Install CRC32C's header and library" ON)
 
-include(TestBigEndian)
-test_big_endian(BYTE_ORDER_BIG_ENDIAN)
-
 include(CheckCXXCompilerFlag)
 # Used by glog.
 check_cxx_compiler_flag(-Wno-deprecated CRC32C_HAVE_NO_DEPRECATED)
