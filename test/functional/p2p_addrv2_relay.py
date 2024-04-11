@@ -6,6 +6,8 @@
 Test addrv2 relay
 """
 
+from typing import List
+
 from test_framework.messages import (
     CAddress,
     msg_addrv2,
@@ -17,7 +19,7 @@ from test_framework.util import assert_equal
 
 I2P_ADDR = "c4gfnttsuwqomiygupdqqqyy5y5emnk5c73hrfvatri67prd7vyq.b32.i2p"
 
-ADDRS = []
+ADDRS: List[CAddress] = []
 
 
 class AddrReceiver(P2PInterface):
