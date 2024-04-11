@@ -295,7 +295,7 @@ struct TapSatisfier: Satisfier<XOnlyPubKey> {
     //! Conversion from a raw xonly public key.
     template <typename I>
     std::optional<XOnlyPubKey> FromPKBytes(I first, I last) const {
-        CHECK_NONFATAL(last - first == 32);
+        if (last - first != 32) return {};
         XOnlyPubKey pubkey;
         std::copy(first, last, pubkey.begin());
         return pubkey;
