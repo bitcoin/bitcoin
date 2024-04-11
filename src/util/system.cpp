@@ -455,6 +455,14 @@ const fs::path& ArgsManager::GetDataDirPath(bool net_specific) const
     return path;
 }
 
+fs::path ArgsManager::GetBackupsDirPath()
+{
+    if (!IsArgSet("-walletbackupsdir"))
+        return GetDataDirPath() / "backups";
+
+    return fs::absolute(GetArg("-walletbackupsdir", ""));
+}
+
 void ArgsManager::ClearPathCache()
 {
     LOCK(cs_args);
@@ -804,10 +812,7 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
 fs::path GetBackupsDir()
 {
-    if (!gArgs.IsArgSet("-walletbackupsdir"))
-        return GetDataDir() / "backups";
-
-    return fs::absolute(gArgs.GetArg("-walletbackupsdir", ""));
+    return gArgs.GetBackupsDirPath();
 }
 
 bool CheckDataDirOption()

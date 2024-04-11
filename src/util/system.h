@@ -98,7 +98,6 @@ void ReleaseDirectoryLocks();
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
-fs::path GetBackupsDir();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
 fs::path GetConfigFile(const std::string& confPath);
@@ -278,6 +277,8 @@ public:
      * @post Returned directory path is created unless it is empty
      */
     const fs::path& GetDataDirPath(bool net_specific = true) const;
+
+    fs::path GetBackupsDirPath();
 
     /**
      * Clear cached directory paths

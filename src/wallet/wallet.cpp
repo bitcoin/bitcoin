@@ -5017,7 +5017,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         return false;
     }
 
-    fs::path backupsDir = GetBackupsDir();
+    fs::path backupsDir = gArgs.GetBackupsDirPath();
     backupsDir.make_preferred();
 
     if (!fs::exists(backupsDir))
