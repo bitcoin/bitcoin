@@ -776,18 +776,23 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 ret.pushKV("signMessage", ptx.MakeSignString());
                 return ret;
             } else {
-                // lets prove we own the collateral
-                // TODO: make collateral works with Descriptor wallets too
-                const LegacyScriptPubKeyMan* spk_man = wallet->GetLegacyScriptPubKeyMan();
-                if (!spk_man) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "This type of wallet does not support this command");
-                }
+                {
+                    LOCK(wallet->cs_wallet);
+                    // lets prove we own the collateral
+                    CScript scriptPubKey = GetScriptForDestination(txDest);
+                    std::unique_ptr<SigningProvider> provider = wallet->GetSolvingProvider(scriptPubKey);
 
-                CKey key;
-                if (!spk_man->GetKey(ToKeyID(*pkhash), key)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
-                }
-                SignSpecialTxPayloadByString(tx, ptx, key);
+                    std::string signed_payload;
+                    SigningResult err = wallet->SignMessage(ptx.MakeSignString(), *pkhash, signed_payload);
+                    if (err == SigningResult::SIGNING_FAILED) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, SigningResultString(err));
+                    } else if (err != SigningResult::OK){
+                        throw JSONRPCError(RPC_WALLET_ERROR, SigningResultString(err));
+                    }
+                    bool invalid = false;
+                    ptx.vchSig = DecodeBase64(signed_payload.c_str(), &invalid);
+                    if (invalid) throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to decode base64 ready signature for protx");
+                } // cs_wallet
                 SetTxPayload(tx, ptx);
                 return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
             }
