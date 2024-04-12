@@ -36,17 +36,6 @@ env_matrix_snippet: &ENV_MATRIX_VALGRIND
       TESTRUNS: 1
       BUILD:
 
-env_matrix_snippet: &ENV_MATRIX_SAN
-  - env:
-      ENABLE_FIELDS: 28
-  - env:
-      BUILD: distcheck
-  - env:
-      CXXFLAGS:  "-fsanitize=undefined -fno-omit-frame-pointer"
-      LDFLAGS: "-fsanitize=undefined -fno-omit-frame-pointer"
-      UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
-      BENCH: no
-
 env_matrix_snippet: &ENV_MATRIX_SAN_VALGRIND
   - env:
       ENABLE_FIELDS: "11,64,37"
@@ -72,9 +61,9 @@ task:
     << : *ENV_MATRIX_SAN_VALGRIND
   matrix:
     - env:
-        CC: gcc
+        CXX: g++
     - env:
-        CC: clang
+        CXX: clang++ -gdwarf-4
   << : *MERGE_BASE
   test_script:
     - ./ci/cirrus.sh
@@ -92,30 +81,45 @@ task:
     << : *ENV_MATRIX_VALGRIND
   matrix:
     - env:
-        CC: i686-linux-gnu-gcc
+        CXX: i686-linux-gnu-g++
     - env:
-        CC: clang --target=i686-pc-linux-gnu -isystem /usr/i686-linux-gnu/include
+        CXX: clang++ --target=i686-linux-gnu -gdwarf-4
+        CXXFLAGS: -g -O2 -isystem /usr/i686-linux-gnu/include -isystem /usr/i686-linux-gnu/include/c++/10/i686-linux-gnu
   test_script:
     - ./ci/cirrus.sh
   << : *CAT_LOGS
 
 task:
-  name: "x86_64: macOS Catalina"
+  name: "arm64: macOS Monterey"
   macos_instance:
-    image: catalina-base
+    image: ghcr.io/cirruslabs/macos-monterey-base:latest
   env:
-    # Cirrus gives us a fixed number of 12 virtual CPUs.
-    MAKEFLAGS: -j13
-  matrix:
-    << : *ENV_MATRIX_SAN
+    # Cirrus gives us a fixed number of 4 virtual CPUs.
+    MAKEFLAGS: -j5
   matrix:
     - env:
-        CC: gcc-9
+        CXX: g++-11
+      # Homebrew's gcc for arm64 has no libubsan.
+      matrix:
+        - env:
+            ENABLE_FIELDS: 28
+        - env:
+            BUILD: distcheck
     - env:
-        CC: clang
+        CXX: clang++
+      matrix:
+        - env:
+            ENABLE_FIELDS: 28
+        - env:
+            BUILD: distcheck
+        - env:
+            CXXFLAGS:  "-fsanitize=undefined -fno-omit-frame-pointer"
+            LDFLAGS: "-fsanitize=undefined -fno-omit-frame-pointer"
+            UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+            BENCH: no
   brew_script:
     - brew update
-    - brew install automake libtool gcc@9
+    - brew install automake libtool gcc@11
   << : *MERGE_BASE
   test_script:
     - ./ci/cirrus.sh
@@ -128,13 +132,11 @@ task:
     cpu: 4
     memory: 2G
   env:
-    EXEC_CMD: qemu-s390x -L /usr/s390x-linux-gnu
+    EXEC_CMD: qemu-s390x
     HOST: s390x-linux-gnu
     BUILD:
   << : *MERGE_BASE
   test_script:
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=27008
-    - rm /etc/ld.so.cache
     - ./ci/cirrus.sh
   << : *CAT_LOGS
 
@@ -146,6 +148,7 @@ task:
     memory: 2G
   env:
     EXEC_CMD: wine
+    EXEC_EXT: .exe
     HOST: x86_64-w64-mingw32
     BUILD:
   << : *MERGE_BASE
