@@ -904,6 +904,7 @@ static RPCHelpMan getnodeaddresses()
                 "\nReturn known addresses, which can potentially be used to find new nodes in the network.\n",
                 {
                     {"count", RPCArg::Type::NUM, /* default */ "1", "The maximum number of addresses to return. Specify 0 to return all known addresses."},
+                    {"network", RPCArg::Type::STR, /* default */ "all networks", "Return only addresses of the specified network. Can be one of: " + Join(GetNetworkNames(), ", ") + "."},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -920,7 +921,10 @@ static RPCHelpMan getnodeaddresses()
                 },
                 RPCExamples{
                     HelpExampleCli("getnodeaddresses", "8")
-            + HelpExampleRpc("getnodeaddresses", "8")
+                    + HelpExampleCli("getnodeaddresses", "4 \"i2p\"")
+                    + HelpExampleCli("-named getnodeaddresses", "network=onion count=12")
+                    + HelpExampleRpc("getnodeaddresses", "8")
+                    + HelpExampleRpc("getnodeaddresses", "4, \"i2p\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -932,8 +936,13 @@ static RPCHelpMan getnodeaddresses()
     const int count{request.params[0].isNull() ? 1 : request.params[0].get_int()};
     if (count < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
 
+    const std::optional<Network> network{request.params[1].isNull() ? std::nullopt : std::optional<Network>{ParseNetwork(request.params[1].get_str())}};
+    if (network == NET_UNROUTABLE) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Network not recognized: %s", request.params[1].get_str()));
+    }
+
     // returns a shuffled list of CAddress
-    const std::vector<CAddress> vAddr{node.connman->GetAddresses(count, /* max_pct */ 0, /* network */ std::nullopt)};
+    const std::vector<CAddress> vAddr{node.connman->GetAddresses(count, /* max_pct */ 0, network)};
     UniValue ret(UniValue::VARR);
 
     for (const CAddress& addr : vAddr) {
@@ -1020,7 +1029,7 @@ static const CRPCCommand commands[] =
     { "network",            "clearbanned",            &clearbanned,            {} },
     { "network",            "cleardiscouraged",       &cleardiscouraged,        {} },
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
-    { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count"} },
+    { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count", "network"} },
 
     { "hidden",             "addconnection",          &addconnection,          {"address", "connection_type"} },
     { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
