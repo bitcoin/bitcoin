@@ -243,6 +243,8 @@ static RPCHelpMan getpeerinfo()
                 heights.push_back(height);
             }
             obj.pushKV("inflight", heights);
+            obj.pushKV("addr_processed", statestats.m_addr_processed);
+            obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
         }
         obj.pushKV("whitelisted", stats.m_legacyWhitelisted);
         UniValue permissions(UniValue::VARR);
