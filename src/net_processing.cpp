@@ -3290,7 +3290,7 @@ void PeerManagerImpl::ProcessMessage(
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), peer->m_starting_height,
                       pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
-                      pfrom.IsBlockOnlyConn()?  "block-relay" : "full-relay");
+                      pfrom.ConnectionTypeAsString());
         }
 
         if (!pfrom.m_masternode_probe_connection) {

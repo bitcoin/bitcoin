@@ -58,6 +58,15 @@ constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
     NetPermissionFlags::All,
 };
 
+constexpr ConnectionType ALL_CONNECTION_TYPES[]{
+    ConnectionType::INBOUND,
+    ConnectionType::OUTBOUND_FULL_RELAY,
+    ConnectionType::MANUAL,
+    ConnectionType::FEELER,
+    ConnectionType::BLOCK_RELAY,
+    ConnectionType::ADDR_FETCH,
+};
+
 /**
  * A mocked Sock alternative that returns a statically contained data upon read and succeeds
  * and ignores all writes. The data to be returned is given to the constructor and when it is

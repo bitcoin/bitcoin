@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +18,7 @@ class CTransaction;
 struct CMutableTransaction;
 class uint256;
 class UniValue;
+class CTxUndo;
 
 struct CSpentIndexTxInfo;
 
@@ -46,6 +47,6 @@ std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, const CSpentIndexTxInfo* ptxSpentInfo = nullptr);
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, const CSpentIndexTxInfo* ptxSpentInfo = nullptr, const CTxUndo* txundo = nullptr);
 
 #endif // BITCOIN_CORE_IO_H
