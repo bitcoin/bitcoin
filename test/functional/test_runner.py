@@ -318,6 +318,7 @@ BASE_SCRIPTS = [
     'p2p_ping.py',
     'rpc_scantxoutset.py',
     'feature_logging.py',
+    'feature_anchors.py',
     'feature_coinstatsindex.py',
     'wallet_orphanedreward.py',
     'p2p_node_network_limited.py',
