@@ -48,6 +48,10 @@
 #endif
 
 class CConnman;
+class CDeterministicMNList;
+class CDeterministicMNManager;
+class CMasternodeMetaMan;
+class CMasternodeSync;
 class CScheduler;
 class CNode;
 class BanMan;
@@ -938,7 +942,8 @@ public:
 
     CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman, bool network_active = true);
     ~CConnman();
-    bool Start(CScheduler& scheduler, const Options& options);
+    bool Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
+               CScheduler& scheduler, const Options& options);
 
     void StopThreads();
     void StopNodes();
@@ -951,7 +956,7 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
-    void SetNetworkActive(bool active);
+    void SetNetworkActive(bool active, CMasternodeSync* const mn_sync);
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
 
     enum class MasternodeConn {
@@ -1180,7 +1185,7 @@ public:
     // also returns QWATCH nodes
     std::set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    bool IsMasternodeQuorumNode(const CNode* pnode);
+    bool IsMasternodeQuorumNode(const CNode* pnode, const CDeterministicMNList& tip_mn_list);
     bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
@@ -1258,10 +1263,10 @@ private:
     void ThreadOpenAddedConnections();
     void AddAddrFetch(const std::string& strDest);
     void ProcessAddrFetch();
-    void ThreadOpenConnections(std::vector<std::string> connect);
+    void ThreadOpenConnections(const std::vector<std::string> connect, CDeterministicMNManager& dmnman);
     void ThreadMessageHandler();
-    void ThreadI2PAcceptIncoming();
-    void AcceptConnection(const ListenSocket& hListenSocket);
+    void ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync);
+    void AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSync& mn_sync);
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
@@ -1274,10 +1279,11 @@ private:
     void CreateNodeFromAcceptedSocket(SOCKET hSocket,
                                       NetPermissionFlags permissionFlags,
                                       const CAddress& addr_bind,
-                                      const CAddress& addr);
+                                      const CAddress& addr,
+                                      CMasternodeSync& mn_sync);
 
     void DisconnectNodes();
-    void NotifyNumConnectionsChanged();
+    void NotifyNumConnectionsChanged(CMasternodeSync& mn_sync);
     void CalculateNumConnectionsChangedStats();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
@@ -1293,10 +1299,11 @@ private:
 #endif
     void SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
     void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
-    void SocketHandler();
-    void ThreadSocketHandler();
+    void SocketHandler(CMasternodeSync& mn_sync);
+    void ThreadSocketHandler(CMasternodeSync& mn_sync);
     void ThreadDNSAddressSeed();
-    void ThreadOpenMasternodeConnections();
+    void ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                         CMasternodeSync& mn_sync);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 

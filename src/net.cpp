@@ -1119,7 +1119,7 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
+void CConnman::AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSync& mn_sync) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
@@ -1141,13 +1141,14 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
 
-    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr);
+    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr, mn_sync);
 }
 
 void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
                                             NetPermissionFlags permissionFlags,
                                             const CAddress& addr_bind,
-                                            const CAddress& addr)
+                                            const CAddress& addr,
+                                            CMasternodeSync& mn_sync)
 {
     int nInbound = 0;
     int nVerifiedInboundMasternodes = 0;
@@ -1236,7 +1237,7 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     }
 
     // don't accept incoming connections until blockchain is synced
-    if(fMasternodeMode && !::masternodeSync->IsBlockchainSynced()) {
+    if (fMasternodeMode && !mn_sync.IsBlockchainSynced()) {
         LogPrint(BCLog::NET, "AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
         CloseSocket(hSocket);
         return;
@@ -1401,7 +1402,7 @@ void CConnman::DisconnectNodes()
     }
 }
 
-void CConnman::NotifyNumConnectionsChanged()
+void CConnman::NotifyNumConnectionsChanged(CMasternodeSync& mn_sync)
 {
     size_t vNodesSize;
     {
@@ -1412,7 +1413,7 @@ void CConnman::NotifyNumConnectionsChanged()
     // If we had zero connections before and new connections now or if we just dropped
     // to zero connections reset the sync process if its outdated.
     if ((vNodesSize > 0 && nPrevNodeCount == 0) || (vNodesSize == 0 && nPrevNodeCount > 0)) {
-        ::masternodeSync->Reset();
+        mn_sync.Reset();
     }
 
     if(vNodesSize != nPrevNodeCount) {
@@ -1779,7 +1780,7 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
     }
 }
 
-void CConnman::SocketHandler()
+void CConnman::SocketHandler(CMasternodeSync& mn_sync)
 {
     bool fOnlyPoll = [this]() {
         // check if we have work to do and thus should avoid waiting for events
@@ -1826,7 +1827,7 @@ void CConnman::SocketHandler()
     {
         if (recv_set.count(hListenSocket.socket) > 0)
         {
-            AcceptConnection(hListenSocket);
+            AcceptConnection(hListenSocket, mn_sync);
         }
     }
 
@@ -2041,7 +2042,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
     return (size_t)nBytes;
 }
 
-void CConnman::ThreadSocketHandler()
+void CConnman::ThreadSocketHandler(CMasternodeSync& mn_sync)
 {
     int64_t nLastCleanupNodes = 0;
 
@@ -2049,7 +2050,7 @@ void CConnman::ThreadSocketHandler()
     {
         // Handle sockets before we do the next round of disconnects. This allows us to flush send buffers one last time
         // before actually closing sockets. Receiving is however skipped in case a peer is pending to be disconnected
-        SocketHandler();
+        SocketHandler(mn_sync);
         if (GetTimeMillis() - nLastCleanupNodes > 1000) {
             ForEachNode(AllNodes, [&](CNode* pnode) {
                 if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
@@ -2057,7 +2058,7 @@ void CConnman::ThreadSocketHandler()
             nLastCleanupNodes = GetTimeMillis();
         }
         DisconnectNodes();
-        NotifyNumConnectionsChanged();
+        NotifyNumConnectionsChanged(mn_sync);
     }
 }
 
@@ -2273,7 +2274,7 @@ int CConnman::GetExtraBlockRelayCount()
     return std::max(block_relay_peers - m_max_outbound_block_relay, 0);
 }
 
-void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
+void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDeterministicMNManager& dmnman)
 {
     FastRandomContext rng;
     // Connect to specific addresses
@@ -2455,7 +2456,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
         addrman.ResolveCollisions();
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto mnList = dmnman.GetListAtChainTip();
 
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
@@ -2668,13 +2669,12 @@ void CConnman::ThreadOpenAddedConnections()
     }
 }
 
-void CConnman::ThreadOpenMasternodeConnections()
+void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                               CMasternodeSync& mn_sync)
 {
     // Connecting to specific addresses, no masternode connections available
     if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
         return;
-
-    assert(::mmetaman != nullptr);
 
     auto& chainParams = Params();
 
@@ -2690,7 +2690,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         didConnect = false;
 
-        if (!fNetworkActive || !::masternodeSync->IsBlockchainSynced())
+        if (!fNetworkActive || !mn_sync.IsBlockchainSynced())
             continue;
 
         std::set<CService> connectedNodes;
@@ -2703,7 +2703,7 @@ void CConnman::ThreadOpenMasternodeConnections()
             }
         });
 
-        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto mnList = dmnman.GetListAtChainTip();
 
         if (interruptNet)
             return;
@@ -2742,7 +2742,7 @@ void CConnman::ThreadOpenMasternodeConnections()
                         continue;
                     }
                     if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
-                        int64_t lastAttempt = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
+                        int64_t lastAttempt = mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                         // back off trying connecting to an address if we already tried recently
                         if (nANow - lastAttempt < chainParams.LLMQConnectionRetryTimeout()) {
                             continue;
@@ -2766,14 +2766,14 @@ void CConnman::ThreadOpenMasternodeConnections()
                 bool connectedAndOutbound = connectedProRegTxHashes.count(dmn->proTxHash) && !connectedProRegTxHashes[dmn->proTxHash];
                 if (connectedAndOutbound) {
                     // we already have an outbound connection to this MN so there is no theed to probe it again
-                    mmetaman->GetMetaInfo(dmn->proTxHash)->SetLastOutboundSuccess(nANow);
+                    mn_metaman.GetMetaInfo(dmn->proTxHash)->SetLastOutboundSuccess(nANow);
                     it = masternodePendingProbes.erase(it);
                     continue;
                 }
 
                 ++it;
 
-                int64_t lastAttempt = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
+                int64_t lastAttempt = mn_metaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                 // back off trying connecting to an address if we already tried recently
                 if (nANow - lastAttempt < chainParams.LLMQConnectionRetryTimeout()) {
                     continue;
@@ -2824,7 +2824,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         didConnect = true;
 
-        mmetaman->GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundAttempt(nANow);
+        mn_metaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundAttempt(nANow);
 
         OpenMasternodeConnection(CAddress(connectToDmn->pdmnState->addr, NODE_NETWORK), isProbe);
         // should be in the list now if connection was opened
@@ -2837,7 +2837,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (!connected) {
             LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
             // Will take a few consequent failed attempts to PoSe-punish a MN.
-            if (mmetaman->GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {
+            if (mn_metaman.GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {
                 LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- failed to connect to masternode %s too many times\n", __func__, connectToDmn->proTxHash.ToString());
             }
         }
@@ -2976,7 +2976,7 @@ void CConnman::ThreadMessageHandler()
     }
 }
 
-void CConnman::ThreadI2PAcceptIncoming()
+void CConnman::ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync)
 {
     static constexpr auto err_wait_begin = 1s;
     static constexpr auto err_wait_cap = 5min;
@@ -3011,7 +3011,7 @@ void CConnman::ThreadI2PAcceptIncoming()
         }
 
         CreateNodeFromAcceptedSocket(conn.sock->Release(), NetPermissionFlags::None,
-                                     CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE});
+                                     CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE}, mn_sync);
     }
 }
 
@@ -3153,7 +3153,7 @@ void Discover()
 #endif
 }
 
-void CConnman::SetNetworkActive(bool active)
+void CConnman::SetNetworkActive(bool active, CMasternodeSync* const mn_sync)
 {
     LogPrintf("%s: %s\n", __func__, active);
 
@@ -3163,11 +3163,11 @@ void CConnman::SetNetworkActive(bool active)
 
     fNetworkActive = active;
 
-    // masternodeSync is nullptr during app initialization with `-networkactive=`
-    if (::masternodeSync) {
+    // mn_sync is nullptr during app initialization with `-networkactive=`
+    if (mn_sync) {
         // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
         // gets a reset if its outdated..
-        ::masternodeSync->Reset();
+        mn_sync->Reset();
     }
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
@@ -3180,7 +3180,7 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, b
 
     Options connOptions;
     Init(connOptions);
-    SetNetworkActive(network_active);
+    SetNetworkActive(network_active, /* mn_sync = */ nullptr);
 }
 
 NodeId CConnman::GetNewNodeId()
@@ -3235,7 +3235,8 @@ bool CConnman::InitBinds(
     return fBound;
 }
 
-bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
+bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
+                     CScheduler& scheduler, const Options& connOptions)
 {
     Init(connOptions);
 
@@ -3371,7 +3372,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 #endif
 
     // Send and receive from sockets, accept connections
-    threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
+    threadSocketHandler = std::thread(&util::TraceThread, "net", [this, &mn_sync] { ThreadSocketHandler(mn_sync); });
 
     if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
         LogPrintf("DNS seeding disabled\n");
@@ -3392,18 +3393,20 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty()) {
         threadOpenConnections = std::thread(
             &util::TraceThread, "opencon",
-            [this, connect = connOptions.m_specified_outgoing] { ThreadOpenConnections(connect); });
+            [this, connect = connOptions.m_specified_outgoing, &dmnman] { ThreadOpenConnections(connect, dmnman); });
     }
 
     // Initiate masternode connections
-    threadOpenMasternodeConnections = std::thread(&util::TraceThread, "mncon", [this] { ThreadOpenMasternodeConnections(); });
+    threadOpenMasternodeConnections = std::thread(&util::TraceThread, "mncon", [this, &dmnman, &mn_metaman, &mn_sync] {
+        ThreadOpenMasternodeConnections(dmnman, mn_metaman, mn_sync);
+    });
 
     // Process messages
     threadMessageHandler = std::thread(&util::TraceThread, "msghand", [this] { ThreadMessageHandler(); });
 
     if (connOptions.m_i2p_accept_incoming && m_i2p_sam_session.get() != nullptr) {
         threadI2PAcceptIncoming =
-            std::thread(&util::TraceThread, "i2paccept", [this] { ThreadI2PAcceptIncoming(); });
+            std::thread(&util::TraceThread, "i2paccept", [this, &mn_sync] { ThreadI2PAcceptIncoming(mn_sync); });
     }
 
     // Dump network addresses
@@ -3754,14 +3757,13 @@ void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const u
     masternodeQuorumRelayMembers.erase(std::make_pair(llmqType, quorumHash));
 }
 
-bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
+bool CConnman::IsMasternodeQuorumNode(const CNode* pnode, const CDeterministicMNList& tip_mn_list)
 {
     // Let's see if this is an outgoing connection to an address that is known to be a masternode
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
     if (pnode->GetVerifiedProRegTxHash().IsNull() && !pnode->IsInboundConn()) {
-        auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetMNByService(pnode->addr);
+        auto dmn = tip_mn_list.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
             // This is definitely not a masternode
             return false;

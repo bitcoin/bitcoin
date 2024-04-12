@@ -49,6 +49,11 @@ public:
     }
 
     static void PushMNAUTH(CNode& peer, CConnman& connman, const CBlockIndex* tip);
+
+    /**
+     * @pre CMasternodeMetaMan's database must be successfully loaded before
+     *      attempting to call this function regardless of sync state
+     */
     static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };

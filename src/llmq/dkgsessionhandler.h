@@ -126,7 +126,7 @@ private:
     CDKGDebugManager& dkgDebugManager;
     CDKGSessionManager& dkgManager;
     CQuorumBlockProcessor& quorumBlockProcessor;
-    const CActiveMasternodeManager* m_mn_activeman;
+    const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
     const Consensus::LLMQParams params;
     const int quorumIndex;
@@ -148,7 +148,7 @@ private:
 public:
     CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                        CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CQuorumBlockProcessor& _quorumBlockProcessor,
-                       const CActiveMasternodeManager* mn_activeman, const CSporkManager& sporkman, const Consensus::LLMQParams& _params,
+                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const Consensus::LLMQParams& _params,
                        int _quorumIndex);
     ~CDKGSessionHandler() = default;
 

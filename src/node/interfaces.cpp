@@ -482,7 +482,7 @@ public:
     void setNetworkActive(bool active) override
     {
         if (m_context->connman) {
-            m_context->connman->SetNetworkActive(active);
+            m_context->connman->SetNetworkActive(active, m_context->mn_sync);
         }
     }
     bool getNetworkActive() override { return m_context->connman && m_context->connman->GetNetworkActive(); }

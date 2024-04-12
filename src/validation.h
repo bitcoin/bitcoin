@@ -718,6 +718,12 @@ public:
      */
     std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
 
+    CChainstateHelper& ChainHelper()
+    {
+        assert(m_chain_helper);
+        return *m_chain_helper;
+    }
+
     //! @returns A reference to the in-memory cache of the UTXO set.
     CCoinsViewCache& CoinsTip() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {

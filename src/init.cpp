@@ -305,13 +305,13 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
-    node.mn_metaman = nullptr;
-    ::mmetaman.reset();
     node.mn_sync = nullptr;
     ::masternodeSync.reset();
     node.sporkman.reset();
     node.govman.reset();
     node.netfulfilledman.reset();
+    node.mn_metaman = nullptr;
+    ::mmetaman.reset();
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
@@ -1676,6 +1676,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.chainman = &g_chainman;
     ChainstateManager& chainman = *Assert(node.chainman);
 
+    assert(!::mmetaman);
+    ::mmetaman = std::make_unique<CMasternodeMetaMan>();
+    node.mn_metaman = ::mmetaman.get();
+
     assert(!node.netfulfilledman);
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
@@ -1713,10 +1717,27 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     ::masternodeSync = std::make_unique<CMasternodeSync>(*node.connman, *node.netfulfilledman, *node.govman);
     node.mn_sync = ::masternodeSync.get();
 
+    fMasternodeMode = false;
+    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
+    if (!strMasterNodeBLSPrivKey.empty()) {
+        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
+        if (!keyOperator.IsValid()) {
+            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+        }
+        fMasternodeMode = true;
+        {
+            // Create and register activeMasternodeManager, will init later in ThreadImport
+            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
+            node.mn_activeman = ::activeMasternodeManager.get();
+            RegisterValidationInterface(node.mn_activeman);
+        }
+    }
+
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, *node.addrman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, *node.govman, *node.sporkman,
-                                     ::deterministicMNManager, node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
+                                     *node.scheduler, chainman, *node.mempool, *node.mn_metaman, *node.mn_sync,
+                                     *node.govman, *node.sporkman, ::deterministicMNManager,
+                                     node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1843,22 +1864,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         *node.connman, *node.mn_sync, *node.govman, ::deterministicMNManager, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
-
-    fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
-        if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
-        }
-        fMasternodeMode = true;
-        {
-            // Create and register activeMasternodeManager, will init later in ThreadImport
-            ::activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, ::deterministicMNManager);
-            node.mn_activeman = ::activeMasternodeManager.get();
-            RegisterValidationInterface(node.mn_activeman);
-        }
-    }
 
     // ********************************************************* Step 7a: Load sporks
 
@@ -2211,6 +2216,22 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (::ChainActive().Tip() != nullptr);
 
+    if (!node.netfulfilledman->LoadCache(fLoadCacheFiles)) {
+        auto file_path = (GetDataDir() / "netfulfilled.dat").string();
+        if (fLoadCacheFiles) {
+            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s"), file_path));
+        }
+        return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s"), file_path));
+    }
+
+    if (!node.mn_metaman->LoadCache(fLoadCacheFiles)) {
+        auto file_path = (GetDataDir() / "mncache.dat").string();
+        if (fLoadCacheFiles) {
+            return InitError(strprintf(_("Failed to load masternode cache from %s"), file_path));
+        }
+        return InitError(strprintf(_("Failed to clear masternode cache at %s"), file_path));
+    }
+
     if (!fDisableGovernance) {
         if (!node.govman->LoadCache(fLoadCacheFiles)) {
             auto file_path = (GetDataDir() / "governance.dat").string();
@@ -2219,25 +2240,6 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             }
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
         }
-    }
-
-    assert(!::mmetaman);
-    ::mmetaman = std::make_unique<CMasternodeMetaMan>(fLoadCacheFiles);
-    node.mn_metaman = ::mmetaman.get();
-    if (!node.mn_metaman->IsValid()) {
-        auto file_path = (GetDataDir() / "mncache.dat").string();
-        if (fLoadCacheFiles) {
-            return InitError(strprintf(_("Failed to load masternode cache from %s"), file_path));
-        }
-        return InitError(strprintf(_("Failed to clear masternode cache at %s"), file_path));
-    }
-
-    if (!node.netfulfilledman->LoadCache(fLoadCacheFiles)) {
-        auto file_path = (GetDataDir() / "netfulfilled.dat").string();
-        if (fLoadCacheFiles) {
-            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s"), file_path));
-        }
-        return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s"), file_path));
     }
 
     // ********************************************************* Step 8: start indexers
@@ -2305,7 +2307,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(*node.netfulfilledman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(*node.mn_sync)), std::chrono::seconds{1});
-    node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.mn_sync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
+    node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.dmnman), std::ref(*node.mn_sync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*node.dmnman)), std::chrono::seconds{10});
 
     if (!fDisableGovernance) {
@@ -2533,7 +2535,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
     connOptions.m_i2p_accept_incoming = args.GetBoolArg("-i2pacceptincoming", true);
 
-    if (!node.connman->Start(*node.scheduler, connOptions)) {
+    if (!node.connman->Start(*node.dmnman, *node.mn_metaman, *node.mn_sync, *node.scheduler, connOptions)) {
         return false;
     }
 

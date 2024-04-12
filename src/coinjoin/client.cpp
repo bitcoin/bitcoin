@@ -42,6 +42,8 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::s
 
 PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataStream& vRecv)
 {
+    assert(::mmetaman->IsValid());
+
     CCoinJoinQueue dsq;
     vRecv >> dsq;
 
@@ -1117,6 +1119,8 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
 bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman)
 {
+    assert(::mmetaman->IsValid());
+
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
     if (nBalanceNeedsAnonymized <= 0) return false;
 

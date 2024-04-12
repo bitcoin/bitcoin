@@ -224,7 +224,7 @@ private:
     CDKGSessionManager& dkgManager;
     CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
-    const CActiveMasternodeManager* m_mn_activeman;
+    const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
@@ -241,7 +241,7 @@ private:
 public:
     CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                    CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                   const CActiveMasternodeManager* mn_activeman, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
+                   const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CQuorumManager() { Stop(); };
 
     void Start();

@@ -342,8 +342,10 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj.Object()));
 }
 
-void CGovernanceManager::UpdateCachesAndClean()
+void CGovernanceManager::CheckAndRemove()
 {
+    assert(::mmetaman->IsValid());
+
     // Return on initial sync, spammed the debug.log and provided no use
     if (::masternodeSync == nullptr || !::masternodeSync->IsBlockchainSynced()) return;
 
@@ -794,7 +796,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
     RequestOrphanObjects(connman);
 
     // CHECK AND REMOVE - REPROCESS GOVERNANCE OBJECTS
-    UpdateCachesAndClean();
+    CheckAndRemove();
 }
 
 bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)

@@ -134,7 +134,9 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, m_connman);
-    m_govman.UpdateCachesAndClean();
+    if (m_govman.IsValid()) {
+        m_govman.CheckAndRemove();
+    }
 }
 
 void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)

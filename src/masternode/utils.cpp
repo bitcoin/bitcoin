@@ -15,7 +15,8 @@
 #include <util/ranges.h>
 #include <coinjoin/context.h>
 
-void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& mn_sync, const CJContext& cj_ctx)
+void CMasternodeUtils::DoMaintenance(CConnman& connman, CDeterministicMNManager& dmnman,
+                                     const CMasternodeSync& mn_sync, const CJContext& cj_ctx)
 {
     if (!mn_sync.IsBlockchainSynced()) return;
     if (ShutdownRequested()) return;
@@ -53,8 +54,9 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, const CMasternodeSync& m
             // we're only disconnecting m_masternode_connection connections
             if (!pnode->m_masternode_connection) return;
             if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
+                const auto tip_mn_list = dmnman.GetListAtChainTip();
                 // keep _verified_ LLMQ connections
-                if (connman.IsMasternodeQuorumNode(pnode)) {
+                if (connman.IsMasternodeQuorumNode(pnode, tip_mn_list)) {
                     return;
                 }
                 // keep _verified_ LLMQ relay connections

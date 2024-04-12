@@ -891,7 +891,7 @@ static RPCHelpMan setnetworkactive()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    node.connman->SetNetworkActive(request.params[0].get_bool());
+    node.connman->SetNetworkActive(request.params[0].get_bool(), node.mn_sync);
 
     return node.connman->GetNetworkActive();
 },

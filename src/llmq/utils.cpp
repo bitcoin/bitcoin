@@ -812,6 +812,8 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
                                const CDeterministicMNList& tip_mn_list, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                                const uint256 &myProTxHash)
 {
+    assert(::mmetaman->IsValid());
+
     if (!IsQuorumPoseEnabled(llmqParams.type, sporkman)) {
         return;
     }

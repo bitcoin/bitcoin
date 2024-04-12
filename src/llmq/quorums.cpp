@@ -207,8 +207,7 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 
 CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                                CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                               const CActiveMasternodeManager* mn_activeman, const CSporkManager& sporkman,
-                               const std::unique_ptr<CMasternodeSync>& mn_sync) :
+                               const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync) :
     blsWorker(_blsWorker),
     m_chainstate(chainstate),
     connman(_connman),
