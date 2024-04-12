@@ -13,7 +13,7 @@ for b_name in {"${BASE_OUTDIR}/bin"/*,src/secp256k1/*tests,src/univalue/{no_nul,
         echo "Wrap $b ..."
         mv "$b" "${b}_orig"
         echo '#!/usr/bin/env bash' > "$b"
-        echo "wine64 \"${b}_orig\" \"\$@\"" >> "$b"
+        echo "( wine \"${b}_orig\" \"\$@\" ) || ( sleep 1 && wine \"${b}_orig\" \"\$@\" )" >> "$b"
         chmod +x "$b"
       fi
     done
