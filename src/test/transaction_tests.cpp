@@ -369,6 +369,15 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     }
 }
 
+BOOST_AUTO_TEST_CASE(tx_no_inputs)
+{
+    CMutableTransaction empty;
+
+    TxValidationState state;
+    BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(empty), state), "Transaction with no inputs should be invalid.");
+    BOOST_CHECK(state.GetRejectReason() == "bad-txns-vin-empty");
+}
+
 BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 {
     // Random real transaction (e2769b09e784f32f62ef849763d4f45b98e07ba658647343b915ff832b110436)
