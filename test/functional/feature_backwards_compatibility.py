@@ -115,7 +115,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # w2: wallet with private keys disabled, created on master: update this
         #     test when default wallets private keys disabled can no longer be
         #     opened by older versions.
-        node_master.rpc.createwallet(wallet_name="w2", disable_private_keys=True)
+        node_master.createwallet(wallet_name="w2", disable_private_keys=True)
         wallet = node_master.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled'] == False
@@ -144,7 +144,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # w3: blank wallet, created on master: update this
         #     test when default blank wallets can no longer be opened by older versions.
-        node_master.rpc.createwallet(wallet_name="w3", blank=True)
+        node_master.createwallet(wallet_name="w3", blank=True)
         wallet = node_master.get_wallet_rpc("w3")
         info = wallet.getwalletinfo()
         assert info['private_keys_enabled']
@@ -300,11 +300,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         else:
             # Descriptor wallets appear to be corrupted wallets to old software
             assert_raises_rpc_error(-4, "Wallet requires newer version of Dash Core", node_v19.loadwallet, "w1")
-            node_v19.loadwallet("w2")
-            node_v19.loadwallet("w3")
+            assert_raises_rpc_error(-4, "Wallet requires newer version of Dash Core", node_v19.loadwallet, "w2")
+            assert_raises_rpc_error(-4, "Wallet requires newer version of Dash Core", node_v19.loadwallet, "w3")
             assert_raises_rpc_error(-18, "Data is not in recognized format", node_v18.loadwallet, "w1")
-            node_v18.loadwallet("w2")
-            node_v18.loadwallet("w3")
+            assert_raises_rpc_error(-18, "Data is not in recognized format", node_v18.loadwallet, "w2")
+            assert_raises_rpc_error(-18, "Data is not in recognized format", node_v18.loadwallet, "w3")
 
         # Open the wallets in v0.17
         node_v17.loadwallet("w1_v18")
