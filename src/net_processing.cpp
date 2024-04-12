@@ -2230,7 +2230,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             } else if (inv.IsMsgFilteredBlk()) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
-                if (RelayAddrsWithPeer(peer)) {
+                if (!pfrom.IsBlockOnlyConn()) {
                     LOCK(pfrom.m_tx_relay->cs_filter);
                     if (pfrom.m_tx_relay->pfilter) {
                         sendMerkleBlock = true;
@@ -2333,7 +2333,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
     const std::chrono::seconds now = GetTime<std::chrono::seconds>();
     // Get last mempool request time
-    const std::chrono::seconds mempool_req = RelayAddrsWithPeer(peer) ? pfrom.m_tx_relay->m_last_mempool_req.load()
+    const std::chrono::seconds mempool_req = !pfrom.IsBlockOnlyConn() ? pfrom.m_tx_relay->m_last_mempool_req.load()
                                                                       : std::chrono::seconds::min();
 
     // Process as many TX items from the front of the getdata queue as
@@ -3197,7 +3197,7 @@ void PeerManagerImpl::ProcessMessage(
         // set nodes not capable of serving the complete blockchain history as "limited nodes"
         pfrom.m_limited_node = (!(nServices & NODE_NETWORK) && (nServices & NODE_NETWORK_LIMITED));
 
-        if (RelayAddrsWithPeer(*peer)) {
+        if (!pfrom.IsBlockOnlyConn()) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             pfrom.m_tx_relay->fRelayTxes = fRelay; // set to true after we get the first filter* message
         }
@@ -4414,7 +4414,7 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
-        if (RelayAddrsWithPeer(*peer)) {
+        if (!pfrom.IsBlockOnlyConn()) {
             LOCK(pfrom.m_tx_relay->cs_tx_inventory);
             pfrom.m_tx_relay->fSendMempool = true;
         }
@@ -4508,7 +4508,7 @@ void PeerManagerImpl::ProcessMessage(
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom.GetId(), 100, "too-large bloom filter");
         }
-        else if (RelayAddrsWithPeer(*peer))
+        else if (!pfrom.IsBlockOnlyConn())
         {
             LOCK(pfrom.m_tx_relay->cs_filter);
             pfrom.m_tx_relay->pfilter.reset(new CBloomFilter(filter));
@@ -4531,7 +4531,7 @@ void PeerManagerImpl::ProcessMessage(
         bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             bad = true;
-        } else if (RelayAddrsWithPeer(*peer)) {
+        } else if (!pfrom.IsBlockOnlyConn()) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             if (pfrom.m_tx_relay->pfilter) {
                 pfrom.m_tx_relay->pfilter->insert(vData);
@@ -4551,7 +4551,7 @@ void PeerManagerImpl::ProcessMessage(
             pfrom.fDisconnect = true;
             return;
         }
-        if (!RelayAddrsWithPeer(*peer)) {
+        if (pfrom.IsBlockOnlyConn()) {
             return;
         }
         LOCK(pfrom.m_tx_relay->cs_filter);
@@ -5336,7 +5336,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK2(m_mempool.cs, peer->m_block_inv_mutex);
 
             size_t reserve = INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000;
-            if (RelayAddrsWithPeer(*peer)) {
+            if (!pto->IsBlockOnlyConn()) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 reserve = std::min<size_t>(pto->m_tx_relay->setInventoryTxToSend.size(), reserve);
             }
@@ -5367,7 +5367,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             };
 
-            if (RelayAddrsWithPeer(*peer)) {
+            if (!pto->IsBlockOnlyConn()) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
                 // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
