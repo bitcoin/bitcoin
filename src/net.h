@@ -603,7 +603,8 @@ public:
     };
 
     // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
-    // in dash: m_tx_relay should never be nullptr, use `!IsBlockOnlyConn() == false` instead
+    // in dash: m_tx_relay should never be nullptr, we don't relay transactions if
+    //          `IsBlockOnlyConn() == true` is instead
     std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
     /** UNIX epoch time of the last block received from this peer that we had

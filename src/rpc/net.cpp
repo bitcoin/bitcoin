@@ -104,6 +104,7 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
                     {RPCResult::Type::STR, "addrbind", "(ip:port) Bind address of the connection to the peer"},
                     {RPCResult::Type::STR, "addrlocal", "(ip:port) Local address as reported by the peer"},
+                    {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
                     {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/* append_unroutable */ true), ", ") + ")"},
                     {RPCResult::Type::STR, "mapped_as", "The AS in the BGP route to the peer used for diversifying peer selection"},
                     {RPCResult::Type::STR_HEX, "services", "The services offered"},
@@ -192,6 +193,7 @@ static RPCHelpMan getpeerinfo()
         if (!(stats.addrLocal.empty())) {
             obj.pushKV("addrlocal", stats.addrLocal);
         }
+        obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
         obj.pushKV("network", GetNetworkName(stats.m_network));
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
