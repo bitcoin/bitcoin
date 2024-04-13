@@ -48,7 +48,7 @@ Build requirements:
 
 Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
-    sudo apt-get install libevent-dev libboost-dev
+    sudo apt-get install libevent-dev libboost-all-dev
 
 SQLite is required for the descriptor wallet:
 
@@ -58,6 +58,10 @@ Berkeley DB is only required for the legacy wallet. Ubuntu and Debian have their
 but these will install Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed
 executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass
 `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+
+To install Berkeley DB 5.3:
+
+    sudo apt install libdb4.8++ libdb4.8++-dev
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
@@ -69,6 +73,10 @@ ZMQ dependencies (provides ZMQ API):
 
     sudo apt-get install libzmq3-dev
 
+SSL dependency:
+
+    sudo apt install libssl-dev
+
 User-Space, Statically Defined Tracing (USDT) dependencies:
 
     sudo apt install systemtap-sdt-dev
@@ -77,7 +85,7 @@ GUI dependencies:
 
 If you want to build bitcoin-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
+To build without GUI pass `--without-gui` to configure.
 
 To build with Qt 5 you need the following:
 
@@ -134,7 +142,7 @@ GUI dependencies:
 
 If you want to build bitcoin-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
+To build without GUI pass `--without-gui` to configure.
 
 To build with Qt 5 you need the following:
 
