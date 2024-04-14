@@ -421,34 +421,28 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     nTransactionsUpdated++;
 }
 
-// Calculates descendants of entry that are not already in setDescendants, and adds to
-// setDescendants. Assumes entryit is already a tx in the mempool and CTxMemPoolEntry::m_children
-// is correct for tx and all descendants.
-// Also assumes that if an entry is in setDescendants already, then all
-// in-mempool descendants of it are already in setDescendants as well, so that we
-// can save time by not iterating over those entries.
+// Calculates descendants of given entry and adds to setDescendants.
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
-    setEntries stage;
-    if (setDescendants.count(entryit) == 0) {
-        stage.insert(entryit);
+    auto descendants = txgraph.GetDescendants({*entryit});
+    for (auto tx: descendants) {
+        setDescendants.insert(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get())));
     }
-    // Traverse down the children of entry, only adding children that are not
-    // accounted for in setDescendants already (because those children have either
-    // already been walked, or will be walked in this iteration).
-    while (!stage.empty()) {
-        txiter it = *stage.begin();
-        setDescendants.insert(it);
-        stage.erase(it);
+}
 
-        const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
-        for (const CTxMemPoolEntry& child : children) {
-            txiter childiter = mapTx.iterator_to(child);
-            if (!setDescendants.count(childiter)) {
-                stage.insert(childiter);
-            }
-        }
+CTxMemPool::Entries CTxMemPool::CalculateDescendants(Entries txs) const
+{
+    std::vector<TxEntry::TxEntryRef> tx_entries;
+    for (auto it : txs) {
+        tx_entries.emplace_back(*it);
     }
+    auto descendants = txgraph.GetDescendants(tx_entries);
+
+    CTxMemPool::Entries result;
+    for (auto tx : descendants) {
+        result.emplace_back(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get())));
+    }
+    return result;
 }
 
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
