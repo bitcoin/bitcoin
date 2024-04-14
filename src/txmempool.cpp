@@ -130,29 +130,45 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     }
 }
 
-CTxMemPool::setEntries CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
+CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(
+    const CTxMemPoolEntry &entry,
+    bool fSearchForParents /* = true */) const
 {
-    setEntries ancestors;
+    auto ancestors = CalculateMemPoolAncestorsFast(entry, fSearchForParents);
 
-    while (!staged_ancestors.empty()) {
-        const CTxMemPoolEntry& stage = staged_ancestors.begin()->get();
-        txiter stageit = mapTx.iterator_to(stage);
+    setEntries ret;
+    for (auto ancestor : ancestors) {
+        ret.insert(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(ancestor.get())));
+    }
+    return ret;
+}
 
-        ancestors.insert(stageit);
-        staged_ancestors.erase(stage);
+std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::CalculateMemPoolAncestorsFast(const CTxMemPoolEntry &entry, bool fSearchForParents) const
+{
+    std::vector<TxEntry::TxEntryRef> ancestors = CalculateAncestors(entry, fSearchForParents);
 
-        const CTxMemPoolEntry::Parents& parents = stageit->GetMemPoolParentsConst();
-        for (const CTxMemPoolEntry& parent : parents) {
-            txiter parent_it = mapTx.iterator_to(parent);
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
+    ret.reserve(ancestors.size());
+    for (auto ancestor : ancestors) {
+        ret.emplace_back(dynamic_cast<const CTxMemPoolEntry&>(ancestor.get()));
+    }
+    return ret;
+}
 
-            // If this is a new ancestor, add it.
-            if (ancestors.count(parent_it) == 0) {
-                staged_ancestors.insert(parent);
-            }
+// This function is just for internal use, not exposed publicly
+std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateAncestors(const CTxMemPoolEntry& entry, bool fSearchForParents) const
+{
+    LOCK(cs);
+    std::vector<TxEntry::TxEntryRef> parents;
+    if (fSearchForParents) {
+        parents = CalculateParents(entry);
+    } else {
+        for (auto p : entry.GetTxEntryParents()) {
+            parents.emplace_back(p);
         }
     }
 
-    return ancestors;
+    return txgraph.GetAncestors(parents);
 }
 
 util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
@@ -231,33 +247,6 @@ std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTransaction
 std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateParents(const CTxMemPoolEntry &entry) const
 {
     return CalculateParents(entry.GetTx());
-}
-
-CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(
-    const CTxMemPoolEntry &entry,
-    bool fSearchForParents /* = true */) const
-{
-    CTxMemPoolEntry::Parents staged_ancestors;
-    const CTransaction &tx = entry.GetTx();
-
-    if (fSearchForParents) {
-        // Get parents of this transaction that are in the mempool
-        // GetMemPoolParents() is only valid for entries in the mempool, so we
-        // iterate mapTx to find parents.
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            std::optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
-            if (piter) {
-                staged_ancestors.insert(**piter);
-            }
-        }
-    } else {
-        // If we're not searching for parents, we require this to already be an
-        // entry in the mempool and use the entry's cached parents.
-        txiter it = mapTx.iterator_to(entry);
-        staged_ancestors = it->GetMemPoolParentsConst();
-    }
-
-    return CalculateAncestors(staged_ancestors);
 }
 
 void CTxMemPool::UpdateAncestorsOf(bool add, txiter it)

@@ -481,6 +481,12 @@ public:
     setEntries CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
                                    bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CalculateMemPoolAncestorsFast(const CTxMemPoolEntry &entry, bool fSearchForParents) const;
+
+private:
+    std::vector<TxEntry::TxEntryRef> CalculateAncestors(const CTxMemPoolEntry& entry, bool fSearchForParents) const;
+
+public:
     bool HasDescendants(const Txid& txid) const;
 
     /** Collect the entire cluster of connected transactions for each transaction in txids.
