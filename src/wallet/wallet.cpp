@@ -2520,7 +2520,8 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
             return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
         }
 
-        op_dest = blsct_man->GetNewDestination(type == OutputType::BLSCT_STAKE ? -2 : m_current_account);
+        auto account = type == OutputType::BLSCT_STAKE ? -2 : m_current_account;
+        op_dest = blsct_man->GetNewDestination(account);
         if (op_dest) {
             SetAddressBook(*op_dest, label, AddressPurpose::RECEIVE);
         }

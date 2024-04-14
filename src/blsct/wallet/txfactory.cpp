@@ -204,7 +204,7 @@ std::optional<CMutableTransaction> TxFactory::CreateTransaction(wallet::CWallet*
         inputCandidates.push_back({recoveredInfo.amount, recoveredInfo.gamma, blsct_km->GetSpendingKeyForOutput(out), out.tokenId, COutPoint(output.outpoint.hash, output.outpoint.n)});
     }
 
-    return TxFactoryBase::CreateTransaction(inputCandidates, std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(-1).value()), destination, nAmount, sMemo, tokenId, type, minStake, fUnstake);
+    return TxFactoryBase::CreateTransaction(inputCandidates, std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(fUnstake ? -2 : -1).value()), destination, nAmount, sMemo, tokenId, type, minStake, fUnstake);
 }
 
 } // namespace blsct

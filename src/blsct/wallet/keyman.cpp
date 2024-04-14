@@ -772,8 +772,8 @@ bool KeyMan::GetSubAddressFromPool(const int64_t& account, CKeyID& result, SubAd
     SubAddressPool keypool;
 
     ReserveSubAddressFromPool(account, nIndex, keypool);
-    id = SubAddressIdentifier{account, (nIndex > -1 ? static_cast<uint64_t>(nIndex) : 0)};
-    if (nIndex == -1) {
+    id = SubAddressIdentifier{account, (account > -1 ? static_cast<uint64_t>(nIndex) : 0)};
+    if (nIndex <= -1) {
         if (m_storage.IsLocked()) return false;
         SubAddress subAddress = GenerateNewSubAddress(account, id);
         result = subAddress.GetKeys().GetID();

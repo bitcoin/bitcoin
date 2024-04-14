@@ -405,7 +405,7 @@ RPCHelpMan stakelock()
             LOCK(pwallet->cs_wallet);
 
             UniValue address_amounts(UniValue::VOBJ);
-            auto op_dest = pwallet->GetNewDestination(OutputType::BLSCT, "");
+            auto op_dest = pwallet->GetNewDestination(OutputType::BLSCT_STAKE, "Locked Stake");
             if (!op_dest) {
                 throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
             }
