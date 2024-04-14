@@ -215,6 +215,15 @@ class MempoolTRUC(BitcoinTestFramework):
         assert_equal(node.getmempoolentry(tx_v3_parent_large1["txid"])["descendantcount"], 1)
         self.generate(node, 1)
 
+        self.log.info("Test that a decreased limitclustersize also applies to v3 parent")
+        self.restart_node(0, extra_args=["-limitclustersize=10", "-acceptnonstdtxn=1"])
+        tx_v3_parent_large2 = self.wallet.send_self_transfer(from_node=node, target_vsize=9900, version=3)
+        tx_v3_child_large2 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent_large2["new_utxo"], version=3)
+        # Child is within v3 limits
+        assert_greater_than_or_equal(1000, tx_v3_child_large2["tx"].get_vsize())
+        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
+        self.check_mempool([tx_v3_parent_large2["txid"]])
+
     @cleanup()
     def test_truc_ancestors_package(self):
         self.log.info("Test that TRUC ancestor limits are checked within the package")
