@@ -180,6 +180,11 @@ public:
     Parents& GetMemPoolParents() const { return m_parents; }
     Children& GetMemPoolChildren() const { return m_children; }
 
+    // XXX: we should move all topology calculations into the mempool, and
+    // eliminate this accessor. This is only needed for v3_policy checks, which
+    // could be reimplemented within the mempool itself.
+    int64_t GetNumChildren() const { return GetTxEntryChildren().size(); }
+
     mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
     mutable Epoch::Marker mempool_epoch_marker; //!< epoch when last touched
 };

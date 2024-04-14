@@ -146,24 +146,28 @@ void CheckMempoolV3Invariants(const CTxMemPool& tx_pool)
     LOCK(tx_pool.cs);
     for (const auto& tx_info : tx_pool.infoAll()) {
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
+        size_t desc_count, desc_size, anc_count, anc_size;
+        CAmount desc_fees, anc_fees;
+        tx_pool.CalculateDescendantData(entry, desc_count, desc_size, desc_fees);
+        tx_pool.CalculateAncestorData(entry, anc_count, anc_size, anc_fees);
+
         if (tx_info.tx->version == TRUC_VERSION) {
             // Check that special maximum virtual size is respected
             Assert(entry.GetTxSize() <= V3_MAX_VSIZE);
 
             // Check that special v3 ancestor/descendant limits and rules are always respected
-            Assert(entry.GetCountWithDescendants() <= V3_DESCENDANT_LIMIT);
-            Assert(entry.GetCountWithAncestors() <= V3_ANCESTOR_LIMIT);
-            Assert(entry.GetSizeWithDescendants() <= V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE);
-            Assert(entry.GetSizeWithAncestors() <= V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE);
-
+            Assert(desc_count <= V3_DESCENDANT_LIMIT);
+            Assert(anc_count <= V3_ANCESTOR_LIMIT);
+            Assert(desc_size <= V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE);
+            Assert(anc_size <= V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE);
             // If this transaction has at least 1 ancestor, it's a "child" and has restricted weight.
-            if (entry.GetCountWithAncestors() > 1) {
+            if (anc_count > 1) {
                 Assert(entry.GetTxSize() <= V3_CHILD_MAX_VSIZE);
                 // All v3 transactions must only have v3 unconfirmed parents.
                 const auto& parents = entry.GetMemPoolParentsConst();
                 Assert(parents.begin()->get().GetSharedTx()->version == TRUC_VERSION);
             }
-        } else if (entry.GetCountWithAncestors() > 1) {
+        } else if (anc_count > 1) {
             // All non-v3 transactions must only have non-v3 unconfirmed parents.
             for (const auto& parent : entry.GetMemPoolParentsConst()) {
                 Assert(parent.get().GetSharedTx()->version != TRUC_VERSION);
