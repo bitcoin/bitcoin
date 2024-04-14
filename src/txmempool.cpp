@@ -99,31 +99,6 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
     }
 }
 
-CTxMemPool::setEntries CTxMemPool::CalculateAncestors(CTxMemPoolEntry::Parents& staged_ancestors) const
-{
-    setEntries ancestors;
-
-    while (!staged_ancestors.empty()) {
-        const CTxMemPoolEntry& stage = staged_ancestors.begin()->get();
-        txiter stageit = mapTx.iterator_to(stage);
-
-        ancestors.insert(stageit);
-        staged_ancestors.erase(stage);
-
-        const CTxMemPoolEntry::Parents& parents = stageit->GetMemPoolParentsConst();
-        for (const CTxMemPoolEntry& parent : parents) {
-            txiter parent_it = mapTx.iterator_to(parent);
-
-            // If this is a new ancestor, add it.
-            if (ancestors.count(parent_it) == 0) {
-                staged_ancestors.insert(parent);
-            }
-        }
-    }
-
-    return ancestors;
-}
-
 util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
                                                   const int64_t total_vsize) const
 {
@@ -138,31 +113,42 @@ bool CTxMemPool::HasDescendants(const Txid& txid) const
     return m_txgraph->GetDescendants(*entry, TxGraph::Level::MAIN).size() > 1;
 }
 
-CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(
-    const CTxMemPoolEntry &entry,
-    bool fSearchForParents /* = true */) const
+CTxMemPool::setEntries CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry) const
 {
-    CTxMemPoolEntry::Parents staged_ancestors;
-    const CTransaction &tx = entry.GetTx();
-
-    if (fSearchForParents) {
-        // Get parents of this transaction that are in the mempool
-        // GetMemPoolParents() is only valid for entries in the mempool, so we
-        // iterate mapTx to find parents.
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            std::optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
-            if (piter) {
-                staged_ancestors.insert(**piter);
+    auto ancestors = m_txgraph->GetAncestors(entry, TxGraph::Level::MAIN);
+    setEntries ret;
+    if (ancestors.size() > 0) {
+        for (auto ancestor : ancestors) {
+            if (ancestor != &entry) {
+                ret.insert(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ancestor)));
             }
         }
-    } else {
-        // If we're not searching for parents, we require this to already be an
-        // entry in the mempool and use the entry's cached parents.
-        txiter it = mapTx.iterator_to(entry);
-        staged_ancestors = it->GetMemPoolParentsConst();
+        return ret;
     }
 
-    return CalculateAncestors(staged_ancestors);
+    // If we didn't get anything back, the transaction is not in the graph.
+    // Find each parent and call GetAncestors on each.
+    setEntries staged_parents;
+    const CTransaction &tx = entry.GetTx();
+
+    // Get parents of this transaction that are in the mempool
+    // GetMemPoolParents() is only valid for entries in the mempool, so we
+    // iterate mapTx to find parents.
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        std::optional<txiter> piter = GetIter(tx.vin[i].prevout.hash);
+        if (piter) {
+            staged_parents.insert(*piter);
+        }
+    }
+
+    for (const auto& parent : staged_parents) {
+        auto parent_ancestors = m_txgraph->GetAncestors(*parent, TxGraph::Level::MAIN);
+        for (auto ancestor : parent_ancestors) {
+            ret.insert(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ancestor)));
+        }
+    }
+
+    return ret;
 }
 
 void CTxMemPool::UpdateAncestorsOf(bool add, txiter it)
