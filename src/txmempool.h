@@ -297,6 +297,7 @@ public:
     std::vector<std::pair<Wtxid, txiter>> txns_randomized GUARDED_BY(cs); //!< All transactions in mapTx with their wtxids, in arbitrary order
 
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
+    typedef std::vector<txiter> Entries;
 
     using Limits = kernel::MemPoolLimits;
 
