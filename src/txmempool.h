@@ -304,17 +304,6 @@ private:
      */
     std::set<Txid> m_unbroadcast_txids GUARDED_BY(cs);
 
-
-    /**
-     * Helper function to calculate all in-mempool ancestors of staged_ancestors
-     *
-     * @param[in]   staged_ancestors    Should contain entries in the mempool.
-     *
-     * @return all in-mempool ancestors
-     */
-    setEntries CalculateAncestors(CTxMemPoolEntry::Parents &staged_ancestors)
-            const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it)
     {
         return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
@@ -429,18 +418,13 @@ public:
     }
 
     /**
-     * Calculate all in-mempool ancestors of entry.
-     * (these are all calculated including the tx itself)
+     * Calculate all in-mempool ancestors of entry (not including the tx itself)
      *
      * @param[in]   entry               CTxMemPoolEntry of which all in-mempool ancestors are calculated
-     * @param[in]   fSearchForParents   Whether to search a tx's vin for in-mempool parents, or look
-     *                                  up parents from mapLinks. Must be true for entries not in
-     *                                  the mempool
      *
      * @return all in-mempool ancestors
      */
-    setEntries CalculateMemPoolAncestors(const CTxMemPoolEntry& entry,
-                                   bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    setEntries CalculateMemPoolAncestors(const CTxMemPoolEntry& entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool HasDescendants(const Txid& txid) const;
 
