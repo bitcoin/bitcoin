@@ -228,6 +228,19 @@ class MempoolTRUC(BitcoinTestFramework):
         assert_equal(node.getmempoolentry(tx_v3_parent_large1["txid"])["descendantcount"], 1)
         self.generate(node, 1)
 
+        self.log.info("Test that a decreased limitclustersize also applies to TRUC child")
+        self.restart_node(0, extra_args=["-limitclustersize=10", "-acceptnonstdtxn=1"])
+        tx_v3_parent_large2 = self.wallet.send_self_transfer(from_node=node, target_vsize=parent_target_vsize, version=3)
+        tx_v3_child_large2 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent_large2["new_utxo"], target_vsize=child_target_vsize, version=3)
+        # Parent and child are within TRUC limits
+        assert_greater_than_or_equal(TRUC_MAX_VSIZE, tx_v3_parent_large2["tx"].get_vsize())
+        assert_greater_than_or_equal(TRUC_CHILD_MAX_VSIZE, tx_v3_child_large2["tx"].get_vsize())
+        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
+        self.log.info("Test that a decreased limitclustercount also applies to TRUC transactions")
+        self.restart_node(0, extra_args=["-limitclustercount=1", "-acceptnonstdtxn=1"])
+        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
+        self.check_mempool([tx_v3_parent_large2["txid"]])
+
     @cleanup()
     def test_truc_ancestors_package(self):
         self.log.info("Test that TRUC ancestor limits are checked within the package")
