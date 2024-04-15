@@ -123,11 +123,6 @@ if test "@host_os@" = darwin; then
     ac_cv_path_OTOOL="${OTOOL}"
   fi
 
-  if test -n "@INSTALL_NAME_TOOL@"; then
-    INSTALL_NAME_TOOL="@INSTALL_NAME_TOOL@"
-    ac_cv_path_INSTALL_NAME_TOOL="${INSTALL_NAME_TOOL}"
-  fi
-
   if test -n "@DSYMUTIL@"; then
     DSYMUTIL="@DSYMUTIL@"
     ac_cv_path_DSYMUTIL="${DSYMUTIL}"

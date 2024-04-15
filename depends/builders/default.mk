@@ -12,7 +12,7 @@ build_$(build_os)_$1 ?= $$(default_build_$1)
 build_$(build_arch)_$(build_os)_$1 ?= $$(build_$(build_os)_$1)
 build_$1=$$(build_$(build_arch)_$(build_os)_$1)
 endef
-$(foreach var,CC CXX AR TAR RANLIB NM STRIP SHA256SUM DOWNLOAD OTOOL INSTALL_NAME_TOOL DSYMUTIL TOUCH,$(eval $(call add_build_tool_func,$(var))))
+$(foreach var,CC CXX AR TAR RANLIB NM STRIP SHA256SUM DOWNLOAD OTOOL DSYMUTIL TOUCH,$(eval $(call add_build_tool_func,$(var))))
 define add_build_flags_func
 build_$(build_arch)_$(build_os)_$1 += $(build_$(build_os)_$1)
 build_$1=$$(build_$(build_arch)_$(build_os)_$1)
