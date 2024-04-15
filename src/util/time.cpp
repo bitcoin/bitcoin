@@ -29,14 +29,10 @@ NodeClock::time_point NodeClock::now() noexcept
     return time_point{ret};
 };
 
-void SetMockTime(int64_t nMockTimeIn)
-{
-    Assert(nMockTimeIn >= 0);
-    nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
-}
-
+void SetMockTime(int64_t nMockTimeIn) { SetMockTime(std::chrono::seconds{nMockTimeIn}); }
 void SetMockTime(std::chrono::seconds mock_time_in)
 {
+    Assert(mock_time_in >= 0s);
     nMockTime.store(mock_time_in.count(), std::memory_order_relaxed);
 }
 
