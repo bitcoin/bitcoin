@@ -12,6 +12,9 @@ too-low-feerate transactions). The packages should be received and accepted by a
 from decimal import Decimal
 from math import ceil
 
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.messages import (
     msg_tx,
 )
@@ -22,7 +25,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    fill_mempool,
 )
 from test_framework.wallet import (
     MiniWallet,

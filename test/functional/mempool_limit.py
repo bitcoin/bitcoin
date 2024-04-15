@@ -6,6 +6,9 @@
 
 from decimal import Decimal
 
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -13,7 +16,6 @@ from test_framework.util import (
     assert_fee_amount,
     assert_greater_than,
     assert_raises_rpc_error,
-    fill_mempool,
 )
 from test_framework.wallet import (
     COIN,

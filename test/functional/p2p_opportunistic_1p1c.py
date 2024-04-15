@@ -8,6 +8,9 @@ Test opportunistic 1p1c package submission logic.
 
 from decimal import Decimal
 import time
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.messages import (
     CInv,
     CTxInWitness,
@@ -24,7 +27,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    fill_mempool,
 )
 from test_framework.wallet import (
     MiniWallet,

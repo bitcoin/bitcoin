@@ -8,6 +8,9 @@ Test transaction download behavior
 from decimal import Decimal
 import time
 
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.messages import (
     CInv,
     MSG_TX,
@@ -24,7 +27,6 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    fill_mempool,
 )
 from test_framework.wallet import MiniWallet
 
