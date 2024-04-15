@@ -2237,6 +2237,7 @@ static bool SelectBlockFromCandidates(std::vector<std::pair<int64_t, uint256>>& 
 // blocks.
 static bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeModifier, bool& fGeneratedStakeModifier, const Consensus::Params& params, const node::BlockManager& m_blockman)
 {
+    AssertLockHeld(::cs_main);
     nStakeModifier = 0;
     fGeneratedStakeModifier = false;
     if (!pindexPrev) {

@@ -75,6 +75,7 @@ unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t 
 // Get the last stake modifier and its generation time from a given block
 bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModifier, int64_t& nModifierTime)
 {
+    AssertLockHeld(::cs_main);
     if (!pindex)
         return false; // error("GetLastStakeModifier: null pindex");
     while (pindex && pindex->pprev && !pindex->GeneratedStakeModifier())
