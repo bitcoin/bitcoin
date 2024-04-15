@@ -24,11 +24,13 @@ static constexpr unsigned int V3_DESCENDANT_LIMIT{2};
 /** Maximum number of transactions including a V3 tx and all its mempool ancestors. */
 static constexpr unsigned int V3_ANCESTOR_LIMIT{2};
 
+/** Maximum sigop-adjusted virtual size of all v3 transactions. */
+static constexpr int64_t V3_MAX_VSIZE{10000};
 /** Maximum sigop-adjusted virtual size of a tx which spends from an unconfirmed v3 transaction. */
 static constexpr int64_t V3_CHILD_MAX_VSIZE{1000};
 // These limits are within the default ancestor/descendant limits.
-static_assert(V3_CHILD_MAX_VSIZE + MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR <= DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
-static_assert(V3_CHILD_MAX_VSIZE + MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR <= DEFAULT_DESCENDANT_SIZE_LIMIT_KVB * 1000);
+static_assert(V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE <= DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
+static_assert(V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT_KVB * 1000);
 
 /** Must be called for every transaction, even if not v3. Not strictly necessary for transactions
  * accepted through AcceptMultipleTransactions.
@@ -40,6 +42,7 @@ static_assert(V3_CHILD_MAX_VSIZE + MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR
  * 4. A v3's descendant set, including itself, must be within V3_DESCENDANT_LIMIT.
  * 5. If a v3 tx has any unconfirmed ancestors, the tx's sigop-adjusted vsize must be within
  * V3_CHILD_MAX_VSIZE.
+ * 6. A v3 tx must be within V3_MAX_VSIZE.
  *
  *
  * @param[in]   mempool_ancestors       The in-mempool ancestors of ptx.

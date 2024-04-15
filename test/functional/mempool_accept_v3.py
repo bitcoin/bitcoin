@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -21,6 +22,7 @@ from test_framework.wallet import (
 )
 
 MAX_REPLACEMENT_CANDIDATES = 100
+V3_MAX_VSIZE = 10000
 
 def cleanup(extra_args=None):
     def decorator(func):
@@ -48,6 +50,20 @@ class MempoolAcceptV3(BitcoinTestFramework):
         mempool_contents = self.nodes[0].getrawmempool()
         assert_equal(len(txids), len(mempool_contents))
         assert all([txid in txids for txid in mempool_contents])
+
+    @cleanup(extra_args=["-datacarriersize=20000", "-acceptnonstdtxn=1"])
+    def test_v3_max_vsize(self):
+        node = self.nodes[0]
+        self.log.info("Test v3-specific maximum transaction vsize")
+        tx_v3_heavy = self.wallet.create_self_transfer(target_weight=(V3_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=3)
+        assert_greater_than_or_equal(tx_v3_heavy["tx"].get_vsize(), V3_MAX_VSIZE)
+        expected_error_heavy = f"v3-rule-violation, v3 tx {tx_v3_heavy['txid']} (wtxid={tx_v3_heavy['wtxid']}) is too big"
+        assert_raises_rpc_error(-26, expected_error_heavy, node.sendrawtransaction, tx_v3_heavy["hex"])
+        self.check_mempool([])
+
+        # Ensure we are hitting the v3-specific limit and not something else
+        tx_v2_heavy = self.wallet.send_self_transfer(from_node=node, target_weight=(V3_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=2)
+        self.check_mempool([tx_v2_heavy["txid"]])
 
     @cleanup(extra_args=["-datacarriersize=1000", "-acceptnonstdtxn=1"])
     def test_v3_acceptance(self):
@@ -201,10 +217,24 @@ class MempoolAcceptV3(BitcoinTestFramework):
         """
         node = self.nodes[0]
         self.log.info("Test that a decreased limitdescendantsize also applies to v3 child")
-        tx_v3_parent_large1 = self.wallet.send_self_transfer(from_node=node, target_weight=99900, version=3)
-        tx_v3_child_large1 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent_large1["new_utxo"], version=3)
-        # Child is within v3 limits, but parent's descendant limit is exceeded
-        assert_greater_than(1000, tx_v3_child_large1["tx"].get_vsize())
+        parent_target_weight = 9990 * WITNESS_SCALE_FACTOR
+        child_target_weight = 500 * WITNESS_SCALE_FACTOR
+        tx_v3_parent_large1 = self.wallet.send_self_transfer(
+            from_node=node,
+            target_weight=parent_target_weight,
+            version=3
+        )
+        tx_v3_child_large1 = self.wallet.create_self_transfer(
+            utxo_to_spend=tx_v3_parent_large1["new_utxo"],
+            target_weight=child_target_weight,
+            version=3
+        )
+
+        # Parent and child are within v3 limits, but parent's 10kvB descendant limit is exceeded
+        assert_greater_than_or_equal(V3_MAX_VSIZE, tx_v3_parent_large1["tx"].get_vsize())
+        assert_greater_than_or_equal(1000, tx_v3_child_large1["tx"].get_vsize())
+        assert_greater_than(tx_v3_parent_large1["tx"].get_vsize() + tx_v3_child_large1["tx"].get_vsize(), 10000)
+
         assert_raises_rpc_error(-26, f"too-long-mempool-chain, exceeds descendant size limit for tx {tx_v3_parent_large1['txid']}", node.sendrawtransaction, tx_v3_child_large1["hex"])
         self.check_mempool([tx_v3_parent_large1["txid"]])
         assert_equal(node.getmempoolentry(tx_v3_parent_large1["txid"])["descendantcount"], 1)
@@ -212,10 +242,22 @@ class MempoolAcceptV3(BitcoinTestFramework):
 
         self.log.info("Test that a decreased limitancestorsize also applies to v3 parent")
         self.restart_node(0, extra_args=["-limitancestorsize=10", "-datacarriersize=40000", "-acceptnonstdtxn=1"])
-        tx_v3_parent_large2 = self.wallet.send_self_transfer(from_node=node, target_weight=99900, version=3)
-        tx_v3_child_large2 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent_large2["new_utxo"], version=3)
-        # Child is within v3 limits
+        tx_v3_parent_large2 = self.wallet.send_self_transfer(
+            from_node=node,
+            target_weight=parent_target_weight,
+            version=3
+        )
+        tx_v3_child_large2 = self.wallet.create_self_transfer(
+            utxo_to_spend=tx_v3_parent_large2["new_utxo"],
+            target_weight=child_target_weight,
+            version=3
+        )
+
+        # Parent and child are within v3 limits
+        assert_greater_than_or_equal(V3_MAX_VSIZE, tx_v3_parent_large2["tx"].get_vsize())
         assert_greater_than_or_equal(1000, tx_v3_child_large2["tx"].get_vsize())
+        assert_greater_than(tx_v3_parent_large2["tx"].get_vsize() + tx_v3_child_large2["tx"].get_vsize(), 10000)
+
         assert_raises_rpc_error(-26, f"too-long-mempool-chain, exceeds ancestor size limit", node.sendrawtransaction, tx_v3_child_large2["hex"])
         self.check_mempool([tx_v3_parent_large2["txid"]])
 
@@ -585,6 +627,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
         self.generate(self.wallet, 120)
+        self.test_v3_max_vsize()
         self.test_v3_acceptance()
         self.test_v3_replacement()
         self.test_v3_bip125()
