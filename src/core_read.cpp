@@ -257,6 +257,6 @@ util::Result<int> SighashFromStr(const std::string& sighash)
     if (it != map_sighash_values.end()) {
         return it->second;
     } else {
-        return util::Error{Untranslated(sighash + " is not a valid sighash parameter.")};
+        return util::Error{Untranslated("'" + sighash + "' is not a valid sighash parameter.")};
     }
 }
