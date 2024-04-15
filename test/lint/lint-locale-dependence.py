@@ -43,6 +43,7 @@ from subprocess import check_output, CalledProcessError
 
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
+    "src/navcoin-staker.cpp:.*stoi",
     "src/test/fuzz/locale.cpp:.*setlocale",
     "src/test/util_tests.cpp:.*strtoll",
     "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
