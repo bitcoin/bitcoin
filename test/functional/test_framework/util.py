@@ -505,6 +505,8 @@ def fill_mempool(test_framework, node, miniwallet):
     It will not ensure mempools become synced as it
     is based on a single node and assumes -minrelaytxfee
     is 1 sat/vbyte.
+    To avoid unintentional tx dependencies, it is recommended to use separate miniwallets for
+    mempool filling vs transactions in tests.
     """
     test_framework.log.info("Fill the mempool until eviction is triggered and the mempoolminfee rises")
     txouts = gen_return_txouts()
@@ -522,8 +524,14 @@ def fill_mempool(test_framework, node, miniwallet):
     # Mine COINBASE_MATURITY - 1 blocks so that the UTXOs are allowed to be spent
     test_framework.generate(node, 100 - 1)
 
+    # Get all UTXOs up front to ensure none of the transactions spend from each other, as that may
+    # change their effective feerate and thus the order in which they are selected for eviction.
+    confirmed_utxos = [miniwallet.get_utxo(confirmed_only=True) for _ in range(num_of_batches * tx_batch_size + 1)]
+    assert_equal(len(confirmed_utxos), num_of_batches * tx_batch_size + 1)
+
     test_framework.log.debug("Create a mempool tx that will be evicted")
-    tx_to_be_evicted_id = miniwallet.send_self_transfer(from_node=node, fee_rate=relayfee)["txid"]
+    tx_to_be_evicted_id = miniwallet.send_self_transfer(from_node=node, utxo_to_spend=confirmed_utxos[0], fee_rate=relayfee)["txid"]
+    del confirmed_utxos[0]
 
     # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
     # The tx has an approx. vsize of 65k, i.e. multiplying the previous fee rate (in sats/kvB)
@@ -534,7 +542,9 @@ def fill_mempool(test_framework, node, miniwallet):
     with node.assert_debug_log(["rolling minimum fee bumped"]):
         for batch_of_txid in range(num_of_batches):
             fee = (batch_of_txid + 1) * base_fee
-            create_lots_of_big_transactions(miniwallet, node, fee, tx_batch_size, txouts)
+            utxos = confirmed_utxos[:tx_batch_size]
+            create_lots_of_big_transactions(miniwallet, node, fee, tx_batch_size, txouts, utxos)
+            del confirmed_utxos[:tx_batch_size]
 
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
