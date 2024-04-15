@@ -12,6 +12,7 @@ Example usage:
 '''
 import sys
 
+import capstone # type: ignore
 import lief
 
 # Debian 10 (Buster) EOL: 2024. https://wiki.debian.org/LTS
@@ -259,6 +260,88 @@ def check_PE_subsystem_version(binary) -> bool:
         return True
     return False
 
+# Intel® 64 and IA-32 Architectures Software Developer’s Manual:
+#   chapter 14.9, table 14-22. Instructions Requiring Explicitly Aligned Memory
+#   chapter 15.7, Table 15-6. SIMD Instructions Requiring Explicitly Aligned Memory
+#
+# This amounts to the following instructions:
+#
+# instruction                  chapter 4.3 section
+# ---------------------------  ---------------------------------
+# (V)MOVDQA xmm, mBBB          MOVDQA,VMOVDQA32/64—Move Aligned Packed Integer Values
+# (V)MOVDQA mBBB, xmm          MOVDQA,VMOVDQA32/64—Move Aligned Packed Integer Values
+# (V)MOVAPS xmm, mBBB          MOVAPS—Move Aligned Packed Single Precision Floating-Point Values
+# (V)MOVAPS mBBB, xmm          MOVAPS—Move Aligned Packed Single Precision Floating-Point Values
+# (V)MOVAPD xmm, mBBB          MOVAPD—Move Aligned Packed Double Precision Floating-Point Values
+# (V)MOVAPD mBBB, xmm          MOVAPD—Move Aligned Packed Double Precision Floating-Point Values
+# (V)MOVNTPS mBBB, xmm         MOVNTPS—Store Packed Single Precision Floating-Point Values Using Non-Temporal Hint
+# (V)MOVNTPD mBBB, xmm         MOVNTPD—Store Packed Double Precision Floating-Point Values Using Non-Temporal Hint
+# (V)MOVNTDQ mBBB, xmm         MOVNTDQ—Store Packed Integers Using Non-Temporal Hint
+# (V)MOVNTDQA xmm, mBBB        MOVNTDQA—Load Double Quadword Non-Temporal Aligned Hint
+#
+# BBB is the bit size, which can be 128, 256 or 512. In our specific case we don't care about the 128 bit
+# instructions, because we're looking for 16 and 32 byte alignments, however we'll consider every
+# listed instruction just to be sure.
+#
+FORBIDDEN_VMOVA = {
+    capstone.x86.X86_INS_MOVDQA,    capstone.x86.X86_INS_VMOVDQA,   capstone.x86.X86_INS_VMOVDQA32, capstone.x86.X86_INS_VMOVDQA64,
+    capstone.x86.X86_INS_MOVAPS,    capstone.x86.X86_INS_VMOVAPS,
+    capstone.x86.X86_INS_MOVAPD,    capstone.x86.X86_INS_VMOVAPD,
+    capstone.x86.X86_INS_MOVNTPS,   capstone.x86.X86_INS_VMOVNTPS,
+    capstone.x86.X86_INS_MOVNTPD,   capstone.x86.X86_INS_VMOVNTPD,
+    capstone.x86.X86_INS_MOVNTDQ,   capstone.x86.X86_INS_VMOVNTDQ,
+    capstone.x86.X86_INS_MOVNTDQA,  capstone.x86.X86_INS_VMOVNTDQA,
+}
+
+def check_PE_no_vmova(binary) -> bool:
+    '''
+    Check for vmov instructions that require alignment.
+    These are a potential problem due to a stack alignment bug in GCC on Windows.
+    See https://github.com/bitcoin/bitcoin/issues/28413 for specifics.
+    '''
+    # capstone instance with details disabled
+    # disassemble without details by default, to speed up disassembly
+    cs = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    cs.detail = False
+    # capstone instance with details enabled, for closer inspection when a
+    # suspect instruction is found
+    cs_d = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    cs_d.detail = True
+
+    found_forbidden = False
+
+    for section in binary.sections:
+        # find sections that contain code
+        if section.has_characteristic(lief.PE.SECTION_CHARACTERISTICS.CNT_CODE):
+            section_base = binary.imagebase + section.virtual_address
+            # disassemble section, check every instruction
+            for i in cs.disasm(section.content, section_base): # -> CsInsn
+                if i.id in FORBIDDEN_VMOVA:
+                    # disassemble this instruction again with details enabled, to be able
+                    # to access operand information.
+                    i = next(cs_d.disasm(section.content[i.address - section_base:], i.address, 1))
+
+                    # extract register from both operands
+                    reg = [op.value.reg for op in i.operands]
+                    if reg[0] != 0 and reg[1] != 0:
+                        continue # r->r operation, this is fine, no alignment issues
+                    elif reg[0] == 0 and reg[1] != 0:
+                        memidx = 0 # m->r
+                    elif reg[0] != 0 and reg[1] == 0:
+                        memidx = 1 # r->m
+                    else:
+                        raise ValueError("Invalid AVX instruction with two memory operands.")
+
+                    # check operand size for memory operand
+                    if i.operands[memidx].size <= 16:
+                        continue # <=16 byte alignment is fine
+
+                    # uncomment for verbose
+                    # print(f"{binary.name}: Forbidden vmov: {i.address:08x} {i.mnemonic} {i.op_str}")
+                    found_forbidden = True
+
+    return not found_forbidden
+
 def check_ELF_interpreter(binary) -> bool:
     expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
 
@@ -287,6 +370,7 @@ lief.EXE_FORMATS.MACHO: [
 lief.EXE_FORMATS.PE: [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
     ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
+    ('NO_VMOVA', check_PE_no_vmova),
 ]
 }
 

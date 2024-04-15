@@ -27,9 +27,28 @@ def call_symbol_check(cc: list[str], source, executable, options):
     os.remove(executable)
     return (p.returncode, p.stdout.rstrip())
 
+def call_symcheck_ASM(cc, instr):
+    source = 'test_asm.c'
+    executable = 'test_asm.exe'
+    with open(source, 'w', encoding="utf8") as f:
+        f.write('''
+            #include <immintrin.h>
+
+            int main()
+            {
+                asm volatile (
+                    "''' + instr + '''\\n"
+                );
+                return 0;
+            }
+    ''')
+
+    return call_symbol_check(cc, source, executable, ['-mavx2', '-Wl,--major-subsystem-version', '-Wl,6', '-Wl,--minor-subsystem-version', '-Wl,1'])
+
 def get_machine(cc: list[str]):
     p = subprocess.run([*cc,'-dumpmachine'], stdout=subprocess.PIPE, text=True)
     return p.stdout.rstrip()
+
 
 class TestSymbolChecks(unittest.TestCase):
     def test_ELF(self):
@@ -173,6 +192,22 @@ class TestSymbolChecks(unittest.TestCase):
         self.assertEqual(call_symbol_check(cc, source, executable, ['-lole32', '-Wl,--major-subsystem-version', '-Wl,6', '-Wl,--minor-subsystem-version', '-Wl,1']),
                 (0, ''))
 
+        # 128 bit r->m - OK
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovd %xmm1,0x60(%rdi,%rsi,1)'), (0, ''))
+        # 128 bit m->r -  OK
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovd 0x60(%rdi,%rsi,1),%xmm1'), (0, ''))
+        # 256 bit r->r - OK
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovdqa %ymm1,%ymm2'), (0, ''))
+        # 256 bit r->m - fail
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovdqa %ymm1,0x60(%rsp,%rsi,1)'), (1, 'test_asm.exe: failed NO_VMOVA'))
+        # 256 bit r->m - fail
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovdqa 0x60(%rsp,%rsi,1), %ymm1'), (1, 'test_asm.exe: failed NO_VMOVA'))
+        # 512 bit r->r - OK
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovdqa64 %zmm1,%zmm2'), (0, ''))
+        # 512 bit r->m - fail
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovdqa64 %zmm1,0x70(%rdi)'), (1, 'test_asm.exe: failed NO_VMOVA'))
+        # 512 bit m->r - fail
+        self.assertEqual(call_symcheck_ASM(cc, 'vmovdqa64 0x70(%rdi),%zmm1'), (1, 'test_asm.exe: failed NO_VMOVA'))
 
 if __name__ == '__main__':
     unittest.main()

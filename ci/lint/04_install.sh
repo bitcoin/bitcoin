@@ -46,6 +46,7 @@ if [ ! -d "${LINT_RUNNER_PATH}" ]; then
 fi
 
 ${CI_RETRY_EXE} pip3 install \
+  capstone==4.0.2 \
   codespell==2.2.6 \
   flake8==6.1.0 \
   lief==0.13.2 \
