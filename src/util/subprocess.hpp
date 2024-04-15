@@ -969,8 +969,8 @@ namespace detail {
 // Metaprogram for searching a type within
 // a variadic parameter pack
 // This is particularly required to do a compile time
-// checking of the arguments provided to 'check_ouput' function
-// wherein the user is not expected to provide an 'ouput' option.
+// checking of the arguments provided to 'check_output' function
+// wherein the user is not expected to provide an 'output' option.
 
 template <typename... T> struct param_pack{};
 
@@ -997,7 +997,7 @@ struct has_type<F, param_pack<H,T...>> {
 /*!
  * A helper class to Popen class for setting
  * options as provided in the Popen constructor
- * or in check_ouput arguments.
+ * or in check_output arguments.
  * This design allows us to _not_ have any fixed position
  * to any arguments and specify them in a way similar to what
  * can be done in python.
