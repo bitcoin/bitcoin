@@ -101,7 +101,7 @@ bool ProofOfStake::VerifyKernelHash(const RangeProof& range_proof, const uint256
 
     RangeProver rp;
     std::vector<bulletproofs::RangeProofWithSeed<Arith>> proofs;
-    proofs.push_back({range_proof_with_value, eta_phi, min_value.GetUint64(0)});
+    proofs.push_back({range_proof_with_value, eta_phi, (CAmount)min_value.GetUint64(0)});
 
     return rp.Verify(proofs);
 }
