@@ -225,7 +225,7 @@ std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet,
         Txid hashTx = wtx.GetHash();
         if (!wallet.IsSpent(COutPoint(hashTx, i))) {
             if (wallet.IsMine(txout) == ISMINE_STAKED_COMMITMENT_BLSCT) {
-                ret.push_back({hashTx, txout.blsctData.rangeProof.Vs[0],
+                ret.push_back({hashTx, i, txout.blsctData.rangeProof.Vs[0],
                                wtx.GetBLSCTRecoveryData(i).amount,
                                wtx.GetBLSCTRecoveryData(i).gamma});
             }

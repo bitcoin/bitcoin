@@ -167,6 +167,7 @@ UniValue FormatStakedCommitmentInfo(const std::vector<StakedCommitmentInfo>& inf
     for (auto& it : info) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("tx_hash", it.hashTx.ToString());
+        obj.pushKV("nout", it.nout);
         obj.pushKV("commitment", HexStr(it.commitment.GetVch()));
         obj.pushKV("value", HexStr(it.value.GetVch()));
         obj.pushKV("amount", FormatMoney(it.value.GetUint64()));
@@ -188,6 +189,7 @@ liststakedcommitments()
             RPCResult::Type::ARR, "", "", {
                                               {RPCResult::Type::OBJ, "", "", {
                                                                                  {RPCResult::Type::STR_HEX, "tx_hash", "The transaction hash where the commitment was locked"},
+                                                                                 {RPCResult::Type::NUM, "nout", "The transaction output index where the commitment was locked"},
                                                                                  {RPCResult::Type::STR_HEX, "commitment", "The staked commitment"},
                                                                                  {RPCResult::Type::STR, "amount", "The commitment amount"},
                                                                                  {RPCResult::Type::STR_HEX, "value", "The commitment amount in hex"},

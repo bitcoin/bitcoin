@@ -96,7 +96,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcwait", "Wait for RPC server to start", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcwaittimeout=<n>", strprintf("Timeout in seconds to wait for the RPC server to start, or 0 for no timeout. (default: %d)", DEFAULT_WAIT_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-stdinrpcwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-walletpassphrase=<password>", "Specify the password to unlock the wallet", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-coinbasedest=<address>", "Specify the address to collect the staking rewards", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
@@ -467,21 +467,21 @@ void Setup()
         rpcPass = gArgs.GetArg("-rpcpassword", {});
 
 
-    if (gArgs.GetBoolArg("-stdinrpcwalletpassphrase", false)) {
+    if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
         NO_STDIN_ECHO();
         if (!StdinReady()) {
             fputs("Wallet password> ", stderr);
             fflush(stderr);
         }
         if (!std::getline(std::cin, walletPassphrase)) {
-            throw std::runtime_error("-stdinrpcwalletpassphrase specified but failed to read from standard input");
+            throw std::runtime_error("-stdinwalletpassphrase specified but failed to read from standard input");
         }
         if (StdinTerminal()) {
             fputc('\n', stdout);
         }
-        gArgs.ForceSetArg("-rpcwalletpassphrase", walletPassphrase);
-    } else if (gArgs.IsArgSet("-rpcwalletpassphrase"))
-        walletPassphrase = gArgs.GetArg("-rpcwalletpassphrase", {});
+        gArgs.ForceSetArg("-walletpassphrase", walletPassphrase);
+    } else if (gArgs.IsArgSet("-walletpassphrase"))
+        walletPassphrase = gArgs.GetArg("-walletpassphrase", {});
 
     if (gArgs.IsArgSet("-coinbasedest"))
         coinbase_dest = gArgs.GetArg("-coinbasedest", {});
