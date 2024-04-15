@@ -32,6 +32,7 @@ from test_framework.messages import (
     CTxIn,
     CTxInWitness,
     CTxOut,
+    hash256,
 )
 from test_framework.script import (
     CScript,
@@ -65,7 +66,10 @@ class MiniWalletMode(Enum):
     However, if the transactions need to be modified by the user (e.g. prepending
     scriptSig for testing opcodes that are activated by a soft-fork), or the txs
     should contain an actual signature, the raw modes RAW_OP_TRUE and RAW_P2PK
-    can be useful. Summary of modes:
+    can be useful. In order to avoid mixing of UTXOs between different MiniWallet
+    instances, a tag name can be passed to the default mode, to create different
+    output scripts. Note that the UTXOs from the pre-generated test chain can
+    only be spent if no tag is passed. Summary of modes:
 
                     |      output       |           |  tx is   | can modify |  needs
          mode       |    description    |  address  | standard | scriptSig  | signing
@@ -80,22 +84,25 @@ class MiniWalletMode(Enum):
 
 
 class MiniWallet:
-    def __init__(self, test_node, *, mode=MiniWalletMode.ADDRESS_OP_TRUE):
+    def __init__(self, test_node, *, mode=MiniWalletMode.ADDRESS_OP_TRUE, tag_name=None):
         self._test_node = test_node
         self._utxos = []
         self._mode = mode
 
         assert isinstance(mode, MiniWalletMode)
         if mode == MiniWalletMode.RAW_OP_TRUE:
+            assert tag_name is None
             self._scriptPubKey = bytes(CScript([OP_TRUE]))
         elif mode == MiniWalletMode.RAW_P2PK:
             # use simple deterministic private key (k=1)
+            assert tag_name is None
             self._priv_key = ECKey()
             self._priv_key.set((1).to_bytes(32, 'big'), True)
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true()
+            internal_key = None if tag_name is None else hash256(tag_name.encode())
+            self._address, self._internal_key = create_deterministic_address_bcrt1_p2tr_op_true(internal_key)
             self._scriptPubKey = address_to_scriptpubkey(self._address)
 
         # When the pre-mined test framework chain is used, it contains coinbase
