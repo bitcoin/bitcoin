@@ -1492,9 +1492,8 @@ void CConnman::CalculateNumConnectionsChangedStats()
     statsClient.gauge("peers.torConnections", torNodes, 1.0f);
 }
 
-bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now_in) const
+bool CConnman::ShouldRunInactivityChecks(const CNode& node, int64_t now) const
 {
-    const int64_t now = now_in ? now_in.value() : GetTimeSeconds();
     return node.nTimeConnected + m_peer_connect_timeout < now;
 }
 

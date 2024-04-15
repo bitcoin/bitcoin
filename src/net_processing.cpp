@@ -176,6 +176,13 @@ static constexpr uint32_t MAX_GETCFHEADERS_SIZE = 2000;
 static constexpr size_t MAX_PCT_ADDR_TO_SEND = 23;
 /** The maximum number of address records permitted in an ADDR message. */
 static constexpr size_t MAX_ADDR_TO_SEND{1000};
+/** The maximum rate of address records we're willing to process on average. Can be bypassed using
+ *  the NetPermissionFlags::Addr permission. */
+static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
+/** The soft limit of the address processing token bucket (the regular MAX_ADDR_RATE_PER_SECOND
+ *  based increments won't go above this, but the MAX_ADDR_TO_SEND increment following GETADDR
+ *  is exempt from this limit). */
+static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 
 struct COrphanTx {
     // When modifying, adapt the copy of this definition in tests/DoS_tests.
@@ -257,9 +264,31 @@ struct Peer {
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
     std::vector<CAddress> m_addrs_to_send;
-    /** Probabilistic filter of addresses that this peer already knows.
-     *  Used to avoid relaying addresses to this peer more than once. */
-    const std::unique_ptr<CRollingBloomFilter> m_addr_known;
+    /** Probabilistic filter to track recent addr messages relayed with this
+     *  peer. Used to avoid relaying redundant addresses to this peer.
+     *
+     *  We initialize this filter for outbound peers (other than
+     *  block-relay-only connections) or when an inbound peer sends us an
+     *  address related message (ADDR, ADDRV2, GETADDR).
+     *
+     *  Presence of this filter must correlate with m_addr_relay_enabled.
+     **/
+    std::unique_ptr<CRollingBloomFilter> m_addr_known;
+    /** Whether we are participating in address relay with this connection.
+     *
+     *  We set this bool to true for outbound peers (other than
+     *  block-relay-only connections), or when an inbound peer sends us an
+     *  address related message (ADDR, ADDRV2, GETADDR).
+     *
+     *  We use this bool to decide whether a peer is eligible for gossiping
+     *  addr messages. This avoids relaying to peers that are unlikely to
+     *  forward them, effectively blackholing self announcements. Reasons
+     *  peers might support addr relay on the link include that they connected
+     *  to us as a block-relay-only peer or they are a light client.
+     *
+     *  This field must correlate with whether m_addr_known has been
+     *  initialized.*/
+    std::atomic_bool m_addr_relay_enabled{false};
     /** Whether a getaddr request to this peer is outstanding. */
     bool m_getaddr_sent{false};
     /** Guards address sending timers. */
@@ -273,6 +302,15 @@ struct Peer {
     std::atomic_bool m_wants_addrv2{false};
     /** Whether this peer has already sent us a getaddr message. */
     bool m_getaddr_recvd{false};
+    /** Number of addresses that can be processed from this peer. Start at 1 to
+     *  permit self-announcement. */
+    double m_addr_token_bucket{1.0};
+    /** When m_addr_token_bucket was last updated */
+    std::chrono::microseconds m_addr_token_timestamp{GetTime<std::chrono::microseconds>()};
+    /** Total number of addresses that were dropped due to rate limiting. */
+    std::atomic<uint64_t> m_addr_rate_limited{0};
+    /** Total number of addresses that were processed (excludes rate-limited ones). */
+    std::atomic<uint64_t> m_addr_processed{0};
 
     /** Set of txids to reconsider once their parent transactions have been accepted **/
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
@@ -282,9 +320,8 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
-    explicit Peer(NodeId id, bool addr_relay)
+    explicit Peer(NodeId id)
         : m_id(id)
-        , m_addr_known{addr_relay ? std::make_unique<CRollingBloomFilter>(5000, 0.001) : nullptr}
     {}
 };
 
@@ -509,6 +546,14 @@ private:
      * @param[in]   vRecv           The raw message received
      */
     void ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv);
+
+    /** Checks if address relay is permitted with peer. If needed, initializes
+     * the m_addr_known bloom filter and sets m_addr_relay_enabled to true.
+     *
+     *  @return   True if address relay is enabled with peer
+     *            False if address relay is disallowed
+     */
+    bool SetupAddressRelay(const CNode& node, Peer& peer);
 
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted GUARDED_BY(cs_main) = 0;
@@ -837,11 +882,6 @@ static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     if (it == mapNodeState.end())
         return nullptr;
     return &it->second;
-}
-
-static bool RelayAddrsWithPeer(const Peer& peer)
-{
-    return peer.m_addr_known != nullptr;
 }
 
 /**
@@ -1317,9 +1357,7 @@ void PeerManagerImpl::InitializeNode(CNode *pnode) {
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->IsInboundConn()));
     }
     {
-        // Addr relay is disabled for outbound block-relay-only peers to
-        // prevent adversaries from inferring these links from addr traffic.
-        PeerRef peer = std::make_shared<Peer>(nodeid, /* addr_relay = */ !pnode->IsBlockOnlyConn());
+        PeerRef peer = std::make_shared<Peer>(nodeid);
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, std::move(peer));
     }
@@ -1450,6 +1488,9 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats)
     }
 
     stats.m_ping_wait = ping_wait;
+    stats.m_addr_processed = peer->m_addr_processed.load();
+    stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
+    stats.m_addr_relay_enabled = peer->m_addr_relay_enabled.load();
 
     return true;
 }
@@ -1639,7 +1680,7 @@ bool PeerManagerImpl::CanRelayAddrs(NodeId pnode) const
     PeerRef peer = GetPeerRef(pnode);
     if (peer == nullptr)
         return false;
-    return RelayAddrsWithPeer(*peer);
+    return peer->m_addr_relay_enabled;
 }
 
 bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
@@ -2119,7 +2160,7 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     LOCK(m_peer_mutex);
 
     for (auto& [id, peer] : m_peer_map) {
-        if (RelayAddrsWithPeer(*peer) && id != originator && IsAddrCompatible(*peer, addr)) {
+        if (peer->m_addr_relay_enabled && id != originator && IsAddrCompatible(*peer, addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(id).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                 if (hashKey > best[i].first) {
@@ -2221,7 +2262,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             } else if (inv.IsMsgFilteredBlk()) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
-                if (RelayAddrsWithPeer(peer)) {
+                if (!pfrom.IsBlockOnlyConn()) {
                     LOCK(pfrom.m_tx_relay->cs_filter);
                     if (pfrom.m_tx_relay->pfilter) {
                         sendMerkleBlock = true;
@@ -2324,7 +2365,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 
     const std::chrono::seconds now = GetTime<std::chrono::seconds>();
     // Get last mempool request time
-    const std::chrono::seconds mempool_req = RelayAddrsWithPeer(peer) ? pfrom.m_tx_relay->m_last_mempool_req.load()
+    const std::chrono::seconds mempool_req = !pfrom.IsBlockOnlyConn() ? pfrom.m_tx_relay->m_last_mempool_req.load()
                                                                       : std::chrono::seconds::min();
 
     // Process as many TX items from the front of the getdata queue as
@@ -2345,7 +2386,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
         ++it;
 
-        if (!RelayAddrsWithPeer(peer) && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+        if (!peer.m_addr_relay_enabled && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
             // Note that if we receive a getdata for non-block messages
             // from a block-relay-only outbound peer that violate the policy,
             // we skip such getdata messages from this peer
@@ -3188,7 +3229,7 @@ void PeerManagerImpl::ProcessMessage(
         // set nodes not capable of serving the complete blockchain history as "limited nodes"
         pfrom.m_limited_node = (!(nServices & NODE_NETWORK) && (nServices & NODE_NETWORK_LIMITED));
 
-        if (RelayAddrsWithPeer(*peer)) {
+        if (!pfrom.IsBlockOnlyConn()) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             pfrom.m_tx_relay->fRelayTxes = fRelay; // set to true after we get the first filter* message
         }
@@ -3199,7 +3240,8 @@ void PeerManagerImpl::ProcessMessage(
         UpdatePreferredDownload(pfrom, State(pfrom.GetId()));
         }
 
-        if (!pfrom.IsInboundConn() && !pfrom.IsBlockOnlyConn()) {
+        // Self advertisement & GETADDR logic
+        if (!pfrom.IsInboundConn() && SetupAddressRelay(pfrom, *peer)) {
             // For outbound peers, we try to relay our address (so that other
             // nodes can try to find us more quickly, as we have no guarantee
             // that an outbound peer is even aware of how to reach us) and do a
@@ -3208,8 +3250,9 @@ void PeerManagerImpl::ProcessMessage(
             // empty and no one will know who we are, so these mechanisms are
             // important to help us connect to the network.
             //
-            // We skip this for block-relay-only peers to avoid potentially leaking
-            // information about our block-relay-only connections via address relay.
+            // We skip this for block-relay-only peers. We want to avoid
+            // potentially leaking addr information and we do not want to
+            // indicate to the peer that we will participate in addr relay.
             if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
@@ -3228,6 +3271,9 @@ void PeerManagerImpl::ProcessMessage(
             // Get recent addresses
             m_connman.PushMessage(&pfrom, CNetMsgMaker(greatest_common_version).Make(NetMsgType::GETADDR));
             peer->m_getaddr_sent = true;
+            // When requesting a getaddr, accept an additional MAX_ADDR_TO_SEND addresses in response
+            // (bypassing the MAX_ADDR_PROCESSING_TOKEN_BUCKET limit).
+            peer->m_addr_token_bucket += MAX_ADDR_TO_SEND;
         }
 
         if (!pfrom.IsInboundConn()) {
@@ -3383,10 +3429,11 @@ void PeerManagerImpl::ProcessMessage(
 
         s >> vAddr;
 
-        if (!RelayAddrsWithPeer(*peer)) {
+        if (!SetupAddressRelay(pfrom, *peer)) {
             LogPrint(BCLog::NET, "ignoring %s message from %s peer=%d\n", msg_type, pfrom.ConnectionTypeAsString(), pfrom.GetId());
             return;
         }
+
         if (vAddr.size() > MAX_ADDR_TO_SEND)
         {
             Misbehaving(pfrom.GetId(), 20, strprintf("%s message size = %u", msg_type, vAddr.size()));
@@ -3397,11 +3444,35 @@ void PeerManagerImpl::ProcessMessage(
         std::vector<CAddress> vAddrOk;
         int64_t nNow = GetAdjustedTime();
         int64_t nSince = nNow - 10 * 60;
+
+        // Update/increment addr rate limiting bucket.
+        const auto current_time = GetTime<std::chrono::microseconds>();
+        if (peer->m_addr_token_bucket < MAX_ADDR_PROCESSING_TOKEN_BUCKET) {
+            // Don't increment bucket if it's already full
+            const auto time_diff = std::max(current_time - peer->m_addr_token_timestamp, 0us);
+            const double increment = CountSecondsDouble(time_diff) * MAX_ADDR_RATE_PER_SECOND;
+            peer->m_addr_token_bucket = std::min<double>(peer->m_addr_token_bucket + increment, MAX_ADDR_PROCESSING_TOKEN_BUCKET);
+        }
+        peer->m_addr_token_timestamp = current_time;
+
+        const bool rate_limited = !pfrom.HasPermission(NetPermissionFlags::Addr);
+        uint64_t num_proc = 0;
+        uint64_t num_rate_limit = 0;
+        Shuffle(vAddr.begin(), vAddr.end(), FastRandomContext());
         for (CAddress& addr : vAddr)
         {
             if (interruptMsgProc)
                 return;
 
+            // Apply rate limiting.
+            if (peer->m_addr_token_bucket < 1.0) {
+                if (rate_limited) {
+                    ++num_rate_limit;
+                    continue;
+                }
+            } else {
+                peer->m_addr_token_bucket -= 1.0;
+            }
             // We only bother storing full nodes, though this may include
             // things which we would not make an outbound connection to, in
             // part because we may make feeler connections to them.
@@ -3415,6 +3486,7 @@ void PeerManagerImpl::ProcessMessage(
                 // Do not process banned/discouraged addresses beyond remembering we received them
                 continue;
             }
+            ++num_proc;
             bool fReachable = IsReachable(addr);
             if (addr.nTime > nSince && !peer->m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
                 // Relay to a limited number of other nodes
@@ -3424,6 +3496,11 @@ void PeerManagerImpl::ProcessMessage(
             if (fReachable)
                 vAddrOk.push_back(addr);
         }
+        peer->m_addr_processed += num_proc;
+        peer->m_addr_rate_limited += num_rate_limit;
+        LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d\n",
+                 vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
+
         m_addrman.Add(vAddrOk, pfrom.addr, 2 * 60 * 60);
         if (vAddr.size() < 1000) peer->m_getaddr_sent = false;
         if (pfrom.IsAddrFetchConn()) {
@@ -4327,6 +4404,10 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
+        // Since this must be an inbound connection, SetupAddressRelay will
+        // never fail.
+        Assume(SetupAddressRelay(pfrom, *peer));
+
         // Only send one GetAddr response per connection to reduce resource waste
         // and discourage addr stamping of INV announcements.
         if (peer->m_getaddr_recvd) {
@@ -4370,7 +4451,7 @@ void PeerManagerImpl::ProcessMessage(
             return;
         }
 
-        if (RelayAddrsWithPeer(*peer)) {
+        if (!pfrom.IsBlockOnlyConn()) {
             LOCK(pfrom.m_tx_relay->cs_tx_inventory);
             pfrom.m_tx_relay->fSendMempool = true;
         }
@@ -4464,7 +4545,7 @@ void PeerManagerImpl::ProcessMessage(
             // There is no excuse for sending a too-large filter
             Misbehaving(pfrom.GetId(), 100, "too-large bloom filter");
         }
-        else if (RelayAddrsWithPeer(*peer))
+        else if (!pfrom.IsBlockOnlyConn())
         {
             LOCK(pfrom.m_tx_relay->cs_filter);
             pfrom.m_tx_relay->pfilter.reset(new CBloomFilter(filter));
@@ -4487,7 +4568,7 @@ void PeerManagerImpl::ProcessMessage(
         bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
             bad = true;
-        } else if (RelayAddrsWithPeer(*peer)) {
+        } else if (!pfrom.IsBlockOnlyConn()) {
             LOCK(pfrom.m_tx_relay->cs_filter);
             if (pfrom.m_tx_relay->pfilter) {
                 pfrom.m_tx_relay->pfilter->insert(vData);
@@ -4507,7 +4588,7 @@ void PeerManagerImpl::ProcessMessage(
             pfrom.fDisconnect = true;
             return;
         }
-        if (!RelayAddrsWithPeer(*peer)) {
+        if (pfrom.IsBlockOnlyConn()) {
             return;
         }
         LOCK(pfrom.m_tx_relay->cs_filter);
@@ -4946,8 +5027,11 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 
 void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now)
 {
-    if (m_connman.ShouldRunInactivityChecks(node_to) && peer.m_ping_nonce_sent &&
+    if (m_connman.ShouldRunInactivityChecks(node_to, std::chrono::duration_cast<std::chrono::seconds>(now).count()) &&
+        peer.m_ping_nonce_sent &&
         now > peer.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL}) {
+        // The ping timeout is using mocktime. To disable the check during
+        // testing, increase -peertimeout.
         LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(now - peer.m_ping_start.load()), peer.m_id);
         node_to.fDisconnect = true;
         return;
@@ -4981,7 +5065,7 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::mic
 void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time)
 {
     // Nothing to do for non-address-relay peers
-    if (!RelayAddrsWithPeer(peer)) return;
+    if (!peer.m_addr_relay_enabled) return;
 
     LOCK(peer.m_addr_send_times_mutex);
     // Periodically advertise our local address to the peer.
@@ -5062,6 +5146,22 @@ public:
         return mp->CompareDepthAndScore(*b, *a);
     }
 };
+}
+
+bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
+{
+    // We don't participate in addr relay with outbound block-relay-only
+    // connections to prevent providing adversaries with the additional
+    // information of addr traffic to infer the link.
+    if (node.IsBlockOnlyConn()) return false;
+
+    if (!peer.m_addr_relay_enabled.exchange(true)) {
+        // First addr message we have received from the peer, initialize
+        // m_addr_known
+        peer.m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);
+    }
+
+    return true;
 }
 
 bool PeerManagerImpl::SendMessages(CNode* pto)
@@ -5292,7 +5392,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK2(m_mempool.cs, peer->m_block_inv_mutex);
 
             size_t reserve = INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000;
-            if (RelayAddrsWithPeer(*peer)) {
+            if (!pto->IsBlockOnlyConn()) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 reserve = std::min<size_t>(pto->m_tx_relay->setInventoryTxToSend.size(), reserve);
             }
@@ -5323,7 +5423,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             };
 
-            if (RelayAddrsWithPeer(*peer)) {
+            if (!pto->IsBlockOnlyConn()) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
                 // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes

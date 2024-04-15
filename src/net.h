@@ -607,7 +607,8 @@ public:
     };
 
     // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
-    // in dash: m_tx_relay should never be nullptr, use `!IsBlockOnlyConn() == false` instead
+    // in dash: m_tx_relay should never be nullptr, we don't relay transactions if
+    //          `IsBlockOnlyConn() == true` is instead
     std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
     /** UNIX epoch time of the last block received from this peer that we had
@@ -1241,7 +1242,7 @@ public:
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
+    bool ShouldRunInactivityChecks(const CNode& node, int64_t secs_now) const;
 
 private:
     struct ListenSocket {
