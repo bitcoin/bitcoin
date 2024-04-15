@@ -66,9 +66,10 @@ Discussion about codebase improvements happens in GitHub issues and pull
 requests.
 
 The developer
-[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+[mailing list](https://groups.google.com/g/bitcoindev)
 should be used to discuss complicated or controversial consensus or P2P protocol changes before working on
 a patch set.
+Archives can be found on [https://gnusha.org/pi/bitcoindev/](https://gnusha.org/pi/bitcoindev/).
 
 
 Contributor Workflow
