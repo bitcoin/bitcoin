@@ -55,7 +55,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
     def test_with_invalid_sighashtype(self):
         self.log.info("Test signrawtransactionwithwallet raises if an invalid sighashtype is passed")
-        assert_raises_rpc_error(-8, "all is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithwallet, hexstring=RAW_TX, sighashtype="all")
+        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithwallet, hexstring=RAW_TX, sighashtype="all")
 
     def script_verification_error_test(self):
         """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
