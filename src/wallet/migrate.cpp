@@ -561,6 +561,24 @@ void BerkeleyRODatabase::Open()
         throw std::runtime_error("BDB builtin encryption is not supported");
     }
 
+    // Check all Log Sequence Numbers (LSN) point to file 0 and offset 1 which indicates that the LSNs were
+    // reset and that the log files are not necessary to get all of the data in the database.
+    for (uint32_t i = 0; i < outer_meta.last_page; ++i) {
+        // The LSN is composed of 2 32-bit ints, the first is a file id, the second an offset
+        // It will always be the first 8 bytes of a page, so we deserialize it directly for every page
+        uint32_t file;
+        uint32_t offset;
+        SeekToPage(db_file, i, page_size);
+        db_file >> file >> offset;
+        if (outer_meta.other_endian) {
+            file = internal_bswap_32(file);
+            offset = internal_bswap_32(offset);
+        }
+        if (file != 0 || offset != 1) {
+            throw std::runtime_error("LSNs are not reset, this database is not completely flushed. Please reopen then close the database with a version that has BDB support");
+        }
+    }
+
     // Read the root page
     SeekToPage(db_file, outer_meta.root, page_size);
     PageHeader header(outer_meta.root, outer_meta.other_endian);
