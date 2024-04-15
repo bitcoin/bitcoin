@@ -65,19 +65,23 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     {
         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
         coins_view_cache.SetBestBlock(InsecureRand256());
+
+        auto commitment1 = coin.out.blsctData.rangeProof.Vs[0];
+        auto commitment2 = coin2.out.blsctData.rangeProof.Vs[0];
+
         coins_view_cache.AddCoin(outpoint, std::move(coin), true);
         coins_view_cache.AddCoin(outpoint2, std::move(coin2), true);
 
-        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment1));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment2));
 
         coins_view_cache.SpendCoin(outpoint);
 
-        BOOST_CHECK(!coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
-        BOOST_ASSERT(coins_view_cache.Flush());
-        BOOST_CHECK(!coins_view_cache.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));
-        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin2.out.blsctData.rangeProof.Vs[0]));
+        BOOST_CHECK(!coins_view_cache.GetStakedCommitments().Exists(commitment1));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment2));
+        BOOST_CHECK(coins_view_cache.Flush());
+        BOOST_CHECK(!coins_view_cache.GetStakedCommitments().Exists(commitment1));
+        BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment2));
     }
 
     BOOST_CHECK(!base.GetStakedCommitments().Exists(coin.out.blsctData.rangeProof.Vs[0]));

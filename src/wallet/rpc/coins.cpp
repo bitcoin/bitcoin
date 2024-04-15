@@ -166,8 +166,10 @@ UniValue FormatStakedCommitmentInfo(const std::vector<StakedCommitmentInfo>& inf
 
     for (auto& it : info) {
         UniValue obj(UniValue::VOBJ);
+        obj.pushKV("tx_hash", it.hashTx.ToString());
         obj.pushKV("commitment", HexStr(it.commitment.GetVch()));
         obj.pushKV("value", HexStr(it.value.GetVch()));
+        obj.pushKV("amount", FormatMoney(it.value.GetUint64()));
         obj.pushKV("gamma", HexStr(it.gamma.GetVch()));
         ret.push_back(obj);
     }
@@ -184,12 +186,14 @@ liststakedcommitments()
         {},
         RPCResult{
             RPCResult::Type::ARR, "", "", {
-                {RPCResult::Type::OBJ, "", "", {
-                    {RPCResult::Type::STR_HEX, "commitment", "The staked commitment"},
-                    {RPCResult::Type::STR_HEX, "value", "The commitment amount"},
-                    {RPCResult::Type::STR_HEX, "gamma", "The commitment gamma"},
-                }},
-            }},
+                                              {RPCResult::Type::OBJ, "", "", {
+                                                                                 {RPCResult::Type::STR_HEX, "tx_hash", "The transaction hash where the commitment was locked"},
+                                                                                 {RPCResult::Type::STR_HEX, "commitment", "The staked commitment"},
+                                                                                 {RPCResult::Type::STR, "amount", "The commitment amount"},
+                                                                                 {RPCResult::Type::STR_HEX, "value", "The commitment amount in hex"},
+                                                                                 {RPCResult::Type::STR_HEX, "gamma", "The commitment gamma"},
+                                                                             }},
+                                          }},
         RPCExamples{"\nList the staked commitments\n" + HelpExampleCli("liststakedcommitments", "") + "\nAs a JSON-RPC call\n" + HelpExampleRpc("liststakedcommitments", "")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
             const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);

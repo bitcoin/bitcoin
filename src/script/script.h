@@ -558,7 +558,7 @@ public:
     {
         return (size() == 1 && *begin() == OP_RETURN);
     }
-    
+
     void clear()
     {
         // The default prevector::clear() does not release memory

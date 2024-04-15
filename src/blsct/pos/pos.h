@@ -7,7 +7,10 @@
 
 #include <blsct/pos/helpers.h>
 #include <chain.h>
-#include <node/blockstorage.h>
+
+namespace node {
+class BlockManager;
+}
 
 namespace blsct {
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);

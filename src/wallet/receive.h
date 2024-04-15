@@ -63,6 +63,7 @@ std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 struct StakedCommitmentInfo {
+    Txid hashTx;
     MclG1Point commitment;
     MclScalar value;
     MclScalar gamma;

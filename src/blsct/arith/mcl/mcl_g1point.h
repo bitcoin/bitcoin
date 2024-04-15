@@ -62,7 +62,7 @@ public:
 
     std::string GetString(const uint8_t& radix = 16) const;
     void SetString(const std::string& hex);
-    
+
     Scalar GetHashWithSalt(const uint64_t salt) const;
 
     template <typename Stream>

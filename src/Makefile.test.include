@@ -201,7 +201,7 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
-  test/blsct/pos/chain_tests.cpp \
+  test/blsct/pos/pos_chain_tests.cpp \
   test/blsct/wallet/address_tests.cpp \
   test/blsct/wallet/chain_tests.cpp \
   test/blsct/wallet/keyman_tests.cpp \

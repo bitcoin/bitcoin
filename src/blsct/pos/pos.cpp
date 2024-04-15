@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blsct/pos/pos.h>
+#include <node/blockstorage.h>
 #include <primitives/block.h>
 
 namespace blsct {
@@ -17,7 +18,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    unsigned int nProofOfStakeLimit = UintToArith256(params.posLimit).GetCompact();
+    // unsigned int nProofOfStakeLimit = UintToArith256(params.posLimit).GetCompact();
 
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight + 1) % params.DifficultyAdjustmentIntervalPos() != 0) {
@@ -197,7 +198,7 @@ bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nStakeMod
         pindex = pindex->pprev;
     }
 
-    int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
+    // int nHeightFirstCandidate = pindex ? (pindex->nHeight + 1) : 0;
     std::reverse(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
     std::sort(vSortedByTimestamp.begin(), vSortedByTimestamp.end());
 
