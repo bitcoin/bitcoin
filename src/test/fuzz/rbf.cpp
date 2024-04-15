@@ -107,6 +107,12 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     std::vector<CTransaction> mempool_txs;
     size_t iter{0};
 
+    int64_t replacement_vsize = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(1, 1000000);
+
+    // Keep track of the total vsize of CTxMemPoolEntry's being added to the mempool to avoid overflow
+    // Add replacement_vsize since this is added to new diagram during RBF check
+    int64_t running_vsize_total{replacement_vsize};
+
     LOCK2(cs_main, pool.cs);
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), NUM_ITERS)
@@ -114,19 +120,33 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         // Make sure txns only have one input, and that a unique input is given to avoid circular references
         std::optional<CMutableTransaction> parent = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
         if (!parent) {
-            continue;
+            return;
         }
         assert(iter <= g_outpoints.size());
         parent->vin.resize(1);
         parent->vin[0].prevout = g_outpoints[iter++];
 
         mempool_txs.emplace_back(*parent);
-        pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back()));
+        const auto parent_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
+        running_vsize_total += parent_entry.GetTxSize();
+        if (running_vsize_total > std::numeric_limits<int32_t>::max()) {
+            // We aren't adding this final tx to mempool, so we don't want to conflict with it
+            mempool_txs.pop_back();
+            break;
+        }
+        pool.addUnchecked(parent_entry);
         if (fuzzed_data_provider.ConsumeBool() && !child->vin.empty()) {
             child->vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
         }
         mempool_txs.emplace_back(*child);
-        pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back()));
+        const auto child_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
+        running_vsize_total += child_entry.GetTxSize();
+        if (running_vsize_total > std::numeric_limits<int32_t>::max()) {
+            // We aren't adding this final tx to mempool, so we don't want to conflict with it
+            mempool_txs.pop_back();
+            break;
+        }
+        pool.addUnchecked(child_entry);
 
         if (fuzzed_data_provider.ConsumeBool()) {
             pool.PrioritiseTransaction(mempool_txs.back().GetHash().ToUint256(), fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(-100000, 100000));
@@ -149,7 +169,6 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
 
     // Calculate the feerate diagrams for a replacement.
     CAmount replacement_fees = ConsumeMoney(fuzzed_data_provider);
-    int64_t replacement_vsize = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(1, 1000000);
     auto calc_results{pool.CalculateFeerateDiagramsForRBF(replacement_fees, replacement_vsize, direct_conflicts, all_conflicts)};
 
     if (calc_results.has_value()) {
