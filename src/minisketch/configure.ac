@@ -104,11 +104,6 @@ esac
 AX_CHECK_COMPILE_FLAG([-Wall],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CXXFLAGS="$CXXFLAGS -fvisibility=hidden"],[],[$CXXFLAG_WERROR])
 
-## Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
-## unknown options if any other warning is produced. Test the -Wfoo case, and
-## set the -Wno-foo case if it works.
-AX_CHECK_COMPILE_FLAG([-Wshift-count-overflow],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-shift-count-overflow"],,[[$CXXFLAG_WERROR]])
-
 if test "x$use_ccache" != "xno"; then
   AC_MSG_CHECKING(if ccache should be used)
   if test x$CCACHE = x; then
@@ -119,7 +114,6 @@ if test "x$use_ccache" != "xno"; then
     fi
   else
     use_ccache=yes
-    CC="$ac_cv_path_CCACHE $CC"
     CXX="$ac_cv_path_CCACHE $CXX"
   fi
   AC_MSG_RESULT($use_ccache)
