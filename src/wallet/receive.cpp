@@ -397,6 +397,7 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
 
 std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet)
 {
+    AssertLockHeld(wallet.cs_wallet);
     std::vector<StakedCommitmentInfo> ret;
 
     {
