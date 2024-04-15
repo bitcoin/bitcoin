@@ -172,6 +172,7 @@ BLSCT_H = \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
+  blsct/pos/helpers.h \
   blsct/pos/pos.h \
   blsct/pos/proof.h \
   blsct/pos/proof_logic.h \
@@ -219,6 +220,10 @@ BLSCT_CPP = \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/external_api/blsct.cpp \
+  blsct/pos/helpers.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof_logic.cpp \
+  blsct/pos/proof.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
