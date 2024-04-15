@@ -403,11 +403,13 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (mine == ISMINE_NO) {
                 continue;
             }
-
             if (params.only_blsct && !output.IsBLSCT()) {
                 continue;
             }
             if (params.include_staked_commitment && !output.IsStakedCommitment()) {
+                continue;
+            }
+            if (!params.include_staked_commitment && output.IsStakedCommitment()) {
                 continue;
             }
             if (params.token_id != output.tokenId) {

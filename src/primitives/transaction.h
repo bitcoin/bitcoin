@@ -18,8 +18,8 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <util/transaction_identifier.h> // IWYU pragma: export
 #include <util/moneystr.h>
+#include <util/transaction_identifier.h> // IWYU pragma: export
 
 #include <cstddef>
 #include <cstdint>

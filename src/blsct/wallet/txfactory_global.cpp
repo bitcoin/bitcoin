@@ -71,9 +71,9 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
 
     std::vector<unsigned char> memo{sMemo.begin(), sMemo.end()};
 
-    if (type == NORMAL) {
-        ret.out.scriptPubKey = CScript(OP_TRUE);
-    } else if (type == STAKED_COMMITMENT && tokenId.IsNull()) {
+    ret.out.scriptPubKey = CScript(OP_TRUE);
+
+    if (type == STAKED_COMMITMENT && tokenId.IsNull()) {
         auto stakeRp = rp.Prove(vs, nonce, {}, tokenId, minStake);
 
         stakeRp.Vs.Clear();
@@ -81,7 +81,7 @@ UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmoun
         DataStream ss{};
         ss << stakeRp;
 
-        ret.out.scriptPubKey << OP_STAKED_COMMITMENT << blsct::Common::DataStreamToVector(ss) << OP_DROP << OP_TRUE;
+        ret.out.scriptPubKey = CScript() << OP_STAKED_COMMITMENT << blsct::Common::DataStreamToVector(ss) << OP_DROP << OP_TRUE;
     }
 
     auto p = rp.Prove(vs, nonce, memo, tokenId);
