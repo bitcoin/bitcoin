@@ -50,16 +50,22 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, TxValidationS
 
     for (auto& out : tx.vout) {
         if (out.IsBLSCT()) {
-            vPubKeys.emplace_back(out.blsctData.ephemeralKey);
+            bulletproofs::RangeProofWithSeed<Mcl> proof{out.blsctData.rangeProof, out.tokenId};
             auto out_hash = out.GetHash();
+
+            vPubKeys.emplace_back(out.blsctData.ephemeralKey);
             vMessages.emplace_back(out_hash.begin(), out_hash.end());
-            vProofs.emplace_back(bulletproofs::RangeProofWithSeed<Mcl>{out.blsctData.rangeProof, out.tokenId});
+            vProofs.emplace_back(proof);
+
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
 
             if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof)) {
                 stakedCommitmentRangeProof.Vs.Clear();
                 stakedCommitmentRangeProof.Vs.Add(out.blsctData.rangeProof.Vs[0]);
-                vProofs.push_back(bulletproofs::RangeProofWithSeed<Mcl>{stakedCommitmentRangeProof, TokenId(), minStake});
+
+                proof = bulletproofs::RangeProofWithSeed<Mcl>{stakedCommitmentRangeProof, TokenId(), minStake};
+
+                vProofs.push_back(proof);
             }
         } else {
             if (!out.scriptPubKey.IsUnspendable() && out.nValue > 0) {

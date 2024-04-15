@@ -64,6 +64,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
 
     auto commitment1 = coin.out.blsctData.rangeProof.Vs[0];
     auto commitment2 = coin2.out.blsctData.rangeProof.Vs[0];
+    auto commitment3 = coin3.out.blsctData.rangeProof.Vs[0];
 
     {
         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
@@ -90,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 
     coins_view_cache.AddCoin(outpoint3, std::move(coin3), true);
-    BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(coin3.out.blsctData.rangeProof.Vs[0]));
+    BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment3));
     BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment2));
 
     CBlockIndex index;
