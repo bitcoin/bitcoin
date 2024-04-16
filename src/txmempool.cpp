@@ -863,15 +863,16 @@ int CTxMemPool::Expire(std::chrono::seconds time)
 {
     AssertLockHeld(cs);
     indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
-    setEntries toremove;
+    Entries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
-        toremove.insert(mapTx.project<0>(it));
+        toremove.emplace_back(mapTx.project<0>(it));
         it++;
     }
+    auto descendants = CalculateDescendants(toremove);
+
     setEntries stage;
-    for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
-    }
+    stage.insert(descendants.begin(), descendants.end());
+
     RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
     return stage.size();
 }
