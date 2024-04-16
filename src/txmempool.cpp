@@ -392,10 +392,14 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
 {
     // Remove transaction from memory pool
     AssertLockHeld(cs);
-        setEntries txToRemove;
-        txiter origit = mapTx.find(origTx.GetHash());
+    Entries txToRemove;
+    txiter origit = mapTx.find(origTx.GetHash());
+
+    {
+        WITH_FRESH_EPOCH(m_epoch);
         if (origit != mapTx.end()) {
-            txToRemove.insert(origit);
+            visited(origit);
+            txToRemove.emplace_back(origit);
         } else {
             // When recursively removing but origTx isn't in the mempool
             // be sure to remove any children that are in the pool. This can
@@ -407,15 +411,18 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
                     continue;
                 txiter nextit = mapTx.find(it->second->GetHash());
                 assert(nextit != mapTx.end());
-                txToRemove.insert(nextit);
+                if (!visited(nextit)) {
+                    txToRemove.emplace_back(nextit);
+                }
             }
         }
-        setEntries setAllRemoves;
-        for (txiter it : txToRemove) {
-            CalculateDescendants(it, setAllRemoves);
-        }
+    }
+    setEntries setAllRemoves;
+    auto all_removes = CalculateDescendants(txToRemove);
 
-        RemoveStaged(setAllRemoves, reason);
+    setAllRemoves.insert(all_removes.begin(), all_removes.end());
+
+    RemoveStaged(setAllRemoves, reason);
 }
 
 void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
