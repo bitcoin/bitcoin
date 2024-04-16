@@ -785,8 +785,6 @@ void Loop()
                 found = candidate.has_value();
                 if (found)
                     proposal = candidate.value();
-
-                nTries++;
             }
         }
 
@@ -802,7 +800,6 @@ void Loop()
                     last_update = SteadyClock::now();
                 }
                 LogPrintf("%s: [%s] Found block %s (%s%s). Current difficulty: %s\n", __func__, walletName, proposal.GetHash().ToString(), result_submit.isNull() ? "ACCEPTED" : "REJECTED: ", result_submit.isNull() ? "" : reply_submit.write(0, 0), currentDifficulty.ToString());
-                nTries = 0;
 
                 auto elapsed = Ticks<std::chrono::minutes>(SteadyClock::now() - start);
 
@@ -813,7 +810,6 @@ void Loop()
         }
 
         if (Ticks<std::chrono::milliseconds>(SteadyClock::now() - last_update) > 60000) {
-            nTries = 0;
             last_update = SteadyClock::now();
             LogPrintf("%s: [%s] Did not find a block yet. Current difficulty: %s\n", __func__, walletName, currentDifficulty.ToString());
         }
