@@ -323,7 +323,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     info.pushKV("depends", std::move(depends));
 
     UniValue spent(UniValue::VARR);
-    for (const CTxMemPoolEntry& child : e.GetMemPoolChildrenConst()) {
+    for (const CTxMemPoolEntry& child : pool.GetChildren(e)) {
         spent.push_back(child.GetTx().GetHash().ToString());
     }
 

@@ -51,6 +51,24 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
     return true;
 }
 
+std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const CTxMemPoolEntry& entry) const
+{
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
+    for (auto child : entry.GetMemPoolChildrenConst()) {
+        ret.push_back(child);
+    }
+    return ret;
+}
+
+std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetParents(const CTxMemPoolEntry& entry) const
+{
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
+    for (auto child : entry.GetMemPoolParentsConst()) {
+        ret.push_back(child);
+    }
+    return ret;
+}
+
 std::vector<TxEntry::TxEntryRef> CTxMemPool::GetChildrenOf(const TxEntry& tx)
 {
     LOCK(cs);
