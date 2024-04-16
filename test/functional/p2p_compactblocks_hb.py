@@ -32,10 +32,15 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
         self.connect_nodes(peer, 0)
         self.generate(self.nodes[0], 1)
         self.disconnect_nodes(peer, 0)
-        status_to = [self.peer_info(1, i)['bip152_hb_to'] for i in range(2, 6)]
-        status_from = [self.peer_info(i, 1)['bip152_hb_from'] for i in range(2, 6)]
-        assert_equal(status_to, status_from)
-        return status_to
+
+        def status_to():
+            return [self.peer_info(1, i)['bip152_hb_to'] for i in range(2, 6)]
+
+        def status_from():
+            return [self.peer_info(i, 1)['bip152_hb_from'] for i in range(2, 6)]
+
+        self.wait_until(lambda: status_to() == status_from())
+        return status_to()
 
     def run_test(self):
         self.log.info("Testing reserved high-bandwidth mode slot for outbound peer...")
