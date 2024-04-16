@@ -162,12 +162,13 @@ std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTran
 }
 
 std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
 {
+    CTxMemPool::Entries parents = pool.CalculateParentsOf(*ptx);
+
     // Check TRUC and non-TRUC inheritance.
-    for (const auto& entry : mempool_ancestors) {
+    for (const auto& entry : parents) {
         if (ptx->version != TRUC_VERSION && entry->GetTx().version == TRUC_VERSION) {
             return std::make_pair(strprintf("non-version=3 tx %s (wtxid=%s) cannot spend from version=3 tx %s (wtxid=%s)",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
@@ -195,14 +196,14 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
     }
 
     // Check that TRUC_ANCESTOR_LIMIT would not be violated.
-    if (mempool_ancestors.size() + 1 > TRUC_ANCESTOR_LIMIT) {
+    if (parents.size() + 1 > TRUC_ANCESTOR_LIMIT) {
         return std::make_pair(strprintf("tx %s (wtxid=%s) would have too many ancestors",
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString()),
             nullptr);
     }
 
     // Remaining checks only pertain to transactions with unconfirmed ancestors.
-    if (mempool_ancestors.size() > 0) {
+    if (parents.size() > 0) {
         // If this transaction spends TRUC parents, it cannot be too large.
         if (vsize > TRUC_CHILD_MAX_VSIZE) {
             return std::make_pair(strprintf("version=3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
@@ -211,7 +212,14 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
         }
 
         // Check the descendant counts of in-mempool ancestors.
-        const auto& parent_entry = *mempool_ancestors.begin();
+        const auto& parent_entry = parents[0];
+
+        // If we have a single parent, that transaction may not have any of its own parents.
+        if (pool.GetParents(*parent_entry).size() > 0) {
+            return std::make_pair(strprintf("tx %s (wtxid=%s) would have too many ancestors",
+                    ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString()), nullptr);
+        }
+
         // If there are any ancestors, this is the only child allowed. The parent cannot have any
         // other descendants. We handle the possibility of multiple children as that case is
         // possible through a reorg.
