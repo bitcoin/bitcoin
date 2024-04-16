@@ -656,17 +656,6 @@ struct close_fds {
 };
 
 /*!
- * Option to make the child process as the
- * session leader and thus the process
- * group leader.
- * Default value is false.
- */
-struct session_leader {
-  explicit session_leader(bool sl): leader_(sl) {}
-  bool leader_ = false;
-};
-
-/*!
  * Base class for all arguments involving string value.
  */
 struct string_arg
@@ -941,7 +930,6 @@ struct ArgumentDeducer
   void set_option(output&& out);
   void set_option(error&& err);
   void set_option(close_fds&& cfds);
-  void set_option(session_leader&& sleader);
 
 private:
   Popen* popen_ = nullptr;
@@ -1268,7 +1256,6 @@ private:
 #endif
 
   bool close_fds_ = false;
-  bool session_leader_ = false;
 
   std::string exe_name_;
   std::string cwd_;
@@ -1385,8 +1372,7 @@ inline void Popen::kill(int sig_num)
     throw OSError("TerminateProcess", 0);
   }
 #else
-  if (session_leader_) killpg(child_pid_, sig_num);
-  else ::kill(child_pid_, sig_num);
+  ::kill(child_pid_, sig_num);
 #endif
 }
 
@@ -1564,10 +1550,6 @@ namespace detail {
     popen_->env_ = std::move(env.env_);
   }
 
-  inline void ArgumentDeducer::set_option(session_leader&& sleader) {
-    popen_->session_leader_ = sleader.leader_;
-  }
-
   inline void ArgumentDeducer::set_option(input&& inp) {
     if (inp.rd_ch_ != -1) popen_->stream_.read_from_parent_ = inp.rd_ch_;
     if (inp.wr_ch_ != -1) popen_->stream_.write_to_child_ = inp.wr_ch_;
@@ -1655,11 +1637,6 @@ namespace detail {
       if (parent_->cwd_.length()) {
         sys_ret = chdir(parent_->cwd_.c_str());
         if (sys_ret == -1) throw OSError("chdir failed", errno);
-      }
-
-      if (parent_->session_leader_) {
-        sys_ret = setsid();
-        if (sys_ret == -1) throw OSError("setsid failed", errno);
       }
 
       // Replace the current image with the executable
