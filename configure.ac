@@ -696,6 +696,9 @@ case $host in
      TARGET_OS=darwin
      if  test $cross_compiling != "yes"; then
        BUILD_OS=darwin
+
+       AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
+
        AC_CHECK_PROG([BREW], [brew], [brew])
        if test "$BREW" = "brew"; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -771,7 +774,6 @@ case $host in
        esac
      fi
 
-     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
      CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
 
      dnl ignore deprecated-declarations warnings coming from objcxx code
