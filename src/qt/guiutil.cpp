@@ -643,7 +643,7 @@ void openConfigfile()
 
 void showBackups()
 {
-    fs::path backupsDir = GetBackupsDir();
+    fs::path backupsDir = gArgs.GetBackupsDirPath();
 
     /* Open folder with default browser */
     if (fs::exists(backupsDir))

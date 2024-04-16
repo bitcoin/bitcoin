@@ -136,7 +136,8 @@ void DashTestSetupClose(NodeContext& node)
 }
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
-    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()}
+    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()},
+      m_args{}
 {
     const std::vector<const char*> arguments = Cat(
         {
@@ -152,8 +153,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         extra_args);
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
+    m_args.ForceSetArg("-datadir", m_path_root.string());
     gArgs.ForceSetArg("-datadir", m_path_root.string());
-    ClearDatadirCache();
+    gArgs.ClearPathCache();
     {
         SetupServerArgs(m_node);
         std::string error;
@@ -283,7 +285,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
 
-    m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirPath() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.scheduler, *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
                                        *m_node.govman, *m_node.sporkman, ::deterministicMNManager, m_node.cj_ctx, m_node.llmq_ctx,
