@@ -67,16 +67,11 @@ class CTxMemPoolEntry : public TxGraph::Ref
 {
 public:
     typedef std::reference_wrapper<const CTxMemPoolEntry> CTxMemPoolEntryRef;
-    // two aliases, should the types ever diverge
-    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Parents;
-    typedef std::set<CTxMemPoolEntryRef, CompareIteratorByHash> Children;
 
 private:
     CTxMemPoolEntry(const CTxMemPoolEntry&) = delete;
 
     const CTransactionRef tx;
-    mutable Parents m_parents;
-    mutable Children m_children;
     const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
     const int32_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
     const size_t nUsageSize;        //!< ... and total memory usage
@@ -141,11 +136,6 @@ public:
     }
 
     bool GetSpendsCoinbase() const { return spendsCoinbase; }
-
-    const Parents& GetMemPoolParentsConst() const { return m_parents; }
-    const Children& GetMemPoolChildrenConst() const { return m_children; }
-    Parents& GetMemPoolParents() const { return m_parents; }
-    Children& GetMemPoolChildren() const { return m_children; }
 
     mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
