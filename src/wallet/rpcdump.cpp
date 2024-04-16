@@ -1943,22 +1943,23 @@ RPCHelpMan listdescriptors()
         "listdescriptors",
         "\nList descriptors imported into a descriptor-enabled wallet.",
         {},
-        RPCResult{
-            RPCResult::Type::ARR, "", "Response is an array of descriptor objects",
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+            {RPCResult::Type::STR, "wallet_name", "Name of wallet this operation was performed on"},
+            {RPCResult::Type::ARR, "descriptors", "Array of descriptor objects",
             {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "desc", "Descriptor string representation"},
                     {RPCResult::Type::NUM, "timestamp", "The creation time of the descriptor"},
                     {RPCResult::Type::BOOL, "active", "Activeness flag"},
-                    {RPCResult::Type::BOOL, "internal", true, "Whether this is internal or external descriptor; defined only for active descriptors"},
+                    {RPCResult::Type::BOOL, "internal", true, "Whether this is an internal or external descriptor; defined only for active descriptors"},
                     {RPCResult::Type::ARR_FIXED, "range", true, "Defined only for ranged descriptors", {
                         {RPCResult::Type::NUM, "", "Range start inclusive"},
                         {RPCResult::Type::NUM, "", "Range end inclusive"},
                     }},
                     {RPCResult::Type::NUM, "next", true, "The next index to generate addresses from; defined only for ranged descriptors"},
                 }},
-            }
-        },
+            }}
+        }},
         RPCExamples{
             HelpExampleCli("listdescriptors", "") + HelpExampleRpc("listdescriptors", "")
         },
@@ -1971,9 +1972,11 @@ RPCHelpMan listdescriptors()
         throw JSONRPCError(RPC_WALLET_ERROR, "listdescriptors is not available for non-descriptor wallets");
     }
 
+    EnsureWalletIsUnlocked(wallet.get());
+
     LOCK(wallet->cs_wallet);
 
-    UniValue response(UniValue::VARR);
+    UniValue descriptors(UniValue::VARR);
     const auto active_spk_mans = wallet->GetActiveScriptPubKeyMans();
     for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
         const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
@@ -1983,7 +1986,11 @@ RPCHelpMan listdescriptors()
         UniValue spk(UniValue::VOBJ);
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
-        spk.pushKV("desc", wallet_descriptor.descriptor->ToString());
+        std::string descriptor;
+        if (!desc_spk_man->GetDescriptorString(descriptor, false)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Can't get normalized descriptor string.");
+        }
+        spk.pushKV("desc", descriptor);
         spk.pushKV("timestamp", wallet_descriptor.creation_time);
         const bool active = active_spk_mans.count(desc_spk_man) != 0;
         spk.pushKV("active", active);
@@ -1998,8 +2005,12 @@ RPCHelpMan listdescriptors()
             spk.pushKV("range", range);
             spk.pushKV("next", wallet_descriptor.next_index);
         }
-        response.push_back(spk);
+        descriptors.push_back(spk);
     }
+
+    UniValue response(UniValue::VOBJ);
+    response.pushKV("wallet_name", wallet->GetName());
+    response.pushKV("descriptors", descriptors);
 
     return response;
 },

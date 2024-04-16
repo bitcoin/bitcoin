@@ -42,6 +42,8 @@ class ZMQSubscriber:
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        if self.is_wallet_compiled():
+            self.requires_wallet = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
@@ -90,8 +92,6 @@ class ZMQTest (BitcoinTestFramework):
 
         # Relax so that the subscriber is ready before publishing zmq messages
         sleep(0.2)
-        self.import_deterministic_coinbase_privkeys()
-
 
         num_blocks = 5
         self.log.info("Generate %(n)d blocks (and %(n)d coinbase txes)" % {"n": num_blocks})
