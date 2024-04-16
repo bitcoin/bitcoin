@@ -632,16 +632,6 @@ namespace util
  */
 
 /*!
- * The buffer size of the stdin/stdout/stderr
- * streams of the child process.
- * Default value is 0.
- */
-struct bufsize {
-  explicit bufsize(int sz): bufsiz(sz) {}
-  int  bufsiz = 0;
-};
-
-/*!
  * Base class for all arguments involving string value.
  */
 struct string_arg
@@ -910,7 +900,6 @@ struct ArgumentDeducer
 
   void set_option(executable&& exe);
   void set_option(cwd&& cwdir);
-  void set_option(bufsize&& bsiz);
   void set_option(environment&& env);
   void set_option(input&& inp);
   void set_option(output&& out);
@@ -1064,9 +1053,6 @@ public:// Yes they are public
   HANDLE g_hChildStd_ERR_Rd = nullptr;
   HANDLE g_hChildStd_ERR_Wr = nullptr;
 #endif
-
-  // Buffer size for the IO streams
-  int bufsiz_ = 0;
 
   // Pipes for communicating with child
 
@@ -1525,10 +1511,6 @@ namespace detail {
     popen_->cwd_ = std::move(cwdir.arg_value);
   }
 
-  inline void ArgumentDeducer::set_option(bufsize&& bsiz) {
-    popen_->stream_.bufsiz_ = bsiz.bufsiz;
-  }
-
   inline void ArgumentDeducer::set_option(environment&& env) {
     popen_->env_ = std::move(env.env_);
   }
@@ -1658,16 +1640,7 @@ namespace detail {
 
     for (auto& h : handles) {
       if (h == nullptr) continue;
-      switch (bufsiz_) {
-      case 0:
-        setvbuf(h, nullptr, _IONBF, BUFSIZ);
-        break;
-      case 1:
-        setvbuf(h, nullptr, _IONBF, BUFSIZ);
-        break;
-      default:
-        setvbuf(h, nullptr, _IOFBF, bufsiz_);
-      };
+      setvbuf(h, nullptr, _IONBF, BUFSIZ);
     }
   #endif
   }
