@@ -435,7 +435,7 @@ public:
      *         exceede
      */
     util::Result<bool> CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
-            const Limits& limits, std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& all_parents) const
+            const Limits& limits, Entries& all_parents) const
         EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     size_t GetUniqueClusterCount(const setEntries& iters_conflicting) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
