@@ -621,7 +621,7 @@ private:
          * replace via sibling eviction. */
         CTxMemPool::setEntries m_iters_conflicting;
         /** All mempool ancestors of this transaction. */
-        CTxMemPool::setEntries m_ancestors;
+        CTxMemPool::Entries m_parents;
         /** Mempool entry constructed for this transaction. Constructed in PreChecks() but not
          * inserted into the mempool until Finalize(). */
         std::unique_ptr<CTxMemPoolEntry> m_entry;
@@ -944,9 +944,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
 
-    // Calculate in-mempool ancestors, up to a limit.
-    ws.m_ancestors = m_pool.CalculateMemPoolAncestors(*entry);
-
     // Even though just checking direct mempool parents for inheritance would be sufficient, we
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
@@ -971,15 +968,17 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-rule-violation", err->first);
         }
     }
+    ws.m_parents = m_pool.CalculateParentsOf(*ws.m_ptx);
 
-    // A transaction that spends outputs that would be replaced by it is invalid. Now
-    // that we have the set of all ancestors we can detect this
-    // pathological case by making sure ws.m_conflicts and ws.m_ancestors don't
-    // intersect.
-    if (const auto err_string{EntriesAndTxidsDisjoint(ws.m_ancestors, ws.m_conflicts, hash)}) {
-        // We classify this as a consensus error because a transaction depending on something it
-        // conflicts with would be inconsistent.
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
+    // A transaction that spends outputs that would be replaced by it is invalid. Ensure
+    // that m_conflicts doesn't intersect with the set of ancestors.
+    if (!ws.m_conflicts.empty()) {
+        auto ancestors = m_pool.CalculateMemPoolAncestors(*entry);
+        if (const auto err_string{EntriesAndTxidsDisjoint(ancestors, ws.m_conflicts, hash)}) {
+            // We classify this as a consensus error because a transaction depending on something it
+            // conflicts with would be inconsistent.
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-spends-conflicting-tx", *err_string);
+        }
     }
 
     // We want to detect conflicts in any tx in a package to trigger package RBF logic
@@ -993,13 +992,9 @@ bool MemPoolAccept::ClusterSizeChecks(Workspace& ws)
     AssertLockHeld(m_pool.cs);
 
     const CTxMemPoolEntry &entry = *ws.m_entry;
-    const CTxMemPool::setEntries& ancestors = ws.m_ancestors;
     TxValidationState& state = ws.m_state;
 
-    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> parents;
-    for (auto a : ancestors) parents.emplace_back(*a);
-
-    auto result{m_pool.CheckClusterSizeLimit(entry.GetTxSize(), 1, m_pool.m_opts.limits, parents)};
+    auto result{m_pool.CheckClusterSizeLimit(entry.GetTxSize(), 1, m_pool.m_opts.limits, ws.m_parents)};
     if (!result) {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-large-cluster", util::ErrorString(result).original);
     }
@@ -1078,7 +1073,7 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
     // N.B. To relax this constraint we will need to revisit how CCoinsViewMemPool::PackageAddTransaction
     // is being used inside AcceptMultipleTransactions to track available inputs while processing a package.
     for (const auto& ws : workspaces) {
-        if (!ws.m_ancestors.empty()) {
+        if (!ws.m_parents.empty()) {
             return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package RBF failed: new transaction cannot have mempool ancestors");
         }
     }
@@ -1287,11 +1282,6 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
                                             ws.m_ptx->GetHash().ToString()));
         }
 
-        // Re-calculate mempool ancestors to call addUnchecked(). They may have changed since the
-        // last calculation done in PreChecks, since package ancestors have already been submitted.
-        {
-            ws.m_ancestors = m_pool.CalculateMemPoolAncestors(*ws.m_entry);
-        }
         // If we call LimitMempoolSize() for each individual Finalize(), the mempool will not take
         // the transaction's descendant feerate into account because it hasn't seen them yet. Also,
         // we risk evicting a transaction that a subsequent package transaction depends on. Instead,

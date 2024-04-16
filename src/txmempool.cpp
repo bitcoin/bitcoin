@@ -166,12 +166,12 @@ std::vector<TxEntry::TxEntryRef> CTxMemPool::CalculateAncestors(const CTxMemPool
 util::Result<void> CTxMemPool::CheckPackageLimits(const Package& package,
                                                   const int64_t total_vsize) const
 {
-    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> staged_ancestors;
+    Entries staged_ancestors;
     for (const auto& tx : package) {
         for (const auto& input : tx->vin) {
             std::optional<txiter> piter = GetIter(input.prevout.hash);
             if (piter) {
-                staged_ancestors.emplace_back(**piter);
+                staged_ancestors.emplace_back(*piter);
             }
         }
     }
@@ -203,11 +203,11 @@ util::Result<bool> CTxMemPool::CheckClusterSizeAgainstLimits(const std::vector<T
 }
 
 util::Result<bool> CTxMemPool::CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
-        const Limits& limits, std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& all_parents) const
+        const Limits& limits, Entries& all_parents) const
 {
     std::vector<TxEntry::TxEntryRef> parents;
     for (auto p : all_parents) {
-        parents.emplace_back(p.get());
+        parents.emplace_back(*p);
     }
 
     return CheckClusterSizeAgainstLimits(parents, entry_count, entry_size, limits);
