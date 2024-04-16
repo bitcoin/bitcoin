@@ -950,7 +950,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Even though just checking direct mempool parents for inheritance would be sufficient, we
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
-    if (const auto err{SingleV3Checks(m_pool, ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
+    if (const auto err{SingleV3Checks(m_pool, ws.m_ptx, ws.m_conflicts, ws.m_vsize)}) {
         // Single transaction contexts only.
         if (args.m_allow_sibling_eviction && err->second != nullptr) {
             // We should only be considering where replacement is considered valid as well.

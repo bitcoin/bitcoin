@@ -47,7 +47,6 @@ static_assert(V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT
  *
  *
  * @param[in]   pool                    A reference to the mempool.
- * @param[in]   mempool_ancestors       The in-mempool ancestors of ptx.
  * @param[in]   direct_conflicts        In-mempool transactions this tx conflicts with. These conflicts
  *                                      are used to more accurately calculate the resulting descendant
  *                                      count of in-mempool ancestors.
@@ -62,7 +61,6 @@ static_assert(V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT
  *   applicable.
  */
 std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTxMemPool& pool, const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize);
 

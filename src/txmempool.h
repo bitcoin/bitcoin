@@ -307,6 +307,7 @@ public:
     int64_t GetNumChildren(const CTxMemPoolEntry &e) const { return e.GetTxEntryChildren().size(); }
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> GetChildren(const CTxMemPoolEntry &entry) const;
     std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> GetParents(const CTxMemPoolEntry &entry) const;
+    Entries CalculateParentsOf(const CTransaction& tx) const;
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
