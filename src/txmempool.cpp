@@ -54,6 +54,38 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
     return true;
 }
 
+std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const CTxMemPoolEntry& entry) const
+{
+    LOCK(cs);
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
+    setEntries children;
+    auto iter = mapNextTx.lower_bound(COutPoint(entry.GetTx().GetHash(), 0));
+    for (; iter != mapNextTx.end() && iter->first->hash == entry.GetTx().GetHash(); ++iter) {
+        children.insert(iter->second);
+    }
+    for (const auto& child : children) {
+        ret.emplace_back(*child);
+    }
+    return ret;
+}
+
+std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetParents(const CTxMemPoolEntry& entry) const
+{
+    LOCK(cs);
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> ret;
+    std::set<Txid> inputs;
+    for (const auto& txin : entry.GetTx().vin) {
+        inputs.insert(txin.prevout.hash);
+    }
+    for (const auto& hash : inputs) {
+        std::optional<txiter> piter = GetIter(hash);
+        if (piter) {
+            ret.emplace_back(**piter);
+        }
+    }
+    return ret;
+}
+
 void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate)
 {
     AssertLockHeld(cs);
