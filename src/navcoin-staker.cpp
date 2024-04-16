@@ -766,7 +766,6 @@ void Loop()
 
     auto last_update{SteadyClock::now()};
     auto start{SteadyClock::now()};
-    auto nTries = 0;
     double nFound = 0;
 
     LogPrintf("%s: [%s] Starting staking...\n", __func__, walletName);

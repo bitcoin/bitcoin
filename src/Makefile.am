@@ -1254,6 +1254,10 @@ libnavcoinkernel_la_SOURCES = \
   blsct/building_block/weighted_inner_prod_arg.cpp \
   blsct/common.cpp \
   blsct/double_public_key.cpp \
+  blsct/pos/helpers.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof_logic.cpp \
+  blsct/pos/proof.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
