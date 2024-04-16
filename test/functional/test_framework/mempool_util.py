@@ -5,6 +5,9 @@
 """Helpful routines for mempool testing."""
 from decimal import Decimal
 
+from .blocktools import (
+    COINBASE_MATURITY,
+)
 from .util import (
     assert_equal,
     assert_greater_than,
@@ -38,8 +41,8 @@ def fill_mempool(test_framework, node, miniwallet):
     # 75 transactions each with a fee rate higher than the previous one
     test_framework.generate(miniwallet, 1 + (num_of_batches * tx_batch_size))
 
-    # Mine COINBASE_MATURITY - 1 blocks so that the UTXOs are allowed to be spent
-    test_framework.generate(node, 100 - 1)
+    # Mine enough blocks so that the UTXOs are allowed to be spent
+    test_framework.generate(node, COINBASE_MATURITY - 1)
 
     # Get all UTXOs up front to ensure none of the transactions spend from each other, as that may
     # change their effective feerate and thus the order in which they are selected for eviction.
