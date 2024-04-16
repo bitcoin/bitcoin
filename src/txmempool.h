@@ -312,26 +312,12 @@ private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
 
-    void UpdateParent(txiter entry, txiter parent, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void UpdateChild(txiter entry, txiter child, bool add) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     std::vector<indexed_transaction_set::const_iterator> GetSortedScoreWithTopology() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /**
      * Track locally submitted transactions to periodically retry initial broadcast.
      */
     std::set<uint256> m_unbroadcast_txids GUARDED_BY(cs);
-
-
-    /**
-     * Helper function to calculate all in-mempool ancestors of staged_ancestors
-     *
-     * @param[in]   staged_ancestors    Should contain entries in the mempool.
-     *
-     * @return all in-mempool ancestors
-     */
-    setEntries CalculateAncestors(CTxMemPoolEntry::Parents &staged_ancestors)
-            const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::vector<TxEntry::TxEntryRef> CalculateParents(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     std::vector<TxEntry::TxEntryRef> CalculateParents(const CTxMemPoolEntry &entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -463,7 +449,7 @@ public:
      *         exceeded
      */
     util::Result<bool> CheckClusterSizeLimit(int64_t entry_size, size_t entry_count,
-            const Limits& limits, CTxMemPoolEntry::Parents all_parents) const
+            const Limits& limits, std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& all_parents) const
         EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 private:
@@ -663,15 +649,6 @@ public:
     std::optional<std::string> CheckConflictTopology(const setEntries& direct_conflicts);
 
 private:
-    /** Update ancestors of hash to add/remove it as a descendant transaction. */
-    void UpdateAncestorsOf(bool add, txiter hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    /** For each transaction being removed, update ancestors and any direct children.
-      * If updateDescendants is true, then also update in-mempool descendants'
-      * ancestor state. */
-    void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    /** Sever link between specified transaction and direct children. */
-    void UpdateChildrenForRemoval(txiter entry) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
      *  of transactions being removed at the same time.  We use each

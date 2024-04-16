@@ -996,8 +996,8 @@ bool MemPoolAccept::ClusterSizeChecks(Workspace& ws)
     const CTxMemPool::setEntries& ancestors = ws.m_ancestors;
     TxValidationState& state = ws.m_state;
 
-    CTxMemPoolEntry::Parents parents;
-    for (auto a : ancestors) parents.insert(*a);
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> parents;
+    for (auto a : ancestors) parents.emplace_back(*a);
 
     auto result{m_pool.CheckClusterSizeLimit(entry.GetTxSize(), 1, m_pool.m_opts.limits, parents)};
     if (!result) {
