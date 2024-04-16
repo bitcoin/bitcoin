@@ -57,7 +57,7 @@ struct ParentInfo {
 
 std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors)
+                                           const CTxMemPool::Entries& mempool_parents)
 {
     // This function is specialized for these limits, and must be reimplemented if they ever change.
     static_assert(TRUC_ANCESTOR_LIMIT == 2);
@@ -73,12 +73,12 @@ std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTran
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, TRUC_MAX_VSIZE);
         }
 
-        if (mempool_ancestors.size() + in_package_parents.size() + 1 > TRUC_ANCESTOR_LIMIT) {
+        if (mempool_parents.size() + in_package_parents.size() + 1 > TRUC_ANCESTOR_LIMIT) {
             return strprintf("tx %s (wtxid=%s) would have too many ancestors",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
         }
 
-        const bool has_parent{mempool_ancestors.size() + in_package_parents.size() > 0};
+        const bool has_parent{mempool_parents.size() + in_package_parents.size() > 0};
         if (has_parent) {
             // A TRUC child cannot be too large.
             if (vsize > TRUC_CHILD_MAX_VSIZE) {
@@ -89,8 +89,8 @@ std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTran
 
             // Exactly 1 parent exists, either in mempool or package. Find it.
             const auto parent_info = [&] {
-                if (mempool_ancestors.size() > 0) {
-                    auto& mempool_parent = *mempool_ancestors.begin();
+                if (mempool_parents.size() > 0) {
+                    auto& mempool_parent = *mempool_parents.begin();
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
                                       mempool_parent->GetTx().GetWitnessHash(),
                                       mempool_parent->GetTx().version,
@@ -141,7 +141,7 @@ std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTran
         }
     } else {
         // Non-TRUC transactions cannot have TRUC parents.
-        for (auto it : mempool_ancestors) {
+        for (auto it : mempool_parents) {
             if (it->GetTx().version == TRUC_VERSION) {
                 return strprintf("non-version=3 tx %s (wtxid=%s) cannot spend from version=3 tx %s (wtxid=%s)",
                                  ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),

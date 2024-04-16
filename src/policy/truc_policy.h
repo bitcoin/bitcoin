@@ -88,6 +88,6 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
  * */
 std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors);
+                                           const CTxMemPool::Entries& mempool_parents);
 
 #endif // BITCOIN_POLICY_TRUC_POLICY_H
