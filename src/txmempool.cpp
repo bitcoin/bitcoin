@@ -198,7 +198,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
     AssertLockHeld(cs);
     m_txgraph->CommitStaging();
 
-    RemoveStaged(changeset->m_to_remove, false, MemPoolRemovalReason::REPLACED);
+    RemoveStaged(changeset->m_to_remove, MemPoolRemovalReason::REPLACED);
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
         auto tx_entry = changeset->m_entry_vec[i];
@@ -329,7 +329,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             CalculateDescendants(it, setAllRemoves);
         }
 
-        RemoveStaged(setAllRemoves, false, reason);
+        RemoveStaged(setAllRemoves, reason);
 }
 
 void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
@@ -347,7 +347,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     for (txiter it : txToRemove) {
         CalculateDescendants(it, setAllRemoves);
     }
-    RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
+    RemoveStaged(setAllRemoves, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
@@ -378,13 +378,14 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
     if (mapTx.size() || mapNextTx.size() || mapDeltas.size()) {
         txs_removed_for_block.reserve(vtx.size());
-        for (const auto& tx : vtx) {
+        for (const auto& tx : vtx)
+        {
             txiter it = mapTx.find(tx->GetHash());
             if (it != mapTx.end()) {
                 setEntries stage;
                 stage.insert(it);
                 txs_removed_for_block.emplace_back(*it);
-                RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+                RemoveStaged(stage, MemPoolRemovalReason::BLOCK);
             }
             removeConflicts(*tx);
             ClearPrioritisation(tx->GetHash());
@@ -717,7 +718,7 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
     for (txiter it : stage) {
         removeUnchecked(it, reason);
@@ -738,7 +739,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     for (txiter removeit : toremove) {
         CalculateDescendants(removeit, stage);
     }
-    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
+    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
     return stage.size();
 }
 
