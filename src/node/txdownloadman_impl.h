@@ -128,11 +128,28 @@ public:
 
     TxDownloadManagerImpl(const TxDownloadOptions& options) : m_opts{options} {}
 
+    struct PeerInfo {
+        /** Information relevant to scheduling tx requests. */
+        const TxDownloadConnectionInfo m_connection_info;
+
+        PeerInfo(const TxDownloadConnectionInfo& info) : m_connection_info{info} {}
+    };
+
+    /** Information for all of the peers we may download transactions from. This is not necessarily
+     * all peers we are connected to (no block-relay-only and temporary connections). */
+    std::map<NodeId, PeerInfo> m_peer_info;
+
+    /** Number of wtxid relay peers we have in m_peer_info. */
+    uint32_t m_num_wtxid_peers{0};
+
     void ActiveTipChange();
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock);
     void BlockDisconnected();
 
     bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable);
+
+    void ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info);
+    void DisconnectedPeer(NodeId nodeid);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H

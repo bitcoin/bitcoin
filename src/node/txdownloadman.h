@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_TXDOWNLOADMAN_H
 #define BITCOIN_NODE_TXDOWNLOADMAN_H
 
+#include <net.h>
+
 #include <cstdint>
 #include <memory>
 
@@ -20,6 +22,14 @@ class TxDownloadManagerImpl;
 struct TxDownloadOptions {
     /** Read-only reference to mempool. */
     const CTxMemPool& m_mempool;
+};
+struct TxDownloadConnectionInfo {
+    /** Whether this peer is preferred for transaction download. */
+    const bool m_preferred;
+    /** Whether this peer has Relay permissions. */
+    const bool m_relay_permissions;
+    /** Whether this peer supports wtxid relay. */
+    const bool m_wtxid_relay;
 };
 
 /**
@@ -68,6 +78,12 @@ public:
      *  - m_recent_confirmed_transactions
      *  */
     bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable);
+
+    /** Creates a new PeerInfo. Saves the connection info to calculate tx announcement delays later. */
+    void ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info);
+
+    /** Deletes all txrequest announcements and orphans for a given peer. */
+    void DisconnectedPeer(NodeId nodeid);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H
