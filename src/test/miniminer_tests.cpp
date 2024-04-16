@@ -598,6 +598,12 @@ BOOST_FIXTURE_TEST_CASE(miniminer_overlap, TestChain100Setup)
 }
 BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
 {
+    m_node.mempool.reset();
+    bilingual_str error;
+    auto opts = MemPoolOptionsForTest(m_node);
+    opts.limits.cluster_count = 501;
+    m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
+
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
 
