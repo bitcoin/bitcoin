@@ -8,10 +8,10 @@
 #include <cstdint>
 #include <memory>
 
+class CBlock;
+class CRollingBloomFilter;
 class TxOrphanage;
 class TxRequestTracker;
-class CRollingBloomFilter;
-
 namespace node {
 class TxDownloadManagerImpl;
 
@@ -48,6 +48,11 @@ public:
     CRollingBloomFilter& RecentRejectsFilter();
     CRollingBloomFilter& RecentRejectsReconsiderableFilter();
     CRollingBloomFilter& RecentConfirmedTransactionsFilter();
+
+    // Responses to chain events. TxDownloadManager is not an actual client of ValidationInterface, these are called through PeerManager.
+    void ActiveTipChange();
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock);
+    void BlockDisconnected();
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

@@ -2036,8 +2036,7 @@ void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
         // If the chain tip has changed, previously rejected transactions might now be valid, e.g. due
         // to a timelock. Reset the rejection filters to give those transactions another chance if we
         // see them again.
-        RecentRejectsFilter().reset();
-        RecentRejectsReconsiderableFilter().reset();
+        m_txdownloadman.ActiveTipChange();
     }
 }
 
@@ -2072,33 +2071,13 @@ void PeerManagerImpl::BlockConnected(
         return;
     }
     LOCK(m_tx_download_mutex);
-    auto& m_orphanage = m_txdownloadman.GetOrphanageRef();
-    auto& m_txrequest = m_txdownloadman.GetTxRequestRef();
-
-    m_orphanage.EraseForBlock(*pblock);
-
-    for (const auto& ptx : pblock->vtx) {
-        RecentConfirmedTransactionsFilter().insert(ptx->GetHash().ToUint256());
-        if (ptx->HasWitness()) {
-            RecentConfirmedTransactionsFilter().insert(ptx->GetWitnessHash().ToUint256());
-        }
-        m_txrequest.ForgetTxHash(ptx->GetHash());
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
-    }
+    m_txdownloadman.BlockConnected(pblock);
 }
 
 void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
 {
-    // To avoid relay problems with transactions that were previously
-    // confirmed, clear our filter of recently confirmed transactions whenever
-    // there's a reorg.
-    // This means that in a 1-block reorg (where 1 block is disconnected and
-    // then another block reconnected), our filter will drop to having only one
-    // block's worth of transactions in it, but that should be fine, since
-    // presumably the most common case of relaying a confirmed transaction
-    // should be just after a new block containing it is found.
     LOCK(m_tx_download_mutex);
-    RecentConfirmedTransactionsFilter().reset();
+    m_txdownloadman.BlockDisconnected();
 }
 
 /**
