@@ -307,6 +307,8 @@ public:
     void CalculateDescendantData(const CTxMemPoolEntry& entry, size_t& descendant_count, size_t& descendant_size, CAmount& descendant_fees) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     int64_t GetNumDescendants(txiter it) const { LOCK(cs); return m_txgraph->GetDescendants(*it, TxGraph::Level::MAIN).size(); }
     int64_t GetNumDescendants(const CTxMemPoolEntry &e) const { LOCK(cs); return m_txgraph->GetDescendants(e, TxGraph::Level::MAIN).size(); }
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> GetChildren(const CTxMemPoolEntry &entry) const;
+    std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> GetParents(const CTxMemPoolEntry &entry) const;
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
