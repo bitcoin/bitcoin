@@ -2265,7 +2265,8 @@ static bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nS
     const CBlockIndex* pindex = pindexPrev;
 
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart) {
-        vSortedByTimestamp.emplace_back(std::make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
+        auto el = std::make_pair(pindex->GetBlockTime(), pindex->GetBlockHash());
+        vSortedByTimestamp.emplace_back(el);
         pindex = pindex->pprev;
     }
 
