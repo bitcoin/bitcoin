@@ -468,21 +468,20 @@ static RPCHelpMan getmempoolancestors()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    auto ancestors{mempool.CalculateMemPoolAncestors(*entry, /*fSearchForParents=*/false)};
+    auto ancestors{mempool.CalculateMemPoolAncestorsFast(*entry, /*fSearchForParents=*/false)};
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
-            o.push_back(ancestorIt->GetTx().GetHash().ToString());
+        for (auto ancestor : ancestors) {
+            o.push_back(ancestor.get().GetTx().GetHash().ToString());
         }
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
-            const CTxMemPoolEntry &e = *ancestorIt;
-            const uint256& _hash = e.GetTx().GetHash();
+        for (auto ancestor : ancestors) {
+            const uint256& _hash = ancestor.get().GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, ancestor.get());
             o.pushKV(_hash.ToString(), std::move(info));
         }
         return o;
