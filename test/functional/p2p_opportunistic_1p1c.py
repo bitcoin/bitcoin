@@ -388,8 +388,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.generate(self.wallet_nonsegwit, 10)
         self.generate(self.wallet, 20)
 
-        filler_wallet = MiniWallet(node)
-        fill_mempool(self, node, filler_wallet)
+        fill_mempool(self, node)
 
         self.log.info("Check opportunistic 1p1c logic when parent (txid != wtxid) is received before child")
         self.test_basic_parent_then_child(self.wallet)

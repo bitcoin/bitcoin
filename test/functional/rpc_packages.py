@@ -390,7 +390,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         ])
         self.wallet.rescan_utxos()
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
 
         minrelay = node.getmempoolinfo()["minrelaytxfee"]
         parent = self.wallet.create_self_transfer(

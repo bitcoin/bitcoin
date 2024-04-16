@@ -95,7 +95,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
         current_info = node.getmempoolinfo()
         mempoolmin_feerate = current_info["mempoolminfee"]
 
@@ -185,7 +185,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
         current_info = node.getmempoolinfo()
         mempoolmin_feerate = current_info["mempoolminfee"]
 
@@ -259,7 +259,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
 
         # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
         self.log.info('Create a mempool tx that will not pass mempoolminfee')

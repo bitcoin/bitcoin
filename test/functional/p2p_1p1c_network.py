@@ -47,8 +47,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def raise_network_minfee(self):
-        filler_wallet = MiniWallet(self.nodes[0])
-        fill_mempool(self, self.nodes[0], filler_wallet)
+        fill_mempool(self, self.nodes[0])
 
         self.log.debug("Wait for the network to sync mempools")
         self.sync_mempools()
