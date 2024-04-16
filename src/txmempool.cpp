@@ -445,14 +445,15 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     AssertLockHeld(::cs_main);
     Assume(!m_have_changeset);
 
-    setEntries txToRemove;
+    Entries txToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        if (check_final_and_mature(it)) txToRemove.insert(it);
+        if (check_final_and_mature(it)) txToRemove.push_back(it);
     }
+    auto descendants = CalculateDescendants(txToRemove);
+
     setEntries setAllRemoves;
-    for (txiter it : txToRemove) {
-        CalculateDescendants(it, setAllRemoves);
-    }
+    setAllRemoves.insert(descendants.begin(), descendants.end());
+
     RemoveStaged(setAllRemoves, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
