@@ -3150,17 +3150,7 @@ void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, c
     AssertLockHeld(g_msgproc_mutex);
     AssertLockHeld(m_tx_download_mutex);
 
-    auto& m_orphanage = m_txdownloadman.GetOrphanageRef();
-    auto& m_txrequest = m_txdownloadman.GetTxRequestRef();
-
-    // As this version of the transaction was acceptable, we can forget about any requests for it.
-    // No-op if the tx is not in txrequest.
-    m_txrequest.ForgetTxHash(tx->GetHash());
-    m_txrequest.ForgetTxHash(tx->GetWitnessHash());
-
-    m_orphanage.AddChildrenToWorkSet(*tx);
-    // If it came from the orphanage, remove it. No-op if the tx is not in txorphanage.
-    m_orphanage.EraseTx(tx->GetWitnessHash());
+    m_txdownloadman.MempoolAcceptedTx(tx);
 
     LogDebug(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (wtxid=%s) (poolsz %u txn, %u kB)\n",
              nodeid,

@@ -152,6 +152,9 @@ public:
      * skipping any combinations that have already been tried. Return the resulting package along with
      * the senders of its respective transactions, or std::nullopt if no package is found. */
     std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
+
+    /** Respond to successful transaction submission to mempool */
+    void MempoolAcceptedTx(const CTransactionRef& tx);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H
