@@ -939,12 +939,8 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
                 txn.emplace_back(dynamic_cast<const CTxMemPoolEntry&>(tx_entry_ref.get()).GetTx());
         }
 
-        setEntries stage;
         for (auto tx : txs_to_remove) {
-            stage.insert(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get())));
-        }
-        for (auto e : stage) {
-            removeUnchecked(e, MemPoolRemovalReason::SIZELIMIT);
+            removeUnchecked(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get())), MemPoolRemovalReason::SIZELIMIT);
         }
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
