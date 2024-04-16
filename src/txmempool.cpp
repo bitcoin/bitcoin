@@ -417,12 +417,9 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             }
         }
     }
-    setEntries setAllRemoves;
     auto all_removes = CalculateDescendants(txToRemove);
 
-    setAllRemoves.insert(all_removes.begin(), all_removes.end());
-
-    RemoveStaged(setAllRemoves, reason);
+    RemoveStaged(all_removes, reason);
 }
 
 void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
@@ -437,10 +434,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     }
     auto descendants = CalculateDescendants(txToRemove);
 
-    setEntries setAllRemoves;
-    setAllRemoves.insert(descendants.begin(), descendants.end());
-
-    RemoveStaged(setAllRemoves, MemPoolRemovalReason::REORG);
+    RemoveStaged(descendants, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
@@ -846,15 +840,14 @@ void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) 
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(Entries& stage, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs)
+{
     AssertLockHeld(cs);
-
     std::vector<TxEntry::TxEntryRef> txs_to_remove;
     for (auto& it : stage) {
         txs_to_remove.emplace_back(*it);
     }
     txgraph.RemoveBatch(txs_to_remove);
-
     for (txiter it : stage) {
         removeUnchecked(it, reason);
     }
@@ -869,13 +862,10 @@ int CTxMemPool::Expire(std::chrono::seconds time)
         toremove.emplace_back(mapTx.project<0>(it));
         it++;
     }
-    auto descendants = CalculateDescendants(toremove);
 
-    setEntries stage;
-    stage.insert(descendants.begin(), descendants.end());
-
-    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
-    return stage.size();
+    auto all_removes = CalculateDescendants(toremove);
+    RemoveStaged(all_removes, MemPoolRemovalReason::EXPIRY);
+    return all_removes.size();
 }
 
 CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
