@@ -808,12 +808,6 @@ private:
     /** Stalling timeout for blocks in IBD */
     std::atomic<std::chrono::seconds> m_block_stalling_timeout{BLOCK_STALLING_TIMEOUT_DEFAULT};
 
-    CRollingBloomFilter& RecentRejectsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
-    {
-        AssertLockHeld(m_tx_download_mutex);
-        return m_txdownloadman.RecentRejectsFilter();
-    }
-
     CRollingBloomFilter& RecentRejectsReconsiderableFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
     {
         AssertLockHeld(m_tx_download_mutex);
@@ -1906,7 +1900,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
-      m_txdownloadman(node::TxDownloadOptions{pool, m_rng}),
+      m_txdownloadman(node::TxDownloadOptions{pool, m_rng, opts.max_orphan_txs}),
       m_warnings{warnings},
       m_opts{opts}
 {
@@ -2984,148 +2978,14 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
 
     PeerRef peer{GetPeerRef(nodeid)};
 
-    auto& m_orphanage = m_txdownloadman.GetOrphanageRef();
-    auto& m_txrequest = m_txdownloadman.GetTxRequestRef();
-    const CTransaction& tx{*ptx};
-
     LogDebug(BCLog::MEMPOOLREJ, "%s (wtxid=%s) from peer=%d was not accepted: %s\n",
         ptx->GetHash().ToString(),
         ptx->GetWitnessHash().ToString(),
         nodeid,
         state.ToString());
 
-    // Whether we should call AddToCompactExtraTransactions at the end
-    bool add_extra_compact_tx{first_time_failure};
-    // Hashes to pass to AddKnownTx later
-    std::vector<uint256> unique_parents;
-    // Populated if failure is reconsiderable and eligible package is found.
-    std::optional<node::PackageToValidate> package_to_validate;
+    const auto& [add_extra_compact_tx, unique_parents, package_to_validate] = m_txdownloadman.MempoolRejectedTx(ptx, state, nodeid, first_time_failure);
 
-    if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-        // Only process a new orphan if this is a first time failure, as otherwise it must be either
-        // already in orphanage or from 1p1c processing.
-        if (first_time_failure) {
-            bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
-
-            // Deduplicate parent txids, so that we don't have to loop over
-            // the same parent txid more than once down below.
-            unique_parents.reserve(tx.vin.size());
-            for (const CTxIn& txin : tx.vin) {
-                // We start with all parents, and then remove duplicates below.
-                unique_parents.push_back(txin.prevout.hash);
-            }
-            std::sort(unique_parents.begin(), unique_parents.end());
-            unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
-
-            // Distinguish between parents in m_lazy_recent_rejects and m_lazy_recent_rejects_reconsiderable.
-            // We can tolerate having up to 1 parent in m_lazy_recent_rejects_reconsiderable since we
-            // submit 1p1c packages. However, fail immediately if any are in m_lazy_recent_rejects.
-            std::optional<uint256> rejected_parent_reconsiderable;
-            for (const uint256& parent_txid : unique_parents) {
-                if (RecentRejectsFilter().contains(parent_txid)) {
-                    fRejectedParents = true;
-                    break;
-                } else if (RecentRejectsReconsiderableFilter().contains(parent_txid) && !m_mempool.exists(GenTxid::Txid(parent_txid))) {
-                    // More than 1 parent in m_lazy_recent_rejects_reconsiderable: 1p1c will not be
-                    // sufficient to accept this package, so just give up here.
-                    if (rejected_parent_reconsiderable.has_value()) {
-                        fRejectedParents = true;
-                        break;
-                    }
-                    rejected_parent_reconsiderable = parent_txid;
-                }
-            }
-            if (!fRejectedParents) {
-                const auto current_time{GetTime<std::chrono::microseconds>()};
-
-                for (const uint256& parent_txid : unique_parents) {
-                    // Here, we only have the txid (and not wtxid) of the
-                    // inputs, so we only request in txid mode, even for
-                    // wtxidrelay peers.
-                    // Eventually we should replace this with an improved
-                    // protocol for getting all unconfirmed parents.
-                    const auto gtxid{GenTxid::Txid(parent_txid)};
-                    // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
-                    // previously rejected for being too low feerate. This orphan might CPFP it.
-                    if (!m_txdownloadman.AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
-                        m_txdownloadman.AddTxAnnouncement(nodeid, gtxid, current_time, /*p2p_inv=*/false);
-                    }
-                }
-
-                // Potentially flip add_extra_compact_tx to false if AddTx returns false because the tx was already there
-                add_extra_compact_tx &= m_orphanage.AddTx(ptx, nodeid);
-
-                // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
-                m_txrequest.ForgetTxHash(tx.GetHash());
-                m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-
-                // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
-                m_orphanage.LimitOrphans(m_opts.max_orphan_txs, m_rng);
-            } else {
-                unique_parents.clear();
-                LogDebug(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)\n",
-                         tx.GetHash().ToString(),
-                         tx.GetWitnessHash().ToString());
-                // We will continue to reject this tx since it has rejected
-                // parents so avoid re-requesting it from other peers.
-                // Here we add both the txid and the wtxid, as we know that
-                // regardless of what witness is provided, we will not accept
-                // this, so we don't need to allow for redownload of this txid
-                // from any of our non-wtxidrelay peers.
-                RecentRejectsFilter().insert(tx.GetHash().ToUint256());
-                RecentRejectsFilter().insert(tx.GetWitnessHash().ToUint256());
-                m_txrequest.ForgetTxHash(tx.GetHash());
-                m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-            }
-        }
-    } else if (state.GetResult() == TxValidationResult::TX_WITNESS_STRIPPED) {
-        add_extra_compact_tx = false;
-    } else {
-        // We can add the wtxid of this transaction to our reject filter.
-        // Do not add txids of witness transactions or witness-stripped
-        // transactions to the filter, as they can have been malleated;
-        // adding such txids to the reject filter would potentially
-        // interfere with relay of valid transactions from peers that
-        // do not support wtxid-based relay. See
-        // https://github.com/bitcoin/bitcoin/issues/8279 for details.
-        // We can remove this restriction (and always add wtxids to
-        // the filter even for witness stripped transactions) once
-        // wtxid-based relay is broadly deployed.
-        // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
-        // for concerns around weakening security of unupgraded nodes
-        // if we start doing this too early.
-        if (state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
-            // If the result is TX_RECONSIDERABLE, add it to m_lazy_recent_rejects_reconsiderable
-            // because we should not download or submit this transaction by itself again, but may
-            // submit it as part of a package later.
-            RecentRejectsReconsiderableFilter().insert(ptx->GetWitnessHash().ToUint256());
-
-            if (first_time_failure) {
-                // When a transaction fails for TX_RECONSIDERABLE, look for a matching child in the
-                // orphanage, as it is possible that they succeed as a package.
-                LogDebug(BCLog::TXPACKAGES, "tx %s (wtxid=%s) failed but reconsiderable, looking for child in orphanage\n",
-                         ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
-                package_to_validate = m_txdownloadman.Find1P1CPackage(ptx, nodeid);
-            }
-        } else {
-            RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
-        }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
-        // If the transaction failed for TX_INPUTS_NOT_STANDARD,
-        // then we know that the witness was irrelevant to the policy
-        // failure, since this check depends only on the txid
-        // (the scriptPubKey being spent is covered by the txid).
-        // Add the txid to the reject filter to prevent repeated
-        // processing of this transaction in the event that child
-        // transactions are later received (resulting in
-        // parent-fetching by txid via the orphan-handling logic).
-        // We only add the txid if it differs from the wtxid, to avoid wasting entries in the
-        // rolling bloom filter.
-        if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && ptx->HasWitness()) {
-            RecentRejectsFilter().insert(ptx->GetHash().ToUint256());
-            m_txrequest.ForgetTxHash(ptx->GetHash());
-        }
-    }
     if (add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
         AddToCompactExtraTransactions(ptx);
     }
@@ -3134,12 +2994,6 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
     }
 
     MaybePunishNodeForTx(nodeid, state);
-
-    // If the tx failed in ProcessOrphanTx, it should be removed from the orphanage unless the
-    // tx was still missing inputs. If the tx was not in the orphanage, EraseTx does nothing and returns 0.
-    if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS && m_orphanage.EraseTx(ptx->GetWitnessHash()) > 0) {
-        LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
-    }
 
     return package_to_validate;
 }

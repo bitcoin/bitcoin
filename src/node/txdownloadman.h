@@ -41,6 +41,8 @@ struct TxDownloadOptions {
     const CTxMemPool& m_mempool;
     /** RNG provided by caller. */
     FastRandomContext& m_rng;
+    /** Maximum number of transactions allowed in orphanage. */
+    const uint32_t m_max_orphan_txs;
 };
 struct TxDownloadConnectionInfo {
     /** Whether this peer is preferred for transaction download. */
@@ -64,6 +66,8 @@ struct PackageToValidate {
 
     // Move ctor
     PackageToValidate(PackageToValidate&& other) : m_txns{std::move(other.m_txns)}, m_senders{std::move(other.m_senders)} {}
+    // Copy ctor
+    PackageToValidate(const PackageToValidate& other) = default;
 
     // Move assignment
     PackageToValidate& operator=(PackageToValidate&& other) {
@@ -83,6 +87,13 @@ struct PackageToValidate {
                          m_senders.back());
     }
 };
+struct RejectedTxTodo
+{
+    bool m_should_add_extra_compact_tx;
+    std::vector<uint256> m_unique_parents;
+    std::optional<PackageToValidate> m_package_to_validate;
+};
+
 
 /**
  * Class responsible for deciding what transactions to request and, once
@@ -114,7 +125,6 @@ public:
     // temporary and removed later once logic has been moved internally.
     TxOrphanage& GetOrphanageRef();
     TxRequestTracker& GetTxRequestRef();
-    CRollingBloomFilter& RecentRejectsFilter();
     CRollingBloomFilter& RecentRejectsReconsiderableFilter();
 
     // Responses to chain events. TxDownloadManager is not an actual client of ValidationInterface, these are called through PeerManager.
@@ -155,6 +165,9 @@ public:
 
     /** Respond to successful transaction submission to mempool */
     void MempoolAcceptedTx(const CTransactionRef& tx);
+
+    /** Respond to transaction rejected from mempool */
+    RejectedTxTodo MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

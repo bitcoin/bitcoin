@@ -7,6 +7,7 @@
 #include <node/txdownloadman.h>
 
 #include <common/bloom.h>
+#include <consensus/validation.h>
 #include <kernel/chain.h>
 #include <net.h>
 #include <primitives/transaction.h>
@@ -164,6 +165,7 @@ public:
     std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
 
     void MempoolAcceptedTx(const CTransactionRef& tx);
+    RejectedTxTodo MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H
