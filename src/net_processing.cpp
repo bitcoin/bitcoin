@@ -854,17 +854,6 @@ private:
     /** Stalling timeout for blocks in IBD */
     std::atomic<std::chrono::seconds> m_block_stalling_timeout{BLOCK_STALLING_TIMEOUT_DEFAULT};
 
-    /** Check whether we already have this gtxid in:
-     *  - mempool
-     *  - orphanage
-     *  - m_lazy_recent_rejects
-     *  - m_lazy_recent_rejects_reconsiderable (if include_reconsiderable = true)
-     *  - m_lazy_recent_confirmed_transactions
-     *  */
-    bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
-        EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex);
-
-
     CRollingBloomFilter& RecentRejectsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
     {
         AssertLockHeld(m_tx_download_mutex);
@@ -875,12 +864,6 @@ private:
     {
         AssertLockHeld(m_tx_download_mutex);
         return m_txdownloadman.RecentRejectsReconsiderableFilter();
-    }
-
-    CRollingBloomFilter& RecentConfirmedTransactionsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
-    {
-        AssertLockHeld(m_tx_download_mutex);
-        return m_txdownloadman.RecentConfirmedTransactionsFilter();
     }
 
     /**
@@ -2213,40 +2196,6 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
 //
 // Messages
 //
-
-
-bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
-{
-    AssertLockHeld(m_tx_download_mutex);
-
-    auto& m_orphanage = m_txdownloadman.GetOrphanageRef();
-
-    const uint256& hash = gtxid.GetHash();
-
-    if (gtxid.IsWtxid()) {
-        // Normal query by wtxid.
-        if (m_orphanage.HaveTx(Wtxid::FromUint256(hash))) return true;
-    } else {
-        // Never query by txid: it is possible that the transaction in the orphanage has the same
-        // txid but a different witness, which would give us a false positive result. If we decided
-        // not to request the transaction based on this result, an attacker could prevent us from
-        // downloading a transaction by intentionally creating a malleated version of it.  While
-        // only one (or none!) of these transactions can ultimately be confirmed, we have no way of
-        // discerning which one that is, so the orphanage can store multiple transactions with the
-        // same txid.
-        //
-        // While we won't query by txid, we can try to "guess" what the wtxid is based on the txid.
-        // A non-segwit transaction's txid == wtxid. Query this txid "casted" to a wtxid. This will
-        // help us find non-segwit transactions, saving bandwidth, and should have no false positives.
-        if (m_orphanage.HaveTx(Wtxid::FromUint256(hash))) return true;
-    }
-
-    if (include_reconsiderable && RecentRejectsReconsiderableFilter().contains(hash)) return true;
-
-    if (RecentConfirmedTransactionsFilter().contains(hash)) return true;
-
-    return RecentRejectsFilter().contains(hash) || m_mempool.exists(gtxid);
-}
 
 bool PeerManagerImpl::AlreadyHaveBlock(const uint256& block_hash)
 {
@@ -4172,7 +4121,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     return;
                 }
                 const GenTxid gtxid = ToGenTxid(inv);
-                const bool fAlreadyHave = AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true);
+                const bool fAlreadyHave = m_txdownloadman.AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true);
                 LogDebug(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
 
                 AddKnownTx(*peer, inv.hash);
@@ -4487,7 +4436,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // already; and an adversary can already relay us old transactions
         // (older than our recency filter) if trying to DoS us, without any need
         // for witness malleation.
-        if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/true)) {
+        if (m_txdownloadman.AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/true)) {
             if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
@@ -4586,7 +4535,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     AddKnownTx(*peer, parent_txid);
                     // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
                     // previously rejected for being too low feerate. This orphan might CPFP it.
-                    if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) AddTxAnnouncement(pfrom, gtxid, current_time);
+                    if (!m_txdownloadman.AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
 
                 if (m_orphanage.AddTx(ptx, pfrom.GetId())) {
@@ -6259,7 +6208,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             for (const GenTxid& gtxid : requestable) {
                 // Exclude m_lazy_recent_rejects_reconsiderable: we may be requesting a missing parent
                 // that was previously rejected for being too low feerate.
-                if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
+                if (!m_txdownloadman.AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
                     LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
                         gtxid.GetHash().ToString(), pto->GetId());
                     vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());

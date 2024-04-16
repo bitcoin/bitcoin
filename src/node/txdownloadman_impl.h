@@ -9,6 +9,7 @@
 #include <common/bloom.h>
 #include <kernel/chain.h>
 #include <net.h>
+#include <primitives/transaction.h>
 #include <txorphanage.h>
 #include <txrequest.h>
 
@@ -130,6 +131,8 @@ public:
     void ActiveTipChange();
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock);
     void BlockDisconnected();
+
+    bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H
