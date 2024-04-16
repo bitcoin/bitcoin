@@ -459,6 +459,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     }
 
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        LOCK(wallet->cs_wallet);
         if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
             wallet->SetupDescriptorScriptPubKeyMans();
         } else {
