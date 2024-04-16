@@ -1099,28 +1099,26 @@ void CTxMemPool::SetLoadTried(bool load_tried)
 std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<uint256>& txids) const
 {
     AssertLockHeld(cs);
-    std::vector<txiter> clustered_txs{GetIterVec(txids)};
-    // Use epoch: visiting an entry means we have added it to the clustered_txs vector. It does not
-    // necessarily mean the entry has been processed.
-    WITH_FRESH_EPOCH(m_epoch);
-    for (const auto& it : clustered_txs) {
-        visited(it);
-    }
-    // i = index of where the list of entries to process starts
-    for (size_t i{0}; i < clustered_txs.size(); ++i) {
-        // DoS protection: if there are 500 or more entries to process, just quit.
-        if (clustered_txs.size() > 500) return {};
-        const txiter& tx_iter = clustered_txs.at(i);
-        for (const auto& entries : {tx_iter->GetMemPoolParentsConst(), tx_iter->GetMemPoolChildrenConst()}) {
-            for (const CTxMemPoolEntry& entry : entries) {
-                const auto entry_it = mapTx.iterator_to(entry);
-                if (!visited(entry_it)) {
-                    clustered_txs.push_back(entry_it);
-                }
-            }
+
+    std::vector<CTxMemPool::txiter> ret;
+    std::vector<TxEntry::TxEntryRef> txs;
+    for (auto txid : txids) {
+        auto it = mapTx.find(txid);
+        if (it != mapTx.end()) {
+            txs.emplace_back(*it);
         }
     }
-    return clustered_txs;
+
+    std::vector<TxEntry::TxEntryRef> all_txs = txgraph.GatherAllClusterTransactions(txs);
+
+    if (all_txs.size() > 500) {
+        return {};
+    }
+    ret.reserve(all_txs.size());
+    for (auto tx : all_txs) {
+        ret.emplace_back(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get())));
+    }
+    return ret;
 }
 
 util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::CalculateChunksForRBF(std::vector<std::pair<CTxMemPoolEntry*, CAmount>> new_entries, const setEntries& direct_conflicts, const setEntries& all_conflicts)
