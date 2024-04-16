@@ -55,7 +55,7 @@ struct ParentInfo {
     {}
 };
 
-std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize,
+std::optional<std::string> PackageTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
                                            const CTxMemPool::setEntries& mempool_ancestors)
 {
@@ -94,7 +94,7 @@ std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
                                       mempool_parent->GetTx().GetWitnessHash(),
                                       mempool_parent->GetTx().version,
-                                      /*has_mempool_descendant=*/mempool_parent->GetNumChildren() > 0};
+                                      /*has_mempool_descendant=*/pool.GetNumChildren(mempool_parent) > 0};
                 } else {
                     auto& parent_index = in_package_parents.front();
                     auto& package_parent = package.at(parent_index);
@@ -161,7 +161,7 @@ std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t
     return std::nullopt;
 }
 
-std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTransactionRef& ptx,
+std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTxMemPool& pool, const CTransactionRef& ptx,
                                           const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
@@ -222,14 +222,14 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
         const bool child_will_be_replaced = !children.empty() &&
             std::any_of(children.cbegin(), children.cend(),
                 [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
-        if (parent_entry->GetNumChildren() + 2 > TRUC_DESCENDANT_LIMIT && !child_will_be_replaced) {
+        if (pool.GetNumChildren(parent_entry) + 2 > TRUC_DESCENDANT_LIMIT && !child_will_be_replaced) {
             // Allow sibling eviction for TRUC transaction: if another child already exists, even if
             // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on TRUC rules
             // only permitting 1 descendant, as otherwise we would need to have logic for deciding
             // which descendant to evict. Skip if this isn't true, e.g. if the transaction has
             // multiple children or the sibling also has descendants due to a reorg.
-            const bool consider_sibling_eviction{parent_entry->GetNumChildren() == 1 &&
-                children.begin()->get().GetNumChildren() == 0};
+            const bool consider_sibling_eviction{pool.GetNumChildren(parent_entry) == 1 &&
+                pool.GetNumChildren(children.begin()->get()) == 0};
 
             // Return the sibling if its eviction can be considered. Provide the "descendant count
             // limit" string either way, as the caller may decide not to do sibling eviction.

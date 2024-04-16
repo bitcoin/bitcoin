@@ -302,6 +302,8 @@ public:
 
     void CalculateAncestorData(const CTxMemPoolEntry& entry, size_t& ancestor_count, size_t& ancestor_size, CAmount& ancestor_fees) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void CalculateDescendantData(const CTxMemPoolEntry& entry, size_t& descendant_count, size_t& descendant_size, CAmount& descendant_fees) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int64_t GetNumChildren(txiter it) const { return it->GetTxEntryChildren().size(); }
+    int64_t GetNumChildren(const CTxMemPoolEntry &e) const { return e.GetTxEntryChildren().size(); }
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
