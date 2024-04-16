@@ -808,12 +808,6 @@ private:
     /** Stalling timeout for blocks in IBD */
     std::atomic<std::chrono::seconds> m_block_stalling_timeout{BLOCK_STALLING_TIMEOUT_DEFAULT};
 
-    CRollingBloomFilter& RecentRejectsReconsiderableFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
-    {
-        AssertLockHeld(m_tx_download_mutex);
-        return m_txdownloadman.RecentRejectsReconsiderableFilter();
-    }
-
     /**
      * For sending `inv`s to inbound peers, we use a single (exponentially
      * distributed) timer for all peers. If we used a separate timer for each
@@ -4239,24 +4233,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK2(cs_main, m_tx_download_mutex);
 
-        auto& m_txrequest = m_txdownloadman.GetTxRequestRef();
-
-        m_txrequest.ReceivedResponse(pfrom.GetId(), txid);
-        if (tx.HasWitness()) m_txrequest.ReceivedResponse(pfrom.GetId(), wtxid);
-
-        // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
-        // absence of witness malleation, this is strictly better, because the
-        // recent rejects filter may contain the wtxid but rarely contains
-        // the txid of a segwit transaction that has been rejected.
-        // In the presence of witness malleation, it's possible that by only
-        // doing the check with wtxid, we could overlook a transaction which
-        // was confirmed with a different witness, or exists in our mempool
-        // with a different witness, but this has limited downside:
-        // mempool validation does its own lookup of whether we have the txid
-        // already; and an adversary can already relay us old transactions
-        // (older than our recency filter) if trying to DoS us, without any need
-        // for witness malleation.
-        if (m_txdownloadman.AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/true)) {
+        const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
+        if (!should_validate) {
             if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
@@ -4271,36 +4249,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
             }
 
-            if (RecentRejectsReconsiderableFilter().contains(wtxid)) {
-                // When a transaction is already in m_lazy_recent_rejects_reconsiderable, we shouldn't submit
-                // it by itself again. However, look for a matching child in the orphanage, as it is
-                // possible that they succeed as a package.
-                LogDebug(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage\n",
-                         txid.ToString(), wtxid.ToString());
-                if (auto package_to_validate{m_txdownloadman.Find1P1CPackage(ptx, pfrom.GetId())}) {
-                    const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
-                    LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
-                             package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                    ProcessPackageResult(package_to_validate.value(), package_result);
-                }
+            if (package_to_validate) {
+                const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
+                LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
+                         package_result.m_state.IsValid() ? "package accepted" : "package rejected");
+                ProcessPackageResult(package_to_validate.value(), package_result);
             }
-            // If a tx is detected by m_lazy_recent_rejects it is ignored. Because we haven't
-            // submitted the tx to our mempool, we won't have computed a DoS
-            // score for it or determined exactly why we consider it invalid.
-            //
-            // This means we won't penalize any peer subsequently relaying a DoSy
-            // tx (even if we penalized the first peer who gave it to us) because
-            // we have to account for m_lazy_recent_rejects showing false positives. In
-            // other words, we shouldn't penalize a peer if we aren't *sure* they
-            // submitted a DoSy tx.
-            //
-            // Note that m_lazy_recent_rejects doesn't just record DoSy or invalid
-            // transactions, but any tx not accepted by the mempool, which may be
-            // due to node policy (vs. consensus). So we can't blanket penalize a
-            // peer simply for relaying a tx that our m_lazy_recent_rejects has caught,
-            // regardless of false positives.
             return;
         }
+
+        // ReceivedTx should not be telling us to validate the tx and a package.
+        Assume(!package_to_validate.has_value());
 
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(ptx);
         const TxValidationState& state = result.m_state;

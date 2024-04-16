@@ -27,10 +27,6 @@ TxRequestTracker& TxDownloadManager::GetTxRequestRef()
 {
     return m_impl->m_txrequest;
 }
-CRollingBloomFilter& TxDownloadManager::RecentRejectsReconsiderableFilter()
-{
-    return m_impl->RecentRejectsReconsiderableFilter();
-}
 void TxDownloadManager::ActiveTipChange()
 {
     m_impl->ActiveTipChange();
@@ -82,6 +78,10 @@ RejectedTxTodo TxDownloadManager::MempoolRejectedTx(const CTransactionRef& ptx, 
 void TxDownloadManager::MempoolRejectedPackage(const Package& package)
 {
     m_impl->MempoolRejectedPackage(package);
+}
+std::pair<bool, std::optional<PackageToValidate>> TxDownloadManager::ReceivedTx(NodeId nodeid, const CTransactionRef& ptx)
+{
+    return m_impl->ReceivedTx(nodeid, ptx);
 }
 
 // TxDownloadManagerImpl
@@ -449,5 +449,59 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
 void TxDownloadManagerImpl::MempoolRejectedPackage(const Package& package)
 {
     RecentRejectsReconsiderableFilter().insert(GetPackageHash(package));
+}
+
+std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::ReceivedTx(NodeId nodeid, const CTransactionRef& ptx)
+{
+    const uint256& txid = ptx->GetHash();
+    const uint256& wtxid = ptx->GetWitnessHash();
+
+    // Mark that we have received a response
+    m_txrequest.ReceivedResponse(nodeid, txid);
+    if (ptx->HasWitness()) m_txrequest.ReceivedResponse(nodeid, wtxid);
+
+    // First check if we should drop this tx.
+    // We do the AlreadyHaveTx() check using wtxid, rather than txid - in the
+    // absence of witness malleation, this is strictly better, because the
+    // recent rejects filter may contain the wtxid but rarely contains
+    // the txid of a segwit transaction that has been rejected.
+    // In the presence of witness malleation, it's possible that by only
+    // doing the check with wtxid, we could overlook a transaction which
+    // was confirmed with a different witness, or exists in our mempool
+    // with a different witness, but this has limited downside:
+    // mempool validation does its own lookup of whether we have the txid
+    // already; and an adversary can already relay us old transactions
+    // (older than our recency filter) if trying to DoS us, without any need
+    // for witness malleation.
+    if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/true)) {
+
+        if (RecentRejectsReconsiderableFilter().contains(wtxid)) {
+            // When a transaction is already in m_lazy_recent_rejects_reconsiderable, we shouldn't submit
+            // it by itself again. However, look for a matching child in the orphanage, as it is
+            // possible that they succeed as a package.
+            LogDebug(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage\n",
+                     txid.ToString(), wtxid.ToString());
+            return std::make_pair(false, Find1P1CPackage(ptx, nodeid));
+        }
+
+        // If a tx is detected by m_lazy_recent_rejects it is ignored. Because we haven't
+        // submitted the tx to our mempool, we won't have computed a DoS
+        // score for it or determined exactly why we consider it invalid.
+        //
+        // This means we won't penalize any peer subsequently relaying a DoSy
+        // tx (even if we penalized the first peer who gave it to us) because
+        // we have to account for m_lazy_recent_rejects showing false positives. In
+        // other words, we shouldn't penalize a peer if we aren't *sure* they
+        // submitted a DoSy tx.
+        //
+        // Note that m_lazy_recent_rejects doesn't just record DoSy or invalid
+        // transactions, but any tx not accepted by the mempool, which may be
+        // due to node policy (vs. consensus). So we can't blanket penalize a
+        // peer simply for relaying a tx that our m_lazy_recent_rejects has caught,
+        // regardless of false positives.
+        return {false, std::nullopt};
+    }
+
+    return {true, std::nullopt};
 }
 } // namespace node
