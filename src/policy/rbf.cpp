@@ -73,11 +73,12 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                 iters_conflicting.size(),
                 MAX_REPLACEMENT_CANDIDATES);
     }
+
     // Calculate the set of all transactions that would have to be evicted.
-    for (CTxMemPool::txiter it : iters_conflicting) {
-        // The cluster count limit ensures that we won't do too much work on a
-        // single invocation of this function.
-        pool.CalculateDescendants(it, all_conflicts);
+    CTxMemPool::Entries direct_conflicts{iters_conflicting.begin(), iters_conflicting.end()};
+    auto descendants = pool.CalculateDescendants(direct_conflicts);
+    for (auto it : descendants) {
+        all_conflicts.insert(it);
     }
     return std::nullopt;
 }

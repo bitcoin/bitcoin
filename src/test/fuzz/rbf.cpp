@@ -169,7 +169,8 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     // Calculate all conflicts:
     CTxMemPool::setEntries all_conflicts;
     for (auto& txiter : direct_conflicts) {
-        pool.CalculateDescendants(txiter, all_conflicts);
+        auto descendants = pool.CalculateDescendants({txiter});
+        all_conflicts.insert(descendants.begin(), descendants.end());
     }
 
 

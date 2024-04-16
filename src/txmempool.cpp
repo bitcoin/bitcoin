@@ -364,15 +364,6 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     nTransactionsUpdated++;
 }
 
-// Calculates descendants of given entry and adds to setDescendants.
-void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
-{
-    auto descendants = txgraph.GetDescendants({*entryit});
-    for (auto tx: descendants) {
-        setDescendants.insert(mapTx.iterator_to(dynamic_cast<const CTxMemPoolEntry&>(tx.get())));
-    }
-}
-
 CTxMemPool::Entries CTxMemPool::CalculateDescendants(Entries txs) const
 {
     std::vector<TxEntry::TxEntryRef> tx_entries;
