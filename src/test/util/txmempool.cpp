@@ -157,7 +157,7 @@ void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool)
         Assert(entry.GetFee() == 0 && entry.GetModifiedFee() == 0);
 
         // Transaction has single dust; make sure it's swept or will not be mined
-        const auto& children = entry.GetMemPoolChildrenConst();
+        const auto& children = tx_pool.GetChildren(entry);
 
         // Multiple children should never happen as non-dust-spending child
         // can get mined as package
@@ -199,12 +199,12 @@ void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool)
             if (anc_count > 1) {
                 Assert(entry.GetTxSize() <= TRUC_CHILD_MAX_VSIZE);
                 // All TRUC transactions must only have TRUC unconfirmed parents.
-                const auto& parents = entry.GetMemPoolParentsConst();
+                const auto& parents = tx_pool.GetParents(entry);
                 Assert(parents.begin()->get().GetSharedTx()->version == TRUC_VERSION);
             }
         } else if (anc_count > 1) {
             // All non-TRUC transactions must only have non-TRUC unconfirmed parents.
-            for (const auto& parent : entry.GetMemPoolParentsConst()) {
+            for (const auto& parent : tx_pool.GetParents(entry)) {
                 Assert(parent.get().GetSharedTx()->version != TRUC_VERSION);
             }
         }
