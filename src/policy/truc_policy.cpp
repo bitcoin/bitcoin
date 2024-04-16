@@ -215,7 +215,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
         // If there are any ancestors, this is the only child allowed. The parent cannot have any
         // other descendants. We handle the possibility of multiple children as that case is
         // possible through a reorg.
-        const auto& children = parent_entry->GetMemPoolChildrenConst();
+        const auto& children = pool.GetChildren(*parent_entry);
         // Don't double-count a transaction that is going to be replaced. This logic assumes that
         // any descendant of the TRUC transaction is a direct child, which makes sense because a
         // TRUC transaction can only have 1 descendant.
