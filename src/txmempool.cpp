@@ -415,7 +415,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             CalculateDescendants(it, setAllRemoves);
         }
 
-        RemoveStaged(setAllRemoves, false, reason);
+        RemoveStaged(setAllRemoves, reason);
 }
 
 void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
@@ -432,7 +432,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     for (txiter it : txToRemove) {
         CalculateDescendants(it, setAllRemoves);
     }
-    RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
+    RemoveStaged(setAllRemoves, MemPoolRemovalReason::REORG);
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
@@ -838,7 +838,7 @@ void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) 
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
 
     std::vector<TxEntry::TxEntryRef> txs_to_remove;
@@ -865,7 +865,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     for (txiter removeit : toremove) {
         CalculateDescendants(removeit, stage);
     }
-    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
+    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
     return stage.size();
 }
 

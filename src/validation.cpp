@@ -1238,7 +1238,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
         );
         m_subpackage.m_replaced_transactions.push_back(it->GetSharedTx());
     }
-    m_pool.RemoveStaged(m_subpackage.m_all_conflicts, false, MemPoolRemovalReason::REPLACED);
+    m_pool.RemoveStaged(m_subpackage.m_all_conflicts, MemPoolRemovalReason::REPLACED);
     // Don't attempt to process the same conflicts repeatedly during subpackage evaluation:
     // they no longer exist on subsequent calls to Finalize() post-RemoveStaged
     m_subpackage.m_all_conflicts.clear();
