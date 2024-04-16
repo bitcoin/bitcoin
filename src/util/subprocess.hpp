@@ -657,18 +657,6 @@ struct executable: string_arg
 };
 
 /*!
- * Option to set the current working directory
- * of the spawned process.
- *
- * Eg: cwd{"/some/path/x"}
- */
-struct cwd: string_arg
-{
-  template <typename T>
-  cwd(T&& arg): string_arg(std::forward<T>(arg)) {}
-};
-
-/*!
  * Option to specify environment variables required by
  * the spawned process.
  *
@@ -899,7 +887,6 @@ struct ArgumentDeducer
   ArgumentDeducer(Popen* p): popen_(p) {}
 
   void set_option(executable&& exe);
-  void set_option(cwd&& cwdir);
   void set_option(environment&& env);
   void set_option(input&& inp);
   void set_option(output&& out);
@@ -1083,9 +1070,9 @@ private:
  * interface to the client.
  *
  * API's provided by the class:
- * 1. Popen({"cmd"}, output{..}, error{..}, cwd{..}, ....)
+ * 1. Popen({"cmd"}, output{..}, error{..}, ....)
  *    Command provided as a sequence.
- * 2. Popen("cmd arg1"m output{..}, error{..}, cwd{..}, ....)
+ * 2. Popen("cmd arg1"m output{..}, error{..}, ....)
  *    Command provided in a single string.
  * 3. wait()             - Wait for the child to exit.
  * 4. retcode()          - The return code of the exited child.
@@ -1227,7 +1214,6 @@ private:
 #endif
 
   std::string exe_name_;
-  std::string cwd_;
   env_map_t env_;
 
   // Command in string format
@@ -1507,10 +1493,6 @@ namespace detail {
     popen_->exe_name_ = std::move(exe.arg_value);
   }
 
-  inline void ArgumentDeducer::set_option(cwd&& cwdir) {
-    popen_->cwd_ = std::move(cwdir.arg_value);
-  }
-
   inline void ArgumentDeducer::set_option(environment&& env) {
     popen_->env_ = std::move(env.env_);
   }
@@ -1582,12 +1564,6 @@ namespace detail {
 
       if (stream.err_write_ != -1 && stream.err_write_ > 2)
         close(stream.err_write_);
-
-      // Change the working directory if provided
-      if (parent_->cwd_.length()) {
-        sys_ret = chdir(parent_->cwd_.c_str());
-        if (sys_ret == -1) throw OSError("chdir failed", errno);
-      }
 
       // Replace the current image with the executable
       if (parent_->env_.size()) {
