@@ -155,19 +155,6 @@ public:
 };
 
 //--------------------------------------------------------------------
-
-//Environment Variable types
-#ifndef _MSC_VER
-	using env_string_t = std::string;
-	using env_char_t = char;
-#else
-	using env_string_t = std::wstring;
-	using env_char_t = wchar_t;
-#endif
-using env_map_t = std::map<env_string_t, env_string_t>;
-using env_vector_t = std::vector<env_char_t>;
-
-//--------------------------------------------------------------------
 namespace util
 {
   template <typename R>
@@ -305,100 +292,6 @@ namespace util
     if (!SetHandleInformation(*child_handle, HANDLE_FLAG_INHERIT, 0))
       throw OSError("SetHandleInformation", 0);
   }
-
-  // env_map_t MapFromWindowsEnvironment()
-  // * Imports current Environment in a C-string table
-  // * Parses the strings by splitting on the first "=" per line
-  // * Creates a map of the variables
-  // * Returns the map
-  inline env_map_t MapFromWindowsEnvironment(){
-      wchar_t *variable_strings_ptr;
-      wchar_t *environment_strings_ptr;
-      std::wstring delimiter(L"=");
-      int del_len = delimiter.length();
-      env_map_t mapped_environment;
-
-      // Get a pointer to the environment block.
-      environment_strings_ptr = GetEnvironmentStringsW();
-      // If the returned pointer is NULL, exit.
-      if (environment_strings_ptr == NULL)
-      {
-          throw OSError("GetEnvironmentStringsW", 0);
-      }
-
-      // Variable strings are separated by NULL byte, and the block is
-      // terminated by a NULL byte.
-
-      variable_strings_ptr = (wchar_t *) environment_strings_ptr;
-
-      //Since the environment map ends with a null, we can loop until we find it.
-      while (*variable_strings_ptr)
-      {
-          // Create a string from Variable String
-          env_string_t current_line(variable_strings_ptr);
-          // Find the first "equals" sign.
-          auto pos = current_line.find(delimiter);
-          // Assuming it's not missing ...
-          if(pos!=std::wstring::npos){
-              // ... parse the key and value.
-              env_string_t key = current_line.substr(0, pos);
-              env_string_t value = current_line.substr(pos + del_len);
-              // Map the entry.
-              mapped_environment[key] = value;
-          }
-          // Jump to next line in the environment map.
-          variable_strings_ptr += std::wcslen(variable_strings_ptr) + 1;
-      }
-      // We're done with the old environment map buffer.
-      FreeEnvironmentStringsW(environment_strings_ptr);
-
-      // Return the map.
-      return mapped_environment;
-  }
-
-  // env_vector_t WindowsEnvironmentVectorFromMap(const env_map_t &source_map)
-  // * Creates a vector buffer for the new environment string table
-  // * Copies in the mapped variables
-  // * Returns the vector
-  inline env_vector_t WindowsEnvironmentVectorFromMap(const env_map_t &source_map)
-  {
-	// Make a new environment map buffer.
-	env_vector_t environment_map_buffer;
-	// Give it some space.
-	environment_map_buffer.reserve(4096);
-
-	// And fill'er up.
-	for(auto kv: source_map){
-	  // Create the line
-	  env_string_t current_line(kv.first); current_line += L"="; current_line += kv.second;
-	  // Add the line to the buffer.
-	  std::copy(current_line.begin(), current_line.end(), std::back_inserter(environment_map_buffer));
-	  // Append a null
-	  environment_map_buffer.push_back(0);
-	}
-	// Append one last null because of how Windows does it's environment maps.
-	environment_map_buffer.push_back(0);
-
-	return environment_map_buffer;
-  }
-
-  // env_vector_t CreateUpdatedWindowsEnvironmentVector(const env_map_t &changes_map)
-  // * Merges host environment with new mapped variables
-  // * Creates and returns string vector based on map
-  inline env_vector_t CreateUpdatedWindowsEnvironmentVector(const env_map_t &changes_map){
-	// Import the environment map
-	env_map_t environment_map = MapFromWindowsEnvironment();
-    // Merge in the changes with overwrite
-	for(auto& it: changes_map)
-	{
-		environment_map[it.first] = it.second;
-	}
-    // Create a Windows-usable Environment Map Buffer
-    env_vector_t environment_map_strings_vector = WindowsEnvironmentVectorFromMap(environment_map);
-
-	return environment_map_strings_vector;
-  }
-
 #endif
 
   /*!
@@ -657,22 +550,6 @@ struct executable: string_arg
 };
 
 /*!
- * Option to specify environment variables required by
- * the spawned process.
- *
- * Eg: environment{{ {"K1", "V1"}, {"K2", "V2"},... }}
- */
-struct environment
-{
-  environment(env_map_t&& env):
-    env_(std::move(env)) {}
-  explicit environment(const env_map_t& env):
-    env_(env) {}
-  env_map_t env_;
-};
-
-
-/*!
  * Used for redirecting input/output/error
  */
 enum IOTYPE {
@@ -887,7 +764,6 @@ struct ArgumentDeducer
   ArgumentDeducer(Popen* p): popen_(p) {}
 
   void set_option(executable&& exe);
-  void set_option(environment&& env);
   void set_option(input&& inp);
   void set_option(output&& out);
   void set_option(error&& err);
@@ -1214,7 +1090,6 @@ private:
 #endif
 
   std::string exe_name_;
-  env_map_t env_;
 
   // Command in string format
   std::string args_;
@@ -1335,13 +1210,6 @@ inline void Popen::kill(int sig_num)
 inline void Popen::execute_process() noexcept(false)
 {
 #ifdef __USING_WINDOWS__
-  void* environment_string_table_ptr = nullptr;
-  env_vector_t environment_string_vector;
-  if(this->env_.size()){
-	  environment_string_vector = util::CreateUpdatedWindowsEnvironmentVector(env_);
-	  environment_string_table_ptr = (void*)environment_string_vector.data();
-  }
-
   if (exe_name_.length()) {
     this->vargs_.insert(this->vargs_.begin(), this->exe_name_);
     this->populate_c_argv();
@@ -1388,7 +1256,7 @@ inline void Popen::execute_process() noexcept(false)
                             NULL,         // primary thread security attributes
                             TRUE,         // handles are inherited
                             creation_flags,	// creation flags
-                            environment_string_table_ptr,  // use provided environment
+                            NULL,         // use parent's environment
                             NULL,         // use parent's current directory
                             &siStartInfo, // STARTUPINFOW pointer
                             &piProcInfo); // receives PROCESS_INFORMATION
@@ -1493,10 +1361,6 @@ namespace detail {
     popen_->exe_name_ = std::move(exe.arg_value);
   }
 
-  inline void ArgumentDeducer::set_option(environment&& env) {
-    popen_->env_ = std::move(env.env_);
-  }
-
   inline void ArgumentDeducer::set_option(input&& inp) {
     if (inp.rd_ch_ != -1) popen_->stream_.read_from_parent_ = inp.rd_ch_;
     if (inp.wr_ch_ != -1) popen_->stream_.write_to_child_ = inp.wr_ch_;
@@ -1566,14 +1430,7 @@ namespace detail {
         close(stream.err_write_);
 
       // Replace the current image with the executable
-      if (parent_->env_.size()) {
-        for (auto& kv : parent_->env_) {
-          setenv(kv.first.c_str(), kv.second.c_str(), 1);
-        }
-        sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
-      } else {
-        sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
-      }
+      sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
 
       if (sys_ret == -1) throw OSError("execve failed", errno);
 
