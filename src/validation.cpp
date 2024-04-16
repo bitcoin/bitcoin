@@ -2189,7 +2189,7 @@ static bool SelectBlockFromCandidates(std::vector<std::pair<int64_t, uint256>>& 
 {
     bool fSelected = false;
     uint256 hashBest = uint256();
-    *pindexSelected = (const CBlockIndex*)0;
+    *pindexSelected = (const CBlockIndex*)nullptr;
     for (const std::pair<int64_t, uint256>& item : vSortedByTimestamp) {
         const CBlockIndex* pindex = m_blockman.LookupBlockIndex(item.second);
         if (!pindex) return false;
@@ -2265,7 +2265,7 @@ static bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nS
     const CBlockIndex* pindex = pindexPrev;
 
     while (pindex && pindex->GetBlockTime() >= nSelectionIntervalStart) {
-        vSortedByTimestamp.push_back(std::make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
+        vSortedByTimestamp.emplace_back(std::make_pair(pindex->GetBlockTime(), pindex->GetBlockHash()));
         pindex = pindex->pprev;
     }
 
