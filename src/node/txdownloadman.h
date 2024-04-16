@@ -10,10 +10,16 @@
 
 class CBlock;
 class CRollingBloomFilter;
+class CTxMemPool;
 class TxOrphanage;
 class TxRequestTracker;
 namespace node {
 class TxDownloadManagerImpl;
+
+struct TxDownloadOptions {
+    /** Read-only reference to mempool. */
+    const CTxMemPool& m_mempool;
+};
 
 /**
  * Class responsible for deciding what transactions to request and, once
@@ -38,7 +44,7 @@ class TxDownloadManager {
     const std::unique_ptr<TxDownloadManagerImpl> m_impl;
 
 public:
-    explicit TxDownloadManager();
+    explicit TxDownloadManager(const TxDownloadOptions& options);
     ~TxDownloadManager();
 
     // Get references to internal data structures. Outside access to these data structures should be

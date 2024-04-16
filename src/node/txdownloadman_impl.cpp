@@ -7,13 +7,14 @@
 
 #include <chain.h>
 #include <consensus/validation.h>
+#include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 namespace node {
 // TxDownloadManager wrappers
-TxDownloadManager::TxDownloadManager() :
-    m_impl{std::make_unique<TxDownloadManagerImpl>()}
+TxDownloadManager::TxDownloadManager(const TxDownloadOptions& options) :
+    m_impl{std::make_unique<TxDownloadManagerImpl>(options)}
 {}
 TxDownloadManager::~TxDownloadManager() = default;
 
