@@ -168,6 +168,9 @@ public:
 
     /** Respond to transaction rejected from mempool */
     RejectedTxTodo MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure);
+
+    /** Respond to package rejected from mempool */
+    void MempoolRejectedPackage(const Package& package);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

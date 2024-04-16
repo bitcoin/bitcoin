@@ -3029,7 +3029,7 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
     const auto& senders = package_to_validate.m_senders;
 
     if (package_result.m_state.IsInvalid()) {
-        RecentRejectsReconsiderableFilter().insert(GetPackageHash(package));
+        m_txdownloadman.MempoolRejectedPackage(package);
     }
     // We currently only expect to process 1-parent-1-child packages. Remove if this changes.
     if (!Assume(package.size() == 2)) return;

@@ -79,6 +79,10 @@ RejectedTxTodo TxDownloadManager::MempoolRejectedTx(const CTransactionRef& ptx, 
 {
     return m_impl->MempoolRejectedTx(ptx, state, nodeid, first_time_failure);
 }
+void TxDownloadManager::MempoolRejectedPackage(const Package& package)
+{
+    m_impl->MempoolRejectedPackage(package);
+}
 
 // TxDownloadManagerImpl
 void TxDownloadManagerImpl::ActiveTipChange()
@@ -440,5 +444,10 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
         .m_unique_parents = std::move(unique_parents),
         .m_package_to_validate = std::move(package_to_validate)
     };
+}
+
+void TxDownloadManagerImpl::MempoolRejectedPackage(const Package& package)
+{
+    RecentRejectsReconsiderableFilter().insert(GetPackageHash(package));
 }
 } // namespace node
