@@ -81,5 +81,8 @@ PrivateDevices=true
 # Deny the creation of writable and executable memory mappings.
 MemoryDenyWriteExecute=true
 
+# Restrict ABIs to help ensure MemoryDenyWriteExecute is enforced
+SystemCallArchitectures=native
+
 [Install]
 WantedBy=multi-user.target
