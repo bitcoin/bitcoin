@@ -83,14 +83,12 @@ static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWall
 
 
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
-/*
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
 {
     CKey key2;
     key2.Set(key.begin(), key.end(), !key.IsCompressed());
     return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
 }
-*/
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
@@ -2976,7 +2974,7 @@ static RPCHelpMan createwallet()
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
             {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
-            {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using upgradetohd."},
+            {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using upgradetohd (by mnemonic) or sethdseed (WIF private key)."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
             {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "false", "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
             {"descriptors", RPCArg::Type::BOOL, /* default */ "false", "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation"},
@@ -4272,6 +4270,85 @@ static RPCHelpMan send()
     };
 }
 
+static RPCHelpMan sethdseed()
+{
+    return RPCHelpMan{"sethdseed",
+                "\nSet or generate a new HD wallet seed. Non-HD wallets will not be upgraded to being a HD wallet. Wallets that are already\n"
+                "HD can not be updated to a new HD seed.\n"
+                "\nNote that you will need to MAKE A NEW BACKUP of your wallet after setting the HD wallet seed." +
+        HELP_REQUIRING_PASSPHRASE,
+                {
+                    {"newkeypool", RPCArg::Type::BOOL, /* default */ "true", "Whether to flush old unused addresses, including change addresses, from the keypool and regenerate it.\n"
+                                         "If true, the next address from getnewaddress and change address from getrawchangeaddress will be from this new seed.\n"
+                                         "If false, addresses from the existing keypool will be used until it has been depleted."},
+                    {"seed", RPCArg::Type::STR, /* default */ "random seed", "The WIF private key to use as the new HD seed.\n"
+                                         "The seed value can be retrieved using the dumpwallet command. It is the private key marked hdseed=1"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("sethdseed", "")
+            + HelpExampleCli("sethdseed", "false")
+            + HelpExampleCli("sethdseed", "true \"wifkey\"")
+            + HelpExampleRpc("sethdseed", "true, \"wifkey\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    // TODO: add mnemonic feature to sethdseed or remove it in favour of upgradetohd
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed to a wallet with private keys disabled");
+    }
+
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+    // Do not do anything to non-HD wallets
+    if (!pwallet->CanSupportFeature(FEATURE_HD)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set an HD seed on a non-HD wallet. Use the upgradewallet RPC in order to upgrade a non-HD wallet to HD");
+    }
+    if (pwallet->IsHDEnabled()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed. The wallet already has a seed");
+    }
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    bool flush_key_pool = true;
+    if (!request.params[0].isNull()) {
+        flush_key_pool = request.params[0].get_bool();
+    }
+
+    if (request.params[1].isNull()) {
+        spk_man.GenerateNewHDChain("", "");
+    } else {
+        CKey key = DecodeSecret(request.params[1].get_str());
+        if (!key.IsValid()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+        }
+        if (HaveKey(spk_man, key)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Already have this key (either as an HD seed or as a loose private key)");
+        }
+        CHDChain newHdChain;
+        if (!newHdChain.SetSeed(SecureVector(key.begin(), key.end()), true)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key: SetSeed failed");
+        }
+        if (!spk_man.SetHDChainSingle(newHdChain, false)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key: SetHDChainSingle failed");
+        }
+        // add default account
+        newHdChain.AddAccount();
+    }
+
+    if (flush_key_pool) spk_man.NewKeyPool();
+
+    return NullUniValue;
+},
+    };
+}
+
 RPCHelpMan walletprocesspsbt()
 {
     return RPCHelpMan{"walletprocesspsbt",
@@ -4576,6 +4653,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "send",                             &send,                          {"outputs","conf_target","estimate_mode","options"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_cj","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode", "avoid_reuse"} },
+    { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
     { "wallet",             "setcoinjoinrounds",                &setcoinjoinrounds,             {"rounds"} },
     { "wallet",             "setcoinjoinamount",                &setcoinjoinamount,             {"amount"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
