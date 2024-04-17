@@ -644,6 +644,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
 {
     LOCK(context.wallet->cs_wallet);
     if (out_type == OutputType::BLSCT) return;
+    if (out_type == OutputType::BLSCT_STAKE) return;
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
     CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
@@ -680,6 +681,7 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     for (const auto& out_type : OUTPUT_TYPES) {
         if (out_type == OutputType::UNKNOWN) continue;
         if (out_type == OutputType::BLSCT) continue;
+        if (out_type == OutputType::BLSCT_STAKE) continue;
         expected_coins_sizes[out_type] = 2U;
         TestCoinsResult(*this, out_type, 1 * COIN, expected_coins_sizes);
     }

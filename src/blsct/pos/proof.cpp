@@ -110,6 +110,7 @@ bool ProofOfStake::VerifyKernelHash(const RangeProof& range_proof, const uint256
 
 uint256 ProofOfStake::CalculateMinValue(const uint256& kernel_hash, const unsigned int& next_target)
 {
+    if (next_target == 0) return uint256();
     return ArithToUint256(UintToArith256(kernel_hash) / arith_uint256().SetCompact(next_target));
 }
 } // namespace blsct

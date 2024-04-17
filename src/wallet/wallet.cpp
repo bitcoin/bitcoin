@@ -3661,7 +3661,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
-            if (t == OutputType::BLSCT) continue;
+            if (t == OutputType::BLSCT || t == OutputType::BLSCT_STAKE) continue;
             auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
             if (IsCrypted()) {
                 if (IsLocked()) {
@@ -3695,7 +3695,6 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         // Get the extended key
         CExtKey master_key;
         master_key.SetSeed(seed_key);
-
         SetupDescriptorScriptPubKeyMans(master_key);
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
