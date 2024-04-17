@@ -41,6 +41,7 @@ class P2PHandshakeTest(BitcoinTestFramework):
             peer.sync_with_ping()
             peer.peer_disconnect()
             peer.wait_for_disconnect()
+        self.wait_until(lambda: len(node.getpeerinfo()) == 0)
 
     def test_desirable_service_flags(self, node, service_flag_tests, desirable_service_flags, expect_disconnect):
         """Check that connecting to a peer either fails or succeeds depending on its offered
