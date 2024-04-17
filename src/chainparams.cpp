@@ -861,6 +861,7 @@ public:
         UpdateActivationParametersFromArgs(args);
         UpdateDIP3ParametersFromArgs(args);
         UpdateDIP8ParametersFromArgs(args);
+        UpdateBIP147ParametersFromArgs(args);
         UpdateBudgetParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
@@ -985,6 +986,12 @@ public:
         consensus.DIP0008Height = nActivationHeight;
     }
     void UpdateDIP8ParametersFromArgs(const ArgsManager& args);
+
+    void UpdateBIP147Parameters(int nActivationHeight)
+    {
+        consensus.BIP147Height = nActivationHeight;
+    }
+    void UpdateBIP147ParametersFromArgs(const ArgsManager& args);
 
     /**
      * Allows modifying the budget regtest parameters.
@@ -1116,6 +1123,18 @@ void CRegTestParams::UpdateDIP8ParametersFromArgs(const ArgsManager& args)
     }
     LogPrintf("Setting DIP8 parameters to activation=%ld\n", nDIP8ActivationHeight);
     UpdateDIP8Parameters(nDIP8ActivationHeight);
+}
+
+void CRegTestParams::UpdateBIP147ParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-bip147height")) return;
+    int nBIP147Height;
+    const std::string strParams = args.GetArg("-bip147height", "");
+    if (!ParseInt32(strParams, &nBIP147Height)) {
+        throw std::runtime_error(strprintf("Invalid activation height (%s)", strParams));
+    }
+    LogPrintf("Setting BIP147 parameters to activation=%lld\n", nBIP147Height);
+    UpdateBIP147Parameters(nBIP147Height);
 }
 
 void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager& args)
