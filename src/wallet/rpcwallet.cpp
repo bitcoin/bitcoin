@@ -4272,21 +4272,6 @@ static RPCHelpMan send()
     };
 }
 
-RPCHelpMan abortrescan();
-RPCHelpMan dumpprivkey();
-RPCHelpMan importprivkey();
-RPCHelpMan importaddress();
-RPCHelpMan importpubkey();
-RPCHelpMan dumpwallet();
-RPCHelpMan importwallet();
-RPCHelpMan importprunedfunds();
-RPCHelpMan removeprunedfunds();
-RPCHelpMan importmulti();
-RPCHelpMan importdescriptors();
-RPCHelpMan listdescriptors();
-RPCHelpMan dumphdinfo();
-RPCHelpMan importelectrumwallet();
-
 RPCHelpMan walletprocesspsbt()
 {
     return RPCHelpMan{"walletprocesspsbt",
@@ -4519,6 +4504,21 @@ static RPCHelpMan upgradewallet()
 },
     };
 }
+
+RPCHelpMan abortrescan();
+RPCHelpMan dumpprivkey();
+RPCHelpMan importprivkey();
+RPCHelpMan importaddress();
+RPCHelpMan importpubkey();
+RPCHelpMan dumpwallet();
+RPCHelpMan importwallet();
+RPCHelpMan importprunedfunds();
+RPCHelpMan removeprunedfunds();
+RPCHelpMan importmulti();
+RPCHelpMan importdescriptors();
+RPCHelpMan listdescriptors();
+RPCHelpMan dumphdinfo();
+RPCHelpMan importelectrumwallet();
 
 Span<const CRPCCommand> GetWalletRPCCommands()
 {
