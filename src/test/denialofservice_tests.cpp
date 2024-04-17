@@ -6,6 +6,7 @@
 
 #include <banman.h>
 #include <chainparams.h>
+#include <evo/deterministicmns.h>
 #include <llmq/context.h>
 #include <net.h>
 #include <net_processing.h>
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     static_cast<ConnmanTestMsg*>(connman.get())->SetPeerConnectTimeout(99999);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr, *m_node.scheduler,
                                        *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, ::deterministicMNManager,
+                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
                                        m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
 
     // Mock an outbound peer
@@ -139,7 +140,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr, *m_node.scheduler,
                                        *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, ::deterministicMNManager,
+                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
                                        m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
@@ -214,7 +215,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(), *m_node.scheduler,
                                        *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, ::deterministicMNManager,
+                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
                                        m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
 
     banman->ClearBanned();
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(), *m_node.scheduler,
                                        *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, ::deterministicMNManager,
+                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
                                        m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
 
     banman->ClearBanned();

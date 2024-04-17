@@ -21,9 +21,10 @@ class CCoinJoinClientQueueManager;
 class CConnman;
 class CDeterministicMN;
 class CDeterministicMNManager;
-class CoinJoinWalletManager;
 class CNode;
+class CMasternodeMetaMan;
 class CMasternodeSync;
+class CoinJoinWalletManager;
 class CTxMemPool;
 
 class UniValue;
@@ -72,9 +73,10 @@ public:
     using wallet_name_cjman_map = std::map<const std::string, std::unique_ptr<CCoinJoinClientManager>>;
 
 public:
-    CoinJoinWalletManager(CConnman& connman, CDeterministicMNManager& dmnman, CTxMemPool& mempool, const CMasternodeSync& mn_sync,
-                    const std::unique_ptr<CCoinJoinClientQueueManager>& queueman)
-        : m_connman(connman), m_dmnman(dmnman), m_mempool(mempool), m_mn_sync(mn_sync), m_queueman(queueman) {}
+    CoinJoinWalletManager(CConnman& connman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
+                          const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman)
+        : m_connman(connman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mempool(mempool), m_mn_sync(mn_sync), m_queueman(queueman) {}
+
     ~CoinJoinWalletManager() {
         for (auto& [wallet_name, cj_man] : m_wallet_manager_map) {
             cj_man.reset();
@@ -94,6 +96,7 @@ public:
 private:
     CConnman& m_connman;
     CDeterministicMNManager& m_dmnman;
+    CMasternodeMetaMan& m_mn_metaman;
     CTxMemPool& m_mempool;
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<CCoinJoinClientQueueManager>& m_queueman;
@@ -108,6 +111,7 @@ private:
     CoinJoinWalletManager& m_walletman;
     CCoinJoinClientManager& m_manager;
     CDeterministicMNManager& m_dmnman;
+    CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<CCoinJoinClientQueueManager>& m_queueman;
 
@@ -157,8 +161,8 @@ private:
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, const CMasternodeSync& mn_sync,
-                                    const std::unique_ptr<CCoinJoinClientQueueManager>& queueman);
+    explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                                    const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman);
 
     void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
 
@@ -191,13 +195,14 @@ private:
     CConnman& connman;
     CoinJoinWalletManager& m_walletman;
     CDeterministicMNManager& m_dmnman;
+    CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
     mutable Mutex cs_ProcessDSQueue;
 
 public:
     explicit CCoinJoinClientQueueManager(CConnman& _connman, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman,
-                                         const CMasternodeSync& mn_sync) :
-        connman(_connman), m_walletman(walletman), m_dmnman(dmnman), m_mn_sync(mn_sync) {};
+                                         CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync) :
+        connman(_connman), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync) {};
 
     PeerMsgRet ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
     PeerMsgRet ProcessDSQueue(const CNode& peer, CDataStream& vRecv);
@@ -212,6 +217,7 @@ private:
     CWallet& m_wallet;
     CoinJoinWalletManager& m_walletman;
     CDeterministicMNManager& m_dmnman;
+    CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<CCoinJoinClientQueueManager>& m_queueman;
 
@@ -244,9 +250,10 @@ public:
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
-    explicit CCoinJoinClientManager(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, const CMasternodeSync& mn_sync,
+    explicit CCoinJoinClientManager(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman,
+                                    CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
-        m_wallet(wallet), m_walletman(walletman), m_dmnman(dmnman), m_mn_sync(mn_sync), m_queueman(queueman) {}
+        m_wallet(wallet), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync), m_queueman(queueman) {}
 
     void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
 

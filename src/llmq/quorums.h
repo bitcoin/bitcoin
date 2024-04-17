@@ -225,8 +225,8 @@ private:
     CEvoDB& m_evoDb;
     CQuorumBlockProcessor& quorumBlockProcessor;
     const CActiveMasternodeManager* const m_mn_activeman;
+    const CMasternodeSync& m_mn_sync;
     const CSporkManager& m_sporkman;
-    const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
     mutable Mutex cs_map_quorums;
     mutable std::map<Consensus::LLMQType, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
@@ -241,7 +241,7 @@ private:
 public:
     CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                    CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
-                   const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, const std::unique_ptr<CMasternodeSync>& mn_sync);
+                   const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync, const CSporkManager& sporkman);
     ~CQuorumManager() { Stop(); };
 
     void Start();

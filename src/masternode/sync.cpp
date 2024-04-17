@@ -15,7 +15,6 @@
 #include <util/translation.h>
 
 class CMasternodeSync;
-std::unique_ptr<CMasternodeSync> masternodeSync;
 
 CMasternodeSync::CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman, const CGovernanceManager& govman) :
     nTimeAssetSyncStarted(GetTime()),

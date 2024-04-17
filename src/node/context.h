@@ -71,19 +71,19 @@ struct NodeContext {
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash
+    std::unique_ptr<CActiveMasternodeManager> mn_activeman;
     std::unique_ptr<CCreditPoolManager> cpoolman;
     std::unique_ptr<CEvoDB> evodb;
     std::unique_ptr<CChainstateHelper> chain_helper;
+    std::unique_ptr<CDeterministicMNManager> dmnman;
     std::unique_ptr<CGovernanceManager> govman;
     std::unique_ptr<CJContext> cj_ctx;
+    std::unique_ptr<CMasternodeMetaMan> mn_metaman;
+    std::unique_ptr<CMasternodeSync> mn_sync;
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<LLMQContext> llmq_ctx;
-    CActiveMasternodeManager* mn_activeman{nullptr};
-    CDeterministicMNManager* dmnman{nullptr};
-    CMasternodeMetaMan* mn_metaman{nullptr};
-    CMasternodeSync* mn_sync{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

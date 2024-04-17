@@ -176,6 +176,4 @@ public:
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
 };
 
-extern std::unique_ptr<CMasternodeMetaMan> mmetaman;
-
 #endif // BITCOIN_MASTERNODE_META_H

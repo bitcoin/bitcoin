@@ -9,8 +9,6 @@
 
 #include <sstream>
 
-std::unique_ptr<CMasternodeMetaMan> mmetaman;
-
 const std::string MasternodeMetaStore::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-3";
 
 CMasternodeMetaMan::CMasternodeMetaMan() :

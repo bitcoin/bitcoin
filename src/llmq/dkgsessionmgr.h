@@ -20,6 +20,7 @@ class CChainState;
 class CDBWrapper;
 class CDeterministicMNManager;
 class CDKGDebugManager;
+class CMasternodeMetaMan;
 class CSporkManager;
 class PeerManager;
 
@@ -67,8 +68,8 @@ private:
 
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
-                       CDKGDebugManager& _dkgDebugManager, CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
-                       const CSporkManager& sporkman, bool unitTests, bool fWipe);
+                       CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
+                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
     void StartThreads();

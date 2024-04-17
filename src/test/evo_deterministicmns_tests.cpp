@@ -640,6 +640,9 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
     SignTransaction(*(setup.m_node.mempool), tx_reg, setup.coinbaseKey);
 
     CTxMemPool testPool;
+    if (setup.m_node.dmnman) {
+        testPool.ConnectManagers(setup.m_node.dmnman.get());
+    }
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);
 
@@ -709,6 +712,9 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     SignTransaction(*(setup.m_node.mempool), tx_reg2, setup.coinbaseKey);
 
     CTxMemPool testPool;
+    if (setup.m_node.dmnman) {
+        testPool.ConnectManagers(setup.m_node.dmnman.get());
+    }
     TestMemPoolEntryHelper entry;
     LOCK2(cs_main, testPool.cs);
 

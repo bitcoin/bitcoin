@@ -7,6 +7,7 @@
 
 #include <validationinterface.h>
 
+class CActiveMasternodeManager;
 class CConnman;
 class CDeterministicMNManager;
 class CGovernanceManager;
@@ -20,6 +21,7 @@ public:
     explicit CDSNotificationInterface(CConnman& connman,
                                       CMasternodeSync& mn_sync,
                                       CGovernanceManager& govman,
+                                      const CActiveMasternodeManager* const mn_activeman,
                                       const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                       const std::unique_ptr<LLMQContext>& llmq_ctx,
                                       const std::unique_ptr<CJContext>& cj_ctx);
@@ -47,6 +49,7 @@ private:
     CMasternodeSync& m_mn_sync;
     CGovernanceManager& m_govman;
 
+    const CActiveMasternodeManager* const m_mn_activeman;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     const std::unique_ptr<CJContext>& m_cj_ctx;

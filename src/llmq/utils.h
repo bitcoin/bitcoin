@@ -19,8 +19,10 @@ class CBlockIndex;
 class CDeterministicMN;
 class CDeterministicMNList;
 class CDeterministicMNManager;
-using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
+class CMasternodeMetaMan;
 class CSporkManager;
+
+using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {
@@ -39,9 +41,9 @@ std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
 bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, CDeterministicMNManager& dmnman, const CSporkManager& sporkman,
                              const CDeterministicMNList& tip_mn_list, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
                              const uint256& myProTxHash);
-void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, CDeterministicMNManager& dmnman, const CSporkManager& sporkman,
-                               const CDeterministicMNList& tip_mn_list, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                               const uint256& myProTxHash);
+void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, CDeterministicMNManager& dmnman,
+                               CMasternodeMetaMan& mn_metaman, const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
+                               gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash);
 
 template <typename CacheType>
 void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true);

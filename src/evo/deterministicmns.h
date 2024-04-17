@@ -637,6 +637,4 @@ bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, g
 bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs);
 bool CheckProUpRevTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, bool check_sigs);
 
-extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
-
 #endif // BITCOIN_EVO_DETERMINISTICMNS_H

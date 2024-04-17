@@ -13,6 +13,7 @@ class CBLSPublicKey;
 class CConnman;
 class CDeterministicMNList;
 class CGovernanceVote;
+class CMasternodeSync;
 class CKey;
 class CKeyID;
 
@@ -104,7 +105,7 @@ public:
     bool Sign(const CActiveMasternodeManager& mn_activeman);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
-    void Relay(CConnman& connman, const CDeterministicMNList& tip_mn_list) const;
+    void Relay(CConnman& connman, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list) const;
 
     const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
 
