@@ -156,9 +156,7 @@ if [[ $HOST = *-mingw32 ]]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
 fi
 
-if [ -n "$USE_VALGRIND" ]; then
-  "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
-fi
+"${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" make "${MAKEJOBS}" check VERBOSE=1
