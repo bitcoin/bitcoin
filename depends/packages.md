@@ -162,7 +162,7 @@ From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assura
 >  creates. This leads to massive overlinking, which is toxic to the Gentoo
 >  ecosystem, as it leads to a massive number of unnecessary rebuilds.
 
-Where possible, packages are built with Position Independant Code. Either using
+Where possible, packages are built with Position Independent Code. Either using
 the Autotools `--with-pic` flag, or `CMAKE_POSITION_INDEPENDENT_CODE` with CMake.
 
 ## Secondary dependencies:
