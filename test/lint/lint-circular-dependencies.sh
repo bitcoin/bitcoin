@@ -96,7 +96,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/deterministicmns -> validationinterface -> evo/deterministicmns"
     "logging -> util/system -> sync -> logging/timer -> logging"
 
-    "coinjoin/context -> net_processing -> coinjoin/context"
+    "coinjoin/context -> coinjoin/server -> net_processing -> coinjoin/context"
     "coinjoin/server -> net_processing -> coinjoin/server"
     "llmq/context -> llmq/ehf_signals -> net_processing -> llmq/context"
     "coinjoin/client -> coinjoin/util -> wallet/wallet -> psbt -> node/transaction -> node/context -> coinjoin/context -> coinjoin/client"

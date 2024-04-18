@@ -4,10 +4,6 @@
 
 #include <coinjoin/context.h>
 
-#include <net.h>
-#include <txmempool.h>
-#include <validation.h>
-
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #endif // ENABLE_WALLET

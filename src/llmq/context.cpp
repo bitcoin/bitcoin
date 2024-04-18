@@ -4,7 +4,6 @@
 
 #include <llmq/context.h>
 
-#include <consensus/validation.h>
 #include <dbwrapper.h>
 
 #include <llmq/blockprocessor.h>
@@ -17,7 +16,6 @@
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
-#include <masternode/sync.h>
 
 LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,
                          CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
