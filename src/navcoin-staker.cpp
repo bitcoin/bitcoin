@@ -368,7 +368,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     UniValue valReply(UniValue::VSTR);
     if (!valReply.read(response.body))
         throw std::runtime_error("couldn't parse reply from server");
-    UniValue reply = rh->ProcessReply(valReply);
+    const UniValue& reply = rh->ProcessReply(valReply);
     if (reply.empty())
         throw std::runtime_error("expected reply to have result, error and id properties");
 
@@ -437,10 +437,10 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
     nRet = abs(error["code"].getInt<int>());
 }
 
-static std::string rpcPass = "";
-static std::string walletName = "";
-static std::string walletPassphrase = "";
-static std::string coinbase_dest = "";
+static std::string rpcPass;
+static std::string walletName;
+static std::string walletPassphrase;
+static std::string coinbase_dest;
 static bool mustUnlockWallet = false;
 static arith_uint256 currentDifficulty;
 
@@ -507,7 +507,7 @@ bool TestSetup()
         UniValue reply = ConnectAndCallRPC(rh.get(), "listwallets", /* args=*/{});
 
         // Parse reply
-        UniValue result = reply.find_value("result");
+        const UniValue& result = reply.find_value("result");
         const UniValue& error = reply.find_value("error");
 
         std::string strError;
@@ -518,7 +518,7 @@ bool TestSetup()
 
             reply = ConnectAndCallRPC(rh.get(), "loadwallet", /* args=*/{walletName});
 
-            UniValue result = reply.find_value("result");
+            const UniValue& result = reply.find_value("result");
             const UniValue& error = reply.find_value("error");
 
             strError.clear();
@@ -533,7 +533,7 @@ bool TestSetup()
 
                 reply = ConnectAndCallRPC(rh.get(), "getwalletinfo", /* args=*/{}, walletName);
 
-                UniValue result = reply.find_value("result");
+                const UniValue& result = reply.find_value("result");
                 const UniValue& error = reply.find_value("error");
 
                 strError.clear();
@@ -556,7 +556,7 @@ bool TestSetup()
 
                         reply = ConnectAndCallRPC(rh.get(), "walletpassphrase", /* args=*/{walletPassphrase, "1"}, walletName);
 
-                        UniValue result = reply.find_value("result");
+                        const UniValue& result = reply.find_value("result");
                         const UniValue& error = reply.find_value("error");
 
                         strError.clear();
@@ -575,14 +575,14 @@ bool TestSetup()
                     if (coinbase_dest == "") {
                         reply = ConnectAndCallRPC(rh.get(), "getaddressesbylabel", /* args=*/{"Staking"}, walletName);
 
-                        UniValue result = reply.find_value("result");
+                        const UniValue& result = reply.find_value("result");
                         const UniValue& error = reply.find_value("error");
 
                         if (error.isNull() && result.isObject()) {
-                            auto array = result.get_obj();
+                            const UniValue& array = result.get_obj();
 
                             for (auto& it : array.getKeys()) {
-                                auto obj = array.find_value(it);
+                                const UniValue& obj = array.find_value(it);
 
                                 if (obj.isObject()) {
                                     if (obj.get_obj().find_value("purpose").get_str() == "receive") {
@@ -596,7 +596,7 @@ bool TestSetup()
                         if (coinbase_dest == "") {
                             reply = ConnectAndCallRPC(rh.get(), "getnewaddress", /* args=*/{"Staking", "blsct"}, walletName);
 
-                            UniValue result = reply.find_value("result");
+                            const UniValue& result = reply.find_value("result");
                             const UniValue& error = reply.find_value("error");
 
                             strError.clear();
@@ -648,7 +648,7 @@ UniValueArrayToStakedCommitmentsMine(const UniValue& array)
     std::vector<StakedCommitment> ret;
 
     for (const UniValue& elementobject : array.getValues()) {
-        auto obj = elementobject.get_obj();
+        const UniValue& obj = elementobject.get_obj();
         MclG1Point point;
         MclScalar value;
         MclScalar gamma;
@@ -701,9 +701,9 @@ std::string EncodeHexBlock(const CBlock& block)
 
 std::vector<StakedCommitment> GetStakedCommitments(const std::unique_ptr<BaseRequestHandler>& rh)
 {
-    UniValue reply_staked = ConnectAndCallRPC(rh.get(), "liststakedcommitments", /* args=*/{}, walletName);
+    const UniValue& reply_staked = ConnectAndCallRPC(rh.get(), "liststakedcommitments", /* args=*/{}, walletName);
 
-    UniValue result = reply_staked.find_value("result");
+    const UniValue& result = reply_staked.find_value("result");
 
     return UniValueArrayToStakedCommitmentsMine(result.get_array());
 }
@@ -713,10 +713,10 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
     CBlock proposal;
 
     auto reply = ConnectAndCallRPC(rh.get(), "getblocktemplate", /* args=*/{"{\"rules\": [\"\"], \"coinbasedest\": \"" + coinbase_dest + "\"}"}, walletName);
-    UniValue result = reply.find_value("result");
+    const UniValue& result = reply.find_value("result");
     const UniValue& error = reply.find_value("error");
 
-    std::string strError = "";
+    std::string strError;
     auto nRet = 0;
 
     if (!error.isNull()) {
@@ -736,7 +736,7 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
 
     uint32_t prev_time = result.find_value("prev_time").get_real();
     uint64_t modifier = result.find_value("modifier").get_uint64();
-    uint64_t next_target = stoi(result.find_value("bits").get_str(), 0, 16);
+    uint64_t next_target = stoi(result.find_value("bits").get_str(), nullptr, 16);
     currentDifficulty.SetCompact(next_target);
 
     proposal.nVersion = result.find_value("version").get_real();
@@ -789,10 +789,10 @@ void Loop()
         }
 
         if (found) {
-            UniValue reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal)}, walletName);
+            const UniValue& reply_submit = ConnectAndCallRPC(rh.get(), "submitblock", /* args=*/{EncodeHexBlock(proposal)}, walletName);
 
-            UniValue result_submit = reply_submit.find_value("result");
-            UniValue error_submit = reply_submit.find_value("error");
+            const UniValue& result_submit = reply_submit.find_value("result");
+            const UniValue& error_submit = reply_submit.find_value("error");
 
             if (error_submit.isNull()) {
                 if (result_submit.isNull()) {

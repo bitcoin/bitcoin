@@ -67,7 +67,8 @@ BOOST_AUTO_TEST_CASE(test_range_proof_prove_verify_one_value)
     bulletproofs::RangeProofLogic<T> rp;
     auto p = rp.Prove(vs, nonce, msg.second, token_id);
     std::vector<bulletproofs::RangeProofWithSeed<T>> proofs;
-    proofs.push_back({p, token_id});
+    bulletproofs::RangeProofWithSeed<T> proof{p, token_id};
+    proofs.emplace_back(proof);
     auto is_valid = rp.Verify(proofs);
     BOOST_CHECK(is_valid);
 }
@@ -283,14 +284,16 @@ static void RunTestCase(
     // calculate proofs
     if (test_case.is_batched) {
         auto proof = rp.Prove(test_case.values, nonce, test_case.msg.second, token_id, test_case.min_value);
-        proofs.push_back({proof, token_id, test_case.min_value});
+        bulletproofs::RangeProofWithSeed<T> p{proof, token_id, test_case.min_value};
+        proofs.emplace_back(p);
     } else {
         for (auto value: test_case.values.m_vec) {
             Scalars single_value_vec;
             single_value_vec.Add(value);
 
             auto proof = rp.Prove(single_value_vec, nonce, test_case.msg.second, token_id, test_case.min_value);
-            proofs.push_back({proof, token_id, test_case.min_value});
+            bulletproofs::RangeProofWithSeed<T> p{proof, token_id, test_case.min_value};
+            proofs.emplace_back(p);
         }
     }
 
