@@ -80,7 +80,7 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIND_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@ENABLE_FUZZ_BINARY_TRUE@" By="#"></ReplaceInFile>
+                  Replace="@ENABLE_FUZZ_BINARY_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
