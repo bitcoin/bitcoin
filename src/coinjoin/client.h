@@ -74,8 +74,10 @@ public:
 
 public:
     CoinJoinWalletManager(CConnman& connman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
-                          const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman)
-        : m_connman(connman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mempool(mempool), m_mn_sync(mn_sync), m_queueman(queueman) {}
+                          const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode)
+        : m_connman(connman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mempool(mempool), m_mn_sync(mn_sync), m_queueman(queueman),
+          m_is_masternode{is_masternode}
+    {}
 
     ~CoinJoinWalletManager() {
         for (auto& [wallet_name, cj_man] : m_wallet_manager_map) {
@@ -101,6 +103,7 @@ private:
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<CCoinJoinClientQueueManager>& m_queueman;
 
+    const bool m_is_masternode;
     wallet_name_cjman_map m_wallet_manager_map;
 };
 
@@ -114,6 +117,9 @@ private:
     CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<CCoinJoinClientQueueManager>& m_queueman;
+
+    // Track node type
+    const bool m_is_masternode;
 
     std::vector<COutPoint> vecOutPointLocked;
 
@@ -162,7 +168,7 @@ private:
 
 public:
     explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                                    const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman);
+                                    const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode);
 
     void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
 
@@ -197,12 +203,14 @@ private:
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
+
     mutable Mutex cs_ProcessDSQueue;
+    const bool m_is_masternode;
 
 public:
     explicit CCoinJoinClientQueueManager(CConnman& _connman, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman,
-                                         CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync) :
-        connman(_connman), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync) {};
+                                         CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync, bool is_masternode) :
+        connman(_connman), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync), m_is_masternode{is_masternode} {};
 
     PeerMsgRet ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
     PeerMsgRet ProcessDSQueue(const CNode& peer, CDataStream& vRecv);
@@ -220,6 +228,9 @@ private:
     CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<CCoinJoinClientQueueManager>& m_queueman;
+
+    // Track node type
+    const bool m_is_masternode;
 
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
@@ -252,8 +263,9 @@ public:
 
     explicit CCoinJoinClientManager(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman,
                                     CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
-                                    const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
-        m_wallet(wallet), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync), m_queueman(queueman) {}
+                                    const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode) :
+        m_wallet(wallet), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync), m_queueman(queueman),
+        m_is_masternode{is_masternode} {}
 
     void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) LOCKS_EXCLUDED(cs_deqsessions);
 

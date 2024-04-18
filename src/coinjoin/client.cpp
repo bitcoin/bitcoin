@@ -31,7 +31,7 @@
 
 PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv)
 {
-    if (fMasternodeMode) return {};
+    if (m_is_masternode) return {};
     if (!m_mn_sync.IsBlockchainSynced()) return {};
 
     if (msg_type == NetMsgType::DSQUEUE) {
@@ -133,7 +133,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
 
 void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
-    if (fMasternodeMode) return;
+    if (m_is_masternode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!m_mn_sync.IsBlockchainSynced()) return;
 
@@ -156,19 +156,20 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, cons
 }
 
 CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                                               const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman) :
+                                               const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode) :
     m_wallet(wallet),
     m_walletman(walletman),
     m_manager(*Assert(walletman.Get(wallet.GetName()))),
     m_dmnman(dmnman),
     m_mn_metaman(mn_metaman),
     m_mn_sync(mn_sync),
-    m_queueman(queueman)
+    m_queueman(queueman),
+    m_is_masternode{is_masternode}
 {}
 
 void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
-    if (fMasternodeMode) return;
+    if (m_is_masternode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
     if (!m_mn_sync.IsBlockchainSynced()) return;
 
@@ -385,7 +386,7 @@ bool CCoinJoinClientManager::GetMixingMasternodesInfo(std::vector<CDeterministic
 //
 bool CCoinJoinClientSession::CheckTimeout()
 {
-    if (fMasternodeMode) return false;
+    if (m_is_masternode) return false;
 
     if (nState == POOL_STATE_IDLE) return false;
 
@@ -422,7 +423,7 @@ bool CCoinJoinClientSession::CheckTimeout()
 void CCoinJoinClientManager::CheckTimeout()
 {
     AssertLockNotHeld(cs_deqsessions);
-    if (fMasternodeMode) return;
+    if (m_is_masternode) return;
 
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return;
 
@@ -440,7 +441,7 @@ void CCoinJoinClientManager::CheckTimeout()
 //
 bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman)
 {
-    if (fMasternodeMode) {
+    if (m_is_masternode) {
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::SendDenominate -- CoinJoin from a Masternode is not supported currently.\n");
         return false;
     }
@@ -497,7 +498,7 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
 // Process incoming messages from Masternode updating the progress of mixing
 void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup)
 {
-    if (fMasternodeMode) return;
+    if (m_is_masternode) return;
 
     // do not update state when mixing client state is one of these
     if (nState == POOL_STATE_IDLE || nState == POOL_STATE_ERROR) return;
@@ -551,7 +552,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, con
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
-    if (fMasternodeMode) return false;
+    if (m_is_masternode) return false;
     if (!mixingMasternode) return false;
 
     LOCK(m_wallet.cs_wallet);
@@ -680,7 +681,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, con
 // mixing transaction was completed (failed or successful)
 void CCoinJoinClientSession::CompletedTransaction(PoolMessage nMessageID)
 {
-    if (fMasternodeMode) return;
+    if (m_is_masternode) return;
 
     if (nMessageID == MSG_SUCCESS) {
         m_manager.UpdatedSuccessBlock();
@@ -697,7 +698,7 @@ void CCoinJoinClientSession::CompletedTransaction(PoolMessage nMessageID)
 
 void CCoinJoinClientManager::UpdatedSuccessBlock()
 {
-    if (fMasternodeMode) return;
+    if (m_is_masternode) return;
     nCachedLastSuccessBlock = nCachedBlockHeight;
 }
 
@@ -782,7 +783,7 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 //
 bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CTxMemPool& mempool, bool fDryRun)
 {
-    if (fMasternodeMode) return false; // no client-side mixing on masternodes
+    if (m_is_masternode) return false; // no client-side mixing on masternodes
     if (nState != POOL_STATE_IDLE) return false;
 
     if (!m_mn_sync.IsBlockchainSynced()) {
@@ -962,7 +963,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, CTxMemPo
 
 bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, CTxMemPool& mempool, bool fDryRun)
 {
-    if (fMasternodeMode) return false; // no client-side mixing on masternodes
+    if (m_is_masternode) return false; // no client-side mixing on masternodes
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
 
     if (!m_mn_sync.IsBlockchainSynced()) {
@@ -991,7 +992,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, CTxMemPo
     AssertLockNotHeld(cs_deqsessions);
     LOCK(cs_deqsessions);
     if (int(deqSessions.size()) < CCoinJoinClientOptions::GetSessions()) {
-        deqSessions.emplace_back(m_wallet, m_walletman, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman);
+        deqSessions.emplace_back(m_wallet, m_walletman, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman, m_is_masternode);
     }
     for (auto& session : deqSessions) {
         if (!CheckAutomaticBackup()) return false;
@@ -1832,7 +1833,7 @@ void CCoinJoinClientManager::UpdatedBlockTip(const CBlockIndex* pindex)
 
 void CCoinJoinClientQueueManager::DoMaintenance()
 {
-    if (fMasternodeMode) return; // no client-side mixing on masternodes
+    if (m_is_masternode) return; // no client-side mixing on masternodes
 
     if (!m_mn_sync.IsBlockchainSynced() || ShutdownRequested()) return;
 
@@ -1842,7 +1843,7 @@ void CCoinJoinClientQueueManager::DoMaintenance()
 void CCoinJoinClientManager::DoMaintenance(CConnman& connman, CTxMemPool& mempool)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return;
-    if (fMasternodeMode) return; // no client-side mixing on masternodes
+    if (m_is_masternode) return; // no client-side mixing on masternodes
 
     if (!m_mn_sync.IsBlockchainSynced() || ShutdownRequested()) return;
 
@@ -1893,7 +1894,7 @@ void CCoinJoinClientManager::GetJsonInfo(UniValue& obj) const
 void CoinJoinWalletManager::Add(CWallet& wallet) {
     m_wallet_manager_map.try_emplace(
         wallet.GetName(),
-        std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman)
+        std::make_unique<CCoinJoinClientManager>(wallet, *this, m_dmnman, m_mn_metaman, m_mn_sync, m_queueman, m_is_masternode)
     );
     g_wallet_init_interface.InitCoinJoinSettings(*this);
 }
