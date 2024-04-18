@@ -24,8 +24,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
     "node/coinstats -> validation -> node/coinstats"
     # Dash
-    "coinjoin/server -> core_io -> evo/assetlocktx -> llmq/signing -> net_processing -> coinjoin/server"
-    "coinjoin/coinjoin -> llmq/instantsend -> net_processing -> coinjoin/server -> coinjoin/coinjoin"
     "dsnotificationinterface -> llmq/chainlocks -> node/blockstorage -> dsnotificationinterface"
     "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"
     "evo/deterministicmns -> llmq/commitment -> evo/deterministicmns"
@@ -58,7 +56,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "logging -> util/system -> sync -> logging"
     "logging -> util/system -> stacktraces -> logging"
     "logging -> util/system -> util/getuniquepath -> random -> logging"
-    "coinjoin/context -> coinjoin/server -> core_io -> evo/assetlocktx -> llmq/signing -> net_processing -> coinjoin/context"
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
     "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil"
 
@@ -69,7 +66,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "banman -> bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> banman"
 
     "coinjoin/client -> coinjoin/coinjoin -> llmq/instantsend -> net_processing -> coinjoin/client"
-    "coinjoin/client -> coinjoin/coinjoin -> llmq/instantsend -> net_processing -> coinjoin/context -> coinjoin/client"
     "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
     "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
@@ -88,7 +84,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
 
     "evo/simplifiedmns -> llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns"
     "llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> llmq/blockprocessor"
-    "llmq/context -> llmq/instantsend -> net_processing -> llmq/context"
     "llmq/commitment -> llmq/utils -> llmq/snapshot -> llmq/commitment"
     "spork -> validation -> spork"
     "governance/governance -> validation -> governance/governance"
@@ -100,6 +95,11 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/chainhelper -> masternode/payments -> validation -> evo/chainhelper"
     "evo/deterministicmns -> validationinterface -> evo/deterministicmns"
     "logging -> util/system -> sync -> logging/timer -> logging"
+
+    "coinjoin/context -> net_processing -> coinjoin/context"
+    "coinjoin/server -> net_processing -> coinjoin/server"
+    "llmq/context -> llmq/ehf_signals -> net_processing -> llmq/context"
+    "coinjoin/client -> coinjoin/util -> wallet/wallet -> psbt -> node/transaction -> node/context -> coinjoin/context -> coinjoin/client"
 )
 
 EXIT_CODE=0

@@ -1533,7 +1533,6 @@ void RelayInvFiltered(CConnman& connman, CInv &inv, const CTransaction &relatedT
  */
 void RelayInvFiltered(CConnman& connman, CInv &inv, const uint256 &relatedTxHash,
                       const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-void RelayTransaction(CConnman& connman, const CTransaction& tx, const bool is_dstx);
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval);

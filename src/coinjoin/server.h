@@ -18,6 +18,7 @@ class CDSTXManager;
 class CMasternodeMetaMan;
 class CNode;
 class CTxMemPool;
+class PeerManager;
 
 class UniValue;
 
@@ -34,6 +35,7 @@ private:
     CTxMemPool& mempool;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CMasternodeSync& m_mn_sync;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     // Mixing uses collateral transactions to trust parties entering the pool
     // to behave honestly. If they don't it takes their money.
@@ -90,7 +92,7 @@ private:
 public:
     explicit CCoinJoinServer(CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CDSTXManager& dstxman,
                              CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-                             const CMasternodeSync& mn_sync) :
+                             const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman) :
         m_chainstate(chainstate),
         connman(_connman),
         m_dmnman(dmnman),
@@ -99,6 +101,7 @@ public:
         mempool(mempool),
         m_mn_activeman(mn_activeman),
         m_mn_sync(mn_sync),
+        m_peerman(peerman),
         vecSessionCollaterals(),
         fUnitTest(false)
     {}

@@ -3972,13 +3972,6 @@ void RelayInvFiltered(CConnman& connman, CInv &inv, const uint256& relatedTxHash
     });
 }
 
-void RelayTransaction(CConnman& connman, const CTransaction& tx, const bool is_dstx)
-{
-    uint256 hash = tx.GetHash();
-    CInv inv(is_dstx ? MSG_DSTX : MSG_TX, hash);
-    RelayInv(connman, inv);
-}
-
 void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);
