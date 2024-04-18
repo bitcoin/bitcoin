@@ -366,7 +366,7 @@ void PrepareShutdown(NodeContext& node)
         delete pdsNotificationInterface;
         pdsNotificationInterface = nullptr;
     }
-    if (fMasternodeMode) {
+    if (node.mn_activeman) {
         UnregisterValidationInterface(node.mn_activeman.get());
         node.mn_activeman.reset();
     }
@@ -2316,7 +2316,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(*node.govman), std::ref(*node.connman)), std::chrono::minutes{5});
     }
 
-    if (fMasternodeMode) {
+    if (node.mn_activeman) {
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*node.cj_ctx->server)), std::chrono::seconds{1});
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET

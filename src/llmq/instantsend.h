@@ -301,7 +301,7 @@ private:
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock) LOCKS_EXCLUDED(cs_pendingLocks, cs_nonLocked);
-    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman);
+    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman, bool is_masternode);
     void ProcessPendingRetryLockTxs() LOCKS_EXCLUDED(cs_creating, cs_nonLocked, cs_pendingRetry);
 
     void WorkThreadMain();

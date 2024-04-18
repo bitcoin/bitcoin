@@ -1062,7 +1062,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
         mempool.AddTransactionsUpdated(1);
     } else {
-        AskNodesForLockedTx(islock->txid, connman, *m_peerman);
+        AskNodesForLockedTx(islock->txid, connman, *m_peerman, m_is_masternode);
     }
 }
 
@@ -1338,7 +1338,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
         for (const auto& p : toDelete) {
             RemoveConflictedTx(*p.second);
         }
-        AskNodesForLockedTx(islock.txid, connman, *m_peerman);
+        AskNodesForLockedTx(islock.txid, connman, *m_peerman, m_is_masternode);
     }
 }
 
@@ -1443,7 +1443,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
     }
 }
 
-void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman)
+void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman, bool is_masternode)
 {
     std::vector<CNode*> nodesToAskFor;
     nodesToAskFor.reserve(4);
@@ -1476,7 +1476,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnma
                       txid.ToString(), pnode->GetId());
 
             CInv inv(MSG_TX, txid);
-            RequestObject(pnode->GetId(), inv, GetTime<std::chrono::microseconds>(), true);
+            RequestObject(pnode->GetId(), inv, GetTime<std::chrono::microseconds>(), is_masternode, /* fForce = */ true);
         }
     }
     for (CNode* pnode : nodesToAskFor) {

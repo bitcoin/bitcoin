@@ -1259,7 +1259,7 @@ std::chrono::microseconds GetObjectRandomDelay(int invType)
     return {};
 }
 
-std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chrono::microseconds current_time, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool use_inbound_delay) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     std::chrono::microseconds process_time;
@@ -1274,12 +1274,12 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
     }
 
     // We delay processing announcements from inbound peers
-    if (inv.IsMsgTx() && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+    if (inv.IsMsgTx() && !is_masternode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     return process_time;
 }
 
-void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds current_time, bool fForce = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool fForce = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     CNodeState::ObjectDownloadState& peer_download_state = state->m_object_download;
@@ -1294,7 +1294,7 @@ void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds
 
     // Calculate the time to try requesting this transaction. Use
     // fPreferredDownload as a proxy for outbound peers.
-    std::chrono::microseconds process_time = CalculateObjectGetDataTime(inv, current_time, !state->fPreferredDownload);
+    std::chrono::microseconds process_time = CalculateObjectGetDataTime(inv, current_time, is_masternode, !state->fPreferredDownload);
 
     peer_download_state.m_object_process_time.emplace(process_time, inv);
 
@@ -1307,14 +1307,14 @@ void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds
     LogPrint(BCLog::NET, "%s -- inv=(%s), current_time=%d, process_time=%d, delta=%d\n", __func__, inv.ToString(), current_time.count(), process_time.count(), (process_time - current_time).count());
 }
 
-void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool fForce) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     auto* state = State(nodeId);
     if (!state) {
         return;
     }
-    RequestObject(state, inv, current_time, fForce);
+    RequestObject(state, inv, current_time, is_masternode, fForce);
 }
 
 size_t GetRequestedObjectCount(NodeId nodeId)
@@ -3127,6 +3127,7 @@ void PeerManagerImpl::ProcessMessage(
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
     statsClient.inc("message.received." + SanitizeString(msg_type), 1.0f);
 
+    const bool is_masternode = m_mn_activeman != nullptr;
 
     PeerRef peer = GetPeerRef(pfrom.GetId());
     if (peer == nullptr) return;
@@ -3197,7 +3198,7 @@ void PeerManagerImpl::ProcessMessage(
                 pfrom.m_masternode_connection = fOtherMasternode;
                 if (fOtherMasternode) {
                     LogPrint(BCLog::NET_NETCONN, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom.GetId());
-                    if (!fMasternodeMode) {
+                    if (!is_masternode) {
                         LogPrint(BCLog::NET_NETCONN, "but we're not a masternode, disconnecting\n");
                         pfrom.fDisconnect = true;
                         return;
@@ -3374,8 +3375,8 @@ void PeerManagerImpl::ProcessMessage(
                       pfrom.ConnectionTypeAsString());
         }
 
-        if (fMasternodeMode && !pfrom.m_masternode_probe_connection) {
-            CMNAuth::PushMNAUTH(pfrom, m_connman, *Assert(m_mn_activeman), m_chainman.ActiveChain().Tip());
+        if (is_masternode && !pfrom.m_masternode_probe_connection) {
+            CMNAuth::PushMNAUTH(pfrom, m_connman, *m_mn_activeman, m_chainman.ActiveChain().Tip());
         }
 
         // Tell our peer we prefer to receive headers rather than inv's
@@ -3674,7 +3675,7 @@ void PeerManagerImpl::ProcessMessage(
                     }
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
-                        RequestObject(State(pfrom.GetId()), inv, current_time);
+                        RequestObject(State(pfrom.GetId()), inv, current_time, is_masternode);
                     }
                 }
             }
@@ -4026,11 +4027,11 @@ void PeerManagerImpl::ProcessMessage(
                 for (const uint256& parent_txid : unique_parents) {
                     CInv _inv(MSG_TX, parent_txid);
                     pfrom.AddKnownInventory(_inv.hash);
-                    if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time);
+                    if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time, is_masternode);
                     // We don't know if the previous tx was a regular or a mixing one, try both
                     CInv _inv2(MSG_DSTX, parent_txid);
                     pfrom.AddKnownInventory(_inv2.hash);
-                    if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time);
+                    if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time, is_masternode);
                 }
                 AddOrphanTx(ptx, pfrom.GetId());
 
@@ -4743,7 +4744,7 @@ void PeerManagerImpl::ProcessMessage(
         ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, *this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, m_connman, m_mn_metaman, m_mn_activeman, m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, /* is_masternode = */ m_mn_activeman != nullptr, msg_type, vRecv), pfrom);
+        ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, is_masternode, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->shareman->ProcessMessage(pfrom, m_sporkman, msg_type, vRecv);
         ProcessPeerMsgRet(m_llmq_ctx->sigman->ProcessMessage(pfrom, this, msg_type, vRecv), pfrom);
@@ -5203,6 +5204,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 {
     assert(m_llmq_ctx);
 
+    const bool is_masternode = m_mn_activeman != nullptr;
+
     PeerRef peer = GetPeerRef(pto->GetId());
     if (!peer) return false;
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
@@ -5463,7 +5466,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Check whether periodic sends should happen
                 // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
                 // because we never produce any txes ourselves i.e. no privacy is lost in this case.
-                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan) || fMasternodeMode;
+                bool fSendTrickle = pto->HasPermission(NetPermissionFlags::NoBan) || is_masternode;
                 if (pto->m_tx_relay->nNextInvSend < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
@@ -5731,7 +5734,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // up processing to happen after the download times out
                     // (with a slight delay for inbound peers, to prefer
                     // requests to outbound peers).
-                    const auto next_process_time = CalculateObjectGetDataTime(inv, current_time, !state.fPreferredDownload);
+                    const auto next_process_time = CalculateObjectGetDataTime(inv, current_time, is_masternode, !state.fPreferredDownload);
                     object_process_time.emplace(next_process_time, inv);
                     LogPrint(BCLog::NET, "%s -- GETDATA re-queue inv=(%s), next_process_time=%d, delta=%d, peer=%d\n", __func__, inv.ToString(), next_process_time.count(), (next_process_time - current_time).count(), pto->GetId());
                 }
