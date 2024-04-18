@@ -257,12 +257,10 @@ static UniValue masternode_status(const JSONRPCRequest& request)
 {
     masternode_status_help(request);
 
-    if (!fMasternodeMode) {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (!node.mn_activeman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
     }
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.mn_activeman);
 
     UniValue mnObj(UniValue::VOBJ);
     // keep compatibility with legacy status for now (might get deprecated/removed later)

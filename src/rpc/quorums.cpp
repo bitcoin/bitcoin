@@ -296,11 +296,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMN
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int tipHeight = pindexTip->nHeight;
 
-    const uint256 proTxHash = [&mn_activeman]() {
-        if (!fMasternodeMode) return uint256();
-        CHECK_NONFATAL(mn_activeman);
-        return mn_activeman->GetProTxHash();
-    }();
+    const uint256 proTxHash = mn_activeman ? mn_activeman->GetProTxHash() : uint256();
 
     UniValue minableCommitments(UniValue::VARR);
     UniValue quorumArrConnections(UniValue::VARR);
@@ -316,7 +312,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMN
             obj.pushKV("llmqType", std::string(llmq_params.name));
             obj.pushKV("quorumIndex", quorumIndex);
 
-            if (fMasternodeMode) {
+            if (mn_activeman) {
                 int quorumHeight = tipHeight - (tipHeight % llmq_params.dkgInterval) + quorumIndex;
                 if (quorumHeight <= tipHeight) {
                     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.ActiveChain()[quorumHeight]);

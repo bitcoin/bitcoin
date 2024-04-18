@@ -7,6 +7,8 @@
 #include <rpc/server.h>
 
 #include <chainparams.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
@@ -511,8 +513,9 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
 
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler, const std::multimap<std::string, std::vector<UniValue>>& mapPlatformRestrictions)
 {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     // Before executing the RPC Command, filter commands from platform rpc user
-    if (fMasternodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
+    if (node.mn_activeman && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
         // replace this with structured binding in c++20
         const auto& it = mapPlatformRestrictions.equal_range(request.strMethod);
         const auto& allowed_begin = it.first;
