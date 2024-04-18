@@ -65,6 +65,7 @@ public:
     virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) = 0;
     virtual int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
     virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
+    virtual bool isEnabled() = 0;
     virtual void setContext(NodeContext* context) {}
 };
 
@@ -229,6 +230,9 @@ public:
 
     //! Is initial block download.
     virtual bool isInitialBlockDownload() = 0;
+
+    //! Is masternode.
+    virtual bool isMasternode() = 0;
 
     //! Get reindex.
     virtual bool getReindex() = 0;

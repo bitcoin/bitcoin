@@ -133,6 +133,13 @@ public:
         }
         return false;
     }
+    bool isEnabled() override
+    {
+        if (context().govman != nullptr) {
+            return context().govman->IsValid();
+        }
+        return false;
+    }
     void setContext(NodeContext* context) override
     {
         m_context = context;
@@ -476,6 +483,10 @@ public:
             assert(std::addressof(::ChainstateActive()) == std::addressof(*active_chainstate));
         }
         return active_chainstate->IsInitialBlockDownload();
+    }
+    bool isMasternode() override
+    {
+        return m_context->mn_activeman != nullptr;
     }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }
