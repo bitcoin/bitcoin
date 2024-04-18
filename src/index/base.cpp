@@ -17,7 +17,6 @@
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
-#include <warnings.h>
 
 #include <string>
 #include <utility>

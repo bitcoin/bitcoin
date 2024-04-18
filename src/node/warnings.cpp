@@ -5,10 +5,11 @@
 
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 
-#include <warnings.h>
+#include <node/warnings.h>
 
 #include <common/system.h>
 #include <sync.h>
+#include <univalue.h>
 #include <util/translation.h>
 
 #include <optional>
@@ -19,6 +20,7 @@ static bilingual_str g_misc_warnings GUARDED_BY(g_warnings_mutex);
 static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
 static std::optional<bilingual_str> g_timeoffset_warning GUARDED_BY(g_warnings_mutex){};
 
+namespace node {
 void SetMiscWarning(const bilingual_str& warning)
 {
     LOCK(g_warnings_mutex);
@@ -63,3 +65,18 @@ std::vector<bilingual_str> GetWarnings()
 
     return warnings;
 }
+
+UniValue GetWarningsForRpc(bool use_deprecated)
+{
+    if (use_deprecated) {
+        const auto all_warnings{GetWarnings()};
+        return all_warnings.empty() ? "" : all_warnings.back().original;
+    }
+
+    UniValue warnings{UniValue::VARR};
+    for (auto&& warning : GetWarnings()) {
+        warnings.push_back(std::move(warning.original));
+    }
+    return warnings;
+}
+} // namespace node

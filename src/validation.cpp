@@ -31,6 +31,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <node/warnings.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -62,7 +63,6 @@
 #include <util/trace.h>
 #include <util/translation.h>
 #include <validationinterface.h>
-#include <warnings.h>
 
 #include <algorithm>
 #include <cassert>
@@ -1922,9 +1922,9 @@ void Chainstate::CheckForkWarningConditions()
 
     if (m_chainman.m_best_invalid && m_chainman.m_best_invalid->nChainWork > m_chain.Tip()->nChainWork + (GetBlockProof(*m_chain.Tip()) * 6)) {
         LogPrintf("%s: Warning: Found invalid chain at least ~6 blocks longer than our best chain.\nChain state database corruption likely.\n", __func__);
-        SetfLargeWorkInvalidChainFound(true);
+        node::SetfLargeWorkInvalidChainFound(true);
     } else {
-        SetfLargeWorkInvalidChainFound(false);
+        node::SetfLargeWorkInvalidChainFound(false);
     }
 }
 

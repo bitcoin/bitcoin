@@ -29,6 +29,7 @@
 #include <node/context.h>
 #include <node/transaction.h>
 #include <node/utxo_snapshot.h>
+#include <node/warnings.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -1308,7 +1309,7 @@ RPCHelpMan getblockchaininfo()
         }
     }
 
-    obj.pushKV("warnings", GetNodeWarnings(IsDeprecatedRPCEnabled("warnings")));
+    obj.pushKV("warnings", node::GetWarningsForRpc(IsDeprecatedRPCEnabled("warnings")));
     return obj;
 },
     };

@@ -6,9 +6,9 @@
 
 #include <logging.h>
 #include <node/interface_ui.h>
+#include <node/warnings.h>
 #include <util/signalinterrupt.h>
 #include <util/translation.h>
-#include <warnings.h>
 
 #include <atomic>
 #include <cstdlib>

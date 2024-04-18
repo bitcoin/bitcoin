@@ -5,11 +5,11 @@
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <node/timeoffsets.h>
+#include <node/warnings.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <warnings.h>
 
 #include <algorithm>
 #include <chrono>
@@ -49,7 +49,7 @@ bool TimeOffsets::WarnIfOutOfSync() const
     // when median == std::numeric_limits<int64_t>::min(), calling std::chrono::abs is UB
     auto median{std::max(Median(), std::chrono::seconds(std::numeric_limits<int64_t>::min() + 1))};
     if (std::chrono::abs(median) <= WARN_THRESHOLD) {
-        SetMedianTimeOffsetWarning(std::nullopt);
+        node::SetMedianTimeOffsetWarning(std::nullopt);
         uiInterface.NotifyAlertChanged();
         return false;
     }
@@ -63,7 +63,7 @@ bool TimeOffsets::WarnIfOutOfSync() const
         "RPC methods to get more info."
     ), Ticks<std::chrono::minutes>(WARN_THRESHOLD))};
     LogWarning("%s\n", msg.original);
-    SetMedianTimeOffsetWarning(msg);
+    node::SetMedianTimeOffsetWarning(msg);
     uiInterface.NotifyAlertChanged();
     return true;
 }

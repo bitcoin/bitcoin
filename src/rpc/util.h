@@ -503,6 +503,4 @@ private:
 void PushWarnings(const UniValue& warnings, UniValue& obj);
 void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj);
 
-UniValue GetNodeWarnings(bool use_deprecated);
-
 #endif // BITCOIN_RPC_UTIL_H
