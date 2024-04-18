@@ -44,11 +44,11 @@ CEHFSignalsHandler::~CEHFSignalsHandler()
     sigman.UnregisterRecoveredSigsListener(this);
 }
 
-void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
+void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew, bool is_masternode)
 {
     if (!DeploymentActiveAfter(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
 
-    if (!fMasternodeMode || (Params().IsTestChain() && !sporkman.IsSporkActive(SPORK_24_TEST_EHF))) {
+    if (!is_masternode || (Params().IsTestChain() && !sporkman.IsSporkActive(SPORK_24_TEST_EHF))) {
         return;
     }
 

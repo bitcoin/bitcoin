@@ -54,6 +54,7 @@ private:
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
+    const bool m_is_masternode;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
     mutable Mutex cs;
@@ -87,7 +88,8 @@ private:
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
                                 CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
-                                const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman);
+                                const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman,
+                                bool is_masternode);
     ~CChainLocksHandler();
 
     void Start();

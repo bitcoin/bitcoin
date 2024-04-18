@@ -208,6 +208,7 @@ private:
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
+    const bool m_is_masternode;
     std::atomic<bool> fUpgradedDB{false};
 
     std::thread workThread;
@@ -257,10 +258,11 @@ public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CConnman& _connman,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
                                  CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                 const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
+                                 const std::unique_ptr<PeerManager>& peerman, bool is_masternode, bool unitTests, bool fWipe) :
         db(unitTests, fWipe),
         clhandler(_clhandler), m_chainstate(chainstate), connman(_connman), qman(_qman), sigman(_sigman),
-        shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman)
+        shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman),
+        m_is_masternode{is_masternode}
     {
         workInterrupt.reset();
     }

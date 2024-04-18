@@ -474,7 +474,7 @@ void CInstantSendManager::Stop()
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
-    if (!fMasternodeMode || !IsInstantSendEnabled() || !m_mn_sync.IsBlockchainSynced()) {
+    if (!m_is_masternode || !IsInstantSendEnabled() || !m_mn_sync.IsBlockchainSynced()) {
         return;
     }
 

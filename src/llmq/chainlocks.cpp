@@ -28,7 +28,8 @@ std::unique_ptr<CChainLocksHandler> chainLocksHandler;
 
 CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
                                        CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
-                                       const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman) :
+                                       const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman,
+                                       bool is_masternode) :
     m_chainstate(chainstate),
     qman(_qman),
     sigman(_sigman),
@@ -37,6 +38,7 @@ CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& 
     mempool(_mempool),
     m_mn_sync(mn_sync),
     m_peerman(peerman),
+    m_is_masternode{is_masternode},
     scheduler(std::make_unique<CScheduler>()),
     scheduler_thread(std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); })))
 {
@@ -238,7 +240,7 @@ void CChainLocksHandler::TrySignChainTip()
 {
     Cleanup();
 
-    if (!fMasternodeMode) {
+    if (!m_is_masternode) {
         return;
     }
 
