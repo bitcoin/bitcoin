@@ -41,6 +41,7 @@
 #include <QFontDatabase>
 #include <QDateTime>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScreen>
@@ -1459,11 +1460,11 @@ QString RPCConsole::tabTitle(TabTypes tab_type) const
 QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
 {
     switch (tab_type) {
-    case TabTypes::INFO: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I);
-    case TabTypes::CONSOLE: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C);
-    case TabTypes::GRAPH: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
-    case TabTypes::PEERS: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P);
-    case TabTypes::REPAIR: return QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R);
+    case TabTypes::INFO: return QKeySequence(tr("Ctrl+Shift+I"));
+    case TabTypes::CONSOLE: return QKeySequence(tr("Ctrl+Shift+C"));
+    case TabTypes::GRAPH: return QKeySequence(tr("Ctrl+Shift+G"));
+    case TabTypes::PEERS: return QKeySequence(tr("Ctrl+Shift+P"));
+    case TabTypes::REPAIR: return QKeySequence(tr("Ctrl+Shift+R"));
     } // no default case, so the compiler can warn about missing cases
 
     assert(false);

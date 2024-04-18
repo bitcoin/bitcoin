@@ -49,6 +49,7 @@
 #include <QComboBox>
 #include <QDateTime>
 #include <QDragEnterEvent>
+#include <QKeySequence>
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
@@ -373,7 +374,7 @@ void BitcoinGUI::createActions()
 
     quitAction = new QAction(tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
-    quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
+    quitAction->setShortcut(QKeySequence(tr("Ctrl+Q")));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(tr("&About %1").arg(PACKAGE_NAME), this);
     aboutAction->setStatusTip(tr("Show information about %1").arg(PACKAGE_NAME));
@@ -463,7 +464,7 @@ void BitcoinGUI::createActions()
     showCoinJoinHelpAction->setStatusTip(tr("Show the %1 basic information").arg(strCoinJoinName));
 
     m_mask_values_action = new QAction(tr("&Discreet mode"), this);
-    m_mask_values_action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D));
+    m_mask_values_action->setShortcut(QKeySequence(tr("Ctrl+Shift+D")));
     m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
     m_mask_values_action->setCheckable(true);
 
@@ -606,7 +607,7 @@ void BitcoinGUI::createMenuBar()
     QMenu* window_menu = appMenuBar->addMenu(tr("&Window"));
 
     QAction* minimize_action = window_menu->addAction(tr("Minimize"));
-    minimize_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+    minimize_action->setShortcut(QKeySequence(tr("Ctrl+M")));
     connect(minimize_action, &QAction::triggered, [] {
         QApplication::activeWindow()->showMinimized();
     });
