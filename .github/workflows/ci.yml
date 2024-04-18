@@ -302,3 +302,9 @@ jobs:
           Set-Location "$env:RUNNER_TEMP\qa-assets"
           Write-Host "Using qa-assets repo from commit ..."
           git log -1
+
+      - name: Run fuzz binaries
+        env:
+          BITCOINFUZZ: "${{ github.workspace}}\\src\\fuzz.exe"
+        shell: cmd
+        run: py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_seed_corpus
