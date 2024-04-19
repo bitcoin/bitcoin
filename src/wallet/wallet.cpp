@@ -4930,8 +4930,10 @@ bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString
     WalletLogPrintf("Upgrading wallet to HD\n");
     SetMinVersion(FEATURE_HD);
 
+    // TODO: replace to GetLegacyScriptPubKeyMan() when `sethdseed` is backported
     auto spk_man = GetOrCreateLegacyScriptPubKeyMan();
     bool prev_encrypted = IsCrypted();
+    // TODO: unify encrypted and plain chains usages here
     if (prev_encrypted) {
         if (!GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
             error = Untranslated("Failed to generate encrypted HD wallet");
