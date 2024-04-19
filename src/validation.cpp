@@ -2187,6 +2187,7 @@ static int64_t num_blocks_total = 0;
 static bool SelectBlockFromCandidates(std::vector<std::pair<int64_t, uint256>>& vSortedByTimestamp, std::map<uint256, const CBlockIndex*>& mapSelectedBlocks,
                                       int64_t nSelectionIntervalStop, uint64_t nStakeModifierPrev, const CBlockIndex** pindexSelected, const Consensus::Params& params, const node::BlockManager& m_blockman)
 {
+    AssertLockHeld(::cs_main);
     bool fSelected = false;
     uint256 hashBest = uint256();
     *pindexSelected = (const CBlockIndex*)nullptr;
