@@ -33,8 +33,8 @@ Documentation for C++ subprocessing library.
 @version 1.0.0
 */
 
-#ifndef SUBPROCESS_HPP
-#define SUBPROCESS_HPP
+#ifndef BITCOIN_UTIL_SUBPROCESS_H
+#define BITCOIN_UTIL_SUBPROCESS_H
 
 #include <algorithm>
 #include <cassert>
@@ -1609,4 +1609,4 @@ namespace detail {
 
 }
 
-#endif // SUBPROCESS_HPP
+#endif // BITCOIN_UTIL_SUBPROCESS_H
