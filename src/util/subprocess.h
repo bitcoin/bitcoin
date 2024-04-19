@@ -36,6 +36,8 @@ Documentation for C++ subprocessing library.
 #ifndef BITCOIN_UTIL_SUBPROCESS_H
 #define BITCOIN_UTIL_SUBPROCESS_H
 
+#include <util/syserror.h>
+
 #include <algorithm>
 #include <cassert>
 #include <csignal>
@@ -150,7 +152,7 @@ class OSError: public std::runtime_error
 {
 public:
   OSError(const std::string& err_msg, int err_code):
-    std::runtime_error( err_msg + ": " + std::strerror(err_code) )
+    std::runtime_error(err_msg + ": " + SysErrorString(err_code))
   {}
 };
 
