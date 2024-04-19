@@ -459,7 +459,8 @@ BOOST_AUTO_TEST_CASE(test_pos_scenario)
     BOOST_CHECK(rproof.Vs[0] == proof.phi);
 
     std::vector<bulletproofs::RangeProofWithSeed<Arith>> rproofs;
-    rproofs.push_back({rproof, eta_phi, value - Scalar(1)});
+    bulletproofs::RangeProofWithSeed<Arith> p{rproof, eta_phi, value - Scalar(1)};
+    rproofs.emplace_back(p);
 
     res = rp.Verify(rproofs);
 
