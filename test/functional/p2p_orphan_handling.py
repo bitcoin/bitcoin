@@ -78,6 +78,10 @@ class PeerTxRelayer(P2PTxInvStore):
     def on_getdata(self, message):
         self._getdata_received.append(message)
 
+    def clear_getdata(self):
+        with p2p_lock:
+            self._getdata_received = []
+
     def wait_for_parent_requests(self, txids):
         """Wait for requests for missing parents by txid with witness data (MSG_WITNESS_TX or
         WitnessTx). Requires that the getdata message match these txids exactly; all txids must be
@@ -357,9 +361,11 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
         # The node should put the orphan into the orphanage and request missing_parent, skipping
         # missing_parent_orphan because it already has it in the orphanage.
+        peer.clear_getdata()
         self.relay_transaction(peer, orphan["tx"])
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         peer.wait_for_parent_requests([int(missing_parent["txid"], 16)])
+        peer.assert_never_requested(int(missing_parent_orphan["txid"], 16))
 
     @cleanup
     def test_orphan_inherit_rejection(self):
