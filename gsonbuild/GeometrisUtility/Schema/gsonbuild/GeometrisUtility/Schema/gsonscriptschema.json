@@ -1,0 +1,3782 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gsonscriptschema.json",
+  "title": "Geometris GSON",
+  "description": "Specifies scripting json for GSON interpreter.",
+
+  "type": "object",
+  "additionalProperties": false,
+
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+
+                                                                       
+    "main": {
+      "title": "Main Function",
+      "description": "The main function is invoked whenever the device enqueues an event. It consists of a list of commands, such that the interpreter will evaluate the conditions of each command and execute its functions.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/command"
+      },
+      "minItems": 1
+    },
+
+                               
+    "init": {
+      "type": "object",
+      "title": "Initialization Section",
+      "description": "The initialization section describes how to prepare the device whenever it powers up or wakes up.",
+      "properties": {
+                                                                     
+        "startup": {
+          "title": "initializer",
+          "description": "The initializer is a command to run once on device startup. Often used to initialize durable variables.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/command"
+          }
+        },
+
+                                              
+        "strings": {
+          "title": "String Declarations",
+          "description": "Creates string constants for reference within script commands.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "title": "String Declarations",
+            "description": "Defines a constant or variable string. String names must begin with the character '@'",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "title": "String Key",
+                "description": "Defines the name of the string.",
+                "pattern": "^\\@"
+              },
+              "val": {
+                "title": "Constant String Constant Value",
+                "description": "Defines the value of the string constant. Not providing this property declares a string variable.",
+                "type": "string"
+              }
+            },
+
+            "required": ["key"]
+          }
+        },
+
+                                               
+        "timers": {
+          "title": "Timers",
+          "description": "Specifies initalization of timers.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "title": "Timer Initialization",
+            "description": "Defines the creation of a timer.",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "title": "Constant Timer key",
+                "description": "Defines the name of the timer. Must begin with the character '@'",
+                "pattern": "^\\@"
+              },
+              "duration": {
+                "title": "Duration In Seconds",
+                "description": "Length in seconds before the timer completes. Upon counting down to zero from this duration, will create an event.",
+                "$ref": "#/definitions/integersParams"
+              },
+              "recurrent": {
+                "title": "Recurrent",
+                "description": "Whether or not the timer starts over at the duration value after counting down to zero.",
+                "type": "boolean",
+                "default": false
+              },
+              "start_now": {
+                "title": "Start Now",
+                "description": "Whether or not to immediately start the timer or wait for a script command to start it.",
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "required": ["key", "duration"]
+          }
+        },
+
+        "params": {
+          "title": "Script Parameters",
+          "description": "Parameter variables backed by configuration items.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "title": "Param Initialization",
+            "description": "Param Initialization",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "(^\\*)",
+                "title": "Parameter Key",
+                "description": "Defines the name of the parameter. Must begin with the character '*'"
+              },
+              "datatype": {
+                "$ref": "#/definitions/dataTypes"
+              },
+              "default": {
+                "$ref": "#/definitions/constantValues",
+                "title": "Default value",
+                "description": "Default value if given configuration is empty."
+              },
+              "config": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 31,
+                "title": "configuration parameter",
+                "description": "The config parameter index"
+              }
+            },
+            "required": ["key", "datatype", "default"]
+          }
+        },           
+
+        "machines": {
+          "title": "State Machines",
+          "description": "State Machine Declarations",
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "title": "State Machine",
+            "description": "Defines a state machine.",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^::[a-zA-Z0-9]+$",
+                "title": "State Machine Key",
+                "description": "Unique identifier for the state machine."
+              },
+              
+              "states": {
+                "title": "States",
+                "description": "States",
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "title": "State",
+                  "description": "A State",
+                  "additionalProperties": false,
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "[a-zA-Z0-9.]+$",
+                      "title": "State Key",
+                      "description": "Unique identifier for the state."
+                    },
+                    
+                    "timeout": {
+                      "$ref": "#/definitions/integersParams",
+                      "title": "timeout",
+                      "description": "Optional timeout, in seconds for the state",
+                      "minimum": 1
+                    },
+                    "timeout.action": {
+                      "type": "string",
+                      "pattern": "[a-zA-Z0-9.]+$",
+                      "title": "Timeout Action",
+                      "description": "Action to invoke if the state times out."
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "maxItems": 12,
+                      "title": "Transitions",
+                      "description": "Transitions from this state to others",
+                      "items": {
+                        "type": "object",
+                        "title": "Transition",
+                        "description": "Transition from this state to another",
+                        "additionalProperties": false,
+                        "properties": {
+                          "action": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9.]+$",
+                            "title": "Action",
+                            "description": "Action on this state that invokes the transition"
+                          },
+                          "goto": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9.]+$",
+                            "title": "Destination State",
+                            "description": "State to Transition to on this Action"
+                          }
+                        },                          
+                        "required": ["action", "goto"]
+                      }                     
+                    }                
+                  },                     
+                  "required": ["key"]
+                }                
+              }           
+            },                       
+            "required": ["key", "states"]
+          }                  
+        }                         
+      }               
+    },         
+
+    "imports": {
+      "title": "Function Imports",
+      "description": "A list of library files to import subroutine functions from.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "title": "File path",
+        "description": "Path to file containing library functions to include in the sub-routines of the script."
+      }
+    },
+
+                                                                
+    "subs": {
+      "title": "Subroutines",
+      "description": "A set of functions that may be called from other functions.",
+      "type": "array",
+                                   
+      "items": {
+        "type": "object",
+        "title": "Function",
+        "description": "A function is defined by a unique name and a list of commands. A function must end with a return statement, which must return a value from a constant or variable.",
+        "properties": {
+          "name": { "type": "string" },
+          "args": {
+            "title": "Optional parameter names as temporary variables.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "title": "Parameter Name",
+              "description": "A temporary variable name that is used to hold the value of a parameter passed to the function.",
+              "pattern": "(^\\$)"
+            }
+          },
+          "fn": {
+            "title": "Function Logic",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/command"
+            }
+          }
+        }               
+      }          
+    }         
+  },
+
+  "oneOf": [
+    { "required": ["main"] },
+    { "required": ["subs"] }
+  ],
+  
+
+  "definitions": {
+                                                                
+                                                     
+                                                                      
+                   
+    "changeevents": {
+      "title": "Change Events",
+      "description": "Change events are monitored more often than ordinary script invocations; using them allows for faster response to these events.",
+      "type": "string",
+      "enum": [
+        "event.change.accel",                                                        
+        "event.change.adc",                                                                             
+        "event.change.battery.device.voltage",                                                          
+        "event.change.battery.engine.voltage",                                                           
+        "event.change.comm",                                                                                                                                                                                  
+        "event.change.comm.network",                                                                                                        
+        "event.change.comm.rssi",                                                                                         
+        "event.change.device.voltage",                                                             
+        "event.change.distance",                                                                                               
+        "event.change.geofence",                                                                                           
+        "event.change.gps.fix",                                                                              
+        "event.change.heading",
+        "event.change.iccid",                                 
+        "event.change.input",                                                                       
+        "event.change.input.high",                 
+        "event.change.input.low",                 
+        "event.change.moving",                         
+        "event.change.onebit",                         
+        "event.change.packet",                                                                                    
+        "event.change.queue",                 
+        "event.change.speed",           
+        "event.change.speed.km",          
+        "event.change.speed.gps",
+        "event.change.time.day",                                           
+        "event.change.time.hour",                                             
+        "event.change.timer",                                                     
+        "event.change.vin"                                                                                    
+      ]
+    },
+
+    "busquery": {
+      "title": "Bus Query",
+      "description": "",
+      "type": "object",
+      "additionalproperties": false,
+      "properties": {}
+    },
+
+    "constantValues": {
+      "title": "Constant Value",
+      "description": "A constant value of type numeric, boolean, or string",
+      "oneOf": [
+        {
+          "title": "Constant Number",
+          "type": "number"
+        },
+        {
+          "title": "Constant Boolean",
+          "type": "boolean"
+        },
+        {
+          "title": "Constant String",
+          "type": "string"
+        }
+      ]
+    },
+
+    "integersParams": {
+      "title": "Integers and Parameters",
+      "description": "Constant numbers or script parameter",
+      "oneOf": [
+        {
+          "title": "Parameter Number Variable",
+          "type": "string",
+          "pattern": "(^\\*)"
+        },
+        {
+          "title": "Constant Integer",
+          "type": "integer"
+        }
+      ]
+    },
+
+    "numbersVariables": {
+      "title": "Numbers And Durables",
+      "description": "Constant number, script parameter or durable variable containing a number.",
+      "oneOf": [
+        {
+          "title": "Durable Number Variable",
+          "type": "string",
+          "pattern": "(^\\$)|(^\\#)|(^\\*)"
+        },
+        {
+          "title": "Constant Number",
+          "type": "number"
+        }
+      ]
+    },
+
+    "indexVariables": {
+      "title": "Index and Durables",
+      "description": "Constant integer, script parameter, index or durable variable.",
+      "oneOf": [
+        {
+          "title": "Durable Index Variable",
+          "type": "string",
+          "pattern": "(^\\$)|(^\\#)|(^\\*)"
+        },
+        {
+          "title": "Constant Index Integer",
+          "type": "integer"
+        }
+      ]
+    },
+
+    "booleansVariables": {
+      "title": "Booleans and Durables",
+      "oneOf": [
+        {
+          "title": "Boolean Variable",
+          "type": "string",
+          "pattern": "(^\\$)|(^\\#)|(^\\*)"
+        },
+        {
+          "title": "Constant Boolean",
+          "type": "boolean"
+        }
+      ]
+    },
+
+                                                
+    "readableVariables": {
+      "title": "Readables And Variables",
+      "oneOf": [
+        {
+          "title": "Readable Variable",
+          "type": "string",
+          "pattern": "(^\\$)|(^\\#)|(^\\@)|(^\\*)|(^::[a-zA-Z0-9.]+$)|(^\\~)"
+        },
+        {
+          "title": "Constant Number",
+          "type": "number"
+        },
+        {
+          "title": "Constant Boolean",
+          "type": "boolean"
+        }
+      ]
+    },
+
+    "constantIntsAndString": {
+      "title": "Constant Int or String",
+      "oneOf": [
+        {
+          "title": "Constant Index Integer",
+          "type": "integer"
+        },
+        {
+          "title": "Constant String Value",
+          "type": "string"
+        }
+      ]
+    },
+
+    "readableStringVariables": {
+      "oneOf": [
+        {
+          "title": "Readable Variable",
+          "type": "string",
+          "pattern": "(^\\$)|(^\\#)|(^\\@)|(^\\*)|(^::[a-zA-Z0-9.]+$)|(^\\~)|(^\\~)"                                                                             
+        }
+      ]
+    },
+
+    "readableDurables": {
+      "title": "Readable And Durables",
+      "oneOf": [
+        {
+          "title": "Durable Variable",
+          "type": "string",
+          "pattern": "(^\\#)|(^\\*)"                
+        },
+        {
+          "title": "Constant Number",
+          "type": "number"
+        },
+        {
+          "title": "Constant Boolean",
+          "type": "boolean"
+        }
+      ]
+    },
+
+    "dataTypes": {
+      "title": "Data Types",
+      "description": "Variable data types",
+      "type": "string",
+      "enum": [ "boolean", "byte", "float", "integer", "numeric", "string" ]
+    },
+
+    "properties": {
+      "title": "Data Properties",
+      "description": "Available data properties sourced from the device, its sensors, and peripherals, and data properties available from the engine computer.",
+      "type": "string",
+      "enum": [
+                                   
+        "event.id",
+        "event.index",                                  
+        "event.arg",                                 
+
+                              
+
+        "event.wq",
+        "event.power.up",
+        "event.ignition.off",
+        "event.ignition.on",
+        "event.alarm",
+        "event.power.off",
+        "event.on.periodic",
+        "event.off.perodic",
+        "event.poll",
+        "event.emergency",
+        "event.battery.warning",
+        "event.idling",
+        "event.power.cut",
+        "event.begin.stop",
+        "event.end.stop",
+        "event.motion.alarm",
+        "event.speeding",
+        "event.fence.exit",
+        "event.fence.entry",
+        "event.heartbeat",
+        "event.live",
+        "event.heading",
+        "event.distance",
+        "event.cluster",
+        "event.emergency.end",
+        "event.alarm.end",
+        "event.io.change",
+        "event.idling.end",
+        "event.hard.stop",
+        "event.speeding.end",
+        "event.hard.brake",
+        "event.hard.turn",
+        "event.hard.acceleration",
+        "event.mil.on",
+        "event.mil.off",
+        "event.vin",
+        "event.fuel.loss",
+        "event.refuel",
+        "event.moving",
+        "event.dmchange",
+        "event.conn",
+        "event.disconn",
+        "event.bus.malf",
+        "event.bus.malf.end",
+        "event.idle.shutdown",
+        "event.cell",
+        "event.no.cell",
+        "event.ble.interrupt",
+        "event.ble.init",
+        "event.sjdr",
+        "event.sjdr.end",
+        "event.on.periodic.2",
+        "event.tire",
+        "event.pto.on",
+        "event.pto.off",
+        "event.door",
+        "event.setpoint",
+        "event.r.mil.on",
+        "event.r.mil.off",
+        "event.r.power",
+        "event.r.periodic",
+        "event.shock",
+        "event.postshock",
+        "event.cast",
+        "event.driver.id",
+        "event.prndl",
+        "event.charge.start",
+        "event.charge.stop",
+
+        "event.ble.paired",
+        "event.ble.sent",
+        "event.command.received",
+        "event.geofence.entry",
+        "event.geofence.exit",
+        "event.message.fail",
+        "event.message.sent",
+        "event.packet.ready",
+        "event.powerup",
+        "event.test",
+        "event.timer",
+        "event.updated.config",
+        "event.updated.firmware",
+        "event.wakeup",
+        "event.wakeup.input",
+        "event.transition",
+
+        "event.channel.closed",
+        "event.channel.reset",
+        "event.channel.receive",
+        "event.stream.written",
+        "event.poke",
+
+        "event.change.accel",
+        "event.change.adc",
+        "event.change.battery.device.engine.voltage",
+        "event.change.battery.engine.voltage",
+        "event.change.comm",
+        "event.change.comm.network",
+        "event.change.comm.rssi",
+        "event.change.device.voltage",
+        "event.change.distance",
+        "event.change.geofence",
+        "event.change.gpsfix",
+        "event.change.heading",
+        "event.change.iccid",
+        "event.change.input",
+        "event.change.input.high",
+        "event.change.input.low",
+        "event.change.moving",
+        "event.change.onebit",
+        "event.change.queue",
+        "event.change.speed",
+        "event.change.speed.km",
+        "event.change.speed.gps",
+        "event.change.time.day",
+        "event.change.time.hour",
+        "event.change.vin",
+
+        "result",                                         
+
+                                                                        
+        "timer.active",
+        "timer.value",
+        "time.utc",
+        "time.hour",
+        "time.minute",
+        "time.seconds",
+        "time.month",
+        "time.month.day",
+        "time.week.day",
+        "time.year",
+        "time.year.day",
+        "accel.dir.planar",
+        "accel.x",
+        "accel.y",
+        "accel.z",
+        "accel.mag",
+        "accel.max",
+        "id.serialnumber",
+        "id.imei",
+        "id.iccid",
+        "id.phonenumber",
+        "dev.queue.count",
+        "dev.queue.last.timestamp",
+        "dev.queue.seconds.since",
+        "dev.reboot.reason",
+        "dev.input",
+        "dev.adc",
+        "dev.awake",
+        "dev.snoozing",
+        "dev.battery.voltage",
+        "dev.ext.voltage",
+        "dev.temperature",
+        "dev.shaking",
+        "ble.client.mac",
+        "ble.client.connected",
+        "ble.client.connected.seconds",
+        "ble.mac",
+        "ble.state",
+        "ble.version",
+        "comm.cellid",
+        "comm.lac",
+        "comm.mcc",
+        "comm.mnc",
+        "comm.operator",
+        "comm.band",
+        "comm.ipaddr",
+        "comm.off",
+        "comm.rssi",
+        "comm.connected",
+        "comm.disconnected",
+        "comm.roaming",
+        "comm.state",
+        "version.app",
+        "version.ble",
+        "version.modem",
+        "version.sup",
+        "calc.odometer",
+        "calc.odometer.km",
+        "calc.roll.total.minutes",
+        "calc.roll.total.seconds",
+        "calc.ignition.total.minutes",
+        "calc.ignition.total.seconds",
+        "calc.idle.total.minutes",
+        "calc.idle.total.seconds",
+        "calc.idle.session.minutes",
+        "calc.idle.session.seconds",
+        "calc.ignition",
+        "calc.moving",
+        "calc.idling",
+        "calc.ignition.session.minutes",
+        "calc.ignition.session.seconds",
+        "calc.moving.session.minutes",
+        "calc.moving.session.seconds",
+
+        "gps.raw.lon",
+        "gps.raw.lat",
+        "gps.raw.alt",
+        "gps.raw.speed.kmh",
+        "gps.raw.speed.mph",
+        "gps.raw.speed.mps",
+        "gps.raw.hdop",
+        "gps.raw.heading",
+        "gps.raw.fix",
+        "gps.raw.valid",
+        "gps.raw.on",
+        "gps.raw.sats.inuse",
+        "gps.raw.sats.tracking",
+        "gps.latest.lon",
+        "gps.latest.lat",
+        "gps.latest.alt",
+        "gps.latest.speed.kmh",
+        "gps.latest.speed.mph",
+        "gps.latest.speed.mps",
+        "gps.latest.hdop",
+        "gps.latest.heading",
+        "gps.latest.utc",
+        "gps.latest.age",
+        "gps.latest.fix",
+        "gps.latest.sats.used",
+        "onewire.all.count",
+        "onewire.driverid",
+        "onewire.driverid.count",
+        "onewire.temperature",
+        "onewire.temperature.count",
+        "onewire.temperature.C",
+        "onewire.temperature.F",
+        "onewire.all",
+
+        "eng.fuel.econ.cumulative.mpg",
+        "eng.fuel.econ.trip.mpg",
+        "eng.fuel.econ.instant.mpg",
+        "eng.fuel.level",
+        "eng.fuel.used.total",
+        "eng.fuel.used.idle",
+        "eng.fuel.used.trip",
+
+        "eng.gas.used.total",
+        "eng.gas.used.trip",
+
+        "eng.rpm",
+        "eng.throttle",
+        "eng.voltage",
+
+        "eng.ambient.temperature",
+
+        "eng.speed.miles",
+        "eng.speed.km",
+        "eng.speed.limit",
+
+        "eng.odometer.miles",
+        "eng.odometer.km",
+        "eng.odometer.source",
+
+        "eng.mil.status",
+        "eng.dtc.count",
+        "eng.dtc.distance.miles",
+        "eng.dtc.distance.km",
+        "eng.dtc.active",
+        "eng.dtc.all",
+        "eng.dtc.dm01",
+        "eng.dtc.dm02",
+
+        "eng.vin",
+
+        "eng.charge.level",
+        "eng.phev.state",
+        "eng.phev.voltage",
+        "eng.phev.current",
+
+        "eng.enginehours.hours",
+        "eng.enginehours.seconds",
+        "eng.idlehours.hours",
+        "eng.idlehours.seconds",
+
+        "eng.ptohours.hours",
+        "eng.ptohours.seconds",
+        "eng.pto.state",
+
+        "eng.oil.level",
+        "eng.oil.temperature",
+        "eng.oil.life",
+
+        "eng.coolant.temperature",
+        "eng.coolant.level",
+
+        "eng.def.level",
+        "eng.def.temperature",
+
+        "eng.dpf.regen.inhibit",
+        "eng.dpf.soot.load",
+        "eng.dpf.lastregen.seconds",
+        "eng.dpf.soot.regen.threshold",
+        "eng.dpf.status",
+        "eng.dpf.active.regen.status",
+
+        "trans.oil.level",
+        "trans.oil.temperature",
+
+        "trans.gear",
+        "cruisecontrol.state",
+        "prndl.position",
+        "seatbelt.state",
+
+        "tpms.all",
+        "tpms.faulty"
+      ]
+    },
+
+                                            
+    "readables": {
+      "oneOf": [
+        {
+          "title": "Readable Data Property",
+          "$ref": "#/definitions/properties"
+        },
+        {
+          "title": "Readable Variable",
+          "type": "string",
+          "pattern": "(^\\$)|(^\\#)|(^\\@)|(^\\*)|(^::[a-zA-Z0-9.]+$)|(^\\~)"                                                                                                      
+        },
+        {
+          "title": "Readable Constant Number",
+          "type": "number"
+        },
+        {
+          "title": "Readable Constant Boolean",
+          "type": "boolean"
+        }
+      ]
+    },
+
+    
+
+    "token": {
+      "title": "Token",
+      "type": "string",
+      "pattern": "(^\\@)|(^\\*)|(^\\~)"
+    },
+
+                          
+    "writables": {
+      "title": "Writable Properties And Variables",
+      "description": "Data properties and variables that the script may assign values to.",
+      "oneOf": [
+        {
+          "title": "Writable Property",
+          "type": "string",
+          "enum": [
+            "dev.default.process",                                     
+            "result"
+          ]
+        },
+        {
+          "title": "Writable Variable",
+          "type": "string",
+          "pattern": "(^\\@)|(^\\$)|(^\\#)"
+        }
+      ]
+    },
+
+    "streamTextOptions": {
+     
+        "type": "object",
+        "title": "Text Options",
+        "description": "Options for handling text in the stream.",
+        "additionalProperties": false,
+        "properties": {
+          "nullterminate": {
+            "type": "boolean",
+            "title": "Null Terminate",
+            "description": "If true, appends a null character to the end of the string. Default is false."
+          },
+          "fixedLength": {
+            "$ref": "#/definitions/readableVariables",
+            "title": "Fixed Length",
+            "description": "If set, pads the string to the specified length with null characters. Default is 0."
+          },
+          "prefixLength": {
+            "type": "integer",
+            "title": "Prefix Length",
+            "description": "If set, writes the length of the string as a prefix before the string. Default is 0.",
+            "enum": [ 0, 1, 2, 4 ]
+          }
+        }
+     
+    },
+
+    "streamMode": {
+      "type": "string",
+      "enum": [ "byte", "hex", "int16", "int32", "text" ]
+    },
+
+                                                          
+                                                                                    
+                                                                     
+                                                                        
+                                                                             
+                                
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "title": "Detect Change Inside Range",
+          "description": "Monitors a specified change event, and will invoke the script if the event occurs inside the given range.<br/>Example:<br/>{ \"change\": \"event.change.time.hour\", \"inside\":[ 6, 18 ]}",
+
+          "additionalProperties": false,
+          "properties": {
+            "change": {
+              "title": "Change Event Id",
+              "description": "Change event id.",
+              "$ref": "#/definitions/changeevents"
+            },
+            "inside": {
+              "title": "Range Inside",
+              "description": "A range of value to monitor for; if the change event occurs within this range, the condition is true.",
+              "type": "array",
+              "items": {
+                "title": "Range",
+                "description": "",
+                "$ref": "#/definitions/readableDurables"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "debounce": {
+              "title": "Debounce",
+              "description": "Debounce period in seconds after a change is detected inside the range before another change event is invoked.",
+              "$ref": "#/definitions/integersParams"               
+              
+            }
+          },
+
+          "required": ["change", "inside"]
+        },
+        {
+          "type": "object",
+          "title": "Detect Change Outside Range",
+          "description": "Monitors a specified change event, and will invoke the script if the event occurs outside the given range.<br/>Example:<br/>{\"change\": \"event.change.speed\"}, \"outside\":[0.0,80.0]}",
+          "additionalProperties": false,
+          "properties": {
+            "change": {
+              "title": "Change Event Id",
+              "description": "Id of the change event to monitor.",
+              "$ref": "#/definitions/changeevents"
+            },
+            "outside": {
+              "type": "array",
+              "items": {
+                "title": "Range Outside",
+                "description": "A range of value to monitor for; if the change event occurs outside this range, the condition is true.",
+                "$ref": "#/definitions/readableDurables"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "debounce": {
+              "title": "Debounce",
+              "description": "Debounce time in seconds before generating another change event.",
+              "$ref": "#/definitions/integersParams"               
+            }
+          },
+
+          "required": ["change", "outside"]
+        },
+        {
+          "type": "object",
+          "title": "Bimodal Detect Changes With Ranges",
+          "description": "Monitors a specified property for changes. Has two modes: inside and outside, each with its own range. If the property meets the mode's range criteria, emits an event with arguments [0:change monitor index, 1:inside (1) or outside (0) signal ], and switches to the other mode.'.<br/>Example:<br/>{\"change\": \"event.change.speed\"}, \"modal\":[0.0,70.0,0.0,80.0], \"default\":0}",
+          "additionalProperties": false,
+          "properties": {
+            "change": {
+              "title": "Change Event Id",
+              "description": "Id of the change event to monitor.",
+              "$ref": "#/definitions/changeevents"
+            },
+            "modal": {
+              "type": "array",
+              "items": {
+                "title": "Detection Ranges",
+                "description": "Two ranges of values to monitor for; an inside range and outside range; representing an 'inside' mode and 'outside' mode. If inside the first range, or outside the second range, and changing from one mode to the other, the condition is true.",
+                "$ref": "#/definitions/readableDurables"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "default": {
+              "type": "integer",
+              "title": "starting mode, check inside or outside",
+              "description": "When initializing the timer, begin in mode checking inside (1) or outside (0)."
+            },
+            "debounce": {
+              "title": "Debounce",
+              "description": "Debounce time in seconds before generating another change event.",
+              "$ref": "#/definitions/integersParams"               
+            }
+          },
+
+          "required": ["change", "modal", "default"]
+        },
+        {
+          "type": "object",
+          "title": "Compare Equal To",
+          "description": "Compares values for equality.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"==\":0.0, \"negate\":true, \"into\":\"#moving\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+            "==": {
+              "$ref": "#/definitions/readables",
+              "title": "Equal To",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", "=="]
+        },
+        {
+          "type": "object",
+          "title": "Compare Not Equal To",
+          "description": "Compares values for inequality.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"!=\":0.0, \"into\":\"#moving\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "!=": {
+              "$ref": "#/definitions/readables",
+              "title": "Not Equal To",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", "!="]
+        },
+        {
+          "type": "object",
+          "title": "Compare Greater Than",
+          "description": "Compares if the compare value is greater than the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \">\":0.0, \"into\":\"#moving\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            ">": {
+              "$ref": "#/definitions/readables",
+              "title": "Greater Than",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", ">"]
+        },
+        {
+          "type": "object",
+          "title": "Compare Less Than",
+          "description": "Compares if the compare value is less than the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"<\":20.0, \"into\":\"#isslow\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "<": {
+              "$ref": "#/definitions/readables",
+              "title": "Less Than",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+          "required": ["cmp", "<"]
+        },
+        {
+          "type": "object",
+          "title": "Compare Greater Or Equal",
+          "description": "Compares if the compare value is greator or equal to the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \">=\":20.0, \"into\":\"#isfast\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            ">=": {
+              "$ref": "#/definitions/readables",
+              "title": "Greater Than Or Equal",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", ">="]
+        },
+        {
+          "type": "object",
+          "title": "Compare Less Than Or Equal",
+          "description": "Compares if the compare value is less than or equal to the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"<=\":20.0, \"into\":\"#isslow\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "<=": {
+              "$ref": "#/definitions/readables",
+              "title": "Less Than Or Equal",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", "<="]
+        },
+        {
+          "type": "object",
+          "title": "Compare Boolean And",
+          "description": "Logical And for two boolean operands.<br/>Example:<br/>{\"cmp\":\"dev.timer.active\",\"csel\":\"@monitortimer\", \"and\": \"#isoffhours\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "and": {
+              "$ref": "#/definitions/readables",
+              "title": "And",
+              "description": "Variable to compare."
+            },
+
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", "and"]
+        },
+        {
+          "type": "object",
+          "title": "Compare Boolean Or",
+          "description": "Logical Or for two boolean operands.<br/>Example:<br/>{\"cmp\":\"#badlocation\", \"or\": \"#isoffhours\", \"into\":\"#badstate\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "or": {
+              "$ref": "#/definitions/readables",
+              "title": "Or",
+              "description": "Variable to compare."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+          "required": ["cmp", "or"]
+        },
+        {
+          "type": "object",
+          "title": "Compare String Contains",
+          "description": "Checks if the given string contains a substring.<br/>Example:<br/>{\"cmp\":\"dev.command.last\", \"contains\":\"@diagstr\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to search."
+            },
+
+            "contains": {
+              "$ref": "#/definitions/readables",
+              "title": "Contains",
+              "description": "Variable to search for."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+          "required": ["cmp", "contains"]
+        },
+        {
+          "type": "object",
+          "title": "Compare String Begins",
+          "description": "Checks if the given string starts with a substring.<br/>Example:<br/>{\"cmp\":\"dev.command.last\", \"begins\":\"@ipstr\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to search."
+            },
+
+            "begins": {
+              "$ref": "#/definitions/readables",
+              "title": "Begins",
+              "description": "Variable to search for at string beginning.."
+            },
+
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+
+          "required": ["cmp", "begins"]
+        },
+        {
+          "type": "object",
+          "title": "Compare String Ends",
+          "description": "Checks if the given string ends with a substring.<br/>Example:<br/>{\"cmp\":\"dev.command.last\", \"ends\":\"dev.serialnumber\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to search."
+            },
+
+            "ends": {
+              "$ref": "#/definitions/readables",
+              "title": "Ends",
+              "description": "Variable to search for at string end."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+          "required": ["cmp", "ends"]
+        },
+
+        {
+          "type": "object",
+          "title": "Compare Mask",
+          "description": "Checks for a non-zero value after bitwise masking (and) operation.<br/>Example:<br/>{\"cmp\":\"#input\", \"&\",:72883, \"into\":\"$iscommand\"}",
+          "additionalProperties": false,
+          "properties": {
+            "cmp": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "&": {
+              "$ref": "#/definitions/readables",
+              "title": "Mask",
+              "description": "Mask value."
+            },
+            "negate": {
+              "type": "boolean",
+              "title": "Negate",
+              "description": "Optional. Negate the resulting condition."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+          "required": ["cmp", "&"]
+        },
+
+        {
+          "type": "object",
+          "title": "On Event",
+          "description": "Detects if the current event matches.",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "$ref": "#/definitions/readables",
+              "pattern": "^event.",
+              "title": "Event Id",
+              "description": "Event Id to match."
+            },
+            "index": {
+              "$ref": "#/definitions/readables",
+              "title": "Event index value",
+              "description": "Event Index Variable to compare."
+            },
+
+                                              
+            "machine": {
+              "type": "string",
+              "pattern": "^::[a-zA-Z0-9]+$",
+              "title": "State Machine",
+              "description": "For event.transition events: Key of the State Machine to receive events on."
+            },
+
+            "state.match": {
+              "type": "array",
+              "title": "Matching States",
+              "description": "For event.transition events: Names of state machine states to match on, qualified by the state machine name.",
+              "items": {
+                "type": "string",
+                "pattern": "^::[a-zA-Z0-9.]+$"
+              },
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true
+            },
+                                        
+
+                                                                           
+            "channel": {
+              "title": "Channel",
+              "description": "For event.channel.receive events: Handle to channel to receive from.",
+              "$ref": "#/definitions/indexVariables"
+            },
+            "channel.terminators.hex": {
+              "type": "array",
+              "title": "Hex Terminators Match",
+              "description": "For event.channel.receive events: A set of hex specified characters to match to as message terminator.",
+              "items": {
+                "type": "string",
+                "title": "Hex Characters",
+                "description": "A hex string describing a sequence of characters.",
+                "pattern": "[0-9A-Z]+"
+              }
+            },
+            "channel.terminators.text": {
+              "type": "array",
+              "title": "Text Terminators Match",
+              "description": "For event.channel.receive events: A set of text strings to match.",
+              "items": {
+                "type": "string",
+                "title": "Text",
+                "description": "A text string to match to from the channel."
+              }
+            },
+            "channel.reset": {
+              "$ref": "#/definitions/booleansVariables",
+              "title": "Match on Reset",
+              "description": "For event.channel.receive events: If true, the condition will match to channel resets."
+            },
+            "channel.text.timeout": {
+              "$ref": "#/definitions/numbersVariables",
+              "title": "Text Timeout",
+              "description": "Event timeout to reset receive stream since last channel transmit or event match"
+            },
+
+                                                                               
+            "stream": {
+              "$ref": "#/definitions/readableDurables",
+              "title": "Stream Handle",
+              "description": "Stream to watch. If the given variable doesn't contain a stream handle (yet), the event system ignores it.'"
+            },
+
+            "stream.length": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Stream Length",
+              "description": "If provided, event will trigger if stream write position exceeds this length."
+            },
+
+            "stream.searchMode": {
+              "type": "string",
+              "enum": [ "ascii", "hex" ],
+              "title": "Search Mode",
+              "description": "Chooses to interpret the stream text as ascii or binary specified in hexadecimal characters. Default is text."
+            },
+
+            "stream.any": {
+              "type": "array",
+              "title": "Match Any",
+              "description": "Event will trigger if any match is made in the stream buffer.",
+              "items": {
+                "$ref": "#/definitions/readableStringVariables"
+              }
+            },
+
+            "stream.all": {
+              "type": "array",
+              "title": "Match All",
+              "description": "Event will trigger if all matches are in the stream buffer.",
+              "items": {
+                "$ref": "#/definitions/readableStringVariables"
+              }
+            },
+
+
+
+                               
+
+            "debounce": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Debounce Seconds",
+              "description": "Number of seconds before another event of the same kind may appear. If not provided, there is no debounce."
+            }
+          },
+          "required": ["on"]
+        }
+      ]
+    },
+
+                                                                                      
+                                                                                      
+                                                                           
+                                                                          
+    "action": {
+      "oneOf": [
+
+
+
+                          
+        {
+                 
+          "type": "object",
+          "title": "Add",
+          "description": "Sums two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mysum\", \"=\":\"eng.battery.voltage\", \"+\":10}",
+          "additionalProperties": false,
+
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand",
+              "description": "First of two values to compute."
+            },
+            "+": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "+" ]
+        },
+        {
+                      
+          "type": "object",
+          "title": "Subtract",
+          "description": "Subtracts two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mydiff\", \"=\":\"eng.battery.voltage\", \"-\":10}",
+          "additionalProperties": false,
+
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand",
+              "description": "First of two values to compute."
+            },
+            "-": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "-" ]
+        },
+        {
+                      
+          "type": "object",
+          "title": "Multiply",
+          "additionalProperties": false,
+          "description": "Multiplies two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$myprod\", \"=\":\"eng.battery.voltage\", \"*\":10}",
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "*": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "*" ]
+        },
+        {
+                    
+          "type": "object",
+          "title": "Divide",
+          "description": "Divides two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$myratio\", \"=\":\"eng.battery.voltage\", \"/\":10}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "/": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "/" ]
+        },
+        {
+          "type": "object",
+          "title": "Modulus",
+          "description": "Computes Modulus of two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$myratio\", \"=\":\"eng.battery.voltage\", \"%\":10}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "%": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "%" ]
+        },
+
+        {
+                 
+          "type": "object",
+          "title": "Map",
+          "description": "Maps a value from one range to another range using interpolation.<br/>Example:<br/>{\"map\":\"eng.fuel\", \"from\":[0.0,100.0], \"to\":[0.0, \"#tanksize\"], \"into\":\"#gallons\"}",
+          "additionalProperties": false,
+          "properties": {
+            "map": {
+              "$ref": "#/definitions/readables",
+              "title": "Map Variable",
+              "description": "Variable to map from one range into another."
+            },
+            "from": {
+              "type": "array",
+              "minLength": 2,
+              "maxLength": 2,
+              "items": {
+                "$ref": "#/definitions/numbersVariables"
+              },
+              "title": "From Domain",
+              "description": "Min and Max boundaries of variable's domain.'"
+            },
+            "to": {
+              "type": "array",
+
+              "minLength": 2,
+              "maxLength": 2,
+              "items": {
+                "$ref": "#/definitions/numbersVariables"
+              },
+              "title": "Into Range",
+              "description": "Min and Max boundaries of the new range."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Variable to store the result mapping into."
+            }
+          },
+          "required": [ "map", "from", "to", "into" ]
+        },
+        {
+                 
+          "type": "object",
+          "title": "Minimum",
+          "description": "Computes the minimum of two values.<br/>Example:<br/>{\"let\":\"$minVoltage\", \"min\":[\"eng.battery.voltage\",\"dev.battery.voltage\"]}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "min": {
+              "title": "Minimum Function",
+              "type": "array",
+              "minLength": 2,
+              "maxLength": 2,
+              "items": {
+                "$ref": "#/definitions/numbersVariables",
+                "title": "values"
+              }
+            }
+          },
+          "required": [ "let", "min" ]
+        },
+        {
+                 
+          "type": "object",
+          "title": "Maximum",
+          "description": "Computes the maximum of two values.<br/>Example:<br/>{\"let\":\"$maxVoltage\", \"max\":[\"eng.battery.voltage\",1000.0]}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "max": {
+              "title": "Maximum Function",
+              "type": "array",
+              "minLength": 2,
+              "maxLength": 2,
+              "items": {
+                "$ref": "#/definitions/numbersVariables",
+                "title": "values"
+              }
+            }
+          },
+          "required": [ "let", "max" ]
+        },
+        {
+                                         
+          "type": "object",
+          "title": "Increment",
+          "description": "Increments a variable by one, with optional limit.<br/>Example:<br/>{\"++\":\"#mycount\", \"limit.max\":100 }",
+          "additionalProperties": false,
+          "properties": {
+            "++": {
+              "$ref": "#/definitions/writables",
+              "title": "Increment Function",
+              "description": "Name of variable to increment in-place."
+            },
+            "limit.max": {
+              "type": "integer",
+              "title": "Max Limit",
+              "description": "The variable will be incremented no higher than this value."
+            }
+          },
+          "required": [ "++" ]
+        },
+        {
+                                          
+          "type": "object",
+          "title": "Decrement",
+          "description": "Decrements a variable by one, with optional limit.<br/>Example:<br/>{\"--\":\"#mycount\", \"limit.min\":0 }",
+          "additionalProperties": false,
+          "properties": {
+            "--": {
+              "$ref": "#/definitions/writables",
+              "title": "Decrement Function",
+              "description": "Name of variable to decrement in-place."
+            },
+            "limit.min": {
+              "type": "integer",
+              "title": "Min Limit",
+              "description": "The variable will be decremented no less than this value."
+            }
+          },
+          "required": [ "--" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Cast Number",
+          "description": "Casts a number to a different type.<br/>Example:<br/>{\"let\":\"@myint\", \"=number.cast\":\"@myfloat\", \"datatype\":\"integer\"}",
+          "additionalItems": false,
+          "properties": {
+            "=number.cast": {
+              "$ref": "#/definitions/readables",
+              "title": "Cast",
+              "description": "Variable to cast."
+            },
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "datatype": {
+              "$ref": "#/definitions/dataTypes"
+            }
+          },
+          "required": [ "=number.cast", "let", "datatype" ]
+        },
+
+                  
+        {
+          "type": "object",
+          "title": "Substring",
+          "description": "Finds a substring within a string. Returns -1 if not found. <br/>Example:<br/>{\"let\":\"@found\", \"=string.find\":{\"in\":\"@mystring\", \"find\":\"@needle\"}}",
+          "additionalItems": false,
+          "properties": {
+            "=string.find": {
+              "type": "object",
+              "title": "find",
+              "description": "String find command",
+              "additionalProperties": false,
+              "properties": {
+                "in": {
+                  "$ref": "#/definitions/readableStringVariables",
+                  "title": "String to Search",
+                  "description": "The string to search for the substring in."
+                },
+                "find": {
+                  "$ref": "#/definitions/readableStringVariables",
+                  "title": "Substring to Find",
+                  "description": "The substring to search for."
+                },
+                "from": {
+                  "$ref": "#/definitions/numbersVariables",
+                  "title": "start position",
+                  "description": "The starting position to search from."
+                }
+              },
+              "required": [ "in", "find" ]
+            },
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            }
+          },
+          "required": [ "=string.find", "let" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Extract String",
+          "description": "Extracts a substring from a string.<br/>Example:<br/>{\"let\":\"#sub\", \"=string.extract\":{\"in\":\"@mystring\", \"start\":0, \"end\":5}}",
+          "additionalItems": false,
+          "properties": {
+            "=string.extract": {
+              "type": "object",
+              "title": "Substring",
+              "description": "Extracts a substring.",
+              "additionalProperties": false,
+              "properties": {
+                "in": {
+                  "$ref": "#/definitions/readableStringVariables",
+                  "title": "String to Search",
+                  "description": "The string to extract the substring from."
+                },
+                "start": {
+                  "$ref": "#/definitions/numbersVariables",
+                  "title": "Start Index",
+                  "description": "The index of the first character to include in the substring."
+                },
+                "end": {
+                  "$ref": "#/definitions/numbersVariables",
+                  "title": "End Index",
+                  "description": "The index of the last character to include in the substring."
+                }
+              },
+
+              "required": [ "in", "start", "end" ]
+            },
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            }
+          },
+          "required": [ "=string.extract", "let" ]
+        },
+        {
+          "type": "object",
+          "title": "Format String.",
+          "description": "Formats data into a string.<br/>Example:<br/>{\"let\":\"@mystr\", \"=string.format\": \"@fmt\", \"sub\":[ 0.8289, \"#myvar\"] }",
+          "additionalItems": false,
+          "properties": {
+            "=string.format": {
+              "$ref": "#/definitions/token",
+              "title": "format String",
+              "description": "Refers to a format string to use."
+            },
+            "sub": {
+              "type": "array",
+              "title": "Substitutions",
+              "description": "Optional. Substitutes given variables in place of substituion place-holders.",
+              "items": {
+                                                                                                
+                "$ref": "#/definitions/readables"
+              }
+            },        
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            }
+          },
+          "required": [ "let", "=string.format", "sub" ]
+        },
+        {
+          "type": "object",
+          "title": "Cast String",
+          "description": "Casts data from a string into another data type.",
+          "additionalItems": false,
+          "properties": {
+            "=string.cast": {
+              "$ref": "#/definitions/readables",
+              "title": "Cast",
+              "description": "Refers to a variable to cast from a string."
+            },
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "datatype": {
+              "$ref": "#/definitions/dataTypes",
+              "title": "Data type",
+              "description": "The data type to cast to."
+            }
+          },
+          "required": [ "=string.cast", "let", "datatype" ]
+        },
+        {
+          "type": "object",
+          "title": "String Length",
+          "description": "Returns the length of a string.",
+          "additionalItems": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=string.length": {
+              "$ref": "#/definitions/readables",
+              "title": "String to Measure",
+              "description": "The string to measure."
+            }
+          },
+          "required": [ "let", "=string.length" ]
+        },
+        {
+          "type": "object",
+          "title": "Count Separated Tokens",
+          "description": "Counts tokens separated by the given separator in the string.",
+          "additionalItems": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=string.token.count": {
+              "$ref": "#/definitions/readables",
+              "title": "String containing tokens",
+              "description": "The string to count tokens in."
+            },
+            "separators": {
+              "type": "array",
+              "title": "separators",
+              "description": "Array of strings that constitute separators",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 8
+            }
+          },
+          "required": [ "let", "=string.token.count", "separators" ]
+        },
+        {
+          "type": "object",
+          "title": "Extract Token",
+          "description": "Extract a token from a string",
+          "additionalItems": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "result": {
+              "$ref": "#/definitions/writables",
+              "title": "Receives tokenization result",
+              "description": "0-token found, 1-token not found, 2-token empty"
+            },
+
+            "=string.token": {
+              "$ref": "#/definitions/readables",
+              "title": "String containing tokens",
+              "description": "The string to tokenize."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Token zero based index",
+              "description": "Token to extract, indexed from zero."
+            },
+
+            "datatype": {
+              "$ref": "#/definitions/dataTypes",
+              "title": "Data type",
+              "description": "The data type to cast to."
+            },
+            "separators": {
+              "type": "array",
+              "title": "separators",
+              "description": "Array of strings that constitute separators",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 8
+            }
+          },
+          "required": [ "let", "=string.token", "separators", "datatype", "sel" ]
+        },
+
+                   
+        {
+          "type": "object",
+          "title": "Compare Equal To",
+          "description": "Compares values for equality.<br/>Example:<br/>{\"let\":\"#moving\", \"=\":\"eng.speed\", \"==\":0.0 }",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+            "==": {
+              "$ref": "#/definitions/readables",
+              "title": "Equal To",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "=", "==" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Not Equal To",
+          "description": "Compares values for inequality.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"!=\":0.0, \"into\":\"#moving\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "!=": {
+              "$ref": "#/definitions/readables",
+              "title": "Not Equal To",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "!=", "=" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Greater Than",
+          "description": "Compares if the compare value is greater than the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \">\":0.0, \"into\":\"#moving\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            ">": {
+              "$ref": "#/definitions/readables",
+              "title": "Greater Than",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "=", ">" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Less Than",
+          "description": "Compares if the compare value is less than the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"<\":20.0, \"into\":\"#isslow\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "<": {
+              "$ref": "#/definitions/readables",
+              "title": "Less Than",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+          "required": [ "let", "=", "<" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Greater Or Equal",
+          "description": "Compares if the compare value is greator or equal to the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \">=\":20.0, \"into\":\"#isfast\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            ">=": {
+              "$ref": "#/definitions/readables",
+              "title": "Greater Than Or Equal",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "=", ">=" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Less Than Or Equal",
+          "description": "Compares if the compare value is less than or equal to the operand.<br/>Example:<br/>{\"cmp\":\"eng.speed\", \"<=\":20.0, \"into\":\"#isslow\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "<=": {
+              "$ref": "#/definitions/readables",
+              "title": "Less Than Or Equal",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "=", "<=" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Boolean And",
+          "description": "Logical And for two boolean operands.<br/>Example:<br/>{\"cmp\":\"dev.timer.active\",\"csel\":\"@monitortimer\", \"and\": \"#isoffhours\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "and": {
+              "$ref": "#/definitions/readables",
+              "title": "And",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "=", "and" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare Boolean Or",
+          "description": "Logical Or for two boolean operands.<br/>Example:<br/>{\"cmp\":\"#badlocation\", \"or\": \"#isoffhours\", \"into\":\"#badstate\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "or": {
+              "$ref": "#/definitions/readables",
+              "title": "Or",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            },
+            "csel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Compare Index",
+              "description": "Optional. If the 'cmp' variable requires an index, specifies an index."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "valueIndex",
+              "description": "Optional. If the operator variable requires an index, specifies an index."
+            }
+          },
+          "required": [ "let", "=", "or" ]
+        },
+        {
+          "type": "object",
+          "title": "Boolean Not",
+          "description": "Logical Not for boolean operand.<br/>Example:<br/>{\"cmp\":\"#badlocation\", \"or\": \"#isoffhours\", \"into\":\"#badstate\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=!": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to compare."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+          "required": [ "let", "=!" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare String Contains",
+          "description": "Checks if the given string contains a substring.<br/>Example:<br/>{\"cmp\":\"dev.command.last\", \"contains\":\"@diagstr\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to search."
+            },
+
+            "contains": {
+              "$ref": "#/definitions/readables",
+              "title": "Contains",
+              "description": "Variable to search for."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+          "required": [ "let", "=", "contains" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare String Begins",
+          "description": "Checks if the given string starts with a substring.<br/>Example:<br/>{\"cmp\":\"dev.command.last\", \"begins\":\"@ipstr\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to search."
+            },
+
+            "begins": {
+              "$ref": "#/definitions/readables",
+              "title": "Begins",
+              "description": "Variable to search for at string beginning.."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+
+          "required": [ "let", "=", "begins" ]
+        },
+        {
+          "type": "object",
+          "title": "Compare String Ends",
+          "description": "Checks if the given string ends with a substring.<br/>Example:<br/>{\"cmp\":\"dev.command.last\", \"ends\":\"dev.serialnumber\"}",
+          "additionalProperties": false,
+          "properties": {
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Compare",
+              "description": "Variable to search."
+            },
+
+            "ends": {
+              "$ref": "#/definitions/readables",
+              "title": "Ends",
+              "description": "Variable to search for at string end."
+            },
+
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "Optional. Stores condition's evaluated value into the given variable, instead of using it to filter for the actions."
+            }
+          },
+          "required": [ "let", "=", "ends" ]
+        },
+
+                   
+        {
+                         
+          "type": "object",
+          "title": "Bitwise And",
+          "description": "Bitwise ands two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mybits-\", \"=\":\"$inputVal\", \"&\":83274}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "&": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "&" ]
+        },
+        {
+                        
+          "type": "object",
+          "title": "Bitwise Or",
+          "description": "Bitwise ORs two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mybits-\", \"=\":\"$inputVal\", \"|\":83274}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "|": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "|" ]
+        },
+        {
+                         
+          "type": "object",
+          "title": "Bitwise Xor",
+          "description": "Bitwise XORs two operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mybits-\", \"=\":\"$inputVal\", \"^\":83274}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "^": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "^" ]
+        },
+        {
+                                
+          "type": "object",
+          "title": "Bitwise Complement",
+          "description": "Bitwise ands an operands and stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mybits-\", \"~\":\"$inputVal\"}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "~": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            }
+          },
+          "requires": [ "let", "~" ]
+        },
+        {
+                                
+          "type": "object",
+          "title": "Bitwise Shift Left",
+          "description": "Bitwise shift left. Stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mybits-\", \"=\":\"$inputVal\", \"<<\":6}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            "<<": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", "<<" ]
+        },
+        {
+                                 
+          "type": "object",
+          "title": "Bitwise Shift Right",
+          "description": "Bitwise shift right. Stores the result into a variable.<br/>Example:<br/>{\"let\":\"$mybits-\", \"=\":\"$inputVal\", \">>\":3}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "First operand.",
+              "description": "First of two values to compute."
+            },
+            ">>": {
+              "$ref": "#/definitions/readables",
+              "title": "Second operand.",
+              "description": "Second of two values to compute."
+            }
+          },
+          "requires": [ "let", "=", ">>" ]
+        },
+
+                  
+        {
+                           
+          "type": "object",
+          "title": "Assignment",
+          "description": "Assigns a value into variable.<br/>Example:<br/>{\"let\":\"$myVar\",\"=\":\"eng.odometer.km\"}",
+          "additionalProperties": false,
+          "properties": {
+            "let": {
+              "$ref": "#/definitions/writables",
+              "title": "Assign to",
+              "description": "Name of variable to assign the result to."
+            },
+            "=": {
+              "$ref": "#/definitions/readables",
+              "title": "Assignment Source",
+              "description": "Constant, property or variable to assign from."
+            },
+            "sel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Source Index",
+              "description": "Optional. Index selector for properties that require it."
+            }
+          },
+          "required": [ "let", "=" ]
+        },
+
+                            
+
+        {
+                             
+          "type": "object",
+          "title": "Turn On Buzzer",
+          "description": "Turns on the buzzer for the specified duration.<br/>Example:<br/>{\"buzzer.on\": \"$severitySeconds\"}",
+          "additionalProperties": false,
+          "properties": {
+            "buzzer.on": {
+              "$ref": "#/definitions/numbersVariables",
+              "title": "Buzzer Seconds",
+              "description": "Number of seconds to sound the buzzer."
+            }
+          },
+          "required": [ "buzzer.on" ]
+        },
+
+        {
+                                
+          "type": "object",
+          "title": "Play melody on Buzzer.",
+          "description": "Plays a melody on the buzzer.",
+          "additionalProperties": false,
+          "properties": {
+            "buzzer.play": {
+              "$ref": "#/definitions/readableStringVariables",
+              "title": "Play this melody",
+              "description": "melody string constant, script parameter, or variable."
+            }
+          },
+          "required": [ "buzzer.play" ]
+        },
+
+        {
+                              
+          "type": "object",
+          "description": "Calls a subroutine. Afterward, the property 'result' will contain any returned variable.<br/>Example:<br/>{\"call\":\"myFunction\"}",
+          "additionalProperties": false,
+          "title": "Call A Subroutine",
+          "properties": {
+            "call": {
+              "title": "call",
+              "description": "Name of the function to call.",
+              "type": "string"
+            },
+            "with": {
+              "title": "with",
+              "description": "Optional. Parameters to pass to the function.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/readables"
+              }
+            }
+          },
+          "required": [ "call" ]
+        },
+
+        {
+                                     
+          "type": "object",
+          "title": "Subroutine Return",
+          "description": "Returns from a subroutine. Not valid for the main function. A return value is required, but you can always return a constant and then ignore it.<br/>Example:<br/>{\"return\":0 }",
+          "additionalProperties": false,
+          "properties": {
+            "return": {
+              "$ref": "#/definitions/readables",
+              "title": "Return",
+              "description": "A constant or variable to return."
+            }
+          },
+          "required": [ "return" ]
+        },
+
+        {
+                     
+          "type": "object",
+          "title": "Command Self",
+          "description": "Sends a command to this device. Requires a constant string to be defined. Substitutions for are allowed.<br/>Example:<br/>Given a constant string:{\"key\":\"@pollstr\",\"value\":\"POLLQ VIAUDP %s\"},<br/>The action may be like:<br/>{\"command.device\":\"@pollstr\", \"sub\":[ \"@server1ipstr\"]}",
+          "additionalProperties": false,
+          "properties": {
+            "command.device": {
+              "$ref": "#/definitions/token",
+              "title": "Command Device",
+              "description": "A token for a string constant that contains the command, with optional substitution placeholders."
+            },
+            "sub": {
+                                                                                     
+              "type": "array",
+              "items": {
+                                                                                                 
+                "$ref": "#/definitions/readables"
+              },
+              "title": "substitutions",
+              "description": "Optional. An array of values to substitute into the given string before sending the command."
+            }
+          },
+          "required": [ "command.device" ]
+        },
+
+        {
+                         
+          "type": "object",
+          "title": "Read Device Configuration",
+          "description": "Read a configuration value from the device.<br/>Example:<br/>{\"config.read\":120, \"into\": \"#initialConfig\"}",
+          "additionalProperties": false,
+          "properties": {
+            "config.read": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Configuration Index",
+              "description": "The configuration parameter id."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "A variable to store the value read from the configuration."
+            }
+          },
+          "required": [ "config.read", "into" ]
+        },
+
+        {
+                           
+          "type": "object",
+          "title": "GPIO Input Read Bit",
+          "description": "Reads data from desired gpio input bit.<br/>Example:<br/>{\"gpio.read\":3, \"into\":\"#identifier\"}",
+          "additionalProperties": false,
+          "properties": {
+            "gpio.read": {
+              "title": "Read Interpretation",
+              "$ref": "#/definitions/readableVariables",
+
+              "description": "Index of the bit to blink."
+            },
+
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Store Into",
+              "description": "A variable to receive the data."
+            }
+          },
+          "required": [ "gpio.read", "into" ]
+        },
+
+        {
+                          
+          "type": "object",
+          "title": "Blink Output Bit",
+          "description": "Cycles between high and low on the specified output index, at the given rate.<br/>Example:<br/>{\"gpio.blink\":\"$bitIndex\", \"rate\":1100, \"duration\":\"$durationms\"}",
+          "additionalProperties": false,
+          "properties": {
+            "gpio.blink": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Bit Index",
+              "description": "Index of the bit to blink."
+            },
+            "rate": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Rate",
+              "description": "Rate, in cycles per second, to blink. Fractional values are valid."
+            },
+            "duration": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Duration",
+              "description": "Time, in milliseconds, to sustain the blink."
+            }
+          },
+          "required": [ "gpio.blink", "rate", "duration" ]
+        },
+
+        {
+                              
+          "type": "object",
+          "title": "Clear Output Bit",
+          "description": "Sets the given output bit to low state.<br/>Example:<br/>{\"gpio.clear\":6 }",
+          "additionalProperties": false,
+          "properties": {
+            "gpio.clear": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Bit Index",
+              "description": "Index of the bit to clear."
+            }
+          },
+          "required": [ "gpio.clear" ]
+        },
+        {
+                                 
+          "type": "object",
+          "title": "Set Output Bit",
+          "description": "Sets the given gpio output bit to high state.<br/>Example:<br/>{\"gpio.set\":\"$flagBit\"}",
+          "additionalProperties": false,
+          "properties": {
+            "gpio.set": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Bit Index",
+              "description": "Index of the bit to set."
+            }
+          },
+          "required": [ "gpio.set" ]
+        },
+
+        {
+                               
+          "type": "object",
+          "title": "Send Packet",
+          "description": "Sends a data packet using the modem.<br/>Example:<br/>{\"packet.send\":205, \"format\":\"@packetformat\", \"via\":\"sms\", \"to\":\"*smsdest\",  \"payload\":\"@payloadfmt\", \"sub\":[\"$data\", 399, \"eng.speed\"]}",
+          "additionalProperties": false,
+          "properties": {
+            "packet.send": {
+              "$ref": "#/definitions/numbersVariables",
+              "title": "Reason Code",
+              "description": "Sets packet reason code."
+            },
+
+            "format": {
+              "$ref": "#/definitions/token",
+              "title": "Packet format String",
+              "description": "Refers to a packet format to send."
+            },
+
+            "payload": {
+              "$ref": "#/definitions/token",
+              "title": "Custom payload string",
+              "description": "Custom payload printf format string for custom variables."
+            },
+
+            "to": {
+              "$ref": "#/definitions/token",
+              "title": "Optional. Explicit destination.",
+              "description": "A string constant containing the IP address and port or phone number to direct the packet to."
+            },
+
+            "sub": {
+              "type": "array",
+              "title": "Substitutions",
+              "description": "Optional. Substitutes given variables in place of substituion place-holders.",
+              "items": {
+                                                                                                
+                "$ref": "#/definitions/readables"
+              }
+            }
+          },
+          "required": [ "packet.send" ]
+        },
+
+        {
+                       
+          "type": "object",
+          "title": "Set Timer",
+          "description": "Sets Timer Behavior.<br/>Example:<br/>{\"timer.set\":\"@slowtimer\", \"threshold\":40000, \"recurrent\": false }",
+          "additionalProperties": false,
+          "properties": {
+            "timer.set": {
+              "$ref": "#/definitions/token",
+              "title": "Timer Name",
+              "description": "Identifier for the timer"
+            },
+            "threshold": {
+              "$ref": "#/definitions/numbersVariables",
+              "title": "Timer Duration",
+              "description": "How many seconds until the timer times out."
+            },
+            "recurrent": {
+              "$ref": "#/definitions/booleansVariables",
+              "title": "Timer Recurs",
+              "description": "Whether or not to restart the timer after the time out."
+            }
+          },
+          "required": [ "timer.set", "threshold" ]
+        },
+        {
+                         
+          "type": "object",
+          "title": "Start Timer",
+          "description": "Starts a timer counting down, or restarts the timer.<br/>Example:<br/>{\"timer.start\":\"@slowtimer\", \"restart\":true }",
+          "additionalProperties": false,
+          "properties": {
+            "timer.start": {
+              "$ref": "#/definitions/token",
+              "title": "Timer Name",
+              "description": "Identifier for the timer"
+            },
+            "restart": {
+              "$ref": "#/definitions/booleansVariables",
+              "title": "Restart or Continue",
+              "description": "Optional. If true, restarts the timer. By default if false, continues from the current timer value."
+            }
+          },
+          "required": [ "timer.start" ]
+        },
+        {
+                        
+          "type": "object",
+          "title": "Stop Timer",
+          "description": "Stops or pauses a timer.<br/>Example:<br/>{\"timer.stop\":\"@slowtimer\"}",
+          "additionalProperties": false,
+          "properties": {
+            "timer.stop": {
+              "$ref": "#/definitions/token",
+              "title": "Timer Name",
+              "description": "Identifier for the timer"
+            },
+            "clear": {
+              "$ref": "#/definitions/booleansVariables",
+              "title": "Clear Timer",
+              "description": "Optional. If true, sets the timer to zero (timed out). By default if false, preserves the timer value."
+            }
+          },
+          "required": [ "timer.stop" ]
+        },
+
+        {
+                                           
+          "type": "object",
+          "title": "Wait",
+          "description": "The script yields in-place until the specified amount of time has passed.<br/>Example:<br/>{\"wait\":10 }",
+          "additionalProperties": false,
+          "properties": {
+            "wait": {
+              "$ref": "#/definitions/numbersVariables",
+              "title": "Duration seconds",
+              "description": "Minimum time before resuming script, in seconds."
+            }
+          },
+          "required": [ "wait" ]
+        },
+
+                         
+
+               
+        {
+          "type": "object",
+          "title": "Log",
+          "description": "Logs given string",
+          "additionalProperties": false,
+          "properties": {
+            "log": {
+              "$ref": "#/definitions/token",
+              "title": "Log format String",
+              "description": "Refers to a log format string to use."
+            },
+            "sub": {
+              "type": "array",
+              "title": "Substitutions",
+              "description": "Optional. Substitutes given variables in place of substituion place-holders.",
+              "items": {
+                                                                                                
+                "$ref": "#/definitions/readables"
+              }
+            }        
+          },          
+          "required": [ "log" ]
+        },        
+
+        {
+                
+          "type": "object",
+          "title": "Do Nested Commands",
+          "description": "Do a set of nested commands by wrapping them into an implicit function call.",
+          "additionalProperties": false,
+          "properties": {
+            "=>": {
+              "type": "array",
+              "title": "Invoke",
+              "description": "Invoke these commands.",
+              "items": {
+                "$ref": "#/definitions/command"
+              }
+            }
+          },
+          "required": [ "=>" ]
+        },       
+
+                                 
+        {
+          "type": "object",
+          "title": "Get Machine State",
+          "description": "Gets the current state of the specified declared state machine.<br/>Example:<br/>{\"machine.get\":\"::logic\", \"into\":\"@thestate\" }",
+          "additionalProperties": false,
+          "properties": {
+            "machine.get": {
+              "type": "string",
+              "pattern": "^::[a-zA-Z0-9]+$",
+              "title": "State Machine",
+              "description": "Key of a declared State Machine to query."
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Return Value",
+              "description": "Name of variable to assign the result to, a state machine handle."
+            }
+          },
+          "required": [ "machine.get", "into" ]
+        },
+
+        {
+          "type": "object",
+          "title": "State Machine Invoke",
+          "description": "Invokes an action on the given State Machine and its current state.<br/>Will cause a transition script event if the state changes.<br/>Example:<br/>{\"machine.invoke\":\"::logic\", \"action\":\"::logic.advance\" }",
+          "additionalProperties": false,
+          "properties": {
+            "machine.invoke": {
+              "type": "string",
+              "pattern": "^::[a-zA-Z0-9]+$",
+              "title": "State Machine",
+              "description": "Key of a declared State Machine to act on."
+            },
+            "action": {
+              "type": "string",
+              "pattern": "^::[a-zA-Z0-9.]+$",
+              "title": "Action",
+              "description": "Name of the declared State Machine action."
+            }
+          },
+          "required": [ "machine.invoke", "action" ]
+        },
+
+        {
+          "type": "object",
+          "title": "State Machine Reset",
+          "description": "Resets the given State Machine back to its first defined state. <br/>Example:<br/>{\"machine.reset\":\"::logic\" }",
+          "additionalProperties": false,
+          "properties": {
+            "machine.reset": {
+              "type": "string",
+              "pattern": "^::[a-zA-Z0-9]+$",
+              "title": "State Machine",
+              "description": "Key of a declared State Machine to act on."
+            }
+          },
+          "required": [ "machine.reset" ]
+        },
+                                     
+
+                           
+        {
+          "type": "object",
+          "title": "Open Text Serial Channel",
+          "description": "Opens a text channel on the given serial port. If the given channel handle variable is already an open serial channel, then it will re-use the channel, otherwise it will re-open it and assign its handle to the given variable.<br/>Example:<br/>{\"channel.open.text.serial\":1, \"baud\": 9600, \"channel\":\"#mychannel\"}",
+          "additionalProperties": false,
+          "properties": {
+            "channel.open.text.uart": {
+              "title": "Port",
+              "description": "Serial Port",
+              "$ref": "#/definitions/readableVariables"
+            },
+            "baud": {
+              "title": "Baud Rate",
+              "description": "Baud Rate",
+              "type": "integer",
+              "enum": [ 110, 300, 1200, 4800, 9600, 19200, 38400, 5760, 115200 ]
+            },
+            "parity": {
+              "title": "Parity",
+              "description": "Parity, default is 'none'.",
+              "type": "string",
+              "enum": [ "none", "even", "odd" ]
+            },
+            "databits": {
+              "title": "Data Bits",
+              "description": "Data Bits, default is 8.",
+              "type": "integer",
+              "enum": [ 8, 7 ]
+            },
+            "stopbits": {
+              "title": "Stop Bits",
+              "description": "Stop Bits, default is 1.",
+              "type": "number",
+              "enum": [ 1, 1.5, 2 ]
+            },
+            "handshake": {
+              "title": "Handshake",
+              "description": "Handshake, default is 'none'.",
+              "type": "string",
+              "enum": [ "none", "xonxoff", "rtscts" ]
+            },
+            "channel": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Channel Handle",
+              "description": "If the handle is already an open serial channel, this action will re-use it; otherwise, it opens the channel and assigns the handle to this variable."
+            },
+            "timeout.reset": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Reset Timeout",
+              "description": "Optional: If no data is sent or received in the given number of seconds, the receive stream will be processed in an event.channel.receive.text event and then flushed."
+            },
+            "timeout.close": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Close Timeout",
+              "description": "Optional: If no data is sent or received in the given number of seconds, the channel will be closed."
+            }
+          },
+          "required": [ "channel.open.text.uart", "baud", "channel" ]
+        },
+
+
+        {
+          "type": "object",
+          "title": "Channel Transmit Text",
+          "description": "Transmits a text message on the given channel.<br/>Example:<br/>{\"channel.xmit.text\":\"#mychannel\", \"message\": \"ACK {0}\", \"sub\": [ \"@idstr\" ]}",
+          "additionalProperties": false,
+          "properties": {
+            "channel.xmit.text": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Channel Handle",
+              "description": "Handle of the channel to transmit on."
+            },
+            "message": {
+              "$ref": "#/definitions/token",
+              "title": "Message",
+              "description": "Message to send, as a text string. Will do hex character substitutions on '\\hFF' style patterns."
+            },
+            "sub": {
+              "type": "array",
+              "title": "Substitutions",
+              "description": "Optional. Substitutes given variables in place of substituion place-holders.",
+              "items": {
+                                                                                                
+                "$ref": "#/definitions/readables"
+              }
+            }
+          },
+          "required": [ "channel.xmit.text", "message" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Open Stream Serial Channel",
+          "description": "Opens a stream channel on the given serial port. If the given channel handle variable is already an open serial channel, then it will re-use the channel, otherwise it will re-open it and assign its handle to the given variable.<br/>Example:<br/>{\"channel.open.stream.serial\":1, \"baud\": 9600, \"channel\":\"#mychannel\", \"receive\":\"#readstr\", \"transmit\":\"#writestr\"}",
+          "additionalProperties": false,
+          "properties": {
+            "channel.open.stream.uart": {
+              "title": "Port",
+              "description": "Serial Port. Presently, port 1 is available.",
+              "$ref": "#/definitions/indexVariables"
+            },
+            "baud": {
+              "title": "Baud Rate",
+              "description": "Baud Rate",
+              "type": "integer",
+              "enum": [ 1200, 4800, 9600, 19200, 115200, 230400, 460800 ]
+            },
+            "parity": {
+              "title": "Parity",
+              "description": "Parity, default is 'none'.",
+              "type": "string",
+              "enum": [ "none", "even", "odd", "space" ]
+            },
+            "databits": {
+              "title": "Data Bits",
+              "description": "Data Bits, default is 8.",
+              "type": "integer",
+              "enum": [ 5, 6, 7, 8 ]
+            },
+            "stopbits": {
+              "title": "Stop Bits",
+              "description": "Stop Bits, default is 1.",
+              "type": "number",
+              "enum": [ 0.5, 1, 1.5, 2 ]
+            },
+
+            "channel": {
+              "$ref": "#/definitions/writables",
+              "title": "Channel Handle",
+              "description": "If the handle is already an open serial channel, this action will re-use it; otherwise, it opens the channel and assigns the handle to this variable."
+            },
+            "receive": {
+              "$ref": "#/definitions/writables",
+              "title": "Receive Stream Handle",
+              "description": "Variable that receives the channel read stream handle."
+            },
+            "transmit": {
+              "$ref": "#/definitions/writables",
+              "title": "Transmit Stream Handle",
+              "description": "Variable that receives the channel transmit stream handle."
+            }
+          },
+          "required": [
+            "channel.open.stream.uart",
+            "baud",
+            "channel",
+            "receive",
+            "transmit"
+          ]
+        },
+
+        {
+          "type": "object",
+          "title": "Create Memory Stream",
+          "description": "Creates a memory buffer stream. Up to 4 may exist.<br/>Example:<br/>{ \"channel.open.stream.memory\":1024, \"channel\":\"#buffer\", \"timeout.close\":90 }",
+          "additionalProperties": false,
+          "properties": {
+            "channel.open.stream.memory": {
+              "title": "Size",
+              "description": "Buffer size in bytes, maximum is 4096 bytes.",
+              "$ref": "#/definitions/indexVariables"
+            },
+            "channel": {
+              "$ref": "#/definitions/writables",
+              "title": "Channel Handle",
+              "description": "If the handle is already a memory buffer, this action will re-use it; otherwise, it opens the channel and assigns the stream handle to this variable."
+            }
+          },
+          "required": [ "channel.open.stream.memory", "channel" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Stream Copy",
+          "description": "Copies from a source stream into a destination stream.<br/>Example:<br/>{ \"stream.copy\":\"#sourcestr\", \"into\":\"#deststr\", \"maxsize\":256 }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.copy": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Source",
+              "description": "Stream handle of the stream to read from."
+            },
+            "into": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Destination",
+              "description": "Stream handle of the stream to write to."
+            },
+            "maxsize": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Maximum Write Size",
+              "description": "Maximum number of characters to write into the destination stream. Defaults to write position of the source."
+            }
+          },
+          "required": [ "stream.copy", "into" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Advance Stream",
+          "description": "Used to reclaim stream buffer capacity. Releases the data up to the current read position, and sets read position to the new start at zero.<br/>Example:<br/>{ \"stream.advance\":\"#mystr\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.advance": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "minCapacity": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Minimum Capacity",
+              "description": "If stream capacity is less than the given value, advance, otherwise, don't. If left unspecified, always advance."
+            }
+          },
+          "required": [ "stream.advance" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Reset Stream",
+          "description": "Clears the given stream buffer, resetting read and write position to zero.<br/>Example:<br/>{ \"stream.reset\":\"#mystr\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.reset": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Reset",
+              "description":  "Stream handle to reset."
+            }
+          },
+          "required": [ "stream.reset" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Close Stream",
+          "description": "Closes the the given stream, and any attached channel as well. Subsequent uses on the same stream handle will do nothing.<br/>Example:<br/>{ \"stream.close\":\"#mystr\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.close": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            }
+          },
+          "required": [ "stream.close" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Stream Read Seek",
+          "description": "Changes the read position on the given stream, relative to a given position.<br/>Example:<br/>{ \"stream.seek.read\":\"#mystr\", \"whence\":\"current\", \"offset\":\"$offset\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.seek.read": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "whence": {
+              "type": "string",
+              "enum": [ "set", "current", "end" ],
+              "title": "Relative Origin",
+              "description": "Specifies the origin of the seek - from the beginning (set), current position (current) or the end of the stream (end). Default is \"set\""
+            },
+            "offset": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Seek Offset",
+              "description": "Specifies how far to seek from the relative origin, in either the positive or negative direction."
+            }
+          },
+          "required": [ "stream.seek.read", "offset" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Stream Write Seek",
+          "description": "Changes the write position on the given stream, relative to a given position.<br/>Example:<br/>{ \"stream.seek.write\":\"#mystr\", \"whence\":\"current\", \"offset\":\"$offset\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.seek.write": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "whence": {
+              "type": "string",
+              "enum": [ "set", "current", "end" ],
+              "title": "Relative Origin",
+              "description": "Specifies the origin of the seek - from the beginning (set), current position (current) or the end of the stream (end). Default is \"set\""
+            },
+            "offset": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Seek Offset",
+              "description": "Specifies how far to seek from the relative origin, in either the positive or negative direction."
+            }
+          },
+          "required": [ "stream.seek.write", "offset" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Stream Read Position",
+          "description": "Gets the current read position of the stream.<br/>Example:<br/>{ \"stream.position.read\":\"#mystr\",\"into\":\"$pos\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.position.read": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Position",
+              "description": "Variable to receive the position."
+            }
+          },
+          "required": [ "stream.position.read", "into" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Stream Write Position",
+          "description": "Gets the current write position of the stream.<br/>Example:<br/>{ \"stream.position.write\":\"#mystr\",\"into\":\"$pos\"}",
+          "additionalProperties": false,
+          "properties": {
+            "stream.position.write": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Position",
+              "description": "Variable to receive the position."
+            }
+          },
+          "required": [ "stream.position.write", "into" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Stream Buffer Capacity",
+          "description": "Gets the remaining buffer capacity of the stream. If low, consider using stream.advance to compact the stream.<br/>Example:<br/>{ \"stream.capacity\":\"#mystr\", \"into\":\"$cap\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.capacity": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Position",
+              "description": "Variable to receive the capacity."
+            }
+          },
+          "required": [ "stream.capacity", "into" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Write to Stream",
+          "description": "Writes data into the stream at the current position.<br/>Example:<br/>{ \"stream.write\":\"#mystr\",\"datatype\":\"byte\",\"value\":\"#data\" }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.write": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "datatype": {
+              "$ref": "#/definitions/dataTypes",
+              "title": "Data Type",
+              "description": "Type of data to write to the stream. \"value\" data type must match, or the write will be ignored."
+            },
+            "writemode": {
+              "$ref": "#/definitions/streamMode",
+              "title": "Write Mode",
+              "description": "For string values, chooses to interpret the text as ascii or binary specified in hexadecimal characters. Default is text."
+            },
+            "textoptions": {
+              "$ref": "#/definitions/streamTextOptions"
+              
+            },
+            "value": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Data Value",
+              "description": "The data to write to the stream."
+            }
+            
+          },
+          "required": [ "stream.write", "datatype", "value" ]
+        },
+
+        { 
+          "type": "object",
+          "title": "Read from Stream",
+          "description": "Reads data from the stream at the current position.<br/>Example:<br/>{ \"stream.read\":\"#mystr\",\"dataType\":\"string\",\"mode\":\"hex\",\"into\":\"$binmessage\",\"advance\":true  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.read": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "datatype": {
+              "$ref": "#/definitions/dataTypes",
+              "title": "Data Type",
+              "description": "Type of data to write to the stream. \"value\" data type must match, or the read will be ignored."
+            },
+            "readmode": {
+              "$ref": "#/definitions/streamMode",
+              "description": "For string values, chooses to interpret the read text as ascii or binary specified in hexadecimal characters. Default is text."
+            },
+            "textoptions": {
+              "$ref": "#/definitions/streamTextOptions"
+
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Data",
+              "description": "Variable to receive the data."
+            },
+            "advance": {
+              "type": "boolean",
+              "title": "Advance Stream",
+              "description": "If true, after reading, advance the stream to the current read position to reclaim stream buffer capacity. Default is false"
+            }
+          },
+          "required": [ "stream.read", "datatype", "into" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Find Data In Stream",
+          "description": "Searches for data in the given stream from the current read position and returns the position from zero if found, -1 otherwise.<br/>Example:<br/>{ \"stream.find\":\"#mystr\",\"mode\":\"text\",\"text\":[\"END\"],\"into\":\"$search\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "stream.find": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Stream Handle"
+            },
+            "stream.searchMode": {
+              "type": "string",
+              "enum": [ "ascii", "hex" ],
+              "title": "Search Mode",
+              "description": "Chooses to interpret the search text as ascii or binary specified in hexadecimal characters. Default is text."
+            },
+            "text": {
+              "type": "array",
+              "title": "Text Search Items",
+              "description": "Items of text to search for. Search will stop on the first found.",
+              "items": {
+                "$ref": "#/definitions/readableStringVariables",
+                "title": "Search Text",
+                "description": "An item of text to search for."
+              }
+            },
+            "regex": {
+              "type": "array",
+              "title": "Regex Search Items",
+              "description": "Regex patterns to search for. Search will stop on the first found.",
+              "items": {
+                "$ref": "#/definitions/readableStringVariables",
+                "title": "Search Regex",
+                "description": "A regex pattern to match, either for text or hexadecimal text representing the stream bytes."
+              }
+            },
+            "into": {
+              "$ref": "#/definitions/writables",
+              "title": "Position",
+              "description": "The position of the first match from zero position, or -1 if none found."
+            }
+          },
+
+          "oneOf": [
+            { "required": [ "stream.find", "into", "text" ] },
+            { "required": [ "stream.find", "into", "regex" ] }
+          ]
+        },
+
+        {
+          "type": "object",
+          "title": "Channel Transmit Stream",
+          "description": "When a complete message has been constructed in a stream, sends the entire content of the stream through the channel.<br/>Example:<br/>{ \"channel.xmit.stream\":\"#mychannel\",\"reset\":true  }",
+          "additionalProperties": false,
+          "properties": {
+            "channel.xmit.stream": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Channel Handle",
+              "description": "Channel to transmit to."
+            },
+            "source": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Channel Handle",
+              "description": "A source stream that contains the message to transmit. If left unspecified, the default channel write stream will be used. The message will start from the current stream read position."
+            },
+            "length": {
+              "$ref": "#/definitions/indexVariables",
+              "title": "Maximum Length",
+              "Description": "Maximum length of the message to transmit. If not specified, the message will extend to the current write position of the source stream."
+            },
+            "reset.xmit": {
+              "$ref": "#/definitions/booleansVariables",
+              "title": "Reset Transmit Stream",
+              "description": "If true, will clear and reset the read and write positions of the message stream after transmission. If unspecified, default is false."
+            }
+          },
+          "required": [ "channel.xmit.stream" ]
+        },
+
+        {
+          "type": "object",
+          "title": "Close Channel",
+          "description": "Closes the given channel.<br/>Example:<br/>{ \"channel.close\":\"#mychannel\"  }",
+          "additionalProperties": false,
+          "properties": {
+            "channel.close": {
+              "$ref": "#/definitions/readableVariables",
+              "title": "Channel Handle",
+              "description": "A channel or stream handle. If a stream handle, also closes the associated channel."
+            }
+          },
+          "required": [ "channel.close" ]
+        }
+
+      
+
+
+      ]
+    },
+
+    "command": {
+      "oneOf": [
+                             
+        {
+          "type": "object",
+          "title": "if then command",
+          "additionalProperties": false,
+          "description": "Given the conditions are true, execute the actions.",
+
+          "properties": {
+            "if": {
+              "type": "array",
+              "title": "Conditions",
+              "description": "A list of conditions.",
+              "items": {
+                "$ref": "#/definitions/condition"
+              }
+            },
+            "then": {
+              "type": "array",
+              "title": "Actions",
+              "description": "A list of actions to perform provided the conditions, logically anded together, are true.",
+              "items": {
+                "$ref": "#/definitions/action"
+              }
+            },
+            "else": {
+              "type": "array",
+              "title": "Else Actions",
+              "description": "An optional list of actions to perform provided the conditions, logically anded together, are not true.",
+              "items": {
+                "$ref": "#/definitions/action"
+              }
+            },
+            "once": {
+              "type": "array",
+              "title": "Actions to perform once",
+              "description": "Use instead of 'then' to indicate the given actions are run one time when the conditions are true. Resets when the conditions are false.",
+              "items": {
+                "$ref": "#/definitions/action"
+              }
+            }
+          },
+
+          "required": [ "if" ]
+        },            
+
+                  
+        {
+          "type": "object",
+          "title": "switch",
+          "additionalProperties": false,
+          "description": "tests the given variable against case values and executes the matching case.",
+
+          "properties": {
+            "switch": {
+              "$ref": "#/definitions/readableStringVariables",
+              "title": "variable",
+              "description": "An integer or string variable to test values for."
+            },
+
+            "cases": {
+              "type": "array",
+              "title": "Cases",
+              "description": "Matching cases",
+              "items": {
+                        
+                "type": "object",
+                "additionalProperties": false,
+                "title": "Case",
+                "description": "Matching Case",
+                "properties": {
+                  "is": {
+                    "$ref": "#/definitions/constantIntsAndString",
+                    "title": "constant match",
+                    "description": "Constant string or constant integer to match"
+                  },
+                  "then": {
+                    "type": "array",
+                    "title": "Actions",
+                    "description": "A list of actions to perform provided the conditions, logically anded together, are true.",
+                    "items": {
+                      "$ref": "#/definitions/action"
+                    }
+                  },
+                  "default": {
+                    "type": "array",
+                    "title": "Default Actions",
+                    "description": "A list of actions to perform as the default case for the switch.",
+                    "items": {
+                      "$ref": "#/definitions/action"
+                    }
+                  }
+                },
+
+                "oneOf": [
+                  { "required": [ "is", "then" ] },
+                  { "required": [ "default" ] }
+                ]
+              }         
+            }          
+          },
+
+          "required": [ "switch", "cases" ]
+        },           
+
+                 
+        {
+          "type": "object",
+          "title": "while loop",
+          "additionalProperties": false,
+          "description": "loop actions while condition is true.",
+
+          "properties": {
+            "while": {
+              "type": "array",
+              "title": "Conditions",
+              "description": "A list of conditions.",
+              "items": {
+                "$ref": "#/definitions/condition"
+              }
+            },
+
+            "then": {
+              "type": "array",
+              "title": "Actions",
+              "description": "A list of actions to perform provided the conditions, logically anded together, are true.",
+              "items": {
+                "$ref": "#/definitions/action"
+              }
+            },
+
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            }
+          },
+
+          "required": [ "while", "then" ]
+        },          
+
+                                  
+        {
+          "type": "object",
+          "title": "actions only",
+          "additionalProperties": false,
+          "description": "Execute actions without condition.",
+          "properties": {
+            "do": {
+              "type": "array",
+              "title": "Actions",
+              "description": "A list of actions to perform provided the conditions, logically anded together, are true.",
+              "items": {
+                "$ref": "#/definitions/action"
+              }
+            }
+          },
+          "required": [ "do" ]
+        },
+
+
+        {                  
+          "type": "object",
+          "title": "action only",
+          "additionalProperties": false,
+          "description": "Execute action without condition.",
+          "properties": {
+            ".": {
+              "$ref": "#/definitions/action"
+            }
+          },
+          "required": [ "." ]
+        },
+
+        {
+                                                   
+          "type": "object",
+          "title": "Subroutine Return",
+          "description": "Returns from a subroutine. Not valid for the main function. A return value is required, but you can always return a constant and then ignore it.<br/>Example:<br/>{\"return\":0 }",
+          "additionalProperties": false,
+          "properties": {
+            "return": {
+              "$ref": "#/definitions/readables",
+              "title": "Return",
+              "description": "A constant or variable to return."
+            }
+          },
+          "required": [ "return" ]
+        }
+
+      ]
+    }
+  }
+}
