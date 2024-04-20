@@ -1,0 +1,914 @@
+From 69be9a8219e20fa551f0f0be55f7fc3cb989a822 Mon Sep 17 00:00:00 2001
+From: laanwj <126646+laanwj@users.noreply.github.com>
+Date: Tue, 23 Apr 2024 10:03:34 +0200
+Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
+
+---
+ src/3rdparty/xcb/libxcb/xinput.c              |  4 +-
+ src/gui/configure.json                        | 96 +++++++++----------
+ .../fontconfig/qfontconfigdatabase.cpp        | 14 ++-
+ .../fontconfig/qfontconfigdatabase_p.h        |  1 +
+ .../fontconfig/qfontenginemultifontconfig_p.h |  2 +-
+ .../fontdatabases/freetype/qfontengine_ft.cpp | 25 +----
+ .../fontdatabases/freetype/qfontengine_ft_p.h |  3 +-
+ .../freetype/qfreetypefontdatabase.cpp        |  4 +-
+ .../input/xkbcommon/qxkbcommon_p.h            |  2 +-
+ .../linuxaccessibility/application.cpp        |  2 +-
+ .../eglfs_x11/qeglfsx11integration.h          |  2 +-
+ src/plugins/platforms/xcb/qxcbatom.h          |  2 +-
+ .../platforms/xcb/qxcbbackingstore.cpp        |  8 +-
+ src/plugins/platforms/xcb/qxcbbackingstore.h  |  2 +-
+ src/plugins/platforms/xcb/qxcbclipboard.h     |  4 +-
+ src/plugins/platforms/xcb/qxcbconnection.cpp  |  6 +-
+ src/plugins/platforms/xcb/qxcbconnection.h    |  4 +-
+ .../platforms/xcb/qxcbconnection_basic.cpp    | 16 ++--
+ .../platforms/xcb/qxcbconnection_basic.h      |  2 +-
+ .../platforms/xcb/qxcbconnection_screens.cpp  |  2 +-
+ .../platforms/xcb/qxcbconnection_xi2.cpp      |  2 +-
+ src/plugins/platforms/xcb/qxcbcursor.cpp      |  4 +-
+ src/plugins/platforms/xcb/qxcbdrag.cpp        |  2 +-
+ src/plugins/platforms/xcb/qxcbdrag.h          |  2 +-
+ src/plugins/platforms/xcb/qxcbeventqueue.h    |  2 +-
+ src/plugins/platforms/xcb/qxcbimage.cpp       |  4 +-
+ src/plugins/platforms/xcb/qxcbimage.h         |  2 +-
+ src/plugins/platforms/xcb/qxcbintegration.cpp |  2 +-
+ src/plugins/platforms/xcb/qxcbintegration.h   |  2 +-
+ src/plugins/platforms/xcb/qxcbkeyboard.cpp    |  2 +-
+ src/plugins/platforms/xcb/qxcbkeyboard.h      |  6 +-
+ src/plugins/platforms/xcb/qxcbmain.cpp        | 41 ++++++++
+ .../platforms/xcb/qxcbnativeinterface.h       |  2 +-
+ src/plugins/platforms/xcb/qxcbscreen.h        |  8 +-
+ .../platforms/xcb/qxcbsystemtraytracker.h     |  2 +-
+ src/plugins/platforms/xcb/qxcbwindow.cpp      |  8 +-
+ src/plugins/platforms/xcb/qxcbwindow.h        |  4 +-
+ 37 files changed, 162 insertions(+), 134 deletions(-)
+
+diff --git a/src/3rdparty/xcb/libxcb/xinput.c b/src/3rdparty/xcb/libxcb/xinput.c
+index d4e3c250bc0120624500165a64aca5791bb6a8d2..7fbc69bfa865a2a19c8fd3dbf5f69209d629895b 100644
+--- a/qtbase/src/3rdparty/xcb/libxcb/xinput.c
++++ a/qtbase/src/3rdparty/xcb/libxcb/xinput.c
+@@ -10,11 +10,11 @@
+ #include <string.h>
+ #include <assert.h>
+ #include <stddef.h>  /* for offsetof() */
+-#include <xcb/xcbext.h>
++#include <xcb-so_wrap.h>
+ #include <xcb/xinput.h>
+ 
+ #define ALIGNOF(type) offsetof(struct { char dummy; type member; }, member)
+-#include <xcb/xfixes.h>
++#include <xcb_xfixes-so_wrap.h>
+ 
+ xcb_extension_t xcb_input_id = { "XInputExtension", 0 };
+ 
+diff --git a/src/gui/configure.json b/src/gui/configure.json
+index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6cb2d5027 100644
+--- a/qtbase/src/gui/configure.json
++++ a/qtbase/src/gui/configure.json
+@@ -236,12 +236,12 @@
+                     "FT_Face face = 0;"
+                 ]
+             },
+-            "headers": "ft2build.h",
++            "headers": "freetype-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "freetype2" },
+-                { "type": "freetype", "libs": "-lfreetype", "condition": "!config.wasm" },
++                { "type": "freetype", "libs": "-lqtsowrap -ldl", "condition": "!config.wasm" },
+                 { "libs": "-s USE_FREETYPE=1", "condition": "config.wasm" },
+-                { "libs": "-lfreetype" }
++                { "libs": "-lqtsowrap -ldl" }
+             ],
+             "use": [
+                 { "lib": "zlib", "condition": "features.system-zlib" }
+@@ -259,10 +259,10 @@
+                     "FcPattern *pattern = 0;"
+                 ]
+             },
+-            "headers": "fontconfig/fontconfig.h",
++            "headers": "fontconfig-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "fontconfig" },
+-                { "type": "freetype", "libs": "-lfontconfig" }
++                { "type": "freetype", "libs": "-lqtsowrap -ldl" }
+             ],
+             "use": "freetype"
+         },
+@@ -586,99 +586,99 @@
+                     "#endif"
+                 ]
+             },
+-            "headers": "xcb/xcb.h",
++            "headers": "xcb-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb >= 1.11" },
+-                "-lxcb"
++                "-lqtsowrap -ldl"
+             ]
+         },
+         "xcb_icccm": {
+             "label": "XCB ICCCM >= 0.3.9",
+-            "headers": "xcb/xcb_icccm.h",
++            "headers": "xcb_icccm-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-icccm >= 0.3.9" },
+-                "-lxcb-icccm"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_image": {
+             "label": "XCB Image >= 0.3.9",
+-            "headers": "xcb/xcb_image.h",
++            "headers": "xcb_image-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-image >= 0.3.9" },
+-                "-lxcb-image"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb_shm xcb"
+         },
+         "xcb_keysyms": {
+             "label": "XCB Keysyms >= 0.3.9",
+-            "headers": "xcb/xcb_keysyms.h",
++            "headers": "xcb_keysyms-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-keysyms >= 0.3.9" },
+-                "-lxcb-keysyms"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_renderutil": {
+             "label": "XCB Renderutil >= 0.3.9",
+-            "headers": "xcb/xcb_renderutil.h",
++            "headers": "xcb_render_util-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-renderutil >= 0.3.9" },
+-                "-lxcb-render-util"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb xcb_render"
+         },
+         "xcb_randr": {
+             "label": "XCB RandR",
+-            "headers": "xcb/randr.h",
++            "headers": "xcb_randr-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-randr" },
+-                "-lxcb-randr"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_shape": {
+             "label": "XCB Shape",
+-            "headers": "xcb/shape.h",
++            "headers": "xcb_shape-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-shape" },
+-                "-lxcb-shape"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_shm": {
+             "label": "XCB SHM",
+-            "headers": "xcb/shm.h",
++            "headers": "xcb_shm-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-shm" },
+-                "-lxcb-shm"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_sync": {
+             "label": "XCB Sync",
+-            "headers": "xcb/sync.h",
++            "headers": "xcb_sync-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-sync" },
+-                "-lxcb-sync"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_xfixes": {
+             "label": "XCB Xfixes",
+-            "headers": "xcb/xfixes.h",
++            "headers": "xcb_xfixes-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-xfixes" },
+-                "-lxcb-xfixes"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_xinerama": {
+             "label": "XCB Xinerama",
+-            "headers": "xcb/xinerama.h",
++            "headers": "xcb_xinerama-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-xinerama" },
+-                "-lxcb-xinerama"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+@@ -696,19 +696,19 @@
+         },
+         "xcb_xkb": {
+             "label": "XCB XKB",
+-            "headers": "xcb/xkb.h",
++            "headers": "xcb_xkb-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-xkb" },
+-                "-lxcb-xkb"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+         "xcb_render": {
+             "label": "XCB XRender",
+-            "headers": "xcb/render.h",
++            "headers": "xcb_render-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "xcb-render" },
+-                "-lxcb-render"
++                "-lqtsowrap -ldl"
+             ],
+             "use": "xcb"
+         },
+@@ -753,10 +753,10 @@
+             "test": {
+                 "main": "xkb_context_new(XKB_CONTEXT_NO_FLAGS);"
+             },
+-            "headers": [ "xkbcommon/xkbcommon.h" ],
++            "headers": [ "xkbcommon-so_wrap.h" ],
+             "sources": [
+                 { "type": "pkgConfig", "args": "xkbcommon >= 0.5.0" },
+-                "-lxkbcommon"
++                "-lqtsowrap -ldl"
+             ]
+         },
+         "xkbcommon_x11": {
+@@ -764,10 +764,10 @@
+             "test": {
+                 "main": "xkb_x11_setup_xkb_extension_flags flag = XKB_X11_SETUP_XKB_EXTENSION_NO_FLAGS;"
+             },
+-            "headers": [ "xkbcommon/xkbcommon-x11.h" ],
++            "headers": [ "xkbcommon_x11-so_wrap.h" ],
+             "sources": [
+                 { "type": "pkgConfig", "args": "xkbcommon-x11" },
+-                "-lxkbcommon -lxkbcommon-x11"
++                "-lqtsowrap -ldl"
+             ]
+         },
+         "xrender": {
+@@ -1055,19 +1055,19 @@
+                 ],
+                 "tail": "#undef explicit",
+                 "include": [
+-                    "xcb/xcb.h",
+-                    "xcb/xcb_image.h",
+-                    "xcb/xcb_keysyms.h",
+-                    "xcb/randr.h",
+-                    "xcb/render.h",
+-                    "xcb/shape.h",
+-                    "xcb/shm.h",
+-                    "xcb/sync.h",
+-                    "xcb/xfixes.h",
+-                    "xcb/xinerama.h",
+-                    "xcb/xcb_icccm.h",
+-                    "xcb/xcb_renderutil.h",
+-                    "xcb/xkb.h"
++                    "xcb-so_wrap.h",
++                    "xcb_image-so_wrap.h",
++                    "xcb_keysyms-so_wrap.h",
++                    "xcb_randr-so_wrap.h",
++                    "xcb_render-so_wrap.h",
++                    "xcb_shape-so_wrap.h",
++                    "xcb_shm-so_wrap.h",
++                    "xcb_sync-so_wrap.h",
++                    "xcb_xfixes-so_wrap.h",
++                    "xcb_xinerama-so_wrap.h",
++                    "xcb_icccm-so_wrap.h",
++                    "xcb_render_util-so_wrap.h",
++                    "xcb_xkb-so_wrap.h"
+                 ],
+                 "main": [
+                     "int primaryScreen = 0;",
+diff --git a/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp b/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp
+index 159b490ce0a7e2b84528247b3d5ae52927f20f1f..0f63b4f4e80864067a931d6c6ed329a763e6bed6 100644
+--- a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp
++++ a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp
+@@ -58,10 +58,7 @@
+ 
+ #include <QtCore/private/qduplicatetracker_p.h>
+ 
+-#include <fontconfig/fontconfig.h>
+-#if FC_VERSION >= 20402
+-#include <fontconfig/fcfreetype.h>
+-#endif
++#include <fontconfig-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+@@ -536,6 +533,15 @@ static void populateFromPattern(FcPattern *pattern)
+ 
+ }
+ 
++QFontconfigDatabase::QFontconfigDatabase()
++{
++    if (initialize_fontconfig(1)) {
++        // There's no error handling for this, so we cannot do anything but exit the process.
++        // Could ostensibly keep track of a flag and fail lazily later.
++        qFatal("Unable to load fontconfig library.");
++    }
++}
++
+ QFontconfigDatabase::~QFontconfigDatabase()
+ {
+     FcConfigDestroy(FcConfigGetCurrent());
+diff --git a/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase_p.h b/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase_p.h
+index 78d6eb9315b129fe22e05a4786e0650e2eb316ac..584e4cb2ea76e78cf54d041d454ee7b07820ef48 100644
+--- a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase_p.h
++++ a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase_p.h
+@@ -61,6 +61,7 @@ class QFontEngineFT;
+ class QFontconfigDatabase : public QFreeTypeFontDatabase
+ {
+ public:
++    QFontconfigDatabase();
+     ~QFontconfigDatabase() override;
+     void populateFontDatabase() override;
+     void invalidate() override;
+diff --git a/src/platformsupport/fontdatabases/fontconfig/qfontenginemultifontconfig_p.h b/src/platformsupport/fontdatabases/fontconfig/qfontenginemultifontconfig_p.h
+index 7f560c2d05d5a38c52da8bca58b7fc638275fbda..9b6ed03c4b95bb44201c3c6c6ebdff722bfd2136 100644
+--- a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontenginemultifontconfig_p.h
++++ a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontenginemultifontconfig_p.h
+@@ -52,7 +52,7 @@
+ //
+ 
+ #include <QtGui/private/qfontengine_p.h>
+-#include <fontconfig/fontconfig.h>
++#include <fontconfig-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/platformsupport/fontdatabases/freetype/qfontengine_ft.cpp b/src/platformsupport/fontdatabases/freetype/qfontengine_ft.cpp
+index 52ce36b0e3d89ec12e62669965509522e1fcebec..588742b9d31769a343de68abb4898d26e83cb06b 100644
+--- a/qtbase/src/platformsupport/fontdatabases/freetype/qfontengine_ft.cpp
++++ a/qtbase/src/platformsupport/fontdatabases/freetype/qfontengine_ft.cpp
+@@ -59,27 +59,7 @@
+ #include <qmath.h>
+ #include <qendian.h>
+ 
+-#include <ft2build.h>
+-#include FT_FREETYPE_H
+-#include FT_OUTLINE_H
+-#include FT_SYNTHESIS_H
+-#include FT_TRUETYPE_TABLES_H
+-#include FT_TYPE1_TABLES_H
+-#include FT_GLYPH_H
+-#include FT_MODULE_H
+-#include FT_LCD_FILTER_H
+-
+-#if defined(FT_CONFIG_OPTIONS_H)
+-#include FT_CONFIG_OPTIONS_H
+-#endif
+-
+-#if defined(FT_FONT_FORMATS_H)
+-#include FT_FONT_FORMATS_H
+-#endif
+-
+-#ifdef QT_LINUXBASE
+-#include FT_ERRORS_H
+-#endif
++#include <freetype-so_wrap.h>
+ 
+ #if !defined(QT_MAX_CACHED_GLYPH_SIZE)
+ #  define QT_MAX_CACHED_GLYPH_SIZE 64
+@@ -143,6 +123,9 @@ Q_GLOBAL_STATIC(QThreadStorage<QtFreetypeData *>, theFreetypeData)
+ 
+ QtFreetypeData *qt_getFreetypeData()
+ {
++    if (initialize_freetype(1)) {
++        qFatal("Unable to load freetype library.");
++    }
+     QtFreetypeData *&freetypeData = theFreetypeData()->localData();
+     if (!freetypeData)
+         freetypeData = new QtFreetypeData;
+diff --git a/src/platformsupport/fontdatabases/freetype/qfontengine_ft_p.h b/src/platformsupport/fontdatabases/freetype/qfontengine_ft_p.h
+index 2e3aef697902c8023871b3726c00215c17cde304..30e1cf506cc05fd81700775775d576e3f61766d7 100644
+--- a/qtbase/src/platformsupport/fontdatabases/freetype/qfontengine_ft_p.h
++++ a/qtbase/src/platformsupport/fontdatabases/freetype/qfontengine_ft_p.h
+@@ -53,8 +53,7 @@
+ 
+ #ifndef QT_NO_FREETYPE
+ 
+-#include <ft2build.h>
+-#include FT_FREETYPE_H
++#include <freetype-so_wrap.h>
+ 
+ 
+ #ifndef Q_OS_WIN
+diff --git a/src/platformsupport/fontdatabases/freetype/qfreetypefontdatabase.cpp b/src/platformsupport/fontdatabases/freetype/qfreetypefontdatabase.cpp
+index 56dcc616c3052ae6d9a19c7f4395855cea15b907..9437877c18b45541afb2507f403709eba86a43bd 100644
+--- a/qtbase/src/platformsupport/fontdatabases/freetype/qfreetypefontdatabase.cpp
++++ a/qtbase/src/platformsupport/fontdatabases/freetype/qfreetypefontdatabase.cpp
+@@ -50,9 +50,7 @@
+ #undef QT_NO_FREETYPE
+ #include <QtFontDatabaseSupport/private/qfontengine_ft_p.h>
+ 
+-#include <ft2build.h>
+-#include FT_TRUETYPE_TABLES_H
+-#include FT_ERRORS_H
++#include <freetype-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/platformsupport/input/xkbcommon/qxkbcommon_p.h b/src/platformsupport/input/xkbcommon/qxkbcommon_p.h
+index 8389bd8f5a1b19cd890057c2536cbfc87448adfe..15303cf95895115c91ee4729b841ba55b8ec2399 100644
+--- a/qtbase/src/platformsupport/input/xkbcommon/qxkbcommon_p.h
++++ a/qtbase/src/platformsupport/input/xkbcommon/qxkbcommon_p.h
+@@ -56,7 +56,7 @@
+ #include <QtCore/QLoggingCategory>
+ #include <QtCore/QList>
+ 
+-#include <xkbcommon/xkbcommon.h>
++#include <xkbcommon-so_wrap.h>
+ 
+ #include <memory>
+ 
+diff --git a/src/platformsupport/linuxaccessibility/application.cpp b/src/platformsupport/linuxaccessibility/application.cpp
+index ac616d6fc0caf308b0d91c5350f0fbe29205ca00..4709369d24c341bda9711b89d06d1e171dfdc6ae 100644
+--- a/qtbase/src/platformsupport/linuxaccessibility/application.cpp
++++ a/qtbase/src/platformsupport/linuxaccessibility/application.cpp
+@@ -48,7 +48,7 @@
+ #include "deviceeventcontroller_adaptor.h"
+ #include "atspi/atspi-constants.h"
+ 
+-#include <xcb/xproto.h>
++#include <xcb-so_wrap.h>
+ 
+ //#define KEYBOARD_DEBUG
+ 
+diff --git a/src/plugins/platforms/eglfs/deviceintegration/eglfs_x11/qeglfsx11integration.h b/src/plugins/platforms/eglfs/deviceintegration/eglfs_x11/qeglfsx11integration.h
+index ebcc19b682ce8929cf97424509e787e05918ef74..56f984941e12476ac9d5d20115df143cb749dc06 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_x11/qeglfsx11integration.h
++++ a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_x11/qeglfsx11integration.h
+@@ -45,7 +45,7 @@
+ #include <qpa/qwindowsysteminterface.h>
+ #include <qpa/qplatformwindow.h>
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbatom.h b/src/plugins/platforms/xcb/qxcbatom.h
+index 1ce6cca573b4c2733dff48da1c5a706d1a31e782..b411655c712d325ec52881cbdbf0165fdbba21d4 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbatom.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbatom.h
+@@ -39,7 +39,7 @@
+ #ifndef QXCBATOM_H
+ #define QXCBATOM_H
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ class QXcbAtom
+ {
+diff --git a/src/plugins/platforms/xcb/qxcbbackingstore.cpp b/src/plugins/platforms/xcb/qxcbbackingstore.cpp
+index 5569bd00cf3c5f3f8d910d65981bbf255e351cda..41960bc0ba6a9481b6c95718d0b063217bb6ad4d 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbbackingstore.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbbackingstore.cpp
+@@ -43,10 +43,10 @@
+ #include "qxcbscreen.h"
+ #include "qxcbwindow.h"
+ 
+-#include <xcb/shm.h>
+-#include <xcb/xcb_image.h>
+-#include <xcb/render.h>
+-#include <xcb/xcb_renderutil.h>
++#include <xcb_shm-so_wrap.h>
++#include <xcb_image-so_wrap.h>
++#include <xcb_render-so_wrap.h>
++#include <xcb_render_util-so_wrap.h>
+ 
+ #include <sys/ipc.h>
+ #include <sys/shm.h>
+diff --git a/src/plugins/platforms/xcb/qxcbbackingstore.h b/src/plugins/platforms/xcb/qxcbbackingstore.h
+index 0c30929d4efb1e0ec0d9c5e3e164797ef9190a37..2e7471fb819b15fab79443073caff80bd87b99d1 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbbackingstore.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbbackingstore.h
+@@ -43,7 +43,7 @@
+ #include <qpa/qplatformbackingstore.h>
+ #include <QtCore/QStack>
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ #include "qxcbobject.h"
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbclipboard.h b/src/plugins/platforms/xcb/qxcbclipboard.h
+index 51ae0dc1eee278d1add4807247cecea76c6ed07e..2ca4b1b2eabe883148036561a53257f72b8fa762 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbclipboard.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbclipboard.h
+@@ -42,8 +42,8 @@
+ 
+ #include <qpa/qplatformclipboard.h>
+ #include <qxcbobject.h>
+-#include <xcb/xcb.h>
+-#include <xcb/xfixes.h>
++#include <xcb-so_wrap.h>
++#include <xcb_xfixes-so_wrap.h>
+ 
+ #include <QtCore/QObject>
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbconnection.cpp b/src/plugins/platforms/xcb/qxcbconnection.cpp
+index 013ca7369f389a3196a6b6dcb7d51e1b2f389aa2..7fd995666983e293ba3f2213fe5ce5594e1fd2d1 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbconnection.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbconnection.cpp
+@@ -65,11 +65,11 @@
+ #include <stdio.h>
+ #include <errno.h>
+ 
+-#include <xcb/xfixes.h>
++#include <xcb_xfixes-so_wrap.h>
+ #define explicit dont_use_cxx_explicit
+-#include <xcb/xkb.h>
++#include <xcb_xkb-so_wrap.h>
+ #undef explicit
+-#include <xcb/xinput.h>
++#include <xcb/xinput.h>  // Leave this unwrapped, as an internal build is used.
+ 
+ #if QT_CONFIG(xcb_xlib)
+ #include "qt_xlib_wrapper.h"
+diff --git a/src/plugins/platforms/xcb/qxcbconnection.h b/src/plugins/platforms/xcb/qxcbconnection.h
+index 8a4b577d2e873ea171b4ae0311e89a2756176316..33d0437a889479a9b1dcd8f5374e4c570f526618 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbconnection.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbconnection.h
+@@ -40,8 +40,8 @@
+ #ifndef QXCBCONNECTION_H
+ #define QXCBCONNECTION_H
+ 
+-#include <xcb/xcb.h>
+-#include <xcb/randr.h>
++#include <xcb-so_wrap.h>
++#include <xcb_randr-so_wrap.h>
+ 
+ #include <QtCore/QTimer>
+ #include <QtGui/private/qtguiglobal_p.h>
+diff --git a/src/plugins/platforms/xcb/qxcbconnection_basic.cpp b/src/plugins/platforms/xcb/qxcbconnection_basic.cpp
+index 115a196769edba7afbd640d3d7bd9a1a6628e2b4..608d70428ad1afd12f36ec746899121c1974ee8b 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbconnection_basic.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbconnection_basic.cpp
+@@ -39,15 +39,15 @@
+ #include "qxcbconnection_basic.h"
+ #include "qxcbbackingstore.h" // for createSystemVShmSegment()
+ 
+-#include <xcb/randr.h>
+-#include <xcb/shm.h>
+-#include <xcb/sync.h>
+-#include <xcb/xfixes.h>
+-#include <xcb/xinerama.h>
+-#include <xcb/render.h>
+-#include <xcb/xinput.h>
++#include <xcb_randr-so_wrap.h>
++#include <xcb_shm-so_wrap.h>
++#include <xcb_sync-so_wrap.h>
++#include <xcb_xfixes-so_wrap.h>
++#include <xcb_xinerama-so_wrap.h>
++#include <xcb_render-so_wrap.h>
++#include <xcb/xinput.h>  // Leave this unwrapped, as an internal build is used.
+ #define explicit dont_use_cxx_explicit
+-#include <xcb/xkb.h>
++#include <xcb_xkb-so_wrap.h>
+ #undef explicit
+ 
+ #if QT_CONFIG(xcb_xlib)
+diff --git a/src/plugins/platforms/xcb/qxcbconnection_basic.h b/src/plugins/platforms/xcb/qxcbconnection_basic.h
+index 109186f966bde4c9ea748264fde957e9dbbc80ae..dae4ebf4681c9fb5f187261351f70f1005337028 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbconnection_basic.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbconnection_basic.h
+@@ -48,7 +48,7 @@
+ #include <QtCore/QLoggingCategory>
+ #include <QtGui/private/qtguiglobal_p.h>
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ #include <memory>
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbconnection_screens.cpp b/src/plugins/platforms/xcb/qxcbconnection_screens.cpp
+index ec099101f5a6922b01af03af67f954e3f2430eb5..dc901fd4a96f45e04d67762a4206bd71c201d4fe 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbconnection_screens.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbconnection_screens.cpp
+@@ -46,7 +46,7 @@
+ 
+ #include <qpa/qwindowsysteminterface.h>
+ 
+-#include <xcb/xinerama.h>
++#include <xcb_xinerama-so_wrap.h>
+ 
+ void QXcbConnection::xrandrSelectEvents()
+ {
+diff --git a/src/plugins/platforms/xcb/qxcbconnection_xi2.cpp b/src/plugins/platforms/xcb/qxcbconnection_xi2.cpp
+index 1ced02f31daf7ce9f6f9bc9297af1621807e5f04..1c899fbaad5483f8e2b8641ca2efa7211c5fcac4 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbconnection_xi2.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbconnection_xi2.cpp
+@@ -47,7 +47,7 @@
+ #include <QDebug>
+ #include <cmath>
+ 
+-#include <xcb/xinput.h>
++#include <xcb/xinput.h> // Leave this unwrapped, as an internal build is used.
+ 
+ using qt_xcb_input_device_event_t = xcb_input_button_press_event_t;
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbcursor.cpp b/src/plugins/platforms/xcb/qxcbcursor.cpp
+index 97a2555cdc1ef88e078a1d219e5ad50a0bd876b2..08e1b9216bb2f9b488700501290811d383812028 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbcursor.cpp
+@@ -52,8 +52,8 @@
+ #if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
+ #include <X11/cursorfont.h>
+ #endif
+-#include <xcb/xfixes.h>
+-#include <xcb/xcb_image.h>
++#include <xcb_xfixes-so_wrap.h>
++#include <xcb_image-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbdrag.cpp b/src/plugins/platforms/xcb/qxcbdrag.cpp
+index 299835ba1ed940507a5887be909aa68dfed4ee39..20d104f9329111a020d37557ca6552bc07c44a1b 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbdrag.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbdrag.cpp
+@@ -38,7 +38,7 @@
+ ****************************************************************************/
+ 
+ #include "qxcbdrag.h"
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ #include "qxcbconnection.h"
+ #include "qxcbclipboard.h"
+ #include "qxcbmime.h"
+diff --git a/src/plugins/platforms/xcb/qxcbdrag.h b/src/plugins/platforms/xcb/qxcbdrag.h
+index 0d16afc47e4eed4015bf85ac9574c89b10fc8643..527ed1d9795faf34e9a03a62a8644363cefa80e6 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbdrag.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbdrag.h
+@@ -43,7 +43,7 @@
+ #include <qpa/qplatformdrag.h>
+ #include <private/qsimpledrag_p.h>
+ #include <qxcbobject.h>
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ #include <qpoint.h>
+ #include <qrect.h>
+ #include <qsharedpointer.h>
+diff --git a/src/plugins/platforms/xcb/qxcbeventqueue.h b/src/plugins/platforms/xcb/qxcbeventqueue.h
+index c89544f7e7f2f164c3544734150b4288687c6c6a..51abecaa6804a19eee6b0a65bed314bb1843d65e 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbeventqueue.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbeventqueue.h
+@@ -46,7 +46,7 @@
+ #include <QtCore/QMutex>
+ #include <QtCore/QWaitCondition>
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ #include <atomic>
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbimage.cpp b/src/plugins/platforms/xcb/qxcbimage.cpp
+index b0e610dd514c5d599faaf5a63447b9f5c9ef2f2e..2def67d05627e68a9f62cd5eeea69a5ddc4702dc 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbimage.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbimage.cpp
+@@ -43,8 +43,8 @@
+ #include <QtGui/private/qimage_p.h>
+ #include <QtGui/private/qdrawhelper_p.h>
+ 
+-#include <xcb/render.h>
+-#include <xcb/xcb_renderutil.h>
++#include <xcb_render-so_wrap.h>
++#include <xcb_render_util-so_wrap.h>
+ 
+ #include "qxcbconnection.h"
+ #include "qxcbintegration.h"
+diff --git a/src/plugins/platforms/xcb/qxcbimage.h b/src/plugins/platforms/xcb/qxcbimage.h
+index d718089ec246694dad0e0d9ef5ea0a07bde7363a..fd9c328ebdeecdfe1c4797383b4ede54a0a86413 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbimage.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbimage.h
+@@ -44,7 +44,7 @@
+ #include <QtCore/QPair>
+ #include <QtGui/QImage>
+ #include <QtGui/QPixmap>
+-#include <xcb/xcb_image.h>
++#include <xcb_image-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbintegration.cpp b/src/plugins/platforms/xcb/qxcbintegration.cpp
+index 76869ced60e60d288e433ebaf6a9d4fa10c34670..ed2b662acf4311536fc2f705d9c9a487a7427f3f 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbintegration.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbintegration.cpp
+@@ -57,7 +57,7 @@
+ #include "qxcbsessionmanager.h"
+ #endif
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ #include <QtFontDatabaseSupport/private/qgenericunixfontdatabase_p.h>
+ #include <QtServiceSupport/private/qgenericunixservices_p.h>
+diff --git a/src/plugins/platforms/xcb/qxcbintegration.h b/src/plugins/platforms/xcb/qxcbintegration.h
+index 571726c354e1149b3e37d8a937d445e694b8e9d0..940236464541d2e5f41bcba684d4f9027ac56661 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbintegration.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbintegration.h
+@@ -46,7 +46,7 @@
+ 
+ #include "qxcbexport.h"
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbkeyboard.cpp b/src/plugins/platforms/xcb/qxcbkeyboard.cpp
+index f43b2b66e1ab8b276717371cc7cc4e3df0186608..0dabe3d55fb009eb6bcf2f6facaed624616a146f 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.cpp
+@@ -49,7 +49,7 @@
+ 
+ #include <private/qguiapplication_p.h>
+ 
+-#include <xcb/xinput.h>
++#include <xcb/xinput.h> // Leave this unwrapped, as an internal build is used.
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbkeyboard.h b/src/plugins/platforms/xcb/qxcbkeyboard.h
+index 0ee08aeff2a8aa5573b7f77050f63de64e87453e..0b8bfeebdc958b5ca087489aca903f6e49152b83 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.h
+@@ -42,13 +42,13 @@
+ 
+ #include "qxcbobject.h"
+ 
+-#include <xcb/xcb_keysyms.h>
++#include <xcb_keysyms-so_wrap.h>
+ #define explicit dont_use_cxx_explicit
+-#include <xcb/xkb.h>
++#include <xcb_xkb-so_wrap.h>
+ #undef explicit
+ 
+ #include <QtXkbCommonSupport/private/qxkbcommon_p.h>
+-#include <xkbcommon/xkbcommon-x11.h>
++#include <xkbcommon_x11-so_wrap.h>
+ 
+ #include <QEvent>
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbmain.cpp b/src/plugins/platforms/xcb/qxcbmain.cpp
+index c1e37f370403f2f088c84955284fdbaa30e67558..c4bed22f4f6edba16a782f6b948aca11baf04452 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbmain.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbmain.cpp
+@@ -38,7 +38,27 @@
+ ****************************************************************************/
+ 
+ #include <qpa/qplatformintegrationplugin.h>
++#include "qxcbconnection_basic.h"
+ #include "qxcbintegration.h"
++#include <qloggingcategory.h>
++
++#include <xcb-so_wrap.h>
++#include <xcb_icccm-so_wrap.h>
++#include <xcb_image-so_wrap.h>
++#include <xcb_keysyms-so_wrap.h>
++#include <xcb_randr-so_wrap.h>
++#include <xcb_render-so_wrap.h>
++#include <xcb_render_util-so_wrap.h>
++#include <xcb_shape-so_wrap.h>
++#include <xcb_shm-so_wrap.h>
++#include <xcb_sync-so_wrap.h>
++#include <xcb_xfixes-so_wrap.h>
++#include <xcb_xinerama-so_wrap.h>
++#define explicit dont_use_cxx_explicit
++#include <xcb_xkb-so_wrap.h>
++#undef explicit
++#include <xkbcommon-so_wrap.h>
++#include <xkbcommon_x11-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+@@ -53,6 +73,27 @@ public:
+ QPlatformIntegration* QXcbIntegrationPlugin::create(const QString& system, const QStringList& parameters, int &argc, char **argv)
+ {
+     if (!system.compare(QLatin1String("xcb"), Qt::CaseInsensitive)) {
++
++        // Try loading libraries. If any fails, skip initialization of this backend.
++        if (initialize_xcb(1) ||
++            initialize_xcb_icccm(1) ||
++            initialize_xcb_image(1) ||
++            initialize_xcb_keysyms(1) ||
++            initialize_xcb_randr(1) ||
++            initialize_xcb_render(1) ||
++            initialize_xcb_render_util(1) ||
++            initialize_xcb_shape(1) ||
++            initialize_xcb_shm(1) ||
++            initialize_xcb_sync(1) ||
++            initialize_xcb_xfixes(1) ||
++            initialize_xcb_xinerama(1) ||
++            initialize_xcb_xkb(1) ||
++            initialize_xkbcommon(1) ||
++            initialize_xkbcommon_x11(1)) {
++            qCWarning(lcQpaXcb, "Unable to load required libraries, skipping initialization of XCB backend.");
++            return nullptr;
++        }
++
+         auto xcbIntegration = new QXcbIntegration(parameters, argc, argv);
+         if (!xcbIntegration->hasDefaultConnection()) {
+             delete xcbIntegration;
+diff --git a/src/plugins/platforms/xcb/qxcbnativeinterface.h b/src/plugins/platforms/xcb/qxcbnativeinterface.h
+index f80f23f0cb2a3e51d28d0939f7de0c82e60adb27..3c3a8eee26a4c9f7a966abf4e30be1465444eb36 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbnativeinterface.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbnativeinterface.h
+@@ -41,7 +41,7 @@
+ #define QXCBNATIVEINTERFACE_H
+ 
+ #include <qpa/qplatformnativeinterface.h>
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ #include <QtCore/QRect>
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbscreen.h b/src/plugins/platforms/xcb/qxcbscreen.h
+index c3a59dc9d1475b85612dec4310aaed4a2218c8cf..2d3cc86d5dd4327e38bb429075e7202389fb0db1 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbscreen.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbscreen.h
+@@ -43,10 +43,10 @@
+ #include <qpa/qplatformscreen.h>
+ #include <QtCore/QString>
+ 
+-#include <xcb/xcb.h>
+-#include <xcb/randr.h>
+-#include <xcb/xfixes.h>
+-#include <xcb/xinerama.h>
++#include <xcb-so_wrap.h>
++#include <xcb_randr-so_wrap.h>
++#include <xcb_xfixes-so_wrap.h>
++#include <xcb_xinerama-so_wrap.h>
+ 
+ #include "qxcbobject.h"
+ #include "qxcbscreen.h"
+diff --git a/src/plugins/platforms/xcb/qxcbsystemtraytracker.h b/src/plugins/platforms/xcb/qxcbsystemtraytracker.h
+index d2fc24c957ca4e88fe182ce60565a74571c99b76..809ee27e3ce6309f3836216cf35d856657bb3e78 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbsystemtraytracker.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbsystemtraytracker.h
+@@ -42,7 +42,7 @@
+ 
+ #include "qxcbconnection.h"
+ 
+-#include <xcb/xcb.h>
++#include <xcb-so_wrap.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+diff --git a/src/plugins/platforms/xcb/qxcbwindow.cpp b/src/plugins/platforms/xcb/qxcbwindow.cpp
+index 45bac8ee852e5803d96d9e45f2088c88e04aea71..3c30b1bb716839523d5edfeda79910d07e9f3f95 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbwindow.cpp
++++ a/qtbase/src/plugins/platforms/xcb/qxcbwindow.cpp
+@@ -64,10 +64,10 @@
+ 
+ #include <algorithm>
+ 
+-#include <xcb/xcb_icccm.h>
+-#include <xcb/xfixes.h>
+-#include <xcb/shape.h>
+-#include <xcb/xinput.h>
++#include <xcb_icccm-so_wrap.h>
++#include <xcb_xfixes-so_wrap.h>
++#include <xcb_shape-so_wrap.h>
++#include <xcb/xinput.h>  // Leave this unwrapped, as an internal build is used.
+ 
+ #include <private/qguiapplication_p.h>
+ #include <private/qwindow_p.h>
+diff --git a/src/plugins/platforms/xcb/qxcbwindow.h b/src/plugins/platforms/xcb/qxcbwindow.h
+index 8de486c6d2a72a6d0a2603b2c9ea982d77d4d2d6..354857fc149d012ddc0844580d8b41efbf7ed3c7 100644
+--- a/qtbase/src/plugins/platforms/xcb/qxcbwindow.h
++++ a/qtbase/src/plugins/platforms/xcb/qxcbwindow.h
+@@ -44,8 +44,8 @@
+ #include <QtGui/QSurfaceFormat>
+ #include <QtGui/QImage>
+ 
+-#include <xcb/xcb.h>
+-#include <xcb/sync.h>
++#include <xcb-so_wrap.h>
++#include <xcb_sync-so_wrap.h>
+ 
+ #include "qxcbobject.h"
+ 
+-- 
+2.39.2
+
