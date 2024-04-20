@@ -64,7 +64,7 @@ bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string&
 {
     if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
         // wallet endpoint was used
-        wallet_name = urlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
+        wallet_name = UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
         return true;
     }
     return false;

@@ -90,7 +90,7 @@ FUZZ_TARGET(string)
     (void)ToUpper(random_string_1);
     (void)TrimString(random_string_1);
     (void)TrimString(random_string_1, random_string_2);
-    (void)urlDecode(random_string_1);
+    (void)UrlDecode(random_string_1);
     (void)ContainsNoNUL(random_string_1);
     (void)_(random_string_1.c_str());
     try {
