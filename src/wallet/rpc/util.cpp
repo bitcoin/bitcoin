@@ -62,9 +62,9 @@ bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wal
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
-    if (URL_DECODE && request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
+    if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
         // wallet endpoint was used
-        wallet_name = URL_DECODE(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
+        wallet_name = urlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
         return true;
     }
     return false;
