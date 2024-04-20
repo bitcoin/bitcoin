@@ -6,8 +6,9 @@
 #define BITCOIN_COMMON_URL_H
 
 #include <string>
+#include <string_view>
 
-using UrlDecodeFn = std::string(const std::string& url_encoded);
+using UrlDecodeFn = std::string(std::string_view url_encoded);
 UrlDecodeFn urlDecode;
 extern UrlDecodeFn* const URL_DECODE;
 
