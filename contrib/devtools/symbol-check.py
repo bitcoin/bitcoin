@@ -106,24 +106,7 @@ ELF_ALLOWED_LIBRARIES = {
 'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
-'libxcb.so.1', # part of X11
-'libxkbcommon.so.0', # keyboard keymapping
-'libxkbcommon-x11.so.0', # keyboard keymapping
-'libfontconfig.so.1', # font support
-'libfreetype.so.6', # font parsing
 'libdl.so.2', # programming interface to dynamic linker
-'libxcb-icccm.so.4',
-'libxcb-image.so.0',
-'libxcb-shm.so.0',
-'libxcb-keysyms.so.1',
-'libxcb-randr.so.0',
-'libxcb-render-util.so.0',
-'libxcb-render.so.0',
-'libxcb-shape.so.0',
-'libxcb-sync.so.1',
-'libxcb-xfixes.so.0',
-'libxcb-xinerama.so.0',
-'libxcb-xkb.so.1',
 }
 
 MACHO_ALLOWED_LIBRARIES = {
