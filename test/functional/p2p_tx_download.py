@@ -265,7 +265,8 @@ class TxDownloadTest(BitcoinTestFramework):
         self.generate(self.wallet, 1, sync_fun=self.no_op)
         peer.sync_with_ping()
         peer.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(low_fee_tx['wtxid'], 16))]))
-        node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT)
+        node.setmocktime(int(time.time()))
+        node.bumpmocktime(MAX_GETDATA_INBOUND_WAIT + 300)
         peer.wait_for_getdata([int(low_fee_tx['wtxid'], 16)])
 
     def run_test(self):
