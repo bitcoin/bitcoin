@@ -15,7 +15,9 @@
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <util/check.h>
 #include <util/rbf.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -107,7 +109,7 @@ void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chains
     SetMockTime(time);
 }
 
-CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
+std::unique_ptr<CTxMemPool> MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeContext& node)
 {
     // Take the default options for tests...
     CTxMemPool::Options mempool_opts{MemPoolOptionsForTest(node)};
@@ -126,8 +128,13 @@ CTxMemPool MakeMempool(FuzzedDataProvider& fuzzed_data_provider, const NodeConte
     mempool_opts.check_ratio = 1;
     mempool_opts.require_standard = fuzzed_data_provider.ConsumeBool();
 
+    bilingual_str error;
     // ...and construct a CTxMemPool from it
-    return CTxMemPool{mempool_opts};
+    auto mempool{std::make_unique<CTxMemPool>(std::move(mempool_opts), error)};
+    // ... ignore the error since it might be beneficial to fuzz even when the
+    // mempool size is unreasonably small
+    Assert(error.empty() || error.original.starts_with("-maxmempool must be at least "));
+    return mempool;
 }
 
 FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
@@ -149,8 +156,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
     auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
     node.validation_signals->RegisterSharedValidationInterface(outpoints_updater);
 
-    CTxMemPool tx_pool_{MakeMempool(fuzzed_data_provider, node)};
-    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
+    auto tx_pool_{MakeMempool(fuzzed_data_provider, node)};
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(tx_pool_.get());
 
     chainstate.SetMempool(&tx_pool);
 
