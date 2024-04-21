@@ -63,8 +63,10 @@ BOOST_AUTO_TEST_CASE(decode_lowercase_hex_test) {
 }
 
 BOOST_AUTO_TEST_CASE(decode_internal_nulls_test) {
-    BOOST_CHECK_EQUAL(UrlDecode("%00%00x%00%00"), "");
-    BOOST_CHECK_EQUAL(UrlDecode("abc%00%00"), "abc");
+    std::string result1{"\0\0x\0\0", 5};
+    BOOST_CHECK_EQUAL(UrlDecode("%00%00x%00%00"), result1);
+    std::string result2{"abc\0\0", 5};
+    BOOST_CHECK_EQUAL(UrlDecode("abc%00%00"), result2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
