@@ -147,6 +147,9 @@ public:
     /** Database pointer. This is initialized lazily and reset during flushes, so it can be null. */
     std::unique_ptr<Db> m_db;
 
+    // Whether to byteswap
+    bool m_byteswap;
+
     fs::path m_filename;
     int64_t m_max_log_mb;
 

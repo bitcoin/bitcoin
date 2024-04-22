@@ -186,6 +186,8 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         data_format = DatabaseFormat::BERKELEY;
     } else if (file_format == "sqlite") {
         data_format = DatabaseFormat::SQLITE;
+    } else if (file_format == "bdb_swap") {
+        data_format = DatabaseFormat::BERKELEY_SWAP;
     } else {
         error = strprintf(_("Unknown wallet file format \"%s\" provided. Please provide one of \"bdb\" or \"sqlite\"."), file_format);
         return false;
