@@ -217,7 +217,10 @@ class HTTPBasicsTest(BitcoinTestFramework):
         cookie_path =     self.nodes[0].chain_path / ".cookie"
         cookie_path_tmp = self.nodes[0].chain_path / ".cookie.tmp"
         cookie_path_tmp.mkdir()
+        cookie_path_tmp_subdir = cookie_path_tmp / "subdir"
+        cookie_path_tmp_subdir.mkdir()
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
+        cookie_path_tmp_subdir.rmdir()
         cookie_path_tmp.rmdir()
         assert not cookie_path.exists()
         self.restart_node(0)

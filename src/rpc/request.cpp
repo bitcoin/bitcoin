@@ -112,6 +112,11 @@ bool GenerateAuthCookie(std::string* cookie_out, std::optional<fs::perms> cookie
     if (filepath_tmp.empty()) {
         return true; // -norpccookiefile
     }
+    try {
+        fs::remove(filepath_tmp);
+    } catch (const fs::filesystem_error&) {
+        // ignore
+    }
     file.open(filepath_tmp);
     if (!file.is_open()) {
         LogWarning("Unable to open cookie authentication file %s for writing", fs::PathToString(filepath_tmp));
