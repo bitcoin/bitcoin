@@ -252,22 +252,32 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
+    def test_feerate_dustrelayfee_common(self, node, multiplier, dust_mode, desc, expected_base):
+        dust_parameter = f"-dustdynamic={dust_mode}".replace('=3*', '=')
+        self.log.info(f"Test dust limit setting {dust_parameter} (fee estimation for {desc})")
+        self.restart_node(0, extra_args=[dust_parameter])
+        assert_equal(node.getmempoolinfo()['dustdynamic'], dust_mode)
+        with node.busy_wait_for_debug_log([b'Updating dust feerate']):
+            node.mockscheduler(SECONDS_PER_HOUR)
+        mempool_info = node.getmempoolinfo()
+        assert_equal(mempool_info['dustrelayfee'], satoshi_round(expected_base() * multiplier, rounding=ROUND_DOWN))
+        assert mempool_info['dustrelayfee'] > mempool_info['dustrelayfeefloor']
+
+    def test_feerate_dustrelayfee_target(self, node, multiplier, dustfee_target):
+        dust_mode = f"{multiplier}*target:{dustfee_target}"
+        self.test_feerate_dustrelayfee_common(node, multiplier, dust_mode, f'{dustfee_target} blocks', lambda: node.estimaterawfee(dustfee_target, target_success_threshold)['long']['feerate'])
+
+    def test_feerate_dustrelayfee_mempool(self, node, multiplier, dustfee_kB):
+        dust_mode = f"{multiplier}*mempool:{dustfee_kB}"
+        self.test_feerate_dustrelayfee_common(node, multiplier, dust_mode, f'{dustfee_kB} kB into mempool', lambda: get_feerate_into_mempool(node, dustfee_kB))
+
     def test_feerate_dustrelayfee(self):
         node = self.nodes[0]
 
         # test dustdynamic=target:<blocks>
         for dustfee_target in (2, 8, 1008):
-            dust_mode = f"target:{dustfee_target}"
-            dust_parameter = f"-dustdynamic={dust_mode}"
-            self.log.info(f"Test dust limit setting {dust_parameter} (fee estimation for {dustfee_target} blocks)")
-            self.restart_node(0, extra_args=[dust_parameter])
-            assert_equal(node.getmempoolinfo()['dustdynamic'], dust_mode)
-            with node.busy_wait_for_debug_log([b'Updating dust feerate']):
-                node.mockscheduler(SECONDS_PER_HOUR)
-            fee_est = node.estimaterawfee(dustfee_target, target_success_threshold)['long']['feerate']
-            mempool_info = node.getmempoolinfo()
-            assert_equal(mempool_info['dustrelayfee'], fee_est)
-            assert mempool_info['dustrelayfee'] > mempool_info['dustrelayfeefloor']
+            for multiplier in (Decimal('0.5'), 1, 3, Decimal('3.3'), 10, Decimal('10.001')):
+                self.test_feerate_dustrelayfee_target(node, multiplier, dustfee_target)
 
         # Fill mempool up
         mempool_size = 0
@@ -289,17 +299,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # test dustdynamic=mempool:<kB>
         for dustfee_kB in (1, 10, 50):
-            dust_mode = f"mempool:{dustfee_kB}"
-            dust_parameter = f"-dustdynamic={dust_mode}"
-            self.log.info(f"Test dust limit setting {dust_parameter} (fee estimation for {dustfee_kB} kB into mempool)")
-            self.restart_node(0, extra_args=[dust_parameter])
-            assert_equal(node.getmempoolinfo()['dustdynamic'], dust_mode)
-            with node.busy_wait_for_debug_log([b'Updating dust feerate']):
-                node.mockscheduler(SECONDS_PER_HOUR)
-            feerate_into_mempool = get_feerate_into_mempool(node, dustfee_kB)
-            mempool_info = node.getmempoolinfo()
-            assert_equal(mempool_info['dustrelayfee'], feerate_into_mempool)
-            assert mempool_info['dustrelayfee'] > mempool_info['dustrelayfeefloor']
+            for multiplier in (Decimal('0.5'), 1, 3, Decimal('3.3'), 10, Decimal('10.001')):
+                self.test_feerate_dustrelayfee_mempool(node, multiplier, dustfee_kB)
 
         # Restore nodes to a normal state, wiping the mempool
         self.stop_node(0)

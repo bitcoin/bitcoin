@@ -750,6 +750,8 @@ void CTxMemPool::UpdateDynamicDustFeerate()
         }
     }
 
+    est_feerate = (est_feerate * m_opts.dust_relay_multiplier) / 1'000;
+
     if (est_feerate < m_opts.dust_relay_feerate_floor) {
         est_feerate = m_opts.dust_relay_feerate_floor;
     }

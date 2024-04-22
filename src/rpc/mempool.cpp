@@ -732,12 +732,19 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHi
     ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
     ret.pushKV("dustrelayfee", ValueFromAmount(pool.m_opts.dust_relay_feerate.GetFeePerK()));
     ret.pushKV("dustrelayfeefloor", ValueFromAmount(pool.m_opts.dust_relay_feerate_floor.GetFeePerK()));
-    if (pool.m_opts.dust_relay_target < 0) {
-        ret.pushKV("dustdynamic", strprintf("target:%u", -pool.m_opts.dust_relay_target));
-    } else if (pool.m_opts.dust_relay_target > 0) {
-        ret.pushKV("dustdynamic", strprintf("mempool:%u", pool.m_opts.dust_relay_target));
-    } else {
+    if (pool.m_opts.dust_relay_target == 0) {
         ret.pushKV("dustdynamic", "off");
+    } else {
+        std::string multiplier_str = strprintf("%u", pool.m_opts.dust_relay_multiplier / 1000);
+        if (pool.m_opts.dust_relay_multiplier % 1000) {
+            multiplier_str += strprintf(".%03u", pool.m_opts.dust_relay_multiplier % 1000);
+            while (multiplier_str.back() == '0') multiplier_str.pop_back();
+        }
+        if (pool.m_opts.dust_relay_target < 0) {
+            ret.pushKV("dustdynamic", strprintf("%s*target:%u", multiplier_str, -pool.m_opts.dust_relay_target));
+        } else { // pool.m_opts.dust_relay_target > 0
+            ret.pushKV("dustdynamic", strprintf("%s*mempool:%u", multiplier_str, pool.m_opts.dust_relay_target));
+        }
     }
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
     ret.pushKV("fullrbf", (pool.m_opts.rbf_policy == RBFPolicy::Always));
