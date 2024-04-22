@@ -7,6 +7,7 @@
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
+             (gnu packages engineering)
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
@@ -512,6 +513,7 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git-minimal
         ;; Tests
+        python-capstone
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
