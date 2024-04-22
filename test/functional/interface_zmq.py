@@ -3,7 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
+import os
 import struct
+import tempfile
 from time import sleep
 from io import BytesIO
 
@@ -30,7 +32,7 @@ from test_framework.util import (
 from test_framework.wallet import (
     MiniWallet,
 )
-from test_framework.netutil import test_ipv6_local
+from test_framework.netutil import test_ipv6_local, test_unix_socket
 
 
 # Test may be skipped and not have zmq installed
@@ -119,6 +121,10 @@ class ZMQTest (BitcoinTestFramework):
         self.ctx = zmq.Context()
         try:
             self.test_basic()
+            if test_unix_socket():
+                self.test_basic(unix=True)
+            else:
+                self.log.info("Skipping ipc test, because UNIX sockets are not supported.")
             self.test_sequence()
             self.test_mempool_sync()
             self.test_reorg()
@@ -139,7 +145,7 @@ class ZMQTest (BitcoinTestFramework):
                 socket.setsockopt(zmq.IPV6, 1)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, [f"-zmqpub{topic}={address}" for topic, address in services])
+        self.restart_node(0, [f"-zmqpub{topic}={address.replace('ipc://', 'unix:')}" for topic, address in services])
 
         for i, sub in enumerate(subscribers):
             sub.socket.connect(services[i][1])
@@ -176,12 +182,19 @@ class ZMQTest (BitcoinTestFramework):
 
         return subscribers
 
-    def test_basic(self):
+    def test_basic(self, unix = False):
+        self.log.info(f"Running basic test with {'ipc' if unix else 'tcp'} protocol")
 
         # Invalid zmq arguments don't take down the node, see #17185.
         self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
 
         address = f"tcp://127.0.0.1:{self.zmq_port_base}"
+
+        if unix:
+            # Use the shortest temp path possible since paths may have as little as 92-char limit
+            socket_path = tempfile.NamedTemporaryFile().name
+            address = f"ipc://{socket_path}"
+
         subs = self.setup_zmq_test([(topic, address) for topic in ["hashblock", "hashtx", "rawblock", "rawtx"]])
 
         hashblock = subs[0]
@@ -247,6 +260,8 @@ class ZMQTest (BitcoinTestFramework):
         ])
 
         assert_equal(self.nodes[1].getzmqnotifications(), [])
+        if unix:
+            os.unlink(socket_path)
 
     def test_reorg(self):
 
