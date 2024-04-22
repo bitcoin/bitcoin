@@ -620,17 +620,19 @@ void CChainLocksHandler::Cleanup()
         return;
     }
 
+    {
+        LOCK(cs);
+        for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
+            if (GetTimeMillis() - it->second >= CLEANUP_SEEN_TIMEOUT) {
+                it = seenChainLocks.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
     // need mempool.cs due to GetTransaction calls
     LOCK2(cs_main, mempool.cs);
     LOCK(cs);
-
-    for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
-        if (GetTimeMillis() - it->second >= CLEANUP_SEEN_TIMEOUT) {
-            it = seenChainLocks.erase(it);
-        } else {
-            ++it;
-        }
-    }
 
     for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
         const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
