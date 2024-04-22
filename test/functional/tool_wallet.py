@@ -454,6 +454,25 @@ class ToolWalletTest(BitcoinTestFramework):
         ''')
         self.assert_tool_output(expected_output, "-wallet=conflicts", "info")
 
+    def test_dump_endianness(self):
+        self.log.info("Testing dumps of the same contents with different BDB endianness")
+
+        self.start_node(0)
+        self.nodes[0].createwallet("endian")
+        self.stop_node(0)
+
+        wallet_dump = self.nodes[0].datadir_path / "endian.dump"
+        self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", "-wallet=endian", f"-dumpfile={wallet_dump}", "dump")
+        expected_dump = self.read_dump(wallet_dump)
+
+        self.do_tool_createfromdump("native_endian", "endian.dump", "bdb")
+        native_dump = self.read_dump(self.nodes[0].datadir_path / "rt-native_endian.dump")
+        self.assert_dump(expected_dump, native_dump)
+
+        self.do_tool_createfromdump("other_endian", "endian.dump", "bdb_swap")
+        other_dump = self.read_dump(self.nodes[0].datadir_path / "rt-other_endian.dump")
+        self.assert_dump(expected_dump, other_dump)
+
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
         self.test_invalid_tool_commands_and_args()
@@ -465,6 +484,7 @@ class ToolWalletTest(BitcoinTestFramework):
         if not self.options.descriptors:
             # Salvage is a legacy wallet only thing
             self.test_salvage()
+            self.test_dump_endianness()
         self.test_dump_createfromdump()
         self.test_chainless_conflicts()
 
