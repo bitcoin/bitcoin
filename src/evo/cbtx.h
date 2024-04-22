@@ -24,7 +24,7 @@ class CChainLocksHandler;
 }// namespace llmq
 
 // Forward declaration from core_io to get rid of circular dependency
-UniValue ValueFromAmount(const CAmount& amount);
+UniValue ValueFromAmount(const CAmount amount);
 
 // coinbase transaction
 class CCbTx

@@ -1007,8 +1007,9 @@ AC_CHECK_DECLS([getifaddrs, freeifaddrs],[CHECK_SOCKET],,
 )
 AC_CHECK_DECLS([strnlen])
 
-dnl Check for daemon(3), unrelated to --with-daemon (although used by it)
-AC_CHECK_DECLS([daemon])
+dnl These are used for daemonization in dashd
+AC_CHECK_DECLS([fork])
+AC_CHECK_DECLS([setsid])
 
 AC_CHECK_DECLS([pipe2])
 

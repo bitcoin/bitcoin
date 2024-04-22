@@ -79,8 +79,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)DecompressAmount(u64);
     (void)FormatISO8601Date(i64);
     (void)FormatISO8601DateTime(i64);
-    // FormatMoney(i) not defined when i == std::numeric_limits<int64_t>::min()
-    if (i64 != std::numeric_limits<int64_t>::min()) {
+    {
+
         if (std::optional<CAmount> parsed = ParseMoney(FormatMoney(i64))) {
             assert(parsed.value() == i64);
         }
@@ -122,8 +122,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)SipHashUint256Extra(u64, u64, u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
-    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
-    if (i64 != std::numeric_limits<int64_t>::min()) {
+    {
+
         if (std::optional<CAmount> parsed = ParseMoney(ValueFromAmount(i64).getValStr())) {
             assert(parsed.value() == i64);
         }
