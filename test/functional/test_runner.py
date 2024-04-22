@@ -193,6 +193,7 @@ BASE_SCRIPTS = [
     'wallet_txn_doublespend.py --mineblock',
     'tool_wallet.py --legacy-wallet',
     'tool_wallet.py --legacy-wallet --bdbro',
+    'tool_wallet.py --legacy-wallet --bdbro --swap-bdb-endian',
     'tool_wallet.py --descriptors',
     'tool_signet_miner.py --legacy-wallet',
     'tool_signet_miner.py --descriptors',
