@@ -8,7 +8,8 @@
 #include <util/result.h>
 
 #include <cstdint>
-#include <string>
+#include <string_view>
+#include <utility>
 
 class ArgsManager;
 class CChainParams;
@@ -17,7 +18,7 @@ namespace kernel {
 struct MemPoolOptions;
 };
 
-[[nodiscard]] util::Result<int32_t> ParseDustDynamicOpt(const std::string& optstr, unsigned int max_fee_estimate_blocks);
+[[nodiscard]] util::Result<std::pair<int32_t, int>> ParseDustDynamicOpt(std::string_view optstr, unsigned int max_fee_estimate_blocks);
 
 /**
  * Overlay the options set in \p argsman on top of corresponding members in \p mempool_opts.
