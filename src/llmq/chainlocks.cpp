@@ -619,6 +619,7 @@ void CChainLocksHandler::Cleanup()
     if (GetTimeMillis() - lastCleanupTime < CLEANUP_INTERVAL) {
         return;
     }
+    lastCleanupTime = GetTimeMillis();
 
     {
         LOCK(cs);
@@ -665,8 +666,6 @@ void CChainLocksHandler::Cleanup()
             ++it;
         }
     }
-
-    lastCleanupTime = GetTimeMillis();
 }
 
 bool AreChainLocksEnabled(const CSporkManager& sporkman)
