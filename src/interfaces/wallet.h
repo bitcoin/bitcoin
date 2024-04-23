@@ -127,7 +127,7 @@ public:
     virtual bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) = 0;
 
     //! Display address on external signer
-    virtual bool displayAddress(const CTxDestination& dest) = 0;
+    virtual util::Result<void> displayAddress(const CTxDestination& dest) = 0;
 
     //! Lock coin.
     virtual bool lockCoin(const COutPoint& output, const bool write_to_db) = 0;
