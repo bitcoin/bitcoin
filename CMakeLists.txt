@@ -578,6 +578,7 @@ endif()
 set(CMAKE_SKIP_BUILD_RPATH TRUE)
 set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 add_subdirectory(test)
+add_subdirectory(doc)
 
 include(cmake/crc32c.cmake)
 include(cmake/leveldb.cmake)
