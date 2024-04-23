@@ -267,7 +267,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(entry1['vsize'], entry0['vsize'])
         # Check parent/child list is correct
             assert_equal(entry1['depends'], entry0['depends'])
-        
         # Test reorg handling
         # First, the basics:
         self.generate(self.nodes[0], 1)
