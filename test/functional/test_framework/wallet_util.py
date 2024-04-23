@@ -165,7 +165,7 @@ class WalletUnlock():
 class TestFrameworkWalletUtil(unittest.TestCase):
     def test_calculate_input_weight(self):
         SKELETON_BYTES = 32 + 4 + 4  # prevout-txid, prevout-index, sequence
-        SMALL_LEN_BYTES = 1  # bytes needed for encoding scriptSig / witness item lenghts < 253
+        SMALL_LEN_BYTES = 1  # bytes needed for encoding scriptSig / witness item lengths < 253
         LARGE_LEN_BYTES = 3  # bytes needed for encoding scriptSig / witness item lengths >= 253
 
         # empty scriptSig, no witness
