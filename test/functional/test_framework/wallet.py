@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
+from typing import Optional
 from test_framework.messages import (
     COIN,
     COutPoint,
@@ -42,12 +43,12 @@ class MiniWallet:
     def get_address(self):
         return self._address
 
-    def get_utxo(self, *, txid=''):
+    def get_utxo(self, *, txid: Optional[str]=''):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
         Args:
-        txid (string), optional: get the first utxo we find from a specific transaction
+        txid: get the first utxo we find from a specific transaction
 
         Note: Can be used to get the change output immediately after a send_self_transfer
         """
@@ -76,9 +77,5 @@ class MiniWallet:
         self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
         from_node.sendrawtransaction(tx_hex)
         assert_equal(len(tx_hex) // 2, vsize)
-        # Dash doesn't have `fees` in this RPC result
-        # TODO drop this variable after 19940
-        b19940_done = False
-        if b19940_done:
-            assert_equal(tx_info['fees']['base'], fee)
+        assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'hex': tx_hex}
