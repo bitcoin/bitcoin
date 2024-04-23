@@ -52,6 +52,7 @@
 #include <QGuiApplication>
 #include <QJsonObject>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QLatin1String>
 #include <QLineEdit>
 #include <QList>
@@ -613,7 +614,7 @@ void bringToFront(QWidget* w)
 
 void handleCloseWindowShortcut(QWidget* w)
 {
-    QObject::connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_W), w), &QShortcut::activated, w, &QWidget::close);
+    QObject::connect(new QShortcut(QKeySequence(QObject::tr("Ctrl+W")), w), &QShortcut::activated, w, &QWidget::close);
 }
 
 void openDebugLogfile()
@@ -1618,7 +1619,7 @@ void updateButtonGroupShortcuts(QButtonGroup* buttonGroup)
     int nKey = 0;
     for (auto button : buttonGroup->buttons()) {
         if (button->isVisible()) {
-            button->setShortcut(QKeySequence(modifier + Qt::Key_1 + nKey++));
+            button->setShortcut(QKeySequence(static_cast<int>(modifier) | static_cast<int>(Qt::Key_1) | nKey++));
         } else {
             button->setShortcut(QKeySequence());
         }

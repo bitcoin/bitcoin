@@ -7,8 +7,6 @@
 
 #include <qt/trafficgraphdata.h>
 
-#include <boost/function.hpp>
-
 #include <QWidget>
 #include <QQueue>
 
@@ -37,7 +35,7 @@ public Q_SLOTS:
     void clear();
 
 private:
-    typedef boost::function<float(const TrafficSample&)> SampleChooser;
+    typedef std::function<float(const TrafficSample&)> SampleChooser;
     void paintPath(QPainterPath &path, const TrafficGraphData::SampleQueue &queue, SampleChooser chooser);
 
     QTimer *timer;
