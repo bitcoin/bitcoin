@@ -1,6 +1,6 @@
-From f838ba8a022e68ba78330f33b3c4969d1ae9c52d Mon Sep 17 00:00:00 2001
+From 945e4cdabff0b742ed90b71d23d2f85df07f8302 Mon Sep 17 00:00:00 2001
 From: laanwj <126646+laanwj@users.noreply.github.com>
-Date: Fri, 19 Apr 2024 15:41:47 +0200
+Date: Tue, 23 Apr 2024 10:03:34 +0200
 Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
 
 ---
@@ -12,7 +12,6 @@ Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
  .../fontdatabases/freetype/qfontengine_ft.cpp | 25 +----
  .../fontdatabases/freetype/qfontengine_ft_p.h |  3 +-
  .../freetype/qfreetypefontdatabase.cpp        |  4 +-
- .../windows/qwindowsfontdatabase_ft.cpp       |  3 +-
  .../input/libinput/qlibinputkeyboard.cpp      |  5 +
  .../input/libinput/qlibinputkeyboard_p.h      |  2 +-
  .../input/xkbcommon/qxkbcommon_p.h            |  2 +-
@@ -44,7 +43,7 @@ Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
  .../platforms/xcb/qxcbsystemtraytracker.h     |  2 +-
  src/plugins/platforms/xcb/qxcbwindow.cpp      |  8 +-
  src/plugins/platforms/xcb/qxcbwindow.h        |  4 +-
- 40 files changed, 172 insertions(+), 137 deletions(-)
+ 39 files changed, 171 insertions(+), 135 deletions(-)
 
 diff --git a/src/3rdparty/xcb/libxcb/xinput.c b/src/3rdparty/xcb/libxcb/xinput.c
 index d4e3c250bc0120624500165a64aca5791bb6a8d2..7fbc69bfa865a2a19c8fd3dbf5f69209d629895b 100644
@@ -65,7 +64,7 @@ index d4e3c250bc0120624500165a64aca5791bb6a8d2..7fbc69bfa865a2a19c8fd3dbf5f69209
  xcb_extension_t xcb_input_id = { "XInputExtension", 0 };
  
 diff --git a/src/gui/configure.json b/src/gui/configure.json
-index 7b80162faa5e001bec0b17a91e4fccab2269dc09..f2827050a81f7de7aca4b887f54dfcedb2c50d1a 100644
+index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6cb2d5027 100644
 --- a/qtbase/src/gui/configure.json
 +++ a/qtbase/src/gui/configure.json
 @@ -236,12 +236,12 @@
@@ -431,20 +430,6 @@ index 56dcc616c3052ae6d9a19c7f4395855cea15b907..9437877c18b45541afb2507f403709eb
  
  QT_BEGIN_NAMESPACE
  
-diff --git a/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase_ft.cpp b/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase_ft.cpp
-index 5c2742d295d18498f64164cb4b3a7ea446d22f72..88396a4db74eb14a8c164c69d20a1679e249798e 100644
---- a/qtbase/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase_ft.cpp
-+++ a/qtbase/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase_ft.cpp
-@@ -42,8 +42,7 @@
- 
- #include <QtFontDatabaseSupport/private/qfontengine_ft_p.h>
- 
--#include <ft2build.h>
--#include FT_TRUETYPE_TABLES_H
-+#include <freetype-so_wrap.h>
- 
- #include <QtCore/QDir>
- #include <QtCore/QDirIterator>
 diff --git a/src/platformsupport/input/libinput/qlibinputkeyboard.cpp b/src/platformsupport/input/libinput/qlibinputkeyboard.cpp
 index 6586b084f101512d45846a3393f9968083935b1c..f29f9cb685aa991dfeba65c83404c595ae4b279c 100644
 --- a/qtbase/src/platformsupport/input/libinput/qlibinputkeyboard.cpp
