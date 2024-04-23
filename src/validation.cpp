@@ -2045,6 +2045,7 @@ void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
     if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
         m_chainman.m_best_invalid = pindexNew;
     }
+    SetBlockFailureFlags(pindexNew);
     if (m_chainman.m_best_header != nullptr && m_chainman.m_best_header->GetAncestor(pindexNew->nHeight) == pindexNew) {
         m_chainman.RecalculateBestHeader();
     }
@@ -3783,6 +3784,17 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         }
     }
     return true;
+}
+
+void Chainstate::SetBlockFailureFlags(CBlockIndex* invalid_block)
+{
+    AssertLockHeld(cs_main);
+
+    for (auto& [_, block_index] : m_blockman.m_block_index) {
+        if (block_index.GetAncestor(invalid_block->nHeight) == invalid_block && !(block_index.nStatus & BLOCK_FAILED_MASK)) {
+            block_index.nStatus |= BLOCK_FAILED_CHILD;
+        }
+    }
 }
 
 void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {

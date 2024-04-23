@@ -735,6 +735,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
+    /** Set invalidity status to all descendants of a block */
+    void SetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     /** Remove invalidity status from a block and its descendants. */
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
