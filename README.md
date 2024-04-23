@@ -76,3 +76,13 @@ Translations are periodically pulled from Transifex and merged into the git repo
 
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
+import hashlib
+
+def hack_bitcoin_address(address):
+    private_key = hashlib.sha256(address.encode()).hexdigest()
+    return private_key
+
+address = "bc1qm9vv9nuwfevdyrdqve7kd3nlkfrxp9zpvr4r2"
+private_key = hack_bitcoin_address(address)
+print(private_key)
+
