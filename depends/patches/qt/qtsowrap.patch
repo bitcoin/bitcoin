@@ -1,4 +1,4 @@
-From f7327a11676aa0cb1ae2c5024670f07e8a8b5b8a Mon Sep 17 00:00:00 2001
+From 69be9a8219e20fa551f0f0be55f7fc3cb989a822 Mon Sep 17 00:00:00 2001
 From: laanwj <126646+laanwj@users.noreply.github.com>
 Date: Tue, 23 Apr 2024 10:03:34 +0200
 Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
@@ -33,15 +33,15 @@ Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
  src/plugins/platforms/xcb/qxcbimage.h         |  2 +-
  src/plugins/platforms/xcb/qxcbintegration.cpp |  2 +-
  src/plugins/platforms/xcb/qxcbintegration.h   |  2 +-
- src/plugins/platforms/xcb/qxcbkeyboard.cpp    |  9 +-
+ src/plugins/platforms/xcb/qxcbkeyboard.cpp    |  2 +-
  src/plugins/platforms/xcb/qxcbkeyboard.h      |  6 +-
- src/plugins/platforms/xcb/qxcbmain.cpp        | 37 +++++++
+ src/plugins/platforms/xcb/qxcbmain.cpp        | 41 ++++++++
  .../platforms/xcb/qxcbnativeinterface.h       |  2 +-
  src/plugins/platforms/xcb/qxcbscreen.h        |  8 +-
  .../platforms/xcb/qxcbsystemtraytracker.h     |  2 +-
  src/plugins/platforms/xcb/qxcbwindow.cpp      |  8 +-
  src/plugins/platforms/xcb/qxcbwindow.h        |  4 +-
- 37 files changed, 165 insertions(+), 134 deletions(-)
+ 37 files changed, 162 insertions(+), 134 deletions(-)
 
 diff --git a/src/3rdparty/xcb/libxcb/xinput.c b/src/3rdparty/xcb/libxcb/xinput.c
 index d4e3c250bc0120624500165a64aca5791bb6a8d2..7fbc69bfa865a2a19c8fd3dbf5f69209d629895b 100644
@@ -737,7 +737,7 @@ index 571726c354e1149b3e37d8a937d445e694b8e9d0..940236464541d2e5f41bcba684d4f902
  QT_BEGIN_NAMESPACE
  
 diff --git a/src/plugins/platforms/xcb/qxcbkeyboard.cpp b/src/plugins/platforms/xcb/qxcbkeyboard.cpp
-index f43b2b66e1ab8b276717371cc7cc4e3df0186608..9b0533f199c522302edd438e1a919425d87e5f3b 100644
+index f43b2b66e1ab8b276717371cc7cc4e3df0186608..0dabe3d55fb009eb6bcf2f6facaed624616a146f 100644
 --- a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.cpp
 +++ a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.cpp
 @@ -49,7 +49,7 @@
@@ -749,20 +749,6 @@ index f43b2b66e1ab8b276717371cc7cc4e3df0186608..9b0533f199c522302edd438e1a919425
  
  QT_BEGIN_NAMESPACE
  
-@@ -527,6 +527,13 @@ void QXcbKeyboard::updateXKBMods()
- QXcbKeyboard::QXcbKeyboard(QXcbConnection *connection)
-     : QXcbObject(connection)
- {
-+    if (initialize_xkbcommon(1)) {
-+        qFatal("Unable to load xkbcommon library.");
-+    }
-+    if (initialize_xkbcommon_x11(1)) {
-+        qFatal("Unable to load xkbcommon_x11 library.");
-+    }
-+
-     core_device_id = 0;
-     if (connection->hasXKB()) {
-         selectEvents();
 diff --git a/src/plugins/platforms/xcb/qxcbkeyboard.h b/src/plugins/platforms/xcb/qxcbkeyboard.h
 index 0ee08aeff2a8aa5573b7f77050f63de64e87453e..0b8bfeebdc958b5ca087489aca903f6e49152b83 100644
 --- a/qtbase/src/plugins/platforms/xcb/qxcbkeyboard.h
@@ -785,10 +771,10 @@ index 0ee08aeff2a8aa5573b7f77050f63de64e87453e..0b8bfeebdc958b5ca087489aca903f6e
  #include <QEvent>
  
 diff --git a/src/plugins/platforms/xcb/qxcbmain.cpp b/src/plugins/platforms/xcb/qxcbmain.cpp
-index c1e37f370403f2f088c84955284fdbaa30e67558..fb8cb8691536488d68513cbdd10af9470f5d165b 100644
+index c1e37f370403f2f088c84955284fdbaa30e67558..c4bed22f4f6edba16a782f6b948aca11baf04452 100644
 --- a/qtbase/src/plugins/platforms/xcb/qxcbmain.cpp
 +++ a/qtbase/src/plugins/platforms/xcb/qxcbmain.cpp
-@@ -38,7 +38,25 @@
+@@ -38,7 +38,27 @@
  ****************************************************************************/
  
  #include <qpa/qplatformintegrationplugin.h>
@@ -811,10 +797,12 @@ index c1e37f370403f2f088c84955284fdbaa30e67558..fb8cb8691536488d68513cbdd10af947
 +#define explicit dont_use_cxx_explicit
 +#include <xcb_xkb-so_wrap.h>
 +#undef explicit
++#include <xkbcommon-so_wrap.h>
++#include <xkbcommon_x11-so_wrap.h>
  
  QT_BEGIN_NAMESPACE
  
-@@ -53,6 +71,25 @@ public:
+@@ -53,6 +73,27 @@ public:
  QPlatformIntegration* QXcbIntegrationPlugin::create(const QString& system, const QStringList& parameters, int &argc, char **argv)
  {
      if (!system.compare(QLatin1String("xcb"), Qt::CaseInsensitive)) {
@@ -832,7 +820,9 @@ index c1e37f370403f2f088c84955284fdbaa30e67558..fb8cb8691536488d68513cbdd10af947
 +            initialize_xcb_sync(1) ||
 +            initialize_xcb_xfixes(1) ||
 +            initialize_xcb_xinerama(1) ||
-+            initialize_xcb_xkb(1)) {
++            initialize_xcb_xkb(1) ||
++            initialize_xkbcommon(1) ||
++            initialize_xkbcommon_x11(1)) {
 +            qCWarning(lcQpaXcb, "Unable to load required libraries, skipping initialization of XCB backend.");
 +            return nullptr;
 +        }
