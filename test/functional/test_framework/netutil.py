@@ -147,10 +147,12 @@ def test_ipv6_local():
     '''
     # By using SOCK_DGRAM this will not actually make a connection, but it will
     # fail if there is no route to IPv6 localhost.
-    have_ipv6 = True
-    try:
-        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        s.connect(('::1', 1))
-    except socket.error:
-        have_ipv6 = False
-    return have_ipv6
+    return False
+    # TODO: disabled until amazon ipv6 issues are resolved
+    # have_ipv6 = True
+    # try:
+    #     s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    #     s.connect(('::1', 1))
+    # except socket.error:
+    #     have_ipv6 = False
+    # return have_ipv6
