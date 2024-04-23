@@ -89,7 +89,6 @@ void MempoolStats::drawChart()
 
         cbShowMemUsage = new QCheckBox("Dynamic Memory Usage");
         cbShowMemUsage->setChecked(true);
-        cbShowMemUsage->setStyleSheet("background-color: rgb(255,255,255);");
         dynMemUsageSwitch = scene->addWidget(cbShowMemUsage);
         connect(cbShowMemUsage, SIGNAL(stateChanged(int)), this, SLOT(drawChart()));
         cbShowMemUsage->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
@@ -98,7 +97,6 @@ void MempoolStats::drawChart()
 
         cbShowNumTxns = new QCheckBox("Amount of Transactions");
         cbShowNumTxns->setChecked(true);
-        cbShowNumTxns->setStyleSheet("background-color: rgb(255,255,255);");
         txCountSwitch = scene->addWidget(cbShowNumTxns);
         scene->addItem(txCountSwitch);
         connect(cbShowNumTxns, SIGNAL(stateChanged(int)), this, SLOT(drawChart()));
@@ -108,7 +106,6 @@ void MempoolStats::drawChart()
 
         cbShowMinFeerate = new QCheckBox("MinRelayFee per KB");
         cbShowMinFeerate->setChecked(false);
-        cbShowMinFeerate->setStyleSheet("background-color: rgb(255,255,255);");
         minFeeSwitch = scene->addWidget(cbShowMinFeerate);
         scene->addItem(minFeeSwitch);
         connect(cbShowMinFeerate, SIGNAL(stateChanged(int)), this, SLOT(drawChart()));
@@ -137,6 +134,11 @@ void MempoolStats::drawChart()
         connect(allDataLabel, SIGNAL(objectClicked(QGraphicsItem*)), this, SLOT(objectClicked(QGraphicsItem*)));
         allDataLabel->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
     }
+
+    static const QString checkbox_style_base = QStringLiteral("background-color:rgb(255,255,255);");
+    cbShowNumTxns->setStyleSheet(cbShowNumTxns->isChecked() ? (checkbox_style_base + "color:rgb(188,49,62);") : checkbox_style_base);
+    cbShowMinFeerate->setStyleSheet(cbShowMinFeerate->isChecked() ? (checkbox_style_base + "color:rgb(49,113,62);") : checkbox_style_base);
+    cbShowMemUsage->setStyleSheet(cbShowMemUsage->isChecked() ? (checkbox_style_base + "color:rgb(15,68,113);") : checkbox_style_base);
 
     last10MinLabel->setEnabled((timeFilter == TEN_MINS));
     lastHourLabel->setEnabled((timeFilter == ONE_HOUR));
