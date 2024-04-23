@@ -199,7 +199,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert set(mempool1).issubset(set(mempool0))
         for tx in chain[:CUSTOM_ANCESTOR_LIMIT]:
             assert tx in mempool1
-        # Check more detailed check of node1's mempool 
+        # Check more detailed check of node1's mempool
             entry0 = self.nodes[0].getmempoolentry(tx)
             entry1 = self.nodes[1].getmempoolentry(tx)
         # Check transaction unbroadcast info (should be false if in both mempools)
@@ -268,7 +268,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Check parent/child list is correct
             assert_equal(entry1['depends'], entry0['depends'])
         
-
         # Test reorg handling
         # First, the basics:
         self.generate(self.nodes[0], 1)
