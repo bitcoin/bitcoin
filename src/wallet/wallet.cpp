@@ -4609,7 +4609,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
                     newHdChain.AddAccount();
                 } else {
                     if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
-                        walletInstance->WalletLogPrintf("%s -- Incorrect seed, generating a random mnemonic instead\n", __func__);
+                        error = strprintf(_("%s -- Incorrect seed, it should be a hex string"), __func__);
+                        return nullptr;
                     }
                     SecureString secureMnemonic = gArgs.GetArg("-mnemonic", "").c_str();
                     SecureString secureMnemonicPassphrase = gArgs.GetArg("-mnemonicpassphrase", "").c_str();
