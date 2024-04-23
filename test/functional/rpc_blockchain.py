@@ -125,6 +125,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblockchaininfo")
 
         keys = [
+            'averageblockspacing',
             'bestblockhash',
             'blocks',
             'chain',

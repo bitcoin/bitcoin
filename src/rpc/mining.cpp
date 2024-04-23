@@ -818,6 +818,11 @@ static RPCHelpMan getblocktemplate()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the signet rule set (call with {\"rules\": [\"segwit\", \"signet\"]})");
             }
 
+            // GBT must be called with 'segwit' set in the rules
+            if (setClientRules.count("segwit") != 1 && !consensusParams.fBLSCT) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
+            }
+
             // Update block
             static CBlockIndex* pindexPrev;
             static int64_t time_start;

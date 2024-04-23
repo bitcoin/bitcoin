@@ -147,6 +147,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-acceptnonstdtxn=1",
+            "--maxtipage=999999999999",
         ]]
         self.utxos = []
 

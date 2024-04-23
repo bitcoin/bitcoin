@@ -1425,7 +1425,6 @@ class FullBlockTest(BitcoinTestFramework):
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
         self.helper_peer.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason, force_send=force_send, timeout=timeout, expect_disconnect=reconnect)
-
         if reconnect:
             self.reconnect_p2p(timeout=timeout)
 

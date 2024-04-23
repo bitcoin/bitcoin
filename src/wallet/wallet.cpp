@@ -460,20 +460,22 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         LOCK(wallet->cs_wallet);
-        if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            wallet->SetupDescriptorScriptPubKeyMans();
-        } else {
-            for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
-                if (!spk_man->SetupGeneration()) {
-                    error = Untranslated("Unable to generate initial keys");
-                    status = DatabaseStatus::FAILED_CREATE;
-                    return nullptr;
+        if (!create_blank) {
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                wallet->SetupDescriptorScriptPubKeyMans();
+            } else {
+                for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
+                    if (!spk_man->SetupGeneration()) {
+                        error = Untranslated("Unable to generate initial keys");
+                        status = DatabaseStatus::FAILED_CREATE;
+                        return nullptr;
+                    }
                 }
             }
-        }
 
-        // Relock the wallet
-        wallet->Lock();
+            // Relock the wallet
+            wallet->Lock();
+        }
     }
 
     NotifyWalletLoaded(context, wallet);
@@ -2341,9 +2343,13 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
     std::string err_string;
     if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, true)) {
-        AbandonTransaction(tx->GetHash());
+        if (tx->IsBLSCT())
+            AbandonTransaction(tx->GetHash());
+
         WalletLogPrintf("CommitTransaction(): Transaction broadcast failed, %s\n", err_string);
-        throw std::runtime_error(std::string(__func__) + ": Transaction broadcast failed: " + err_string);
+
+        if (tx->IsBLSCT())
+            throw std::runtime_error(std::string(__func__) + ": Transaction broadcast failed: " + err_string);
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
 }

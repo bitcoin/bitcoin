@@ -1259,28 +1259,34 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB. *\n",
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
-            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "", {
-                                                                              {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks\n"},
-                                                                              {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "\nSpecify a fee rate in " + CURRENCY_ATOM + "/vB instead of relying on the built-in fee estimator.\n"
-                                                                                                                                                                                                                                  "Must be at least " +
-                                                                                                                                                                                         incremental_fee + " higher than the current transaction fee rate.\n"
-                                                                                                                                                                                                           "WARNING: before version 0.21, fee_rate was in " +
-                                                                                                                                                                                         CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB.\n"},
-                                                                              {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether the new transaction should still be\n"
-                                                                                                                                         "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
-                                                                                                                                         "be left unchanged from the original. If false, any input sequence numbers in the\n"
-                                                                                                                                         "original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
-                                                                                                                                         "so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
-                                                                                                                                         "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
-                                                                                                                                         "are replaceable).\n"},
-                                                                              {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
-                                                                                                                                             "\"" +
-                                                                                                                                                 FeeModes("\"\n\"") + "\""},
-                                                                              {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "New outputs (key-value pairs) which will replace\n"
-                                                                                                                                              "the original ones, if provided. Each address can only appear once and there can\n"
-                                                                                                                                              "only be one \"data\" object.\n",
-                                                                               OutputsDoc(), RPCArgOptions{.skip_type_check = true}},
-                                                                          },
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", {
+                                                                                           {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks\n"},
+                                                                                           {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "\nSpecify a fee rate in " + CURRENCY_ATOM + "/vB instead of relying on the built-in fee estimator.\n"
+                                                                                                                                                                                                                                               "Must be at least " +
+                                                                                                                                                                                                      incremental_fee + " higher than the current transaction fee rate.\n"
+                                                                                                                                                                                                                        "WARNING: before version 0.21, fee_rate was in " +
+                                                                                                                                                                                                      CURRENCY_UNIT + "/kvB. As of 0.21, fee_rate is in " + CURRENCY_ATOM + "/vB.\n"},
+                                                                                           {"replaceable", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether the new transaction should still be\n"
+                                                                                                                                                      "marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
+                                                                                                                                                      "be left unchanged from the original. If false, any input sequence numbers in the\n"
+                                                                                                                                                      "original transaction that were less than 0xfffffffe will be increased to 0xfffffffe\n"
+                                                                                                                                                      "so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
+                                                                                                                                                      "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
+                                                                                                                                                      "are replaceable).\n"},
+                                                                                           {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, "The fee estimate mode, must be one of (case insensitive):\n"
+                                                                                                                                                          "\"" +
+                                                                                                                                                              FeeModes("\"\n\"") + "\""},
+                                                                                           {"outputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The outputs specified as key-value pairs.\n"
+                                                                                                                                                           "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
+                                                                                                                                                           "At least one output of either type must be specified.\n"
+                                                                                                                                                           "Cannot be provided if 'original_change_index' is specified.",
+                                                                                            OutputsDoc(), RPCArgOptions{.skip_type_check = true}},
+                                                                                           {"original_change_index", RPCArg::Type::NUM, RPCArg::DefaultHint{"not set, detect change automatically"}, "The 0-based index of the change output on the original transaction. "
+                                                                                                                                                                                                     "The indicated output will be recycled into the new change output on the bumped transaction. "
+                                                                                                                                                                                                     "The remainder after paying the recipients and fees will be sent to the output script of the "
+                                                                                                                                                                                                     "original change output. The change output’s amount can increase if bumping the transaction "
+                                                                                                                                                                                                     "adds new inputs, otherwise it will decrease. Cannot be used in combination with the 'outputs' option."},
+                                                                                       },
              RPCArgOptions{.oneline_description = "options"}},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", Cat(want_psbt ? std::vector<RPCResult>{{RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction."}} : std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction."}}, {
@@ -1307,6 +1313,8 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             coin_control.m_signal_bip125_rbf = true;
             std::vector<CTxOut> outputs;
 
+            std::optional<uint32_t> original_change_index;
+
             if (!request.params[1].isNull()) {
                 UniValue options = request.params[1];
                 RPCTypeCheckObj(options,
@@ -1317,6 +1325,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                                     {"replaceable", UniValueType(UniValue::VBOOL)},
                                     {"estimate_mode", UniValueType(UniValue::VSTR)},
                                     {"outputs", UniValueType()}, // will be checked by AddOutputs()
+                                    {"original_change_index", UniValueType(UniValue::VNUM)},
                                 },
                                 true, true);
 
@@ -1340,6 +1349,10 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                     AddOutputs(tempTx, options["outputs"]);
                     outputs = tempTx.vout;
                 }
+
+                if (options.exists("original_change_index")) {
+                    original_change_index = options["original_change_index"].getInt<uint32_t>();
+                }
             }
 
             // Make sure the results are valid at least up to the most recent block
@@ -1357,7 +1370,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             CMutableTransaction mtx;
             feebumper::Result res;
             // Targeting feerate bump.
-            res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/!want_psbt, outputs);
+            res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/!want_psbt, outputs, original_change_index);
             if (res != feebumper::Result::OK) {
                 switch (res) {
                 case feebumper::Result::INVALID_ADDRESS_OR_KEY:
@@ -1402,7 +1415,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/false, /*bip32derivs=*/true);
                 CHECK_NONFATAL(err == TransactionError::OK);
                 CHECK_NONFATAL(!complete);
-                DataStream ssTx;
+                DataStream ssTx{};
                 ssTx << psbtx;
                 result.pushKV("psbt", EncodeBase64(ssTx.str()));
             }
@@ -1555,11 +1568,11 @@ RPCHelpMan sendall()
                                                                                          "\"" +
                                                                                              FeeModes("\"\n\"") + "\""},
                           {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
-                          {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                          {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                            Cat<std::vector<RPCArg>>(
                                {
                                    {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns the serialized transaction without broadcasting or adding it to the wallet"},
-                                   {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
+                                   {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
                                    {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch-only.\n"
                                                                                                                                                  "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
                                                                                                                                                  "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
@@ -1799,6 +1812,7 @@ RPCHelpMan walletprocesspsbt()
             RPCResult::Type::OBJ, "", "", {
                                               {RPCResult::Type::STR, "psbt", "The base64-encoded partially signed transaction"},
                                               {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                                              {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded network transaction if complete"},
                                           }},
         RPCExamples{HelpExampleCli("walletprocesspsbt", "\"psbt\"")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
@@ -1834,10 +1848,18 @@ RPCHelpMan walletprocesspsbt()
             }
 
             UniValue result(UniValue::VOBJ);
-            DataStream ssTx;
+            DataStream ssTx{};
             ssTx << psbtx;
             result.pushKV("psbt", EncodeBase64(ssTx.str()));
             result.pushKV("complete", complete);
+            if (complete) {
+                CMutableTransaction mtx;
+                // Returns true if complete, which we already think it is.
+                CHECK_NONFATAL(FinalizeAndExtractPSBT(psbtx, mtx));
+                DataStream ssTx_final;
+                ssTx_final << TX_WITH_WITNESS(mtx);
+                result.pushKV("hex", HexStr(ssTx_final));
+            }
 
             return result;
         },
