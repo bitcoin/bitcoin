@@ -7,6 +7,7 @@
 
 #include <util/result.h>
 
+#include <cstdint>
 #include <string>
 
 class ArgsManager;

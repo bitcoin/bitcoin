@@ -18,11 +18,13 @@
 #include <policy/policy.h>
 #include <tinyformat.h>
 #include <util/moneystr.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 
 using common::AmountErrMsg;
