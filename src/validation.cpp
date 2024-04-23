@@ -2045,6 +2045,11 @@ void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
         m_chainman.m_best_invalid = pindexNew;
     }
     if (m_chainman.m_best_header != nullptr && m_chainman.m_best_header->GetAncestor(pindexNew->nHeight) == pindexNew) {
+        CBlockIndex *index_walk{m_chainman.m_best_header};
+        while (index_walk != pindexNew) {
+                index_walk->nStatus |= BLOCK_FAILED_CHILD;
+                index_walk = index_walk->pprev;
+        }
         // Setting m_best_header to the tip here is merely an educated guess. There could be other
         // indexes with more work in the block header tree. Finding these would require walking
         // through the entire block tree or introducing best-possible header tracking (see PR #12138)

@@ -89,7 +89,7 @@ class GetChainTipsTest (BitcoinTestFramework):
         tips = n0.getchaintips()
         assert_equal(len(tips), 3)
         assert_equal(tips[0]['height'], start_height + 2)
-        assert_equal(tips[0]['status'], 'headers-only')  # bug: chain should be marked as invalid instead of headers-only
+        assert_equal(tips[0]['status'], 'invalid')
 
         self.log.info("Check getchaintips behavior after restart")
         self.restart_node(0)
