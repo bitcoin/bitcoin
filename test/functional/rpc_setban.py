@@ -64,18 +64,8 @@ class SetBanTests(BitcoinTestFramework):
         assert self.is_banned(node, tor_addr)
         assert not self.is_banned(node, ip_addr)
 
-        self.log.info("Test the ban list is preserved through restart")
-
-        self.restart_node(1)
-        assert self.is_banned(node, tor_addr)
-        assert not self.is_banned(node, ip_addr)
-
         node.setban(tor_addr, "remove")
         assert not self.is_banned(self.nodes[1], tor_addr)
-        assert not self.is_banned(node, ip_addr)
-
-        self.restart_node(1)
-        assert not self.is_banned(node, tor_addr)
         assert not self.is_banned(node, ip_addr)
 
         self.log.info("Test -bantime")

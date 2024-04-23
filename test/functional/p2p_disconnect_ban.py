@@ -77,6 +77,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.nodes[1].setmocktime(old_time)
         self.nodes[1].setban("127.0.0.0/32", "add")
         self.nodes[1].setban("127.0.0.0/24", "add")
+        self.nodes[1].setban("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", "add")
         self.nodes[1].setban("192.168.0.1", "add", 1)  # ban for 1 seconds
         self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000)  # ban for 1000 seconds
         listBeforeShutdown = self.nodes[1].listbanned()
@@ -85,13 +86,13 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("setban: test banning with absolute timestamp")
         self.nodes[1].setban("192.168.0.2", "add", old_time + 120, True)
 
-        # Move time forward by 3 seconds so the third ban has expired
+        # Move time forward by 3 seconds so the fourth ban has expired
         self.nodes[1].setmocktime(old_time + 3)
-        assert_equal(len(self.nodes[1].listbanned()), 4)
+        assert_equal(len(self.nodes[1].listbanned()), 5)
 
         self.log.info("Test ban_duration and time_remaining")
         for ban in self.nodes[1].listbanned():
-            if ban["address"] in ["127.0.0.0/32", "127.0.0.0/24"]:
+            if ban["address"] in ["127.0.0.0/32", "127.0.0.0/24", "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"]:
                 assert_equal(ban["ban_duration"], 86400)
                 assert_equal(ban["time_remaining"], 86397)
             elif ban["address"] == "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19":
@@ -108,6 +109,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])
         assert_equal("192.168.0.2/32", listAfterShutdown[2]['address'])
         assert_equal("/19" in listAfterShutdown[3]['address'], True)
+        assert_equal("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", listAfterShutdown[4]['address'])
 
         # Clear ban lists
         self.nodes[1].clearbanned()
