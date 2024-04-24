@@ -85,6 +85,10 @@ For linux S390X cross compilation:
 
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 
+### Install the required dependencies: FreeBSD
+
+    pkg install bash
+
 ### Install the required dependencies: OpenBSD
 
     pkg_add bash gtar
