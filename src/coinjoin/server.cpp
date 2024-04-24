@@ -12,6 +12,7 @@
 #include <masternode/sync.h>
 #include <net.h>
 #include <netmessagemaker.h>
+#include <net_processing.h>
 #include <script/interpreter.h>
 #include <shutdown.h>
 #include <streams.h>
@@ -348,7 +349,7 @@ void CCoinJoinServer::CommitFinalTransaction()
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- TRANSMITTING DSTX\n");
 
     CInv inv(MSG_DSTX, hashTx);
-    connman.RelayInv(inv);
+    Assert(m_peerman)->RelayInv(inv);
 
     // Tell the clients it was successful
     RelayCompletedTransaction(MSG_SUCCESS);
@@ -459,7 +460,7 @@ void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
     if (!ATMPIfSaneFee(m_chainstate, mempool, txref, false /* bypass_limits */)) {
         LogPrint(BCLog::COINJOIN, "%s -- AcceptToMemoryPool failed\n", __func__);
     } else {
-        connman.RelayTransaction(*txref, static_cast<bool>(m_dstxman.GetDSTX(txref->GetHash())));
+        Assert(m_peerman)->RelayTransaction(txref->GetHash());
         LogPrint(BCLog::COINJOIN, "%s -- Collateral was consumed\n", __func__);
     }
 }

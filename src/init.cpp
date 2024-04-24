@@ -1860,7 +1860,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 #endif
 
     pdsNotificationInterface = new CDSNotificationInterface(
-        *node.connman, *node.mn_sync, *node.govman, node.mn_activeman.get(), node.dmnman, node.llmq_ctx, node.cj_ctx
+        *node.connman, *node.mn_sync, *node.govman, *node.peerman, node.mn_activeman.get(), node.dmnman, node.llmq_ctx, node.cj_ctx
     );
     RegisterValidationInterface(pdsNotificationInterface);
 
@@ -2207,7 +2207,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     // ********************************************************* Step 7c: Setup CoinJoin
 
     node.cj_ctx = std::make_unique<CJContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.mn_metaman, *node.mempool,
-                                              node.mn_activeman.get(), *node.mn_sync, !ignores_incoming_txs);
+                                              node.mn_activeman.get(), *node.mn_sync, node.peerman, !ignores_incoming_txs);
 
 #ifdef ENABLE_WALLET
     node.coinjoin_loader = interfaces::MakeCoinJoinLoader(*node.cj_ctx->walletman);

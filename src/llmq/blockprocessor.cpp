@@ -16,6 +16,7 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <net.h>
+#include <net_processing.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <saltedhasher.h>
@@ -46,8 +47,9 @@ static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT_Q_INDEXED = "q_m
 
 static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
-CQuorumBlockProcessor::CQuorumBlockProcessor(CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman, CEvoDB& evoDb) :
-    m_chainstate(chainstate), connman(_connman), m_dmnman(dmnman), m_evoDb(evoDb)
+CQuorumBlockProcessor::CQuorumBlockProcessor(CChainState& chainstate, CDeterministicMNManager& dmnman, CEvoDB& evoDb,
+                                             const std::unique_ptr<PeerManager>& peerman) :
+    m_chainstate(chainstate), m_dmnman(dmnman), m_evoDb(evoDb), m_peerman(peerman)
 {
     utils::InitQuorumsCache(mapHasMinedCommitmentCache);
 }
@@ -666,7 +668,7 @@ void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
         CInv inv(MSG_QUORUM_FINAL_COMMITMENT, commitmentHash);
-        connman.RelayInv(inv);
+        Assert(m_peerman)->RelayInv(inv);
     }
 }
 

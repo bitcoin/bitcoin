@@ -1394,7 +1394,7 @@ void CSigSharesManager::RemoveBannedNodeStates()
 
     LOCK(cs);
     for (auto it = nodeStates.begin(); it != nodeStates.end();) {
-        if (m_peerman->IsBanned(it->first)) {
+        if (Assert(m_peerman)->IsBanned(it->first)) {
             // re-request sigshares from other nodes
             it->second.requestedSigShares.ForEach([this](const SigShareKey& k, int64_t) {
                 AssertLockHeld(cs);
@@ -1414,7 +1414,7 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     }
 
     {
-        m_peerman->Misbehaving(nodeId, 100);
+        Assert(m_peerman)->Misbehaving(nodeId, 100);
     }
 
     LOCK(cs);

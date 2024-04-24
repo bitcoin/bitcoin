@@ -399,9 +399,9 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     if (fMissingConfirmations) {
         node.govman->AddPostponedObject(govobj);
-        govobj.Relay(*node.connman, *node.mn_sync);
+        govobj.Relay(*node.peerman, *node.mn_sync);
     } else {
-        node.govman->AddGovernanceObject(govobj, *node.connman);
+        node.govman->AddGovernanceObject(govobj, *node.peerman);
     }
 
     return govobj.GetHash().ToString();
@@ -452,7 +452,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
         }
 
         CGovernanceException exception;
-        if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman)) {
+        if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -1035,7 +1035,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman)) {
+    if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());

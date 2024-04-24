@@ -11,6 +11,7 @@
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
 #include <masternode/sync.h>
+#include <net_processing.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
@@ -26,6 +27,7 @@
 CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
                                                    CMasternodeSync& mn_sync,
                                                    CGovernanceManager& govman,
+                                                   PeerManager& peerman,
                                                    const CActiveMasternodeManager* const mn_activeman,
                                                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                    const std::unique_ptr<LLMQContext>& llmq_ctx,
@@ -33,6 +35,7 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
   : m_connman(connman),
     m_mn_sync(mn_sync),
     m_govman(govman),
+    m_peerman(peerman),
     m_mn_activeman(mn_activeman),
     m_dmnman(dmnman),
     m_llmq_ctx(llmq_ctx),
@@ -96,7 +99,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     m_llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
     m_llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew);
 
-    if (!fDisableGovernance) m_govman.UpdatedBlockTip(pindexNew, m_connman, m_mn_activeman);
+    if (!fDisableGovernance) m_govman.UpdatedBlockTip(pindexNew, m_connman, m_peerman, m_mn_activeman);
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime)

@@ -747,15 +747,9 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     pendingInstantSendLocks.emplace(hash, std::make_pair(-1, islock));
 }
 
-PeerMsgRet CInstantSendManager::ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, std::string_view msg_type, CDataStream& vRecv)
+PeerMsgRet CInstantSendManager::ProcessMessage(const CNode& pfrom, std::string_view msg_type, CDataStream& vRecv)
 {
     if (IsInstantSendEnabled() && msg_type == NetMsgType::ISDLOCK) {
-        if (m_peerman == nullptr) {
-            m_peerman = peerman;
-        }
-        // we should never use one CInstantSendManager with different PeerManager
-        assert(m_peerman == peerman);
-
         const auto islock = std::make_shared<CInstantSendLock>();
         vRecv >> *islock;
         return ProcessMessageInstantSendLock(pfrom, islock);
@@ -957,7 +951,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         for (const auto& nodeId : batchVerifier.badSources) {
             // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
             // does not validate anymore due to changed quorums
-            m_peerman.load()->Misbehaving(nodeId, 20);
+            Assert(m_peerman)->Misbehaving(nodeId, 20);
         }
     }
     for (const auto& p : pend) {
@@ -1051,11 +1045,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     CInv inv(MSG_ISDLOCK, hash);
     if (tx != nullptr) {
-        connman.RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
+        Assert(m_peerman)->RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        connman.RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
+        Assert(m_peerman)->RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);
@@ -1068,7 +1062,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
         mempool.AddTransactionsUpdated(1);
     } else {
-        AskNodesForLockedTx(islock->txid, connman, *m_peerman.load());
+        AskNodesForLockedTx(islock->txid, connman, *m_peerman);
     }
 }
 
@@ -1344,7 +1338,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
         for (const auto& p : toDelete) {
             RemoveConflictedTx(*p.second);
         }
-        AskNodesForLockedTx(islock.txid, connman, *m_peerman.load());
+        AskNodesForLockedTx(islock.txid, connman, *m_peerman);
     }
 }
 

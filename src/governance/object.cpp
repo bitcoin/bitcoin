@@ -14,7 +14,7 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
-#include <net.h>
+#include <net_processing.h>
 #include <timedata.h>
 #include <util/time.h>
 #include <validation.h>
@@ -629,7 +629,7 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
     return true;
 }
 
-void CGovernanceObject::Relay(CConnman& connman, const CMasternodeSync& mn_sync) const
+void CGovernanceObject::Relay(PeerManager& peerman, const CMasternodeSync& mn_sync) const
 {
     // Do not relay until fully synced
     if (!mn_sync.IsSynced()) {
@@ -651,7 +651,7 @@ void CGovernanceObject::Relay(CConnman& connman, const CMasternodeSync& mn_sync)
     }
 
     CInv inv(MSG_GOVERNANCE_OBJECT, GetHash());
-    connman.RelayInv(inv, minProtoVersion);
+    peerman.RelayInv(inv, minProtoVersion);
 }
 
 void CGovernanceObject::UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list)

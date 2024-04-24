@@ -14,6 +14,7 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <index/txindex.h> // g_txindex
+#include <net_processing.h>
 #include <primitives/transaction.h>
 #include <spork.h>
 #include <txmempool.h>
@@ -22,17 +23,17 @@
 namespace llmq {
 
 
-CEHFSignalsHandler::CEHFSignalsHandler(CChainState& chainstate, CConnman& connman,
-                                       CMNHFManager& mnhfman, CSigningManager& sigman, CSigSharesManager& shareman,
-                                       const CSporkManager& sporkman, const CQuorumManager& qman, CTxMemPool& mempool) :
+CEHFSignalsHandler::CEHFSignalsHandler(CChainState& chainstate, CMNHFManager& mnhfman, CSigningManager& sigman,
+                                       CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman,
+                                       const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
     chainstate(chainstate),
-    connman(connman),
     mnhfman(mnhfman),
     sigman(sigman),
     shareman(shareman),
-    sporkman(sporkman),
+    mempool(mempool),
     qman(qman),
-    mempool(mempool)
+    sporkman(sporkman),
+    m_peerman(peerman)
 {
     sigman.RegisterRecoveredSigsListener(this);
 }
@@ -139,7 +140,7 @@ void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig
             LOCK(cs_main);
             const MempoolAcceptResult result = AcceptToMemoryPool(chainstate, mempool, tx_to_sent, /* bypass_limits */ false);
             if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                connman.RelayTransaction(*tx_to_sent, /*is_dstx=*/ false);
+                Assert(m_peerman)->RelayTransaction(tx_to_sent->GetHash());
             } else {
                 LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig -- AcceptToMemoryPool failed: %s\n", result.m_state.ToString());
             }
