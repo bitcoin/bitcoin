@@ -1612,14 +1612,14 @@ void updateButtonGroupShortcuts(QButtonGroup* buttonGroup)
         return;
     }
 #ifdef Q_OS_MAC
-    auto modifier = Qt::CTRL;
+    auto modifier = "Ctrl";
 #else
-    auto modifier = Qt::ALT;
+    auto modifier = "Alt";
 #endif
-    int nKey = 0;
+    int nKey = 1;
     for (auto button : buttonGroup->buttons()) {
         if (button->isVisible()) {
-            button->setShortcut(QKeySequence(static_cast<int>(modifier) | static_cast<int>(Qt::Key_1) | nKey++));
+            button->setShortcut(QKeySequence(QString("%1+%2").arg(modifier).arg(nKey++)));
         } else {
             button->setShortcut(QKeySequence());
         }
