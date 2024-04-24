@@ -71,8 +71,8 @@ struct StakedCommitmentInfo {
 };
 
 std::vector<StakedCommitmentInfo>
-GetStakedCommitmentInfo(const CWallet& wallet, const CWalletTx& wtx);
-std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet);
+GetStakedCommitmentInfo(const CWallet& wallet, const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+std::vector<StakedCommitmentInfo> GetStakedCommitmentInfo(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_RECEIVE_H

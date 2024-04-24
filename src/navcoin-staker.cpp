@@ -507,7 +507,6 @@ bool TestSetup()
         UniValue reply = ConnectAndCallRPC(rh.get(), "listwallets", /* args=*/{});
 
         // Parse reply
-        const UniValue& result = reply.find_value("result");
         const UniValue& error = reply.find_value("error");
 
         std::string strError;
@@ -518,7 +517,6 @@ bool TestSetup()
 
             reply = ConnectAndCallRPC(rh.get(), "loadwallet", /* args=*/{walletName});
 
-            const UniValue& result = reply.find_value("result");
             const UniValue& error = reply.find_value("error");
 
             strError.clear();
@@ -556,7 +554,6 @@ bool TestSetup()
 
                         reply = ConnectAndCallRPC(rh.get(), "walletpassphrase", /* args=*/{walletPassphrase, "1"}, walletName);
 
-                        const UniValue& result = reply.find_value("result");
                         const UniValue& error = reply.find_value("error");
 
                         strError.clear();

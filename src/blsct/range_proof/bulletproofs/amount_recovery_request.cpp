@@ -27,8 +27,8 @@ AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(const RangeProofWithSeed<T
         proof.Rs,
         proof.mu,
         proof.tau_x,
-        nonce
-    };
+        nonce,
+        0};
     return req;
 }
 template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(const RangeProofWithSeed<Mcl>&, const range_proof::GammaSeed<Mcl>&);
