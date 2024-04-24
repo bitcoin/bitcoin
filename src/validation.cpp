@@ -2419,6 +2419,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
         } catch (const std::runtime_error& e) {
+            LogPrintf("%s: Validation of PoS proof failed: %s\n", __func__, e.what());
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
         }
 
