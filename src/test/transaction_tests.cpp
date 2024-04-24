@@ -378,6 +378,32 @@ BOOST_AUTO_TEST_CASE(tx_no_inputs)
     BOOST_CHECK(state.GetRejectReason() == "bad-txns-vin-empty");
 }
 
+BOOST_AUTO_TEST_CASE(tx_oversized)
+{
+    auto createTransaction =[](size_t payloadSize) {
+        CMutableTransaction tx;
+        tx.vin.resize(1);
+        tx.vout.emplace_back(1, CScript() << OP_RETURN << std::vector<unsigned char>(payloadSize));
+        return CTransaction(tx);
+    };
+    const auto maxTransactionSize = MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR;
+    const auto oversizedTransactionBaseSize = ::GetSerializeSize(TX_NO_WITNESS(createTransaction(maxTransactionSize))) - maxTransactionSize;
+
+    auto maxPayloadSize = maxTransactionSize - oversizedTransactionBaseSize;
+    {
+        TxValidationState state;
+        CheckTransaction(createTransaction(maxPayloadSize), state);
+        BOOST_CHECK(state.GetRejectReason() != "bad-txns-oversize");
+    }
+
+    maxPayloadSize += 1;
+    {
+        TxValidationState state;
+        BOOST_CHECK_MESSAGE(!CheckTransaction(createTransaction(maxPayloadSize), state), "Oversized transaction should be invalid");
+        BOOST_CHECK(state.GetRejectReason() == "bad-txns-oversize");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 {
     // Random real transaction (e2769b09e784f32f62ef849763d4f45b98e07ba658647343b915ff832b110436)
