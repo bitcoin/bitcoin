@@ -439,44 +439,50 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             }
         }
     }
-    if (!create_blank) {
-        // Set a seed for the wallet
-        LOCK(wallet->cs_wallet);
-        if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
-            wallet->SetupBLSCTKeyMan();
-            {
-                auto blsct_man = wallet->GetBLSCTKeyMan();
-
-                if (blsct_man) {
-                    if (!blsct_man->SetupGeneration()) {
-                        error = Untranslated("Unable to generate initial blsct keys");
-                        status = DatabaseStatus::FAILED_CREATE;
-                        return nullptr;
-                    }
-                }
-            }
-        }
-    }
-
-    if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        LOCK(wallet->cs_wallet);
+    {
         if (!create_blank) {
-            if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                wallet->SetupDescriptorScriptPubKeyMans();
-            } else {
-                for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
-                    if (!spk_man->SetupGeneration()) {
-                        error = Untranslated("Unable to generate initial keys");
-                        status = DatabaseStatus::FAILED_CREATE;
-                        return nullptr;
+            LOCK(wallet->cs_wallet);
+            // Set a seed for the wallet
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+                wallet->SetupBLSCTKeyMan();
+                {
+                    auto blsct_man = wallet->GetBLSCTKeyMan();
+
+                    if (blsct_man) {
+                        if (!blsct_man->SetupGeneration()) {
+                            error = Untranslated("Unable to generate initial blsct keys");
+                            status = DatabaseStatus::FAILED_CREATE;
+                            return nullptr;
+                        }
                     }
                 }
             }
+        }
 
-            // Relock the wallet
-            wallet->Lock();
+        if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            if (!create_blank) {
+                {
+                    LOCK(wallet->cs_wallet);
+
+                    if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                        wallet->SetupDescriptorScriptPubKeyMans();
+                    } else {
+                        for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
+                            if (!spk_man->SetupGeneration()) {
+                                error = Untranslated("Unable to generate initial keys");
+                                status = DatabaseStatus::FAILED_CREATE;
+                                return nullptr;
+                            }
+                        }
+                    }
+                }
+
+                // Relock the wallet
+                wallet->Lock();
+            }
         }
     }
+
 
     NotifyWalletLoaded(context, wallet);
     AddWallet(context, wallet);
