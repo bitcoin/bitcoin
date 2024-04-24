@@ -151,6 +151,7 @@ BASE_SCRIPTS = [
     'feature_abortnode.py',
     # vv Tests less than 30s vv
     'rpc_quorum.py --legacy-wallet',
+    'rpc_quorum.py --descriptors',
     'wallet_keypool_topup.py --legacy-wallet',
     'wallet_keypool_topup.py --descriptors',
     'feature_fee_estimation.py',
@@ -227,7 +228,7 @@ BASE_SCRIPTS = [
     'feature_backwards_compatibility.py --legacy-wallet',
     'feature_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
-    'feature_notifications.py --legacy-wallet',
+    'feature_notifications.py',
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
     'feature_txindex.py',
