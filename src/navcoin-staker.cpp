@@ -50,22 +50,13 @@
 #include <event2/keyvalq_struct.h>
 #include <support/events.h>
 
-// The server returns time values from a mockable system clock, but it is not
-// trivial to get the mocked time from the server, nor is it needed for now, so
-// just use a plain system_clock.
-using CliClock = std::chrono::system_clock;
-
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-UrlDecodeFn* const URL_DECODE = urlDecode;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT = 900;
 static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const int CONTINUE_EXECUTION = -1;
 static const char* const DEFAULT_LOGFILE = "staker.log";
-
-/** Default number of blocks to generate for RPC generatetoaddress. */
-static const std::string DEFAULT_NBLOCKS = "1";
 
 /** Default -color setting. */
 static const std::string DEFAULT_COLOR_SETTING{"auto"};
