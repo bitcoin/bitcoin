@@ -12,7 +12,7 @@
 #include <univalue.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
-#include <util/subprocess.hpp>
+#include <util/subprocess.h>
 #endif // ENABLE_EXTERNAL_SIGNER
 
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)

@@ -33,8 +33,10 @@ Documentation for C++ subprocessing library.
 @version 1.0.0
 */
 
-#ifndef SUBPROCESS_HPP
-#define SUBPROCESS_HPP
+#ifndef BITCOIN_UTIL_SUBPROCESS_H
+#define BITCOIN_UTIL_SUBPROCESS_H
+
+#include <util/syserror.h>
 
 #include <algorithm>
 #include <cassert>
@@ -150,7 +152,7 @@ class OSError: public std::runtime_error
 {
 public:
   OSError(const std::string& err_msg, int err_code):
-    std::runtime_error( err_msg + ": " + std::strerror(err_code) )
+    std::runtime_error(err_msg + ": " + SysErrorString(err_code))
   {}
 };
 
@@ -1609,4 +1611,4 @@ namespace detail {
 
 }
 
-#endif // SUBPROCESS_HPP
+#endif // BITCOIN_UTIL_SUBPROCESS_H
