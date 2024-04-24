@@ -61,6 +61,8 @@ jobs:
           # https://git-scm.com/docs/git-rev-list
           echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD ^$(git rev-list -n1 --merges HEAD)^@ | head -1)" >> "$GITHUB_ENV"
       - run: |
+          # Workaround for https://github.com/actions/runner-images/issues/9733.
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update
           sudo apt-get install clang-15 ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev qtbase5-dev qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
       - name: Compile and run tests
