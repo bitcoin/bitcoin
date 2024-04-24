@@ -19,12 +19,7 @@ other consensus and policy rules, each of the following conditions are met:
    Use the (`-mempoolfullrbf`) configuration option to allow transaction replacement without enforcement of the
    opt-in signaling rule.
 
-2. The replacement transaction only include an unconfirmed input if that input was included in
-   one of the directly conflicting transactions. An unconfirmed input spends an output from a
-   currently-unconfirmed transaction.
-
-   *Rationale*: When RBF was originally implemented, the mempool did not keep track of
-   ancestor feerates yet. This rule was suggested as a temporary restriction.
+2. [REDACTED]
 
 3. The replacement transaction pays an absolute fee of at least the sum paid by the original
    transactions.
@@ -45,23 +40,16 @@ other consensus and policy rules, each of the following conditions are met:
    *Rationale*: Try to prevent DoS attacks where an attacker causes the network to repeatedly relay
    transactions each paying a tiny additional amount in fees, e.g. just 1 satoshi.
 
-5. The number of original transactions does not exceed 100. More precisely, the sum of all
-   directly conflicting transactions' descendant counts (number of transactions inclusive of itself
-   and its descendants) must not exceed 100; it is possible that this overestimates the true number
-   of original transactions.
+5. The number of directly conflicting transactions does not exceed 100.
 
-   *Rationale*: Try to prevent DoS attacks where an attacker is able to easily occupy and flush out
-   significant portions of the node's mempool using replacements with multiple directly conflicting
-   transactions, each with large descendant sets.
+   *Rationale*: Limit CPU usage required to update the mempool for so many transactions being
+   removed at once.
 
-6. The replacement transaction's feerate is greater than the feerates of all directly conflicting
-   transactions.
+6. The feerate diagram of the mempool must be strictly improved by the replacement transaction.
 
-   *Rationale*: This rule was originally intended to ensure that the replacement transaction is
-   preferable for block-inclusion, compared to what would be removed from the mempool. This rule
-   predates ancestor feerate-based transaction selection.
+   *Rationale*: This ensures that block fees in all future blocks will go up
+   after the replacement (ignoring tail effects at the end of a block).
 
-This set of rules is similar but distinct from BIP125.
 
 ## History
 
@@ -80,3 +68,5 @@ This set of rules is similar but distinct from BIP125.
 
 * Full replace-by-fee enabled as a configurable mempool policy as of **v24.0** ([PR
   #25353](https://github.com/bitcoin/bitcoin/pull/25353)).
+
+* Feerate diagram policy enabled in conjunction with switch to cluster mempool as of **v??.0**.
