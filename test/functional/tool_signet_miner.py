@@ -33,7 +33,7 @@ class SignetMinerTest(BitcoinTestFramework):
         privkey.set(CHALLENGE_PRIVATE_KEY, True)
         pubkey = privkey.get_pubkey().get_bytes()
         challenge = key_to_p2wpkh_script(pubkey)
-        self.extra_args = [[f'-signetchallenge={challenge.hex()}']]
+        self.extra_args = [["--maxtipage=999999999999", f'-signetchallenge={challenge.hex()}']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
