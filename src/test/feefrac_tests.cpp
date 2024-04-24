@@ -82,43 +82,4 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
 
 }
 
-BOOST_AUTO_TEST_CASE(build_diagram_test)
-{
-    FeeFrac p1{1000, 100};
-    FeeFrac empty{0, 0};
-    FeeFrac zero_fee{0, 1};
-    FeeFrac oversized_1{4611686000000, 4000000};
-    FeeFrac oversized_2{184467440000000, 100000};
-
-    // Diagram-building will reorder chunks
-    std::vector<FeeFrac> chunks;
-    chunks.push_back(p1);
-    chunks.push_back(zero_fee);
-    chunks.push_back(empty);
-    chunks.push_back(oversized_1);
-    chunks.push_back(oversized_2);
-
-    // Caller in charge of sorting chunks in case chunk size limit
-    // differs from cluster size limit
-    std::sort(chunks.begin(), chunks.end(), [](const FeeFrac& a, const FeeFrac& b) { return a > b; });
-
-    // Chunks are now sorted in reverse order (largest first)
-    BOOST_CHECK(chunks[0] == empty); // empty is considered "highest" fee
-    BOOST_CHECK(chunks[1] == oversized_2);
-    BOOST_CHECK(chunks[2] == oversized_1);
-    BOOST_CHECK(chunks[3] == p1);
-    BOOST_CHECK(chunks[4] == zero_fee);
-
-    std::vector<FeeFrac> generated_diagram{BuildDiagramFromChunks(chunks)};
-    BOOST_CHECK(generated_diagram.size() == 1 + chunks.size());
-
-    // Prepended with an empty, then the chunks summed in order as above
-    BOOST_CHECK(generated_diagram[0] == empty);
-    BOOST_CHECK(generated_diagram[1] == empty);
-    BOOST_CHECK(generated_diagram[2] == oversized_2);
-    BOOST_CHECK(generated_diagram[3] == oversized_2 + oversized_1);
-    BOOST_CHECK(generated_diagram[4] == oversized_2 + oversized_1 + p1);
-    BOOST_CHECK(generated_diagram[5] == oversized_2 + oversized_1 + p1 + zero_fee);
-}
-
 BOOST_AUTO_TEST_SUITE_END()

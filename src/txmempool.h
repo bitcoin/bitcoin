@@ -738,7 +738,7 @@ public:
     }
 
     /**
-     * Calculate the old and new mempool feerate diagrams relating to the
+     * Calculate the sorted chunks for the old and new mempool relating to the
      * clusters that would be affected by a potential replacement transaction.
      * (replacement_fees, replacement_vsize) values are gathered from a
      * proposed set of replacement transactions that are considered as a single
@@ -752,7 +752,7 @@ public:
      * @param[in] all_conflicts       All transactions that would be removed
      * @return old and new diagram pair respectively, or an error string if the conflicts don't match a calculable topology
      */
-    util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateFeerateDiagramsForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF(CAmount replacement_fees, int64_t replacement_vsize, const setEntries& direct_conflicts, const setEntries& all_conflicts) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /* Check that all direct conflicts are in a cluster size of two or less. Each
      * direct conflict may be in a separate cluster.
