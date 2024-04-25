@@ -33,14 +33,18 @@
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)
-Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
+Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin)
 #endif
-#if defined(QT_QPA_PLATFORM_XCB)
-Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
+#if defined(QT_QPA_PLATFORM_LINUX)
+Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)
+Q_IMPORT_PLUGIN(QWaylandIntegrationPlugin)
+Q_IMPORT_PLUGIN(QWaylandEglClientBufferPlugin)
+Q_IMPORT_PLUGIN(QWaylandBradientDecorationPlugin)
+Q_IMPORT_PLUGIN(QWaylandXdgShellIntegrationPlugin)
 #elif defined(QT_QPA_PLATFORM_WINDOWS)
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
+Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #elif defined(QT_QPA_PLATFORM_COCOA)
-Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)
 #elif defined(QT_QPA_PLATFORM_ANDROID)
 Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 #endif
