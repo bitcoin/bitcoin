@@ -644,15 +644,17 @@ class P2PInterface(P2PConnection):
 
         self.wait_until(test_function, timeout=timeout)
 
-    def wait_for_getheaders(self, *, timeout=60):
-        """Waits for a getheaders message.
+    def wait_for_getheaders(self, block_hash=None, *, timeout=60):
+        """Waits for a getheaders message containing a specific block hash.
 
-        Receiving any getheaders message will satisfy the predicate. the last_message["getheaders"]
-        value must be explicitly cleared before calling this method, or this will return
-        immediately with success. TODO: change this method to take a hash value and only
-        return true if the correct block header has been requested."""
+        If no block hash is provided, checks whether any getheaders message has been received by the node."""
         def test_function():
-            return self.last_message.get("getheaders")
+            last_getheaders = self.last_message.pop("getheaders", None)
+            if block_hash is None:
+                 return last_getheaders
+            if last_getheaders is None:
+                return False
+            return block_hash == last_getheaders.locator.vHave[0]
 
         self.wait_until(test_function, timeout=timeout)
 

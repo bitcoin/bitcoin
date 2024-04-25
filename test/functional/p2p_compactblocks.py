@@ -387,7 +387,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
             if announce == "inv":
                 test_node.send_message(msg_inv([CInv(MSG_BLOCK, block.sha256)]))
-                test_node.wait_until(lambda: "getheaders" in test_node.last_message, timeout=30)
+                test_node.wait_for_getheaders(timeout=30)
                 test_node.send_header_for_blocks([block])
             else:
                 test_node.send_header_for_blocks([block])
