@@ -10,6 +10,7 @@
 #include <kernel/chain.h>
 #include <net.h>
 #include <primitives/transaction.h>
+#include <policy/packages.h>
 #include <txorphanage.h>
 #include <txrequest.h>
 
@@ -159,6 +160,8 @@ public:
 
     /** Marks a tx as ReceivedResponse in txrequest. */
     void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
+
+    std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H
