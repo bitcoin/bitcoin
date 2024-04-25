@@ -4609,7 +4609,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
                     newHdChain.AddAccount();
                 } else {
                     if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
-                        walletInstance->WalletLogPrintf("%s -- Incorrect seed, generating a random mnemonic instead\n", __func__);
+                        error = strprintf(_("%s -- Incorrect seed, it should be a hex string"), __func__);
+                        return nullptr;
                     }
                     SecureString secureMnemonic = gArgs.GetArg("-mnemonic", "").c_str();
                     SecureString secureMnemonicPassphrase = gArgs.GetArg("-mnemonicpassphrase", "").c_str();
@@ -4623,18 +4624,13 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
                 gArgs.ForceRemoveArg("hdseed");
                 gArgs.ForceRemoveArg("mnemonic");
                 gArgs.ForceRemoveArg("mnemonicpassphrase");
-            }
+            } // Otherwise, do not create a new HD chain
+
             LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 walletInstance->SetupDescriptorScriptPubKeyMans();
                 // SetupDescriptorScriptPubKeyMans already calls SetupGeneration for us so we don't need to call SetupGeneration separately
-            }
-        } // Otherwise, do not create a new HD chain
-
-        // Top up the keypool
-        {
-            LOCK(walletInstance->cs_wallet);
-            if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            } else { // Top up the keypool
                 // Legacy wallets need SetupGeneration here.
                 if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
                     if (spk_man->CanGenerateKeys() && !spk_man->TopUp()) {
@@ -4935,8 +4931,10 @@ bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString
     WalletLogPrintf("Upgrading wallet to HD\n");
     SetMinVersion(FEATURE_HD);
 
+    // TODO: replace to GetLegacyScriptPubKeyMan() when `sethdseed` is backported
     auto spk_man = GetOrCreateLegacyScriptPubKeyMan();
     bool prev_encrypted = IsCrypted();
+    // TODO: unify encrypted and plain chains usages here
     if (prev_encrypted) {
         if (!GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
             error = Untranslated("Failed to generate encrypted HD wallet");
