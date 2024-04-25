@@ -371,11 +371,11 @@ public:
 private:
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
     std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, PeerManager& peerman,
-                                                                   const CActiveMasternodeManager* const mn_activeman);
+                                                                   const CActiveMasternodeManager& mn_activeman);
     void VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman, PeerManager& peerman,
-                                const CActiveMasternodeManager* const mn_activeman);
+                                const CActiveMasternodeManager& mn_activeman);
     bool VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman, PeerManager& peerman,
-                            const CActiveMasternodeManager* const mn_activeman);
+                            const CActiveMasternodeManager& mn_activeman);
     bool HasAlreadyVotedFundingTrigger() const;
 
     void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const;

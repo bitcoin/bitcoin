@@ -565,7 +565,7 @@ struct sortProposalsByVotes {
 
 std::optional<const CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHeight) const
 {
-    if (!fMasternodeMode || fDisableGovernance) return std::nullopt;
+    if (fDisableGovernance) return std::nullopt;
     if (m_mn_sync == nullptr || !m_mn_sync->IsSynced()) return std::nullopt;
     if (nHeight % Params().GetConsensus().nSuperblockCycle < Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockMaturityWindow) return std::nullopt;
     if (HasAlreadyVotedFundingTrigger()) return std::nullopt;
@@ -673,10 +673,8 @@ std::optional<const CSuperblock> CGovernanceManager::CreateSuperblockCandidate(i
 }
 
 std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt, PeerManager& peerman,
-                                                                                   const CActiveMasternodeManager* const mn_activeman)
+                                                                                   const CActiveMasternodeManager& mn_activeman)
 {
-    if (!fMasternodeMode) return std::nullopt;
-
     // no sb_opt, no trigger
     if (!sb_opt.has_value()) return std::nullopt;
 
@@ -700,12 +698,12 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
         return std::nullopt;
     }
 
-    if (mn_payees.front()->proTxHash != Assert(mn_activeman)->GetProTxHash()) {
+    if (mn_payees.front()->proTxHash != mn_activeman.GetProTxHash()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s we are not the payee, skipping\n", __func__);
         return std::nullopt;
     }
-    gov_sb.SetMasternodeOutpoint(mn_activeman->GetOutPoint());
-    gov_sb.Sign(*mn_activeman);
+    gov_sb.SetMasternodeOutpoint(mn_activeman.GetOutPoint());
+    gov_sb.Sign(mn_activeman);
 
     if (std::string strError; !gov_sb.IsValidLocally(m_dmnman->GetListAtChainTip(), strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
@@ -723,11 +721,10 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
 }
 
 void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, CConnman& connman, PeerManager& peerman,
-                                                const CActiveMasternodeManager* const mn_activeman)
+                                                const CActiveMasternodeManager& mn_activeman)
 {
     // only active masternodes can vote on triggers
-    if (!fMasternodeMode) return;
-    if (Assert(mn_activeman)->GetProTxHash().IsNull()) return;
+    if (mn_activeman.GetProTxHash().IsNull()) return;
 
     LOCK2(cs_main, cs);
 
@@ -769,13 +766,11 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
 }
 
 bool CGovernanceManager::VoteFundingTrigger(const uint256& nHash, const vote_outcome_enum_t outcome, CConnman& connman, PeerManager& peerman,
-                                            const CActiveMasternodeManager* const mn_activeman)
+                                            const CActiveMasternodeManager& mn_activeman)
 {
-    if (!fMasternodeMode) return false;
-
-    CGovernanceVote vote(Assert(mn_activeman)->GetOutPoint(), nHash, VOTE_SIGNAL_FUNDING, outcome);
+    CGovernanceVote vote(mn_activeman.GetOutPoint(), nHash, VOTE_SIGNAL_FUNDING, outcome);
     vote.SetTime(GetAdjustedTime());
-    vote.Sign(*mn_activeman);
+    vote.Sign(mn_activeman);
 
     CGovernanceException exception;
     if (!ProcessVoteAndRelay(vote, exception, connman, peerman)) {
@@ -1485,9 +1480,11 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
         return;
     }
 
-    const auto sb_opt = CreateSuperblockCandidate(pindex->nHeight);
-    const auto trigger_opt = CreateGovernanceTrigger(sb_opt, peerman, mn_activeman);
-    VoteGovernanceTriggers(trigger_opt, connman, peerman, mn_activeman);
+    if (mn_activeman) {
+        const auto sb_opt = CreateSuperblockCandidate(pindex->nHeight);
+        const auto trigger_opt = CreateGovernanceTrigger(sb_opt, peerman, *mn_activeman);
+        VoteGovernanceTriggers(trigger_opt, connman, peerman, *mn_activeman);
+    }
 
     nCachedBlockHeight = pindex->nHeight;
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
