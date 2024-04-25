@@ -7,6 +7,7 @@
 
 #include <chain.h>
 #include <consensus/validation.h>
+#include <logging.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -57,6 +58,14 @@ void TxDownloadManager::ConnectedPeer(NodeId nodeid, const TxDownloadConnectionI
 void TxDownloadManager::DisconnectedPeer(NodeId nodeid)
 {
     m_impl->DisconnectedPeer(nodeid);
+}
+bool TxDownloadManager::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv)
+{
+    return m_impl->AddTxAnnouncement(peer, gtxid, now, p2p_inv);
+}
+std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+{
+    return m_impl->GetRequestsToSend(nodeid, current_time);
 }
 
 // TxDownloadManagerImpl
@@ -141,5 +150,59 @@ void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
         m_peer_info.erase(it);
     }
 
+}
+
+bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now, bool p2p_inv)
+{
+    // If this is an inv received from a peer and we already have it, we can drop it.
+    if (p2p_inv && AlreadyHaveTx(gtxid, /*include_reconsiderable=*/true)) return true;
+
+    auto it = m_peer_info.find(peer);
+    if (it == m_peer_info.end()) return false;
+    const auto& info = it->second.m_connection_info;
+    if (!info.m_relay_permissions && m_txrequest.Count(peer) >= MAX_PEER_TX_ANNOUNCEMENTS) {
+        // Too many queued announcements for this peer
+        return false;
+    }
+    // Decide the TxRequestTracker parameters for this announcement:
+    // - "preferred": if fPreferredDownload is set (= outbound, or NetPermissionFlags::NoBan permission)
+    // - "reqtime": current time plus delays for:
+    //   - NONPREF_PEER_TX_DELAY for announcements from non-preferred connections
+    //   - TXID_RELAY_DELAY for txid announcements while wtxid peers are available
+    //   - OVERLOADED_PEER_TX_DELAY for announcements from peers which have at least
+    //     MAX_PEER_TX_REQUEST_IN_FLIGHT requests in flight (and don't have NetPermissionFlags::Relay).
+    auto delay{0us};
+    if (!info.m_preferred) delay += NONPREF_PEER_TX_DELAY;
+    if (!gtxid.IsWtxid() && m_num_wtxid_peers > 0) delay += TXID_RELAY_DELAY;
+    const bool overloaded = !info.m_relay_permissions && m_txrequest.CountInFlight(peer) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
+    if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
+
+    m_txrequest.ReceivedInv(peer, gtxid, info.m_preferred, now + delay);
+
+    return false;
+}
+
+std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time)
+{
+    std::vector<GenTxid> requests;
+    std::vector<std::pair<NodeId, GenTxid>> expired;
+    auto requestable = m_txrequest.GetRequestable(nodeid, current_time, &expired);
+    for (const auto& entry : expired) {
+        LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
+            entry.second.GetHash().ToString(), entry.first);
+    }
+    for (const GenTxid& gtxid : requestable) {
+        if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
+            LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+                gtxid.GetHash().ToString(), nodeid);
+            requests.emplace_back(gtxid);
+            m_txrequest.RequestedTx(nodeid, gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
+        } else {
+            // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
+            // this should already be called whenever a transaction becomes AlreadyHaveTx().
+            m_txrequest.ForgetTxHash(gtxid.GetHash());
+        }
+    }
+    return requests;
 }
 } // namespace node
