@@ -73,6 +73,11 @@ pub fn get_pathspecs_exclude_includes_build_config() -> Vec<String> {
     ]))
 }
 
+/// Return the pathspecs for locale dependence related excludes
+pub fn get_pathspecs_exclude_locale_dependence() -> Vec<String> {
+    get_pathspecs_exclude(Some(&["src/tinyformat.h"]))
+}
+
 /// Return the pathspecs for spelling check related excludes
 pub fn get_pathspecs_exclude_spelling() -> Vec<String> {
     get_pathspecs_exclude(Some(&[
