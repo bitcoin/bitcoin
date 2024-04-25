@@ -682,22 +682,6 @@ public:
   explicit Buffer(size_t cap) { buf.resize(cap); }
   void add_cap(size_t cap) { buf.resize(cap); }
 
-#if 0
-  Buffer(const Buffer& other):
-    buf(other.buf),
-    length(other.length)
-  {
-    std::cout << "COPY" << std::endl;
-  }
-
-  Buffer(Buffer&& other):
-    buf(std::move(other.buf)),
-    length(other.length)
-  {
-    std::cout << "MOVE" << std::endl;
-  }
-#endif
-
 public:
   std::vector<char> buf;
   size_t length = 0;
@@ -973,15 +957,6 @@ public:
 
     execute_process();
   }
-
-/*
-  ~Popen()
-  {
-#ifdef __USING_WINDOWS__
-    CloseHandle(this->process_handle_);
-#endif
-  }
-*/
 
   int pid() const noexcept { return child_pid_; }
 
