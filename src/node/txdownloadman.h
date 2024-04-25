@@ -108,6 +108,9 @@ public:
 
     /** Get getdata requests to send. */
     std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time);
+
+    /** Should be called when a notfound for a tx has been received. */
+    void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

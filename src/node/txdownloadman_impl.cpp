@@ -67,6 +67,10 @@ std::vector<GenTxid> TxDownloadManager::GetRequestsToSend(NodeId nodeid, std::ch
 {
     return m_impl->GetRequestsToSend(nodeid, current_time);
 }
+void TxDownloadManager::ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes)
+{
+    m_impl->ReceivedNotFound(nodeid, txhashes);
+}
 
 // TxDownloadManagerImpl
 void TxDownloadManagerImpl::ActiveTipChange()
@@ -204,5 +208,14 @@ std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std
         }
     }
     return requests;
+}
+
+void TxDownloadManagerImpl::ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes)
+{
+    for (const auto& txhash : txhashes) {
+        // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
+        // completed in TxRequestTracker.
+        m_txrequest.ReceivedResponse(nodeid, txhash);
+    }
 }
 } // namespace node
