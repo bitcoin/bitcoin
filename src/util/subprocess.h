@@ -159,12 +159,6 @@ public:
 //--------------------------------------------------------------------
 namespace util
 {
-  template <typename R>
-  inline bool is_ready(std::shared_future<R> const &f)
-  {
-    return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-  }
-
   inline void quote_argument(const std::wstring &argument, std::wstring &command_line,
                       bool force)
   {
@@ -724,35 +718,6 @@ class Popen;
  */
 
 namespace detail {
-
-// Metaprogram for searching a type within
-// a variadic parameter pack
-// This is particularly required to do a compile time
-// checking of the arguments provided to 'check_output' function
-// wherein the user is not expected to provide an 'output' option.
-
-template <typename... T> struct param_pack{};
-
-template <typename F, typename T> struct has_type;
-
-template <typename F>
-struct has_type<F, param_pack<>> {
-  static constexpr bool value = false;
-};
-
-template <typename F, typename... T>
-struct has_type<F, param_pack<F, T...>> {
-  static constexpr bool value = true;
-};
-
-template <typename F, typename H, typename... T>
-struct has_type<F, param_pack<H,T...>> {
-  static constexpr bool value =
-    std::is_same<F, typename std::decay<H>::type>::value ? true : has_type<F, param_pack<T...>>::value;
-};
-
-//----
-
 /*!
  * A helper class to Popen class for setting
  * options as provided in the Popen constructor
