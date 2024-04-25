@@ -218,14 +218,14 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
         if (keyFail) {
             return false;
         }
-        if (!keyPass && !accept_no_keys && (hdChain.IsNull() || !hdChain.IsNull() && !hdChain.IsCrypted())) {
+        if (!keyPass && !accept_no_keys && (m_hd_chain.IsNull() || !m_hd_chain.IsNull() && !m_hd_chain.IsCrypted())) {
             return false;
         }
 
-        if(!hdChain.IsNull() && !hdChain.IsCrypted()) {
+        if(!m_hd_chain.IsNull() && !m_hd_chain.IsCrypted()) {
             // try to decrypt seed and make sure it matches
             CHDChain hdChainTmp;
-            if (!DecryptHDChain(master_key, hdChainTmp) || (hdChain.GetID() != hdChainTmp.GetSeedHash())) {
+            if (!DecryptHDChain(master_key, hdChainTmp) || (m_hd_chain.GetID() != hdChainTmp.GetSeedHash())) {
                 return false;
             }
         }
@@ -267,8 +267,8 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     }
 
     if (!hdChainCurrent.IsNull()) {
-        assert(EncryptHDChain(master_key, hdChain));
-        assert(SetHDChain(hdChain));
+        assert(EncryptHDChain(master_key, m_hd_chain));
+        assert(SetHDChain(m_hd_chain));
 
         CHDChain hdChainCrypted;
         assert(GetHDChain(hdChainCrypted));
@@ -539,40 +539,40 @@ bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
     if (!m_storage.HasEncryptionKeys())
         return true;
 
-    if (hdChain.IsNull())
+    if (m_hd_chain.IsNull())
         return false;
 
-    if (!hdChain.IsCrypted())
+    if (!m_hd_chain.IsCrypted())
         return false;
 
     SecureVector vchSecureSeed;
-    SecureVector vchSecureCryptedSeed = hdChain.GetSeed();
+    SecureVector vchSecureCryptedSeed = m_hd_chain.GetSeed();
     std::vector<unsigned char> vchCryptedSeed(vchSecureCryptedSeed.begin(), vchSecureCryptedSeed.end());
-    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, hdChain.GetID(), vchSecureSeed))
+    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, m_hd_chain.GetID(), vchSecureSeed))
         return false;
 
-    hdChainRet = hdChain;
+    hdChainRet = m_hd_chain;
     if (!hdChainRet.SetSeed(vchSecureSeed, false))
         return false;
 
     // hash of decrypted seed must match chain id
-    if (hdChainRet.GetSeedHash() != hdChain.GetID())
+    if (hdChainRet.GetSeedHash() != m_hd_chain.GetID())
         return false;
 
     SecureVector vchSecureCryptedMnemonic;
     SecureVector vchSecureCryptedMnemonicPassphrase;
 
     // it's ok to have no mnemonic if wallet was initialized via hdseed
-    if (hdChain.GetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase)) {
+    if (m_hd_chain.GetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase)) {
         SecureVector vchSecureMnemonic;
         SecureVector vchSecureMnemonicPassphrase;
 
         std::vector<unsigned char> vchCryptedMnemonic(vchSecureCryptedMnemonic.begin(), vchSecureCryptedMnemonic.end());
         std::vector<unsigned char> vchCryptedMnemonicPassphrase(vchSecureCryptedMnemonicPassphrase.begin(), vchSecureCryptedMnemonicPassphrase.end());
 
-        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, hdChain.GetID(), vchSecureMnemonic))
+        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, m_hd_chain.GetID(), vchSecureMnemonic))
             return false;
-        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, hdChain.GetID(), vchSecureMnemonicPassphrase))
+        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, m_hd_chain.GetID(), vchSecureMnemonicPassphrase))
             return false;
 
         if (!hdChainRet.SetMnemonic(vchSecureMnemonic, vchSecureMnemonicPassphrase, false))
@@ -1096,7 +1096,7 @@ bool LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain)
 
     if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
 
-    hdChain = chain;
+    m_hd_chain = chain;
     return true;
 }
 
@@ -1758,8 +1758,8 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 bool LegacyScriptPubKeyMan::GetHDChain(CHDChain& hdChainRet) const
 {
     LOCK(cs_KeyStore);
-    hdChainRet = hdChain;
-    return !hdChain.IsNull();
+    hdChainRet = m_hd_chain;
+    return !m_hd_chain.IsNull();
 }
 
 void LegacyScriptPubKeyMan::SetInternal(bool internal) {}

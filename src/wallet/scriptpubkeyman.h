@@ -286,7 +286,7 @@ private:
     bool SetHDChain(const CHDChain& chain);
 
     /* the HD chain data model (external chain counters) */
-    CHDChain hdChain GUARDED_BY(cs_KeyStore);
+    CHDChain m_hd_chain GUARDED_BY(cs_KeyStore);
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
