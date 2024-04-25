@@ -1,48 +1,75 @@
-From 69be9a8219e20fa551f0f0be55f7fc3cb989a822 Mon Sep 17 00:00:00 2001
+From 3c4224c6c4f3e6085b57366a3341258588fc7636 Mon Sep 17 00:00:00 2001
 From: laanwj <126646+laanwj@users.noreply.github.com>
 Date: Tue, 23 Apr 2024 10:03:34 +0200
 Subject: [PATCH] qtsowrap: Replace UNIX system libraries linking with qtsowrap
 
 ---
- src/3rdparty/xcb/libxcb/xinput.c              |  4 +-
- src/gui/configure.json                        | 96 +++++++++----------
- .../fontconfig/qfontconfigdatabase.cpp        | 14 ++-
- .../fontconfig/qfontconfigdatabase_p.h        |  1 +
- .../fontconfig/qfontenginemultifontconfig_p.h |  2 +-
- .../fontdatabases/freetype/qfontengine_ft.cpp | 25 +----
- .../fontdatabases/freetype/qfontengine_ft_p.h |  3 +-
- .../freetype/qfreetypefontdatabase.cpp        |  4 +-
- .../input/xkbcommon/qxkbcommon_p.h            |  2 +-
- .../linuxaccessibility/application.cpp        |  2 +-
- .../eglfs_x11/qeglfsx11integration.h          |  2 +-
- src/plugins/platforms/xcb/qxcbatom.h          |  2 +-
- .../platforms/xcb/qxcbbackingstore.cpp        |  8 +-
- src/plugins/platforms/xcb/qxcbbackingstore.h  |  2 +-
- src/plugins/platforms/xcb/qxcbclipboard.h     |  4 +-
- src/plugins/platforms/xcb/qxcbconnection.cpp  |  6 +-
- src/plugins/platforms/xcb/qxcbconnection.h    |  4 +-
- .../platforms/xcb/qxcbconnection_basic.cpp    | 16 ++--
- .../platforms/xcb/qxcbconnection_basic.h      |  2 +-
- .../platforms/xcb/qxcbconnection_screens.cpp  |  2 +-
- .../platforms/xcb/qxcbconnection_xi2.cpp      |  2 +-
- src/plugins/platforms/xcb/qxcbcursor.cpp      |  4 +-
- src/plugins/platforms/xcb/qxcbdrag.cpp        |  2 +-
- src/plugins/platforms/xcb/qxcbdrag.h          |  2 +-
- src/plugins/platforms/xcb/qxcbeventqueue.h    |  2 +-
- src/plugins/platforms/xcb/qxcbimage.cpp       |  4 +-
- src/plugins/platforms/xcb/qxcbimage.h         |  2 +-
- src/plugins/platforms/xcb/qxcbintegration.cpp |  2 +-
- src/plugins/platforms/xcb/qxcbintegration.h   |  2 +-
- src/plugins/platforms/xcb/qxcbkeyboard.cpp    |  2 +-
- src/plugins/platforms/xcb/qxcbkeyboard.h      |  6 +-
- src/plugins/platforms/xcb/qxcbmain.cpp        | 41 ++++++++
- .../platforms/xcb/qxcbnativeinterface.h       |  2 +-
- src/plugins/platforms/xcb/qxcbscreen.h        |  8 +-
- .../platforms/xcb/qxcbsystemtraytracker.h     |  2 +-
- src/plugins/platforms/xcb/qxcbwindow.cpp      |  8 +-
- src/plugins/platforms/xcb/qxcbwindow.h        |  4 +-
- 37 files changed, 162 insertions(+), 134 deletions(-)
+ mkspecs/common/linux.conf                     |   8 +-
+ src/3rdparty/xcb/libxcb/xinput.c              |   4 +-
+ src/gui/configure.json                        | 100 +++++++++---------
+ src/platformsupport/eglconvenience/qt_egl_p.h |   2 +-
+ .../fontconfig/qfontconfigdatabase.cpp        |  14 ++-
+ .../fontconfig/qfontconfigdatabase_p.h        |   1 +
+ .../fontconfig/qfontenginemultifontconfig_p.h |   2 +-
+ .../fontdatabases/freetype/qfontengine_ft.cpp |  25 +----
+ .../fontdatabases/freetype/qfontengine_ft_p.h |   3 +-
+ .../freetype/qfreetypefontdatabase.cpp        |   4 +-
+ .../input/xkbcommon/qxkbcommon_p.h            |   2 +-
+ .../linuxaccessibility/application.cpp        |   2 +-
+ .../eglfs_x11/qeglfsx11integration.h          |   2 +-
+ src/plugins/platforms/xcb/qxcbatom.h          |   2 +-
+ .../platforms/xcb/qxcbbackingstore.cpp        |   8 +-
+ src/plugins/platforms/xcb/qxcbbackingstore.h  |   2 +-
+ src/plugins/platforms/xcb/qxcbclipboard.h     |   4 +-
+ src/plugins/platforms/xcb/qxcbconnection.cpp  |   6 +-
+ src/plugins/platforms/xcb/qxcbconnection.h    |   4 +-
+ .../platforms/xcb/qxcbconnection_basic.cpp    |  16 +--
+ .../platforms/xcb/qxcbconnection_basic.h      |   2 +-
+ .../platforms/xcb/qxcbconnection_screens.cpp  |   2 +-
+ .../platforms/xcb/qxcbconnection_xi2.cpp      |   2 +-
+ src/plugins/platforms/xcb/qxcbcursor.cpp      |   4 +-
+ src/plugins/platforms/xcb/qxcbdrag.cpp        |   2 +-
+ src/plugins/platforms/xcb/qxcbdrag.h          |   2 +-
+ src/plugins/platforms/xcb/qxcbeventqueue.h    |   2 +-
+ src/plugins/platforms/xcb/qxcbimage.cpp       |   4 +-
+ src/plugins/platforms/xcb/qxcbimage.h         |   2 +-
+ src/plugins/platforms/xcb/qxcbintegration.cpp |   2 +-
+ src/plugins/platforms/xcb/qxcbintegration.h   |   2 +-
+ src/plugins/platforms/xcb/qxcbkeyboard.cpp    |   2 +-
+ src/plugins/platforms/xcb/qxcbkeyboard.h      |   6 +-
+ src/plugins/platforms/xcb/qxcbmain.cpp        |  41 +++++++
+ .../platforms/xcb/qxcbnativeinterface.h       |   2 +-
+ src/plugins/platforms/xcb/qxcbscreen.h        |   8 +-
+ .../platforms/xcb/qxcbsystemtraytracker.h     |   2 +-
+ src/plugins/platforms/xcb/qxcbwindow.cpp      |   8 +-
+ src/plugins/platforms/xcb/qxcbwindow.h        |   4 +-
+ 39 files changed, 168 insertions(+), 142 deletions(-)
 
+diff --git a/mkspecs/common/linux.conf b/mkspecs/common/linux.conf
+index 544cc2271534d5cf466a94a3d18c3a3eb5fc0dcc..b3cc6cb44b371b4e8a7377f162ae798deb1595d1 100644
+--- a/qtbase/mkspecs/common/linux.conf
++++ a/qtbase/mkspecs/common/linux.conf
+@@ -29,16 +29,16 @@ QMAKE_LIBDIR_OPENVG     =
+ QMAKE_LIBS              =
+ QMAKE_LIBS_DYNLOAD      = -ldl
+ QMAKE_LIBS_X11          = -lXext -lX11 -lm
+-QMAKE_LIBS_EGL          = -lEGL
++QMAKE_LIBS_EGL          = -lqtsowrap -ldl
+ QMAKE_LIBS_OPENGL       = -lGL
+-QMAKE_LIBS_OPENGL_ES2   = -lGLESv2
++QMAKE_LIBS_OPENGL_ES2   =
+ QMAKE_LIBS_OPENVG       = -lOpenVG
+ QMAKE_LIBS_THREAD       = -lpthread
+ QMAKE_LIBS_VULKAN       =
+ 
+ QMAKE_INCDIR_WAYLAND    =
+-QMAKE_LIBS_WAYLAND_CLIENT = -lwayland-client
+-QMAKE_LIBS_WAYLAND_SERVER = -lwayland-server
++QMAKE_LIBS_WAYLAND_CLIENT =
++QMAKE_LIBS_WAYLAND_SERVER =
+ QMAKE_LIBDIR_WAYLAND    =
+ QMAKE_DEFINES_WAYLAND   =
+ QMAKE_WAYLAND_SCANNER   = wayland-scanner
 diff --git a/src/3rdparty/xcb/libxcb/xinput.c b/src/3rdparty/xcb/libxcb/xinput.c
 index d4e3c250bc0120624500165a64aca5791bb6a8d2..7fbc69bfa865a2a19c8fd3dbf5f69209d629895b 100644
 --- a/qtbase/src/3rdparty/xcb/libxcb/xinput.c
@@ -62,9 +89,18 @@ index d4e3c250bc0120624500165a64aca5791bb6a8d2..7fbc69bfa865a2a19c8fd3dbf5f69209
  xcb_extension_t xcb_input_id = { "XInputExtension", 0 };
  
 diff --git a/src/gui/configure.json b/src/gui/configure.json
-index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6cb2d5027 100644
+index 7b80162faa5e001bec0b17a91e4fccab2269dc09..b8a6bcde0f6a47cbc4c52ae8a649603ade21db00 100644
 --- a/qtbase/src/gui/configure.json
 +++ a/qtbase/src/gui/configure.json
+@@ -217,7 +217,7 @@
+                     "eglDestroyContext(dpy, ctx);"
+                 ]
+             },
+-            "headers": "EGL/egl.h",
++            "headers": "egl-so_wrap.h",
+             "sources": [
+                 { "type": "pkgConfig", "args": "egl" },
+                 { "type": "makeSpec", "spec": "EGL" }
 @@ -236,12 +236,12 @@
                      "FT_Face face = 0;"
                  ]
@@ -94,7 +130,16 @@ index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6
              ],
              "use": "freetype"
          },
-@@ -586,99 +586,99 @@
+@@ -460,8 +460,6 @@
+                     "#endif"
+                 ],
+                 "main": [
+-                    "glUniform1f(1, GLfloat(1.0));",
+-                    "glClear(GL_COLOR_BUFFER_BIT);"
+                 ]
+             },
+             "headers": [
+@@ -586,99 +584,99 @@
                      "#endif"
                  ]
              },
@@ -216,7 +261,7 @@ index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6
              ],
              "use": "xcb"
          },
-@@ -696,19 +696,19 @@
+@@ -696,19 +694,19 @@
          },
          "xcb_xkb": {
              "label": "XCB XKB",
@@ -240,7 +285,7 @@ index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6
              ],
              "use": "xcb"
          },
-@@ -753,10 +753,10 @@
+@@ -753,10 +751,10 @@
              "test": {
                  "main": "xkb_context_new(XKB_CONTEXT_NO_FLAGS);"
              },
@@ -253,7 +298,7 @@ index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6
              ]
          },
          "xkbcommon_x11": {
-@@ -764,10 +764,10 @@
+@@ -764,10 +762,10 @@
              "test": {
                  "main": "xkb_x11_setup_xkb_extension_flags flag = XKB_X11_SETUP_XKB_EXTENSION_NO_FLAGS;"
              },
@@ -266,7 +311,7 @@ index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6
              ]
          },
          "xrender": {
-@@ -1055,19 +1055,19 @@
+@@ -1055,19 +1053,19 @@
                  ],
                  "tail": "#undef explicit",
                  "include": [
@@ -299,6 +344,19 @@ index 7b80162faa5e001bec0b17a91e4fccab2269dc09..398e30bc22884dda78fb358003186ef6
                  ],
                  "main": [
                      "int primaryScreen = 0;",
+diff --git a/src/platformsupport/eglconvenience/qt_egl_p.h b/src/platformsupport/eglconvenience/qt_egl_p.h
+index bf37d07fd80529c8b6340f727c08c3c9039863da..b9736f3930ceed1896130a6fa70dde773cd591ff 100644
+--- a/qtbase/src/platformsupport/eglconvenience/qt_egl_p.h
++++ a/qtbase/src/platformsupport/eglconvenience/qt_egl_p.h
+@@ -67,7 +67,7 @@
+ # define WAYLAND // NV
+ #endif // QT_EGL_WAYLAND
+ 
+-#include <EGL/egl.h>
++#include <egl-so_wrap.h>
+ #include <EGL/eglext.h>
+ 
+ #include <stdint.h>
 diff --git a/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp b/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp
 index 159b490ce0a7e2b84528247b3d5ae52927f20f1f..0f63b4f4e80864067a931d6c6ed329a763e6bed6 100644
 --- a/qtbase/src/platformsupport/fontdatabases/fontconfig/qfontconfigdatabase.cpp
