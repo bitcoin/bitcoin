@@ -69,7 +69,8 @@ private:
 public:
     CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                        CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
-                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman, bool unitTests, bool fWipe);
+                       const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman,
+                       const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe);
     ~CDKGSessionManager() = default;
 
     void StartThreads();

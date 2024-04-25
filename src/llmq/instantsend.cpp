@@ -1452,12 +1452,9 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnma
         if (nodesToAskFor.size() >= 4) {
             return;
         }
-        if (peerman.CanRelayAddrs(pnode->GetId())) {
-            LOCK(pnode->m_tx_relay->cs_tx_inventory);
-            if (pnode->m_tx_relay->filterInventoryKnown.contains(txid)) {
-                pnode->AddRef();
-                nodesToAskFor.emplace_back(pnode);
-            }
+        if (peerman.IsInvInFilter(pnode->GetId(), txid)) {
+            pnode->AddRef();
+            nodesToAskFor.emplace_back(pnode);
         }
     };
 

@@ -1236,7 +1236,6 @@ void RPCConsole::updateDetailWidget()
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
     ui->peerHeading->setText(peerAddrDetails);
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
-    ui->peerRelayTxes->setText(stats->nodeStats.fRelayTxes ? "Yes" : "No");
     const auto time_now{GetTime<std::chrono::seconds>()};
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - std::chrono::seconds{stats->nodeStats.nTimeConnected}));
     ui->peerLastBlock->setText(TimeDurationField(time_now, std::chrono::seconds{stats->nodeStats.nLastBlockTime}));
@@ -1295,6 +1294,7 @@ void RPCConsole::updateDetailWidget()
         ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? "Yes" : "No");
         ui->peerAddrProcessed->setText(QString::number(stats->nodeStateStats.m_addr_processed));
         ui->peerAddrRateLimited->setText(QString::number(stats->nodeStateStats.m_addr_rate_limited));
+        ui->peerRelayTxes->setText(stats->nodeStateStats.m_relay_txs ? "Yes" : "No");
     }
 
     ui->detailWidget->show();

@@ -22,6 +22,7 @@ class CDeterministicMN;
 class CMasternodeMetaMan;
 class CSporkManager;
 class UniValue;
+class PeerManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -280,6 +281,7 @@ private:
     CMasternodeMetaMan& m_mn_metaman;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
+    const std::unique_ptr<PeerManager>& m_peerman;
 
     const CBlockIndex* m_quorum_base_block_index{nullptr};
     int quorumIndex{0};
@@ -322,9 +324,10 @@ public:
     CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CConnman& _connman,
                 CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
                 CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                const CSporkManager& sporkman) :
+                const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
         params(_params), blsWorker(_blsWorker), cache(_blsWorker), connman(_connman), m_dmnman(dmnman), dkgManager(_dkgManager),
-        dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman) {}
+        dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman),
+        m_peerman(peerman) {}
 
     bool Init(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex);
 

@@ -130,6 +130,7 @@ private:
     CQuorumBlockProcessor& quorumBlockProcessor;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
+    const std::unique_ptr<PeerManager>& m_peerman;
     const Consensus::LLMQParams params;
     const int quorumIndex;
 
@@ -151,7 +152,7 @@ public:
     CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
                        CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
                        CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
-                       const CSporkManager& sporkman, const Consensus::LLMQParams& _params, int _quorumIndex);
+                       const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman, const Consensus::LLMQParams& _params, int _quorumIndex);
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
