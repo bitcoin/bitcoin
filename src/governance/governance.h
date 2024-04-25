@@ -33,6 +33,7 @@ class CNetFulfilledRequestManager;
 class CSporkManager;
 
 static constexpr int RATE_BUFFER_SIZE = 5;
+static constexpr bool DEFAULT_GOVERNANCE_ENABLE{true};
 
 class CDeterministicMNList;
 using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;

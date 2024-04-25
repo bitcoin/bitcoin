@@ -37,7 +37,6 @@
 //Dash only features
 
 extern bool fMasternodeMode;
-extern bool fDisableGovernance;
 extern int nWalletBackups;
 extern const std::string gCoinJoinName;
 
