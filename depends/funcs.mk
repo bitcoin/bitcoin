@@ -170,6 +170,9 @@ ifneq ($($(1)_ldflags),)
 $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
 endif
 
+debug_cmake_opts=-DCMAKE_BUILD_TYPE=Debug
+release_cmake_opts=-DCMAKE_BUILD_TYPE=RelWithDebInfo
+
 # We hardcode the library install path to "lib" to match the PKG_CONFIG_PATH
 # setting in depends/config.site.in, which also hardcodes "lib".
 # Without this setting, CMake by default would use the OS library
@@ -182,6 +185,7 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
                -DCMAKE_INSTALL_LIBDIR=lib/ \
                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+               $$($(release_type)_cmake_opts) \
                $$($(1)_config_opts)
 ifeq ($($(1)_type),build)
 $(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
