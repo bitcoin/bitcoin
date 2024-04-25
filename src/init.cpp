@@ -2312,7 +2312,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.dmnman), std::ref(*node.mn_sync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*node.dmnman)), std::chrono::seconds{10});
 
-    if (!fDisableGovernance) {
+    if (node.govman->IsValid()) {
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(*node.govman), std::ref(*node.connman)), std::chrono::minutes{5});
     }
 

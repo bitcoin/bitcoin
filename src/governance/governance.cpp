@@ -121,7 +121,7 @@ bool CGovernanceManager::SerializeVoteForHash(const uint256& nHash, CDataStream&
 
 PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv)
 {
-    if (fDisableGovernance) return {};
+    if (!IsValid()) return {};
     if (m_mn_sync == nullptr || !m_mn_sync->IsBlockchainSynced()) return {};
 
     const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
@@ -565,7 +565,7 @@ struct sortProposalsByVotes {
 
 std::optional<const CSuperblock> CGovernanceManager::CreateSuperblockCandidate(int nHeight) const
 {
-    if (fDisableGovernance) return std::nullopt;
+    if (!IsValid()) return std::nullopt;
     if (m_mn_sync == nullptr || !m_mn_sync->IsSynced()) return std::nullopt;
     if (nHeight % Params().GetConsensus().nSuperblockCycle < Params().GetConsensus().nSuperblockCycle - Params().GetConsensus().nSuperblockMaturityWindow) return std::nullopt;
     if (HasAlreadyVotedFundingTrigger()) return std::nullopt;
@@ -793,7 +793,7 @@ void CGovernanceManager::ResetVotedFundingTrigger()
 
 void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
-    if (fDisableGovernance) return;
+    if (!IsValid()) return;
     if (m_mn_sync == nullptr || !m_mn_sync->IsSynced()) return;
     if (ShutdownRequested()) return;
 

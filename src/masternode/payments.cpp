@@ -18,7 +18,6 @@
 #include <script/standard.h>
 #include <tinyformat.h>
 #include <util/ranges.h>
-#include <util/system.h>
 #include <validation.h>
 
 #include <cassert>
@@ -223,7 +222,7 @@ bool CMNPaymentsProcessor::IsBlockValueValid(const CBlock& block, const int nBlo
         return false;
     }
 
-    if(!m_mn_sync.IsSynced() || fDisableGovernance) {
+    if (!m_mn_sync.IsSynced() || !m_govman.IsValid()) {
         LogPrint(BCLog::MNPAYMENTS, "CMNPaymentsProcessor::%s -- WARNING! Not enough data, checked superblock max bounds only\n", __func__);
         // not enough data for full checks but at least we know that the superblock limits were honored.
         // We rely on the network to have followed the correct chain in this case
@@ -280,7 +279,7 @@ bool CMNPaymentsProcessor::IsBlockPayeeValid(const CTransaction& txNew, const CB
         return false;
     }
 
-    if (!m_mn_sync.IsSynced() || fDisableGovernance) {
+    if (!m_mn_sync.IsSynced() || !m_govman.IsValid()) {
         // governance data is either incomplete or non-existent
         LogPrint(BCLog::MNPAYMENTS, "CMNPaymentsProcessor::%s -- WARNING! Not enough data, skipping superblock payee checks\n", __func__);
         return true;  // not an error
