@@ -1,8 +1,8 @@
 package=qtsowrap
 $(package)_version=0.0.1
 $(package)_download_path=https://github.com/laanwj/qtsowrap/archive/
-$(package)_file_name=8825b14e8db51a1ae707c58448ec36dfa7ab7be2.tar.gz
-$(package)_sha256_hash=26f99e32d0b9f84f588d5fd6e129812418759d0fd551f6a35367d61974ea424a
+$(package)_file_name=996b672c3ad5736d962e04618fc86f75df92647e.tar.gz
+$(package)_sha256_hash=e12b78a1988e7b8e28b14b7f2d2ad4f33a465b9e9775b4a713f9c82efb99fcaf
 $(package)_dependencies=
 $(package)_patches =
 
