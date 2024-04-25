@@ -1459,10 +1459,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         }
     }
 
-    const bool is_governance_enabled{!args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)};
-    LogPrintf("fDisableGovernance %d\n", !is_governance_enabled);
-
-    if (!is_governance_enabled) {
+    if (args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)) {
         InitWarning(_("You are starting with governance validation disabled.") +
             (fPruneMode ?
                 Untranslated(" ") + _("This is expected because you are running a pruned node.") :
