@@ -45,14 +45,14 @@ or `--help`:
 
 | Lint test | Dependency |
 |-----------|:----------:|
-| [`lint-python.py`](/test/lint/lint-python.py) | [flake8](https://github.com/PyCQA/flake8)
+| [`lint-python.py`](/test/lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
 | [`lint-python.py`](/test/lint/lint-python.py) | [lief](https://github.com/lief-project/LIEF)
 | [`lint-python.py`](/test/lint/lint-python.py) | [mypy](https://github.com/python/mypy)
 | [`lint-python.py`](/test/lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-python-dead-code.py`](/test/lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
 | [`lint-shell.py`](/test/lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
-| [`lint-spelling.py`](/test/lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
-| markdown link check | [mlc](https://github.com/becheran/mlc)
+| [`test-runner --lint="markdown"`](/test/lint/test_runner/src/main.rs) | [mlc](https://github.com/becheran/mlc)
+| [`test-runner --lint="spelling"`](/test/lint/test_runner/src/main.rs) | [codespell](https://github.com/codespell-project/codespell)
 
 In use versions and install instructions are available in the [CI setup](../../ci/lint/04_install.sh).
 
