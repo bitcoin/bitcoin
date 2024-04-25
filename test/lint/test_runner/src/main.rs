@@ -12,6 +12,113 @@ type LintError = String;
 type LintResult = Result<(), LintError>;
 type LintFn = fn() -> LintResult;
 
+struct Linter {
+    pub description: &'static str,
+    pub name: &'static str,
+    pub lint_fn: LintFn,
+}
+
+fn get_linter_list() -> Vec<&'static Linter> {
+    vec![
+        &Linter {
+            description: "Check that all command line arguments are documented.",
+            name: "doc",
+            lint_fn: lint_doc
+        },
+        &Linter {
+            description: "Check that no symbol from bitcoin-config.h is used without the header being included",
+            name: "includes_build_config",
+            lint_fn: lint_includes_build_config
+        },
+        &Linter {
+            description: "Check that markdown links resolve",
+            name: "markdown",
+            lint_fn: lint_markdown
+        },
+        &Linter {
+            description: "Check that std::filesystem is not used directly",
+            name: "std_filesystem",
+            lint_fn: lint_std_filesystem
+        },
+        &Linter {
+            description: "Check that subtrees are pure subtrees",
+            name: "subtree",
+            lint_fn: lint_subtree
+        },
+        &Linter {
+            description: "Check that tabs are not used as whitespace",
+            name: "tabs_whitespace",
+            lint_fn: lint_tabs_whitespace
+        },
+        &Linter {
+            description: "Check for trailing whitespace",
+            name: "trailing_whitespace",
+            lint_fn: lint_trailing_whitespace
+        },
+        &Linter {
+            description: "Run all linters of the form: test/lint/lint-*.py",
+            name: "all_python_linters",
+            lint_fn: run_all_python_linters
+        },
+    ]
+}
+
+fn print_help_and_exit() {
+    print!(
+        r#"
+Usage: test_runner [--lint=LINTER_TO_RUN]
+Runs all linters in the lint test suite, printing any errors
+they detect.
+
+If you wish to only run some particular lint tests, pass
+'--lint=' with the name of the lint test you wish to run.
+You can set as many '--lint=' values as you wish, e.g.:
+test_runner --lint=doc --lint=subtree
+
+The individual linters available to run are:
+"#
+    );
+    for linter in get_linter_list() {
+        println!("{}: \"{}\"", linter.name, linter.description)
+    }
+
+    std::process::exit(1);
+}
+
+fn parse_lint_args(args: &[String]) -> Vec<&'static Linter> {
+    let linter_list = get_linter_list();
+    let mut lint_values = Vec::new();
+
+    for arg in args {
+        #[allow(clippy::if_same_then_else)]
+        if arg.starts_with("--lint=") {
+            let lint_arg_value = arg
+                .trim_start_matches("--lint=")
+                .trim_matches('"')
+                .trim_matches('\'');
+
+            let try_find_linter = linter_list
+                .iter()
+                .find(|linter| linter.name == lint_arg_value);
+            match try_find_linter {
+                Some(linter) => {
+                    lint_values.push(*linter);
+                }
+                None => {
+                    println!("No linter {lint_arg_value} found!");
+                    print_help_and_exit();
+                }
+            }
+        } else if arg.eq("--help") || arg.eq("-h") {
+            print_help_and_exit();
+        } else {
+            print_help_and_exit();
+        }
+    }
+
+    lint_values
+}
+
 /// Return the git command
 fn git() -> Command {
     let mut git = Command::new("git");
@@ -337,7 +444,7 @@ Markdown link errors found:
     }
 }
 
-fn lint_all() -> LintResult {
+fn run_all_python_linters() -> LintResult {
     let mut good = true;
     let lint_dir = get_git_root().join("test/lint");
     for entry in fs::read_dir(lint_dir).unwrap() {
@@ -352,7 +459,7 @@ fn lint_all() -> LintResult {
                 .success()
         {
             good = false;
-            println!("^---- failure generated from {}", entry_fn);
+            println!("^---- ⚠️ Failure generated from {}", entry_fn);
         }
     }
     if good {
@@ -363,25 +470,26 @@ fn lint_all() -> LintResult {
 }
 
 fn main() -> ExitCode {
-    let test_list: Vec<(&str, LintFn)> = vec![
-        ("subtree check", lint_subtree),
-        ("std::filesystem check", lint_std_filesystem),
-        ("trailing whitespace check", lint_trailing_whitespace),
-        ("no-tabs check", lint_tabs_whitespace),
-        ("build config includes check", lint_includes_build_config),
-        ("-help=1 documentation check", lint_doc),
-        ("markdown hyperlink check", lint_markdown),
-        ("lint-*.py scripts", lint_all),
-    ];
+    let linters_to_run: Vec<&Linter> = if env::args().count() > 1 {
+        let args: Vec<String> = env::args().skip(1).collect();
+        parse_lint_args(&args)
+    } else {
+        // If no arguments are passed, run all linters.
+        get_linter_list()
+    };
 
     let git_root = get_git_root();
 
     let mut test_failed = false;
-    for (lint_name, lint_fn) in test_list {
+    for linter in linters_to_run {
         // chdir to root before each lint test
         env::set_current_dir(&git_root).unwrap();
-        if let Err(err) = lint_fn() {
-            println!("{err}\n^---- ⚠️ Failure generated from {lint_name}!");
+        if let Err(err) = (linter.lint_fn)() {
+            println!(
+                "{err}\n^---- ⚠️ Failure generated from lint check '{}'!",
+                linter.name
+            );
+            println!("{}", linter.description);
             test_failed = true;
         }
     }

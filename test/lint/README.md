@@ -26,6 +26,21 @@ Then you can use:
 ( cd ./test/lint/test_runner/ && cargo fmt && cargo clippy && RUST_BACKTRACE=1 cargo run )
 ```
 
+If you wish to run individual lint checks, run the test_runner with
+`--lint=TEST_TO_RUN` arguments. If running with `cargo run`, arguments after
+`--` are passed to the binary you are running e.g.:
+
+```sh
+( cd ./test/lint/test_runner/ && RUST_BACKTRACE=1 cargo run -- --lint=doc --lint=trailing_whitespace )
+```
+
+To see a list of all individual lint checks available in test_runner, use `-h`
+or `--help`:
+
+```sh
+( cd ./test/lint/test_runner/ && RUST_BACKTRACE=1 cargo run -- --help )
+```
+
 #### Dependencies
 
 | Lint test | Dependency |
