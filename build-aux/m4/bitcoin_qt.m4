@@ -135,6 +135,15 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       if test -d "$qt_plugin_path/platforms/android"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
       fi
+      if test -d "$qt_plugin_path/wayland-decoration-client"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/wayland-decoration-client"
+      fi
+      if test -d "$qt_plugin_path/wayland-graphics-integration-client"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/wayland-graphics-integration-client"
+      fi
+      if test -d "$qt_plugin_path/wayland-shell-integration"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/wayland-shell-integration"
+      fi
     fi
 
     AC_DEFINE([QT_STATICPLUGIN], [1], [Define this symbol if qt plugins are static])
@@ -151,7 +160,11 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       AC_DEFINE([QT_QPA_PLATFORM_WINDOWS], [1], [Define this symbol if the qt platform is windows])
     elif test "$TARGET_OS" = "linux"; then
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb])
-      AC_DEFINE([QT_QPA_PLATFORM_XCB], [1], [Define this symbol if the qt platform is xcb])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWaylandIntegrationPlugin], [-lqwayland-generic])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWaylandEglClientBufferPlugin], [-lqt-plugin-wayland-egl])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWaylandBradientDecorationPlugin], [-lbradient])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWaylandXdgShellIntegrationPlugin], [-lxdg-shell])
+      AC_DEFINE([QT_QPA_PLATFORM_LINUX], [1], [Define this symbol if the qt platform is xcb or wayland])
     elif test "$TARGET_OS" = "darwin"; then
       AX_CHECK_LINK_FLAG([-framework Carbon], [QT_LIBS="$QT_LIBS -framework Carbon"], [AC_MSG_ERROR(could not link against Carbon framework)])
       AX_CHECK_LINK_FLAG([-framework IOSurface], [QT_LIBS="$QT_LIBS -framework IOSurface"], [AC_MSG_ERROR(could not link against IOSurface framework)])
@@ -351,6 +364,8 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
     PKG_CHECK_MODULES([QT_SERVICE], [${qt_lib_prefix}ServiceSupport], [QT_LIBS="$QT_SERVICE_LIBS $QT_LIBS"])
     PKG_CHECK_MODULES([QT_XCBQPA], [${qt_lib_prefix}XcbQpa], [QT_LIBS="$QT_XCBQPA_LIBS $QT_LIBS"])
     PKG_CHECK_MODULES([QT_XKBCOMMON], [${qt_lib_prefix}XkbCommonSupport], [QT_LIBS="$QT_XKBCOMMON_LIBS $QT_LIBS"])
+    PKG_CHECK_MODULES([QT_EGL], [${qt_lib_prefix}EglSupport], [QT_LIBS="$QT_EGL_LIBS $QT_LIBS"])
+    PKG_CHECK_MODULES([QT_WAYLANDCLIENT], [${qt_lib_prefix}WaylandClient], [QT_LIBS="$QT_WAYLANDCLIENT_LIBS $QT_LIBS"])
   elif test "$TARGET_OS" = "darwin"; then
     PKG_CHECK_MODULES([QT_CLIPBOARD], [${qt_lib_prefix}ClipboardSupport${qt_lib_suffix}], [QT_LIBS="$QT_CLIPBOARD_LIBS $QT_LIBS"])
     PKG_CHECK_MODULES([QT_GRAPHICS], [${qt_lib_prefix}GraphicsSupport${qt_lib_suffix}], [QT_LIBS="$QT_GRAPHICS_LIBS $QT_LIBS"])
