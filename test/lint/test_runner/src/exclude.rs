@@ -46,6 +46,16 @@ pub fn get_pathspecs_exclude_whitespace() -> Vec<String> {
     ]))
 }
 
+/// Return the pathspecs for include guard related excludes
+pub fn get_pathspecs_exclude_include_guards() -> Vec<String> {
+    get_pathspecs_exclude(Some(&[
+        "contrib/devtools/bitcoin-tidy",
+        "src/tinyformat.h",
+        "src/bench/nanobench.h",
+        "src/test/fuzz/FuzzedDataProvider.h",
+    ]))
+}
+
 /// Return the pathspecs for build config includes related excludes
 pub fn get_pathspecs_exclude_includes_build_config() -> Vec<String> {
     get_pathspecs_exclude(Some(&[

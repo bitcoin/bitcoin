@@ -28,6 +28,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_doc
         },
         &Linter {
+            description: "Check that header files have include guards",
+            name: "include_guards",
+            lint_fn: lint_include_guards
+        },
+        &Linter {
             description: "Check that no symbol from bitcoin-config.h is used without the header being included",
             name: "includes_build_config",
             lint_fn: lint_includes_build_config
@@ -237,6 +242,73 @@ Please remove the tabs.
 
 Please add any false positives, such as subtrees, or externally sourced files to the exclude list.
             "#
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+// Check include guards
+fn lint_include_guards() -> LintResult {
+    let mut include_guard_error = false;
+    let header_files = String::from_utf8(
+        git()
+            .args(["ls-files", "--", "*.h"])
+            .args(exclude::get_pathspecs_exclude_include_guards())
+            .output()
+            .expect("command error")
+            .stdout,
+    )
+    .expect("error reading stdout");
+
+    for header_file in header_files.lines() {
+        // src/wallet/fees.h -> BITCOIN_WALLET_FEES_H
+        let header_id = format!(
+            "BITCOIN_{}",
+            header_file.split('/').collect::<Vec<_>>()[1..]
+                .join("_")
+                .replace(['-', '.'], "_")
+                .to_uppercase()
+        );
+
+        let header_file_body =
+            fs::read_to_string(header_file).expect("Failure opening header file");
+
+        let include_guards = [
+            format!("#ifndef {header_id}"),
+            format!("#define {header_id}"),
+            format!("#endif // {header_id}"),
+        ];
+
+        let mut guard_index = 0;
+        for header_file_line in header_file_body.lines() {
+            if guard_index >= 3 {
+                break;
+            }
+            if header_file_line == include_guards[guard_index] {
+                guard_index += 1;
+            }
+        }
+
+        if guard_index != 3 {
+            include_guard_error = true;
+            println!(
+                r#"
+{header_file} seems to be missing the expected include guard:
+{}
+{}
+{}
+                "#,
+                include_guards[0], include_guards[1], include_guards[2]
+            )
+        }
+    }
+
+    if include_guard_error {
+        Err(r#"
+^^^
+One or more include guards are missing.
+"#
         .to_string())
     } else {
         Ok(())
