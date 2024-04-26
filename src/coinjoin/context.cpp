@@ -14,8 +14,8 @@ CJContext::CJContext(CChainState& chainstate, CConnman& connman, CDeterministicM
                      const std::unique_ptr<PeerManager>& peerman, bool relay_txes) :
     dstxman{std::make_unique<CDSTXManager>()},
 #ifdef ENABLE_WALLET
-    walletman{std::make_unique<CoinJoinWalletManager>(connman, dmnman, mn_metaman, mempool, mn_sync, queueman)},
-    queueman {relay_txes ? std::make_unique<CCoinJoinClientQueueManager>(connman, *walletman, dmnman, mn_metaman, mn_sync) : nullptr},
+    walletman{std::make_unique<CoinJoinWalletManager>(connman, dmnman, mn_metaman, mempool, mn_sync, queueman, /* is_masternode = */ mn_activeman != nullptr)},
+    queueman {relay_txes ? std::make_unique<CCoinJoinClientQueueManager>(connman, *walletman, dmnman, mn_metaman, mn_sync, /* is_masternode = */ mn_activeman != nullptr) : nullptr},
 #endif // ENABLE_WALLET
     server{std::make_unique<CCoinJoinServer>(chainstate, connman, dmnman, *dstxman, mn_metaman, mempool, mn_activeman, mn_sync, peerman)}
 {}

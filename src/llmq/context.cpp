@@ -21,6 +21,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
                          CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
                          const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                          const std::unique_ptr<PeerManager>& peerman, bool unit_tests, bool wipe) :
+    is_masternode{mn_activeman != nullptr},
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     quorum_block_processor{[&]() -> llmq::CQuorumBlockProcessor* const {
@@ -38,12 +39,12 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *llmq::quorumManager, sporkman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
-        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman);
+        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode);
         return llmq::chainLocksHandler.get();
     }()},
     isman{[&]() -> llmq::CInstantSendManager* const {
         assert(llmq::quorumInstantSendManager == nullptr);
-        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, unit_tests, wipe);
+        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode, unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *llmq::quorumManager, sporkman, peerman)}
@@ -76,7 +77,7 @@ void LLMQContext::Start() {
     assert(isman == llmq::quorumInstantSendManager.get());
 
     bls_worker->Start();
-    if (fMasternodeMode) {
+    if (is_masternode) {
         qdkgsman->StartThreads();
     }
     qman->Start();
@@ -101,7 +102,7 @@ void LLMQContext::Stop() {
     shareman->UnregisterAsRecoveredSigsListener();
     sigman->StopWorkerThread();
     qman->Stop();
-    if (fMasternodeMode) {
+    if (is_masternode) {
         qdkgsman->StopThreads();
     }
     bls_worker->Stop();

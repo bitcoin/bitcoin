@@ -97,9 +97,11 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     m_llmq_ctx->qman->UpdatedBlockTip(pindexNew, fInitialDownload);
     m_llmq_ctx->qdkgsman->UpdatedBlockTip(pindexNew, fInitialDownload);
-    m_llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew);
+    m_llmq_ctx->ehfSignalsHandler->UpdatedBlockTip(pindexNew, /* is_masternode = */ m_mn_activeman != nullptr);
 
-    if (!fDisableGovernance) m_govman.UpdatedBlockTip(pindexNew, m_connman, m_peerman, m_mn_activeman);
+    if (m_govman.IsValid()) {
+        m_govman.UpdatedBlockTip(pindexNew, m_connman, m_peerman, m_mn_activeman);
+    }
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcceptTime)

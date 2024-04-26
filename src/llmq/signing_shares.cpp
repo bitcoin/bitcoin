@@ -218,9 +218,7 @@ void CSigSharesManager::InterruptWorkerThread()
 void CSigSharesManager::ProcessMessage(const CNode& pfrom, const CSporkManager& sporkman, const std::string& msg_type, CDataStream& vRecv)
 {
     // non-masternodes are not interested in sigshares
-    if (!fMasternodeMode) return;
-
-    assert(m_mn_activeman);
+    if (m_mn_activeman == nullptr) return;
     if (m_mn_activeman->GetProTxHash().IsNull()) return;
 
     if (sporkman.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED) && msg_type == NetMsgType::QSIGSHARE) {

@@ -38,7 +38,8 @@ static RPCHelpMan coinjoin()
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    if (fMasternodeMode) {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (node.mn_activeman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
 
@@ -53,7 +54,6 @@ static RPCHelpMan coinjoin()
         }
     }
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
     auto cj_clientman = node.coinjoin_loader->walletman().Get(wallet->GetName());
     CHECK_NONFATAL(cj_clientman != nullptr);
 
@@ -152,9 +152,9 @@ static RPCHelpMan getcoinjoininfo()
                 [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue obj(UniValue::VOBJ);
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    if (fMasternodeMode) {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (node.mn_activeman) {
         node.cj_ctx->server->GetJsonInfo(obj);
         return obj;
     }

@@ -208,6 +208,7 @@ private:
     const CMasternodeSync& m_mn_sync;
     const std::unique_ptr<PeerManager>& m_peerman;
 
+    const bool m_is_masternode;
     std::atomic<bool> fUpgradedDB{false};
 
     std::thread workThread;
@@ -257,10 +258,11 @@ public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CConnman& _connman,
                                  CQuorumManager& _qman, CSigningManager& _sigman, CSigSharesManager& _shareman,
                                  CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                 const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
+                                 const std::unique_ptr<PeerManager>& peerman, bool is_masternode, bool unitTests, bool fWipe) :
         db(unitTests, fWipe),
         clhandler(_clhandler), m_chainstate(chainstate), connman(_connman), qman(_qman), sigman(_sigman),
-        shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman)
+        shareman(_shareman), spork_manager(sporkman), mempool(_mempool), m_mn_sync(mn_sync), m_peerman(peerman),
+        m_is_masternode{is_masternode}
     {
         workInterrupt.reset();
     }
@@ -299,7 +301,7 @@ private:
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock) LOCKS_EXCLUDED(cs_pendingLocks, cs_nonLocked);
-    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman);
+    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman, const PeerManager& peerman, bool is_masternode);
     void ProcessPendingRetryLockTxs() LOCKS_EXCLUDED(cs_creating, cs_nonLocked, cs_pendingRetry);
 
     void WorkThreadMain();

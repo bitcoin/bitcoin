@@ -34,6 +34,10 @@ class CSigningManager;
 }
 
 struct LLMQContext {
+private:
+    const bool is_masternode;
+
+public:
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
     LLMQContext(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CEvoDB& evo_db,

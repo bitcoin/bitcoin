@@ -838,7 +838,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
         pendingReconstructedRecoveredSigs.erase(recoveredSig->GetHash());
     }
 
-    if (fMasternodeMode) {
+    if (m_mn_activeman != nullptr) {
         CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
         connman.ForEachNode([&](CNode* pnode) {
             if (pnode->fSendRecSigs) {
@@ -895,9 +895,7 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
 
 bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigSharesManager& shareman, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
 {
-    if (!fMasternodeMode) return false;
-
-    assert(m_mn_activeman);
+    if (m_mn_activeman == nullptr) return false;
     if (m_mn_activeman->GetProTxHash().IsNull()) return false;
 
     const CQuorumCPtr quorum = [&]() {

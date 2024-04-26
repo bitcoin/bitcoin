@@ -36,7 +36,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
     quorumBlockProcessor(_quorumBlockProcessor),
     spork_manager(sporkman)
 {
-    if (!fMasternodeMode && !IsWatchQuorumsEnabled()) {
+    if (mn_activeman == nullptr && !IsWatchQuorumsEnabled()) {
         // Regular nodes do not care about any DKG internals, bail out
         return;
     }
@@ -173,7 +173,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     }
 }
 
-PeerMsgRet CDKGSessionManager::ProcessMessage(CNode& pfrom, PeerManager* peerman, const std::string& msg_type, CDataStream& vRecv)
+PeerMsgRet CDKGSessionManager::ProcessMessage(CNode& pfrom, PeerManager* peerman, bool is_masternode, const std::string& msg_type, CDataStream& vRecv)
 {
     static Mutex cs_indexedQuorumsCache;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, int, StaticSaltedHasher>> indexedQuorumsCache GUARDED_BY(cs_indexedQuorumsCache);
@@ -190,7 +190,7 @@ PeerMsgRet CDKGSessionManager::ProcessMessage(CNode& pfrom, PeerManager* peerman
     }
 
     if (msg_type == NetMsgType::QWATCH) {
-        if (!fMasternodeMode) {
+        if (!is_masternode) {
             // non-masternodes should never receive this
             return tl::unexpected{10};
         }
@@ -198,7 +198,7 @@ PeerMsgRet CDKGSessionManager::ProcessMessage(CNode& pfrom, PeerManager* peerman
         return {};
     }
 
-    if ((!fMasternodeMode && !IsWatchQuorumsEnabled())) {
+    if ((!is_masternode && !IsWatchQuorumsEnabled())) {
         // regular non-watching nodes should never receive any of these
         return tl::unexpected{10};
     }

@@ -366,7 +366,7 @@ void PrepareShutdown(NodeContext& node)
         delete pdsNotificationInterface;
         pdsNotificationInterface = nullptr;
     }
-    if (fMasternodeMode) {
+    if (node.mn_activeman) {
         UnregisterValidationInterface(node.mn_activeman.get());
         node.mn_activeman.reset();
     }
@@ -1230,7 +1230,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-coinstatsindex", DEFAULT_COINSTATSINDEX))
             return InitError(_("Prune mode is incompatible with -coinstatsindex."));
-        if (!args.GetBoolArg("-disablegovernance", false)) {
+        if (!args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)) {
             return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
         }
     }
@@ -1454,15 +1454,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (args.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             return InitError(strprintf(Untranslated("Masternode must be able to handle at least %d connections, set -maxconnections=%d"), DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
-        if (args.GetBoolArg("-disablegovernance", false)) {
+        if (args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)) {
             return InitError(_("You can not disable governance validation on a masternode."));
         }
     }
 
-    fDisableGovernance = args.GetBoolArg("-disablegovernance", false);
-    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-
-    if (fDisableGovernance) {
+    if (args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)) {
         InitWarning(_("You are starting with governance validation disabled.") +
             (fPruneMode ?
                 Untranslated(" ") + _("This is expected because you are running a pruned node.") :
@@ -1684,6 +1681,15 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     assert(!node.netfulfilledman);
     node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
 
+    /**
+     * The manager needs to be constructed regardless of whether governance
+     * validation is needed or not.
+     *
+     * Instead, we decide whether to initialize its database based on whether we
+     * need it or not further down and then query if the database is initialized
+     * to check if validation is enabled.
+     */
+    const bool is_governance_enabled{!args.GetBoolArg("-disablegovernance", !DEFAULT_GOVERNANCE_ENABLE)};
     assert(!node.govman);
     node.govman = std::make_unique<CGovernanceManager>(*node.mn_metaman, *node.netfulfilledman, node.dmnman, node.mn_sync);
 
@@ -1988,7 +1994,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                     break;
                 }
 
-                if (!fDisableGovernance && !args.GetBoolArg("-txindex", DEFAULT_TXINDEX) && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
+                if (is_governance_enabled && !args.GetBoolArg("-txindex", DEFAULT_TXINDEX) && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
                     return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
                 }
 
@@ -2234,10 +2240,10 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         return InitError(strprintf(_("Failed to clear masternode cache at %s"), file_path));
     }
 
-    if (!fDisableGovernance) {
+    if (is_governance_enabled) {
         if (!node.govman->LoadCache(fLoadCacheFiles)) {
             auto file_path = (GetDataDir() / "governance.dat").string();
-            if (fLoadCacheFiles && !fDisableGovernance) {
+            if (fLoadCacheFiles) {
                 return InitError(strprintf(_("Failed to load governance cache from %s"), file_path));
             }
             return InitError(strprintf(_("Failed to clear governance cache at %s"), file_path));
@@ -2312,11 +2318,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     node.scheduler->scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*node.connman), std::ref(*node.dmnman), std::ref(*node.mn_sync), std::ref(*node.cj_ctx)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*node.dmnman)), std::chrono::seconds{10});
 
-    if (!fDisableGovernance) {
+    if (node.govman->IsValid()) {
         node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(*node.govman), std::ref(*node.connman)), std::chrono::minutes{5});
     }
 
-    if (fMasternodeMode) {
+    if (node.mn_activeman) {
         node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(*node.cj_ctx->server)), std::chrono::seconds{1});
         node.scheduler->scheduleEvery(std::bind(&llmq::CDKGSessionManager::CleanupOldContributions, std::ref(*node.llmq_ctx->qdkgsman)), std::chrono::hours{1});
 #ifdef ENABLE_WALLET

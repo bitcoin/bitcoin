@@ -75,8 +75,6 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 {
     AssertLockHeld(cs);
 
-    if (!fMasternodeMode) return;
-
     if (!DeploymentDIP0003Enforced(pindex->nHeight, Params().GetConsensus())) return;
 
     // Check that our local network configuration is correct
@@ -146,8 +144,6 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 
 void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    if (!fMasternodeMode) return;
-
     if (!DeploymentDIP0003Enforced(pindexNew->nHeight, Params().GetConsensus())) return;
 
     const auto [cur_state, cur_protx_hash] = WITH_READ_LOCK(cs, return std::make_pair(m_state, m_info.proTxHash));

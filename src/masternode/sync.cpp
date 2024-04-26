@@ -220,7 +220,7 @@ void CMasternodeSync::ProcessTick()
             // GOVOBJ : SYNC GOVERNANCE ITEMS FROM OUR PEERS
 
             if(nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
-                if (fDisableGovernance) {
+                if (!m_govman.IsValid()) {
                     SwitchToNextAsset();
                     connman.ReleaseNodeVector(vNodesCopy);
                     return;

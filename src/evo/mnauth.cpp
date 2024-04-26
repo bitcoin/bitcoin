@@ -22,8 +22,6 @@
 void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternodeManager& mn_activeman,
                          const CBlockIndex* tip)
 {
-    assert(fMasternodeMode);
-
     CMNAuth mnauth;
     if (mn_activeman.GetProTxHash().IsNull()) {
         return;
@@ -134,9 +132,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMe
         }
     }
 
-    const uint256 myProTxHash = fMasternodeMode ?
-                                Assert(mn_activeman)->GetProTxHash() :
-                                uint256();
+    const uint256 myProTxHash = mn_activeman != nullptr ? mn_activeman->GetProTxHash() : uint256();
 
     connman.ForEachNode([&](CNode* pnode2) {
         if (peer.fDisconnect) {
@@ -145,7 +141,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMe
         }
 
         if (pnode2->GetVerifiedProRegTxHash() == mnauth.proRegTxHash) {
-            if (fMasternodeMode && !myProTxHash.IsNull()) {
+            if (mn_activeman != nullptr && !myProTxHash.IsNull()) {
                 const auto deterministicOutbound = llmq::utils::DeterministicOutboundConnection(myProTxHash, mnauth.proRegTxHash);
                 LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), peer.GetId());

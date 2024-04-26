@@ -755,9 +755,9 @@ std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType,
 
 bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman, CDeterministicMNManager& dmnman, const CSporkManager& sporkman,
                              const CDeterministicMNList& tip_mn_list, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                             const uint256& myProTxHash)
+                             const uint256& myProTxHash, bool is_masternode)
 {
-    if (!fMasternodeMode && !IsWatchQuorumsEnabled()) {
+    if (!is_masternode && !IsWatchQuorumsEnabled()) {
         return false;
     }
 

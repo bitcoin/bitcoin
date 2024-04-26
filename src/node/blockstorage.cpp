@@ -209,8 +209,8 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }
 
-    if (fMasternodeMode) {
-        Assert(mn_activeman)->Init(::ChainActive().Tip());
+    if (mn_activeman != nullptr) {
+        mn_activeman->Init(::ChainActive().Tip());
     }
 
     g_wallet_init_interface.AutoLockMasternodeCollaterals();
