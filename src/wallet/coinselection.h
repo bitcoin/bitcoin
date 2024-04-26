@@ -197,15 +197,16 @@ struct CoinSelectionParams {
      * 1) Received from other wallets, 2) replacing other txs, 3) that have been replaced.
      */
     bool m_include_unsafe_inputs = false;
-    /**
-     * Maximum of excess value added to the input that does not count as waste and can be added to the target value.
-    */
-    CAmount m_max_excess{0};
     /***
      * The array of disabled coin selection algorithms. A disabled algorithms will have the index corresponding
      * to its SelectionAlgorithm enum value set to false. By default none are disabled.
     */
     std::bitset<size_t(SelectionAlgorithm::NUM_ELEMENTS)> m_disable_algos;
+    /***
+     * When set, excess value for changeless results will be added to the target amount at the given position
+     * and not counted as waste. Otherwise excess value will be be applied to fees and counted as waste.
+    */
+    std::optional<uint32_t> m_add_excess_to_recipient_position;
 
     CoinSelectionParams(FastRandomContext& rng_fast, size_t change_output_size, size_t change_spend_size,
                         CAmount min_change_target, CFeeRate effective_feerate,
@@ -412,8 +413,8 @@ public:
     /** How much individual inputs overestimated the bump fees for shared ancestries */
     void SetBumpFeeDiscount(const CAmount discount);
 
-    /** Target the current amount if it is less than max_target */
-    void SetTargetToCurrentAmount(const CAmount max_target);
+    /** Reset target to the current selected amount */
+    CAmount ResetTargetToSelectedValue();
 
     /** Calculates and stores the waste for this selection via GetSelectionWaste */
     void ComputeAndSetWaste(const CAmount min_viable_change, const CAmount change_cost, const CAmount change_fee);
@@ -473,7 +474,7 @@ public:
 };
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_weight, const CAmount& max_excess = CAmount{0});
+                                             int max_weight, const bool add_excess_to_target);
                                              
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight);
 

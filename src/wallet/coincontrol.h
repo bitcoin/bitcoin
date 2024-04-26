@@ -119,10 +119,10 @@ public:
     std::optional<uint32_t> m_version;
     //! Use this change target instead of default behavior if set
     std::optional<CAmount> m_change_target;
-    //! Maximum of excess value added to the input that does not count as waste and can be added to the target value.
-    std::optional<CAmount> m_max_excess;
     //! Disable corresponding coin selection algorithms
     std::bitset<size_t(SelectionAlgorithm::NUM_ELEMENTS)> m_disable_algos;
+    //! If set, add any excess from changeless spends to the specified recipient output index instead of to fees and do not count it as waste.
+    std::optional<uint32_t> m_add_excess_to_recipient_position;
     
     CCoinControl();
 

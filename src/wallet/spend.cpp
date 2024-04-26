@@ -214,8 +214,8 @@ std::optional<COutput> CoinsResult::Max() const
     }
     return max_out;
 }
-/* Return coin with amount greater than selection_target, but not more than max_excess greater */
-std::optional<COutput> CoinsResult::Nearest(const CAmount& selection_target, const CAmount& max_excess) const
+/* Return coin with amount greater than selection_target, but not more than change_spend_fee greater */
+std::optional<COutput> CoinsResult::Nearest(const CAmount& selection_target, const CAmount& change_spend_fee) const
 {
     std::optional<COutput> nearest;
     for (const auto& it : coins) {
@@ -228,7 +228,7 @@ std::optional<COutput> CoinsResult::Nearest(const CAmount& selection_target, con
             nearest = *min_out;
         }
     }
-    if (nearest && (nearest->GetEffectiveValue() - selection_target) > max_excess) 
+    if (nearest && (nearest->GetEffectiveValue() - selection_target) > change_spend_fee) 
         return std::nullopt;
     return nearest;
 }
@@ -731,7 +731,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     if (!coin_selection_params.m_disable_algos.test(size_t(SelectionAlgorithm::BNB))) {
         // SFFO frequently causes issues in the context of changeless input sets: skip BnB when SFFO is active
         if (!coin_selection_params.m_subtract_fee_outputs) {
-            if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_inputs_weight)}) {
+            if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_inputs_weight, coin_selection_params.m_add_excess_to_recipient_position.has_value())}) {
                 results.push_back(*bnb_result);
             } else append_error(bnb_result);
         }
@@ -1307,10 +1307,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
     }
 
-    if (coin_control.m_max_excess) {
-        coin_selection_params.m_max_excess = coin_control.m_max_excess.value();
-    }
-
     // The smallest change amount should be:
     // 1. at least equal to dust threshold
     // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
@@ -1323,6 +1319,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Deselect any algorithms disabled by the user
     coin_selection_params.m_disable_algos = coin_control.m_disable_algos;
+
+    // 
+    coin_selection_params.m_add_excess_to_recipient_position = coin_control.m_add_excess_to_recipient_position;
 
     // vouts to the payees
     for (const auto& recipient : vecSend)
@@ -1363,51 +1362,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
     }
 
-    // size of 1 input, 1 output tx (static overhead + input size + output size)
-    const CAmount spend_target_size = 10 + GetSizeOfCompactSize(1) + coin_selection_params.change_spend_size + coin_selection_params.change_output_size;
-
-    // Load a json file that describes a target utxo set and estimated feerates
-    std::vector<UtxoTarget> utxo_targets;
-    CFeeRate bucket_refill_feerate{0};
-    std::vector<EstimatedFeerateBin> estimated_feerate_bins;
-    CAmount min_spend_target_fee{0}, max_spend_target_fee{0};
-    const fs::path utxo_targets_file_path{gArgs.GetPathArg("-utxotargetsfile", fs::path{})};
-if (utxo_targets_file_path.empty() == false) {
-        std::map<std::string, common::SettingsValue> utxo_targets_json;
-        std::vector<std::string> read_errors;
-        common::ReadSettings(utxo_targets_file_path, utxo_targets_json, read_errors);
-        estimated_feerate_bins = EstimatedFeerateBinsFromJson(utxo_targets_json["feerates_satoshis_per_kvbyte"]);
-        min_spend_target_fee = estimated_feerate_bins.front().start.GetFee(spend_target_size);
-        max_spend_target_fee = estimated_feerate_bins.back().end.GetFee(spend_target_size);
-
-        // calculate targets from both confirmed and unconfirmed coins, but only spend from confirmed coins
-        CCoinControl tmp_coin_control = coin_control;
-        tmp_coin_control.m_min_depth = 0;
-        CoinsResult tmp_available_coins = AvailableCoins(wallet, &tmp_coin_control, coin_selection_params.m_effective_feerate);
-        utxo_targets = UtxoTargetsFromJson(utxo_targets_json["buckets"], min_spend_target_fee, max_spend_target_fee, tmp_available_coins);
-        bucket_refill_feerate = CFeeRate(utxo_targets_json["bucket_refill_feerate"].getInt<CAmount>());
-    }
-
-    auto selection_target1 = selection_target; 
-    if (utxo_targets.size() > 0) {
-        // Set the target change to refill the utxo target bucket with the smallest current capacity, if any.
-        auto nearest_utxo = available_coins.Nearest(selection_target, coin_selection_params.m_max_excess);
-        if (nearest_utxo) {
-            // found a changeless solution
-            preset_inputs.Insert(nearest_utxo.value(), coin_selection_params.m_subtract_fee_outputs);
-            // increate selection target by any excess
-            selection_target1 = nearest_utxo.value().GetEffectiveValue();
-        } else {
-            // use our largest UTXO
-            auto largest_utxo = available_coins.Max();
-            if (largest_utxo) {
-                preset_inputs.Insert(largest_utxo.value(), coin_selection_params.m_subtract_fee_outputs);
-            }
-        }
-    }
-
     // Choose coins to use
-    auto select_coins_res = SelectCoins(wallet, available_coins, preset_inputs, /*nTargetValue=*/selection_target1, coin_control, coin_selection_params);
+    auto select_coins_res = SelectCoins(wallet, available_coins, preset_inputs, /*nTargetValue=*/selection_target, coin_control, coin_selection_params);
     if (!select_coins_res) {
         // 'SelectCoins' either returns a specific error message or, if empty, means a general "Insufficient funds".
         const bilingual_str& err = util::ErrorString(select_coins_res);
@@ -1421,26 +1377,15 @@ if (utxo_targets_file_path.empty() == false) {
            result.GetWaste(),
            result.GetSelectedValue());
 
-    // TODO: only adjust target amount when there is a single recipient
-    if (result.GetTarget() != selection_target) {
-        txNew.vout[0].nValue += result.GetTarget() - selection_target;
-        recipients_sum += result.GetTarget() - selection_target;
+    if (result.GetTarget() != selection_target && coin_selection_params.m_add_excess_to_recipient_position) {
+        auto excess = result.GetTarget() - selection_target;
+        txNew.vout[coin_selection_params.m_add_excess_to_recipient_position.value()].nValue += excess;
+        recipients_sum += excess;
     }
 
     CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         std::optional<std::list<CTxOut>> change_txouts;
-        if (utxo_targets.size() > 0) {
-            change_txouts = std::list<CTxOut>(1, {change_amount, scriptChange});
-            if (bucket_refill_feerate >= coin_selection_params.m_effective_feerate) {
-                const auto target_amount = GenerateChangeTargetFromUtxoTargets(utxo_targets, estimated_feerate_bins, spend_target_size, rng_fast);
-                if (target_amount && change_amount > target_amount) {
-                    change_txouts = SplitChangeFromUtxoTargets(change_amount, coin_selection_params.m_change_fee, utxo_targets, target_amount.value(), estimated_feerate_bins, spend_target_size, rng_fast, scriptChange);
-                }
-            }
-            // change_txouts = SplitResidualChange(change_txouts.value(), coin_selection_params.m_change_fee, utxo_targets, estimated_feerate_bins, spend_target_size, rng_fast, scriptChange);
-            change_amount = std::accumulate(change_txouts->begin(), change_txouts->end(), CAmount(0), [](CAmount sum, CTxOut& tx_out) { return sum + tx_out.nValue; });
-        }
         if (!change_pos) {
             // Insert change txn at random position:
             change_pos = rng_fast.randrange(txNew.vout.size() + (change_txouts.has_value() ? change_txouts->size() : 1));

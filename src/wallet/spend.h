@@ -48,9 +48,9 @@ struct CoinsResult {
 
     /** 
      * Return smallest COutput value that is greater than selection_target, 
-     * but not more than max_excess more than selection_target.
+     * but not more than change_fee more than selection_target.
      */
-    std::optional<COutput> Nearest(const CAmount& selection_target, const CAmount& max_excess) const;
+    std::optional<COutput> Nearest(const CAmount& selection_target, const CAmount& change_fee) const;
 
     /** The following methods are provided so that CoinsResult can mimic a vector,
      * i.e., methods can work with individual OutputType vectors or on the entire object */
