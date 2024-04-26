@@ -17,6 +17,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
+    assert_greater_than,
 )
 from test_framework.wallet_util import generate_keypair
 from test_framework.wallet import (

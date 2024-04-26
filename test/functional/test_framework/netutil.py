@@ -13,6 +13,8 @@ import struct
 import array
 import os
 
+from .util import assert_greater_than
+
 # STATE_ESTABLISHED = '01'
 # STATE_SYN_SENT  = '02'
 # STATE_SYN_RECV = '03'

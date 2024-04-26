@@ -80,6 +80,7 @@ from test_framework.util import (
     MAX_NODES,
     p2p_port,
     wait_until_helper_internal,
+    assert_greater_than,
 )
 from test_framework.v2_p2p import (
     EncryptedP2PState,

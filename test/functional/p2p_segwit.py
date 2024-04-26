@@ -84,6 +84,7 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     softfork_active,
     assert_raises_rpc_error,
 )

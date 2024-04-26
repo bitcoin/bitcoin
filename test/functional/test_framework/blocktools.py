@@ -43,7 +43,10 @@ from .script_util import (
     keys_to_multisig_script,
     script_to_p2wsh_script,
 )
-from .util import assert_equal
+from .util import (
+    assert_equal,
+    assert_greater_than,
+)
 
 WITNESS_SCALE_FACTOR = 4
 MAX_BLOCK_SIGOPS = 20000
