@@ -30,6 +30,22 @@ set(CLIENT_VERSION_RC 0)
 set(CLIENT_VERSION_IS_RELEASE "false")
 set(COPYRIGHT_YEAR "2024")
 
+# During the enabling of the CXX and CXXOBJ languages, we modify
+# CMake's compiler/linker invocation strings by appending the content
+# of the user-defined `APPEND_*` variables, which allows overriding
+# any flag. We also ensure that the APPEND_* flags are considered
+# during CMake's tests, which use the `try_compile()` command.
+#
+# CMake's docs state that the `CMAKE_TRY_COMPILE_PLATFORM_VARIABLES`
+# variable "is meant to be set by CMake's platform information modules
+# for the current toolchain, or by a toolchain file." We do our best
+# to set it before the `project()` command.
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
+  CMAKE_CXX_COMPILE_OBJECT
+  CMAKE_OBJCXX_COMPILE_OBJECT
+  CMAKE_CXX_LINK_EXECUTABLE
+)
+
 project(BitcoinCore
   VERSION ${CLIENT_VERSION_MAJOR}.${CLIENT_VERSION_MINOR}.${CLIENT_VERSION_BUILD}
   DESCRIPTION "Bitcoin client software"
@@ -188,6 +204,16 @@ option(BUILD_FUZZ_BINARY "Build fuzz binary." OFF)
 cmake_dependent_option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF "NOT MSVC" OFF)
 
 option(INSTALL_MAN "Install man pages." ON)
+
+set(APPEND_CPPFLAGS "" CACHE STRING "Preprocessor flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
+set(APPEND_CFLAGS "" CACHE STRING "C compiler flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
+set(APPEND_CXXFLAGS "" CACHE STRING "(Objective) C++ compiler flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
+set(APPEND_LDFLAGS "" CACHE STRING "Linker flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
+# Appending to this low-level rule variables is the only way to
+# guarantee that the flags appear at the end of the command line.
+string(APPEND CMAKE_CXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
+string(APPEND CMAKE_CXX_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
+string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
 
 set(configure_warnings)
 
