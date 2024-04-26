@@ -1297,7 +1297,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    for (const auto &port_option : std::vector<std::pair<std::string, bool>>{
+    for ([[maybe_unused]] const auto& [arg, unix] : std::vector<std::pair<std::string, bool>>{
         // arg name            UNIX socket support
         {"-i2psam",                 false},
         {"-onion",                  true},
@@ -1309,10 +1309,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         {"-zmqpubhashtx",           true},
         {"-zmqpubrawblock",         true},
         {"-zmqpubrawtx",            true},
-        {"-zmqpubsequence",         true}
+        {"-zmqpubsequence",         true},
     }) {
-        const std::string arg{port_option.first};
-        const bool unix{port_option.second};
         for (const std::string& socket_addr : args.GetArgs(arg)) {
             std::string host_out;
             uint16_t port_out{0};
