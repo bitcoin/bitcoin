@@ -114,24 +114,21 @@ def pushd(new_dir) -> None:
 def download_binary(tag, args) -> int:
     if Path(tag).is_dir():
         if not args.remove_dir:
-            print('Using cached {}'.format(tag))
+            print(f'Using cached {tag}')
             return 0
         shutil.rmtree(tag)
     Path(tag).mkdir()
-    bin_path = 'bin/bitcoin-core-{}'.format(tag[1:])
+    bin_path = f'bin/bitcoin-core-{tag[1:]}'
     match = re.compile('v(.*)(rc[0-9]+)$').search(tag)
     if match:
-        bin_path = 'bin/bitcoin-core-{}/test.{}'.format(
-            match.group(1), match.group(2))
+        bin_path = f'bin/bitcoin-core-{match.group(1)}/test.{match.group(2)}'
     platform = args.platform
     if tag < "v23" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
         platform = "osx64"
-    tarball = 'bitcoin-{tag}-{platform}.tar.gz'.format(
-        tag=tag[1:], platform=platform)
-    tarballUrl = 'https://bitcoincore.org/{bin_path}/{tarball}'.format(
-        bin_path=bin_path, tarball=tarball)
+    tarball = f'bitcoin-{tag[1:]}-{platform}.tar.gz'
+    tarballUrl = f'https://bitcoincore.org/{bin_path}/{tarball}'
 
-    print('Fetching: {tarballUrl}'.format(tarballUrl=tarballUrl))
+    print(f'Fetching: {tarballUrl}')
 
     header, status = subprocess.Popen(
         ['curl', '--head', tarballUrl], stdout=subprocess.PIPE).communicate()
@@ -213,7 +210,7 @@ def build_release(tag, args) -> int:
             ["git", "fetch", githubUrl, "--tags"])
         output = subprocess.check_output(['git', 'tag', '-l', tag])
         if not output:
-            print('Tag {} not found'.format(tag))
+            print(f'Tag {tag} not found')
             return 1
     ret = subprocess.run([
         'git', 'clone', f'--branch={tag}', '--depth=1', githubUrl, tag
@@ -229,12 +226,10 @@ def build_release(tag, args) -> int:
                     return ret
                 host = os.environ.get(
                     'HOST', subprocess.check_output(['./config.guess']))
-        config_flags = '--prefix={pwd}/depends/{host} '.format(
-            pwd=os.getcwd(),
-            host=host) + args.config_flags
+        config_flags = f'--prefix={os.getcwd()}/depends/{host} {args.config_flags}'
         cmds = [
             './autogen.sh',
-            './configure {}'.format(config_flags),
+            f'./configure {config_flags}',
             'make',
         ]
         for cmd in cmds:
@@ -267,14 +262,14 @@ def check_host(args) -> int:
             if fnmatch(args.host, pattern):
                 args.platform = target
         if not args.platform:
-            print('Not sure which binary to download for {}'.format(args.host))
+            print(f'Not sure which binary to download for {args.host}')
             return 1
     return 0
 
 
 def main(args) -> int:
     Path(args.target_dir).mkdir(exist_ok=True, parents=True)
-    print("Releases directory: {}".format(args.target_dir))
+    print(f"Releases directory: {args.target_dir}")
     ret = check_host(args)
     if ret:
         return ret
