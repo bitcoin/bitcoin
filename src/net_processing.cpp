@@ -1527,10 +1527,7 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
         LOCK(cs_main); // For m_node_states
         m_node_states.try_emplace(m_node_states.end(), nodeid);
     }
-    {
-        LOCK(m_tx_download_mutex);
-        assert(m_txdownloadman.GetTxRequestRef().Count(nodeid) == 0);
-    }
+    WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty(nodeid));
 
     if (NetPermissions::HasFlag(node.m_permission_flags, NetPermissionFlags::BloomFilter)) {
         our_services = static_cast<ServiceFlags>(our_services | NODE_BLOOM);
@@ -1616,9 +1613,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
         assert(m_wtxid_relay_peers == 0);
-        LOCK(m_tx_download_mutex);
-        assert(m_txdownloadman.GetTxRequestRef().Size() == 0);
-        assert(m_txdownloadman.GetOrphanageRef().Size() == 0);
+        WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
     }
     } // cs_main
     if (node.fSuccessfullyConnected &&
@@ -1727,7 +1722,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
 std::vector<TxOrphanage::OrphanTxBase> PeerManagerImpl::GetOrphanTransactions()
 {
     LOCK(m_tx_download_mutex);
-    return m_txdownloadman.GetOrphanageRef().GetOrphanTransactions();
+    return m_txdownloadman.GetOrphanTransactions();
 }
 
 PeerManagerInfo PeerManagerImpl::GetInfo() const

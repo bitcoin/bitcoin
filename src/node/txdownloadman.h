@@ -7,6 +7,7 @@
 
 #include <net.h>
 #include <policy/packages.h>
+#include <txorphanage.h>
 
 #include <cstdint>
 #include <memory>
@@ -15,7 +16,6 @@ class CBlock;
 class CRollingBloomFilter;
 class CTxMemPool;
 class GenTxid;
-class TxOrphanage;
 class TxRequestTracker;
 namespace node {
 class TxDownloadManagerImpl;
@@ -121,11 +121,6 @@ public:
     explicit TxDownloadManager(const TxDownloadOptions& options);
     ~TxDownloadManager();
 
-    // Get references to internal data structures. Outside access to these data structures should be
-    // temporary and removed later once logic has been moved internally.
-    TxOrphanage& GetOrphanageRef();
-    TxRequestTracker& GetTxRequestRef();
-
     // Responses to chain events. TxDownloadManager is not an actual client of ValidationInterface, these are called through PeerManager.
     void ActiveTipChange();
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock);
@@ -167,6 +162,15 @@ public:
 
     /** Returns next orphan tx to consider, or nullptr if none exist. */
     CTransactionRef GetTxToReconsider(NodeId nodeid);
+
+    /** Check that all data structures are empty. */
+    void CheckIsEmpty() const;
+
+    /** Check that all data structures that track per-peer information have nothing for this peer. */
+    void CheckIsEmpty(NodeId nodeid) const;
+
+    /** Wrapper for TxOrphanage::GetOrphanTransactions */
+    std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

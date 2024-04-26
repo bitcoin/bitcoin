@@ -182,6 +182,11 @@ public:
 
     bool HaveMoreWork(NodeId nodeid);
     CTransactionRef GetTxToReconsider(NodeId nodeid);
+
+    void CheckIsEmpty();
+    void CheckIsEmpty(NodeId nodeid);
+
+    std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H

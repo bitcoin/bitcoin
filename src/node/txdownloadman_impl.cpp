@@ -19,14 +19,6 @@ TxDownloadManager::TxDownloadManager(const TxDownloadOptions& options) :
 {}
 TxDownloadManager::~TxDownloadManager() = default;
 
-TxOrphanage& TxDownloadManager::GetOrphanageRef()
-{
-    return m_impl->m_orphanage;
-}
-TxRequestTracker& TxDownloadManager::GetTxRequestRef()
-{
-    return m_impl->m_txrequest;
-}
 void TxDownloadManager::ActiveTipChange()
 {
     m_impl->ActiveTipChange();
@@ -82,6 +74,18 @@ bool TxDownloadManager::HaveMoreWork(NodeId nodeid) const
 CTransactionRef TxDownloadManager::GetTxToReconsider(NodeId nodeid)
 {
     return m_impl->GetTxToReconsider(nodeid);
+}
+void TxDownloadManager::CheckIsEmpty() const
+{
+    m_impl->CheckIsEmpty();
+}
+void TxDownloadManager::CheckIsEmpty(NodeId nodeid) const
+{
+    m_impl->CheckIsEmpty(nodeid);
+}
+std::vector<TxOrphanage::OrphanTxBase> TxDownloadManager::GetOrphanTransactions() const
+{
+    return m_impl->GetOrphanTransactions();
 }
 
 // TxDownloadManagerImpl
@@ -515,4 +519,18 @@ CTransactionRef TxDownloadManagerImpl::GetTxToReconsider(NodeId nodeid)
     return m_orphanage.GetTxToReconsider(nodeid);
 }
 
+void TxDownloadManagerImpl::CheckIsEmpty(NodeId nodeid)
+{
+    assert(m_txrequest.Count(nodeid) == 0);
+}
+void TxDownloadManagerImpl::CheckIsEmpty()
+{
+    assert(m_orphanage.Size() == 0);
+    assert(m_txrequest.Size() == 0);
+    assert(m_num_wtxid_peers == 0);
+}
+std::vector<TxOrphanage::OrphanTxBase> TxDownloadManagerImpl::GetOrphanTransactions() const
+{
+    return m_orphanage.GetOrphanTransactions();
+}
 } // namespace node
