@@ -54,6 +54,9 @@ BOOST_AUTO_TEST_CASE(decode_malformed_test) {
     BOOST_CHECK_EQUAL(UrlDecode(" %Z "), " %Z ");
     BOOST_CHECK_EQUAL(UrlDecode(" % X"), " % X");
 
+    BOOST_CHECK_EQUAL(UrlDecode("%%ffg"), "%\xffg");
+    BOOST_CHECK_EQUAL(UrlDecode("%fg"), "%fg");
+
     BOOST_CHECK_EQUAL(UrlDecode("%-1"), "%-1");
     BOOST_CHECK_EQUAL(UrlDecode("%1-"), "%1-");
 }
