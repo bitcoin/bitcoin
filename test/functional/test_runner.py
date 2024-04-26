@@ -26,7 +26,6 @@ import sys
 import tempfile
 import re
 import logging
-import unittest
 
 os.environ["REQUIRE_WALLET_TYPE_SET"] = "1"
 
@@ -70,23 +69,7 @@ if platform.system() != 'Windows' or sys.getwindowsversion() >= (10, 0, 14393): 
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
-# List of framework modules containing unit tests. Should be kept in sync with
-# the output of `git grep unittest.TestCase ./test/functional/test_framework`
-TEST_FRAMEWORK_MODULES = [
-    "address",
-    "crypto.bip324_cipher",
-    "blocktools",
-    "crypto.chacha20",
-    "crypto.ellswift",
-    "key",
-    "messages",
-    "crypto.muhash",
-    "crypto.poly1305",
-    "crypto.ripemd160",
-    "script",
-    "segwit_addr",
-    "wallet_util",
-]
+TEST_FRAMEWORK_UNIT_TESTS = 'feature_framework_unit_tests.py'
 
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
@@ -255,6 +238,7 @@ BASE_SCRIPTS = [
     'wallet_keypool.py --descriptors',
     'wallet_descriptor.py --descriptors',
     'p2p_nobloomfilter_messages.py',
+    TEST_FRAMEWORK_UNIT_TESTS,
     'p2p_filter.py',
     'rpc_setban.py --v1transport',
     'rpc_setban.py --v2transport',
@@ -440,7 +424,6 @@ def main():
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
     parser.add_argument('--filter', help='filter scripts to run by regular expression')
-    parser.add_argument('--skipunit', '-u', action='store_true', help='skip unit tests for the test framework')
 
 
     args, unknown_args = parser.parse_known_args()
@@ -552,10 +535,9 @@ def main():
         combined_logs_len=args.combinedlogslen,
         failfast=args.failfast,
         use_term_control=args.ansi,
-        skipunit=args.skipunit,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, skipunit=False):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control):
     args = args or []
 
     # Warn if bitcoind is already running
@@ -577,15 +559,6 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     # This allows `test_runner.py` to work from an out-of-source build directory using a symlink,
     # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
     sys.path.append(tests_dir)
-
-    if not skipunit:
-        print("Running Unit Tests for Test Framework Modules")
-        test_framework_tests = unittest.TestSuite()
-        for module in TEST_FRAMEWORK_MODULES:
-            test_framework_tests.addTest(unittest.TestLoader().loadTestsFromName("test_framework.{}".format(module)))
-        result = unittest.TextTestRunner(verbosity=1, failfast=True).run(test_framework_tests)
-        if not result.wasSuccessful():
-            sys.exit("Early exiting after failure in TestFramework unit tests")
 
     flags = ['--cachedir={}'.format(cache_dir)] + args
 
