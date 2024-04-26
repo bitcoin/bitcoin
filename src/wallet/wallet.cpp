@@ -653,6 +653,20 @@ void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
     batch.WriteBestBlock(loc);
 }
 
+void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
+{
+    AssertLockHeld(cs_wallet);
+
+    m_last_block_processed = block_hash;
+    m_last_block_processed_height = block_height;
+
+    CBlockLocator loc;
+    chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
+
+    WalletBatch batch(GetDatabase());
+    batch.WriteBestBlock(loc);
+}
+
 void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
@@ -1511,8 +1525,11 @@ void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& b
     assert(block.data);
     LOCK(cs_wallet);
 
-    m_last_block_processed_height = block.height;
-    m_last_block_processed = block.hash;
+    // Update the best block first. This will set the best block's height, which is
+    // needed by MarkConflicted.
+    // Although this also writes the best block to disk, this is okay even if there is an unclean
+    // shutdown since reloading the wallet will still rescan this block.
+    SetLastBlockProcessed(block.height, block.hash);
 
     // No need to scan block if it was created before the wallet birthday.
     // Uses chain max time and twice the grace period to adjust time for block time variability.
@@ -1534,11 +1551,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     // be unconfirmed, whether or not the transaction is added back to the mempool.
     // User may have to call abandontransaction again. It may be addressed in the
     // future with a stickier abandoned state or even removing abandontransaction call.
-    m_last_block_processed_height = block.height - 1;
-    m_last_block_processed = *Assert(block.prev_hash);
-
     int disconnect_height = block.height;
-
     for (const CTransactionRef& ptx : Assert(block.data)->vtx) {
         SyncTransaction(ptx, TxStateInactive{});
 
@@ -1567,6 +1580,9 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
             }
         }
     }
+
+    // Update the best block
+    SetLastBlockProcessed(block.height - 1, *Assert(block.prev_hash));
 }
 
 void CWallet::updatedBlockTip()
