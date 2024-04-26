@@ -8,6 +8,7 @@
 
 #include <attributes.h>
 #include <consensus/amount.h>
+#include <crypto/common.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -15,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <ios>
 #include <limits>
 #include <memory>
@@ -43,7 +45,12 @@ public:
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
-        return std::tie(a.hash, a.n) < std::tie(b.hash, b.n);
+        // Compare outpoints based on their 36-byte serialization (<txid little-endian>:<vout little-endian>)
+        if (a.hash != b.hash) return a.hash < b.hash;
+        uint8_t a_vout[4], b_vout[4];
+        WriteLE32(a_vout, a.n);
+        WriteLE32(b_vout, b.n);
+        return std::memcmp(a_vout, b_vout, 4) < 0;
     }
 
     friend bool operator==(const COutPoint& a, const COutPoint& b)
