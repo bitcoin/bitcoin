@@ -663,6 +663,22 @@ void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
     batch.WriteBestBlock(loc);
 }
 
+void CWallet::SetLastBlockProcessedInMem(int block_height, uint256 block_hash)
+{
+    AssertLockHeld(cs_wallet);
+
+    m_last_block_processed = block_hash;
+    m_last_block_processed_height = block_height;
+}
+
+void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
+{
+    AssertLockHeld(cs_wallet);
+
+    SetLastBlockProcessedInMem(block_height, block_hash);
+    WriteBestBlock();
+}
+
 void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
@@ -1378,15 +1394,16 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const uint256& tx_hash,
     }
 }
 
-void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool update_tx, bool rescanning_old_block)
+bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool update_tx, bool rescanning_old_block)
 {
     if (!AddToWalletIfInvolvingMe(ptx, state, update_tx, rescanning_old_block))
-        return; // Not one of ours
+        return false; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
     // available of the outputs it spends. So force those to be
     // recomputed, also:
     MarkInputsDirty(ptx);
+    return true;
 }
 
 void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
@@ -1473,17 +1490,24 @@ void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& b
     assert(block.data);
     LOCK(cs_wallet);
 
-    m_last_block_processed_height = block.height;
-    m_last_block_processed = block.hash;
+    // Update the best block in memory first. This will set the best block's height, which is
+    // needed by MarkConflicted.
+    SetLastBlockProcessedInMem(block.height, block.hash);
 
     // No need to scan block if it was created before the wallet birthday.
     // Uses chain max time and twice the grace period to adjust time for block time variability.
     if (block.chain_time_max < m_birth_time.load() - (TIMESTAMP_WINDOW * 2)) return;
 
     // Scan block
+    bool wallet_updated = false;
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
+        wallet_updated |= SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
         transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
+    }
+
+    // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
+    if (wallet_updated || block.height % 144 == 0) {
+        WriteBestBlock();
     }
 }
 
@@ -1496,9 +1520,6 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     // be unconfirmed, whether or not the transaction is added back to the mempool.
     // User may have to call abandontransaction again. It may be addressed in the
     // future with a stickier abandoned state or even removing abandontransaction call.
-    m_last_block_processed_height = block.height - 1;
-    m_last_block_processed = *Assert(block.prev_hash);
-
     int disconnect_height = block.height;
 
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
@@ -1532,6 +1553,9 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
             }
         }
     }
+
+    // Update the best block
+    SetLastBlockProcessed(block.height - 1, *Assert(block.prev_hash));
 }
 
 void CWallet::updatedBlockTip()
@@ -3264,14 +3288,7 @@ void CWallet::postInitProcess()
 
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
-    if (m_chain) {
-        CBlockLocator loc;
-        WITH_LOCK(cs_wallet, chain().findBlock(m_last_block_processed, FoundBlock().locator(loc)));
-        if (!loc.IsNull()) {
-            WalletBatch batch(GetDatabase());
-            batch.WriteBestBlock(loc);
-        }
-    }
+    WITH_LOCK(cs_wallet, WriteBestBlock());
     return GetDatabase().Backup(strDest);
 }
 
@@ -4452,5 +4469,18 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
         }
     }
     return std::nullopt;
+}
+
+void CWallet::WriteBestBlock() const
+{
+    AssertLockHeld(cs_wallet);
+
+    if (!m_last_block_processed.IsNull()) {
+        CBlockLocator loc;
+        chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
+
+        WalletBatch batch(GetDatabase());
+        batch.WriteBestBlock(loc);
+    }
 }
 } // namespace wallet
