@@ -85,13 +85,14 @@ struct {
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
  * @param int max_selection_weight The maximum allowed weight for a selection result to be valid.
+ * @param bool add_excess_to_target When true do not count excess as waste and add to the result target
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_selection_weight)
+                                             int max_selection_weight, const bool add_excess_to_target)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
@@ -116,6 +117,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     CAmount curr_waste = 0;
     std::vector<size_t> best_selection;
     CAmount best_waste = MAX_MONEY;
+    CAmount best_excess = MAX_MONEY;
 
     bool is_feerate_high = utxo_pool.at(0).fee > utxo_pool.at(0).long_term_fee;
     bool max_tx_weight_exceeded = false;
@@ -132,16 +134,25 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
-            curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
             // Adding another UTXO after this check could bring the waste down if the long term fee is higher than the current fee.
             // However we are not going to explore that because this optimization for the waste is only done when we have hit our target
             // value. Adding any more UTXOs will be just burning the UTXO; it will go entirely to fees. Thus we aren't going to
             // explore any more UTXOs to avoid burning money like that.
-            if (curr_waste <= best_waste) {
-                best_selection = curr_selection;
-                best_waste = curr_waste;
+            CAmount curr_excess = (curr_value - selection_target);
+            if (add_excess_to_target) {
+                if (curr_waste < best_waste || (curr_waste == best_waste && curr_excess <= best_excess)) {
+                    best_selection = curr_selection;
+                    best_waste = curr_waste;
+                    best_excess = curr_excess;
+                }
             }
-            curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
+            else {
+                if (curr_waste + curr_excess <= best_waste) {
+                    best_selection = curr_selection;
+                    best_waste = curr_waste + curr_excess;
+                }
+            }
+            
             backtrack = true;
         }
 
@@ -193,6 +204,10 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     // Set output set
     for (const size_t& i : best_selection) {
         result.AddInput(utxo_pool.at(i));
+    }
+    if (add_excess_to_target) {
+        auto excess = result.ResetTargetToSelectedValue();
+        assert(best_excess == excess);
     }
     result.RecalculateWaste(cost_of_change, cost_of_change, CAmount{0});
     assert(best_waste == result.GetWaste());
@@ -851,6 +866,13 @@ void SelectionResult::RecalculateWaste(const CAmount min_viable_change, const CA
     }
 
     m_waste = waste;
+}
+
+CAmount SelectionResult::ResetTargetToSelectedValue()
+{
+    CAmount excess = (m_use_effective ? GetSelectedEffectiveValue(): GetSelectedValue()) - m_target;
+    m_target += excess;
+    return excess;
 }
 
 void SelectionResult::SetAlgoCompleted(bool algo_completed)
