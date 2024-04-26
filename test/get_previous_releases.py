@@ -249,25 +249,28 @@ def build_release(tag, args) -> int:
             Path('src/'+f).rename('bin/'+f)
     return 0
 
+def get_platform(host):
+    platforms = {
+        'aarch64-*-linux*': 'aarch64-linux-gnu',
+        'powerpc64le-*-linux-*': 'powerpc64le-linux-gnu',
+        'riscv64-*-linux*': 'riscv64-linux-gnu',
+        'x86_64-*-linux*': 'x86_64-linux-gnu',
+        'x86_64-apple-darwin*': 'x86_64-apple-darwin',
+        'aarch64-apple-darwin*': 'arm64-apple-darwin',
+    }
+
+    for pattern, target in platforms.items():
+        if fnmatch(host, pattern):
+            return target
+
+    print(f'Not sure which binary to download for {host}')
+    return None
 
 def check_host(args) -> int:
-    args.host = os.environ.get('HOST', subprocess.check_output(
-        './depends/config.guess').decode())
+    args.host = os.environ.get('HOST', subprocess.check_output('./depends/config.guess').decode())
     if args.download_binary:
-        platforms = {
-            'aarch64-*-linux*': 'aarch64-linux-gnu',
-            'powerpc64le-*-linux-*': 'powerpc64le-linux-gnu',
-            'riscv64-*-linux*': 'riscv64-linux-gnu',
-            'x86_64-*-linux*': 'x86_64-linux-gnu',
-            'x86_64-apple-darwin*': 'x86_64-apple-darwin',
-            'aarch64-apple-darwin*': 'arm64-apple-darwin',
-        }
-        args.platform = ''
-        for pattern, target in platforms.items():
-            if fnmatch(args.host, pattern):
-                args.platform = target
+        args.platform = get_platform(args.host)
         if not args.platform:
-            print('Not sure which binary to download for {}'.format(args.host))
             return 1
     return 0
 
