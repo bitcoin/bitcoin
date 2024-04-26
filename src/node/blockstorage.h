@@ -328,8 +328,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk and update block file statistics.
-     *  If dbp is non-null, it means the block data is already stored, and dbp contains the file position.
-     *  In this case, the block data will not be written, only the block file statistics will be updated. This case should only happen during reindexing.
      *
      * @param[in]  block        the block to be stored
      * @param[in]  nHeight      the height of the block
@@ -337,7 +335,7 @@ public:
      * @returns in case of success, the position to which the block was written to
      *          in case of an error, an empty FlatFilePos
      */
-    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
+    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight);
 
     /** Update blockfile info while processing a block during reindex. The block must be available on disk.
      *
