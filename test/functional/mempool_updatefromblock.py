@@ -18,6 +18,7 @@ from test_framework.blocktools import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
+from test_framework.mempool_util import DEFAULT_CLUSTER_LIMIT
 
 MAX_DISCONNECTED_TX_POOL_BYTES = 20_000_000
 
@@ -197,7 +198,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         fork_blocks = self.create_empty_fork(fork_length=10)
 
         # Two higher than descendant count
-        chain = wallet.create_self_transfer_chain(chain_length=64 + 2)
+        chain = wallet.create_self_transfer_chain(chain_length=DEFAULT_CLUSTER_LIMIT + 2)
         for tx in chain[:-2]:
             self.nodes[0].sendrawtransaction(tx["hex"])
 
@@ -219,7 +220,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine in batches of 25 to test multi-block reorg under chain limits
-        self.transaction_graph_test(size=64, n_tx_to_mine=[25, 50, 75])
+        self.transaction_graph_test(size=DEFAULT_CLUSTER_LIMIT, n_tx_to_mine=[25, 50, 75])
 
         self.test_max_disconnect_pool_bytes()
 
