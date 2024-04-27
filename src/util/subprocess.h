@@ -905,7 +905,6 @@ private:
  * 4. retcode()          - The return code of the exited child.
  * 5. pid()              - PID of the spawned child.
  * 6. poll()             - Check the status of the running child.
- * 7. kill(sig_num)      - Kill the child. SIGTERM used by default.
  * 8. send(...)          - Send input to the input channel of the child.
  * 9. communicate(...)   - Get the output/error from the child and close the channels
  *                         from the parent side.
@@ -965,10 +964,6 @@ public:
   int wait() noexcept(false);
 
   int poll() noexcept(false);
-
-  // Does not fail, Caller is expected to recheck the
-  // status with a call to poll()
-  void kill(int sig_num = 9);
 
   void set_out_buf_cap(size_t cap) { stream_.set_out_buf_cap(cap); }
 
@@ -1136,18 +1131,6 @@ inline int Popen::poll() noexcept(false)
   return retcode_;
 #endif
 }
-
-inline void Popen::kill(int sig_num)
-{
-#ifdef __USING_WINDOWS__
-  if (!TerminateProcess(this->process_handle_, (UINT)sig_num)) {
-    throw OSError("TerminateProcess", 0);
-  }
-#else
-  ::kill(child_pid_, sig_num);
-#endif
-}
-
 
 inline void Popen::execute_process() noexcept(false)
 {
