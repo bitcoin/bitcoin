@@ -98,7 +98,7 @@ chain for " target " development."))
                                        #:key
                                        (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc glibc-2.27)
+                                       (base-libc glibc-2.31)
                                        (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -440,24 +440,21 @@ inspecting signatures in Mach-O binaries.")
                  (("-rpath=") "-rpath-link="))
                #t))))))))
 
-(define-public glibc-2.27
+(define-public glibc-2.31
+  (let ((commit "8e30f03744837a85e33d84ccd34ed3abe30d37c3"))
   (package
-    (inherit glibc-2.31)
-    (version "2.27")
+    (inherit glibc) ;; 2.35
+    (version "2.31")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://sourceware.org/git/glibc.git")
-                    (commit "73886db6218e613bd6d4edf529f11e008a6c2fa6")))
-              (file-name (git-file-name "glibc" "73886db6218e613bd6d4edf529f11e008a6c2fa6"))
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "0azpb9cvnbv25zg8019rqz48h8i2257ngyjg566dlnp74ivrs9vq"))
-              (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
-                                           "glibc-2.27-fcommon.patch"
-                                           "glibc-2.27-guix-prefix.patch"
-                                           "glibc-2.27-no-librt.patch"
-                                           "glibc-2.27-powerpc-ldbrx.patch"))))
+                "1zi0s9yy5zkisw823vivn7zlj8w6g9p3mm7lmlqiixcxdkz4dbn6"))
+              (patches (search-our-patches "glibc-guix-prefix.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
@@ -473,12 +470,13 @@ inspecting signatures in Mach-O binaries.")
              (lambda* (#:key outputs #:allow-other-keys)
                ;; Install the rpc data base file under `$out/etc/rpc'.
                ;; Otherwise build will fail with "Permission denied."
+               ;; Can be removed when we are building 2.32 or later.
                (let ((out (assoc-ref outputs "out")))
                  (substitute* "sunrpc/Makefile"
                    (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
                     (string-append out "/etc/rpc" suffix "\n"))
                    (("^install-others =.*$")
-                    (string-append "install-others = " out "/etc/rpc\n"))))))))))))
+                    (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
 (packages->manifest
  (append
