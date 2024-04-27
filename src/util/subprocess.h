@@ -670,8 +670,8 @@ struct error
  * This is basically used to determine the length of the actual
  * data stored inside the dynamically resized vector.
  *
- * This is what is returned as the output to communicate and check_output
- * functions, so, users must know about this class.
+ * This is what is returned as the output to the communicate
+ * function, so, users must know about this class.
  *
  * OutBuffer and ErrBuffer are just different typedefs to this class.
  */
@@ -704,8 +704,7 @@ class Popen;
 namespace detail {
 /*!
  * A helper class to Popen class for setting
- * options as provided in the Popen constructor
- * or in check_output arguments.
+ * options as provided in the Popen constructor.
  * This design allows us to _not_ have any fixed position
  * to any arguments and specify them in a way similar to what
  * can be done in python.
@@ -897,23 +896,23 @@ private:
  * interface to the client.
  *
  * API's provided by the class:
- * 1. Popen({"cmd"}, output{..}, error{..}, ....)
+ * Popen({"cmd"}, output{..}, error{..}, ....)
  *    Command provided as a sequence.
- * 2. Popen("cmd arg1"m output{..}, error{..}, ....)
+ * Popen("cmd arg1", output{..}, error{..}, ....)
  *    Command provided in a single string.
- * 3. wait()             - Wait for the child to exit.
- * 4. retcode()          - The return code of the exited child.
- * 5. pid()              - PID of the spawned child.
- * 6. poll()             - Check the status of the running child.
- * 8. send(...)          - Send input to the input channel of the child.
- * 9. communicate(...)   - Get the output/error from the child and close the channels
- *                         from the parent side.
- *10. input()            - Get the input channel/File pointer. Can be used for
- *                         customizing the way of sending input to child.
- *11. output()           - Get the output channel/File pointer. Usually used
-                           in case of redirection. See piping examples.
- *12. error()            - Get the error channel/File pointer. Usually used
-                           in case of redirection.
+ * wait()             - Wait for the child to exit.
+ * retcode()          - The return code of the exited child.
+ * pid()              - PID of the spawned child.
+ * poll()             - Check the status of the running child.
+ * send(...)          - Send input to the input channel of the child.
+ * communicate(...)   - Get the output/error from the child and close the channels
+ *                      from the parent side.
+ * input()            - Get the input channel/File pointer. Can be used for
+ *                      customizing the way of sending input to child.
+ * output()           - Get the output channel/File pointer. Usually used
+                        in case of redirection. See piping examples.
+ * error()            - Get the error channel/File pointer. Usually used
+                        in case of redirection.
  */
 class Popen
 {
