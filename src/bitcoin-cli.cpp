@@ -770,6 +770,12 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
             // Use the valid port provided
             port = rpcport_int;
+
+            // If there was a valid port provided in rpcconnect,
+            // rpcconnect_port is non-zero.
+            if (rpcconnect_port != 0) {
+                tfm::format(std::cerr, "Warning: Port specified in both -rpcconnect and -rpcport. Using -rpcport %u\n", port);
+            }
         }
     }
 
