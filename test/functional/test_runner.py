@@ -340,6 +340,7 @@ BASE_SCRIPTS = [
     'p2p_sendtxrcncl.py',
     'rpc_scantxoutset.py',
     'feature_unsupported_utxo_db.py',
+    'mempool_cluster.py',
     'feature_logging.py',
     'interface_ipc.py',
     'feature_anchors.py',
