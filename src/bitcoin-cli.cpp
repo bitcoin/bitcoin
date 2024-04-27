@@ -743,8 +743,35 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
     uint16_t port{BaseParams().RPCPort()};
-    SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", port));
+    {
+        uint16_t rpcconnect_port{0};
+        const std::string rpcconnect_str = gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT);
+        if (!SplitHostPort(rpcconnect_str, rpcconnect_port, host)) {
+            // Uses argument provided as-is
+            // (rather than value parsed)
+            // to aid the user in troubleshooting
+            throw std::runtime_error(strprintf("Invalid port provided in -rpcconnect: %s", rpcconnect_str));
+        } else {
+            if (rpcconnect_port != 0) {
+                // Use the valid port provided in rpcconnect
+                port = rpcconnect_port;
+            } // else, no port was provided in rpcconnect (continue using default one)
+        }
+
+        if (std::optional<std::string> rpcport_arg = gArgs.GetArg("-rpcport")) {
+            // -rpcport was specified
+            const uint16_t rpcport_int{ToIntegral<uint16_t>(rpcport_arg.value()).value_or(0)};
+            if (rpcport_int == 0) {
+                // Uses argument provided as-is
+                // (rather than value parsed)
+                // to aid the user in troubleshooting
+                throw std::runtime_error(strprintf("Invalid port provided in -rpcport: %s", rpcport_arg.value()));
+            }
+
+            // Use the valid port provided
+            port = rpcport_int;
+        }
+    }
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
