@@ -172,6 +172,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Create another conflicting transaction using RBF
         tx3_id = node_master.sendtoaddress(return_address, 1)
         tx4_id = node_master.bumpfee(tx3_id)["txid"]
+        self.sync_mempools()
         # Abandon transaction, but don't confirm
         node_master.abandontransaction(tx3_id)
 
