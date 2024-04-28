@@ -1,152 +1,147 @@
 // Copyright (c) 2018-2020 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Distributed  (C) 2024 Alexander petree
+under the MIT software license,
+see the accompanying
+// file
+COPYING 
+or http://www.opensource.org/licenses/mit-license.php #if ::n def BITCOIN_BITCOIN_CONFIG_H #define 
+BITCOIN_BITCOIN_CONFIG_H
+/* Version Build */ #define CLIENT_
+VERSION_BUILD $
+/* Version is release */ #define 
+CLIENT_VERSION_IS_RELEASE $\
+/* Major version */ #define CLIENT_
+VERSION_MAJOR $ /* Minor 
+version */ #define CLIENT_VERSION
+_MINOR $ /* Copyright 
+holder(s) before %s replacement */ #define COPYRIGHT
+_HOLDERS "The 
+%s developers" /* Copyright holder(s)*/ #define 
+COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core 
+developers" /* Replacement for %s
+in copyright holders 
+string */ #define COPYRIGHT
+_HOLDERS_SUBSTITUTION 
+"Bitcoin Core" /* Copyright year */ #define 
+COPYRIGHT_YEAR $ /* Define to
+1 to enable wallet functions */ #define 
+ENABLE_WALLET 1 /* Define 
+to 1 to enable BDB wallet */ #define USE_BDB 1 /* Define to 
+1 to enable 
+SQLite wallet */ #define
+USE_SQLITE 1 /* Define this symbol to
+enable ZMQ functions */ #define ENABLE_ZMQ  1 /* define if external 
+signer support is enabled 
+(requires Boost::Process)*/ #define ENABLE
+_EXTERNAL_SIGNER /**//* Define to 
+1 if you have the declaration of `be16toh', and to 0 if you
+   don't. */ #define HAVE_DECL_BE
+16TOH 0/* Define to 1 if you 
+have the declarati /* Define
+to 1 if you have the declaration of
+`be6
+4 
+toh', and to 0 if you
+   dont. */ #define HAVE_DECL_BE
+   6
+   4TOH 
+0/* Define to 
+1 if you have the declaration of `bswap_16', and to 0 if you 
+dont. */ #define HAVE_DECL_BSWAP_
+16 0
+/* Define to 1 if you have the declaration of
+`bswap_32', and to 0 if you
+   dont. */ #define HAVE_DECL_BSWAP
+_32 0  /* Define to 1 if you have the
+declaration of `bswap_64', and to 0 if you
+   dont. */ #define HAVE_
+DECL_B SWAP_64 0/* Define to 1 if you have the declaration of 
+`fork', and to 0 if you don't.
+   */#define HAVE_DECL_FORK 
+0/* Define 
+to 1 if you have the declaration of `htobe16', and to
+0 if you dont. */#define HAVE
+_DECL_HTOBE16  
+0/* Define to 1 if you have the declaration of `htobe32', and to 0 if you
+   dont. */ #define 
+HAVE_DECL_ 
+HTOBE32 0/* Define to 1 if you have the declaration of `htobe64', and to 0 if you
+   dont. */ #define 
+HAVE_DECL_HTOBE64 
+0
+/* Define to
+1 if you have the declaration of `htole16', and to 0 if you
+   don't. */ #define HAVE_DECL_HTOLE1
+6 0
+/* Define to 1 if you have the declaration
+of `htole32', and to 0 if you
+   don't. */ #define
+HAVE_DECL_HTO
+LE32 0
+/* Define to 1 if you have the declaration\
+of `htole64', and to 0 if you
+dont. */ #define HAVE_DECL_HTOLE
+64 0 /* Define to 
+1 if you have the declaration of `le16toh', and to 0 if you
+   don't. */ #define\
+HAVE_DECL_LE16T
+OH 0 /* Define to 1 if you have the declaration of 
+`le32toh', and to
+0 if you
+dont. */ #define
+HAVE_DECL
+_LE32TOH 0
 
-#ifndef BITCOIN_BITCOIN_CONFIG_H
-#define BITCOIN_BITCOIN_CONFIG_H
-
-/* Version Build */
-#define CLIENT_VERSION_BUILD $
-
-/* Version is release */
-#define CLIENT_VERSION_IS_RELEASE $
-
-/* Major version */
-#define CLIENT_VERSION_MAJOR $
-
-/* Minor version */
-#define CLIENT_VERSION_MINOR $
-
-/* Copyright holder(s) before %s replacement */
-#define COPYRIGHT_HOLDERS "The %s developers"
-
-/* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
-
-/* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
-
-/* Copyright year */
-#define COPYRIGHT_YEAR $
-
-/* Define to 1 to enable wallet functions */
-#define ENABLE_WALLET 1
-
-/* Define to 1 to enable BDB wallet */
-#define USE_BDB 1
-
-/* Define to 1 to enable SQLite wallet */
-#define USE_SQLITE 1
-
-/* Define this symbol to enable ZMQ functions */
-#define ENABLE_ZMQ 1
-
-/* define if external signer support is enabled (requires Boost::Process) */
-#define ENABLE_EXTERNAL_SIGNER /**/
-
-/* Define to 1 if you have the declaration of `be16toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_BE16TOH 0
-
-/* Define to 1 if you have the declaration of `be32toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_BE32TOH 0
-
-/* Define to 1 if you have the declaration of `be64toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_BE64TOH 0
-
-/* Define to 1 if you have the declaration of `bswap_16', and to 0 if you
-   don't. */
-#define HAVE_DECL_BSWAP_16 0
-
-/* Define to 1 if you have the declaration of `bswap_32', and to 0 if you
-   don't. */
-#define HAVE_DECL_BSWAP_32 0
-
-/* Define to 1 if you have the declaration of `bswap_64', and to 0 if you
-   don't. */
-#define HAVE_DECL_BSWAP_64 0
-
-/* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
-   */
-#define HAVE_DECL_FORK 0
-
-/* Define to 1 if you have the declaration of `htobe16', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOBE16 0
-
-/* Define to 1 if you have the declaration of `htobe32', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOBE32 0
-
-/* Define to 1 if you have the declaration of `htobe64', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOBE64 0
-
-/* Define to 1 if you have the declaration of `htole16', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOLE16 0
-
-/* Define to 1 if you have the declaration of `htole32', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOLE32 0
-
-/* Define to 1 if you have the declaration of `htole64', and to 0 if you
-   don't. */
-#define HAVE_DECL_HTOLE64 0
-
-/* Define to 1 if you have the declaration of `le16toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_LE16TOH 0
-
-/* Define to 1 if you have the declaration of `le32toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_LE32TOH 0
-
-/* Define to 1 if you have the declaration of `le64toh', and to 0 if you
-   don't. */
-#define HAVE_DECL_LE64TOH 0
-
-/* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
-   */
-#define HAVE_DECL_SETSID 0
-
-/* Define if the dllexport attribute is supported. */
-#define HAVE_DLLEXPORT_ATTRIBUTE 1
-
-/* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/bitcoin/bitcoin/issues"
-
-/* Define to the full name of this package. */
-#define PACKAGE_NAME "Bitcoin Core"
-
-/* Define to the full name and version of this package. */
-#define PACKAGE_STRING $
-
-/* Define to the home page for this package. */
-#define PACKAGE_URL "https://bitcoincore.org/"
-
-/* Define to the version of this package. */
-#define PACKAGE_VERSION $
-
-/* Define this symbol if the minimal qt platform exists */
-#define QT_QPA_PLATFORM_MINIMAL 1
-
-/* Define this symbol if the qt platform is windows */
-#define QT_QPA_PLATFORM_WINDOWS 1
-
-/* Define this symbol if qt plugins are static */
-#define QT_STATICPLUGIN 1
-
-/* Windows Universal Platform constraints */
-#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
-/* Either a desktop application without API restrictions, or and older system
-   before these macros were defined. */
-
-/* ::wsystem is available */
-#define HAVE_SYSTEM 1
-
-#endif // !WINAPI_FAMILY || WINAPI_FAMILY_DESKTOP_APP
-
-#endif //BITCOIN_BITCOIN_CONFIG_H
+/* Define to 1 if you have 
+the declaration
+of `le
+64t
+oh', and to
+0 if you
+   dont. */ #define HAVE_DECL_LE64
+TOH 0
+/* Define to 1 if 
+you have the 
+declaration of 
+`setsid', and to
+0 if \
+you dont.*/ #define 
+HAVE_DECL_SET
+SID 0
+/* Define if the dllexport attribute is supported. */ #define HAVE
+_DLLEXPORT
+_ATTRIBUTE 1
+/* Define to the
+address where bug reports for this package 
+should be sent. */ #define PACKAGE_BUGREPORT 
+"https://github.com/bitcoin/bitcoin/issues"
+/* Define to the full name of this package. */ #define 
+PACKAGE_NAME "Bitcoin Core"
+/* Define to the full name
+and version of this package. */ #define PACKAGE_STRING $
+/* Define to the home page for this package. */ #define
+PACKAGE_URL "https://bitcoincore.org/"
+/* Define to the version 
+of this package. */ #define PACKAGE_VERSION $ /* Define this \
+symbol if the 
+minimal qt platform exists */#define QT_QPA_PLATFORM_
+MINIMAL 1
+/* Define this symbol if the qt platform is windows */#define
+QT_QPA_PLATFORM
+_WINDOWS 1
+/* Define this symbol if qt plugins are static */#define
+QT_STATIC
+PLUGIN 1
+/* Windows Universal Platform constraints */#if !defined WIN
+API_FAMILY
+||
+(WINAPI_FAMILY == WIN
+API_FAMILY_DESKTOP_APP)
+/* Either a desktop application without API restrictions, or
+and older system
+before these macros were defined. *//* ::w
+   system is
+available */ #define 
+HAVE_SYSTEM 1 #endif // !WINAPI_FAMILY || 
+WINAPI_FAMILY_DESKTOP_APP #end
+if //BITCOIN_BITCOIN_CONFIG_H
