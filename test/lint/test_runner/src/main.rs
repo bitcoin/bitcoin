@@ -318,20 +318,14 @@ Please add any false positives, such as subtrees, or externally sourced files to
 }
 
 fn lint_includes_build_config() -> LintResult {
-    let config_path = "./src/config/bitcoin-config.h.in";
-    if !Path::new(config_path).is_file() {
-        assert!(Command::new("./autogen.sh")
-            .status()
-            .expect("command error")
-            .success());
-    }
+    let config_path = "./cmake/bitcoin-config.h.in";
     let defines_regex = format!(
         r"^\s*(?!//).*({})",
-        check_output(Command::new("grep").args(["undef ", "--", config_path]))
+        check_output(Command::new("grep").args(["define", "--", config_path]))
             .expect("grep failed")
             .lines()
             .map(|line| {
-                line.split("undef ")
+                line.split_whitespace()
                     .nth(1)
                     .unwrap_or_else(|| panic!("Could not extract name in line: {line}"))
             })
