@@ -178,11 +178,11 @@ constexpr inline bool IsSpace(char c) noexcept {
  *   parsed value is not in the range representable by the type T.
  */
 template <typename T>
-std::optional<T> ToIntegral(std::string_view str)
+std::optional<T> ToIntegral(std::string_view str, int base = 10)
 {
     static_assert(std::is_integral<T>::value);
     T result;
-    const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result);
+    const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result, base);
     if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
         return std::nullopt;
     }
