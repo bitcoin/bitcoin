@@ -540,8 +540,8 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 //////////////////
 
 CSigningManager::CSigningManager(CConnman& _connman, const CActiveMasternodeManager* const mn_activeman, const CQuorumManager& _qman,
-                                 bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), connman(_connman), m_mn_activeman(mn_activeman), qman(_qman)
+                                 const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe) :
+    db(fMemory, fWipe), connman(_connman), m_mn_activeman(mn_activeman), qman(_qman), m_peerman(peerman)
 {
 }
 
@@ -572,18 +572,18 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-PeerMsgRet CSigningManager::ProcessMessage(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::string& msg_type, CDataStream& vRecv)
+PeerMsgRet CSigningManager::ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv)
 {
     if (msg_type == NetMsgType::QSIGREC) {
         auto recoveredSig = std::make_shared<CRecoveredSig>();
         vRecv >> *recoveredSig;
 
-        return ProcessMessageRecoveredSig(pfrom, peerman, recoveredSig);
+        return ProcessMessageRecoveredSig(pfrom, recoveredSig);
     }
     return {};
 }
 
-PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, gsl::not_null<PeerManager*> peerman, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
 {
     {
         LOCK(cs_main);
@@ -614,12 +614,6 @@ PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, gsl::
                  recoveredSig->buildSignHash().ToString(), recoveredSig->getId().ToString(), recoveredSig->getMsgHash().ToString(), pfrom.GetId());
         return {};
     }
-
-    if (m_peerman == nullptr) {
-        m_peerman = peerman;
-    }
-    // we should never use one CSigningManager with different PeerManager
-    assert(m_peerman == peerman);
 
     pendingRecoveredSigs[pfrom.GetId()].emplace_back(recoveredSig);
     return {};
@@ -776,7 +770,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
-            m_peerman.load()->Misbehaving(nodeId, 100);
+            Assert(m_peerman)->Misbehaving(nodeId, 100);
             continue;
         }
 
@@ -840,9 +834,9 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
 
     if (m_mn_activeman != nullptr) {
         CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
-        connman.ForEachNode([&](CNode* pnode) {
+        connman.ForEachNode([&](const CNode* pnode) {
             if (pnode->fSendRecSigs) {
-                pnode->PushInventory(inv);
+                Assert(m_peerman)->PushInventory(pnode->GetId(), inv);
             }
         });
     }

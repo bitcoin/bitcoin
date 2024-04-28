@@ -17,6 +17,7 @@
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
+#include <net_processing.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
@@ -141,9 +142,9 @@ PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, Pe
 
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCESYNC -- syncing governance objects to our peer %s\n", peer.GetLogString());
         if (nProp == uint256()) {
-            return SyncObjects(peer, connman);
+            return SyncObjects(peer, peerman, connman);
         } else {
-            SyncSingleObjVotes(peer, nProp, filter, connman);
+            SyncSingleObjVotes(peer, peerman, nProp, filter, connman);
         }
     }
 
@@ -858,7 +859,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
     return true;
 }
 
-void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
+void CGovernanceManager::SyncSingleObjVotes(CNode& peer, PeerManager& peerman, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
 {
     // do not provide any data until our node is synced
     if (!Assert(m_mn_sync)->IsSynced()) return;
@@ -899,7 +900,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
         if (filter.contains(nVoteHash) || !vote.IsValid(tip_mn_list, onlyVotingKeyAllowed)) {
             continue;
         }
-        peer.PushInventory(CInv(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash));
+        peerman.PushInventory(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash));
         ++nVoteCount;
     }
 
@@ -908,7 +909,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode& peer, const uint256& nProp, c
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, peer.GetId());
 }
 
-PeerMsgRet CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
+PeerMsgRet CGovernanceManager::SyncObjects(CNode& peer, PeerManager& peerman, CConnman& connman) const
 {
     assert(m_netfulfilledman.IsValid());
 
@@ -959,7 +960,7 @@ PeerMsgRet CGovernanceManager::SyncObjects(CNode& peer, CConnman& connman) const
 
         // Push the inventory budget proposal message over to the other client
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, peer.GetId());
-        peer.PushInventory(CInv(MSG_GOVERNANCE_OBJECT, nHash));
+        peerman.PushInventory(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash));
         ++nObjCount;
     }
 

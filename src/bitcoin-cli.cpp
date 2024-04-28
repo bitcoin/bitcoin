@@ -525,7 +525,7 @@ public:
             const int8_t network_id{NetworkStringToId(network)};
             if (network_id == UNKNOWN_NETWORK) continue;
             const bool is_outbound{!peer["inbound"].get_bool()};
-            const bool is_block_relay{!peer["relaytxes"].get_bool()};
+            const bool is_block_relay{peer["relaytxes"].isNull() ? false : !peer["relaytxes"].get_bool()};
             ++m_counts.at(is_outbound).at(network_id);        // in/out by network
             ++m_counts.at(is_outbound).at(m_networks.size()); // in/out overall
             ++m_counts.at(2).at(network_id);                  // total by network

@@ -36,6 +36,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <map>
 #include <memory>
 #include <thread>
@@ -63,7 +64,7 @@ static const bool DEFAULT_WHITELISTRELAY = true;
 static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
-static const int TIMEOUT_INTERVAL = 20 * 60;
+static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 /** Time to wait since nTimeConnected before disconnecting a probe node. **/
 static const int PROBE_WAIT_INTERVAL = 5;
 /** Minimum time between warnings printed to log. */
@@ -274,9 +275,8 @@ class CNodeStats
 public:
     NodeId nodeid;
     ServiceFlags nServices;
-    bool fRelayTxes;
-    int64_t nLastSend;
-    int64_t nLastRecv;
+    std::chrono::seconds m_last_send;
+    std::chrono::seconds m_last_recv;
     int64_t nLastTXTime;
     int64_t nLastBlockTime;
     int64_t nTimeConnected;
@@ -459,8 +459,8 @@ public:
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
-    std::atomic<int64_t> nLastSend{0};
-    std::atomic<int64_t> nLastRecv{0};
+    std::atomic<std::chrono::seconds> m_last_send{0s};
+    std::atomic<std::chrono::seconds> m_last_recv{0s};
     //! Unix epoch time at peer connection, in seconds.
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
@@ -580,34 +580,16 @@ public:
         assert(false);
     }
 
-    struct TxRelay {
-        mutable RecursiveMutex cs_filter;
-        // We use fRelayTxes for two purposes -
-        // a) it allows us to not relay tx invs before receiving the peer's version message
-        // b) the peer may tell us in its version message that we should not relay tx invs
-        //    unless it loads a bloom filter.
-        bool fRelayTxes GUARDED_BY(cs_filter){false};
-        std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter) GUARDED_BY(cs_filter){nullptr};
+public:
+    /** Whether we should relay transactions to this peer (their version
+     *  message did not include fRelay=false and this is not a block-relay-only
+     *  connection). This only changes from false to true. It will never change
+     *  back to false. Used only in inbound eviction logic. */
+    std::atomic_bool m_relays_txs{false};
 
-        mutable RecursiveMutex cs_tx_inventory;
-        // inventory based relay
-        CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_tx_inventory){50000, 0.000001};
-        // Set of transaction ids we still have to announce.
-        // They are sorted by the mempool before relay, so the order is not important.
-        std::set<uint256> setInventoryTxToSend GUARDED_BY(cs_tx_inventory);
-        // List of non-tx/non-block inventory items
-        std::vector<CInv> vInventoryOtherToSend GUARDED_BY(cs_tx_inventory);
-        // Used for BIP35 mempool sending, also protected by cs_tx_inventory
-        bool fSendMempool GUARDED_BY(cs_tx_inventory){false};
-        // Last time a "MEMPOOL" request was serviced.
-        std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
-        std::chrono::microseconds nNextInvSend{0};
-    };
-
-    // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
-    // in dash: m_tx_relay should never be nullptr, we don't relay transactions if
-    //          `IsBlockOnlyConn() == true` is instead
-    std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
+    /** Whether this peer has loaded a bloom filter. Used only in inbound
+     *  eviction logic. */
+    std::atomic_bool m_bloom_filter_loaded{false};
 
     /** UNIX epoch time of the last block received from this peer that we had
      * not yet seen (e.g. not already received from another peer), that passed
@@ -692,33 +674,6 @@ public:
     void Release()
     {
         nRefCount--;
-    }
-
-    void AddKnownInventory(const uint256& hash)
-    {
-        LOCK(m_tx_relay->cs_tx_inventory);
-        m_tx_relay->filterInventoryKnown.insert(hash);
-    }
-
-    void PushInventory(const CInv& inv)
-    {
-        ASSERT_IF_DEBUG(inv.type != MSG_BLOCK);
-        if (inv.type == MSG_BLOCK) {
-            LogPrintf("%s -- WARNING: using PushInventory for BLOCK inv, peer=%d\n", __func__, id);
-            return;
-        }
-
-        LOCK(m_tx_relay->cs_tx_inventory);
-        if (m_tx_relay->filterInventoryKnown.contains(inv.hash)) {
-            LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
-            return;
-        }
-        LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
-        if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
-            m_tx_relay->setInventoryTxToSend.insert(inv.hash);
-            return;
-        }
-        m_tx_relay->vInventoryOtherToSend.push_back(inv);
     }
 
     void CloseSocketDisconnect(CConnman* connman);
@@ -926,7 +881,7 @@ public:
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
-        m_peer_connect_timeout = connOptions.m_peer_connect_timeout;
+        m_peer_connect_timeout = std::chrono::seconds{connOptions.m_peer_connect_timeout};
         {
             LOCK(cs_totalBytesSent);
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
@@ -1235,7 +1190,7 @@ public:
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const CNode& node, int64_t secs_now) const;
+    bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
 private:
     struct ListenSocket {
@@ -1351,7 +1306,7 @@ private:
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
 
     // P2P timeout in seconds
-    int64_t m_peer_connect_timeout;
+    std::chrono::seconds m_peer_connect_timeout;
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
@@ -1528,7 +1483,17 @@ private:
 std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
 /** Dump binary message to file, with timestamp */
-void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);
+void CaptureMessageToFile(const CAddress& addr,
+                          const std::string& msg_type,
+                          Span<const unsigned char> data,
+                          bool is_incoming);
+
+/** Defaults to `CaptureMessageToFile()`, but can be overridden by unit tests. */
+extern std::function<void(const CAddress& addr,
+                          const std::string& msg_type,
+                          Span<const unsigned char> data,
+                          bool is_incoming)>
+    CaptureMessage;
 
 struct NodeEvictionCandidate
 {
@@ -1538,7 +1503,7 @@ struct NodeEvictionCandidate
     int64_t nLastBlockTime;
     int64_t nLastTXTime;
     bool fRelevantServices;
-    bool fRelayTxes;
+    bool m_relay_txs;
     bool fBloomFilter;
     uint64_t nKeyedNetGroup;
     bool prefer_evict;

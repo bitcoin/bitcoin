@@ -20,6 +20,7 @@
 #include <logging.h>
 #include <masternode/meta.h>
 #include <masternode/node.h>
+#include <net_processing.h>
 #include <netmessagemaker.h>
 #include <validation.h>
 #include <util/irange.h>
@@ -1326,10 +1327,10 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
                  myProTxHash.ToString().substr(0, 4), ss.str());
 
     std::stringstream ss2;
-    connman.ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](const CNode* pnode) {
         if (pnode->qwatch ||
                 (!pnode->GetVerifiedProRegTxHash().IsNull() && (relayMembers.count(pnode->GetVerifiedProRegTxHash()) != 0))) {
-            pnode->PushInventory(inv);
+            Assert(m_peerman)->PushInventory(pnode->GetId(), inv);
         }
 
         if (pnode->GetVerifiedProRegTxHash().IsNull()) {
