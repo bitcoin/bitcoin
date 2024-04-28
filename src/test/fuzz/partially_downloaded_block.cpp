@@ -72,7 +72,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
             available.insert(i);
         }
 
-        if (add_to_mempool) {
+        if (add_to_mempool && !pool.exists(GenTxid::Txid(tx->GetHash()))) {
             LOCK2(cs_main, pool.cs);
             pool.addUnchecked(ConsumeTxMemPoolEntry(fuzzed_data_provider, *tx));
             available.insert(i);
