@@ -991,11 +991,11 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 BOOST_AUTO_TEST_CASE(check_script_push_size_tests)
 {
     CScript scriptWithinLimit;
-    scriptWithinLimit << std::vector<unsigned char>(MAX_SCRIPT_ELEMENT_SIZE, 0x00); // Data dentro do limite
+    scriptWithinLimit << std::vector<unsigned char>(MAX_SCRIPT_ELEMENT_SIZE, 0x00); // Data within limit
     BOOST_CHECK(CheckScriptPushSize(scriptWithinLimit) == true);
 
     CScript scriptExceedsLimit;
-    scriptExceedsLimit << std::vector<unsigned char>(MAX_SCRIPT_ELEMENT_SIZE + 1, 0x00); // Data excede o limite
+    scriptExceedsLimit << std::vector<unsigned char>(MAX_SCRIPT_ELEMENT_SIZE + 1, 0x00); // Data exceeds limit
     BOOST_CHECK(CheckScriptPushSize(scriptExceedsLimit) == false);
 }
 
