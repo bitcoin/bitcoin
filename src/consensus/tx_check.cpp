@@ -8,7 +8,8 @@
 #include <primitives/transaction.h>
 #include <consensus/validation.h>
 
-bool CheckScriptPushSize(const CScript& script) {
+bool CheckScriptPushSize(const CScript& script) 
+{
     CScript::const_iterator pc = script.begin();
     opcodetype opcode;
     std::vector<unsigned char> data;
@@ -45,10 +46,10 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-txouttotal-toolarge");
     }
 
-    for (const auto& txout : tx.vout) {
-        if (!CheckScriptPushSize(txout.scriptPubKey)) {
+    for (const auto& txout : tx.vout) 
+    {
+        if (!CheckScriptPushSize(txout.scriptPubKey))
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-output-script-too-large");
-        }
     }
 
     // Check for duplicate inputs (see CVE-2018-17144)
