@@ -801,6 +801,15 @@ bitcoind_CXXFLAGS = $(bitcoin_bin_cxxflags)
 bitcoind_LDFLAGS = $(bitcoin_bin_ldflags)
 bitcoind_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd)
 
+#################################################################
+bin_PROGRAMS += pcp-test
+pcp_test_SOURCES = pcp-test.cpp
+pcp_test_CPPFLAGS = $(bitcoin_bin_cppflags)
+pcp_test_CXXFLAGS = $(bitcoin_bin_cxxflags)
+pcp_test_LDFLAGS = $(bitcoin_bin_ldflags)
+pcp_test_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd)
+#################################################################
+
 bitcoin_node_SOURCES = $(bitcoin_daemon_sources) init/bitcoin-node.cpp
 bitcoin_node_CPPFLAGS = $(bitcoin_bin_cppflags)
 bitcoin_node_CXXFLAGS = $(bitcoin_bin_cxxflags)
