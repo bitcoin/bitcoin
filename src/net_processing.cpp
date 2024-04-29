@@ -3281,9 +3281,7 @@ void PeerManagerImpl::ProcessPackageResult(const Package& package, const Package
             switch (tx_result.m_result_type) {
                 case MempoolAcceptResult::ResultType::VALID:
                 {
-                    Assume(tx_result.m_replaced_transactions.has_value());
-                    std::list<CTransactionRef> empty_replacement_list;
-                    ProcessValidTx(nodeid, tx, tx_result.m_replaced_transactions.value_or(empty_replacement_list));
+                    ProcessValidTx(nodeid, tx, tx_result.m_replaced_transactions);
                     break;
                 }
                 case MempoolAcceptResult::ResultType::INVALID:
@@ -3378,9 +3376,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::TXPACKAGES, "   accepted orphan tx %s (wtxid=%s)\n", orphanHash.ToString(), orphan_wtxid.ToString());
-            Assume(result.m_replaced_transactions.has_value());
-            std::list<CTransactionRef> empty_replacement_list;
-            ProcessValidTx(peer.m_id, porphanTx, result.m_replaced_transactions.value_or(empty_replacement_list));
+            ProcessValidTx(peer.m_id, porphanTx, result.m_replaced_transactions);
             return true;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             LogPrint(BCLog::TXPACKAGES, "   invalid orphan tx %s (wtxid=%s) from peer=%d. %s\n",
@@ -4578,9 +4574,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-            Assume(result.m_replaced_transactions.has_value());
-            std::list<CTransactionRef> empty_replacement_list;
-            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions.value_or(empty_replacement_list));
+            ProcessValidTx(pfrom.GetId(), ptx, result.m_replaced_transactions);
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
