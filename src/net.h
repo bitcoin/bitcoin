@@ -857,7 +857,10 @@ public:
         bool m_i2p_accept_incoming;
     };
 
-    void Init(const Options& connOptions) {
+    void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex)
+    {
+        AssertLockNotHeld(m_total_bytes_sent_mutex);
+
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         m_max_outbound_full_relay = std::min(connOptions.m_max_outbound_full_relay, connOptions.nMaxConnections);
@@ -873,7 +876,7 @@ public:
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
         m_peer_connect_timeout = std::chrono::seconds{connOptions.m_peer_connect_timeout};
         {
-            LOCK(cs_totalBytesSent);
+            LOCK(m_total_bytes_sent_mutex);
             nMaxOutboundLimit = connOptions.nMaxOutboundLimit;
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
@@ -888,7 +891,7 @@ public:
     CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman, bool network_active = true);
     ~CConnman();
     bool Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
-               CScheduler& scheduler, const Options& options);
+               CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     void StopThreads();
     void StopNodes();
@@ -956,7 +959,7 @@ public:
 
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
-    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
+    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
@@ -1141,24 +1144,22 @@ public:
     //! that peer during `net_processing.cpp:PushNodeVersion()`.
     ServiceFlags GetLocalServices() const;
 
-    uint64_t GetMaxOutboundTarget() const;
+    uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::chrono::seconds GetMaxOutboundTimeframe() const;
 
     //! check if the outbound target is reached
     //! if param historicalBlockServingLimit is set true, the function will
     //! response true if the limit for serving historical blocks has been reached
-    bool OutboundTargetReached(bool historicalBlockServingLimit) const;
+    bool OutboundTargetReached(bool historicalBlockServingLimit) const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     //! response the bytes left in the current max outbound cycle
     //! in case of no limit, it will always response 0
-    uint64_t GetOutboundTargetBytesLeft() const;
+    uint64_t GetOutboundTargetBytesLeft() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
-    //! returns the time left in the current max outbound cycle
-    //! in case of no limit, it will always return 0
-    std::chrono::seconds GetMaxOutboundTimeLeftInCycle() const;
+    std::chrono::seconds GetMaxOutboundTimeLeftInCycle() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     uint64_t GetTotalBytesRecv() const;
-    uint64_t GetTotalBytesSent() const;
+    uint64_t GetTotalBytesSent() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
@@ -1208,6 +1209,10 @@ private:
     private:
         NetPermissionFlags m_permissions;
     };
+
+    //! returns the time left in the current max outbound cycle
+    //! in case of no limit, it will always return 0
+    std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
 
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
@@ -1300,7 +1305,7 @@ private:
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
      */
-    void SocketHandler(CMasternodeSync& mn_sync);
+    void SocketHandler(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /**
      * Do the read/write for connected sockets that are ready for IO.
@@ -1310,7 +1315,8 @@ private:
      */
     void SocketHandlerConnected(const std::set<SOCKET>& recv_set,
                                 const std::set<SOCKET>& send_set,
-                                const std::set<SOCKET>& error_set);
+                                const std::set<SOCKET>& error_set)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /**
      * Accept incoming connections, one from each read-ready listening socket.
@@ -1318,7 +1324,7 @@ private:
      */
     void SocketHandlerListening(const std::set<SOCKET>& recv_set, CMasternodeSync& mn_sync);
 
-    void ThreadSocketHandler(CMasternodeSync& mn_sync);
+    void ThreadSocketHandler(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     void ThreadDNSAddressSeed();
     void ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
                                          CMasternodeSync& mn_sync);
@@ -1350,7 +1356,7 @@ private:
 
     // Network stats
     void RecordBytesRecv(uint64_t bytes);
-    void RecordBytesSent(uint64_t bytes);
+    void RecordBytesSent(uint64_t bytes) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     /**
      * Return vector of current BLOCK_RELAY peers.
@@ -1364,14 +1370,14 @@ private:
     void UnregisterEvents(CNode* pnode);
 
     // Network usage totals
-    mutable RecursiveMutex cs_totalBytesSent;
+    mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
-    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
+    uint64_t nTotalBytesSent GUARDED_BY(m_total_bytes_sent_mutex) {0};
 
     // outbound limit & stats
-    uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent) {0};
-    std::chrono::seconds nMaxOutboundCycleStartTime GUARDED_BY(cs_totalBytesSent) {0};
-    uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
+    uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(m_total_bytes_sent_mutex) {0};
+    std::chrono::seconds nMaxOutboundCycleStartTime GUARDED_BY(m_total_bytes_sent_mutex) {0};
+    uint64_t nMaxOutboundLimit GUARDED_BY(m_total_bytes_sent_mutex);
 
     // P2P timeout in seconds
     std::chrono::seconds m_peer_connect_timeout;
