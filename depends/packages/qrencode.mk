@@ -1,8 +1,8 @@
 package=qrencode
 $(package)_version=4.1.1
 $(package)_download_path=https://fukuchi.org/works/qrencode/
-$(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=e455d9732f8041cf5b9c388e345a641fd15707860f928e94507b1961256a6923
+$(package)_file_name=$(package)-$($(package)_version).tar.gz
+$(package)_sha256_hash=da448ed4f52aba6bcb0cd48cac0dd51b8692bccc4cd127431402fca6f8171e8e
 $(package)_patches=cmake_fixups.patch
 
 define $(package)_set_vars
