@@ -2302,7 +2302,10 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconside
         // Never query by txid: it is possible that the transaction in the orphanage has the same
         // txid but a different witness, which would give us a false positive result. If we decided
         // not to request the transaction based on this result, an attacker could prevent us from
-        // downloading a transaction by intentionally creating a malleated version of it.
+        // downloading a transaction by intentionally creating a malleated version of it.  While
+        // only one (or none!) of these transactions can ultimately be confirmed, we have no way of
+        // discerning which one that is, so the orphanage can store multiple transactions with the
+        // same txid.
         //
         // While we won't query by txid, we can try to "guess" what the wtxid is based on the txid.
         // A non-segwit transaction's txid == wtxid. Query this txid "casted" to a wtxid. This will

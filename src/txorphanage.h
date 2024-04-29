@@ -77,12 +77,12 @@ protected:
         size_t list_pos;
     };
 
-    /** Map from txid to orphan transaction record. Limited by
+    /** Map from wtxid to orphan transaction record. Limited by
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-    std::map<Txid, OrphanTx> m_orphans GUARDED_BY(m_mutex);
+    std::map<Wtxid, OrphanTx> m_orphans GUARDED_BY(m_mutex);
 
     /** Which peer provided the orphans that need to be reconsidered */
-    std::map<NodeId, std::set<Txid>> m_peer_work_set GUARDED_BY(m_mutex);
+    std::map<NodeId, std::set<Wtxid>> m_peer_work_set GUARDED_BY(m_mutex);
 
     using OrphanMap = decltype(m_orphans);
 
@@ -101,10 +101,6 @@ protected:
 
     /** Orphan transactions in vector for quick random eviction */
     std::vector<OrphanMap::iterator> m_orphan_list GUARDED_BY(m_mutex);
-
-    /** Index from wtxid into the m_orphans to lookup orphan
-     *  transactions using their witness ids. */
-    std::map<Wtxid, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
 
     /** Erase an orphan by wtxid */
     int EraseTxNoLock(const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);

@@ -30,8 +30,8 @@ public:
     CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         LOCK(m_mutex);
-        std::map<Txid, OrphanTx>::iterator it;
-        it = m_orphans.lower_bound(Txid::FromUint256(InsecureRand256()));
+        std::map<Wtxid, OrphanTx>::iterator it;
+        it = m_orphans.lower_bound(Wtxid::FromUint256(InsecureRand256()));
         if (it == m_orphans.end())
             it = m_orphans.begin();
         return it->second.tx;
