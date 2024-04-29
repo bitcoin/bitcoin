@@ -183,8 +183,8 @@ void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
     UniValue lastprocessedblock{UniValue::VOBJ};
-    lastprocessedblock.pushKV("hash", wallet.GetLastBlockHash().GetHex());
-    lastprocessedblock.pushKV("height", wallet.GetLastBlockHeight());
+    lastprocessedblock.pushKV("hash", wallet.GetBestBlockHash().GetHex());
+    lastprocessedblock.pushKV("height", wallet.GetBestBlockHeight());
     entry.pushKV("lastprocessedblock", std::move(lastprocessedblock));
 }
 
