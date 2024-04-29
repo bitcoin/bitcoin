@@ -663,8 +663,8 @@ void CWallet::SetBestBlockInMem(int block_height, uint256 block_hash)
 {
     AssertLockHeld(cs_wallet);
 
-    m_last_block_processed = block_hash;
-    m_last_block_processed_height = block_height;
+    m_best_block.m_hash = block_hash;
+    m_best_block.m_height = block_height;
 }
 
 void CWallet::SetBestBlock(int block_height, uint256 block_hash)
@@ -674,7 +674,7 @@ void CWallet::SetBestBlock(int block_height, uint256 block_hash)
     SetBestBlockInMem(block_height, block_hash);
 
     CBlockLocator loc;
-    chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
+    chain().findBlock(m_best_block.m_hash, FoundBlock().locator(loc));
 
     WalletBatch batch(GetDatabase());
     batch.WriteBestBlock(loc);
@@ -1379,10 +1379,10 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
     // that the block is still unknown or not yet part of the main chain,
     // for example when loading the wallet during a reindex. Do nothing in that
     // case.
-    if (m_last_block_processed_height < 0 || conflicting_height < 0) {
+    if (!m_best_block.m_height.has_value() || conflicting_height < 0) {
         return;
     }
-    int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
+    int conflictconfirms = (m_best_block.m_height.value() - conflicting_height + 1) * -1;
     if (conflictconfirms >= 0)
         return;
 
@@ -1617,7 +1617,7 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
     // chain().Tip(), otherwise put a callback in the validation interface queue and wait
     // for the queue to drain enough to execute it (indicating we are caught up
     // at least with the time we entered this function).
-    uint256 last_block_hash = WITH_LOCK(cs_wallet, return m_last_block_processed);
+    uint256 last_block_hash = WITH_LOCK(cs_wallet, return m_best_block.m_hash);
     chain().waitForNotificationsIfTipChanged(last_block_hash);
 }
 
@@ -3338,11 +3338,11 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
 
     const std::optional<int> tip_height = chain.getHeight();
     if (tip_height) {
-        walletInstance->m_last_block_processed = chain.getBlockHash(*tip_height);
-        walletInstance->m_last_block_processed_height = *tip_height;
+        walletInstance->m_best_block.m_hash = chain.getBlockHash(*tip_height);
+        walletInstance->m_best_block.m_height = *tip_height;
     } else {
-        walletInstance->m_last_block_processed.SetNull();
-        walletInstance->m_last_block_processed_height = -1;
+        walletInstance->m_best_block.m_hash.SetNull();
+        walletInstance->m_best_block.m_height = std::nullopt;
     }
 
     if (tip_height && *tip_height != rescan_height)
@@ -3468,7 +3468,7 @@ bool CWallet::BackupWallet(const std::string& strDest) const
 {
     if (m_chain) {
         CBlockLocator loc;
-        WITH_LOCK(cs_wallet, chain().findBlock(m_last_block_processed, FoundBlock().locator(loc)));
+        WITH_LOCK(cs_wallet, chain().findBlock(m_best_block.m_hash, FoundBlock().locator(loc)));
         if (!loc.IsNull()) {
             WalletBatch batch(GetDatabase());
             batch.WriteBestBlock(loc);
