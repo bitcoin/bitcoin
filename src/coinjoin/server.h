@@ -44,12 +44,12 @@ private:
     bool fUnitTest;
 
     /// Add a clients entry to the pool
-    bool AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet) LOCKS_EXCLUDED(cs_coinjoin);
+    bool AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
     /// Add signature to a txin
-    bool AddScriptSig(const CTxIn& txin) LOCKS_EXCLUDED(cs_coinjoin);
+    bool AddScriptSig(const CTxIn& txin) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
     /// Charge fees to bad actors (Charge clients a fee if they're abusive)
-    void ChargeFees() const LOCKS_EXCLUDED(cs_coinjoin);
+    void ChargeFees() const EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
     /// Rarely charge fees to pay miners
     void ChargeRandomFees() const;
     /// Consume collateral in cases when peer misbehaved
@@ -58,18 +58,18 @@ private:
     /// Check for process
     void CheckPool();
 
-    void CreateFinalTransaction() LOCKS_EXCLUDED(cs_coinjoin);
-    void CommitFinalTransaction() LOCKS_EXCLUDED(cs_coinjoin);
+    void CreateFinalTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
+    void CommitFinalTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
     /// Is this nDenom and txCollateral acceptable?
     bool IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) const;
-    bool CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) LOCKS_EXCLUDED(cs_vecqueue);
+    bool CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
     bool AddUserToExistingSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet);
     /// Do we have enough users to take entries?
     bool IsSessionReady() const;
 
     /// Check that all inputs are signed. (Are all inputs signed?)
-    bool IsSignaturesComplete() const LOCKS_EXCLUDED(cs_coinjoin);
+    bool IsSignaturesComplete() const EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
     /// Check to make sure a given input matches an input in the pool and its scriptSig is valid
     bool IsInputScriptSigValid(const CTxIn& txin) const EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
@@ -80,12 +80,12 @@ private:
     void RelayFinalTransaction(const CTransaction& txFinal) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
     void PushStatus(CNode& peer, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) const;
     void RelayStatus(PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID = MSG_NOERR) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
-    void RelayCompletedTransaction(PoolMessage nMessageID) LOCKS_EXCLUDED(cs_coinjoin);
+    void RelayCompletedTransaction(PoolMessage nMessageID) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
-    void ProcessDSACCEPT(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
-    PeerMsgRet ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_vecqueue);
-    void ProcessDSVIN(CNode& peer, CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
-    void ProcessDSSIGNFINALTX(CDataStream& vRecv) LOCKS_EXCLUDED(cs_coinjoin);
+    void ProcessDSACCEPT(CNode& peer, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
+    PeerMsgRet ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
+    void ProcessDSVIN(CNode& peer, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
+    void ProcessDSSIGNFINALTX(CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
