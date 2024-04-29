@@ -622,7 +622,7 @@ RPCHelpMan listsinceblock()
         blockId = ParseHashV(request.params[0], "blockhash");
         height = int{};
         altheight = int{};
-        if (!wallet.chain().findCommonAncestor(blockId, wallet.GetLastBlockHash(), /*ancestor_out=*/FoundBlock().height(*height), /*block1_out=*/FoundBlock().height(*altheight))) {
+        if (!wallet.chain().findCommonAncestor(blockId, wallet.GetBestBlockHash(), /*ancestor_out=*/FoundBlock().height(*height), /*block1_out=*/FoundBlock().height(*altheight))) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
@@ -646,7 +646,7 @@ RPCHelpMan listsinceblock()
     std::optional<std::string> filter_label;
     if (!request.params[5].isNull()) filter_label.emplace(LabelFromValue(request.params[5]));
 
-    int depth = height ? wallet.GetLastBlockHeight() + 1 - *height : -1;
+    int depth = height ? wallet.GetBestBlockHeight() + 1 - *height : -1;
 
     UniValue transactions(UniValue::VARR);
 
@@ -679,8 +679,8 @@ RPCHelpMan listsinceblock()
     }
 
     uint256 lastblock;
-    target_confirms = std::min(target_confirms, wallet.GetLastBlockHeight() + 1);
-    CHECK_NONFATAL(wallet.chain().findAncestorByHeight(wallet.GetLastBlockHash(), wallet.GetLastBlockHeight() + 1 - target_confirms, FoundBlock().hash(lastblock)));
+    target_confirms = std::min(target_confirms, wallet.GetBestBlockHeight() + 1);
+    CHECK_NONFATAL(wallet.chain().findAncestorByHeight(wallet.GetBestBlockHash(), wallet.GetBestBlockHeight() + 1 - target_confirms, FoundBlock().hash(lastblock)));
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("transactions", std::move(transactions));
@@ -892,7 +892,7 @@ RPCHelpMan rescanblockchain()
     {
         LOCK(pwallet->cs_wallet);
         EnsureWalletIsUnlocked(*pwallet);
-        int tip_height = pwallet->GetLastBlockHeight();
+        int tip_height = pwallet->GetBestBlockHeight();
 
         if (!request.params[0].isNull()) {
             start_height = request.params[0].getInt<int>();
@@ -911,7 +911,7 @@ RPCHelpMan rescanblockchain()
         }
 
         // We can't rescan unavailable blocks, stop and throw an error
-        if (!pwallet->chain().hasBlocks(pwallet->GetLastBlockHash(), start_height, stop_height)) {
+        if (!pwallet->chain().hasBlocks(pwallet->GetBestBlockHash(), start_height, stop_height)) {
             if (pwallet->chain().havePruned() && pwallet->chain().getPruneHeight() >= start_height) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.");
             }
@@ -921,7 +921,7 @@ RPCHelpMan rescanblockchain()
             throw JSONRPCError(RPC_MISC_ERROR, "Failed to rescan unavailable blocks, potentially caused by data corruption. If the issue persists you may want to reindex (see -reindex option).");
         }
 
-        CHECK_NONFATAL(pwallet->chain().findAncestorByHeight(pwallet->GetLastBlockHash(), start_height, FoundBlock().hash(start_block)));
+        CHECK_NONFATAL(pwallet->chain().findAncestorByHeight(pwallet->GetBestBlockHash(), start_height, FoundBlock().hash(start_block)));
     }
 
     CWallet::ScanResult result =
