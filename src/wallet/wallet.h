@@ -438,7 +438,7 @@ private:
     static NodeClock::time_point GetDefaultNextResend();
 
     // Update last block processed in memory only
-    void SetLastBlockProcessedInMem(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SetBestBlockInMem(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
 public:
     /**
@@ -980,20 +980,20 @@ public:
     bool HaveCryptedKeys() const;
 
     /** Get last block processed height */
-    int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    int GetBestBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed_height;
     };
-    uint256 GetLastBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    uint256 GetBestBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
         assert(m_last_block_processed_height >= 0);
         return m_last_block_processed;
     }
     /** Set last block processed height, and write to database */
-    void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SetBestBlock(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
     void ConnectScriptPubKeyManNotifiers();

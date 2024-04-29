@@ -659,7 +659,7 @@ void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
     batch.WriteBestBlock(loc);
 }
 
-void CWallet::SetLastBlockProcessedInMem(int block_height, uint256 block_hash)
+void CWallet::SetBestBlockInMem(int block_height, uint256 block_hash)
 {
     AssertLockHeld(cs_wallet);
 
@@ -667,11 +667,11 @@ void CWallet::SetLastBlockProcessedInMem(int block_height, uint256 block_hash)
     m_last_block_processed_height = block_height;
 }
 
-void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
+void CWallet::SetBestBlock(int block_height, uint256 block_hash)
 {
     AssertLockHeld(cs_wallet);
 
-    SetLastBlockProcessedInMem(block_height, block_hash);
+    SetBestBlockInMem(block_height, block_hash);
 
     CBlockLocator loc;
     chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
@@ -1544,7 +1544,7 @@ void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& b
 
     // Update the best block in memory first. This will set the best block's height, which is
     // needed by MarkConflicted.
-    SetLastBlockProcessedInMem(block.height, block.hash);
+    SetBestBlockInMem(block.height, block.hash);
 
     // No need to scan block if it was created before the wallet birthday.
     // Uses chain max time and twice the grace period to adjust time for block time variability.
@@ -1559,7 +1559,7 @@ void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& b
 
     // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
     if (wallet_updated || block.height % 144 == 0) {
-        SetLastBlockProcessed(block.height, block.hash);
+        SetBestBlock(block.height, block.hash);
     }
 }
 
@@ -1607,7 +1607,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     }
 
     // Update the best block
-    SetLastBlockProcessed(block.height - 1, *Assert(block.prev_hash));
+    SetBestBlock(block.height - 1, *Assert(block.prev_hash));
 }
 
 void CWallet::updatedBlockTip()
@@ -1884,7 +1884,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     int start_height = 0;
     uint256 start_block;
     bool start = chain().findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, FoundBlock().hash(start_block).height(start_height));
-    WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, start ? WITH_LOCK(cs_wallet, return GetLastBlockHeight()) - start_height + 1 : 0);
+    WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, start ? WITH_LOCK(cs_wallet, return GetBestBlockHeight()) - start_height + 1 : 0);
 
     if (start) {
         // TODO: this should take into account failure by ScanResult::USER_ABORT
@@ -1939,7 +1939,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 
     fAbortRescan = false;
     ShowProgress(strprintf("%s %s", GetDisplayName(), _("Rescanning…")), 0); // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
-    uint256 tip_hash = WITH_LOCK(cs_wallet, return GetLastBlockHash());
+    uint256 tip_hash = WITH_LOCK(cs_wallet, return GetBestBlockHash());
     uint256 end_hash = tip_hash;
     if (max_height) chain().findAncestorByHeight(tip_hash, *max_height, FoundBlock().hash(end_hash));
     double progress_begin = chain().guessVerificationProgress(block_hash);
@@ -2029,7 +2029,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         // aren't processed here but will be processed with the pending blockConnected notifications after the lock is released.
         // If rescanning without a permanent cs_wallet lock, additional blocks that were added during the rescan will be re-processed if
         // the notification was processed and the last block height was updated.
-        if (block_height >= WITH_LOCK(cs_wallet, return GetLastBlockHeight())) {
+        if (block_height >= WITH_LOCK(cs_wallet, return GetBestBlockHeight())) {
             break;
         }
 
@@ -2047,7 +2047,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 
             // handle updated tip hash
             const uint256 prev_tip_hash = tip_hash;
-            tip_hash = WITH_LOCK(cs_wallet, return GetLastBlockHash());
+            tip_hash = WITH_LOCK(cs_wallet, return GetBestBlockHash());
             if (!max_height && prev_tip_hash != tip_hash) {
                 // in case the tip has changed, update progress max
                 progress_end = chain().guessVerificationProgress(tip_hash);
@@ -2814,8 +2814,8 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
     // map in which we'll infer heights of other keys
     std::map<CKeyID, const TxStateConfirmed*> mapKeyFirstBlock;
     TxStateConfirmed max_confirm{uint256{}, /*height=*/-1, /*index=*/-1};
-    max_confirm.confirmed_block_height = GetLastBlockHeight() > 144 ? GetLastBlockHeight() - 144 : 0; // the tip can be reorganized; use a 144-block safety margin
-    CHECK_NONFATAL(chain().findAncestorByHeight(GetLastBlockHash(), max_confirm.confirmed_block_height, FoundBlock().hash(max_confirm.confirmed_block_hash)));
+    max_confirm.confirmed_block_height = GetBestBlockHeight() > 144 ? GetBestBlockHeight() - 144 : 0; // the tip can be reorganized; use a 144-block safety margin
+    CHECK_NONFATAL(chain().findAncestorByHeight(GetBestBlockHash(), max_confirm.confirmed_block_height, FoundBlock().hash(max_confirm.confirmed_block_hash)));
 
     {
         LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
@@ -3501,10 +3501,10 @@ int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
     AssertLockHeld(cs_wallet);
     if (auto* conf = wtx.state<TxStateConfirmed>()) {
         assert(conf->confirmed_block_height >= 0);
-        return GetLastBlockHeight() - conf->confirmed_block_height + 1;
+        return GetBestBlockHeight() - conf->confirmed_block_height + 1;
     } else if (auto* conf = wtx.state<TxStateBlockConflicted>()) {
         assert(conf->conflicting_block_height >= 0);
-        return -1 * (GetLastBlockHeight() - conf->conflicting_block_height + 1);
+        return -1 * (GetBestBlockHeight() - conf->conflicting_block_height + 1);
     } else {
         return 0;
     }
@@ -4453,7 +4453,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
 
         // Flush chain state before unloading wallet
         CBlockLocator locator;
-        WITH_LOCK(wallet->cs_wallet, context.chain->findBlock(wallet->GetLastBlockHash(), FoundBlock().locator(locator)));
+        WITH_LOCK(wallet->cs_wallet, context.chain->findBlock(wallet->GetBestBlockHash(), FoundBlock().locator(locator)));
         if (!locator.IsNull()) wallet->chainStateFlushed(ChainstateRole::NORMAL, locator);
 
         if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
