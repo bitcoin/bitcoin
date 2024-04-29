@@ -476,12 +476,12 @@ public:
     const bool m_inbound_onion;
     std::atomic<int> nNumWarningsSkipped{0};
     std::atomic<int> nVersion{0};
+    Mutex m_subver_mutex;
     /**
      * cleanSubVer is a sanitized string of the user agent byte array we read
      * from the wire. This cleaned string can safely be logged or displayed.
      */
-    std::string cleanSubVer GUARDED_BY(cs_SubVer){};
-    RecursiveMutex cs_SubVer; // used for both cleanSubVer and strSubVer
+    std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
     bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permissionFlags, permission);

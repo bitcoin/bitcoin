@@ -3357,7 +3357,7 @@ void PeerManagerImpl::ProcessMessage(
         pfrom.nServices = nServices;
         pfrom.SetAddrLocal(addrMe);
         {
-            LOCK(pfrom.cs_SubVer);
+            LOCK(pfrom.m_subver_mutex);
             pfrom.cleanSubVer = cleanSubVer;
         }
         peer->m_starting_height = starting_height;

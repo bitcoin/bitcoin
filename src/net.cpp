@@ -648,7 +648,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     X(m_addr_name);
     X(nVersion);
     {
-        LOCK(cs_SubVer);
+        LOCK(m_subver_mutex);
         X(cleanSubVer);
     }
     stats.fInbound = IsInboundConn();
