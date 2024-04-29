@@ -217,7 +217,7 @@ bool RecFindRoots(std::vector<std::vector<typename F::Elem>>& stack, size_t pos,
         }
 
         if (fully_factorizable) {
-            // Every succesful iteration of this algorithm splits the input
+            // Every successful iteration of this algorithm splits the input
             // polynomial further into buckets, each corresponding to a subset
             // of 2^(BITS-depth) roots. If after depth splits the degree of
             // the polynomial is >= 2^(BITS-depth), something is wrong.
