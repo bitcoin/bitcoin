@@ -395,7 +395,7 @@ static RPCHelpMan createwallet()
     if (!request.params[4].isNull() && request.params[4].get_bool()) {
         flags |= WALLET_FLAG_AVOID_REUSE;
     }
-    if (self.Arg<bool>(5)) {
+    if (self.Arg<bool>("descriptors")) {
 #ifndef USE_SQLITE
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
 #endif
@@ -489,7 +489,7 @@ static RPCHelpMan unloadwallet()
         // Release the "main" shared pointer and prevent further notifications.
         // Note that any attempt to load the same wallet would fail until the wallet
         // is destroyed (see CheckUniqueFileid).
-        std::optional<bool> load_on_start{self.MaybeArg<bool>(1)};
+        std::optional<bool> load_on_start{self.MaybeArg<bool>("load_on_startup")};
         if (!RemoveWallet(context, wallet, load_on_start, warnings)) {
             throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
         }

@@ -677,7 +677,7 @@ static const UniValue* DetailMaybeArg(CheckFn* check, const std::vector<RPCArg>&
 
 static void CheckRequiredOrDefault(const RPCArg& param)
 {
-    // Must use `Arg<Type>(i)` to get the argument or its default value.
+    // Must use `Arg<Type>(key)` to get the argument or its default value.
     const bool required{
         std::holds_alternative<RPCArg::Optional>(param.m_fallback) && RPCArg::Optional::NO == std::get<RPCArg::Optional>(param.m_fallback),
     };

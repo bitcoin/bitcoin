@@ -485,7 +485,7 @@ static RPCHelpMan prioritisetransaction()
     LOCK(cs_main);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
-    const auto dummy{self.MaybeArg<double>(1)};
+    const auto dummy{self.MaybeArg<double>("dummy")};
     CAmount nAmount = request.params[2].getInt<int64_t>();
 
     if (dummy && *dummy != 0) {
