@@ -649,15 +649,6 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
     return false;
 }
 
-void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
-{
-    // Don't update the best block until the chain is attached so that in case of a shutdown,
-    // the rescan will be restarted at next startup.
-    if (m_attaching_chain || role == ChainstateRole::BACKGROUND) {
-        return;
-    }
-}
-
 void CWallet::SetBestBlockInMem(int block_height, uint256 block_hash)
 {
     AssertLockHeld(cs_wallet);
@@ -3325,11 +3316,6 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     // be pending on the validation-side until lock release. Blocks that are connected while the
     // rescan is ongoing will not be processed in the rescan but with the block connected notifications,
     // so the wallet will only be completeley synced after the notifications delivery.
-    // chainStateFlushed notifications are ignored until the rescan is finished
-    // so that in case of a shutdown event, the rescan will be repeated at the next start.
-    // This is temporary until rescan and notifications delivery are unified under same
-    // interface.
-    walletInstance->m_attaching_chain = true; //ignores chainStateFlushed notifications
     walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
 
     // Update the best block locator if it is missing the height.
@@ -3420,7 +3406,6 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
                 error = _("Failed to rescan the wallet during initialization");
                 return false;
             }
-            walletInstance->m_attaching_chain = false;
             // Set and update the best block record
             // Although ScanForWalletTransactions will have stopped at the best block that was set prior to the rescan,
             // we still need to make sure that the best block on disk is set correctly as rescanning may overwrite it.
@@ -3428,7 +3413,6 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
         }
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
-    walletInstance->m_attaching_chain = false;
 
     return true;
 }
