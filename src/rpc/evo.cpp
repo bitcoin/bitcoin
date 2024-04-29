@@ -1372,7 +1372,6 @@ static UniValue protx_list(const JSONRPCRequest& request, CDeterministicMNManage
             throw std::runtime_error("\"protx list wallet\" not supported when wallet is disabled");
         }
 #ifdef ENABLE_WALLET
-        LOCK2(wallet->cs_wallet, cs_main);
 
         if (request.params.size() > 4) {
             protx_list_help(request);
@@ -1380,6 +1379,7 @@ static UniValue protx_list(const JSONRPCRequest& request, CDeterministicMNManage
 
         bool detailed = !request.params[1].isNull() ? ParseBoolV(request.params[1], "detailed") : false;
 
+        LOCK2(wallet->cs_wallet, cs_main);
         int height = !request.params[2].isNull() ? ParseInt32V(request.params[2], "height") : chainman.ActiveChain().Height();
         if (height < 1 || height > chainman.ActiveChain().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
@@ -1408,10 +1408,13 @@ static UniValue protx_list(const JSONRPCRequest& request, CDeterministicMNManage
             protx_list_help(request);
         }
 
-        LOCK(cs_main);
-
         bool detailed = !request.params[1].isNull() ? ParseBoolV(request.params[1], "detailed") : false;
 
+#ifdef ENABLE_WALLET
+        LOCK2(wallet ? wallet->cs_wallet : cs_main, cs_main);
+#else
+        LOCK(cs_main);
+#endif
         int height = !request.params[2].isNull() ? ParseInt32V(request.params[2], "height") : chainman.ActiveChain().Height();
         if (height < 1 || height > chainman.ActiveChain().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
