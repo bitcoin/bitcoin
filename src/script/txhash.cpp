@@ -62,9 +62,6 @@ bool parse_inout_selector(
 
     unsigned int selection = first & (0xff ^ TXFS_INOUT_NUMBER);
     if (selection == TXFS_INOUT_SELECTION_NONE) {
-        if (!allow_empty && !out_count) {
-            return false; // no in/output range given and nb_items bitflag also unset
-        }
         return true;
     } else if (selection == TXFS_INOUT_SELECTION_ALL) {
         out_all = true;
@@ -83,9 +80,6 @@ bool parse_inout_selector(
             }
             unsigned int next_byte = SpanPopFront(bytes);
 
-            if ((selection & TXFS_INOUT_SELECTION_MASK) == 0) {
-                return false; // non-minimal range
-            }
             count = ((selection & TXFS_INOUT_SELECTION_MASK) << 8) + next_byte;
         }
         if (count > nb_items) {
@@ -97,9 +91,6 @@ bool parse_inout_selector(
         // individual mode
         bool absolute = (selection & TXFS_INOUT_INDIVIDUAL_MODE) == 0;
         unsigned int count = selection & TXFS_INOUT_SELECTION_MASK;
-        if (count == 0) {
-            return false; // invalid 0 range count for individual mode
-        }
 
         signed int cur = in_pos; // cast to avoid warnings
         std::vector<unsigned int> indices = {};
@@ -128,9 +119,6 @@ bool parse_inout_selector(
                     rel = read_i15(number);
                 }
 
-                if (rel == 0 && count == 1) {
-                    return false; // should just have used SELECTION_CURRENT
-                }
                 if (rel < 0 && (-rel) > cur) {
                     return false; // underflow
                 }
@@ -818,12 +806,6 @@ bool calculate_txhash(
     individual = {};
     if (!parse_inout_selector(bytes, tx.vout.size(), count, all, current, leading, individual, in_pos, false)) {
         return false;
-    }
-
-    if (!all && !current && leading == 0 && individual.size() == 0) {
-        if ((inout_fields & TXFS_OUTPUTS_ALL) != 0) {
-            return false; // some field bits set but no outputs selected
-        }
     }
 
     if (current && in_pos >= tx.vout.size()) {
