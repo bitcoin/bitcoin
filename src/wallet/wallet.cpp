@@ -1985,13 +1985,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 result.last_scanned_height = block_height;
 
                 if (save_progress && next_interval) {
-                    CBlockLocator loc = m_chain->getActiveChainLocator(block_hash);
-
-                    if (!loc.IsNull()) {
-                        WalletLogPrintf("Saving scan progress %d.\n", block_height);
-                        WalletBatch batch(GetDatabase());
-                        batch.WriteBestBlock(BestBlock{loc, block_hash, block_height});
-                    }
+                    WalletLogPrintf("Saving scan progress %d.\n", block_height);
+                    SetBestBlock(block_height, block_hash);
                 }
             } else {
                 // could not scan block, keep scanning but record this block as the most recent failure
