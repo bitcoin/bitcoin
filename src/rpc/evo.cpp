@@ -1264,33 +1264,15 @@ static void protx_list_help(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-static bool CheckWalletOwnsKey(const CWallet* const pwallet, const CKeyID& keyID) {
-    if (!pwallet) {
-        return false;
-    }
-    const LegacyScriptPubKeyMan* const spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return false;
-    }
-    return spk_man->HaveKey(keyID);
-}
-
 static bool CheckWalletOwnsScript(const CWallet* const pwallet, const CScript& script) {
     if (!pwallet) {
         return false;
     }
-    const LegacyScriptPubKeyMan* const spk_man = pwallet->GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        return false;
-    }
+    return WITH_LOCK(pwallet->cs_wallet, return pwallet->IsMine(script)) == isminetype::ISMINE_SPENDABLE;
+}
 
-    CTxDestination dest;
-    if (ExtractDestination(script, dest)) {
-        if ((std::get_if<PKHash>(&dest) && spk_man->HaveKey(ToKeyID(*std::get_if<PKHash>(&dest)))) || (std::get_if<ScriptHash>(&dest) && spk_man->HaveCScript(CScriptID{ScriptHash(*std::get_if<ScriptHash>(&dest))}))) {
-            return true;
-        }
-    }
-    return false;
+static bool CheckWalletOwnsKey(const CWallet* const pwallet, const CKeyID& keyID) {
+    return CheckWalletOwnsScript(pwallet, GetScriptForDestination(PKHash(keyID)));
 }
 #endif
 
