@@ -4135,12 +4135,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
-    // Get best block locator so that we can copy it to the watchonly and solvables
-    BestBlock best_block;
-    if (!local_wallet_batch.ReadBestBlock(best_block)) {
-        return util::Error{_("Error: Unable to read wallet's best block locator record")};
-    }
-
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
     std::vector<uint256> txids_to_delete;
@@ -4153,7 +4147,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
         watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
         // Write the best block locator to avoid rescanning on reload
-        if (!watchonly_batch->WriteBestBlock(best_block)) {
+        if (!watchonly_batch->WriteBestBlock(m_best_block)) {
             return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
         }
     }
@@ -4162,7 +4156,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         solvables_batch = std::make_unique<WalletBatch>(data.solvable_wallet->GetDatabase());
         if (!solvables_batch->TxnBegin()) return util::Error{strprintf(_("Error: database transaction cannot be executed for wallet %s"), data.solvable_wallet->GetName())};
         // Write the best block locator to avoid rescanning on reload
-        if (!solvables_batch->WriteBestBlock(best_block)) {
+        if (!solvables_batch->WriteBestBlock(m_best_block)) {
             return util::Error{_("Error: Unable to write solvable wallet best block locator record")};
         }
     }
