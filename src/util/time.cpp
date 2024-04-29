@@ -16,11 +16,11 @@
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
-static std::atomic<int64_t> nMockTime(0); //!< For testing
+static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
 
 NodeClock::time_point NodeClock::now() noexcept
 {
-    const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
+    const auto mocktime{g_mock_time.load(std::memory_order_relaxed)};
     const auto ret{
         mocktime.count() ?
             mocktime :
@@ -29,20 +29,16 @@ NodeClock::time_point NodeClock::now() noexcept
     return time_point{ret};
 };
 
-void SetMockTime(int64_t nMockTimeIn)
-{
-    Assert(nMockTimeIn >= 0);
-    nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
-}
-
+void SetMockTime(int64_t nMockTimeIn) { SetMockTime(std::chrono::seconds{nMockTimeIn}); }
 void SetMockTime(std::chrono::seconds mock_time_in)
 {
-    nMockTime.store(mock_time_in.count(), std::memory_order_relaxed);
+    Assert(mock_time_in >= 0s);
+    g_mock_time.store(mock_time_in, std::memory_order_relaxed);
 }
 
 std::chrono::seconds GetMockTime()
 {
-    return std::chrono::seconds(nMockTime.load(std::memory_order_relaxed));
+    return g_mock_time.load(std::memory_order_relaxed);
 }
 
 int64_t GetTime() { return GetTime<std::chrono::seconds>().count(); }
