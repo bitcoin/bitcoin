@@ -269,6 +269,7 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:libevent::libevent>
     $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
     $<TARGET_NAME_IF_EXISTS:NATPMP::NATPMP>
+    $<TARGET_NAME_IF_EXISTS:MiniUPnPc::MiniUPnPc>
 )
 
 
