@@ -7,6 +7,7 @@ import time
 
 from test_framework.messages import (
     CInv,
+    CTxInWitness,
     MSG_TX,
     MSG_WITNESS_TX,
     MSG_WTX,
@@ -21,6 +22,7 @@ from test_framework.p2p import (
     NONPREF_PEER_TX_DELAY,
     OVERLOADED_PEER_TX_DELAY,
     p2p_lock,
+    P2PInterface,
     P2PTxInvStore,
     TXID_RELAY_DELAY,
 )
@@ -126,6 +128,22 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
         peer.wait_for_getdata([wtxid])
         peer.send_and_ping(msg_tx(tx))
+
+    def create_malleated_version(self, tx):
+        """
+        Create a malleated version of the tx where the witness is replaced with garbage data.
+        Returns a CTransaction object.
+        """
+        tx_bad_wit = tx_from_hex(tx["hex"])
+        tx_bad_wit.wit.vtxinwit = [CTxInWitness()]
+        # Add garbage data to witness 0. We cannot simply strip the witness, as the node would
+        # classify it as a transaction in which the witness was missing rather than wrong.
+        tx_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
+
+        assert_equal(tx["txid"], tx_bad_wit.rehash())
+        assert tx["wtxid"] != tx_bad_wit.getwtxid()
+
+        return tx_bad_wit
 
     @cleanup
     def test_arrival_timing_orphan(self):
@@ -284,8 +302,8 @@ class OrphanHandlingTest(BitcoinTestFramework):
         # doesn't give up on the orphan. Once all of the missing parents are received, it should be
         # submitted to mempool.
         peer.send_message(msg_notfound(vec=[CInv(MSG_WITNESS_TX, int(txid_conf_old, 16))]))
+        # Sync with ping to ensure orphans are reconsidered
         peer.send_and_ping(msg_tx(missing_tx["tx"]))
-        peer.sync_with_ping()
         assert_equal(node.getmempoolentry(orphan["txid"])["ancestorcount"], 3)
 
     @cleanup
@@ -394,9 +412,160 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer2.assert_never_requested(child["tx"].getwtxid())
 
         # The child should never be requested, even if announced again with potentially different witness.
+        # Sync with ping to ensure orphans are reconsidered
         peer3.send_and_ping(msg_inv([CInv(t=MSG_TX, h=int(child["txid"], 16))]))
         self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
         peer3.assert_never_requested(child["txid"])
+
+    @cleanup
+    def test_same_txid_orphan(self):
+        self.log.info("Check what happens when orphan with same txid is already in orphanage")
+        node = self.nodes[0]
+
+        tx_parent = self.wallet.create_self_transfer()
+
+        # Create the real child
+        tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
+
+        # Create a fake version of the child
+        tx_orphan_bad_wit = self.create_malleated_version(tx_child)
+
+        bad_peer = node.add_p2p_connection(P2PInterface())
+        honest_peer = node.add_p2p_connection(P2PInterface())
+
+        # 1. Fake orphan is received first. It is missing an input.
+        bad_peer.send_and_ping(msg_tx(tx_orphan_bad_wit))
+
+        # 2. Node requests the missing parent by txid.
+        parent_txid_int = int(tx_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        bad_peer.wait_for_getdata([parent_txid_int])
+
+        # 3. Honest peer relays the real child, which is also missing parents and should be placed
+        # in the orphanage.
+        with node.assert_debug_log(["missingorspent", "stored orphan tx"]):
+            honest_peer.send_and_ping(msg_tx(tx_child["tx"]))
+
+        # Time out the previous request for the parent (node will not request the same transaction
+        # from multiple nodes at the same time)
+        node.bumpmocktime(GETDATA_TX_INTERVAL)
+
+        # 4. The parent is requested. Honest peer sends it.
+        honest_peer.wait_for_getdata([parent_txid_int])
+        # Sync with ping to ensure orphans are reconsidered
+        honest_peer.send_and_ping(msg_tx(tx_parent["tx"]))
+
+        # 5. After parent is accepted, orphans should be reconsidered.
+        # The real child should be accepted and the fake one rejected.
+        node_mempool = node.getrawmempool()
+        assert tx_parent["txid"] in node_mempool
+        assert tx_child["txid"] in node_mempool
+        assert_equal(node.getmempoolentry(tx_child["txid"])["wtxid"], tx_child["wtxid"])
+
+    @cleanup
+    def test_same_txid_orphan_of_orphan(self):
+        self.log.info("Check what happens when orphan's parent with same txid is already in orphanage")
+        node = self.nodes[0]
+
+        tx_grandparent = self.wallet.create_self_transfer()
+
+        # Create middle tx (both parent and child) which will be in orphanage.
+        tx_middle = self.wallet.create_self_transfer(utxo_to_spend=tx_grandparent["new_utxo"])
+
+        # Create a fake version of the middle tx
+        tx_orphan_bad_wit = self.create_malleated_version(tx_middle)
+
+        # Create grandchild spending from tx_middle (and spending from tx_orphan_bad_wit since they
+        # have the same txid).
+        tx_grandchild = self.wallet.create_self_transfer(utxo_to_spend=tx_middle["new_utxo"])
+
+        bad_peer = node.add_p2p_connection(P2PInterface())
+        honest_peer = node.add_p2p_connection(P2PInterface())
+
+        # 1. Fake orphan is received first. It is missing an input.
+        bad_peer.send_and_ping(msg_tx(tx_orphan_bad_wit))
+
+        # 2. Node requests missing tx_grandparent by txid.
+        grandparent_txid_int = int(tx_grandparent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        bad_peer.wait_for_getdata([grandparent_txid_int])
+
+        # 3. Honest peer relays the grandchild, which is missing a parent. The parent by txid already
+        # exists in orphanage, but should be re-requested because the node shouldn't assume that the
+        # witness data is the same. In this case, a same-txid-different-witness transaction exists!
+        with node.assert_debug_log(["stored orphan tx"]):
+            honest_peer.send_and_ping(msg_tx(tx_grandchild["tx"]))
+        middle_txid_int = int(tx_middle["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        honest_peer.wait_for_getdata([middle_txid_int])
+
+        # 4. Honest peer relays the real child, which is also missing parents and should be placed
+        # in the orphanage.
+        with node.assert_debug_log(["stored orphan tx"]):
+            honest_peer.send_and_ping(msg_tx(tx_middle["tx"]))
+        assert_equal(len(node.getrawmempool()), 0)
+
+        # 5. Honest peer sends tx_grandparent
+        honest_peer.send_and_ping(msg_tx(tx_grandparent["tx"]))
+
+        # 6. After parent is accepted, orphans should be reconsidered.
+        # The real child should be accepted and the fake one rejected.
+        node_mempool = node.getrawmempool()
+        assert tx_grandparent["txid"] in node_mempool
+        assert tx_middle["txid"] in node_mempool
+        assert tx_grandchild["txid"] in node_mempool
+        assert_equal(node.getmempoolentry(tx_middle["txid"])["wtxid"], tx_middle["wtxid"])
+
+    @cleanup
+    def test_orphan_txid_inv(self):
+        self.log.info("Check node does not ignore announcement with same txid as tx in orphanage")
+        node = self.nodes[0]
+
+        tx_parent = self.wallet.create_self_transfer()
+
+        # Create the real child and fake version
+        tx_child = self.wallet.create_self_transfer(utxo_to_spend=tx_parent["new_utxo"])
+        tx_orphan_bad_wit = self.create_malleated_version(tx_child)
+
+        bad_peer = node.add_p2p_connection(PeerTxRelayer())
+        # Must not send wtxidrelay because otherwise the inv(TX) will be ignored later
+        honest_peer = node.add_p2p_connection(P2PInterface(wtxidrelay=False))
+
+        # 1. Fake orphan is received first. It is missing an input.
+        bad_peer.send_and_ping(msg_tx(tx_orphan_bad_wit))
+
+        # 2. Node requests the missing parent by txid.
+        parent_txid_int = int(tx_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        bad_peer.wait_for_getdata([parent_txid_int])
+
+        # 3. Honest peer announces the real child, by txid (this isn't common but the node should
+        # still keep track of it).
+        child_txid_int = int(tx_child["txid"], 16)
+        honest_peer.send_and_ping(msg_inv([CInv(t=MSG_TX, h=child_txid_int)]))
+
+        # 4. The child is requested. Honest peer sends it.
+        node.bumpmocktime(TXREQUEST_TIME_SKIP)
+        honest_peer.wait_for_getdata([child_txid_int])
+        with node.assert_debug_log(["stored orphan tx"]):
+            honest_peer.send_and_ping(msg_tx(tx_child["tx"]))
+
+        # 5. After first parent request times out, the node sends another one for the missing parent
+        # of the real orphan child.
+        node.bumpmocktime(GETDATA_TX_INTERVAL)
+        honest_peer.wait_for_getdata([parent_txid_int])
+        honest_peer.send_and_ping(msg_tx(tx_parent["tx"]))
+
+        # 6. After parent is accepted, orphans should be reconsidered.
+        # The real child should be accepted and the fake one rejected. This may happen in either
+        # order since the message-processing is randomized. If tx_orphan_bad_wit is validated first,
+        # its consensus error leads to disconnection of bad_peer. If tx_child is validated first,
+        # tx_orphan_bad_wit is rejected for txn-same-nonwitness-data-in-mempool (no punishment).
+        node_mempool = node.getrawmempool()
+        assert tx_parent["txid"] in node_mempool
+        assert tx_child["txid"] in node_mempool
+        assert_equal(node.getmempoolentry(tx_child["txid"])["wtxid"], tx_child["wtxid"])
+
 
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
@@ -410,6 +579,9 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_orphans_overlapping_parents()
         self.test_orphan_of_orphan()
         self.test_orphan_inherit_rejection()
+        self.test_same_txid_orphan()
+        self.test_same_txid_orphan_of_orphan()
+        self.test_orphan_txid_inv()
 
 
 if __name__ == '__main__':
