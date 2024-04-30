@@ -97,13 +97,11 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
     // so that the recipient's amount is no longer equal to the user's selected target of 299 BTC.
 
     // First case, use 'subtract_fee_from_outputs=true'
-    util::Result<CreatedTransactionResult> res_tx = CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control);
-    BOOST_CHECK(!res_tx.has_value());
+    BOOST_CHECK(!CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control));
 
     // Second case, don't use 'subtract_fee_from_outputs'.
     recipients[0].fSubtractFeeFromAmount = false;
-    res_tx = CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control);
-    BOOST_CHECK(!res_tx.has_value());
+    BOOST_CHECK(!CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
