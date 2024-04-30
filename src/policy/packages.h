@@ -88,4 +88,9 @@ bool IsChildWithParents(const Package& package);
  * other (the package is a "tree").
  */
 bool IsChildWithParentsTree(const Package& package);
+
+/** Get the hash of these transactions' wtxids, concatenated in lexicographical order (treating the
+ * wtxids as little endian encoded uint256, smallest to largest). */
+uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions);
+
 #endif // BITCOIN_POLICY_PACKAGES_H

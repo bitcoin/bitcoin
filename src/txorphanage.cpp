@@ -241,3 +241,77 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
         LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
 }
+
+std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const
+{
+    LOCK(m_mutex);
+
+    // First construct a vector of iterators to ensure we do not return duplicates of the same tx
+    // and so we can sort by nTimeExpire.
+    std::vector<OrphanMap::iterator> iters;
+
+    // For each output, get all entries spending this prevout, filtering for ones from the specified peer.
+    for (unsigned int i = 0; i < parent->vout.size(); i++) {
+        const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(parent->GetHash(), i));
+        if (it_by_prev != m_outpoint_to_orphan_it.end()) {
+            for (const auto& elem : it_by_prev->second) {
+                if (elem->second.fromPeer == nodeid) {
+                    iters.emplace_back(elem);
+                }
+            }
+        }
+    }
+
+    // Sort by address so that duplicates can be deleted. At the same time, sort so that more recent
+    // orphans (which expire later) come first.  Break ties based on address, as nTimeExpire is
+    // quantified in seconds and it is possible for orphans to have the same expiry.
+    std::sort(iters.begin(), iters.end(), [](const auto& lhs, const auto& rhs) {
+        if (lhs->second.nTimeExpire == rhs->second.nTimeExpire) {
+            return &(*lhs) < &(*rhs);
+        } else {
+            return lhs->second.nTimeExpire > rhs->second.nTimeExpire;
+        }
+    });
+    // Erase duplicates
+    iters.erase(std::unique(iters.begin(), iters.end()), iters.end());
+
+    // Convert to a vector of CTransactionRef
+    std::vector<CTransactionRef> children_found;
+    children_found.reserve(iters.size());
+    for (const auto child_iter : iters) {
+        children_found.emplace_back(child_iter->second.tx);
+    }
+    return children_found;
+}
+
+std::vector<std::pair<CTransactionRef, NodeId>> TxOrphanage::GetChildrenFromDifferentPeer(const CTransactionRef& parent, NodeId nodeid) const
+{
+    LOCK(m_mutex);
+
+    // First construct vector of iterators to ensure we do not return duplicates of the same tx.
+    std::vector<OrphanMap::iterator> iters;
+
+    // For each output, get all entries spending this prevout, filtering for ones not from the specified peer.
+    for (unsigned int i = 0; i < parent->vout.size(); i++) {
+        const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(parent->GetHash(), i));
+        if (it_by_prev != m_outpoint_to_orphan_it.end()) {
+            for (const auto& elem : it_by_prev->second) {
+                if (elem->second.fromPeer != nodeid) {
+                    iters.emplace_back(elem);
+                }
+            }
+        }
+    }
+
+    // Erase duplicates
+    std::sort(iters.begin(), iters.end(), IteratorComparator());
+    iters.erase(std::unique(iters.begin(), iters.end()), iters.end());
+
+    // Convert iterators to pair<CTransactionRef, NodeId>
+    std::vector<std::pair<CTransactionRef, NodeId>> children_found;
+    children_found.reserve(iters.size());
+    for (const auto child_iter : iters) {
+        children_found.emplace_back(child_iter->second.tx, child_iter->second.fromPeer);
+    }
+    return children_found;
+}
