@@ -1173,6 +1173,8 @@ public:
 
     void StartExtraBlockRelayPeers();
 
+    // Count the number of full-relay peer we have.
+    int GetFullOutboundConnCount() const;
     // Return the number of outbound peers we have in excess of our target (eg,
     // if we previously called SetTryNewOutboundPeer(true), and have since set
     // to false, we may have extra peers that we wish to disconnect). This may
