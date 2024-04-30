@@ -53,9 +53,10 @@ private:
 public:
     explicit CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
 
-    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Init(const CBlockIndex* pindex) LOCKS_EXCLUDED(cs) { LOCK(cs); InitInternal(pindex); };
+    void Init(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs) { LOCK(cs); InitInternal(pindex); };
 
     std::string GetStateString() const;
     std::string GetStatus() const;
@@ -64,9 +65,9 @@ public:
 
     template <template <typename> class EncryptedObj, typename Obj>
     [[nodiscard]] bool Decrypt(const EncryptedObj<Obj>& obj, size_t idx, Obj& ret_obj, int version) const
-        LOCKS_EXCLUDED(cs);
-    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const LOCKS_EXCLUDED(cs);
-    [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const LOCKS_EXCLUDED(cs);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] CBLSSignature Sign(const uint256& hash, const bool is_legacy) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     /* TODO: Reconsider external locking */
     [[nodiscard]] COutPoint GetOutPoint() const { READ_LOCK(cs); return m_info.outpoint; }
