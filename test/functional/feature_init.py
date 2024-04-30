@@ -85,7 +85,7 @@ class InitStressTest(BitcoinTestFramework):
 
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will exit after line {terminate_line}")
-            with node.wait_for_debug_log([terminate_line]):
+            with node.busy_wait_for_debug_log([terminate_line]):
                 node.start(extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1'])
             self.log.debug("Terminating node after terminate line was found")
             sigterm_node()
