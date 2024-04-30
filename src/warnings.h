@@ -6,12 +6,15 @@
 #ifndef BITCOIN_WARNINGS_H
 #define BITCOIN_WARNINGS_H
 
+#include <optional>
 #include <string>
 
 struct bilingual_str;
 
 void SetMiscWarning(const bilingual_str& warning);
 void SetfLargeWorkInvalidChainFound(bool flag);
+/** Pass std::nullopt to disable the warning */
+void SetMedianTimeOffsetWarning(std::optional<bilingual_str> warning);
 /** Format a string that describes several potential problems detected by the core.
  * @param[in] verbose bool
  * - if true, get all warnings separated by <hr />

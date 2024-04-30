@@ -153,7 +153,7 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
-  test/timedata_tests.cpp \
+  test/timeoffsets_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
   test/translation_tests.cpp \
@@ -384,7 +384,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/string.cpp \
  test/fuzz/strprintf.cpp \
  test/fuzz/system.cpp \
- test/fuzz/timedata.cpp \
+ test/fuzz/timeoffsets.cpp \
  test/fuzz/torcontrol.cpp \
  test/fuzz/transaction.cpp \
  test/fuzz/tx_in.cpp \
