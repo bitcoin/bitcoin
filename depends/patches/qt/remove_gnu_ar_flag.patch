@@ -1,0 +1,14 @@
+Qt insists on using -q with ar, which breaks when using
+BusyBox utils. Replace The one broken instance with just
+rc.
+--- a/qtbase/qmake/generators/unix/unixmake2.cpp
++++ b/qtbase/qmake/generators/unix/unixmake2.cpp
+@@ -225,7 +225,7 @@ UnixMakefileGenerator::writeMakeParts(QTextStream &t)
+                                            << fixLibFlags("QMAKE_LIBS_PRIVATE").join(' ') << Qt::endl;
+     }
+ 
+-    t << "AR            = " << var("QMAKE_AR") << Qt::endl;
++    t << "AR            = ar cs" << Qt::endl;
+     t << "RANLIB        = " << var("QMAKE_RANLIB") << Qt::endl;
+     t << "SED           = " << var("QMAKE_STREAM_EDITOR") << Qt::endl;
+     t << "STRIP         = " << var("QMAKE_STRIP") << Qt::endl;
