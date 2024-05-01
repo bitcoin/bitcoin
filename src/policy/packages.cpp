@@ -156,7 +156,10 @@ uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions)
         [](const auto& tx){ return tx->GetWitnessHash(); });
 
     // Sort in ascending order
-    std::sort(wtxids_copy.begin(), wtxids_copy.end(), [](const auto& lhs, const auto& rhs) { return lhs.GetHex() < rhs.GetHex(); });
+    std::sort(wtxids_copy.begin(), wtxids_copy.end(), [](const auto& lhs, const auto& rhs) {
+        return std::lexicographical_compare(std::make_reverse_iterator(lhs.end()), std::make_reverse_iterator(lhs.begin()),
+                                            std::make_reverse_iterator(rhs.end()), std::make_reverse_iterator(rhs.begin()));
+    });
 
     // Get sha256 hash of the wtxids concatenated in this order
     HashWriter hashwriter;
