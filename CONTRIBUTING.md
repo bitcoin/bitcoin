@@ -418,11 +418,8 @@ Backporting
 
 Security and bug fixes can be backported from `master` to release
 branches.
-If the backport is non-trivial, it may be appropriate to open an
-additional PR to backport the change, but only after the original PR
-has been merged.
-Otherwise, backports will be done in batches and
-the maintainers will use the proper `Needs backport (...)` labels
+Maintainers will do backports in batches and
+use the proper `Needs backport (...)` labels
 when needed (the original author does not need to worry about it).
 
 A backport should contain the following metadata in the commit body:
