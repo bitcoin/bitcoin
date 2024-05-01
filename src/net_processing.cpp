@@ -608,7 +608,6 @@ private:
     void ProcessPackageResult(const Package& package, const PackageMempoolAcceptResult& package_result, const std::vector<NodeId>& senders)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
 
-    /** A package to validate  */
     struct PackageToValidate {
         const Package m_txns;
         const std::vector<NodeId> m_senders;
