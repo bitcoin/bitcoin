@@ -123,13 +123,13 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
     entry.pushKV("parent_descs", std::move(parent_descs));
 }
 
-void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
+void HandleWalletError(const util::ResultPtr<std::shared_ptr<CWallet>, DatabaseStatus>& wallet)
 {
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
         // wallet directory exists, but doesn't contain a data file.
         RPCErrorCode code = RPC_WALLET_ERROR;
-        switch (status) {
+        switch (wallet.GetFailure()) {
             case DatabaseStatus::FAILED_NOT_FOUND:
             case DatabaseStatus::FAILED_BAD_FORMAT:
             case DatabaseStatus::FAILED_LEGACY_DISABLED:
@@ -147,7 +147,7 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
             default: // RPC_WALLET_ERROR is returned for all other cases.
                 break;
         }
-        throw JSONRPCError(code, error.original);
+        throw JSONRPCError(code, util::ErrorString(wallet).original);
     }
 }
 
