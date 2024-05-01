@@ -3264,10 +3264,6 @@ void PeerManagerImpl::ProcessPackageResult(const PackageToValidate& package_to_v
     // We currently only expect to process 1-parent-1-child packages. Remove if this changes.
     if (!Assume(package.size() == 2)) return;
 
-    // No package results to look through for PCKG_POLICY or PCKG_MEMPOOL_ERROR
-    if (package_result.m_state.GetResult() == PackageValidationResult::PCKG_POLICY ||
-        package_result.m_state.GetResult() == PackageValidationResult::PCKG_MEMPOOL_ERROR) return;
-
     // Iterate backwards to erase in-package descendants from the orphanage before they become
     // relevant in AddChildrenToWorkSet.
     auto package_iter = package.rbegin();
@@ -3276,7 +3272,9 @@ void PeerManagerImpl::ProcessPackageResult(const PackageToValidate& package_to_v
         const auto& tx = *package_iter;
         const NodeId nodeid = *senders_iter;
         const auto it_result{package_result.m_tx_results.find(tx->GetWitnessHash())};
-        if (Assume(it_result != package_result.m_tx_results.end())) {
+
+        // It is not guaranteed that a result exists for every transaction.
+        if (it_result != package_result.m_tx_results.end()) {
             const auto& tx_result = it_result->second;
             switch (tx_result.m_result_type) {
                 case MempoolAcceptResult::ResultType::VALID:
