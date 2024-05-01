@@ -137,9 +137,9 @@ fn lint_trailing_whitespace() -> LintResult {
     if trailing_space {
         Err(r#"
 ^^^
-Trailing whitespace is problematic, because git may warn about it, or editors may remove it by
-default, forcing developers in the future to either undo the changes manually or spend time on
-review.
+Trailing whitespace (including Windows line endings [CR LF]) is problematic, because git may warn
+about it, or editors may remove it by default, forcing developers in the future to either undo the
+changes manually or spend time on review.
 
 Thus, it is best to remove the trailing space now.
 
