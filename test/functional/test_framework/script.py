@@ -12,7 +12,7 @@ import struct
 import unittest
 
 from .key import TaggedHash, tweak_add_pubkey, compute_xonly_pubkey
-
+from .util import assert_greater_than
 
 from .messages import (
     CTransaction,
@@ -814,7 +814,7 @@ def BIP341_sha_outputs(txTo):
 
 def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpath = False, script = CScript(), codeseparator_pos = -1, annex = None, leaf_ver = LEAF_VERSION_TAPSCRIPT):
     assert (len(txTo.vin) == len(spent_utxos))
-    assert (input_index < len(txTo.vin))
+    assert_greater_than(len(txTo.vin), input_index)
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
     in_type = hash_type & SIGHASH_ANYONECANPAY
     spk = spent_utxos[input_index].scriptPubKey
