@@ -600,14 +600,6 @@ private:
     void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
 
-    /** Handle the results of package validation: calls ProcessValidTx and ProcessInvalidTx for
-     * individual transactions, and caches rejection for the package as a group.
-     * @param[in]   senders     Must contain the nodeids of the peers that provided each transaction
-     *                          in package, in the same order.
-     *   */
-    void ProcessPackageResult(const Package& package, const PackageMempoolAcceptResult& package_result, const std::vector<NodeId>& senders)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
-
     struct PackageToValidate {
         const Package m_txns;
         const std::vector<NodeId> m_senders;
@@ -631,6 +623,12 @@ private:
                              m_senders.back());
         }
     };
+
+    /** Handle the results of package validation: calls ProcessValidTx and ProcessInvalidTx for
+     * individual transactions, and caches rejection for the package as a group.
+     */
+    void ProcessPackageResult(const PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
 
     /** Look for a child of this transaction in the orphanage to form a 1-parent-1-child package,
      * skipping any combinations that have already been tried. Return the resulting package along with
@@ -3251,11 +3249,14 @@ void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, c
     }
 }
 
-void PeerManagerImpl::ProcessPackageResult(const Package& package, const PackageMempoolAcceptResult& package_result, const std::vector<NodeId>& senders)
+void PeerManagerImpl::ProcessPackageResult(const PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result)
 {
     AssertLockNotHeld(m_peer_mutex);
     AssertLockHeld(g_msgproc_mutex);
     AssertLockHeld(cs_main);
+
+    const auto& package = package_to_validate.m_txns;
+    const auto& senders = package_to_validate.m_senders;
 
     if (package_result.m_state.IsInvalid()) {
         m_recent_rejects_reconsiderable.insert(GetPackageHash(package));
@@ -4548,7 +4549,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
                     LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
                              package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                    ProcessPackageResult(package_to_validate->m_txns, package_result, package_to_validate->m_senders);
+                    ProcessPackageResult(package_to_validate.value(), package_result);
                 }
             }
             // If a tx is detected by m_recent_rejects it is ignored. Because we haven't
@@ -4663,7 +4664,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
                 LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
                          package_result.m_state.IsValid() ? "package accepted" : "package rejected");
-                ProcessPackageResult(package_to_validate->m_txns, package_result, package_to_validate->m_senders);
+                ProcessPackageResult(package_to_validate.value(), package_result);
             }
         }
 
