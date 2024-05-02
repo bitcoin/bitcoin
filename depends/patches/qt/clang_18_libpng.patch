@@ -1,0 +1,40 @@
+fix Qt macOS build with Clang 18
+
+    See:
+    https://github.com/pnggroup/libpng/commit/893b8113f04d408cc6177c6de19c9889a48faa24.
+
+    In a similar manner as zlib (madler/zlib#895),
+    libpng contains a header configuration that's no longer valid and
+    hasn't been exercised for the macOS target.
+
+    - The target OS conditional macros are misused. Specifically
+      `TARGET_OS_MAC` covers all Apple targets, including iOS, and it
+      should not be checked with `#if defined` as they would always be
+      defined (to either 1 or 0) on Apple platforms.
+    - `#include <fp.h>` no longer works for the macOS target and results
+      in a compilation failure. macOS ships all required functions in
+      `math.h`, and clients should use `math.h` instead.
+
+--- a/qtbase/src/3rdparty/libpng/pngpriv.h
++++ b/qtbase/src/3rdparty/libpng/pngpriv.h
+@@ -514,18 +514,8 @@
+     */
+ #  include <float.h>
+ 
+-#  if (defined(__MWERKS__) && defined(macintosh)) || defined(applec) || \
+-    defined(THINK_C) || defined(__SC__) || defined(TARGET_OS_MAC)
+-   /* We need to check that <math.h> hasn't already been included earlier
+-    * as it seems it doesn't agree with <fp.h>, yet we should really use
+-    * <fp.h> if possible.
+-    */
+-#    if !defined(__MATH_H__) && !defined(__MATH_H) && !defined(__cmath__)
+-#      include <fp.h>
+-#    endif
+-#  else
+-#    include <math.h>
+-#  endif
++#  include <math.h>
++
+ #  if defined(_AMIGA) && defined(__SASC) && defined(_M68881)
+    /* Amiga SAS/C: We must include builtin FPU functions when compiling using
+     * MATH=68881
