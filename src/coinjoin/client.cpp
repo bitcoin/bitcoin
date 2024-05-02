@@ -249,7 +249,7 @@ void CCoinJoinClientSession::ResetPool()
 {
     txMyCollateral = CMutableTransaction();
     UnlockCoins();
-    keyHolderStorage.ReturnAll();
+    WITH_LOCK(m_wallet.cs_wallet, keyHolderStorage.ReturnAll());
     WITH_LOCK(cs_coinjoin, SetNull());
 }
 
@@ -410,7 +410,7 @@ bool CCoinJoinClientSession::CheckTimeout()
 
     SetState(POOL_STATE_ERROR);
     UnlockCoins();
-    keyHolderStorage.ReturnAll();
+    WITH_LOCK(m_wallet.cs_wallet, keyHolderStorage.ReturnAll());
     nTimeLastSuccessfulStep = GetTime();
     strLastMessage = CoinJoin::GetMessageByID(ERR_SESSION);
 
@@ -521,7 +521,7 @@ void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup
             WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- rejected by Masternode: %s\n", __func__, strMessageTmp.translated);
             SetState(POOL_STATE_ERROR);
             UnlockCoins();
-            keyHolderStorage.ReturnAll();
+            WITH_LOCK(m_wallet.cs_wallet, keyHolderStorage.ReturnAll());
             nTimeLastSuccessfulStep = GetTime();
             strLastMessage = strMessageTmp;
             break;
@@ -688,7 +688,7 @@ void CCoinJoinClientSession::CompletedTransaction(PoolMessage nMessageID)
         keyHolderStorage.KeepAll();
         WalletCJLogPrint(m_wallet, "CompletedTransaction -- success\n");
     } else {
-        keyHolderStorage.ReturnAll();
+        WITH_LOCK(m_wallet.cs_wallet, keyHolderStorage.ReturnAll());
         WalletCJLogPrint(m_wallet, "CompletedTransaction -- error\n");
     }
     UnlockCoins();
