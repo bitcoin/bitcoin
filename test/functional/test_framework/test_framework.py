@@ -194,6 +194,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="use BIP324 v2 connections between all nodes by default")
         parser.add_argument("--v1transport", dest="v1transport", default=False, action="store_true",
                             help="Explicitly use v1 transport (can be used to overwrite global --v2transport option)")
+        parser.add_argument("--noextratxn", dest="noextratxn", default=False, action="store_true",
+                            help="No extra transactions for compact blocks")
 
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument

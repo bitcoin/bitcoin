@@ -56,10 +56,17 @@ class PackageRelayTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [[
-            "-datacarriersize=100000",
-            "-maxmempool=5",
-        ]]
+        if self.options.noextratxn:
+            self.extra_args = [[
+                "-datacarriersize=100000",
+                "-maxmempool=5",
+                "-blockreconstructionextratxn=0", # require fetching parent even if cached
+            ]]
+        else:
+            self.extra_args = [[
+                "-datacarriersize=100000",
+                "-maxmempool=5",
+            ]]
         self.supports_cli = False
 
     def create_tx_below_mempoolminfee(self, wallet):
@@ -127,6 +134,13 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_sender.wait_for_getdata([high_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
 
+        if not self.options.noextratxn:
+            # 3. It's in extra transactions. Done!
+            node_mempool = node.getrawmempool()
+            assert low_fee_parent["txid"] in node_mempool
+            assert high_fee_child["txid"] in node_mempool
+            return
+
         # 3. Node requests the missing parent by txid.
         # It should do so even if it has previously rejected that parent for being too low feerate.
         parent_txid_int = int(low_fee_parent["txid"], 16)
@@ -171,12 +185,14 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_sender.wait_for_getdata([med_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(med_fee_child["tx"]))
 
-        # 3. Node requests the orphan's missing parent.
-        parent_txid_int = int(low_fee_parent["txid"], 16)
-        peer_sender.wait_for_getdata([parent_txid_int])
+        # Extra transactions will allow it to go ahead and validate the package
+        if self.options.noextratxn:
+            # 3. Node requests the orphan's missing parent.
+            parent_txid_int = int(low_fee_parent["txid"], 16)
+            peer_sender.wait_for_getdata([parent_txid_int])
 
-        # 4. The low parent + low child are submitted as a package. They are not accepted due to low package feerate.
-        peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+            # 4. The low parent + low child are submitted as a package. They are not accepted due to low package feerate.
+            peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
 
         assert low_fee_parent["txid"] not in node.getrawmempool()
         assert med_fee_child["txid"] not in node.getrawmempool()
@@ -197,13 +213,15 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_sender.wait_for_getdata([high_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
 
-        # 6. Node requests the orphan's parent, even though it has already been rejected, both by
-        # itself and with a child. This is necessary, otherwise high_fee_child can be censored.
-        parent_txid_int = int(low_fee_parent["txid"], 16)
-        peer_sender.wait_for_getdata([parent_txid_int])
+        # Extra transactions will allow it to go ahead and validate the package
+        if self.options.noextratxn:
+            # 6. Node requests the orphan's parent, even though it has already been rejected, both by
+            # itself and with a child. This is necessary, otherwise high_fee_child can be censored.
+            parent_txid_int = int(low_fee_parent["txid"], 16)
+            peer_sender.wait_for_getdata([parent_txid_int])
 
-        # 7. The low feerate parent + high feerate child are submitted as a package.
-        peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+            # 7. The low feerate parent + high feerate child are submitted as a package.
+            peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
 
         # 8. Both transactions should now be in mempool
         node_mempool = node.getrawmempool()

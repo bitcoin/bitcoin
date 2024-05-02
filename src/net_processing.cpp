@@ -636,6 +636,9 @@ private:
     std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
 
+    std::optional<PackageToValidate> Find1P1CPackageExtraTxn(const CTransactionRef& orphan_child, NodeId child_sender)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
+
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
@@ -1076,12 +1079,15 @@ private:
     /** Storage for orphan information */
     TxOrphanage m_orphanage;
 
-    void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    /** Opportunistically store rejected or replaced transactions for later evaluation in blocks or packages. */
+    void AddToCompactExtraTransactions(const CTransactionRef& tx, NodeId sender) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
      *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
      *  these are kept in a ring buffer */
     std::vector<CTransactionRef> vExtraTxnForCompact GUARDED_BY(g_msgproc_mutex);
+    std::vector<NodeId> m_extra_txn_senders GUARDED_BY(g_msgproc_mutex);
+
     /** Offset into vExtraTxnForCompact to insert the next tx */
     size_t vExtraTxnForCompactIt GUARDED_BY(g_msgproc_mutex) = 0;
 
@@ -1880,14 +1886,33 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
     };
 }
 
-void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
+void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx, NodeId sender)
 {
     if (m_opts.max_extra_txs <= 0)
         return;
-    if (!vExtraTxnForCompact.size())
+    if (!vExtraTxnForCompact.size()) {
         vExtraTxnForCompact.resize(m_opts.max_extra_txs);
+        m_extra_txn_senders = std::vector<NodeId>(m_opts.max_extra_txs, -1);
+    }
     vExtraTxnForCompact[vExtraTxnForCompactIt] = tx;
+    m_extra_txn_senders[vExtraTxnForCompactIt] = sender;
     vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % m_opts.max_extra_txs;
+}
+
+std::optional<PeerManagerImpl::PackageToValidate> PeerManagerImpl::Find1P1CPackageExtraTxn(const CTransactionRef& orphan_child,
+                                                                                           NodeId child_sender)
+{
+    for (size_t i = 0; i < vExtraTxnForCompact.size(); i++) {
+        const auto& maybe_parent = vExtraTxnForCompact[i];
+        // We stopped checking it earlier due to fee reasons, try again?
+        if (maybe_parent && m_recent_rejects_reconsiderable.contains(maybe_parent->GetWitnessHash().ToUint256())) {
+            Package maybe_cpfp_package{maybe_parent, orphan_child};
+            if (IsChildWithParents(maybe_cpfp_package) && !m_recent_rejects_reconsiderable.contains(GetPackageHash(maybe_cpfp_package))) {
+                return PeerManagerImpl::PackageToValidate{maybe_parent, orphan_child, /*parent_sender=*/m_extra_txn_senders[i], child_sender};
+            }
+        }
+    }
+    return std::nullopt;
 }
 
 void PeerManagerImpl::Misbehaving(Peer& peer, int howmuch, const std::string& message)
@@ -3208,7 +3233,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
             m_txrequest.ForgetTxHash(ptx->GetHash());
         }
         if (maybe_add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
-            AddToCompactExtraTransactions(ptx);
+            AddToCompactExtraTransactions(ptx, nodeid);
         }
     }
 
@@ -3245,7 +3270,8 @@ void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, c
     RelayTransaction(tx->GetHash(), tx->GetWitnessHash());
 
     for (const CTransactionRef& removedTx : replaced_transactions) {
-        AddToCompactExtraTransactions(removedTx);
+        // We don't track who sent replaced transactions; It was good enough to add to our mempool already.
+        AddToCompactExtraTransactions(removedTx, /*sender=*/-1);
     }
 }
 
@@ -4577,7 +4603,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
-            bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
+            bool fRejectedParents = false; // It may be the case that the an orphan parent has been rejected
 
             // Deduplicate parent txids, so that we don't have to loop over
             // the same parent txid more than once down below.
@@ -4624,8 +4650,19 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
 
+                // Maybe we have its parent in extra_txn?
+                if (auto package_to_validate{Find1P1CPackageExtraTxn(/*orphan_child=*/ptx, pfrom.GetId())}) {
+                    const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
+                    LogDebug(BCLog::TXPACKAGES, "package evaluation for %s from extra_txns: %s\n", package_to_validate->ToString(),
+                             package_result.m_state.IsValid() ? "package accepted" : "package rejected");
+                    ProcessPackageResult(package_to_validate.value(), package_result);
+
+                    // Ended up succeeding
+                    if (package_result.m_state.IsValid()) return;
+                }
+
                 if (m_orphanage.AddTx(ptx, pfrom.GetId())) {
-                    AddToCompactExtraTransactions(ptx);
+                    AddToCompactExtraTransactions(ptx, pfrom.GetId());
                 }
 
                 // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.

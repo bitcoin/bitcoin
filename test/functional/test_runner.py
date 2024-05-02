@@ -185,6 +185,7 @@ BASE_SCRIPTS = [
     'rpc_misc.py',
     'p2p_1p1c_network.py',
     'p2p_opportunistic_1p1c.py',
+    'p2p_opportunistic_1p1c.py --noextratxn',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'wallet_avoid_mixing_output_types.py --descriptors',
