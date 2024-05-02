@@ -159,12 +159,6 @@ public:
 //--------------------------------------------------------------------
 namespace util
 {
-  template <typename R>
-  inline bool is_ready(std::shared_future<R> const &f)
-  {
-    return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-  }
-
   inline void quote_argument(const std::wstring &argument, std::wstring &command_line,
                       bool force)
   {
@@ -676,8 +670,8 @@ struct error
  * This is basically used to determine the length of the actual
  * data stored inside the dynamically resized vector.
  *
- * This is what is returned as the output to communicate and check_output
- * functions, so, users must know about this class.
+ * This is what is returned as the output to the communicate
+ * function, so, users must know about this class.
  *
  * OutBuffer and ErrBuffer are just different typedefs to this class.
  */
@@ -687,22 +681,6 @@ public:
   Buffer() {}
   explicit Buffer(size_t cap) { buf.resize(cap); }
   void add_cap(size_t cap) { buf.resize(cap); }
-
-#if 0
-  Buffer(const Buffer& other):
-    buf(other.buf),
-    length(other.length)
-  {
-    std::cout << "COPY" << std::endl;
-  }
-
-  Buffer(Buffer&& other):
-    buf(std::move(other.buf)),
-    length(other.length)
-  {
-    std::cout << "MOVE" << std::endl;
-  }
-#endif
 
 public:
   std::vector<char> buf;
@@ -724,39 +702,9 @@ class Popen;
  */
 
 namespace detail {
-
-// Metaprogram for searching a type within
-// a variadic parameter pack
-// This is particularly required to do a compile time
-// checking of the arguments provided to 'check_output' function
-// wherein the user is not expected to provide an 'output' option.
-
-template <typename... T> struct param_pack{};
-
-template <typename F, typename T> struct has_type;
-
-template <typename F>
-struct has_type<F, param_pack<>> {
-  static constexpr bool value = false;
-};
-
-template <typename F, typename... T>
-struct has_type<F, param_pack<F, T...>> {
-  static constexpr bool value = true;
-};
-
-template <typename F, typename H, typename... T>
-struct has_type<F, param_pack<H,T...>> {
-  static constexpr bool value =
-    std::is_same<F, typename std::decay<H>::type>::value ? true : has_type<F, param_pack<T...>>::value;
-};
-
-//----
-
 /*!
  * A helper class to Popen class for setting
- * options as provided in the Popen constructor
- * or in check_output arguments.
+ * options as provided in the Popen constructor.
  * This design allows us to _not_ have any fixed position
  * to any arguments and specify them in a way similar to what
  * can be done in python.
@@ -948,24 +896,23 @@ private:
  * interface to the client.
  *
  * API's provided by the class:
- * 1. Popen({"cmd"}, output{..}, error{..}, ....)
+ * Popen({"cmd"}, output{..}, error{..}, ....)
  *    Command provided as a sequence.
- * 2. Popen("cmd arg1"m output{..}, error{..}, ....)
+ * Popen("cmd arg1", output{..}, error{..}, ....)
  *    Command provided in a single string.
- * 3. wait()             - Wait for the child to exit.
- * 4. retcode()          - The return code of the exited child.
- * 5. pid()              - PID of the spawned child.
- * 6. poll()             - Check the status of the running child.
- * 7. kill(sig_num)      - Kill the child. SIGTERM used by default.
- * 8. send(...)          - Send input to the input channel of the child.
- * 9. communicate(...)   - Get the output/error from the child and close the channels
- *                         from the parent side.
- *10. input()            - Get the input channel/File pointer. Can be used for
- *                         customizing the way of sending input to child.
- *11. output()           - Get the output channel/File pointer. Usually used
-                           in case of redirection. See piping examples.
- *12. error()            - Get the error channel/File pointer. Usually used
-                           in case of redirection.
+ * wait()             - Wait for the child to exit.
+ * retcode()          - The return code of the exited child.
+ * pid()              - PID of the spawned child.
+ * poll()             - Check the status of the running child.
+ * send(...)          - Send input to the input channel of the child.
+ * communicate(...)   - Get the output/error from the child and close the channels
+ *                      from the parent side.
+ * input()            - Get the input channel/File pointer. Can be used for
+ *                      customizing the way of sending input to child.
+ * output()           - Get the output channel/File pointer. Usually used
+                        in case of redirection. See piping examples.
+ * error()            - Get the error channel/File pointer. Usually used
+                        in case of redirection.
  */
 class Popen
 {
@@ -1009,15 +956,6 @@ public:
     execute_process();
   }
 
-/*
-  ~Popen()
-  {
-#ifdef __USING_WINDOWS__
-    CloseHandle(this->process_handle_);
-#endif
-  }
-*/
-
   int pid() const noexcept { return child_pid_; }
 
   int retcode() const noexcept { return retcode_; }
@@ -1025,10 +963,6 @@ public:
   int wait() noexcept(false);
 
   int poll() noexcept(false);
-
-  // Does not fail, Caller is expected to recheck the
-  // status with a call to poll()
-  void kill(int sig_num = 9);
 
   void set_out_buf_cap(size_t cap) { stream_.set_out_buf_cap(cap); }
 
@@ -1196,18 +1130,6 @@ inline int Popen::poll() noexcept(false)
   return retcode_;
 #endif
 }
-
-inline void Popen::kill(int sig_num)
-{
-#ifdef __USING_WINDOWS__
-  if (!TerminateProcess(this->process_handle_, (UINT)sig_num)) {
-    throw OSError("TerminateProcess", 0);
-  }
-#else
-  ::kill(child_pid_, sig_num);
-#endif
-}
-
 
 inline void Popen::execute_process() noexcept(false)
 {
