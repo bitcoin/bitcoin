@@ -36,7 +36,7 @@ You can find installation instructions in the `build-*.md` file for your platfor
 | Dependency | Releases | Version used | Minimum required | Runtime |
 | --- | --- | --- | --- | --- |
 | [libnatpmp](../depends/packages/libnatpmp.mk) | [link](https://github.com/miniupnp/libnatpmp/) | commit [f2433be...](https://github.com/bitcoin/bitcoin/pull/29708) | | No |
-| [MiniUPnPc](../depends/packages/miniupnpc.mk) | [link](https://miniupnp.tuxfamily.org/) | [2.2.2](https://github.com/bitcoin/bitcoin/pull/20421) | 2.1 | No |
+| [MiniUPnPc](../depends/packages/miniupnpc.mk) | [link](https://miniupnp.tuxfamily.org/) | [2.2.7](https://github.com/bitcoin/bitcoin/pull/29707) | 2.1 | No |
 
 ### Notifications
 | Dependency | Releases | Version used | Minimum required | Runtime |
