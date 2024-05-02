@@ -12,6 +12,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <vector>
@@ -102,14 +103,14 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 
     BOOST_CHECK_EQUAL(chainman.GetAll().size(), 2);
 
-    Chainstate& background_cs{*[&] {
+    Chainstate& background_cs{*Assert([&]() -> Chainstate* {
         for (Chainstate* cs : chainman.GetAll()) {
             if (cs != &chainman.ActiveChainstate()) {
                 return cs;
             }
         }
-        assert(false);
-    }()};
+        return nullptr;
+    }())};
 
     // Append the first block to the background chain.
     BlockValidationState state;
