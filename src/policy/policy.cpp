@@ -43,6 +43,11 @@
  *   so dust is a spendable txout less than
  *   98*dustRelayFee/1000 (in satoshis).
  *   294 satoshis at the default rate of 3000 sat/kvB.
+ * - A typical spendable segwit P2TR txout is 43 bytes big, and will
+ *   need a CTxIn of at least 57（used 67, see reason below） bytes to spend:
+ *   so dust is a spendable txout less than
+ *   110*dustRelayFee/1000 (in satoshis).
+ *   330 satoshis at the default rate of 3000 sat/kvB.
  *
  * The actual dust threshold is calculated by determining the cost to
  * spend the output at the current fee rate and comparing it to the
