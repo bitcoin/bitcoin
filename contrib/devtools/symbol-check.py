@@ -240,7 +240,7 @@ def check_MACHO_sdk(binary) -> bool:
     return False
 
 def check_MACHO_ld64(binary) -> bool:
-    if binary.build_version.tools[0].version == [17, 0, 6]:
+    if binary.build_version.tools[0].version == [18, 1, 6]:
         return True
     return False
 

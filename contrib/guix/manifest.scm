@@ -532,9 +532,9 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "darwin")
            (list ;; Native GCC 11 toolchain
                  gcc-toolchain-11
-                 clang-toolchain-17
-                 lld-17
-                 (make-lld-wrapper lld-17 #:lld-as-ld? #t)
+                 clang-toolchain-18
+                 lld-18
+                 (make-lld-wrapper lld-18 #:lld-as-ld? #t)
                  python-signapple
                  zip))
           (else '())))))
