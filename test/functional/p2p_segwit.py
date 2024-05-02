@@ -1054,7 +1054,7 @@ class SegWitTest(BitcoinTestFramework):
 
     @subtest
     def test_max_witness_push_length(self):
-        """Test that witness stack can only allow up to 520 byte pushes."""
+        """Test that witness stack can only allow up to MAX_SCRIPT_ELEMENT_SIZE byte pushes."""
 
         block = self.build_next_block()
 
