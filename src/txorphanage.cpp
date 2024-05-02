@@ -278,7 +278,7 @@ std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransac
     // Convert to a vector of CTransactionRef
     std::vector<CTransactionRef> children_found;
     children_found.reserve(iters.size());
-    for (const auto child_iter : iters) {
+    for (const auto& child_iter : iters) {
         children_found.emplace_back(child_iter->second.tx);
     }
     return children_found;
@@ -310,7 +310,7 @@ std::vector<std::pair<CTransactionRef, NodeId>> TxOrphanage::GetChildrenFromDiff
     // Convert iterators to pair<CTransactionRef, NodeId>
     std::vector<std::pair<CTransactionRef, NodeId>> children_found;
     children_found.reserve(iters.size());
-    for (const auto child_iter : iters) {
+    for (const auto& child_iter : iters) {
         children_found.emplace_back(child_iter->second.tx, child_iter->second.fromPeer);
     }
     return children_found;
