@@ -994,10 +994,8 @@ static RPCHelpMan submitpackage()
                         fees.pushKV("effective-includes", effective_includes_res);
                     }
                     result_inner.pushKV("fees", fees);
-                    if (it->second.m_replaced_transactions.has_value()) {
-                        for (const auto& ptx : it->second.m_replaced_transactions.value()) {
-                            replaced_txids.insert(ptx->GetHash());
-                        }
+                    for (const auto& ptx : it->second.m_replaced_transactions) {
+                        replaced_txids.insert(ptx->GetHash());
                     }
                     break;
                 }

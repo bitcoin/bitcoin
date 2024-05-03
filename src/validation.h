@@ -113,7 +113,6 @@ void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight
 *| txid in mempool?          | yes            | no                | no*              | yes            | yes               |
 *| wtxid in mempool?         | yes            | no                | no*              | yes            | no                |
 *| m_state                   | yes, IsValid() | yes, IsInvalid()  | yes, IsInvalid() | yes, IsValid() | yes, IsValid()    |
-*| m_replaced_transactions   | yes            | no                | no               | no             | no                |
 *| m_vsize                   | yes            | no                | no               | yes            | no                |
 *| m_base_fees               | yes            | no                | no               | yes            | no                |
 *| m_effective_feerate       | yes            | yes               | no               | no             | no                |
@@ -139,7 +138,7 @@ struct MempoolAcceptResult {
     const TxValidationState m_state;
 
     /** Mempool transactions replaced by the tx. */
-    const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
+    const std::list<CTransactionRef> m_replaced_transactions;
     /** Virtual size as used by the mempool, calculated using serialized size and sigops. */
     const std::optional<int64_t> m_vsize;
     /** Raw base fees in satoshis. */
