@@ -5197,7 +5197,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         std::vector<unsigned char> vData;
         vRecv >> vData;
 
-        // Nodes must NEVER send a data item > 520 bytes (the max size for a script data object,
+        // Nodes must NEVER send a data item > MAX_SCRIPT_ELEMENT_SIZE bytes (the max size for a script data object,
         // and thus, the maximum size any matched object can have) in a filteradd message
         bool bad = false;
         if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
