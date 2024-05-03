@@ -86,14 +86,4 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 
-if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
-  ANDROID_TOOLS_PATH=${DEPENDS_DIR}/sdk-sources/android-tools.zip
-  if [ ! -f "$ANDROID_TOOLS_PATH" ]; then
-    ${CI_RETRY_EXE} curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
-  fi
-  mkdir -p "$ANDROID_HOME"
-  unzip -o "$ANDROID_TOOLS_PATH" -d "$ANDROID_HOME"
-  yes | "${ANDROID_HOME}"/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_HOME}" --install "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" "platform-tools" "platforms;android-31" "platforms;android-${ANDROID_API_LEVEL}" "ndk;${ANDROID_NDK_VERSION}"
-fi
-
 git config --global ${CFG_DONE} "true"
