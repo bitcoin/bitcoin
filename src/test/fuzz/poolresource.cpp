@@ -63,9 +63,9 @@ public:
     {
         if (m_total_allocated > 0x1000000) return;
         size_t alignment_bits = m_provider.ConsumeIntegralInRange<size_t>(0, 7);
-        size_t alignment = 1 << alignment_bits;
+        size_t alignment = size_t{1} << alignment_bits;
         size_t size_bits = m_provider.ConsumeIntegralInRange<size_t>(0, 16 - alignment_bits);
-        size_t size = m_provider.ConsumeIntegralInRange<size_t>(1U << size_bits, (1U << (size_bits + 1)) - 1U) << alignment_bits;
+        size_t size = m_provider.ConsumeIntegralInRange<size_t>(size_t{1} << size_bits, (size_t{1} << (size_bits + 1)) - 1U) << alignment_bits;
         Allocate(size, alignment);
     }
 
