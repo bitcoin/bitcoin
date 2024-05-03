@@ -10,7 +10,6 @@ from test_framework.blocktools import (
     create_block,
     add_witness_commitment,
     MAX_BLOCK_SIGOPS_WEIGHT,
-    WITNESS_SCALE_FACTOR,
 )
 from test_framework.messages import (
     COutPoint,
@@ -20,6 +19,7 @@ from test_framework.messages import (
     CTxOut,
     SEQUENCE_FINAL,
     tx_from_hex,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.script import (
     ANNEX_TAG,
