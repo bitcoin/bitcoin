@@ -105,7 +105,7 @@ class TxConflicts(BitcoinTestFramework):
 
         self.log.info("Verify, after the reorg, that Tx_A was accepted, and tx_AB and its Child_Tx are conflicting now")
         # Tx A was accepted, Tx AB was not.
-        assert conflicted_AB_tx["confirmations"] < 0
+        assert_greater_than(0, conflicted_AB_tx["confirmations"])
         assert conflicted_A_tx["confirmations"] > 0
 
         # Conflicted tx should have confirmations set to the confirmations of the most conflicting tx

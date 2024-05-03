@@ -847,7 +847,7 @@ class SegWitTest(BitcoinTestFramework):
         assert self.nodes[0].getbestblockhash() != block.hash
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
-        assert block.get_weight() < MAX_BLOCK_WEIGHT
+        assert_greater_than(MAX_BLOCK_WEIGHT, block.get_weight())
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
 
         assert self.nodes[0].getbestblockhash() == block.hash
@@ -1885,7 +1885,7 @@ class SegWitTest(BitcoinTestFramework):
         extra_sigops_available = MAX_SIGOP_COST % sigops_per_script
 
         # We chose the number of checkmultisigs/checksigs to make this work:
-        assert extra_sigops_available < 100  # steer clear of MAX_OPS_PER_SCRIPT
+        assert_greater_than(100, extra_sigops_available) # steer clear of MAX_OPS_PER_SCRIPT
 
         # This script, when spent with the first
         # N(=MAX_SIGOP_COST//sigops_per_script) outputs of our transaction,

@@ -798,7 +798,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(57)
         self.next_block(58, spend=out[17])
         tx = CTransaction()
-        assert len(out[17].vout) < 42
+        assert_greater_than(42, len(out[17].vout))
         tx.vin.append(CTxIn(COutPoint(out[17].sha256, 42), CScript([OP_TRUE]), SEQUENCE_FINAL))
         tx.vout.append(CTxOut(0, b""))
         tx.calc_sha256()

@@ -54,7 +54,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
 
         newbalance = alice.getbalance()
-        assert balance - newbalance < Decimal("0.001")  #no more than fees lost
+        assert_greater_than(Decimal("0.001"), balance - newbalance) #no more than fees lost
         balance = newbalance
 
         # Disconnect nodes so node0's transactions don't get into node1's mempool

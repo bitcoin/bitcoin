@@ -41,7 +41,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(node.getrawmempool()), set())
         confirmed_txns = set(node.getblock(blocks[0])['tx'] + node.getblock(blocks[1])['tx'])
         # Checks that all spend txns are contained in the mined blocks
-        assert spends_ids < confirmed_txns
+        assert_greater_than(confirmed_txns, spends_ids)
 
         # Use invalidateblock to re-org back
         node.invalidateblock(blocks[0])
@@ -54,7 +54,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # mempool should be empty, all txns confirmed
         assert_equal(set(node.getrawmempool()), set())
         confirmed_txns = set(node.getblock(blocks[0])['tx'])
-        assert spends_ids < confirmed_txns
+        assert_greater_than(confirmed_txns, spends_ids)
 
 
 if __name__ == '__main__':

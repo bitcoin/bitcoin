@@ -135,7 +135,7 @@ def addr_to_hex(addr):
                 if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
                     continue
                 x += 1 # :: skips to suffix
-                assert x < 2
+                assert_greater_than(2, x)
             else: # two bytes per component
                 val = int(comp, 16)
                 sub[x].append(val >> 8)

@@ -113,7 +113,7 @@ class AddrTest(BitcoinTestFramework):
             addr.time = self.mocktime + random.randrange(-100, 100)
             addr.nServices = P2P_SERVICES
             if sequential_ips:
-                assert self.counter < 256 ** 2  # Don't allow the returned ip addresses to wrap.
+                assert_greater_than(256 ** 2, self.counter) # Don't allow the returned ip addresses to wrap.
                 addr.ip = f"123.123.{self.counter // 256}.{self.counter % 256}"
                 self.counter += 1
             else:
