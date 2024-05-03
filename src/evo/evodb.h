@@ -48,7 +48,7 @@ private:
 public:
     explicit CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction() LOCKS_EXCLUDED(cs)
+    std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         return std::make_unique<CEvoDBScopedCommitter>(*this);
@@ -61,28 +61,28 @@ public:
     }
 
     template <typename K, typename V>
-    bool Read(const K& key, V& value) LOCKS_EXCLUDED(cs)
+    bool Read(const K& key, V& value) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         return curDBTransaction.Read(key, value);
     }
 
     template <typename K, typename V>
-    void Write(const K& key, const V& value) LOCKS_EXCLUDED(cs)
+    void Write(const K& key, const V& value) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         curDBTransaction.Write(key, value);
     }
 
     template <typename K>
-    bool Exists(const K& key) LOCKS_EXCLUDED(cs)
+    bool Exists(const K& key) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         return curDBTransaction.Exists(key);
     }
 
     template <typename K>
-    void Erase(const K& key) LOCKS_EXCLUDED(cs)
+    void Erase(const K& key) EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
         curDBTransaction.Erase(key);
@@ -98,18 +98,18 @@ public:
         return rootDBTransaction.GetMemoryUsage();
     }
 
-    bool CommitRootTransaction() LOCKS_EXCLUDED(cs);
+    bool CommitRootTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool IsEmpty() { return db.IsEmpty(); }
 
-    bool VerifyBestBlock(const uint256& hash);
-    void WriteBestBlock(const uint256& hash);
+    bool VerifyBestBlock(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void WriteBestBlock(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     // only CEvoDBScopedCommitter is allowed to invoke these
     friend class CEvoDBScopedCommitter;
-    void CommitCurTransaction() LOCKS_EXCLUDED(cs);
-    void RollbackCurTransaction() LOCKS_EXCLUDED(cs);
+    void CommitCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void RollbackCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 #endif // BITCOIN_EVO_EVODB_H

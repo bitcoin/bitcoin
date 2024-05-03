@@ -128,7 +128,7 @@ public:
     /**
      * Helper that used in Unit Test to forcely setup EHF signal for specific block
      */
-    void AddSignal(const CBlockIndex* const pindex, int bit) LOCKS_EXCLUDED(cs_cache);
+    void AddSignal(const CBlockIndex* const pindex, int bit) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 private:
     void AddToCache(const Signals& signals, const CBlockIndex* const pindex);
 

@@ -95,37 +95,37 @@ public:
     void Start();
     void Stop();
 
-    bool AlreadyHave(const CInv& inv) const LOCKS_EXCLUDED(cs);
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const LOCKS_EXCLUDED(cs);
-    CChainLockSig GetBestChainLock() const LOCKS_EXCLUDED(cs);
+    bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    CChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    PeerMsgRet ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv);
-    PeerMsgRet ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) LOCKS_EXCLUDED(cs);
+    PeerMsgRet ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    PeerMsgRet ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) LOCKS_EXCLUDED(cs);
+    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip();
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) LOCKS_EXCLUDED(cs);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex) LOCKS_EXCLUDED(cs);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) LOCKS_EXCLUDED(cs);
-    void CheckActiveState() LOCKS_EXCLUDED(cs);
-    void TrySignChainTip() LOCKS_EXCLUDED(cs);
-    void EnforceBestChainLock() LOCKS_EXCLUDED(cs);
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs);
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void TrySignChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool HasChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const LOCKS_EXCLUDED(cs);
+    bool HasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool VerifyChainLock(const CChainLockSig& clsig) const;
 
-    bool IsTxSafeForMining(const uint256& txid) const LOCKS_EXCLUDED(cs);
+    bool IsTxSafeForMining(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     // these require locks to be held already
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash) LOCKS_EXCLUDED(cs);
+    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void Cleanup() LOCKS_EXCLUDED(cs);
+    void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 extern std::unique_ptr<CChainLocksHandler> chainLocksHandler;

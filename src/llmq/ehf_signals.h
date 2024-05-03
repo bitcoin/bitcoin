@@ -49,12 +49,12 @@ public:
     /**
      * Since Tip is updated it could be a time to generate EHF Signal
      */
-    void UpdatedBlockTip(const CBlockIndex* const pindexNew, bool is_masternode);
+    void UpdatedBlockTip(const CBlockIndex* const pindexNew, bool is_masternode) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override LOCKS_EXCLUDED(cs);
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
-    void trySignEHFSignal(int bit, const CBlockIndex* const pindex) LOCKS_EXCLUDED(cs);
+    void trySignEHFSignal(int bit, const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 };
 

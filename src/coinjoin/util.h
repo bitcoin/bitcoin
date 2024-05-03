@@ -33,9 +33,9 @@ private:
     std::vector<std::unique_ptr<CKeyHolder> > storage GUARDED_BY(cs_storage);
 
 public:
-    CScript AddKey(CWallet* pwalletIn) LOCKS_EXCLUDED(cs_storage);
-    void KeepAll() LOCKS_EXCLUDED(cs_storage);
-    void ReturnAll() LOCKS_EXCLUDED(cs_storage);
+    CScript AddKey(CWallet* pwalletIn) EXCLUSIVE_LOCKS_REQUIRED(!cs_storage);
+    void KeepAll() EXCLUSIVE_LOCKS_REQUIRED(!cs_storage);
+    void ReturnAll() EXCLUSIVE_LOCKS_REQUIRED(!cs_storage);
 };
 
 /**
@@ -103,39 +103,40 @@ public:
     CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn);
     ~CTransactionBuilder();
     /// Check it would be possible to add a single output with the amount nAmount. Returns true if its possible and false if not.
-    bool CouldAddOutput(CAmount nAmountOutput) const;
+    bool CouldAddOutput(CAmount nAmountOutput) const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Check if its possible to add multiple outputs as vector of amounts. Returns true if its possible to add all of them and false if not.
-    bool CouldAddOutputs(const std::vector<CAmount>& vecOutputAmounts) const;
+    bool CouldAddOutputs(const std::vector<CAmount>& vecOutputAmounts) const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Add an output with the amount nAmount. Returns a pointer to the output if it could be added and nullptr if not due to insufficient amount left.
-    CTransactionBuilderOutput* AddOutput(CAmount nAmountOutput = 0) LOCKS_EXCLUDED(cs_outputs);
+    CTransactionBuilderOutput* AddOutput(CAmount nAmountOutput = 0) EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Get amount we had available when we started
     CAmount GetAmountInitial() const { return tallyItem.nAmount; }
     /// Get the amount currently left to add more outputs. Does respect fees.
-    CAmount GetAmountLeft() const { return GetAmountInitial() - GetAmountUsed() - GetFee(GetBytesTotal()); }
+    CAmount GetAmountLeft() const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs)
+        { return GetAmountInitial() - GetAmountUsed() - GetFee(GetBytesTotal()); }
     /// Check if an amounts should be considered as dust
     bool IsDust(CAmount nAmount) const;
     /// Get the total number of added outputs
     int CountOutputs() const { LOCK(cs_outputs); return vecOutputs.size(); }
     /// Create and Commit the transaction to the wallet
-    bool Commit(bilingual_str& strResult) LOCKS_EXCLUDED(cs_outputs);
+    bool Commit(bilingual_str& strResult) EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Convert to a string
-    std::string ToString() const;
+    std::string ToString() const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
 
 private:
     /// Clear the output vector and keep/return the included keys depending on the value of fKeepKeys
-    void Clear() LOCKS_EXCLUDED(cs_outputs);
+    void Clear() EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Get the total number of bytes used already by this transaction
-    unsigned int GetBytesTotal() const LOCKS_EXCLUDED(cs_outputs);
+    unsigned int GetBytesTotal() const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Helper to calculate static amount left by simply subtracting an used amount and a fee from a provided initial amount.
     static CAmount GetAmountLeft(CAmount nAmountInitial, CAmount nAmountUsed, CAmount nFee);
     /// Get the amount currently used by added outputs. Does not include fees.
-    CAmount GetAmountUsed() const LOCKS_EXCLUDED(cs_outputs);
+    CAmount GetAmountUsed() const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
     /// Get fees based on the number of bytes and the feerate set in CoinControl.
     /// NOTE: To get the total transaction fee this should only be called once with the total number of bytes for the transaction to avoid
     /// calling CFeeRate::GetFee multiple times with subtotals as this may add rounding errors with each further call.
     CAmount GetFee(unsigned int nBytes) const;
     /// Helper to get GetSizeOfCompactSizeDiff(vecOutputs.size(), vecOutputs.size() + nAdd)
-    int GetSizeOfCompactSizeDiff(size_t nAdd) const LOCKS_EXCLUDED(cs_outputs);
+    int GetSizeOfCompactSizeDiff(size_t nAdd) const EXCLUSIVE_LOCKS_REQUIRED(!cs_outputs);
 };
 
 #endif // BITCOIN_COINJOIN_UTIL_H
