@@ -8,23 +8,28 @@
 #include <util/edge.h>
 #include <util/sock.h>
 
+static constexpr int EXPECTED_PIPE_WRITTEN_BYTES = 1;
+
 WakeupPipe::WakeupPipe(EdgeTriggeredEvents* edge_trig_events)
     : m_edge_trig_events{edge_trig_events}
 {
 #ifdef USE_WAKEUP_PIPE
     if (pipe(m_pipe.data()) != 0) {
-        LogPrintf("Unable to initialize WakeupPipe, pipe() for m_pipe failed\n");
+        LogPrintf("Unable to initialize WakeupPipe, pipe() for m_pipe failed with error %s\n",
+                  NetworkErrorString(WSAGetLastError()));
         return;
     }
     for (size_t idx = 0; idx < m_pipe.size(); idx++) {
         int flags = fcntl(m_pipe[idx], F_GETFL, 0);
         if (fcntl(m_pipe[idx], F_SETFL, flags | O_NONBLOCK) == -1) {
-            LogPrintf("Unable to initialize WakeupPipe, fcntl for O_NONBLOCK on m_pipe[%d] failed\n", idx);
+            LogPrintf("Unable to initialize WakeupPipe, fcntl for O_NONBLOCK on m_pipe[%d] failed with error %s\n", idx,
+                      NetworkErrorString(WSAGetLastError()));
             return;
         }
     }
     if (edge_trig_events && !edge_trig_events->RegisterPipe(m_pipe[0])) {
-        LogPrintf("Unable to initialize WakeupPipe, EdgeTriggeredEvents::RegisterPipe() failed\n");
+        LogPrintf("Unable to initialize WakeupPipe, EdgeTriggeredEvents::RegisterPipe() failed for m_pipe[0] = %d\n",
+                  m_pipe[0]);
         return;
     }
     m_valid = true;
@@ -38,7 +43,8 @@ WakeupPipe::~WakeupPipe()
     if (m_valid) {
 #ifdef USE_WAKEUP_PIPE
         if (m_edge_trig_events && !m_edge_trig_events->UnregisterPipe(m_pipe[0])) {
-            LogPrintf("Destroying WakeupPipe instance, EdgeTriggeredEvents::UnregisterPipe() failed\n");
+            LogPrintf("Destroying WakeupPipe instance, EdgeTriggeredEvents::UnregisterPipe() failed for m_pipe[0] = %d\n",
+                      m_pipe[0]);
         }
         for (size_t idx = 0; idx < m_pipe.size(); idx++) {
             if (close(m_pipe[idx]) != 0) {
@@ -72,9 +78,14 @@ void WakeupPipe::Write()
 #ifdef USE_WAKEUP_PIPE
     assert(m_valid && m_pipe[1] != -1);
 
-    std::array<uint8_t, 1> buf;
-    if (write(m_pipe[1], buf.data(), buf.size()) != 1) {
-        LogPrintf("Write to m_pipe[1] failed\n");
+    std::array<uint8_t, EXPECTED_PIPE_WRITTEN_BYTES> buf;
+    int ret = write(m_pipe[1], buf.data(), buf.size());
+    if (ret == -1) {
+        LogPrintf("write() to m_pipe[1] = %d failed with error %s\n", m_pipe[1], NetworkErrorString(WSAGetLastError()));
+    }
+    if (ret != EXPECTED_PIPE_WRITTEN_BYTES) {
+        LogPrintf("write() to m_pipe[1] = %d succeeded with unexpected result %d (expected %d)\n", m_pipe[1], ret,
+                  EXPECTED_PIPE_WRITTEN_BYTES);
     }
 
     m_need_wakeup = false;

@@ -22,7 +22,8 @@ EdgeTriggeredEvents::EdgeTriggeredEvents(SocketEventsMode events_mode)
 #ifdef USE_EPOLL
         m_fd = epoll_create1(0);
         if (m_fd == -1) {
-            LogPrintf("Unable to initialize EdgeTriggeredEvents, epoll_create1 returned -1\n");
+            LogPrintf("Unable to initialize EdgeTriggeredEvents, epoll_create1 returned -1 with error %s\n",
+                      NetworkErrorString(WSAGetLastError()));
             return;
         }
 #else
@@ -33,7 +34,8 @@ EdgeTriggeredEvents::EdgeTriggeredEvents(SocketEventsMode events_mode)
 #ifdef USE_KQUEUE
         m_fd = kqueue();
         if (m_fd == -1) {
-            LogPrintf("Unable to initialize EdgeTriggeredEvents, kqueue returned -1\n");
+            LogPrintf("Unable to initialize EdgeTriggeredEvents, kqueue returned -1 with error %s\n",
+                      NetworkErrorString(WSAGetLastError()));
             return;
         }
 #else
