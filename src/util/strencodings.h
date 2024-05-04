@@ -181,7 +181,7 @@ template <typename T>
 std::optional<T> ToIntegral(std::string_view str)
 {
     static_assert(std::is_integral<T>::value);
-    T result;
+    T result{};
     const auto [first_nonmatching, error_condition] = std::from_chars(str.data(), str.data() + str.size(), result);
     if (first_nonmatching != str.data() + str.size() || error_condition != std::errc{}) {
         return std::nullopt;
