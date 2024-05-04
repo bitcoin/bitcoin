@@ -93,9 +93,9 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         assert_equal(0, info['fee_histogram']['3']['fees'])
         assert_equal(3, info['fee_histogram']['3']['from_feerate'])
 
-        assert_equal(188, info['fee_histogram']['5']['sizes'])
+        assert_equal(tx1_info['vsize'], info['fee_histogram']['5']['sizes'])
         assert_equal(1, info['fee_histogram']['5']['count'])
-        assert_equal(940, info['fee_histogram']['5']['fees'])
+        assert_equal(tx1_info['fee'], info['fee_histogram']['5']['fees'])
         assert_equal(5, info['fee_histogram']['5']['from_feerate'])
 
         assert_equal(0, info['fee_histogram']['10']['sizes'])
