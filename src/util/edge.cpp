@@ -7,8 +7,6 @@
 #include <logging.h>
 #include <util/sock.h>
 
-#include <assert.h>
-
 #ifdef USE_EPOLL
 #include <sys/epoll.h>
 #endif

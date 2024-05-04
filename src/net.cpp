@@ -1598,7 +1598,7 @@ void CConnman::SocketEventsKqueue(std::set<SOCKET>& recv_set,
     timeout.tv_nsec = (only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS % 1000) * 1000 * 1000;
 
     int n{-1};
-    ToggleWakeupPipe([&](){n = kevent(Assert(m_edge_trig_events)->m_fd, nullptr, 0, events, maxEvents, &timeout);});
+    ToggleWakeupPipe([&](){n = kevent(Assert(m_edge_trig_events)->GetFileDescriptor(), nullptr, 0, events, maxEvents, &timeout);});
     if (n == -1) {
         LogPrintf("kevent wait error\n");
     } else if (n > 0) {
@@ -1631,7 +1631,7 @@ void CConnman::SocketEventsEpoll(std::set<SOCKET>& recv_set,
     epoll_event events[maxEvents];
 
     int n{-1};
-    ToggleWakeupPipe([&](){n = epoll_wait(Assert(m_edge_trig_events)->m_fd, events, maxEvents, only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);});
+    ToggleWakeupPipe([&](){n = epoll_wait(Assert(m_edge_trig_events)->GetFileDescriptor(), events, maxEvents, only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);});
     for (int i = 0; i < n; i++) {
         auto& e = events[i];
         if((e.events & EPOLLERR) || (e.events & EPOLLHUP)) {
