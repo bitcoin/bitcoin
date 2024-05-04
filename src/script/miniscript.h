@@ -123,12 +123,12 @@ class Type {
     //! Internal bitmap of properties (see ""_mst operator for details).
     uint32_t m_flags;
 
-    //! Internal constructor used by the ""_mst operator.
-    explicit constexpr Type(uint32_t flags) : m_flags(flags) {}
+    //! Internal constructor.
+    explicit constexpr Type(uint32_t flags) noexcept : m_flags(flags) {}
 
 public:
-    //! The only way to publicly construct a Type is using this literal operator.
-    friend constexpr Type operator"" _mst(const char* c, size_t l);
+    //! Construction function used by the ""_mst operator.
+    static consteval Type Make(uint32_t flags) noexcept { return Type(flags); }
 
     //! Compute the type with the union of properties.
     constexpr Type operator|(Type x) const { return Type(m_flags | x.m_flags); }
@@ -150,11 +150,11 @@ public:
 };
 
 //! Literal operator to construct Type objects.
-inline constexpr Type operator"" _mst(const char* c, size_t l) {
-    Type typ{0};
+inline consteval Type operator"" _mst(const char* c, size_t l) {
+    Type typ{Type::Make(0)};
 
     for (const char *p = c; p < c + l; p++) {
-        typ = typ | Type(
+        typ = typ | Type::Make(
             *p == 'B' ? 1 << 0 : // Base type
             *p == 'V' ? 1 << 1 : // Verify type
             *p == 'K' ? 1 << 2 : // Key type
@@ -548,7 +548,8 @@ private:
         for (const auto& sub : subs) {
             subsize += sub->ScriptSize();
         }
-        Type sub0type = subs.size() > 0 ? subs[0]->GetType() : ""_mst;
+        static constexpr auto NONE_MST{""_mst};
+        Type sub0type = subs.size() > 0 ? subs[0]->GetType() : NONE_MST;
         return internal::ComputeScriptLen(fragment, sub0type, subsize, k, subs.size(), keys.size(), m_script_ctx);
     }
 
@@ -712,9 +713,10 @@ private:
             for (const auto& sub : subs) sub_types.push_back(sub->GetType());
         }
         // All other nodes than THRESH can be computed just from the types of the 0-3 subexpressions.
-        Type x = subs.size() > 0 ? subs[0]->GetType() : ""_mst;
-        Type y = subs.size() > 1 ? subs[1]->GetType() : ""_mst;
-        Type z = subs.size() > 2 ? subs[2]->GetType() : ""_mst;
+        static constexpr auto NONE_MST{""_mst};
+        Type x = subs.size() > 0 ? subs[0]->GetType() : NONE_MST;
+        Type y = subs.size() > 1 ? subs[1]->GetType() : NONE_MST;
+        Type z = subs.size() > 2 ? subs[2]->GetType() : NONE_MST;
 
         return SanitizeType(ComputeType(fragment, x, y, z, sub_types, k, data.size(), subs.size(), keys.size(), m_script_ctx));
     }
