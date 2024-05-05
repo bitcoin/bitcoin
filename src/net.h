@@ -652,7 +652,7 @@ public:
      * @return  True if the peer should stay connected,
      *          False if the peer should be disconnected from.
      */
-    bool ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete);
+    bool ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete) EXCLUSIVE_LOCKS_REQUIRED(!cs_vRecv);
 
     void SetCommonVersion(int greatest_common_version)
     {
@@ -664,9 +664,9 @@ public:
         return m_greatest_common_version;
     }
 
-    CService GetAddrLocal() const LOCKS_EXCLUDED(m_addr_local_mutex);
+    CService GetAddrLocal() const EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex);
     //! May not be called more than once
-    void SetAddrLocal(const CService& addrLocalIn) LOCKS_EXCLUDED(m_addr_local_mutex);
+    void SetAddrLocal(const CService& addrLocalIn) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_local_mutex);
 
     CNode* AddRef()
     {
@@ -679,9 +679,9 @@ public:
         nRefCount--;
     }
 
-    void CloseSocketDisconnect(CConnman* connman);
+    void CloseSocketDisconnect(CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_hSocket);
 
-    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap);
+    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
     ServiceFlags GetLocalServices() const
     {
@@ -857,7 +857,7 @@ public:
         bool m_i2p_accept_incoming;
     };
 
-    void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex)
+    void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
     {
         AssertLockNotHeld(m_total_bytes_sent_mutex);
 
@@ -891,7 +891,8 @@ public:
     CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman, bool network_active = true);
     ~CConnman();
     bool Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
-               CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+               CScheduler& scheduler, const Options& options)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc);
 
     void StopThreads();
     void StopNodes();
@@ -901,7 +902,7 @@ public:
         StopNodes();
     };
 
-    void Interrupt();
+    void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active, CMasternodeSync* const mn_sync);
@@ -917,8 +918,13 @@ public:
         IsConnection,
     };
 
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound, const char* strDest, ConnectionType conn_type, MasternodeConn masternode_connection = MasternodeConn::IsNotConnection, MasternodeProbeConn masternode_probe_connection = MasternodeProbeConn::IsNotConnection);
-    void OpenMasternodeConnection(const CAddress& addrConnect, MasternodeProbeConn probe = MasternodeProbeConn::IsConnection);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound,
+                               const char* strDest, ConnectionType conn_type,
+                               MasternodeConn masternode_connection = MasternodeConn::IsNotConnection,
+                               MasternodeProbeConn masternode_probe_connection = MasternodeProbeConn::IsNotConnection)
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+    void OpenMasternodeConnection(const CAddress& addrConnect, MasternodeProbeConn probe = MasternodeProbeConn::IsConnection)
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     bool CheckIncomingNonce(uint64_t nonce);
 
     struct CFullyConnectedOnly {
@@ -959,7 +965,8 @@ public:
 
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
-    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc, !m_total_bytes_sent_mutex);
 
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
@@ -1099,9 +1106,9 @@ public:
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
 
-    bool AddNode(const std::string& node);
-    bool RemoveAddedNode(const std::string& node);
-    std::vector<AddedNodeInfo> GetAddedNodeInfo() const;
+    bool AddNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    std::vector<AddedNodeInfo> GetAddedNodeInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 
     /**
      * Attempts to open a connection. Currently only used from tests.
@@ -1114,7 +1121,7 @@ public:
      *                          - Max total outbound connection capacity filled
      *                          - Max connection capacity for type is filled
      */
-    bool AddConnection(const std::string& address, ConnectionType conn_type);
+    bool AddConnection(const std::string& address, ConnectionType conn_type) EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     bool AddPendingMasternode(const uint256& proTxHash);
     void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
@@ -1166,8 +1173,8 @@ public:
 
     unsigned int GetReceiveFloodSize() const;
 
-    void WakeMessageHandler();
-    void WakeSelect();
+    void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+    void WakeSelect() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     /** Attempts to obfuscate tx time through exponentially distributed emitting.
         Works assuming that a single interval is used.
@@ -1221,13 +1228,15 @@ private:
         const std::vector<NetWhitebindPermissions>& whiteBinds,
         const std::vector<CService>& onion_binds);
 
-    void ThreadOpenAddedConnections();
-    void AddAddrFetch(const std::string& strDest);
-    void ProcessAddrFetch();
-    void ThreadOpenConnections(const std::vector<std::string> connect, CDeterministicMNManager& dmnman);
-    void ThreadMessageHandler();
-    void ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync);
-    void AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSync& mn_sync);
+    void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !mutexMsgProc);
+    void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
+    void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !mutexMsgProc);
+    void ThreadOpenConnections(const std::vector<std::string> connect, CDeterministicMNManager& dmnman)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !mutexMsgProc);
+    void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+    void ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+    void AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSync& mn_sync)
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
@@ -1241,7 +1250,7 @@ private:
                                       NetPermissionFlags permissionFlags,
                                       const CAddress& addr_bind,
                                       const CAddress& addr,
-                                      CMasternodeSync& mn_sync);
+                                      CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     void DisconnectNodes();
     void NotifyNumConnectionsChanged(CMasternodeSync& mn_sync);
@@ -1305,7 +1314,7 @@ private:
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
      */
-    void SocketHandler(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+    void SocketHandler(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
 
     /**
      * Do the read/write for connected sockets that are ready for IO.
@@ -1316,18 +1325,20 @@ private:
     void SocketHandlerConnected(const std::set<SOCKET>& recv_set,
                                 const std::set<SOCKET>& send_set,
                                 const std::set<SOCKET>& error_set)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
 
     /**
      * Accept incoming connections, one from each read-ready listening socket.
      * @param[in] recv_set Sockets that are ready for read.
      */
-    void SocketHandlerListening(const std::set<SOCKET>& recv_set, CMasternodeSync& mn_sync);
+    void SocketHandlerListening(const std::set<SOCKET>& recv_set, CMasternodeSync& mn_sync)
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
-    void ThreadSocketHandler(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
-    void ThreadDNSAddressSeed();
+    void ThreadSocketHandler(CMasternodeSync& mn_sync) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
+    void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
     void ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
-                                         CMasternodeSync& mn_sync);
+                                         CMasternodeSync& mn_sync)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex, !mutexMsgProc);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
@@ -1351,7 +1362,7 @@ private:
     NodeId GetNewNodeId();
 
     size_t SocketSendData(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
-    size_t SocketRecvData(CNode* pnode);
+    size_t SocketRecvData(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void DumpAddresses();
 
     // Network stats
