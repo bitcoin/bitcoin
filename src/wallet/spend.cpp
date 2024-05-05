@@ -976,6 +976,16 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
     }
 }
 
+size_t GetSerializeSizeForRecipient(const CRecipient& recipient)
+{
+    return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
+}
+
+bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
+{
+    return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)), dustRelayFee);
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
@@ -1097,9 +1107,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CTxOut txout(recipient.nAmount, GetScriptForDestination(recipient.dest));
 
         // Include the fee cost for outputs.
-        coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout);
+        coin_selection_params.tx_noinputs_size += GetSerializeSizeForRecipient(recipient);
 
-        if (IsDust(txout, wallet.chain().relayDustFee())) {
+        if (IsDust(recipient, wallet.chain().relayDustFee())) {
             return util::Error{_("Transaction amount too small")};
         }
         txNew.vout.push_back(txout);
