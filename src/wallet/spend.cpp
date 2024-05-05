@@ -23,6 +23,7 @@
 #include <util/rbf.h>
 #include <util/trace.h>
 #include <util/translation.h>
+#include <variant>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>
@@ -1036,12 +1037,23 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
 
 size_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
-    return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
+    // A Silent Payements address is instructions on how to create a WitnessV1Taproot output
+    // Luckily, we know exactly how big a single WitnessV1Taproot output is, so return the serialization for that
+    // For everything else, convert it to a CTxOut and get the serialized size
+    if (std::holds_alternative<V0SilentPaymentDestination>(recipient.dest)) {
+        return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(WitnessV1Taproot())));
+    } else {
+        return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
+    }
 }
 
 bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
 {
-    return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)), dustRelayFee);
+    if (std::holds_alternative<V0SilentPaymentDestination>(recipient.dest)) {
+        return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(WitnessV1Taproot())), dustRelayFee);
+    } else {
+        return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)), dustRelayFee);
+    }
 }
 
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
