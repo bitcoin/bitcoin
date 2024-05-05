@@ -13,7 +13,6 @@
 //! Returns std::nullopt if it cannot be found, or there is no support for this OS.
 std::optional<CNetAddr> QueryDefaultGateway(Network network);
 
-// TODO share with Discover()
 //! Return all local non-loopback IPv4 and IPv6 network addresses.
 std::vector<CNetAddr> GetLocalAddresses();
 
