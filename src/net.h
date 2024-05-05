@@ -440,7 +440,17 @@ public:
 
     NetPermissionFlags m_permissionFlags{ NetPermissionFlags::None };
     std::atomic<ServiceFlags> nServices{NODE_NONE};
-    SOCKET hSocket GUARDED_BY(cs_hSocket);
+
+    /**
+     * Socket used for communication with the node.
+     * May not own a Sock object (after `CloseSocketDisconnect()` or during tests).
+     * `shared_ptr` (instead of `unique_ptr`) is used to avoid premature close of
+     * the underlying file descriptor by one thread while another thread is
+     * poll(2)-ing it for activity.
+     * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
+     */
+    std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
+
     /** Total size of all vSendMsg entries */
     size_t nSendSize GUARDED_BY(cs_vSend){0};
     /** Offset inside the first vSendMsg already sent */
@@ -449,7 +459,7 @@ public:
     std::list<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
     std::atomic<size_t> nSendMsgSize{0};
     Mutex cs_vSend;
-    Mutex cs_hSocket;
+    Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
     RecursiveMutex cs_vProcessMsg;
@@ -630,8 +640,7 @@ public:
 
     bool IsBlockRelayOnly() const;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session = nullptr);
-    ~CNode();
+    CNode(NodeId id, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> sock, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session = nullptr);
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 
@@ -685,7 +694,7 @@ public:
         nRefCount--;
     }
 
-    void CloseSocketDisconnect(CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_hSocket);
+    void CloseSocketDisconnect(CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
     void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
@@ -795,7 +804,7 @@ private:
      * closed.
      * Otherwise this unique_ptr is empty.
      */
-    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(cs_hSocket);
+    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
 };
 
 /**

@@ -574,7 +574,17 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     if (!addr_bind.IsValid()) {
         addr_bind = GetBindAddress(sock->Get());
     }
-    CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type, /* inbound_onion */ false, std::move(i2p_transient_session));
+    CNode* pnode = new CNode(id,
+                             nLocalServices,
+                             std::move(sock),
+                             addrConnect,
+                             CalculateKeyedNetGroup(addrConnect),
+                             nonce,
+                             addr_bind,
+                             pszDest ? pszDest : "",
+                             conn_type,
+                             /*inbound_onion=*/false,
+                             std::move(i2p_transient_session));
     pnode->AddRef();
     statsClient.inc("peers.connect", 1.0f);
 
@@ -589,15 +599,15 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
     AssertLockHeld(connman->m_nodes_mutex);
 
     fDisconnect = true;
-    LOCK2(connman->cs_mapSocketToNode, cs_hSocket);
-    if (hSocket == INVALID_SOCKET) {
+    LOCK2(connman->cs_mapSocketToNode, m_sock_mutex);
+    if (!m_sock) {
         return;
     }
 
     fHasRecvData = false;
     fCanSendData = false;
 
-    connman->mapSocketToNode.erase(hSocket);
+    connman->mapSocketToNode.erase(m_sock->Get());
     {
         LOCK(connman->cs_sendable_receivable_nodes);
         connman->mapReceivableNodes.erase(GetId());
@@ -611,12 +621,12 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
         }
     }
 
-    if (connman->m_edge_trig_events && !connman->m_edge_trig_events->UnregisterEvents(hSocket)) {
+    if (connman->m_edge_trig_events && !connman->m_edge_trig_events->UnregisterEvents(m_sock->Get())) {
         LogPrint(BCLog::NET, "EdgeTriggeredEvents::UnregisterEvents() failed\n");
     }
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
-    CloseSocket(hSocket);
+    m_sock.reset();
     m_i2p_sam_session.reset();
 
     statsClient.inc("peers.disconnect", 1.0f);
@@ -909,10 +919,11 @@ size_t CConnman::SocketSendData(CNode& node)
         assert(data.size() > node.nSendOffset);
         int nBytes = 0;
         {
-            LOCK(node.cs_hSocket);
-            if (node.hSocket == INVALID_SOCKET)
+            LOCK(node.m_sock_mutex);
+            if (!node.m_sock) {
                 break;
-            nBytes = send(node.hSocket, reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
+            }
+            nBytes = node.m_sock->Send(reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         }
         if (nBytes > 0) {
             node.m_last_send = GetTime<std::chrono::seconds>();
@@ -1347,7 +1358,16 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
-    CNode* pnode = new CNode(id, nodeServices, sock->Release(), addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
+    CNode* pnode = new CNode(id,
+                             nodeServices,
+                             std::move(sock),
+                             addr,
+                             CalculateKeyedNetGroup(addr),
+                             nonce,
+                             addr_bind,
+                             /*addrNameIn=*/"",
+                             ConnectionType::INBOUND,
+                             inbound_onion);
     pnode->AddRef();
     pnode->m_permissionFlags = permissionFlags;
     // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
@@ -1355,10 +1375,13 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(pnode);
 
-    if (fLogIPs) {
-        LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), sock->Get(), pnode->GetId());
-    } else {
-        LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", sock->Get(), pnode->GetId());
+    {
+        LOCK(pnode->m_sock_mutex);
+        if (fLogIPs) {
+            LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), pnode->m_sock->Get(), pnode->GetId());
+        } else {
+            LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", pnode->m_sock->Get(), pnode->GetId());
+        }
     }
 
     {
@@ -1366,10 +1389,10 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
         m_nodes.push_back(pnode);
     }
     {
-        LOCK(pnode->cs_hSocket);
-        WITH_LOCK(cs_mapSocketToNode, mapSocketToNode.emplace(pnode->hSocket, pnode));
+        LOCK2(cs_mapSocketToNode, pnode->m_sock_mutex);
+        mapSocketToNode.emplace(pnode->m_sock->Get(), pnode);
         if (m_edge_trig_events) {
-            if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
+            if (!m_edge_trig_events->RegisterEvents(pnode->m_sock->Get())) {
                 LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
             }
         }
@@ -1456,10 +1479,10 @@ void CConnman::DisconnectNodes()
                     if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
                         // everything flushed to the kernel?
                         if (!pnode->fSocketShutdown && pnode->nSendMsgSize == 0) {
-                            LOCK(pnode->cs_hSocket);
-                            if (pnode->hSocket != INVALID_SOCKET) {
+                            LOCK(pnode->m_sock_mutex);
+                            if (pnode->m_sock) {
                                 // Give the other side a chance to detect the disconnect as early as possible (recv() will return 0)
-                                ::shutdown(pnode->hSocket, SD_SEND);
+                                ::shutdown(pnode->m_sock->Get(), SD_SEND);
                             }
                             pnode->fSocketShutdown = true;
                         }
@@ -1661,16 +1684,17 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
         bool select_recv = !pnode->fHasRecvData;
         bool select_send = !pnode->fCanSendData;
 
-        LOCK(pnode->cs_hSocket);
-        if (pnode->hSocket == INVALID_SOCKET)
+        LOCK(pnode->m_sock_mutex);
+        if (!pnode->m_sock) {
             continue;
+        }
 
-        error_set.insert(pnode->hSocket);
+        error_set.insert(pnode->m_sock->Get());
         if (select_send) {
-            send_set.insert(pnode->hSocket);
+            send_set.insert(pnode->m_sock->Get());
         }
         if (select_recv) {
-            recv_set.insert(pnode->hSocket);
+            recv_set.insert(pnode->m_sock->Get());
         }
     }
 
@@ -2137,10 +2161,10 @@ size_t CConnman::SocketRecvData(CNode *pnode)
     uint8_t pchBuf[0x10000];
     int nBytes = 0;
     {
-        LOCK(pnode->cs_hSocket);
-        if (pnode->hSocket == INVALID_SOCKET)
+        LOCK(pnode->m_sock_mutex);
+        if (!pnode->m_sock)
             return 0;
-        nBytes = recv(pnode->hSocket, (char*)pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+        nBytes = recv(pnode->m_sock->Get(), (char*)pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
         if (nBytes < (int)sizeof(pchBuf)) {
             pnode->fHasRecvData = false;
         }
@@ -3047,8 +3071,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
 
     {
-        LOCK(pnode->cs_hSocket);
-        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- successfully connected to %s, sock=%d, peer=%d\n", __func__, getIpStr(), pnode->hSocket, pnode->GetId());
+        LOCK(pnode->m_sock_mutex);
+        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- successfully connected to %s, sock=%d, peer=%d\n", __func__, getIpStr(), pnode->m_sock->Get(), pnode->GetId());
     }
 
     if (grantOutbound)
@@ -3060,17 +3084,19 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->m_masternode_probe_connection = true;
 
     {
-        LOCK2(cs_mapSocketToNode, pnode->cs_hSocket);
-        mapSocketToNode.emplace(pnode->hSocket, pnode);
+        LOCK2(cs_mapSocketToNode, pnode->m_sock_mutex);
+        mapSocketToNode.emplace(pnode->m_sock->Get(), pnode);
     }
 
     m_msgproc->InitializeNode(pnode);
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
+    }
+    {
         if (m_edge_trig_events) {
-            LOCK(pnode->cs_hSocket);
-            if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
+            LOCK(pnode->m_sock_mutex);
+            if (!m_edge_trig_events->RegisterEvents(pnode->m_sock->Get())) {
                 LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
             }
         }
@@ -3579,7 +3605,7 @@ void CConnman::StopNodes()
             pnode->CloseSocketDisconnect(this);
     }
     for (ListenSocket& hListenSocket : vhListenSocket) {
-        if (hListenSocket.sock->Get() != INVALID_SOCKET) {
+        if (hListenSocket.sock) {
             if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.sock->Get())) {
                 LogPrintf("EdgeTriggeredEvents::RemoveSocket() failed\n");
             }
@@ -4046,8 +4072,9 @@ ServiceFlags CConnman::GetLocalServices() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
-    : nTimeConnected{GetTimeSeconds()},
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> sock, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
+    : m_sock{sock},
+      nTimeConnected{GetTimeSeconds()},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
@@ -4060,7 +4087,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
       m_i2p_sam_session{std::move(i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
-    hSocket = hSocketIn;
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
@@ -4074,11 +4100,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
 
     m_deserializer = std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
     m_serializer = std::make_unique<V1TransportSerializer>(V1TransportSerializer());
-}
-
-CNode::~CNode()
-{
-    CloseSocket(hSocket);
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
