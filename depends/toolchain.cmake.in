@@ -146,13 +146,6 @@ else()
   set(WITH_MINIUPNPC ON CACHE BOOL "")
 endif()
 
-set(natpmp_packages @natpmp_packages@)
-if("${natpmp_packages}" STREQUAL "")
-  set(WITH_NATPMP OFF CACHE BOOL "")
-else()
-  set(WITH_NATPMP ON CACHE BOOL "")
-endif()
-
 set(usdt_packages @usdt_packages@)
 if("${usdt_packages}" STREQUAL "")
   set(WITH_USDT OFF CACHE BOOL "")

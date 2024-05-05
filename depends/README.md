@@ -113,7 +113,6 @@ The following can be set when running make: `make FOO=bar`
 - `NO_BDB`: Don't download/build/cache BerkeleyDB
 - `NO_SQLITE`: Don't download/build/cache SQLite
 - `NO_UPNP`: Don't download/build/cache packages needed for enabling UPnP
-- `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP
 - `NO_USDT`: Don't download/build/cache packages needed for enabling USDT tracepoints
 - `MULTIPROCESS`: Build libmultiprocess (experimental, requires CMake)
 - `DEBUG`: Disable some optimizations and enable more runtime checking
