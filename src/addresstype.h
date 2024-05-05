@@ -227,4 +227,9 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  */
 CScript GetScriptForDestination(const CTxDestination& dest);
 
+/**
+ * Check if desitnation is a silent payments destination
+ */
+bool IsSilentPaymentsDestination(const CTxDestination& dest);
+
 #endif // BITCOIN_ADDRESSTYPE_H

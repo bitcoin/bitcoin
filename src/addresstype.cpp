@@ -28,6 +28,11 @@ V0SilentPaymentsDestination::V0SilentPaymentsDestination(const CPubKey& scan_pub
     }
 }
 
+bool IsSilentPaymentsDestination(const CTxDestination& dest) {
+    return std::holds_alternative<V0SilentPaymentsDestination>(dest) ||
+        std::holds_alternative<UnknownSilentPaymentsDestination>(dest);
+}
+
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
 ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
 
