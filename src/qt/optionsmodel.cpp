@@ -414,11 +414,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return false;
 #endif // USE_UPNP
     case MapPortNatpmp:
-#ifdef USE_NATPMP
         return SettingToBool(setting(), DEFAULT_NATPMP);
-#else
-        return false;
-#endif // USE_NATPMP
     case MinimizeOnClose:
         return fMinimizeOnClose;
 
