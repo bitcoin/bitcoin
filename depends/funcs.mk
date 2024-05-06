@@ -182,6 +182,7 @@ $(1)_cmake=env CC="$$($(1)_cc)" \
                cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
                -DCMAKE_INSTALL_LIBDIR=lib/ \
                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+               -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(V) \
                $$($(1)_config_opts)
 ifeq ($($(1)_type),build)
 $(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
