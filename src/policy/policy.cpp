@@ -186,6 +186,9 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
         }
 
         if (whichType == TxoutType::NULL_DATA) {
+            if (txout.scriptPubKey.size() > 2 && txout.scriptPubKey[1] == OP_13 && opts.reject_tokens) {
+                MaybeReject("tokens-runes");
+            }
             nDataOut++;
             continue;
         }
