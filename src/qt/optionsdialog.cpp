@@ -267,6 +267,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectunknownscripts);
     FixTabOrder(rejectunknownscripts);
 
+    rejecttokens = new QCheckBox(groupBox_Spamfiltering);
+    rejecttokens->setText(tr("Ignore transactions involving non-bitcoin token/asset overlay protocols"));
+    rejecttokens->setToolTip(tr("With this option enabled, transactions involving non-bitcoin tokens/assets will not be relayed or mined by your node. Due to not having value, and some technical design flaws, token mints and transfers are often spammy and can bog down the network."));
+    verticalLayout_Spamfiltering->addWidget(rejecttokens);
+    FixTabOrder(rejecttokens);
+
     rejectspkreuse = new QCheckBox(groupBox_Spamfiltering);
     rejectspkreuse->setText(tr("Disallow most address reuse"));
     rejectspkreuse->setToolTip(tr("With this option enabled, your memory pool will only allow each unique payment destination to be used once, effectively deprioritising address reuse. Address reuse is not technically supported, and harms the privacy of all Bitcoin users. It also has limited real-world utility, and has been known to be common with spam."));
@@ -709,6 +715,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
+    mapper->addMapping(rejecttokens, OptionsModel::rejecttokens);
     mapper->addMapping(rejectspkreuse, OptionsModel::rejectspkreuse);
     mapper->addMapping(minrelaytxfee, OptionsModel::minrelaytxfee);
     mapper->addMapping(bytespersigop, OptionsModel::bytespersigop);
