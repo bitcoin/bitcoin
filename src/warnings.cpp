@@ -11,7 +11,6 @@
 
 #include <common/system.h>
 #include <sync.h>
-#include <util/string.h>
 #include <util/translation.h>
 
 #include <optional>
@@ -39,37 +38,30 @@ void SetMedianTimeOffsetWarning(std::optional<bilingual_str> warning)
     LOCK(g_warnings_mutex);
     g_timeoffset_warning = warning;
 }
-bilingual_str GetWarnings(bool verbose)
+
+std::vector<bilingual_str> GetWarnings()
 {
-    bilingual_str warnings_concise;
-    std::vector<bilingual_str> warnings_verbose;
+    std::vector<bilingual_str> warnings;
 
     LOCK(g_warnings_mutex);
 
     // Pre-release build warning
     if (!CLIENT_VERSION_IS_RELEASE) {
-        warnings_concise = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
-        warnings_verbose.emplace_back(warnings_concise);
+        warnings.emplace_back(_("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications"));
     }
 
     // Misc warnings like out of disk space and clock is wrong
     if (!g_misc_warnings.empty()) {
-        warnings_concise = g_misc_warnings;
-        warnings_verbose.emplace_back(warnings_concise);
+        warnings.emplace_back(g_misc_warnings);
     }
 
     if (fLargeWorkInvalidChainFound) {
-        warnings_concise = _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
-        warnings_verbose.emplace_back(warnings_concise);
+        warnings.emplace_back(_("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade."));
     }
 
     if (g_timeoffset_warning) {
-        warnings_verbose.emplace_back(g_timeoffset_warning.value());
+        warnings.emplace_back(g_timeoffset_warning.value());
     }
 
-    if (verbose) {
-        return Join(warnings_verbose, Untranslated("<hr />"));
-    }
-
-    return warnings_concise;
+    return warnings;
 }

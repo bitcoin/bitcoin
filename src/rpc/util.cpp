@@ -18,16 +18,19 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <tinyformat.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
+#include <warnings.h>
 
 #include <algorithm>
 #include <iterator>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "bc1q02ad21edsxd23d32dfgqqsz4vv4nmtfzuklhy3"};
@@ -1356,4 +1359,18 @@ void PushWarnings(const std::vector<bilingual_str>& warnings, UniValue& obj)
 {
     if (warnings.empty()) return;
     obj.pushKV("warnings", BilingualStringsToUniValue(warnings));
+}
+
+UniValue GetNodeWarnings(bool use_deprecated)
+{
+    if (use_deprecated) {
+        const auto all_warnings{GetWarnings()};
+        return all_warnings.empty() ? "" : all_warnings.back().original;
+    }
+
+    UniValue warnings{UniValue::VARR};
+    for (auto&& warning : GetWarnings()) {
+        warnings.push_back(std::move(warning.original));
+    }
+    return warnings;
 }
