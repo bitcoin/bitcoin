@@ -267,6 +267,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectunknownscripts);
     FixTabOrder(rejectunknownscripts);
 
+    rejectparasites = new QCheckBox(groupBox_Spamfiltering);
+    rejectparasites->setText(tr("Reject parasite transactions"));
+    rejectparasites->setToolTip(tr("With this option enabled, transactions related to parasitic overlay protocols will be ignored. Parasites are transactions using Bitcoin as a technical infrastructure to animate other protocols, unrelated to ordinary money transfers."));
+    verticalLayout_Spamfiltering->addWidget(rejectparasites);
+    FixTabOrder(rejectparasites);
+
     rejecttokens = new QCheckBox(groupBox_Spamfiltering);
     rejecttokens->setText(tr("Ignore transactions involving non-bitcoin token/asset overlay protocols"));
     rejecttokens->setToolTip(tr("With this option enabled, transactions involving non-bitcoin tokens/assets will not be relayed or mined by your node. Due to not having value, and some technical design flaws, token mints and transfers are often spammy and can bog down the network."));
@@ -715,6 +721,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
+    mapper->addMapping(rejectparasites, OptionsModel::rejectparasites);
     mapper->addMapping(rejecttokens, OptionsModel::rejecttokens);
     mapper->addMapping(rejectspkreuse, OptionsModel::rejectspkreuse);
     mapper->addMapping(minrelaytxfee, OptionsModel::minrelaytxfee);
