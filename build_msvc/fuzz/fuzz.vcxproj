@@ -9,8 +9,7 @@
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <!-- TODO: Fix the code and remove miniscript.cpp exclusion. -->
-    <ClCompile Include="..\..\src\test\fuzz\*.cpp" Exclude="..\..\src\test\fuzz\miniscript.cpp" />
+    <ClCompile Include="..\..\src\test\fuzz\*.cpp" />
     <ClCompile Include="..\..\src\test\fuzz\util\descriptor.cpp">
       <ObjectFileName>$(IntDir)test_fuzz_util_descriptor.obj</ObjectFileName>
     </ClCompile>
