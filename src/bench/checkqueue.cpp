@@ -25,7 +25,7 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
     // We shouldn't ever be running with the checkqueue on a single core machine.
     if (GetNumCores() <= 1) return;
 
-    ECC_Start();
+    ECC_Context ecc_context{};
 
     struct PrevectorJob {
         prevector<PREVECTOR_SIZE, uint8_t> p;
@@ -62,6 +62,5 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         // it is done explicitly here for clarity
         control.Wait();
     });
-    ECC_Stop();
 }
 BENCHMARK(CCheckQueueSpeedPrevectorJob, benchmark::PriorityLevel::HIGH);
