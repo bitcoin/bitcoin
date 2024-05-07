@@ -23,10 +23,14 @@
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
 
+static constexpr size_t DEFAULT_DB_FILE_SIZE{2};
+
 //! User-controlled performance and debug options.
 struct DBOptions {
     //! Compact database on startup.
     bool force_compact = false;
+    //! Target size of files.
+    size_t max_file_size{DEFAULT_DB_FILE_SIZE << 20};
 };
 
 //! Application-specific storage settings.
