@@ -457,3 +457,13 @@ void ECC_Stop() {
         secp256k1_context_destroy(ctx);
     }
 }
+
+ECC_Context::ECC_Context()
+{
+    ECC_Start();
+}
+
+ECC_Context::~ECC_Context()
+{
+    ECC_Stop();
+}
