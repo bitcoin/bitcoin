@@ -137,8 +137,7 @@ struct CSerializedNetMsg {
 /**
  * Look up IP addresses from all interfaces on the machine and add them to the
  * list of local addresses to self-advertise.
- * The loopback interface is skipped and only the first address from each
- * interface is used.
+ * The loopback interface is skipped.
  */
 void Discover();
 
