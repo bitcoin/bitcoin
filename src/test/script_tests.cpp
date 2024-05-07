@@ -1268,8 +1268,7 @@ BOOST_AUTO_TEST_CASE(sign_invalid_miniscript)
     const auto invalid_pubkey{ParseHex("173d36c8c9c9c9ffffffffffff0200000000021e1e37373721361818181818181e1e1e1e19000000000000000000b19292929292926b006c9b9b9292")};
     TaprootBuilder builder;
     builder.Add(0, {invalid_pubkey}, 0xc0);
-    XOnlyPubKey nums{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
-    builder.Finalize(nums);
+    builder.Finalize(XOnlyPubKey::NUMS_H);
     prev.vout.emplace_back(0, GetScriptForDestination(builder.GetOutput()));
     curr.vin.emplace_back(COutPoint{prev.GetHash(), 0});
     sig_data.tr_spenddata = builder.GetSpendData();
