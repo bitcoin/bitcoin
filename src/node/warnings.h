@@ -31,7 +31,7 @@ enum class Warning {
  * @brief Manages warning messages within a node.
  *
  * The Warnings class provides mechanisms to set, unset, and retrieve
- * warning messages.
+ * warning messages. It updates the GUI when warnings are changed.
  *
  * This class is designed to be non-copyable to ensure warnings
  * are managed centrally.
@@ -52,7 +52,7 @@ public:
      * @brief Set a warning message. If a warning with the specified
      *        `id` is already active, false is returned and the new
      *        warning is ignored. If `id` does not yet exist, the
-     *        warning is set, and true is returned.
+     *        warning is set, the UI is updated, and true is returned.
      *
      * @param[in]   id  Unique identifier of the warning.
      * @param[in]   message Warning message to be shown.
@@ -63,8 +63,9 @@ public:
     bool Set(warning_type id, bilingual_str message) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /**
      * @brief Unset a warning message. If a warning with the specified
-     *        `id` is active, it is unset, and true is returned.
-     *        Otherwise, no warning is unset and false is returned.
+     *        `id` is active, it is unset, the UI is updated, and true
+     *        is returned. Otherwise, no warning is unset and false is
+     *        returned.
      *
      * @param[in]   id  Unique identifier of the warning.
      *

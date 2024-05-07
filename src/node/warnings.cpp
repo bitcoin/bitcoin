@@ -8,6 +8,7 @@
 #include <node/warnings.h>
 
 #include <common/system.h>
+#include <node/interface_ui.h>
 #include <sync.h>
 #include <univalue.h>
 #include <util/translation.h>
@@ -31,12 +32,15 @@ bool Warnings::Set(warning_type id, bilingual_str message)
 {
     LOCK(m_mutex);
     const auto& [_, inserted]{m_warnings.insert({id, std::move(message)})};
+    if (inserted) uiInterface.NotifyAlertChanged();
     return inserted;
 }
 
 bool Warnings::Unset(warning_type id)
 {
-    return WITH_LOCK(m_mutex, return m_warnings.erase(id));
+    auto success{WITH_LOCK(m_mutex, return m_warnings.erase(id))};
+    if (success) uiInterface.NotifyAlertChanged();
+    return success;
 }
 
 std::vector<bilingual_str> Warnings::GetMessages() const
