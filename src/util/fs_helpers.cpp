@@ -5,9 +5,7 @@
 
 #include <util/fs_helpers.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <config/bitcoin-config.h> // IWYU pragma: keep
 
 #include <logging.h>
 #include <sync.h>
