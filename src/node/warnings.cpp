@@ -12,69 +12,53 @@
 #include <univalue.h>
 #include <util/translation.h>
 
-#include <optional>
+#include <utility>
 #include <vector>
 
-static GlobalMutex g_warnings_mutex;
-static bilingual_str g_misc_warnings GUARDED_BY(g_warnings_mutex);
-static bool fLargeWorkInvalidChainFound GUARDED_BY(g_warnings_mutex) = false;
-static std::optional<bilingual_str> g_timeoffset_warning GUARDED_BY(g_warnings_mutex){};
-
 namespace node {
-void SetMiscWarning(const bilingual_str& warning)
+Warnings g_warnings;
+
+Warnings::Warnings()
 {
-    LOCK(g_warnings_mutex);
-    g_misc_warnings = warning;
-}
-
-void SetfLargeWorkInvalidChainFound(bool flag)
-{
-    LOCK(g_warnings_mutex);
-    fLargeWorkInvalidChainFound = flag;
-}
-
-void SetMedianTimeOffsetWarning(std::optional<bilingual_str> warning)
-{
-    LOCK(g_warnings_mutex);
-    g_timeoffset_warning = warning;
-}
-
-std::vector<bilingual_str> GetWarnings()
-{
-    std::vector<bilingual_str> warnings;
-
-    LOCK(g_warnings_mutex);
-
     // Pre-release build warning
     if (!CLIENT_VERSION_IS_RELEASE) {
-        warnings.emplace_back(_("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications"));
+        m_warnings.insert(
+            {Warning::PRE_RELEASE_TEST_BUILD,
+             _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications")});
     }
+}
+bool Warnings::Set(warning_type id, bilingual_str message)
+{
+    LOCK(m_mutex);
+    const auto& [_, inserted]{m_warnings.insert({id, std::move(message)})};
+    return inserted;
+}
 
-    // Misc warnings like out of disk space and clock is wrong
-    if (!g_misc_warnings.empty()) {
-        warnings.emplace_back(g_misc_warnings);
+bool Warnings::Unset(warning_type id)
+{
+    return WITH_LOCK(m_mutex, return m_warnings.erase(id));
+}
+
+std::vector<bilingual_str> Warnings::GetMessages() const
+{
+    LOCK(m_mutex);
+    std::vector<bilingual_str> messages;
+    messages.reserve(m_warnings.size());
+    for (const auto& [id, msg] : m_warnings) {
+        messages.push_back(msg);
     }
-
-    if (fLargeWorkInvalidChainFound) {
-        warnings.emplace_back(_("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade."));
-    }
-
-    if (g_timeoffset_warning) {
-        warnings.emplace_back(g_timeoffset_warning.value());
-    }
-
-    return warnings;
+    return messages;
 }
 
 UniValue GetWarningsForRpc(bool use_deprecated)
 {
     if (use_deprecated) {
-        const auto all_warnings{GetWarnings()};
+        const auto all_warnings{g_warnings.GetMessages()};
         return all_warnings.empty() ? "" : all_warnings.back().original;
     }
 
     UniValue warnings{UniValue::VARR};
-    for (auto&& warning : GetWarnings()) {
+    for (auto&& warning : g_warnings.GetMessages()) {
         warnings.push_back(std::move(warning.original));
     }
     return warnings;

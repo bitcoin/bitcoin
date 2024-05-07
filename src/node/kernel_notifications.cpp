@@ -10,6 +10,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <kernel/context.h>
+#include <kernel/warning.h>
 #include <logging.h>
 #include <node/abort.h>
 #include <node/interface_ui.h>
@@ -46,16 +47,6 @@ static void AlertNotify(const std::string& strMessage)
 #endif
 }
 
-static void DoWarning(const bilingual_str& warning)
-{
-    static bool fWarned = false;
-    node::SetMiscWarning(warning);
-    if (!fWarned) {
-        AlertNotify(warning.original);
-        fWarned = true;
-    }
-}
-
 namespace node {
 
 kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state, CBlockIndex& index)
@@ -80,9 +71,16 @@ void KernelNotifications::progress(const bilingual_str& title, int progress_perc
     uiInterface.ShowProgress(title.translated, progress_percent, resume_possible);
 }
 
-void KernelNotifications::warning(const bilingual_str& warning)
+void KernelNotifications::warningSet(kernel::Warning id, const bilingual_str& message)
 {
-    DoWarning(warning);
+    if (node::g_warnings.Set(id, message)) {
+        AlertNotify(message.original);
+    }
+}
+
+void KernelNotifications::warningUnset(kernel::Warning id)
+{
+    g_warnings.Unset(id);
 }
 
 void KernelNotifications::flushError(const bilingual_str& message)

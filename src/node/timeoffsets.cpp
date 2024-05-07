@@ -49,7 +49,7 @@ bool TimeOffsets::WarnIfOutOfSync() const
     // when median == std::numeric_limits<int64_t>::min(), calling std::chrono::abs is UB
     auto median{std::max(Median(), std::chrono::seconds(std::numeric_limits<int64_t>::min() + 1))};
     if (std::chrono::abs(median) <= WARN_THRESHOLD) {
-        node::SetMedianTimeOffsetWarning(std::nullopt);
+        node::g_warnings.Unset(node::Warning::CLOCK_OUT_OF_SYNC);
         uiInterface.NotifyAlertChanged();
         return false;
     }
@@ -63,7 +63,7 @@ bool TimeOffsets::WarnIfOutOfSync() const
         "RPC methods to get more info."
     ), Ticks<std::chrono::minutes>(WARN_THRESHOLD))};
     LogWarning("%s\n", msg.original);
-    node::SetMedianTimeOffsetWarning(msg);
+    node::g_warnings.Set(node::Warning::CLOCK_OUT_OF_SYNC, msg);
     uiInterface.NotifyAlertChanged();
     return true;
 }

@@ -12,13 +12,12 @@
 
 #include <atomic>
 #include <cstdlib>
-#include <string>
 
 namespace node {
 
 void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& message)
 {
-    SetMiscWarning(message);
+    g_warnings.Set(Warning::FATAL_INTERNAL_ERROR, message);
     InitError(_("A fatal internal error occurred, see debug.log for details: ") + message);
     exit_status.store(EXIT_FAILURE);
     if (shutdown && !(*shutdown)()) {

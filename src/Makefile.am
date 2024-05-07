@@ -196,6 +196,7 @@ BITCOIN_CORE_H = \
   kernel/messagestartchars.h \
   kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
+  kernel/warning.h \
   key.h \
   key_io.h \
   logging.h \
@@ -996,8 +997,7 @@ libbitcoinkernel_la_SOURCES = \
   util/tokenpipe.cpp \
   validation.cpp \
   validationinterface.cpp \
-  versionbits.cpp \
-  warnings.cpp
+  versionbits.cpp
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
