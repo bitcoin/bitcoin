@@ -4,9 +4,9 @@
 
 use std::env;
 use std::fs;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::process::ExitCode;
+use std::process::{Command, ExitCode, Stdio};
 
 type LintError = String;
 type LintResult = Result<(), LintError>;
@@ -292,6 +292,51 @@ fn lint_doc() -> LintResult {
     }
 }
 
+fn lint_markdown() -> LintResult {
+    let bin_name = "mlc";
+    let mut md_ignore_paths = get_subtrees();
+    md_ignore_paths.push("./doc/README_doxygen.md");
+    let md_ignore_path_str = md_ignore_paths.join(",");
+
+    let mut cmd = Command::new(bin_name);
+    cmd.args([
+        "--offline",
+        "--ignore-path",
+        md_ignore_path_str.as_str(),
+        "--root-dir",
+        ".",
+    ])
+    .stdout(Stdio::null()); // Suppress overly-verbose output
+
+    match cmd.output() {
+        Ok(output) if output.status.success() => Ok(()),
+        Ok(output) => {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let filtered_stderr: String = stderr // Filter out this annoying trailing line
+                .lines()
+                .filter(|&line| line != "The following links could not be resolved:")
+                .collect::<Vec<&str>>()
+                .join("\n");
+            Err(format!(
+                r#"
+One or more markdown links are broken.
+
+Relative links are preferred (but not required) as jumping to file works natively within Emacs.
+
+Markdown link errors found:
+{}
+                "#,
+                filtered_stderr
+            ))
+        }
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            println!("`mlc` was not found in $PATH, skipping markdown lint check.");
+            Ok(())
+        }
+        Err(e) => Err(format!("Error running mlc: {}", e)), // Misc errors
+    }
+}
+
 fn lint_all() -> LintResult {
     let mut good = true;
     let lint_dir = get_git_root().join("test/lint");
@@ -325,6 +370,7 @@ fn main() -> ExitCode {
         ("no-tabs check", lint_tabs_whitespace),
         ("build config includes check", lint_includes_build_config),
         ("-help=1 documentation check", lint_doc),
+        ("markdown hyperlink check", lint_markdown),
         ("lint-*.py scripts", lint_all),
     ];
 
