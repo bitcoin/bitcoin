@@ -1309,7 +1309,8 @@ RPCHelpMan getblockchaininfo()
         }
     }
 
-    obj.pushKV("warnings", node::GetWarningsForRpc(IsDeprecatedRPCEnabled("warnings")));
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    obj.pushKV("warnings", node::GetWarningsForRpc(*CHECK_NONFATAL(node.warnings), IsDeprecatedRPCEnabled("warnings")));
     return obj;
 },
     };

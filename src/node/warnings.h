@@ -7,13 +7,13 @@
 #define BITCOIN_NODE_WARNINGS_H
 
 #include <sync.h>
+#include <util/translation.h>
 
 #include <map>
 #include <variant>
 #include <vector>
 
 class UniValue;
-struct bilingual_str;
 
 namespace kernel {
 enum class Warning;
@@ -79,14 +79,12 @@ public:
 };
 
 /**
- * RPC helper function that wraps g_warnings.GetMessages().
+ * RPC helper function that wraps warnings.GetMessages().
  *
  * Returns a UniValue::VSTR with the latest warning if use_deprecated is
  * set to true, or a UniValue::VARR with all warnings otherwise.
  */
-UniValue GetWarningsForRpc(bool use_deprecated);
-
-extern Warnings g_warnings;
+UniValue GetWarningsForRpc(const Warnings& warnings, bool use_deprecated);
 } // namespace node
 
 #endif // BITCOIN_NODE_WARNINGS_H

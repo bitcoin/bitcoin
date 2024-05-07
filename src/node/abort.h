@@ -14,7 +14,8 @@ class SignalInterrupt;
 } // namespace util
 
 namespace node {
-void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& message);
+class Warnings;
+void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, const bilingual_str& message, node::Warnings* warnings);
 } // namespace node
 
 #endif // BITCOIN_NODE_ABORT_H

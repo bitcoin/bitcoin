@@ -17,6 +17,7 @@
 #include <kernel/context.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
+#include <node/warnings.h>
 #include <noui.h>
 #include <util/check.h>
 #include <util/exception.h>
@@ -180,6 +181,8 @@ static bool AppInit(NodeContext& node)
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
+
+        node.warnings = std::make_unique<node::Warnings>();
 
         node.kernel = std::make_unique<kernel::Context>();
         node.ecc_context = std::make_unique<ECC_Context>();

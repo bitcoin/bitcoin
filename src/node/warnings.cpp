@@ -17,8 +17,6 @@
 #include <vector>
 
 namespace node {
-Warnings g_warnings;
-
 Warnings::Warnings()
 {
     // Pre-release build warning
@@ -54,17 +52,17 @@ std::vector<bilingual_str> Warnings::GetMessages() const
     return messages;
 }
 
-UniValue GetWarningsForRpc(bool use_deprecated)
+UniValue GetWarningsForRpc(const Warnings& warnings, bool use_deprecated)
 {
     if (use_deprecated) {
-        const auto all_warnings{g_warnings.GetMessages()};
-        return all_warnings.empty() ? "" : all_warnings.back().original;
+        const auto all_messages{warnings.GetMessages()};
+        return all_messages.empty() ? "" : all_messages.back().original;
     }
 
-    UniValue warnings{UniValue::VARR};
-    for (auto&& warning : g_warnings.GetMessages()) {
-        warnings.push_back(std::move(warning.original));
+    UniValue messages{UniValue::VARR};
+    for (auto&& message : warnings.GetMessages()) {
+        messages.push_back(std::move(message.original));
     }
-    return warnings;
+    return messages;
 }
 } // namespace node

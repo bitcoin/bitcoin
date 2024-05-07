@@ -72,25 +72,25 @@ void KernelNotifications::progress(const bilingual_str& title, int progress_perc
 
 void KernelNotifications::warningSet(kernel::Warning id, const bilingual_str& message)
 {
-    if (node::g_warnings.Set(id, message)) {
+    if (m_warnings.Set(id, message)) {
         AlertNotify(message.original);
     }
 }
 
 void KernelNotifications::warningUnset(kernel::Warning id)
 {
-    g_warnings.Unset(id);
+    m_warnings.Unset(id);
 }
 
 void KernelNotifications::flushError(const bilingual_str& message)
 {
-    AbortNode(&m_shutdown, m_exit_status, message);
+    AbortNode(&m_shutdown, m_exit_status, message, &m_warnings);
 }
 
 void KernelNotifications::fatalError(const bilingual_str& message)
 {
     node::AbortNode(m_shutdown_on_fatal_error ? &m_shutdown : nullptr,
-                    m_exit_status, message);
+                    m_exit_status, message, &m_warnings);
 }
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications)
