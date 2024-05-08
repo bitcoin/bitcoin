@@ -842,6 +842,7 @@ void InitParameterInteraction(ArgsManager& args)
         args.SoftSetArg("-bytespersigopstrict", "0");
         args.SoftSetArg("-permitbarepubkey", "1");
         args.SoftSetArg("-permitbaremultisig", "1");
+        args.SoftSetArg("-rejectparasites", "0");
         args.SoftSetArg("-datacarriercost", "0.25");
         args.SoftSetArg("-datacarrierfullcount", "0");
         args.SoftSetArg("-datacarriersize", "83");
