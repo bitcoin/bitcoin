@@ -7,6 +7,7 @@
 
 #include <cluster_linearize.h>
 #include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <util/bitset.h>
 #include <util/feefrac.h>
@@ -328,6 +329,22 @@ void VerifyDepGraphFromCluster(const Cluster<SetType>& cluster, const DepGraph<S
         for (auto parent : cluster[i].second) {
             assert(ancestors[parent]);
         }
+    }
+}
+
+/** Perform a sanity check on a linearization. */
+template<typename SetType>
+void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization)
+{
+    // Check completeness.
+    assert(linearization.size() == depgraph.TxCount());
+    TestBitSet done;
+    for (auto i : linearization) {
+        // Check transaction position is in range.
+        assert(i < depgraph.TxCount());
+        // Check topology and lack of duplicates.
+        assert((depgraph.Ancestors(i) - done) == TestBitSet::Singleton(i));
+        done.Set(i);
     }
 }
 
