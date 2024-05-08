@@ -142,7 +142,7 @@ In the current design, class names, method names, and parameter names are duplic
 
 An alternate approach could use custom [C++ Attributes](https://en.cppreference.com/w/cpp/language/attributes) embedded in interface declarations to automatically generate `.capnp` files from C++ headers. This has not been pursued because parsing C++ headers is more complicated than parsing Cap’n Proto interface definitions, especially portably on multiple platforms.
 
-In the meantime, the developer guide [Internal interface guidelines](developer-notes.md#internal-interface-guidelines) can provide guidance on keeping interfaces consistent and functional and avoiding compile errors.
+In the meantime, the developer guide [Internal interface guidelines](../developer-notes.md#internal-interface-guidelines) can provide guidance on keeping interfaces consistent and functional and avoiding compile errors.
 
 ### Interface Stability
 
