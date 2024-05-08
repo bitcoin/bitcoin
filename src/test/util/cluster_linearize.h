@@ -301,6 +301,20 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
     }
 }
 
+/** Perform a sanity check on a linearization. */
+template<typename SetType>
+void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization)
+{
+    // Check completeness.
+    assert(linearization.size() == depgraph.TxCount());
+    TestBitSet done;
+    for (auto i : linearization) {
+        // Check topology and lack of duplicates.
+        assert((depgraph.Ancestors(i) - done) == TestBitSet::Singleton(i));
+        done.Set(i);
+    }
+}
+
 } // namespace
 
 #endif // BITCOIN_TEST_UTIL_CLUSTER_LINEARIZE_H
