@@ -5,6 +5,7 @@
 #ifndef BITCOIN_CLUSTER_LINEARIZE_H
 #define BITCOIN_CLUSTER_LINEARIZE_H
 
+#include <optional>
 #include <stdint.h>
 #include <vector>
 #include <utility>
@@ -159,6 +160,100 @@ public:
         FeeFrac ret;
         for (auto pos : elems) ret += entries[pos].feerate;
         return ret;
+    }
+};
+
+/** A set of transactions together with their aggregate feerate. */
+template<typename SetType>
+struct SetInfo
+{
+    /** The transactions in the set. */
+    SetType transactions;
+    /** Their combined fee and size. */
+    FeeFrac feerate;
+
+    /** Construct a SetInfo for a specified set and feerate. */
+    SetInfo(const SetType& txn, const FeeFrac& fr) noexcept : transactions(txn), feerate(fr) {}
+
+    /** Construct a SetInfo for a set of transactions in a depgraph. */
+    explicit SetInfo(const DepGraph<SetType>& depgraph, const SetType& txn) noexcept :
+        transactions(txn), feerate(depgraph.FeeRate(txn)) {}
+
+    /** Permit equality testing. */
+    friend bool operator==(const SetInfo&, const SetInfo&) noexcept = default;
+};
+
+/** Class encapsulating the state needed to find the best remaining ancestor set. */
+template<typename SetType>
+class AncestorCandidateFinder
+{
+    /** Internal dependency graph. */
+    const DepGraph<SetType>& m_depgraph;
+    /** Which transaction are left to include. */
+    SetType m_todo;
+    /** Precomputed ancestor-set feerates (only kept up-to-date for indices in m_todo). */
+    std::vector<FeeFrac> m_ancestor_set_feerates;
+
+public:
+    /** Construct an AncestorCandidateFinder for a given cluster.
+     *
+     * Complexity: O(N^2) where N=depgraph.TxCount().
+     */
+    AncestorCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
+        m_depgraph(depgraph),
+        m_todo{SetType::Fill(depgraph.TxCount())},
+        m_ancestor_set_feerates(depgraph.TxCount())
+    {
+        // Precompute ancestor-set feerates.
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            SetType anc_to_add = m_depgraph.Ancestors(i); //!< Remaining ancestors for transaction i.
+            FeeFrac anc_feerate;
+            // Reuse accumulated feerate from first ancestor, if usable.
+            Assume(anc_to_add.Any());
+            ClusterIndex first = anc_to_add.First();
+            if (first < i) {
+                anc_feerate = m_ancestor_set_feerates[first];
+                anc_to_add -= m_depgraph.Ancestors(first);
+            }
+            // Add in other ancestors (which necessarily include i itself).
+            Assume(anc_to_add[i]);
+            for (ClusterIndex idx : anc_to_add) anc_feerate += m_depgraph.FeeRate(idx);
+            // Store the result.
+            m_ancestor_set_feerates[i] = anc_feerate;
+        }
+    }
+
+    /** Remove a set of transactions from the set of to-be-linearized ones.
+     *
+     * Complexity: O(N*M) where N=depgraph.TxCount(), M=select.Count().
+     */
+    void MarkDone(SetType select) noexcept
+    {
+        select &= m_todo;
+        m_todo -= select;
+        for (auto i : select) {
+            auto feerate = m_depgraph.FeeRate(i);
+            for (auto j : m_depgraph.Descendants(i) & m_todo) {
+                m_ancestor_set_feerates[j] -= feerate;
+            }
+        }
+    }
+
+    /** Find the best remaining ancestor set. Unlinearized transactions must remain.
+     *
+     * Complexity: O(N) where N=depgraph.TxCount();
+     */
+    SetInfo<SetType> FindCandidateSet() const noexcept
+    {
+        std::optional<ClusterIndex> best;
+        for (auto i : m_todo) {
+            if (best.has_value()) {
+                if (!(m_ancestor_set_feerates[i] > m_ancestor_set_feerates[*best])) continue;
+            }
+            best = i;
+        }
+        Assume(best.has_value());
+        return {m_depgraph.Ancestors(*best) & m_todo, m_ancestor_set_feerates[*best]};
     }
 };
 
