@@ -15,6 +15,30 @@
 #include <vector>
 #include <utility>
 
+using namespace cluster_linearize;
+
+namespace {
+
+/** Given a dependency graph, and a todo set, read a topological subset of todo from reader. */
+template<typename SetType>
+SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader)
+{
+    uint64_t mask{0};
+    try {
+        reader >> VARINT(mask);
+    } catch(const std::ios_base::failure&) {}
+    SetType ret;
+    for (auto i : todo) {
+        if (!ret[i]) {
+            if (mask & 1) ret |= depgraph.Ancestors(i);
+            mask >>= 1;
+        }
+    }
+    return ret & todo;
+}
+
+} // namespace
+
 FUZZ_TARGET(clusterlin_add_dependency)
 {
     // Verify that computing a DepGraph from a cluster, or building it step by step using AddDependency
@@ -84,4 +108,52 @@ FUZZ_TARGET(clusterlin_depgraph_serialization)
 
     // Verify the graph is a DAG.
     assert(IsAcyclic(depgraph));
+}
+
+FUZZ_TARGET(clusterlin_ancestor_finder)
+{
+    // Verify that AncestorCandidateFinder works as expected.
+
+    // Retrieve a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    AncestorCandidateFinder anc_finder(depgraph);
+    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    while (todo.Any()) {
+        // Call the ancestor finder's FindCandidateSet for what remains of the graph.
+        assert(!anc_finder.AllDone());
+        auto best_anc = anc_finder.FindCandidateSet();
+        // Sanity check the result.
+        assert(best_anc.transactions.Any());
+        assert(best_anc.transactions.IsSubsetOf(todo));
+        assert(depgraph.FeeRate(best_anc.transactions) == best_anc.feerate);
+        // Check that it is topologically valid.
+        for (auto i : best_anc.transactions) {
+            assert((depgraph.Ancestors(i) & todo).IsSubsetOf(best_anc.transactions));
+        }
+
+        // Compute all remaining ancestor sets.
+        std::optional<SetInfo<TestBitSet>> real_best_anc;
+        for (auto i : todo) {
+            SetInfo info(depgraph, todo & depgraph.Ancestors(i));
+            if (!real_best_anc.has_value() || info.feerate > real_best_anc->feerate) {
+                real_best_anc = info;
+            }
+        }
+        // The set returned by anc_finder must equal the real best ancestor sets.
+        assert(real_best_anc.has_value());
+        assert(*real_best_anc == best_anc);
+
+        // Find a topologically valid subset of transactions to remove from the graph.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
+        // If we did not find anything, use best_anc itself, because we should remove something.
+        if (del_set.None()) del_set = best_anc.transactions;
+        todo -= del_set;
+        anc_finder.MarkDone(del_set);
+    }
+    assert(anc_finder.AllDone());
 }
