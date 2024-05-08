@@ -1046,8 +1046,15 @@ inline int Popen::wait() noexcept(false)
 {
 #ifdef __USING_WINDOWS__
   int ret = WaitForSingleObject(process_handle_, INFINITE);
+  if (ret != WAIT_OBJECT_0) return -1;
 
-  return 0;
+  DWORD dretcode_;
+  if (FALSE == GetExitCodeProcess(process_handle_, &dretcode_))
+      throw OSError("GetExitCodeProcess", 0);
+
+  CloseHandle(process_handle_);
+
+  return (int)dretcode_;
 #else
   int ret, status;
   std::tie(ret, status) = util::wait_for_child_exit(child_pid_);
