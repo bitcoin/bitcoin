@@ -456,12 +456,7 @@ RPCHelpMan importpubkey()
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
 
-    if (!IsHex(request.params[0].get_str()))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey must be a hex string");
-    std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
-    CPubKey pubKey(data);
-    if (!pubKey.IsFullyValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
+    CPubKey pubKey = HexToPubKey(request.params[0].get_str());
 
     {
         LOCK(pwallet->cs_wallet);
@@ -983,15 +978,7 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
         import_data.witnessscript = std::make_unique<CScript>(parsed_witnessscript.begin(), parsed_witnessscript.end());
     }
     for (size_t i = 0; i < pubKeys.size(); ++i) {
-        const auto& str = pubKeys[i].get_str();
-        if (!IsHex(str)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey \"" + str + "\" must be a hex string");
-        }
-        auto parsed_pubkey = ParseHex(str);
-        CPubKey pubkey(parsed_pubkey);
-        if (!pubkey.IsFullyValid()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey \"" + str + "\" is not a valid public key");
-        }
+        CPubKey pubkey = HexToPubKey(pubKeys[i].get_str());
         pubkey_map.emplace(pubkey.GetID(), pubkey);
         ordered_pubkeys.push_back(pubkey.GetID());
     }

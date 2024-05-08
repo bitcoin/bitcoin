@@ -627,15 +627,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         const UniValue solving_data = options["solving_data"].get_obj();
         if (solving_data.exists("pubkeys")) {
             for (const UniValue& pk_univ : solving_data["pubkeys"].get_array().getValues()) {
-                const std::string& pk_str = pk_univ.get_str();
-                if (!IsHex(pk_str)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not hex", pk_str));
-                }
-                const std::vector<unsigned char> data(ParseHex(pk_str));
-                const CPubKey pubkey(data.begin(), data.end());
-                if (!pubkey.IsFullyValid()) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("'%s' is not a valid public key", pk_str));
-                }
+                const CPubKey pubkey = HexToPubKey(pk_univ.get_str());
                 coinControl.m_external_provider.pubkeys.emplace(pubkey.GetID(), pubkey);
                 // Add witness script for pubkeys
                 const CScript wit_script = GetScriptForDestination(WitnessV0KeyHash(pubkey));
