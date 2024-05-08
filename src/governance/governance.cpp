@@ -1223,11 +1223,11 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
 
 int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman) const
 {
-    std::array<CNode*, 1> nodeCopy{&peer};
-    return RequestGovernanceObjectVotes(nodeCopy, connman);
+    const std::vector<CNode*> vNodeCopy{&peer};
+    return RequestGovernanceObjectVotes(vNodeCopy, connman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman) const
+int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 
@@ -1501,7 +1501,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
 
 void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
 {
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+    const CConnman::NodesSnapshot snap{connman, /* filter = */ CConnman::FullyConnectedOnly};
 
     std::vector<uint256> vecHashesFiltered;
     {
@@ -1517,15 +1517,13 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
 
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashesFiltered.size());
     for (const uint256& nHash : vecHashesFiltered) {
-        for (CNode* pnode : vNodesCopy) {
+        for (CNode* pnode : snap.Nodes()) {
             if (!pnode->CanRelay()) {
                 continue;
             }
             RequestGovernanceObject(pnode, nHash, connman);
         }
     }
-
-    connman.ReleaseNodeVector(vNodesCopy);
 }
 
 void CGovernanceManager::CleanOrphanObjects()

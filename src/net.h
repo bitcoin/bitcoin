@@ -1058,9 +1058,6 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
-    std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond = AllNodes);
-    void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
-
     // Addrman functions
     /**
      * Return all or many randomly selected addresses, optionally by network.
@@ -1182,6 +1179,26 @@ public:
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
+    /**
+     * RAII helper to atomically create a copy of `vNodes` and add a reference
+     * to each of the nodes. The nodes are released when this object is destroyed.
+     */
+    class NodesSnapshot
+    {
+    public:
+        explicit NodesSnapshot(const CConnman& connman, std::function<bool(const CNode* pnode)> cond = AllNodes,
+                               bool shuffle = false);
+        ~NodesSnapshot();
+
+        const std::vector<CNode*>& Nodes() const
+        {
+            return m_nodes_copy;
+        }
+
+    private:
+        std::vector<CNode*> m_nodes_copy;
+    };
+
 private:
     struct ListenSocket {
     public:
@@ -1226,19 +1243,81 @@ private:
     void CalculateNumConnectionsChangedStats();
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
-    bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+
+    /**
+     * Generate a collection of sockets to check for IO readiness.
+     * @param[in] nodes Select from these nodes' sockets.
+     * @param[out] recv_set Sockets to check for read readiness.
+     * @param[out] send_set Sockets to check for write readiness.
+     * @param[out] error_set Sockets to check for errors.
+     * @return true if at least one socket is to be checked (the returned set is not empty)
+     */
+    bool GenerateSelectSet(const std::vector<CNode*>& nodes,
+                           std::set<SOCKET>& recv_set,
+                           std::set<SOCKET>& send_set,
+                           std::set<SOCKET>& error_set);
+
+    /**
+     * Check which sockets are ready for IO.
+     * @param[in] nodes Select from these nodes' sockets (in supported event methods).
+     * @param[in] only_poll Permit zero timeout polling
+     * @param[out] recv_set Sockets which are ready for read.
+     * @param[out] send_set Sockets which are ready for write.
+     * @param[out] error_set Sockets which have errors.
+     * This calls `GenerateSelectSet()` to gather a list of sockets to check.
+     */
+    void SocketEvents(const std::vector<CNode*>& nodes,
+                      std::set<SOCKET>& recv_set,
+                      std::set<SOCKET>& send_set,
+                      std::set<SOCKET>& error_set,
+                      bool only_poll);
+
 #ifdef USE_KQUEUE
-    void SocketEventsKqueue(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+    void SocketEventsKqueue(std::set<SOCKET>& recv_set,
+                            std::set<SOCKET>& send_set,
+                            std::set<SOCKET>& error_set,
+                            bool only_poll);
 #endif
 #ifdef USE_EPOLL
-    void SocketEventsEpoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+    void SocketEventsEpoll(std::set<SOCKET>& recv_set,
+                           std::set<SOCKET>& send_set,
+                           std::set<SOCKET>& error_set,
+                           bool only_poll);
 #endif
 #ifdef USE_POLL
-    void SocketEventsPoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+    void SocketEventsPoll(const std::vector<CNode*>& nodes,
+                          std::set<SOCKET>& recv_set,
+                          std::set<SOCKET>& send_set,
+                          std::set<SOCKET>& error_set,
+                          bool only_poll);
 #endif
-    void SocketEventsSelect(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
-    void SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+    void SocketEventsSelect(const std::vector<CNode*>& nodes,
+                            std::set<SOCKET>& recv_set,
+                            std::set<SOCKET>& send_set,
+                            std::set<SOCKET>& error_set,
+                            bool only_poll);
+
+    /**
+     * Check connected and listening sockets for IO readiness and process them accordingly.
+     */
     void SocketHandler(CMasternodeSync& mn_sync);
+
+    /**
+     * Do the read/write for connected sockets that are ready for IO.
+     * @param[in] recv_set Sockets that are ready for read.
+     * @param[in] send_set Sockets that are ready for send.
+     * @param[in] error_set Sockets that have an exceptional condition (error).
+     */
+    void SocketHandlerConnected(const std::set<SOCKET>& recv_set,
+                                const std::set<SOCKET>& send_set,
+                                const std::set<SOCKET>& error_set);
+
+    /**
+     * Accept incoming connections, one from each read-ready listening socket.
+     * @param[in] recv_set Sockets that are ready for read.
+     */
+    void SocketHandlerListening(const std::set<SOCKET>& recv_set, CMasternodeSync& mn_sync);
+
     void ThreadSocketHandler(CMasternodeSync& mn_sync);
     void ThreadDNSAddressSeed();
     void ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
