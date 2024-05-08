@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CLUSTER_LINEARIZE_H
 #define BITCOIN_CLUSTER_LINEARIZE_H
 
+#include <algorithm>
+#include <numeric>
 #include <optional>
 #include <stdint.h>
 #include <vector>
@@ -172,12 +174,30 @@ struct SetInfo
     /** Their combined fee and size. */
     FeeFrac feerate;
 
+    /** Construct a SetInfo for an empty set. */
+    SetInfo() noexcept {}
+
     /** Construct a SetInfo for a specified set and feerate. */
     SetInfo(const SetType& txn, const FeeFrac& fr) noexcept : transactions(txn), feerate(fr) {}
 
     /** Construct a SetInfo for a set of transactions in a depgraph. */
     explicit SetInfo(const DepGraph<SetType>& depgraph, const SetType& txn) noexcept :
         transactions(txn), feerate(depgraph.FeeRate(txn)) {}
+
+    /** Construct a new SetInfo equal to this, with more added. */
+    [[nodiscard]] SetInfo Add(const DepGraph<SetType>& depgraph, const SetType& txn) const noexcept
+    {
+        return {transactions | txn, feerate + depgraph.FeeRate(txn - transactions)};
+    }
+
+    /** Add the transactions of other to this SetInfo. */
+    SetInfo& operator|=(const SetInfo& other) noexcept
+    {
+        Assume(!transactions.Overlaps(other.transactions));
+        transactions |= other.transactions;
+        feerate += other.feerate;
+        return *this;
+    }
 
     /** Permit equality testing. */
     friend bool operator==(const SetInfo&, const SetInfo&) noexcept = default;
@@ -254,6 +274,145 @@ public:
         }
         Assume(best.has_value());
         return {m_depgraph.Ancestors(*best) & m_todo, m_ancestor_set_feerates[*best]};
+    }
+};
+
+/** Class encapsulating the state needed to perform search for good candidate sets. */
+template<typename SetType>
+class SearchCandidateFinder
+{
+    /** Internal dependency graph for the cluster. */
+    const DepGraph<SetType>& m_depgraph;
+    /** Which transactions are left to do (sorted indices). */
+    SetType m_todo;
+
+public:
+    /** Construct a candidate finder for a graph.
+     *
+     * @param[in] depgraph   Dependency graph for the to-be-linearized cluster.
+     *
+     * Complexity: O(1).
+     */
+    SearchCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
+        m_depgraph(depgraph),
+        m_todo(SetType::Fill(depgraph.TxCount())) {}
+
+    /** Find a high-feerate topologically-valid subset of what remains of the cluster.
+     *
+     * @param[in] max_iterations  The maximum number of optimization steps that will be performed.
+     * @param[in] best            A set/feerate pair with an already-known good candidate. This may
+     *                            be empty.
+     * @return                    A pair of:
+     *                            - The best (highest feerate, smallest size as tiebreaker)
+     *                              topologically valid subset (and its feerate) that was
+     *                              encountered during search. It will be at least as good as the
+     *                              best passed in (if not empty).
+     *                            - The number of optimization steps that were performed. This will
+     *                              be <= max_iterations. If strictly < max_iterations, the
+     *                              returned subset is optimal.
+     *
+     * Complexity: O(N * min(max_iterations, 2^N)) where N=depgraph.TxCount().
+     */
+    std::pair<SetInfo<SetType>, uint64_t> FindCandidateSet(uint64_t max_iterations, SetInfo<SetType> best) noexcept
+    {
+        // Bail out quickly if we're given a (remaining) cluster that is empty.
+        if (m_todo.None()) return {};
+
+        /** Type for work queue items. */
+        struct WorkItem
+        {
+            /** Set of transactions definitely included (and its feerate). This must be a subset
+             *  of m_todo, and be topologically valid (includes all in-m_todo ancestors of
+             *  itself). */
+            SetInfo<SetType> inc;
+            /** Set of undecided transactions. This must be a subset of m_todo, and have no overlap
+             *  with inc. The set (inc | und) must be topologically valid. */
+            SetType und;
+
+            /** Construct a new work item. */
+            WorkItem(SetInfo<SetType>&& i, SetType&& u) noexcept :
+                inc(std::move(i)), und(std::move(u)) {}
+        };
+
+        /** The queue of work items. */
+        std::vector<WorkItem> queue;
+
+        // Create an initial entry with m_todo as undecided. Also use it as best if not provided,
+        // so that during the work processing loop below, and during the add_fn/split_fn calls, we
+        // do not need to deal with the best=empty case.
+        if (best.feerate.IsEmpty()) best = SetInfo(m_depgraph, m_todo);
+        queue.emplace_back(SetInfo<SetType>{}, SetType{m_todo});
+
+        /** Local copy of the iteration limit. */
+        uint64_t iterations_left = max_iterations;
+
+        /** Internal function to add a work item.
+         *
+         * - inc: the "inc" value for the new work item
+         * - und: the "und" value for the new work item
+         */
+        auto add_fn = [&](SetInfo<SetType> inc, SetType und) noexcept {
+            if (!inc.feerate.IsEmpty()) {
+                // If inc's feerate is better than best's, remember it as our new best.
+                if (inc.feerate > best.feerate) {
+                    best = inc;
+                }
+            }
+
+            // Make sure there are undecided transactions left to split on.
+            if (und.None()) return;
+
+            // Actually construct new work item on the queue.
+            queue.emplace_back(std::move(inc), std::move(und));
+        };
+
+        /** Internal process function. It takes an existing work item, and splits it in two: one
+         *  with a particular transaction (and its ancestors) included, and one with that
+         *  transaction (and its descendants) excluded. */
+        auto split_fn = [&](WorkItem&& elem) noexcept {
+            // Any queue element must have undecided transactions left, otherwise there is nothing
+            // to explore anymore.
+            Assume(elem.und.Any());
+            // The included and undecided set are all subsets of m_todo.
+            Assume(elem.inc.transactions.IsSubsetOf(m_todo) && elem.und.IsSubsetOf(m_todo));
+            // Included transactions cannot be undecided.
+            Assume(!elem.inc.transactions.Overlaps(elem.und));
+
+            const ClusterIndex first = elem.und.First();
+
+            // Add a work item corresponding to excluding the first undecided transaction.
+            const auto& desc = m_depgraph.Descendants(first);
+            add_fn(/*inc=*/elem.inc,
+                   /*und=*/elem.und - desc);
+
+            // Add a work item corresponding to including the first undecided transaction.
+            const auto anc = m_depgraph.Ancestors(first) & m_todo;
+            add_fn(/*inc=*/elem.inc.Add(m_depgraph, anc),
+                   /*und=*/elem.und - anc);
+
+            // Account for the performed split.
+            --iterations_left;
+        };
+
+        // Work processing loop.
+        while (!queue.empty()) {
+            if (!iterations_left) break;
+            auto elem = queue.back();
+            queue.pop_back();
+            split_fn(std::move(elem));
+        }
+
+        // Return the found best set and the number of iterations performed.
+        return {std::move(best), max_iterations - iterations_left};
+    }
+
+    /** Remove a subset of transactions from the cluster being linearized.
+     *
+     * Complexity: O(N) where N=done.Count().
+     */
+    void MarkDone(const SetType& done) noexcept
+    {
+        m_todo -= done;
     }
 };
 

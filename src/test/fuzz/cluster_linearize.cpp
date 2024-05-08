@@ -193,6 +193,106 @@ struct DepGraphFormatter
     }
 };
 
+/** A very simple finder class for optimal candidate sets, which tries every subset. */
+template<typename SetType>
+class ExhaustiveCandidateFinder
+{
+    /** Internal dependency graph. */
+    const DepGraph<SetType>& m_depgraph;
+    /** Which transaction are left to include. */
+    SetType m_todo;
+
+public:
+    /** Construct an SimpleOptimalCandidateFinder for a given graph. */
+    ExhaustiveCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
+        m_depgraph(depgraph), m_todo{SetType::Fill(depgraph.TxCount())} {}
+
+    /** Remove a set of transactions from the set of to-be-linearized ones. */
+    void MarkDone(SetType select) noexcept { m_todo -= select; }
+
+    /** Find the optimal remaining candidate set. */
+    SetInfo<SetType> FindCandidateSet() const noexcept
+    {
+        // Best solution so far.
+        SetInfo<SetType> best{m_todo, m_depgraph.FeeRate(m_todo)};
+        // The number of combinations to try.
+        uint64_t limit = (uint64_t{1} << m_todo.Count()) - 1;
+        // Try the transitive closure of every non-empty subset of m_todo.
+        for (uint64_t x = 1; x < limit; ++x) {
+            // If bit number b is set in x, then the remaining ancestors of the b'th remaining
+            // transaction in m_todo are included.
+            SetType txn;
+            auto x_shifted{x};
+            for (auto i : m_todo) {
+                if (x_shifted & 1) txn |= m_depgraph.Ancestors(i);
+                x_shifted >>= 1;
+            }
+            SetInfo cur(m_depgraph, txn & m_todo);
+            if (cur.feerate > best.feerate) best = cur;
+        }
+        return best;
+    }
+};
+
+/** A simple finder class for candidate sets. */
+template<typename SetType>
+class SimpleCandidateFinder
+{
+    /** Internal dependency graph. */
+    const DepGraph<SetType>& m_depgraph;
+    /** Which transaction are left to include. */
+    SetType m_todo;
+
+public:
+    /** Construct an SimpleOptimalCandidateFinder for a given graph. */
+    SimpleCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
+        m_depgraph(depgraph), m_todo{SetType::Fill(depgraph.TxCount())} {}
+
+    /** Remove a set of transactions from the set of to-be-linearized ones. */
+    void MarkDone(SetType select) noexcept { m_todo -= select; }
+
+    /** Find a candidate set using at most max_iterations iterations, and the number of iterations
+     *  actually performed. If that number is less than max_iterations, then the result is optimal.
+     */
+    std::pair<SetInfo<SetType>, uint64_t> FindCandidateSet(uint64_t max_iterations) const noexcept
+    {
+        uint64_t iterations_left = max_iterations;
+        // Queue of work units. Each consists of:
+        // - inc: set of transactions definitely included
+        // - und: set of transactions that can be added to inc still
+        std::vector<std::pair<SetType, SetType>> queue;
+        // Initially we have just one queue element, with the entire graph in und.
+        queue.emplace_back(SetType{}, m_todo);
+        // Best solution so far.
+        SetInfo best(m_depgraph, m_todo);
+        // Process the queue.
+        while (!queue.empty() && iterations_left) {
+            --iterations_left;
+            // Pop top element of the queue.
+            auto [inc, und] = queue.back();
+            queue.pop_back();
+            // Look for a transaction to consider adding/removing.
+            bool inc_none = inc.None();
+            for (auto pivot : und) {
+                // If inc is empty, consider any pivot. Otherwise only consider transactions
+                // that share ancestry with inc so far (which means only connected sets will be
+                // considered).
+                if (inc_none || inc.Overlaps(m_depgraph.Ancestors(pivot))) {
+                    // Add a queue entry with pivot included.
+                    SetInfo new_inc(m_depgraph, inc | (m_todo & m_depgraph.Ancestors(pivot)));
+                    queue.emplace_back(new_inc.transactions, und - new_inc.transactions);
+                    // Add a queue entry with pivot excluded.
+                    queue.emplace_back(inc, und - m_depgraph.Descendants(pivot));
+                    // Update statistics to account for the candidate new_inc.
+                    if (new_inc.feerate > best.feerate) best = new_inc;
+                    break;
+                }
+            }
+        }
+        return {std::move(best), max_iterations - iterations_left};
+    }
+};
+
 /** Perform a sanity/consistency check on a DepGraph. */
 template<typename SetType>
 void SanityCheck(const DepGraph<SetType>& depgraph)
@@ -407,6 +507,89 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
         // If we did not find anything, use best_anc itself, because we should remove something.
         if (del_set.None()) del_set = best_anc.transactions;
         todo -= del_set;
+        anc_finder.MarkDone(del_set);
+    }
+}
+
+FUZZ_TARGET(clusterlin_search_finder)
+{
+    // Verify that SearchCandidateFinder works as expected by sanity checking the results
+    // and comparing with the results from SimpleCandidateFinder, ExhaustiveCandidateFinder, and
+    // AncestorCandidateFinder.
+
+    // Retrieve a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    // Instantiate ALL the candidate finders.
+    SearchCandidateFinder src_finder(depgraph);
+    SimpleCandidateFinder smp_finder(depgraph);
+    ExhaustiveCandidateFinder exh_finder(depgraph);
+    AncestorCandidateFinder anc_finder(depgraph);
+
+    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    while (todo.Any()) {
+        // For each iteration, read an iteration count limit from the fuzz input.
+        uint64_t max_iterations = 1;
+        try {
+            reader >> VARINT(max_iterations);
+        } catch (const std::ios_base::failure&) {}
+        max_iterations &= 0xfffff;
+
+        // Read an initial subset from the fuzz input.
+        SetInfo init_best(depgraph, ReadTopologicalSet(depgraph, todo, reader));
+
+        // Call the search finder's FindCandidateSet for what remains of the graph.
+        auto [found, iterations_done] = src_finder.FindCandidateSet(max_iterations, init_best);
+
+        // Sanity check the result.
+        assert(iterations_done <= max_iterations);
+        assert(found.transactions.Any());
+        assert(found.transactions.IsSubsetOf(todo));
+        assert(depgraph.FeeRate(found.transactions) == found.feerate);
+        if (!init_best.feerate.IsEmpty()) assert(found.feerate >= init_best.feerate);
+        // Check that it is topologically valid.
+        for (auto i : found.transactions) {
+            assert(found.transactions.IsSupersetOf(depgraph.Ancestors(i) & todo));
+        }
+
+        // At most 2^N-1 iterations can be required: the number of non-empty subsets a graph with N
+        // transactions has.
+        assert(iterations_done <= ((uint64_t{1} << todo.Count()) - 1));
+
+        // Perform quality checks only if SearchCandidateFinder claims an optimal result.
+        if (iterations_done < max_iterations) {
+            // Compare with SimpleCandidateFinder.
+            auto [simple, simple_iters] = smp_finder.FindCandidateSet(0x3ffff);
+            assert(found.feerate >= simple.feerate);
+            if (simple_iters < 0x3ffff) assert(found.feerate == simple.feerate);
+
+            // Compare with AncestorCandidateFinder;
+            auto anc = anc_finder.FindCandidateSet();
+            assert(found.feerate >= anc.feerate);
+
+            // If todo isn't too big, compare with ExhaustiveCandidateFinder.
+            if (todo.Count() <= 12) {
+                auto exhaustive = exh_finder.FindCandidateSet();
+                assert(exhaustive.feerate == found.feerate);
+                // Also compare ExhaustiveCandidateFinder with SimpleCandidateFinder (this is more
+                // a test for SimpleCandidateFinder's correctness).
+                assert(exhaustive.feerate >= simple.feerate);
+                if (simple_iters < 0x3ffff) assert(exhaustive.feerate == simple.feerate);
+            }
+        }
+
+        // Find a topologically valid subset of transactions to remove from the graph.
+        auto del_set = ReadTopologicalSet(depgraph, todo, reader);
+        // If we did not find anything, use found_set itself, because we should remove something.
+        if (del_set.None()) del_set = found.transactions;
+        todo -= del_set;
+        src_finder.MarkDone(del_set);
+        smp_finder.MarkDone(del_set);
+        exh_finder.MarkDone(del_set);
         anc_finder.MarkDone(del_set);
     }
 }
