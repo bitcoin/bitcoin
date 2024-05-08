@@ -10,6 +10,7 @@
 #include <util/bitset.h>
 #include <util/feefrac.h>
 
+#include <algorithm>
 #include <stdint.h>
 #include <vector>
 #include <utility>
@@ -293,6 +294,25 @@ public:
     }
 };
 
+/** Simple linearization algorithm built on SimpleCandidateFinder. */
+template<typename SetType>
+std::pair<std::vector<ClusterIndex>, bool> SimpleLinearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations)
+{
+    std::vector<ClusterIndex> linearization;
+    SimpleCandidateFinder finder(depgraph);
+    SetType todo = SetType::Fill(depgraph.TxCount());
+    bool optimal = true;
+    while (todo.Any()) {
+        auto [candidate, iterations_done] = finder.FindCandidateSet(max_iterations);
+        if (iterations_done == max_iterations) optimal = false;
+        depgraph.AppendTopo(linearization, candidate.transactions);
+        todo -= candidate.transactions;
+        finder.MarkDone(candidate.transactions);
+        max_iterations -= iterations_done;
+    }
+    return {std::move(linearization), optimal};
+}
+
 /** Perform a sanity/consistency check on a DepGraph. */
 template<typename SetType>
 void SanityCheck(const DepGraph<SetType>& depgraph)
@@ -351,6 +371,20 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
     }
 }
 
+/** Perform a sanity check on a linearization. */
+template<typename SetType>
+void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization)
+{
+    // Check completeness.
+    assert(linearization.size() == depgraph.TxCount());
+    TestBitSet done;
+    for (auto i : linearization) {
+        // Check topology and lack of duplicates.
+        assert((depgraph.Ancestors(i) - done) == TestBitSet::Singleton(i));
+        done.Set(i);
+    }
+}
+
 /** Given a dependency graph, and a todo set, read a topological subset of todo from reader. */
 template<typename SetType>
 SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader)
@@ -367,6 +401,25 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
         }
     }
     return ret & todo;
+}
+
+/** Compute the chunks for a given linearization. */
+template<typename SetType>
+std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization) noexcept
+{
+    std::vector<FeeFrac> ret;
+    for (ClusterIndex i : linearization) {
+        /** The new chunk to be added, initially a singleton. */
+        auto new_chunk = depgraph.FeeRate(i);
+        // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
+        while (!ret.empty() && new_chunk >> ret.back()) {
+            new_chunk += ret.back();
+            ret.pop_back();
+        }
+        // Actually move that new chunk into the chunking.
+        ret.push_back(std::move(new_chunk));
+    }
+    return ret;
 }
 
 } // namespace
@@ -591,5 +644,70 @@ FUZZ_TARGET(clusterlin_search_finder)
         smp_finder.MarkDone(del_set);
         exh_finder.MarkDone(del_set);
         anc_finder.MarkDone(del_set);
+    }
+}
+
+FUZZ_TARGET(clusterlin_linearize)
+{
+    // Verify the behavior of Linearize().
+
+    // Retrieve an iteration count, and a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    uint64_t iter_count{0};
+    try {
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    // Invoke Linearize().
+    iter_count &= 0x7ffff;
+    auto [linearization, optimal] = Linearize(depgraph, iter_count);
+    SanityCheck(depgraph, linearization);
+    auto chunking = ChunkLinearization(depgraph, linearization);
+
+    // If the iteration count is sufficiently high, an optimal linearization must be found.
+    // Each linearization step can use up to 2^k iterations, with steps k=1..n. That sum is
+    // 2 * (2^n - 1)
+    const uint64_t n = depgraph.TxCount();
+    if (n <= 18 && iter_count > 2U * ((uint64_t{1} << n) - 1U)) {
+        assert(optimal);
+    }
+
+    // If Linearize claims optimal result, run quality tests.
+    if (optimal) {
+        // It must be as good as SimpleLinearize.
+        auto [simple_linearization, simple_optimal] = SimpleLinearize(depgraph, 0x3ffff);
+        SanityCheck(depgraph, simple_linearization);
+        auto simple_chunking = ChunkLinearization(depgraph, simple_linearization);
+        auto cmp = CompareChunks(chunking, simple_chunking);
+        assert(cmp >= 0);
+        // If SimpleLinearize finds the optimal result too, they must be equal (if not,
+        // SimpleLinearize is broken).
+        if (simple_optimal) assert(cmp == 0);
+
+        // Only for very small clusters, test every topologically-valid permutation.
+        if (depgraph.TxCount() <= 7) {
+            std::vector<ClusterIndex> perm_linearization(depgraph.TxCount());
+            for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) perm_linearization[i] = i;
+            // Iterate over all valid permutations.
+            do {
+                // Determine whether perm_linearization is topological.
+                TestBitSet perm_done;
+                bool perm_is_topo{true};
+                for (auto i : perm_linearization) {
+                    perm_done.Set(i);
+                    if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) {
+                        perm_is_topo = false;
+                        break;
+                    }
+                }
+                // If so, verify that the obtained linearization is as good as the permutation.
+                if (perm_is_topo) {
+                    auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
+                    auto cmp = CompareChunks(chunking, perm_chunking);
+                    assert(cmp >= 0);
+                }
+            } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
+        }
     }
 }

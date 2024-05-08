@@ -163,6 +163,22 @@ public:
         for (auto pos : elems) ret += entries[pos].feerate;
         return ret;
     }
+
+    /** Append the entries of select to list in a topologically valid order.
+     *
+     * Complexity: O(select.Count() * log(select.Count())).
+     */
+    void AppendTopo(std::vector<ClusterIndex>& list, const SetType& select) const noexcept
+    {
+        ClusterIndex old_len = list.size();
+        for (auto i : select) list.push_back(i);
+        std::sort(list.begin() + old_len, list.end(), [&](ClusterIndex a, ClusterIndex b) noexcept {
+            const auto a_anc_count = entries[a].ancestors.Count();
+            const auto b_anc_count = entries[b].ancestors.Count();
+            if (a_anc_count != b_anc_count) return a_anc_count < b_anc_count;
+            return a < b;
+        });
+    }
 };
 
 /** A set of transactions together with their aggregate feerate. */
@@ -415,6 +431,56 @@ public:
         m_todo -= done;
     }
 };
+
+/** Find a linearization for a cluster.
+ *
+ * @param[in] depgraph        Dependency graph of the the cluster to be linearized.
+ * @param[in] max_iterations  Upper bound on the number of optimization steps that will be done.
+ * @return                    A pair of:
+ *                            - The resulting linearization.
+ *                            - A boolean indicating whether the result is guaranteed to be
+ *                              optimal.
+ *
+ * Complexity: O(N * min(max_iterations + N, 2^N)) where N=depgraph.TxCount().
+ */
+template<typename SetType>
+std::pair<std::vector<ClusterIndex>, uint64_t> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations) noexcept
+{
+    uint64_t iterations_left = max_iterations;
+    auto todo = SetType::Fill(depgraph.TxCount());
+    std::vector<ClusterIndex> linearization;
+
+    AncestorCandidateFinder anc_finder(depgraph);
+    SearchCandidateFinder src_finder(depgraph);
+    linearization.reserve(depgraph.TxCount());
+    bool optimal = true;
+
+    while (todo.Any()) {
+        // Initialize best as the best remaining ancestor set.
+        auto best = anc_finder.FindCandidateSet();
+
+        // Invoke bounded search to update best, with up to half of our remaining iterations as
+        // limit.
+        uint64_t max_iterations_now = (iterations_left + 1) / 2;
+        uint64_t iterations_done_now = 0;
+        std::tie(best, iterations_done_now) = src_finder.FindCandidateSet(max_iterations_now, best);
+
+        if (iterations_done_now == max_iterations_now) {
+            optimal = false;
+        }
+
+        // Add to output in topological order.
+        depgraph.AppendTopo(linearization, best.transactions);
+
+        // Update state to reflect best is no longer to be linearized.
+        todo -= best.transactions;
+        anc_finder.MarkDone(best.transactions);
+        src_finder.MarkDone(best.transactions);
+        iterations_left -= iterations_done_now;
+    }
+
+    return {std::move(linearization), optimal};
+}
 
 } // namespace cluster_linearize
 
