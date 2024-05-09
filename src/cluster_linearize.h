@@ -198,6 +198,10 @@ struct SetInfo
     /** Construct a SetInfo for a specified set and feerate. */
     SetInfo(const SetType& txn, const FeeFrac& fr) noexcept : transactions(txn), feerate(fr) {}
 
+    /** Construct a SetInfo for a given transaction in a depgraph. */
+    explicit SetInfo(const DepGraph<SetType>& depgraph, ClusterIndex pos) noexcept :
+        transactions(SetType::Singleton(pos)), feerate(depgraph.FeeRate(pos)) {}
+
     /** Construct a SetInfo for a set of transactions in a depgraph. */
     explicit SetInfo(const DepGraph<SetType>& depgraph, const SetType& txn) noexcept :
         transactions(txn), feerate(depgraph.FeeRate(txn)) {}
@@ -491,24 +495,37 @@ public:
     }
 };
 
-/** Find a linearization for a cluster.
+/** Find or improve a linearization for a cluster.
  *
- * @param[in] depgraph        Dependency graph of the the cluster to be linearized.
- * @param[in] max_iterations  Upper bound on the number of optimization steps that will be done.
- * @param[in] rng_seed        A random number seed to control search order.
- * @return                    A pair of:
- *                            - The resulting linearization.
- *                            - A boolean indicating whether the result is guaranteed to be
- *                              optimal.
+ * @param[in] depgraph           Dependency graph of the the cluster to be linearized.
+ * @param[in] max_iterations     Upper bound on the number of optimization steps that will be done.
+ * @param[in] rng_seed           A random number seed to control search order.
+ * @param[in] old_linearization  An existing linearization for the cluster, or empty.
+ * @return                       A pair of:
+ *                               - The resulting linearization. It is guaranteed to be at least as
+ *                                 good (in the feerate diagram sense) as old_linearization.
+ *                               - A boolean indicating whether the result is guaranteed to be
+ *                                 optimal.
  *
  * Complexity: O(N * min(max_iterations + N, 2^N)) where N=depgraph.TxCount().
  */
 template<typename SetType>
-std::pair<std::vector<ClusterIndex>, uint64_t> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed) noexcept
+std::pair<std::vector<ClusterIndex>, uint64_t> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, Span<const ClusterIndex> old_linearization = {}) noexcept
 {
     uint64_t iterations_left = max_iterations;
     auto todo = SetType::Fill(depgraph.TxCount());
     std::vector<ClusterIndex> linearization;
+
+    // Precompute chunking of the existing linearization.
+    std::vector<SetInfo<SetType>> chunks;
+    for (auto i : old_linearization) {
+        SetInfo new_chunk(depgraph, i);
+        while (!chunks.empty() && new_chunk.feerate >> chunks.back().feerate) {
+            new_chunk |= chunks.back();
+            chunks.pop_back();
+        }
+        chunks.push_back(std::move(new_chunk));
+    }
 
     AncestorCandidateFinder anc_finder(depgraph);
     SearchCandidateFinder src_finder(depgraph, rng_seed);
@@ -516,8 +533,27 @@ std::pair<std::vector<ClusterIndex>, uint64_t> Linearize(const DepGraph<SetType>
     bool optimal = true;
 
     while (todo.Any()) {
-        // Initialize best as the best remaining ancestor set.
-        auto best = anc_finder.FindCandidateSet();
+        // This is an implementation of the (single) LIMO algorithm:
+        // https://delvingbitcoin.org/t/limo-combining-the-best-parts-of-linearization-search-and-merging/825
+        // where S is instantiated to be the result of a bounded search, which itself is seeded
+        // with the best prefix of what remains of the input linearization, or the best ancestor set.
+
+        // Find the highest-feerate prefix of remainder of original chunks.
+        SetInfo<SetType> best_prefix, best_prefix_acc;
+        for (const auto& chunk : chunks) {
+            SetType intersect = chunk.transactions & todo;
+            if (intersect.Any()) {
+                best_prefix_acc |= SetInfo(depgraph, intersect);
+                if (best_prefix.feerate.IsEmpty() || best_prefix_acc.feerate > best_prefix.feerate) {
+                    best_prefix = best_prefix_acc;
+                }
+            }
+        }
+
+        // Then initialize best to be either the best remaining ancestor set, or the first chunk.
+        auto best_anc = anc_finder.FindCandidateSet();
+        auto best = best_anc;
+        if (!best_prefix.feerate.IsEmpty() && best_prefix.feerate > best.feerate) best = best_prefix;
 
         // Invoke bounded search to update best, with up to half of our remaining iterations as
         // limit.
@@ -527,6 +563,24 @@ std::pair<std::vector<ClusterIndex>, uint64_t> Linearize(const DepGraph<SetType>
 
         if (iterations_done_now == max_iterations_now) {
             optimal = false;
+            // If the search result is not (guaranteed to be) optimal, run intersections to make
+            // sure we don't pick something that makes us unable to reach further diagram points
+            // of the old linearization.
+            if (best.transactions != best_prefix.transactions) {
+                SetInfo<SetType> acc;
+                for (const auto& chunk : chunks) {
+                    SetType intersect = chunk.transactions & best.transactions;
+                    if (intersect.Any()) {
+                        acc.transactions |= intersect;
+                        if (acc.transactions == best.transactions) break;
+                        acc.feerate += depgraph.FeeRate(intersect);
+                        if (acc.feerate > best.feerate) {
+                            best = acc;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         // Add to output in topological order.
