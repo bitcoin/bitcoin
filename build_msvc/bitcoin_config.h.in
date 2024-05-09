@@ -17,6 +17,9 @@
 /* Minor version */
 #define CLIENT_VERSION_MINOR $
 
+/* Release candidate */
+#define CLIENT_VERSION_RC $
+
 /* Copyright holder(s) before %s replacement */
 #define COPYRIGHT_HOLDERS "The %s developers"
 
