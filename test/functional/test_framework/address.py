@@ -53,13 +53,14 @@ def create_deterministic_address_bcrt1_p2tr_op_true(explicit_internal_key=None):
     can be spent with a witness stack of OP_TRUE and the control block
     with internal public key (script-path spending).
 
-    Returns a tuple with the generated address and the internal key.
+    Returns a tuple with the generated address and the TaprootInfo object.
     """
     internal_key = explicit_internal_key or (1).to_bytes(32, 'big')
-    address = output_key_to_p2tr(taproot_construct(internal_key, [(None, CScript([OP_TRUE]))]).output_pubkey)
+    taproot_info = taproot_construct(internal_key, [("only-path", CScript([OP_TRUE]))])
+    address = output_key_to_p2tr(taproot_info.output_pubkey)
     if explicit_internal_key is None:
         assert_equal(address, 'bcrt1p9yfmy5h72durp7zrhlw9lf7jpwjgvwdg0jr0lqmmjtgg83266lqsekaqka')
-    return (address, internal_key)
+    return (address, taproot_info)
 
 
 def byte_to_base58(b, version):
