@@ -942,23 +942,18 @@ void BlockManager::UpdateBlockInfo(const CBlock& block, unsigned int nHeight, co
 {
     LOCK(cs_LastBlockFile);
 
+    // Update the cursor so it points to the last file.
+    const BlockfileType chain_type{BlockfileTypeForHeight(nHeight)};
+    auto& cursor{m_blockfile_cursors[chain_type]};
+    if (!cursor || cursor->file_num < pos.nFile) {
+        m_blockfile_cursors[chain_type] = BlockfileCursor{pos.nFile};
+    }
+
+    // Update the file information with the current block.
     const unsigned int added_size = ::GetSerializeSize(TX_WITH_WITNESS(block));
-    const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
-    // Check that chain type is NORMAL, because this function is only
-    // called during reindexing, and reindexing deletes snapshot chainstates, so
-    // chain_type will not be SNAPSHOT. Also check that cursor exists, because
-    // the normal cursor should never be null.
-    Assume(chain_type == BlockfileType::NORMAL);
-    Assume(m_blockfile_cursors[chain_type]);
     const int nFile = pos.nFile;
     if (static_cast<int>(m_blockfile_info.size()) <= nFile) {
         m_blockfile_info.resize(nFile + 1);
-    }
-
-    const int last_blockfile = m_blockfile_cursors[chain_type]->file_num;
-    if (nFile != last_blockfile) {
-        // No undo data yet in the new file, so reset our undo-height tracking.
-        m_blockfile_cursors[chain_type] = BlockfileCursor{nFile};
     }
     m_blockfile_info[nFile].AddBlock(nHeight, block.GetBlockTime());
     m_blockfile_info[nFile].nSize = std::max(pos.nPos + added_size, m_blockfile_info[nFile].nSize);
