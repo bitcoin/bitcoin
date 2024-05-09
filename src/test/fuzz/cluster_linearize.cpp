@@ -429,7 +429,7 @@ FUZZ_TARGET(clusterlin_chunking)
         SetInfo<TestBitSet> accumulator, best;
         for (ClusterIndex idx : linearization) {
             if (todo[idx]) {
-                accumulator |= SetInfo(depgraph, idx);
+                accumulator.Set(depgraph, idx);
                 if (best.feerate.IsEmpty() || accumulator.feerate >> best.feerate) {
                     best = accumulator;
                 }
@@ -658,7 +658,7 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
             SetInfo<TestBitSet> accumulator, best;
             for (auto j : linearization) {
                 if (todo[j] && !combined[j]) {
-                    accumulator |= SetInfo(depgraph, j);
+                    accumulator.Set(depgraph, j);
                     if (best.feerate.IsEmpty() || accumulator.feerate > best.feerate) {
                         best = accumulator;
                     }
