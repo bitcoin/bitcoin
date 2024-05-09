@@ -17,6 +17,7 @@ define $(package)_stage_cmds
   cp bin/clang $($(package)_staging_prefix_dir)/bin/ && \
   cp -P bin/clang++ $($(package)_staging_prefix_dir)/bin/ && \
   cp bin/dsymutil $($(package)_staging_prefix_dir)/bin/dsymutil && \
+  cp bin/ld64.lld $($(package)_staging_prefix_dir)/bin/ld64.lld && \
   cp bin/llvm-ar $($(package)_staging_prefix_dir)/bin/llvm-ar && \
   cp bin/llvm-config $($(package)_staging_prefix_dir)/bin/ && \
   cp bin/llvm-nm $($(package)_staging_prefix_dir)/bin/llvm-nm && \
