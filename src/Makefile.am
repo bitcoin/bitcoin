@@ -242,6 +242,7 @@ BITCOIN_CORE_H = \
   noui.h \
   outputtype.h \
   policy/v3_policy.h \
+  policy/fees_util.h \
   policy/feerate.h \
   policy/fees.h \
   policy/fees_args.h \
@@ -446,6 +447,7 @@ libbitcoin_node_a_SOURCES = \
   node/validation_cache_args.cpp \
   noui.cpp \
   policy/v3_policy.cpp \
+  policy/fees_util.cpp \
   policy/fees.cpp \
   policy/fees_args.cpp \
   policy/packages.cpp \
