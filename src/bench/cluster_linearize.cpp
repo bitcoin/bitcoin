@@ -105,8 +105,10 @@ void BenchLinearizeNoItersWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
 {
     const auto depgraph = MakeLinearGraph<SetType>(ntx);
     uint64_t rng_seed = 0;
+    std::vector<ClusterIndex> old_lin(ntx);
+    for (ClusterIndex i = 0; i < ntx; ++i) old_lin[i] = i;
     bench.run([&] {
-        Linearize(depgraph, /*max_iterations=*/0, rng_seed++);
+        Linearize(depgraph, /*max_iterations=*/0, rng_seed++, old_lin);
     });
 }
 
