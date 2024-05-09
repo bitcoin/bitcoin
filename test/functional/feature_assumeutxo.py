@@ -249,6 +249,11 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])
+
+        self.log.info(f"Test bitcoind should fail when trying to activate snapshot more than once.")
+        with n1.assert_debug_log(expected_msgs=["[snapshot] can't activate a snapshot-based chainstate more than once"]):
+            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", n1.loadtxoutset, dump_output['path'])
+
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
