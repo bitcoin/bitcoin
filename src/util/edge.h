@@ -28,6 +28,11 @@ public:
 
     bool IsValid() const { return m_valid; }
 
+    /* Register events for socket */
+    bool RegisterEvents(SOCKET socket) const;
+    /* Unregister events for socket */
+    bool UnregisterEvents(SOCKET socket) const;
+
 public:
     /* File descriptor used to interact with events mode */
     int m_fd{-1};

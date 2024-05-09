@@ -563,7 +563,9 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
         }
     }
 
-    connman->UnregisterEvents(this);
+    if (connman->m_edge_trig_events && !connman->m_edge_trig_events->UnregisterEvents(hSocket)) {
+        LogPrint(BCLog::NET, "EdgeTriggeredEvents::UnregisterEvents() failed\n");
+    }
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
     CloseSocket(hSocket);
@@ -1276,7 +1278,12 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
         WITH_LOCK(cs_mapSocketToNode, mapSocketToNode.emplace(hSocket, pnode));
-        RegisterEvents(pnode);
+        if (m_edge_trig_events) {
+            LOCK(pnode->cs_hSocket);
+            if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
+                LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
+            }
+        }
         WakeSelect();
     }
 
@@ -2980,7 +2987,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
-        RegisterEvents(pnode);
+        if (m_edge_trig_events) {
+            LOCK(pnode->cs_hSocket);
+            if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
+                LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
+            }
+        }
         WakeSelect();
     }
 }
@@ -4191,79 +4203,6 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
     std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.m_asmap));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
-}
-
-void CConnman::RegisterEvents(CNode *pnode)
-{
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SocketEventsMode::KQueue) {
-        LOCK(pnode->cs_hSocket);
-        assert(pnode->hSocket != INVALID_SOCKET);
-
-        struct kevent events[2];
-        EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
-        EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, nullptr);
-
-        int r = kevent(Assert(m_edge_trig_events)->m_fd, events, 2, nullptr, 0, nullptr);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                     m_edge_trig_events->m_fd, EV_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
-#ifdef USE_EPOLL
-    if (socketEventsMode == SocketEventsMode::EPoll) {
-        LOCK(pnode->cs_hSocket);
-        assert(pnode->hSocket != INVALID_SOCKET);
-
-        epoll_event e;
-        // We're using edge-triggered mode, so it's important that we drain sockets even if no signals come in
-        e.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
-        e.data.fd = pnode->hSocket;
-
-        int r = epoll_ctl(Assert(m_edge_trig_events)->m_fd, EPOLL_CTL_ADD, pnode->hSocket, &e);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                     m_edge_trig_events->m_fd, EPOLL_CTL_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
-}
-
-void CConnman::UnregisterEvents(CNode *pnode)
-{
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SocketEventsMode::KQueue) {
-        AssertLockHeld(pnode->cs_hSocket);
-        if (pnode->hSocket == INVALID_SOCKET) {
-            return;
-        }
-
-        struct kevent events[2];
-        EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-        EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
-
-        int r = kevent(Assert(m_edge_trig_events)->m_fd, events, 2, nullptr, 0, nullptr);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                     m_edge_trig_events->m_fd, EV_DELETE, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
-#ifdef USE_EPOLL
-    if (socketEventsMode == SocketEventsMode::EPoll) {
-        AssertLockHeld(pnode->cs_hSocket);
-        if (pnode->hSocket == INVALID_SOCKET) {
-            return;
-        }
-
-        int r = epoll_ctl(Assert(m_edge_trig_events)->m_fd, EPOLL_CTL_DEL, pnode->hSocket, nullptr);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                     m_edge_trig_events->m_fd, EPOLL_CTL_DEL, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
 }
 
 void CaptureMessageToFile(const CAddress& addr,

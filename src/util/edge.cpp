@@ -125,3 +125,80 @@ bool EdgeTriggeredEvents::RemoveSocket(SOCKET socket) const
     }
     return true;
 }
+
+bool EdgeTriggeredEvents::RegisterEvents(SOCKET socket) const
+{
+    assert(m_valid && socket != INVALID_SOCKET);
+
+    if (m_mode == SocketEventsMode::EPoll) {
+#ifdef USE_EPOLL
+        epoll_event e;
+        // We're using edge-triggered mode, so it's important that we drain sockets even if no signals come in
+        e.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
+        e.data.fd = socket;
+
+        if (epoll_ctl(m_fd, EPOLL_CTL_ADD, socket, &e) != 0) {
+            LogPrintf("Failed to register events for socket -- epoll_ctl(%d, %d, %d, ...) returned error: %s\n",
+                      m_fd, EPOLL_CTL_ADD, socket, NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_EPOLL */
+    } else if (m_mode == SocketEventsMode::KQueue) {
+#ifdef USE_KQUEUE
+        struct kevent events[2];
+        EV_SET(&events[0], socket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
+        EV_SET(&events[1], socket, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, nullptr);
+
+        if (kevent(m_fd, events, 2, nullptr, 0, nullptr) != 0) {
+            LogPrintf("Failed to register events for socket -- kevent(%d, %d, %d, ...) returned error: %s\n",
+                      m_fd, EV_ADD, socket, NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_KQUEUE */
+    } else {
+        assert(false);
+    }
+    return true;
+}
+
+bool EdgeTriggeredEvents::UnregisterEvents(SOCKET socket) const
+{
+    assert(m_valid);
+
+    if (socket == INVALID_SOCKET) {
+        LogPrintf("Cannot unregister events for invalid socket\n");
+        return false;
+    }
+
+    if (m_mode == SocketEventsMode::EPoll) {
+#ifdef USE_EPOLL
+        if (epoll_ctl(m_fd, EPOLL_CTL_DEL, socket, nullptr) != 0) {
+            LogPrintf("Failed to unregister events for socket -- epoll_ctl(%d, %d, %d, ...) returned error: %s\n",
+                      m_fd, EPOLL_CTL_DEL, socket, NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_EPOLL */
+    } else if (m_mode == SocketEventsMode::KQueue) {
+#ifdef USE_KQUEUE
+        struct kevent events[2];
+        EV_SET(&events[0], socket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+        EV_SET(&events[1], socket, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
+        if (kevent(m_fd, events, 2, nullptr, 0, nullptr) != 0) {
+            LogPrintf("Failed to unregister events for socket -- kevent(%d, %d, %d, ...) returned error: %s\n",
+                      m_fd, EV_DELETE, socket, NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_KQUEUE */
+    } else {
+        assert(false);
+    }
+    return true;
+}
