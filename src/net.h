@@ -118,16 +118,6 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr bool DEFAULT_V2_TRANSPORT{true};
 
-#if defined USE_KQUEUE
-#define DEFAULT_SOCKETEVENTS "kqueue"
-#elif defined USE_EPOLL
-#define DEFAULT_SOCKETEVENTS "epoll"
-#elif defined USE_POLL
-#define DEFAULT_SOCKETEVENTS "poll"
-#else
-#define DEFAULT_SOCKETEVENTS "select"
-#endif
-
 typedef int64_t NodeId;
 
 struct AddedNodeParams {

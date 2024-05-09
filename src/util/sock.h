@@ -15,6 +15,16 @@
 #include <string>
 #include <unordered_map>
 
+#if defined(USE_EPOLL)
+#define DEFAULT_SOCKETEVENTS "epoll"
+#elif defined(USE_KQUEUE)
+#define DEFAULT_SOCKETEVENTS "kqueue"
+#elif defined(USE_POLL)
+#define DEFAULT_SOCKETEVENTS "poll"
+#else
+#define DEFAULT_SOCKETEVENTS "select"
+#endif
+
 /**
  * Maximum time to wait for I/O readiness.
  * It will take up until this time to break off in case of an interruption.
