@@ -38,6 +38,30 @@ constexpr int CURRENT_FEES_FILE_VERSION{149900};
 
 static constexpr double INF_FEERATE = 1e99;
 
+TxAncestorsAndDescendants GetTxAncestorsAndDescendants(const std::vector<RemovedMempoolTransactionInfo>& transactions)
+{
+    TxAncestorsAndDescendants visited_txs;
+    for (const auto& tx_info : transactions) {
+        const auto& txid = tx_info.info.m_tx->GetHash();
+        visited_txs.emplace(txid, std::make_pair(std::set<Txid>{txid}, std::set<Txid>{txid}));
+        for (const auto& input : tx_info.info.m_tx->vin) {
+            // If a parent has been visited add all the parent ancestors to the set of transaction ancestor
+            // Also add the transaction into each ancestor descendant set.
+            auto parent = input.prevout.hash;
+            if (visited_txs.find(parent) != visited_txs.end()) {
+                auto& parent_ancestors = visited_txs[parent].first;
+                auto& tx_ancestors = visited_txs[txid].first;
+                for (auto& ancestor : parent_ancestors) {
+                    tx_ancestors.insert(ancestor);
+                    auto& ancestor_descendants = visited_txs[ancestor].second;
+                    ancestor_descendants.insert(txid);
+                }
+            }
+        }
+    }
+    return visited_txs;
+}
+
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
 {
     switch (horizon) {

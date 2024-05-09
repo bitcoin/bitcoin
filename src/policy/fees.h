@@ -20,6 +20,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -53,6 +54,17 @@ static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
     FeeEstimateHorizon::MED_HALFLIFE,
     FeeEstimateHorizon::LONG_HALFLIFE,
 };
+
+using TxAncestorsAndDescendants = std::map<Txid, std::pair<std::set<Txid>, std::set<Txid>>>;
+
+/* GetTxAncestorsAndDescendants takes the vector of transactions removed from the mempool after a block is connected.
+ * The function assumes the order the transactions were included in the block was maintained; that is, all transaction
+ * parents was added into the vector first before descendants.
+ *
+ * GetTxAncestorsAndDescendants computes all the ancestors and descendants of the transactions, the transaction is
+ * also included as a descendant and ancestor of itself.
+ */
+TxAncestorsAndDescendants GetTxAncestorsAndDescendants(const std::vector<RemovedMempoolTransactionInfo>& transactions);
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
 
