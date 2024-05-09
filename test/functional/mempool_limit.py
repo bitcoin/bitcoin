@@ -6,6 +6,9 @@
 
 from decimal import Decimal
 
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -13,7 +16,6 @@ from test_framework.util import (
     assert_fee_amount,
     assert_greater_than,
     assert_raises_rpc_error,
-    fill_mempool,
 )
 from test_framework.wallet import (
     COIN,
@@ -93,7 +95,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
         current_info = node.getmempoolinfo()
         mempoolmin_feerate = current_info["mempoolminfee"]
 
@@ -183,7 +185,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
         current_info = node.getmempoolinfo()
         mempoolmin_feerate = current_info["mempoolminfee"]
 
@@ -257,7 +259,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
         assert_equal(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
 
         # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
         self.log.info('Create a mempool tx that will not pass mempoolminfee')
