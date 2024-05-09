@@ -6,6 +6,7 @@
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 
 #include <chainparams.h>
+#include <clientversion.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
@@ -189,6 +190,40 @@ static RPCHelpMan getmemoryinfo()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown mode " + mode);
     }
 },
+    };
+}
+
+static RPCHelpMan getversion()
+{
+    return RPCHelpMan{
+        "getversion",
+        "Returns an object containing information about the node version.",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ,
+            "",
+            "",
+            {
+                {RPCResult::Type::STR, "short", "Node version formatted as 'MAJOR.MINOR.BUILD'."},
+                {RPCResult::Type::STR, "long", "Detailed node version. Optionally with git commit hash information."},
+                {RPCResult::Type::NUM, "numeric", "Node version as integer: '10000 * MAJOR + 100 * MINOR + 1 * BUILD'."},
+                {RPCResult::Type::STR, "client", "The nodes client name."},
+                {RPCResult::Type::NUM, "release_candidate", "The release candidate. 0 means this version is not a release candidate."},
+                {RPCResult::Type::BOOL, "is_release", "True for release versions and false for development versions."},
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("getversion", "") + HelpExampleRpc("getversion", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("short", FormatVersion(CLIENT_VERSION));
+            obj.pushKV("long", FormatFullVersion());
+            obj.pushKV("numeric", CLIENT_VERSION);
+            obj.pushKV("client", CLIENT_NAME);
+            obj.pushKV("release_candidate", CLIENT_VERSION_RC);
+            obj.pushKV("is_release", CLIENT_VERSION_IS_RELEASE);
+            return obj;
+        },
     };
 }
 
@@ -406,6 +441,7 @@ void RegisterNodeRPCCommands(CRPCTable& t)
     static const CRPCCommand commands[]{
         {"control", &getmemoryinfo},
         {"control", &logging},
+        {"control", &getversion},
         {"util", &getindexinfo},
         {"hidden", &setmocktime},
         {"hidden", &mockscheduler},
