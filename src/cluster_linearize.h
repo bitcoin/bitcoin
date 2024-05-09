@@ -13,6 +13,7 @@
 #include <utility>
 
 #include <util/feefrac.h>
+#include <util/vecdeque.h>
 
 namespace cluster_linearize {
 
@@ -351,7 +352,8 @@ public:
         };
 
         /** The queue of work items. */
-        std::vector<WorkItem> queue;
+        VecDeque<WorkItem> queue;
+        queue.reserve(std::max<size_t>(256, 2 * m_todo.Count()));
 
         // Create an initial entry with m_todo as undecided. Also use it as best if not provided,
         // so that during the work processing loop below, and during the add_fn/split_fn calls, we
@@ -378,7 +380,10 @@ public:
             // Make sure there are undecided transactions left to split on.
             if (und.None()) return;
 
-            // Actually construct new work item on the queue.
+            // Actually construct new work item on the queue. Due to the switch to DFS when queue
+            // space runs out (see below), we know that no reallocation of the queue should ever
+            // occur.
+            Assume(queue.size() < queue.capacity());
             queue.emplace_back(std::move(inc), std::move(und));
         };
 
@@ -411,10 +416,36 @@ public:
         };
 
         // Work processing loop.
+        //
+        // New work items are always added at the back of the queue, but items to process use a
+        // hybrid approach where they can be taken from the front or the back.
+        //
+        // Depth-first search (DFS) corresponds to always taking from the back of the queue. This
+        // is very memory-efficient (linear in the number of transactions). Breadth-first search
+        // (BFS) corresponds to always taking from the front, which potentially uses more memory
+        // (up to exponential in the transaction count), but seems to work better in practice.
+        //
+        // The approach here combines the two: use BFS until the queue grows too large, at which
+        // point we temporarily switch to DFS until the size shrinks again.
         while (!queue.empty()) {
+            // See if processing the first queue item (BFS) is possible without exceeding the queue
+            // capacity(), assuming we process the last queue items (DFS) after that.
+            const auto queuesize_for_front = queue.capacity() - queue.front().und.Count();
+            Assume(queuesize_for_front >= 1);
+
+            // Process entries from the end of the queue (DFS exploration) until it shrinks below
+            // queuesize_for_front.
+            while (queue.size() > queuesize_for_front) {
+                if (!iterations_left) break;
+                auto elem = queue.back();
+                queue.pop_back();
+                split_fn(std::move(elem));
+            }
+
+            // Process one entry from the front of the queue (BFS exploration)
             if (!iterations_left) break;
-            auto elem = queue.back();
-            queue.pop_back();
+            auto elem = queue.front();
+            queue.pop_front();
             split_fn(std::move(elem));
         }
 
