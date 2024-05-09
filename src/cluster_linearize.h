@@ -647,7 +647,7 @@ public:
      *                              be <= max_iterations. If strictly < max_iterations, the
      *                              returned subset is optimal.
      *
-     * Complexity: O(N * min(max_iterations, 2^N)) where N=depgraph.TxCount().
+     * Complexity: possibly O(N * min(max_iterations, sqrt(2^N))) where N=depgraph.TxCount().
      */
     std::pair<SetInfo<SetType>, uint64_t> FindCandidateSet(uint64_t max_iterations, SetInfo<SetType> best) noexcept
     {
@@ -719,7 +719,8 @@ public:
         }
 
         /** Internal function to add an item to the queue of elements to explore if there are any
-         *  transactions left to split on, and to update best/imp.
+         *  transactions left to split on, possibly improving it before doing so, and to update
+         *  best/imp.
          *
          * - inc: the "inc" value for the new work item (must be topological).
          * - und: the "und" value for the new work item ((inc | und) must be topological).
@@ -729,6 +730,8 @@ public:
              *  pot_feerate. It starts off equal to inc. */
             auto pot = inc;
             if (!inc.feerate.IsEmpty()) {
+                /** Which transactions to consider adding to inc. */
+                SetType consider_inc;
                 // Add entries to pot. We iterate over all undecided transactions whose feerate is
                 // higher than best. While undecided transactions of lower feerate may improve pot,
                 // the resulting pot feerate cannot possibly exceed best's (and this item will be
@@ -740,7 +743,30 @@ public:
                     // individual feerate order.
                     if (!(m_depgraph.FeeRate(pos) >> pot.feerate)) break;
                     pot.Set(m_depgraph, pos);
+                    consider_inc.Set(pos);
                 }
+
+                // The "jump ahead" optimization: whenever pot has a topologically-valid subset,
+                // that subset can be added to inc. Any subset of (pot - inc) has the property that
+                // its feerate exceeds that of any set compatible with this work item (superset of
+                // inc, subset of (inc | und)). Thus, if T is a topological subset of pot, and B is
+                // the best topologically-valid set compatible with this work item, and (T - B) is
+                // non-empty, then (T | B) is better than B and also topological. This is in
+                // contradiction with the assumption that B is best. Thus, (T - B) must be empty,
+                // or T must be a subset of B.
+                //
+                // See https://delvingbitcoin.org/t/how-to-linearize-your-cluster/303 section 2.4.
+                const auto init_inc = inc.transactions;
+                for (auto pos : consider_inc) {
+                    // If the transaction's ancestors are a subset of pot, we can add it together
+                    // with its ancestors to inc. Just update the transactions here; the feerate
+                    // update happens below.
+                    auto anc_todo = m_depgraph.Ancestors(pos) & m_todo;
+                    if (anc_todo.IsSubsetOf(pot.transactions)) inc.transactions |= anc_todo;
+                }
+                // Finally update und and inc's feerate to account for the added transactions.
+                und -= inc.transactions;
+                inc.feerate += m_depgraph.FeeRate(inc.transactions - init_inc);
 
                 // If inc's feerate is better than best's, remember it as our new best.
                 if (inc.feerate > best.feerate) {
@@ -888,7 +914,7 @@ public:
  *                                - A boolean indicating whether the result is guaranteed to be
  *                                  optimal.
  *
- * Complexity: O(N * min(max_iterations + N, 2^N)) where N=depgraph.TxCount().
+ * Complexity: possibly O(N * min(max_iterations + N, sqrt(2^N))) where N=depgraph.TxCount().
  */
 template<typename SetType>
 std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, Span<const ClusterIndex> old_linearization = {}) noexcept
