@@ -48,7 +48,7 @@ const std::string CLIENT_NAME("Satoshi");
     #endif
 #endif
 
-static std::string FormatVersion(int nVersion)
+std::string FormatVersion(int nVersion)
 {
     return strprintf("%d.%d.%d", nVersion / 10000, (nVersion / 100) % 100, nVersion % 100);
 }
