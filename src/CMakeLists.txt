@@ -240,6 +240,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/ephemeral_policy.cpp
   policy/fees.cpp
   policy/fees_args.cpp
+  policy/fees_util.cpp
   policy/packages.cpp
   policy/rbf.cpp
   policy/settings.cpp
