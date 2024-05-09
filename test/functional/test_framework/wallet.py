@@ -198,7 +198,7 @@ class MiniWallet:
                 leaf_info = list(self._taproot_info.leaves.values())[0]
                 i.scriptWitness.stack = [
                     leaf_info.script,
-                    bytes([leaf_info.version]) + self._taproot_info.internal_pubkey,
+                    bytes([leaf_info.version | self._taproot_info.negflag]) + self._taproot_info.internal_pubkey,
                 ]
         else:
             assert False
