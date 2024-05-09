@@ -185,7 +185,6 @@ all_packages = $(packages) $(native_packages)
 
 meta_depends = Makefile config.guess config.sub funcs.mk builders/default.mk hosts/default.mk hosts/$(host_os).mk builders/$(build_os).mk
 
-$(host_arch)_$(host_os)_native_binutils?=$($(host_os)_native_binutils)
 $(host_arch)_$(host_os)_native_toolchain?=$($(host_os)_native_toolchain)
 
 include funcs.mk
@@ -217,9 +216,8 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 #      tool needs to be available in $PATH at all times.
 #
 #   2. If the tool is _**not**_ expected to be available in $PATH at all times
-#      (such as is the case for our native_cctools binutils tools), it needs to
-#      be referred to by its absolute path, such as would be output by the
-#      AC_PATH_{PROG,TOOL} macros.
+#      it needs to be referred to by its absolute path, such as would be output
+#      by the AC_PATH_{PROG,TOOL} macros.
 #
 # Minor note: it is also okay to refer to tools by their absolute path even if
 # we expect them to be available in $PATH at all times, more specificity does

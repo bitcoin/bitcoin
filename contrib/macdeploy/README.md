@@ -56,27 +56,15 @@ The `sha256sum` should be `c0c2e7bb92c1fee0c4e9f3a485e4530786732d6c6dd9e9f418c28
 
 ## Deterministic macOS App Notes
 
-macOS Applications are created in Linux by combining a recent `clang` and the Apple
-`binutils` (`ld`, `ar`, etc).
+macOS Applications are created in Linux using a recent LLVM.
 
 Apple uses `clang` extensively for development and has upstreamed the necessary
 functionality so that a vanilla clang can take advantage. It supports the use of `-F`,
 `-target`, `-mmacosx-version-min`, and `-isysroot`, which are all necessary when
 building for macOS.
 
-Apple's version of `binutils` (called `cctools`) contains lots of functionality missing in the
-FSF's `binutils`. In addition to extra linker options for frameworks and sysroots, several
-other tools are needed as well. These do not build under Linux, so they have been patched to
-do so. The work here was used as a starting point: [mingwandroid/toolchain4](https://github.com/mingwandroid/toolchain4).
-
-In order to build a working toolchain, the following source packages are needed from
-Apple: `cctools`, `dyld`, and `ld64`.
-
 These tools inject timestamps by default, which produce non-deterministic binaries. The
 `ZERO_AR_DATE` environment variable is used to disable that.
-
-This version of `cctools` has been patched to use the current version of `clang`'s headers
-and its `libLTO.so` rather than those from `llvmgcc`, as it was originally done in `toolchain4`.
 
 To complicate things further, all builds must target an Apple SDK. These SDKs are free to
 download, but not redistributable. See the SDK Extraction notes above for how to obtain it.
