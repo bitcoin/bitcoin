@@ -663,23 +663,27 @@ public:
     }
 };
 
-/** Find a linearization for a cluster.
+/** Find or improve a linearization for a cluster.
  *
  * @param[in] depgraph            Dependency graph of the cluster to be linearized.
  * @param[in] max_iterations      Upper bound on the number of optimization steps that will be done.
  * @param[in] rng_seed            A random number seed to control search order. This prevents peers
  *                                from predicting exactly which clusters would be hard for us to
  *                                linearize.
+ * @param[in] old_linearization   An existing linearization for the cluster (which must be
+ *                                topologically valid), or empty.
  * @return                        A pair of:
- *                                - The resulting linearization.
+ *                                - The resulting linearization. It is guaranteed to be at least as
+ *                                  good (in the feerate diagram sense) as old_linearization.
  *                                - A boolean indicating whether the result is guaranteed to be
  *                                  optimal.
  *
  * Complexity: O(N * min(max_iterations + N, 2^N)) where N=depgraph.TxCount().
  */
 template<typename SetType>
-std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed) noexcept
+std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, Span<const ClusterIndex> old_linearization = {}) noexcept
 {
+    Assume(old_linearization.empty() || old_linearization.size() == depgraph.TxCount());
     if (depgraph.TxCount() == 0) return {{}, true};
 
     uint64_t iterations_left = max_iterations;
@@ -690,9 +694,17 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
     linearization.reserve(depgraph.TxCount());
     bool optimal = true;
 
+    /** Chunking of what remains of the old linearization. */
+    LinearizationChunking old_chunking(depgraph, old_linearization);
+
     while (true) {
-        // Initialize best as the best remaining ancestor set.
+        // Find the highest-feerate prefix of the remainder of old_linearization.
+        SetInfo<SetType> best_prefix;
+        if (old_chunking.NumChunksLeft()) best_prefix = old_chunking.GetChunk(0);
+
+        // Then initialize best to be either the best remaining ancestor set, or the first chunk.
         auto best = anc_finder.FindCandidateSet();
+        if (!best_prefix.feerate.IsEmpty() && best_prefix.feerate >= best.feerate) best = best_prefix;
 
         // Invoke bounded search to update best, with up to half of our remaining iterations as
         // limit.
@@ -703,6 +715,12 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
 
         if (iterations_done_now == max_iterations_now) {
             optimal = false;
+            // If the search result is not (guaranteed to be) optimal, run intersections to make
+            // sure we don't pick something that makes us unable to reach further diagram points
+            // of the old linearization.
+            if (old_chunking.NumChunksLeft() > 0) {
+                best = old_chunking.Intersect(best);
+            }
         }
 
         // Add to output in topological order.
@@ -712,6 +730,9 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
         anc_finder.MarkDone(best.transactions);
         if (anc_finder.AllDone()) break;
         src_finder.MarkDone(best.transactions);
+        if (old_chunking.NumChunksLeft() > 0) {
+            old_chunking.MarkDone(best.transactions);
+        }
     }
 
     return {std::move(linearization), optimal};
