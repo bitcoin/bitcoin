@@ -61,7 +61,7 @@ namespace miniscript {
  *   - Is always "OP_SWAP [B]" or "OP_TOALTSTACK [B] OP_FROMALTSTACK".
  *   - For example sc:pk_k(key) = OP_SWAP <key> OP_CHECKSIG
  *
- * There a type properties that help reasoning about correctness:
+ * There are type properties that help reasoning about correctness:
  * - "z" Zero-arg:
  *   - Is known to always consume exactly 0 stack elements.
  *   - For example after(n) = <n> OP_CHECKLOCKTIMEVERIFY
