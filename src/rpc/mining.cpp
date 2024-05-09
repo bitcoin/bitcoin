@@ -748,9 +748,9 @@ static RPCHelpMan getblocktemplate()
         pindexPrev = nullptr;
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
-        nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+        auto nTransactionsUpdatedLast_new = mempool.GetTransactionsUpdated();
         CBlockIndex* pindexPrevNew = active_chain.Tip();
-        time_start = GetTime();
+        auto time_start_new = GetTime();
 
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
@@ -759,6 +759,8 @@ static RPCHelpMan getblocktemplate()
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
         // Need to update only after we know CreateNewBlock succeeded
+        nTransactionsUpdatedLast = nTransactionsUpdatedLast_new;
+        time_start = time_start_new;
         pindexPrev = pindexPrevNew;
     }
     CHECK_NONFATAL(pindexPrev);
