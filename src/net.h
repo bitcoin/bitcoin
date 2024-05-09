@@ -878,8 +878,8 @@ public:
         }
         vWhitelistedRange = connOptions.vWhitelistedRange;
         {
-            LOCK(cs_vAddedNodes);
-            vAddedNodes = connOptions.m_added_nodes;
+            LOCK(m_added_nodes_mutex);
+            m_added_nodes = connOptions.m_added_nodes;
         }
         socketEventsMode = connOptions.socketEventsMode;
         m_onion_binds = connOptions.onion_binds;
@@ -961,8 +961,8 @@ public:
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes)
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes)
             if (cond(node))
                 if(!func(node))
                     return false;
@@ -978,8 +978,8 @@ public:
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func) const
     {
-        LOCK(cs_vNodes);
-        for (const auto& node : vNodes)
+        LOCK(m_nodes_mutex);
+        for (const auto& node : m_nodes)
             if (cond(node))
                 if(!func(node))
                     return false;
@@ -995,8 +995,8 @@ public:
     template<typename Condition, typename Callable>
     void ForEachNode(const Condition& cond, Callable&& func)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (cond(node))
                 func(node);
         }
@@ -1011,8 +1011,8 @@ public:
     template<typename Condition, typename Callable>
     void ForEachNode(const Condition& cond, Callable&& func) const
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (cond(node))
                 func(node);
         }
@@ -1027,8 +1027,8 @@ public:
     template<typename Condition, typename Callable, typename CallableAfter>
     void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post)
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (cond(node))
                 pre(node);
         }
@@ -1044,8 +1044,8 @@ public:
     template<typename Condition, typename Callable, typename CallableAfter>
     void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post) const
     {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
+        LOCK(m_nodes_mutex);
+        for (auto&& node : m_nodes) {
             if (cond(node))
                 pre(node);
         }
@@ -1180,7 +1180,7 @@ public:
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
 
     /**
-     * RAII helper to atomically create a copy of `vNodes` and add a reference
+     * RAII helper to atomically create a copy of `m_nodes` and add a reference
      * to each of the nodes. The nodes are released when this object is destroyed.
      */
     class NodesSnapshot
@@ -1226,7 +1226,7 @@ private:
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
-     * the `vNodes` member.
+     * the `m_nodes` member.
      * @param[in] hSocket Connected socket to communicate with the peer.
      * @param[in] permissionFlags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
@@ -1364,9 +1364,8 @@ private:
     void UnregisterEvents(CNode* pnode);
 
     // Network usage totals
-    mutable RecursiveMutex cs_totalBytesRecv;
     mutable RecursiveMutex cs_totalBytesSent;
-    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv) {0};
+    std::atomic<uint64_t> nTotalBytesRecv{0};
     uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
 
     // outbound limit & stats
@@ -1389,21 +1388,23 @@ private:
     bool fAddressesInitialized{false};
     CAddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
-    RecursiveMutex m_addr_fetches_mutex;
-    std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    mutable RecursiveMutex cs_vAddedNodes;
+    Mutex m_addr_fetches_mutex;
+    std::vector<std::string> m_added_nodes GUARDED_BY(m_added_nodes_mutex);
+    mutable Mutex m_added_nodes_mutex;
+    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::list<CNode*> m_nodes_disconnected;
+    mutable RecursiveMutex m_nodes_mutex;
+    std::atomic<NodeId> nLastNodeId{0};
+    unsigned int nPrevNodeCount{0};
+
     std::vector<uint256> vPendingMasternodes;
     mutable RecursiveMutex cs_vPendingMasternodes;
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumRelayMembers GUARDED_BY(cs_vPendingMasternodes);
     std::set<uint256> masternodePendingProbes GUARDED_BY(cs_vPendingMasternodes);
-    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
-    std::list<CNode*> vNodesDisconnected;
+
     mutable Mutex cs_mapSocketToNode;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode GUARDED_BY(cs_mapSocketToNode);
-    mutable RecursiveMutex cs_vNodes;
-    std::atomic<NodeId> nLastNodeId{0};
-    unsigned int nPrevNodeCount{0};
 
     /**
      * Cache responses to addr requests to minimize privacy leak.
