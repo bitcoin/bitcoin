@@ -279,6 +279,14 @@ struct SetInfo
     explicit SetInfo(const DepGraph<SetType>& depgraph, const SetType& txn) noexcept :
         transactions(txn), feerate(depgraph.FeeRate(txn)) {}
 
+    /** Add a transaction to this SetInfo (which must not yet be in it). */
+    void Set(const DepGraph<SetType>& depgraph, ClusterIndex pos) noexcept
+    {
+        Assume(!transactions[pos]);
+        transactions.Set(pos);
+        feerate += depgraph.FeeRate(pos);
+    }
+
     /** Add the transactions of other to this SetInfo (no overlap allowed). */
     SetInfo& operator|=(const SetInfo& other) noexcept
     {
@@ -658,16 +666,24 @@ public:
             /** Set of undecided transactions. This must be a subset of m_todo, and have no overlap
              *  with inc. The set (inc | und) must be topologically valid. */
             SetType und;
+            /** (Only when inc is not empty) The best feerate of any superset of inc that is also a
+             *  subset of (inc | und), without requiring it to be topologically valid. It forms a
+             *  conservative upper bound on how good a set this work item can give rise to. */
+            FeeFrac pot_feerate;
 
             /** Construct a new work item. */
-            WorkItem(SetInfo<SetType>&& i, SetType&& u) noexcept :
-                inc(std::move(i)), und(std::move(u)) {}
+            WorkItem(SetInfo<SetType>&& i, SetType&& u, FeeFrac&& p_f) noexcept :
+                inc(std::move(i)), und(std::move(u)), pot_feerate(std::move(p_f))
+            {
+                Assume(pot_feerate.IsEmpty() == inc.feerate.IsEmpty());
+            }
 
             /** Swap two WorkItems. */
             void Swap(WorkItem& other) noexcept
             {
                 swap(inc, other.inc);
                 swap(und, other.und);
+                swap(pot_feerate, other.pot_feerate);
             }
         };
 
@@ -687,7 +703,9 @@ public:
             // processing loop below, and during the add_fn/split_fn calls, we do not need to deal
             // with the best=empty case.
             if (best.feerate.IsEmpty()) best = SetInfo(m_sorted_depgraph, component);
-            queue.emplace_back(/*inc=*/SetInfo<SetType>{}, /*und=*/std::move(component));
+            queue.emplace_back(/*inc=*/SetInfo<SetType>{},
+                               /*und=*/std::move(component),
+                               /*pot_feerate=*/FeeFrac{});
         } while (to_cover.Any());
 
         /** Local copy of the iteration limit. */
@@ -700,23 +718,44 @@ public:
          * - und: the "und" value for the new work item ((inc | und) must be topological).
          */
         auto add_fn = [&](SetInfo<SetType> inc, SetType und) noexcept {
+            /** SetInfo object with the set whose feerate will become the new work item's
+             *  pot_feerate. It starts off equal to inc. */
+            auto pot = inc;
             if (!inc.feerate.IsEmpty()) {
+                // Add entries to pot.
+                for (auto pos : und) {
+                    // Determine if adding transaction pos to pot (ignoring topology) would improve
+                    // it. If not, we're done updating pot. This relies on the fact that
+                    // m_sorted_depgraph, and thus the transactions iterated over, are in decreasing
+                    // individual feerate order.
+                    if (!(m_sorted_depgraph.FeeRate(pos) >> pot.feerate)) break;
+                    pot.Set(m_sorted_depgraph, pos);
+                }
+
                 // If inc's feerate is better than best's, remember it as our new best.
                 if (inc.feerate > best.feerate) {
                     best = inc;
                 }
+
+                // If no potential transactions exist beyond the already included ones, no
+                // improvement is possible anymore.
+                if (pot.feerate.size == inc.feerate.size) return;
+                // At this point und must be non-empty. If it were empty then pot would equal inc.
+                Assume(und.Any());
             } else {
                 Assume(inc.transactions.None());
+                // If inc is empty, we just make sure there are undecided transactions left to
+                // split on.
+                if (und.None()) return;
             }
-
-            // Make sure there are undecided transactions left to split on.
-            if (und.None()) return;
 
             // Actually construct a new work item on the queue. Due to the switch to DFS when queue
             // space runs out (see below), we know that no reallocation of the queue should ever
             // occur.
             Assume(queue.size() < queue.capacity());
-            queue.emplace_back(/*inc=*/std::move(inc), /*und=*/std::move(und));
+            queue.emplace_back(/*inc=*/std::move(inc),
+                               /*und=*/std::move(und),
+                               /*pot_feerate=*/std::move(pot.feerate));
         };
 
         /** Internal process function. It takes an existing work item, and splits it in two: one
@@ -730,9 +769,21 @@ public:
             Assume(elem.inc.transactions.IsSubsetOf(m_todo) && elem.und.IsSubsetOf(m_todo));
             // Included transactions cannot be undecided.
             Assume(!elem.inc.transactions.Overlaps(elem.und));
+            // If pot is empty, then so is inc.
+            Assume(elem.inc.feerate.IsEmpty() == elem.pot_feerate.IsEmpty());
+
+            const ClusterIndex first = elem.und.First();
+            if (!elem.inc.feerate.IsEmpty()) {
+                // We can ignore any queue item whose potential feerate isn't better than the best
+                // seen so far.
+                if (elem.pot_feerate <= best.feerate) return;
+            } else {
+                // In case inc is empty use a simpler alternative check.
+                if (m_sorted_depgraph.FeeRate(first) <= best.feerate) return;
+            }
 
             // Pick the first undecided transaction as the one to split on.
-            const ClusterIndex split = elem.und.First();
+            const ClusterIndex split = first;
 
             // Add a work item corresponding to exclusion of the split transaction.
             const auto& desc = m_sorted_depgraph.Descendants(split);
