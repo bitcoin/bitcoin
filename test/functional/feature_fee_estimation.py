@@ -129,6 +129,15 @@ def make_tx(wallet, utxo, feerate):
     )
 
 
+def send_tx(wallet, node, utxo, feerate):
+    """Broadcast a 1in-1out transaction with a specific input and feerate (sat/vb)."""
+    return wallet.send_self_transfer(
+        from_node=node,
+        utxo_to_spend=utxo,
+        fee_rate=Decimal(feerate * 1000) / COIN,
+    )
+
+
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
@@ -392,6 +401,76 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
 
+    def send_and_mine_child_tx(self, broadcaster, miner, parent_tx, feerate):
+        u = {"txid": parent_tx["txid"], "vout": 0, "value": Decimal(parent_tx["tx"].vout[0].nValue) / COIN}
+        send_tx(wallet=self.wallet, node=broadcaster, utxo=u, feerate=feerate)
+        self.sync_mempools(wait=0.1, nodes=[broadcaster, miner])
+        self.generate(miner, 1)
+
+    def sanity_check_cpfp_estimates(self, utxos):
+        """The BlockPolicyEstimator currently does not take CPFP into account. This test
+        sanity checks its behaviour when receiving transactions that were confirmed because
+        of their child's feerate.
+        """
+        # The broadcaster and block producer
+        broadcaster = self.nodes[0]
+        miner = self.nodes[1]
+        # In sat/vb
+        [low_feerate, med_feerate, high_feerate] = [Decimal(2), Decimal(15), Decimal(20)]
+
+        self.log.info("Test that fee estimator will ignore all transaction with in block child")
+        # If a transaction got mined and has a child in the same block it was mined
+        # if the child does not CPFP the parent, the parent got accounted in fee estimation.
+        low_fee_parent = send_tx(wallet=self.wallet, node=broadcaster, utxo=None, feerate=low_feerate)
+        self.send_and_mine_child_tx(broadcaster=broadcaster, miner=miner, parent_tx=low_fee_parent, feerate=high_feerate)
+        assert_equal(broadcaster.estimaterawfee(1)["short"]["fail"]["totalconfirmed"], 0)
+
+        # If the child CPFP the parent, the parent is not accounted in fee estimation
+        high_fee_parent = send_tx(wallet=self.wallet, node=broadcaster, utxo=None, feerate=high_feerate)
+        self.send_and_mine_child_tx(broadcaster=broadcaster, miner=miner, parent_tx=high_fee_parent, feerate=low_feerate)
+        assert_equal(broadcaster.estimaterawfee(1)["short"]["fail"]["totalconfirmed"], 1)
+
+        # Generate and mine packages of transactions, 80% of them are a [low fee, high fee] package
+        # which get mined because of the child transaction. 20% are single-transaction packages with
+        # a medium-high feerate.
+        # Test that we don't give the low feerate as estimate, assuming the low fee transactions
+        # got mined on their own.
+        for _ in range(5):
+            txs = []  # Batch the RPCs calls.
+            for _ in range(20):
+                u = utxos.pop(0)
+                parent_tx = make_tx(wallet=self.wallet, utxo=u, feerate=low_feerate)
+                txs.append(parent_tx)
+                u = {
+                    "txid": parent_tx["txid"],
+                    "vout": 0,
+                    "value": Decimal(parent_tx["tx"].vout[0].nValue) / COIN
+                }
+                child_tx = make_tx(wallet=self.wallet, utxo=u, feerate=high_feerate)
+                txs.append(child_tx)
+            for _ in range(5):
+                u = utxos.pop(0)
+                tx = make_tx(wallet=self.wallet, utxo=u, feerate=med_feerate)
+                txs.append(tx)
+            batch_send_tx = (broadcaster.sendrawtransaction.get_request(tx["hex"]) for tx in txs)
+            broadcaster.batch(batch_send_tx)
+            self.sync_mempools(wait=0.1, nodes=[broadcaster, miner])
+            self.generate(miner, 1)
+        assert_equal(broadcaster.estimatesmartfee(2)["feerate"], med_feerate * 1000 / COIN)
+
+    def clear_first_node_estimates(self):
+        """Restart node 0 without a fee_estimates.dat."""
+        self.log.info("Restarting node with fresh estimation")
+        self.stop_node(0)
+        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
+        os.remove(fee_dat)
+        self.start_node(0)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        # Note: we need to get into the estimator's processBlock to set nBestSeenHeight or it
+        # will ignore all the txs of the first block we mine in the next test.
+        self.generate(self.nodes[0], 1)
+
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
@@ -429,16 +508,15 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test reading old fee_estimates.dat")
         self.test_old_fee_estimate_file()
 
-        self.log.info("Restarting node with fresh estimation")
-        self.stop_node(0)
-        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
-        os.remove(fee_dat)
-        self.start_node(0)
-        self.connect_nodes(0, 1)
-        self.connect_nodes(0, 2)
+        self.clear_first_node_estimates()
 
         self.log.info("Testing estimates with RBF.")
-        self.sanity_check_rbf_estimates(self.confutxo + self.memutxo)
+        self.sanity_check_rbf_estimates(self.confutxo)
+
+        self.clear_first_node_estimates()
+
+        self.log.info("Testing estimates with CPFP.")
+        self.sanity_check_cpfp_estimates(self.confutxo)
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
