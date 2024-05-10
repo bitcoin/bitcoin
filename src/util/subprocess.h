@@ -902,7 +902,6 @@ private:
  *    Command provided in a single string.
  * wait()             - Wait for the child to exit.
  * retcode()          - The return code of the exited child.
- * pid()              - PID of the spawned child.
  * poll()             - Check the status of the running child.
  * send(...)          - Send input to the input channel of the child.
  * communicate(...)   - Get the output/error from the child and close the channels
@@ -955,8 +954,6 @@ public:
 
     execute_process();
   }
-
-  int pid() const noexcept { return child_pid_; }
 
   int retcode() const noexcept { return retcode_; }
 
@@ -1068,7 +1065,7 @@ inline int Popen::wait() noexcept(false)
   return 0;
 #else
   int ret, status;
-  std::tie(ret, status) = util::wait_for_child_exit(pid());
+  std::tie(ret, status) = util::wait_for_child_exit(child_pid_);
   if (ret == -1) {
     if (errno != ECHILD) throw OSError("waitpid failed", errno);
     return 0;
