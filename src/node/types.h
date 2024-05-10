@@ -78,6 +78,8 @@ struct BlockCreateOptions {
     // Whether to call TestBlockValidity() at the end of CreateNewBlock().
     bool test_block_validity{true};
     bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
+
+    BlockCreateOptions Clamped() const;
 };
 } // namespace node
 
