@@ -12,6 +12,7 @@
 #include <vector>
 #include <utility>
 
+#include <random.h>
 #include <util/feefrac.h>
 #include <util/vecdeque.h>
 
@@ -225,6 +226,13 @@ struct SetInfo
         return {transactions | txn, feerate + depgraph.FeeRate(txn - transactions)};
     }
 
+    /** Swap two SetInfo objects. */
+    friend void swap(SetInfo& a, SetInfo& b) noexcept
+    {
+        swap(a.transactions, b.transactions);
+        swap(a.feerate, b.feerate);
+    }
+
     /** Permit equality testing. */
     friend bool operator==(const SetInfo&, const SetInfo&) noexcept = default;
 };
@@ -356,6 +364,8 @@ public:
 template<typename SetType>
 class SearchCandidateFinder
 {
+    /** Internal RNG. */
+    InsecureRandomContext m_rng;
     /** Internal dependency graph for the cluster. */
     const DepGraph<SetType>& m_depgraph;
     /** Which transactions are left to do (sorted indices). */
@@ -365,10 +375,12 @@ public:
     /** Construct a candidate finder for a graph.
      *
      * @param[in] depgraph   Dependency graph for the to-be-linearized cluster.
+     * @param[in] rng_seed   A random seed to control the search order.
      *
      * Complexity: O(1).
      */
-    SearchCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
+    SearchCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND, uint64_t rng_seed) noexcept :
+        m_rng(rng_seed),
         m_depgraph(depgraph),
         m_todo(SetType::Fill(depgraph.TxCount())) {}
 
@@ -413,6 +425,13 @@ public:
             /** Construct a new work item. */
             WorkItem(SetInfo<SetType>&& i, SetType&& u) noexcept :
                 inc(std::move(i)), und(std::move(u)) {}
+
+            /** Swap two WorkItems. */
+            void Swap(WorkItem& other) noexcept
+            {
+                swap(inc, other.inc);
+                swap(und, other.und);
+            }
         };
 
         /** The queue of work items. */
@@ -493,9 +512,14 @@ public:
         // (BFS) corresponds to always taking from the front, which potentially uses more memory
         // (up to exponential in the transaction count), but seems to work better in practice.
         //
-        // The approach here combines the two: use BFS until the queue grows too large, at which
-        // point we temporarily switch to DFS until the size shrinks again.
+        // The approach here combines the two: use BFS (plus random swapping) until the queue grows
+        // too large, at which point we temporarily switch to DFS until the size shrinks again.
         while (!queue.empty()) {
+            // Randomly swap the first two items to randomize the search order.
+            if (queue.size() > 1 && m_rng.randbool()) {
+                queue[0].Swap(queue[1]);
+            }
+
             // Processing the first queue item, and then using DFS for everything it gives rise to,
             // may increase the queue size by the number of undecided elements in there, minus 1
             // for the first queue item being removed. Thus, only when that pushes the queue over
@@ -534,6 +558,9 @@ public:
  *
  * @param[in] depgraph            Dependency graph of the cluster to be linearized.
  * @param[in] max_iterations      Upper bound on the number of optimization steps that will be done.
+ * @param[in] rng_seed            A random number seed to control search order. This prevents peers
+ *                                from predicting exactly which clusters would be hard for us to
+ *                                linearize.
  * @return                        A pair of:
  *                                - The resulting linearization.
  *                                - A boolean indicating whether the result is guaranteed to be
@@ -542,7 +569,7 @@ public:
  * Complexity: O(N * min(max_iterations + N, 2^N)) where N=depgraph.TxCount().
  */
 template<typename SetType>
-std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations) noexcept
+std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed) noexcept
 {
     if (depgraph.TxCount() == 0) return {{}, true};
 
@@ -550,7 +577,7 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
     std::vector<ClusterIndex> linearization;
 
     AncestorCandidateFinder anc_finder(depgraph);
-    SearchCandidateFinder src_finder(depgraph);
+    SearchCandidateFinder src_finder(depgraph, rng_seed);
     linearization.reserve(depgraph.TxCount());
     bool optimal = true;
 
