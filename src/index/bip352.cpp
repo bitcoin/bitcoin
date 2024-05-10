@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 
 #include <undo.h>
+#include <util/fs.h>
 #include <validation.h>
 
 #include <dbwrapper.h>
@@ -24,18 +25,19 @@ constexpr uint8_t DB_SILENT_PAYMENT_INDEX{'s'};
 const int TAPROOT_MAINNET_ACTIVATION_HEIGHT{709632};
 
 std::unique_ptr<BIP352Index> g_bip352_index;
+std::unique_ptr<BIP352Index> g_bip352_ct_index;
 
 /** Access to the silent payment index database (indexes/bip352/) */
 class BIP352Index::DB : public BaseIndex::DB
 {
 public:
-    explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    explicit DB(fs::path file_name, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     bool WriteSilentPayments(const std::pair<uint256, std::vector<CPubKey>>& tweaks);
 };
 
-BIP352Index::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
-    BaseIndex::DB(gArgs.GetDataDirNet() / "indexes" / "bip352", n_cache_size, f_memory, f_wipe)
+BIP352Index::DB::DB(fs::path file_name, size_t n_cache_size, bool f_memory, bool f_wipe) :
+    BaseIndex::DB(gArgs.GetDataDirNet() / "indexes" / file_name, n_cache_size, f_memory, f_wipe)
 {}
 
 bool BIP352Index::DB::WriteSilentPayments(const std::pair<uint256, std::vector<CPubKey>>& tweaks)
@@ -45,9 +47,11 @@ bool BIP352Index::DB::WriteSilentPayments(const std::pair<uint256, std::vector<C
     return WriteBatch(batch);
 }
 
-BIP352Index::BIP352Index(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "bip352 index", /*start_height=*/Params().IsTestChain() ? 0 : TAPROOT_MAINNET_ACTIVATION_HEIGHT), m_db(std::make_unique<BIP352Index::DB>(n_cache_size, f_memory, f_wipe))
-{}
+BIP352Index::BIP352Index(bool cut_through, std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
+    : BaseIndex(std::move(chain), strprintf("bip352 %sindex", cut_through ? "cut-through " : ""), /*start_height=*/Params().IsTestChain() ? 0 : TAPROOT_MAINNET_ACTIVATION_HEIGHT), m_db(std::make_unique<BIP352Index::DB>(fs::u8path(strprintf("bip352%s", cut_through ? "ct" : "")), n_cache_size, f_memory, f_wipe))
+{
+    m_cut_through = cut_through;
+}
 
 BIP352Index::~BIP352Index() = default;
 

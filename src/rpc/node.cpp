@@ -397,6 +397,9 @@ static RPCHelpMan getindexinfo()
         result.pushKVs(SummaryToJSON(g_bip352_index->GetSummary(), index_name));
     }
 
+    if (g_bip352_ct_index) {
+        result.pushKVs(SummaryToJSON(g_bip352_ct_index->GetSummary(), index_name));
+    }
 
     ForEachBlockFilterIndex([&result, &index_name](const BlockFilterIndex& index) {
         result.pushKVs(SummaryToJSON(index.GetSummary(), index_name));
