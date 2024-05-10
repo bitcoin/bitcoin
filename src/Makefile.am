@@ -669,6 +669,7 @@ libbitcoin_common_a_SOURCES = \
   addresstype.cpp \
   base58.cpp \
   bech32.cpp \
+  chainparamsbase.cpp \
   chainparams.cpp \
   coins.cpp \
   common/args.cpp \
@@ -719,7 +720,6 @@ libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
   support/lockedpool.cpp \
-  chainparamsbase.cpp \
   clientversion.cpp \
   logging.cpp \
   random.cpp \
