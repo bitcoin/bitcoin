@@ -363,6 +363,7 @@ BITCOIN_CORE_H = \
   util/ui_change_type.h \
   util/url.h \
   util/vector.h \
+  util/wpipe.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -797,6 +798,7 @@ libbitcoin_util_a_SOURCES = \
   util/thread.cpp \
   util/threadnames.cpp \
   util/tokenpipe.cpp \
+  util/wpipe.cpp \
   $(BITCOIN_CORE_H)
 
 if USE_LIBEVENT

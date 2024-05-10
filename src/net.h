@@ -31,6 +31,7 @@
 #include <util/check.h>
 #include <util/edge.h>
 #include <util/system.h>
+#include <util/wpipe.h>
 #include <consensus/params.h>
 
 #include <atomic>
@@ -44,10 +45,6 @@
 #include <optional>
 #include <queue>
 #include <vector>
-
-#ifndef WIN32
-#define USE_WAKEUP_PIPE
-#endif
 
 class CConnman;
 class CDeterministicMNList;
@@ -1168,7 +1165,6 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
-    void WakeSelect() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     /** Attempts to obfuscate tx time through exponentially distributed emitting.
         Works assuming that a single interval is used.
@@ -1505,14 +1501,19 @@ private:
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
 
-#ifdef USE_WAKEUP_PIPE
-    /** a pipe which is added to select() calls to wakeup before the timeout */
-    int wakeupPipe[2]{-1,-1};
-#endif
-    std::atomic<bool> wakeupSelectNeeded{false};
-
     SocketEventsMode socketEventsMode;
     std::unique_ptr<EdgeTriggeredEvents> m_edge_trig_events{nullptr};
+    std::unique_ptr<WakeupPipe> m_wakeup_pipe{nullptr};
+
+    template <typename Callable>
+    void ToggleWakeupPipe(Callable&& func)
+    {
+        if (m_wakeup_pipe) {
+            m_wakeup_pipe->Toggle(func);
+        } else {
+            func();
+        }
+    }
 
     Mutex cs_sendable_receivable_nodes;
     std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_sendable_receivable_nodes);
