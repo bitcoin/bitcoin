@@ -905,12 +905,6 @@ private:
  * send(...)          - Send input to the input channel of the child.
  * communicate(...)   - Get the output/error from the child and close the channels
  *                      from the parent side.
- * input()            - Get the input channel/File pointer. Can be used for
- *                      customizing the way of sending input to child.
- * output()           - Get the output channel/File pointer. Usually used
-                        in case of redirection. See piping examples.
- * error()            - Get the error channel/File pointer. Usually used
-                        in case of redirection.
  */
 class Popen
 {
@@ -994,15 +988,6 @@ public:
   {
     return communicate(nullptr, 0);
   }
-
-  FILE* input()  { return stream_.input(); }
-  FILE* output() { return stream_.output();}
-  FILE* error()  { return stream_.error(); }
-
-  /// Stream close APIs
-  void close_input()  { stream_.input_.reset();  }
-  void close_output() { stream_.output_.reset(); }
-  void close_error()  { stream_.error_.reset();  }
 
 private:
   template <typename F, typename... Args>
