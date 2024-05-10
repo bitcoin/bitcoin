@@ -14,7 +14,7 @@
 
 static void BIP324_ECDH(benchmark::Bench& bench)
 {
-    ECC_Start();
+    ECC_Context ecc_context{};
     FastRandomContext rng;
 
     std::array<std::byte, 32> key_data;
@@ -44,8 +44,6 @@ static void BIP324_ECDH(benchmark::Bench& bench)
         // - Copy 16 bytes from the resulting shared secret into the middle of their ellswift key.
         std::copy(ret.begin() + 16, ret.end(), their_ellswift_data.begin() + 24);
     });
-
-    ECC_Stop();
 }
 
 BENCHMARK(BIP324_ECDH, benchmark::PriorityLevel::HIGH);

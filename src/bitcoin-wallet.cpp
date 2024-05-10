@@ -128,10 +128,9 @@ MAIN_FUNCTION
         return EXIT_FAILURE;
     }
 
-    ECC_Start();
+    ECC_Context ecc_context{};
     if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;
     }
-    ECC_Stop();
     return EXIT_SUCCESS;
 }

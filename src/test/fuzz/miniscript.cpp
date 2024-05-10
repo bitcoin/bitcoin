@@ -1201,7 +1201,7 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
 
 void FuzzInit()
 {
-    ECC_Start();
+    static ECC_Context ecc_context{};
     TEST_DATA.Init();
 }
 

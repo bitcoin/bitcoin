@@ -31,6 +31,7 @@
 #include <script/signingprovider.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
