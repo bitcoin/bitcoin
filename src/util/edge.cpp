@@ -52,7 +52,10 @@ EdgeTriggeredEvents::~EdgeTriggeredEvents()
 {
     if (m_valid) {
 #if defined(USE_KQUEUE) || defined(USE_EPOLL)
-        close(m_fd);
+        if (close(m_fd) != 0) {
+            LogPrintf("Destroying EdgeTriggeredEvents instance, close() failed for m_fd = %d with error %s\n", m_fd,
+                      NetworkErrorString(WSAGetLastError()));
+        }
 #else
         assert(false);
 #endif /* defined(USE_KQUEUE) || defined(USE_EPOLL) */
