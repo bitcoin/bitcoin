@@ -587,7 +587,8 @@ crypto_libbitcoin_crypto_base_la_SOURCES = \
   crypto/sha512.cpp \
   crypto/sha512.h \
   crypto/siphash.cpp \
-  crypto/siphash.h
+  crypto/siphash.h \
+  support/cleanse.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above
@@ -725,7 +726,6 @@ libbitcoin_util_a_SOURCES = \
   random.cpp \
   randomenv.cpp \
   streams.cpp \
-  support/cleanse.cpp \
   sync.cpp \
   util/asmap.cpp \
   util/batchpriority.cpp \
@@ -968,7 +968,6 @@ libbitcoinkernel_la_SOURCES = \
   script/solver.cpp \
   signet.cpp \
   streams.cpp \
-  support/cleanse.cpp \
   support/lockedpool.cpp \
   sync.cpp \
   txdb.cpp \
