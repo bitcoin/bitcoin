@@ -65,7 +65,7 @@ private:
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. */
-    bool Loop(bool fMaster)
+    bool Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
         std::vector<T> vChecks;
@@ -139,7 +139,7 @@ public:
     }
 
     //! Create a pool of new worker threads.
-    void StartWorkerThreads(const int threads_num)
+    void StartWorkerThreads(const int threads_num) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         {
             LOCK(m_mutex);
@@ -157,13 +157,13 @@ public:
     }
 
     //! Wait until execution finishes, and return whether all evaluations were successful.
-    bool Wait()
+    bool Wait() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         return Loop(true /* master thread */);
     }
 
     //! Add a batch of checks to the queue
-    void Add(std::vector<T>& vChecks)
+    void Add(std::vector<T>& vChecks) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         if (vChecks.empty()) {
             return;
@@ -186,7 +186,7 @@ public:
     }
 
     //! Stop all of the worker threads.
-    void StopWorkerThreads()
+    void StopWorkerThreads() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         WITH_LOCK(m_mutex, m_request_stop = true);
         m_worker_cv.notify_all();

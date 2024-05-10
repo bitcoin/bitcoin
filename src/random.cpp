@@ -377,7 +377,7 @@ public:
     {
     }
 
-    void AddEvent(uint32_t event_info) noexcept
+    void AddEvent(uint32_t event_info) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_events_mutex)
     {
         LOCK(m_events_mutex);
 
@@ -391,7 +391,7 @@ public:
     /**
      * Feed (the hash of) all events added through AddEvent() to hasher.
      */
-    void SeedEvents(CSHA512& hasher) noexcept
+    void SeedEvents(CSHA512& hasher) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_events_mutex)
     {
         // We use only SHA256 for the events hashing to get the ASM speedups we have for SHA256,
         // since we want it to be fast as network peers may be able to trigger it repeatedly.
@@ -410,7 +410,7 @@ public:
      *
      * If this function has never been called with strong_seed = true, false is returned.
      */
-    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept
+    bool MixExtract(unsigned char* out, size_t num, CSHA512&& hasher, bool strong_seed) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         assert(num <= 32);
         unsigned char buf[64];

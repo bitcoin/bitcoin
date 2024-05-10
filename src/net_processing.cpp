@@ -374,38 +374,45 @@ public:
                     bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
-    void BlockChecked(const CBlock& block, const BlockValidationState& state) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_recent_confirmed_transactions_mutex);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void BlockChecked(const CBlock& block, const BlockValidationState& state) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
 
     /** Implement NetEventsInterface */
-    void InitializeNode(CNode* pnode) override;
-    void FinalizeNode(const CNode& node) override;
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
+    void InitializeNode(CNode* pnode) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
+    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
 
     /** Implement PeerManager */
     void CheckForStaleTipAndEvictPeers() override;
-    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
+    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
-    void SendPings() override;
-    void PushInventory(NodeId nodeid, const CInv& inv) override;
-    void RelayInv(CInv &inv, const int minProtoVersion) override;
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override;
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override;
-    void RelayTransaction(const uint256& txid) override;
+    void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);;
+    void PushInventory(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInv(CInv &inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestHeight(int height) override { m_best_height = height; };
-    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override;
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
-    bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override;
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
+    bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
+    bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
 private:
     /** Helper to process result of external handlers of message */
-    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom);
+    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -414,15 +421,15 @@ private:
     void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
-    void ReattemptInitialBroadcast(CScheduler& scheduler);
+    void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef GetPeerRef(NodeId id) const;
+    PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Get a shared pointer to the Peer object and remove it from m_peer_map.
      *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef RemovePeer(NodeId id);
+    PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
@@ -435,7 +442,8 @@ private:
      * @return Returns true if the peer was punished (probably disconnected)
      */
     bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
-                                 bool via_compact_block, const std::string& message = "");
+                                 bool via_compact_block, const std::string& message = "")
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /**
      * Potentially ban a node based on the contents of a TxValidationState object
@@ -444,7 +452,8 @@ private:
      *
      * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
      */
-    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "");
+    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "")
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Maybe disconnect a peer and discourage future connections from its address.
      *
@@ -454,14 +463,16 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
-    void ProcessOrphanTx(std::set<uint256>& orphan_work_set)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+    void ProcessOrphanTx(std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     /** Process a single headers message from a peer. */
     void ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
                                const std::vector<CBlockHeader>& headers,
-                               bool via_compact_block);
+                               bool via_compact_block)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
-    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req);
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
@@ -482,7 +493,7 @@ private:
      * @param[in] fReachable   Whether the address' network is reachable. We relay unreachable
      *                         addresses less.
      */
-    void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable);
+    void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -608,7 +619,8 @@ private:
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
-    bool AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool AlreadyHave(const CInv& inv)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
 
     /**
      * Filter for transactions that were recently rejected by
@@ -3357,7 +3369,7 @@ void PeerManagerImpl::ProcessMessage(
         pfrom.nServices = nServices;
         pfrom.SetAddrLocal(addrMe);
         {
-            LOCK(pfrom.cs_SubVer);
+            LOCK(pfrom.m_subver_mutex);
             pfrom.cleanSubVer = cleanSubVer;
         }
         peer->m_starting_height = starting_height;

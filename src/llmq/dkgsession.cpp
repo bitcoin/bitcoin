@@ -1336,7 +1336,7 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
         if (pnode->GetVerifiedProRegTxHash().IsNull()) {
             logger.Batch("node[%d:%s] not mn",
                          pnode->GetId(),
-                         pnode->GetAddrName());
+                         pnode->m_addr_name);
         } else if (relayMembers.count(pnode->GetVerifiedProRegTxHash()) == 0) {
             ss2 << pnode->GetVerifiedProRegTxHash().ToString().substr(0, 4) << " | ";
         }

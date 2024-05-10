@@ -140,12 +140,11 @@ void CMasternodeSync::ProcessTick()
     }
 
     nTimeLastProcess = GetTime();
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
+    const CConnman::NodesSnapshot snap{connman, /* filter = */ CConnman::FullyConnectedOnly};
 
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
-        m_govman.RequestGovernanceObjectVotes(vNodesCopy, connman);
-        connman.ReleaseNodeVector(vNodesCopy);
+        m_govman.RequestGovernanceObjectVotes(snap.Nodes(), connman);
         return;
     }
 
@@ -154,7 +153,7 @@ void CMasternodeSync::ProcessTick()
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nCurrentAsset, nTriedPeerCount, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    for (auto& pnode : vNodesCopy)
+    for (auto& pnode : snap.Nodes())
     {
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
@@ -189,7 +188,7 @@ void CMasternodeSync::ProcessTick()
             }
 
             if (nCurrentAsset == MASTERNODE_SYNC_BLOCKCHAIN) {
-                int64_t nTimeSyncTimeout = vNodesCopy.size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
+                int64_t nTimeSyncTimeout = snap.Nodes().size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
                 if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
@@ -205,7 +204,7 @@ void CMasternodeSync::ProcessTick()
 
                     if (gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL)) {
                         // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
-                        for (auto pNodeTmp : vNodesCopy) {
+                        for (auto pNodeTmp : snap.Nodes()) {
                             bool fRequestedEarlier = m_netfulfilledman.HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                             if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->IsInboundConn() && !fRequestedEarlier && !pNodeTmp->IsBlockRelayOnly()) {
                                 m_netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
@@ -222,7 +221,6 @@ void CMasternodeSync::ProcessTick()
             if(nCurrentAsset == MASTERNODE_SYNC_GOVERNANCE) {
                 if (!m_govman.IsValid()) {
                     SwitchToNextAsset();
-                    connman.ReleaseNodeVector(vNodesCopy);
                     return;
                 }
                 LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nCurrentAsset, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
@@ -235,7 +233,6 @@ void CMasternodeSync::ProcessTick()
                         // it's kind of ok to skip this for now, hopefully we'll catch up later?
                     }
                     SwitchToNextAsset();
-                    connman.ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -259,12 +256,11 @@ void CMasternodeSync::ProcessTick()
 
     if (nCurrentAsset != MASTERNODE_SYNC_GOVERNANCE) {
         // looped through all nodes and not syncing governance yet/already, release them
-        connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
 
     // request votes on per-obj basis from each node
-    for (const auto& pnode : vNodesCopy) {
+    for (const auto& pnode : snap.Nodes()) {
         if(!m_netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
             continue; // to early for this node
         }
@@ -291,16 +287,12 @@ void CMasternodeSync::ProcessTick()
                 // reset nTimeNoObjectsLeft to be able to use the same condition on resync
                 nTimeNoObjectsLeft = 0;
                 SwitchToNextAsset();
-                connman.ReleaseNodeVector(vNodesCopy);
                 return;
             }
             nLastTick = nTick;
             nLastVotes = m_govman.GetVoteCount();
         }
     }
-
-    // looped through all nodes, release them
-    connman.ReleaseNodeVector(vNodesCopy);
 }
 
 void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode) const

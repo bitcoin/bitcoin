@@ -1092,14 +1092,13 @@ bool CSigSharesManager::SendMessages()
         return session->sendSessionId;
     };
 
-    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
-
+    const CConnman::NodesSnapshot snap{connman, /* filter = */ CConnman::FullyConnectedOnly};
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
         CollectSigSharesToSend(sigShareBatchesToSend);
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
-        CollectSigSharesToSendConcentrated(sigSharesToSend, vNodesCopy);
+        CollectSigSharesToSendConcentrated(sigSharesToSend, snap.Nodes());
 
         for (auto& [nodeId, sigShareMap] : sigSharesToRequest) {
             for (auto& [hash, sigShareInv] : sigShareMap) {
@@ -1120,7 +1119,7 @@ bool CSigSharesManager::SendMessages()
 
     bool didSend = false;
 
-    for (auto& pnode : vNodesCopy) {
+    for (auto& pnode : snap.Nodes()) {
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
         if (const auto it1 = sigSessionAnnouncements.find(pnode->GetId()); it1 != sigSessionAnnouncements.end()) {
@@ -1221,9 +1220,6 @@ bool CSigSharesManager::SendMessages()
             }
         }
     }
-
-    // looped through all nodes, release them
-    connman.ReleaseNodeVector(vNodesCopy);
 
     return didSend;
 }

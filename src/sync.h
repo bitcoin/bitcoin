@@ -77,8 +77,6 @@ inline void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, 
 inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
 #endif
-#define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
-#define AssertLockNotHeld(cs) AssertLockNotHeldInternal(#cs, __FILE__, __LINE__, &cs)
 
 /**
  * Template mixin that adds -Wthread-safety locking annotations and lock order
@@ -138,10 +136,18 @@ public:
 using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
 
 /** Wrapped mutex: supports waiting but not recursive locking */
-typedef AnnotatedMixin<std::mutex> Mutex;
+using Mutex = AnnotatedMixin<std::mutex>;
+
 /** Wrapped shared mutex: supports read locking via .shared_lock, exlusive locking via .lock;
  * does not support recursive locking */
-typedef SharedAnnotatedMixin<std::shared_mutex> SharedMutex;
+using SharedMutex = SharedAnnotatedMixin<std::shared_mutex>;
+
+#define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
+
+inline void AssertLockNotHeldInline(const char* name, const char* file, int line, Mutex* cs) EXCLUSIVE_LOCKS_REQUIRED(!cs) { AssertLockNotHeldInternal(name, file, line, cs); }
+inline void AssertLockNotHeldInline(const char* name, const char* file, int line, RecursiveMutex* cs) LOCKS_EXCLUDED(cs) { AssertLockNotHeldInternal(name, file, line, cs); }
+inline void AssertLockNotHeldInline(const char* name, const char* file, int line, SharedMutex* cs) LOCKS_EXCLUDED(cs) { AssertLockNotHeldInternal(name, file, line, cs); }
+#define AssertLockNotHeld(cs) AssertLockNotHeldInline(#cs, __FILE__, __LINE__, &cs)
 
 /** Prints a lock contention to the log */
 void LockContention(const char* pszName, const char* pszFile, int nLine);

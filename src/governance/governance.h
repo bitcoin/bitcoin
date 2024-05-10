@@ -358,7 +358,7 @@ public:
     void InitOnLoad();
 
     int RequestGovernanceObjectVotes(CNode& peer, CConnman& connman) const;
-    int RequestGovernanceObjectVotes(Span<CNode*> vNodesCopy, CConnman& connman) const;
+    int RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const;
 
     /*
      * Trigger Management (formerly CGovernanceTriggerManager)

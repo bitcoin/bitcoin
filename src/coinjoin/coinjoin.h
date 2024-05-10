@@ -368,15 +368,22 @@ public:
     void AddDSTX(const CCoinJoinBroadcastTx& dstx) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
     CCoinJoinBroadcastTx GetDSTX(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
-    void UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync);
-    void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync);
+    void UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler,
+                         const CMasternodeSync& mn_sync)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
+    void NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler,
+                         const CMasternodeSync& mn_sync)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
     void TransactionAddedToMempool(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*) EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
 
 private:
-    void CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler);
+    void CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
     void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight);
 
 };
