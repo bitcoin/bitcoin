@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/signmessage.h>
 #include <hash.h>
 #include <key.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <uint256.h>
-#include <util/message.h>
 #include <util/strencodings.h>
 
 #include <cassert>

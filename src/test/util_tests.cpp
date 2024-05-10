@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
+#include <common/signmessage.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
 #include <sync.h>
@@ -12,7 +13,6 @@
 #include <util/bitdeque.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/readwritefile.h>

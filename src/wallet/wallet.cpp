@@ -12,6 +12,7 @@
 #include <coins.h>
 #include <common/args.h>
 #include <common/settings.h>
+#include <common/signmessage.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -52,7 +53,6 @@
 #include <util/error.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/message.h>
 #include <util/moneystr.h>
 #include <util/result.h>
 #include <util/string.h>

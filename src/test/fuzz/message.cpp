@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/signmessage.h>
 #include <key_io.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/chaintype.h>
-#include <util/message.h>
 #include <util/strencodings.h>
 
 #include <cassert>

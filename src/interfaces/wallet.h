@@ -6,13 +6,13 @@
 #define BITCOIN_INTERFACES_WALLET_H
 
 #include <addresstype.h>
+#include <common/signmessage.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
-#include <util/message.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
 
