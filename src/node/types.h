@@ -64,6 +64,8 @@ struct BlockCreateOptions {
     bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
 
     BlockCreateOptions Clamped() const;
+
+    friend bool operator==(const BlockCreateOptions& a, const BlockCreateOptions& b) noexcept = default;
 };
 } // namespace node
 
