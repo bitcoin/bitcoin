@@ -58,3 +58,70 @@ EdgeTriggeredEvents::~EdgeTriggeredEvents()
 #endif /* defined(USE_KQUEUE) || defined(USE_EPOLL) */
     }
 }
+
+bool EdgeTriggeredEvents::AddSocket(SOCKET socket) const
+{
+    assert(m_valid);
+
+    if (m_mode == SocketEventsMode::EPoll) {
+#ifdef USE_EPOLL
+        epoll_event event;
+        event.data.fd = socket;
+        event.events = EPOLLIN;
+        if (epoll_ctl(m_fd, EPOLL_CTL_ADD, socket, &event) != 0) {
+            LogPrintf("Failed to add socket to epoll fd (epoll_ctl returned error %s)\n",
+                      NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_EPOLL */
+    } else if (m_mode == SocketEventsMode::KQueue) {
+#ifdef USE_KQUEUE
+        struct kevent event;
+        EV_SET(&event, socket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
+        if (kevent(m_fd, &event, 1, nullptr, 0, nullptr) != 0) {
+            LogPrintf("Failed to add socket to kqueue fd (kevent returned error %s)\n",
+                      NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_KQUEUE */
+    } else {
+        assert(false);
+    }
+    return true;
+}
+
+bool EdgeTriggeredEvents::RemoveSocket(SOCKET socket) const
+{
+    assert(m_valid);
+
+    if (m_mode == SocketEventsMode::EPoll) {
+#ifdef USE_EPOLL
+        if (epoll_ctl(m_fd, EPOLL_CTL_DEL, socket, nullptr) != 0) {
+            LogPrintf("Failed to remove socket from epoll fd (epoll_ctl returned error %s)\n",
+                      NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_EPOLL */
+    } else if (m_mode == SocketEventsMode::KQueue) {
+#ifdef USE_KQUEUE
+        struct kevent event;
+        EV_SET(&event, socket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+        if (kevent(m_fd, &event, 1, nullptr, 0, nullptr) != 0) {
+            LogPrintf("Failed to remove socket from kqueue fd (kevent returned error %s)\n",
+                      NetworkErrorString(WSAGetLastError()));
+            return false;
+        }
+#else
+        assert(false);
+#endif /* USE_KQUEUE */
+    } else {
+        assert(false);
+    }
+    return true;
+}

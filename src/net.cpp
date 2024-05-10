@@ -3132,30 +3132,10 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SocketEventsMode::KQueue) {
-        struct kevent event;
-        EV_SET(&event, sock->Get(), EVFILT_READ, EV_ADD, 0, 0, nullptr);
-        if (kevent(Assert(m_edge_trig_events)->m_fd, &event, 1, nullptr, 0, nullptr) != 0) {
-            strError = strprintf(_("Error: failed to add socket to kqueue fd (kevent returned error %s)"), NetworkErrorString(WSAGetLastError()));
-            LogPrintf("%s\n", strError.original);
-            return false;
-        }
+    if (m_edge_trig_events && !m_edge_trig_events->AddSocket(sock->Get())) {
+        LogPrintf("Error: EdgeTriggeredEvents::AddSocket() failed\n");
+        return false;
     }
-#endif
-
-#ifdef USE_EPOLL
-    if (socketEventsMode == SocketEventsMode::EPoll) {
-        epoll_event event;
-        event.data.fd = sock->Get();
-        event.events = EPOLLIN;
-        if (epoll_ctl(Assert(m_edge_trig_events)->m_fd, EPOLL_CTL_ADD, sock->Get(), &event) != 0) {
-            strError = strprintf(_("Error: failed to add socket to epoll fd (epoll_ctl returned error %s)"), NetworkErrorString(WSAGetLastError()));
-            LogPrintf("%s\n", strError.original);
-            return false;
-        }
-    }
-#endif
 
     vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
 
@@ -3553,23 +3533,15 @@ void CConnman::StopNodes()
         for (CNode *pnode : m_nodes)
             pnode->CloseSocketDisconnect(this);
     }
-    for (ListenSocket& hListenSocket : vhListenSocket)
+    for (ListenSocket& hListenSocket : vhListenSocket) {
         if (hListenSocket.socket != INVALID_SOCKET) {
-#ifdef USE_KQUEUE
-            if (socketEventsMode == SocketEventsMode::KQueue) {
-                struct kevent event;
-                EV_SET(&event, hListenSocket.socket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-                kevent(Assert(m_edge_trig_events)->m_fd, &event, 1, nullptr, 0, nullptr);
+            if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.socket)) {
+                LogPrintf("EdgeTriggeredEvents::RemoveSocket() failed\n");
             }
-#endif
-#ifdef USE_EPOLL
-            if (socketEventsMode == SocketEventsMode::EPoll) {
-                epoll_ctl(Assert(m_edge_trig_events)->m_fd, EPOLL_CTL_DEL, hListenSocket.socket, nullptr);
-            }
-#endif
             if (!CloseSocket(hListenSocket.socket))
                 LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
         }
+    }
 
     // clean up some globals (to help leak detection)
     std::vector<CNode*> nodes;

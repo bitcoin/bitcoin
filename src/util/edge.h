@@ -5,6 +5,8 @@
 #ifndef BITCOIN_UTIL_EDGE_H
 #define BITCOIN_UTIL_EDGE_H
 
+#include <compat.h>
+
 #include <cstdint>
 
 enum class SocketEventsMode : int8_t;
@@ -18,6 +20,11 @@ class EdgeTriggeredEvents
 public:
     explicit EdgeTriggeredEvents(SocketEventsMode events_mode);
     ~EdgeTriggeredEvents();
+
+    /* Add socket to interest list */
+    bool AddSocket(SOCKET socket) const;
+    /* Remove socket from interest list */
+    bool RemoveSocket(SOCKET socket) const;
 
     bool IsValid() const { return m_valid; }
 
