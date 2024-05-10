@@ -77,8 +77,9 @@ void BenchLinearizePerIterWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
 {
     const auto depgraph = MakeHardGraph<SetType>(ntx);
     const auto iter_limit = std::min<uint64_t>(10000, uint64_t{1} << (ntx / 2 - 1));
+    uint64_t rng_seed = 0;
     bench.batch(iter_limit).unit("iters").run([&] {
-        SearchCandidateFinder finder(depgraph);
+        SearchCandidateFinder finder(depgraph, rng_seed++);
         auto [candidate, iters_performed] = finder.FindCandidateSet(iter_limit, {});
         assert(iters_performed == iter_limit);
     });
@@ -89,11 +90,12 @@ template<typename SetType>
 void BenchLinearizeNoItersWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
 {
     const auto depgraph = MakeLinearGraph<SetType>(ntx);
+    uint64_t rng_seed = 0;
     bench.run([&] {
         // Do 10 iterations just to make sure some of that logic is executed, but this is
         // effectively negligible.
         uint64_t iters = 10;
-        Linearize(depgraph, iters);
+        Linearize(depgraph, iters, rng_seed++);
     });
 }
 

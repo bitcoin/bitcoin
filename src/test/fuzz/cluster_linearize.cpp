@@ -570,15 +570,16 @@ FUZZ_TARGET(clusterlin_search_finder)
     // and comparing with the results from SimpleCandidateFinder, ExhaustiveCandidateFinder, and
     // AncestorCandidateFinder.
 
-    // Retrieve a depgraph from the fuzz input.
+    // Retrieve an RNG seed and a depgraph from the fuzz input.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
+    uint64_t rng_seed{0};
     try {
-        reader >> Using<DepGraphFormatter>(depgraph);
+        reader >> Using<DepGraphFormatter>(depgraph) >> rng_seed;
     } catch (const std::ios_base::failure&) {}
 
     // Instantiate ALL the candidate finders.
-    SearchCandidateFinder src_finder(depgraph);
+    SearchCandidateFinder src_finder(depgraph, rng_seed);
     SimpleCandidateFinder smp_finder(depgraph);
     ExhaustiveCandidateFinder exh_finder(depgraph);
     AncestorCandidateFinder anc_finder(depgraph);
@@ -651,17 +652,18 @@ FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
 
-    // Retrieve an iteration count, and a depgraph from the fuzz input.
+    // Retrieve an RNG seed, an iteration count, and a depgraph from the fuzz input.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
+    uint64_t rng_seed{0};
     uint64_t iter_count{0};
     try {
-        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph);
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed;
     } catch (const std::ios_base::failure&) {}
 
     // Invoke Linearize().
     iter_count &= 0x7ffff;
-    auto [linearization, optimal] = Linearize(depgraph, iter_count);
+    auto [linearization, optimal] = Linearize(depgraph, iter_count, rng_seed);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
