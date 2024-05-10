@@ -101,6 +101,17 @@ std::pair<CPubKey, uint256> CreateLabelTweak(const CKey& scan_key, const int m);
 V0SilentPaymentDestination GenerateSilentPaymentLabelledAddress(const V0SilentPaymentDestination& recipient, const uint256& label);
 
 /**
+ * @brief: Check if a transaction could be a silent payment.
+ *
+ * A coinbase transaction can't be a silent payment.
+ * A transaction with no Taproot outputs can't be a silent payment.
+ *
+ * @param tx                        The transaction to check
+ * @return false if a transaction can't be a silent payment, true otherwise.
+ */
+bool MaybeSilentPayment(CTransactionRef &tx);
+
+/**
  * @brief Get silent payment public data from transaction inputs.
  *
  * Get the necessary data from the transaction inputs to be able to scan the transaction outputs for silent payment outputs.

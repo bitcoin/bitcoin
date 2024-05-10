@@ -74,6 +74,18 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
     return std::nullopt;
 }
 
+bool MaybeSilentPayment(CTransactionRef &tx) {
+    if (tx->IsCoinBase()) return false;
+
+    if (std::none_of(tx->vout.begin(), tx->vout.end(), [](const CTxOut& txout) {
+        return txout.scriptPubKey.IsPayToTaproot();
+    })) {
+        return false;
+    }
+
+    return true;
+}
+
 std::optional<PubTweakData> CreateInputPubkeysTweak(
     const std::vector<CPubKey>& plain_pubkeys,
     const std::vector<XOnlyPubKey>& taproot_pubkeys,
