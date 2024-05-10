@@ -1027,7 +1027,6 @@ private:
   std::vector<std::string> vargs_;
   std::vector<char*> cargv_;
 
-  bool child_created_ = false;
   // Pid of the child process
   int child_pid_ = -1;
 
@@ -1176,8 +1175,6 @@ inline void Popen::execute_process() noexcept(false)
     close(err_wr_pipe);
     throw OSError("fork failed", errno);
   }
-
-  child_created_ = true;
 
   if (child_pid_ == 0)
   {
