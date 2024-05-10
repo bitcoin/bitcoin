@@ -1175,69 +1175,66 @@ public:
 
 void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
 {
-    ScheduleBatchPriority();
+    ImportingNow imp{chainman.m_blockman.m_importing};
 
-    {
-        ImportingNow imp{chainman.m_blockman.m_importing};
-
-        // -reindex
-        if (fReindex) {
-            int nFile = 0;
-            // Map of disk positions for blocks with unknown parent (only used for reindex);
-            // parent hash -> child disk position, multiple children can have the same parent.
-            std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
-            while (true) {
-                FlatFilePos pos(nFile, 0);
-                if (!fs::exists(chainman.m_blockman.GetBlockPosFilename(pos))) {
-                    break; // No block files left to reindex
-                }
-                AutoFile file{chainman.m_blockman.OpenBlockFile(pos, true)};
-                if (file.IsNull()) {
-                    break; // This error is logged in OpenBlockFile
-                }
-                LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
-                if (chainman.m_interrupt) {
-                    LogPrintf("Interrupt requested. Exit %s\n", __func__);
-                    return;
-                }
-                nFile++;
+    // -reindex
+    if (fReindex) {
+        int nFile = 0;
+        // Map of disk positions for blocks with unknown parent (only used for reindex);
+        // parent hash -> child disk position, multiple children can have the same parent.
+        std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
+        while (true) {
+            FlatFilePos pos(nFile, 0);
+            if (!fs::exists(chainman.m_blockman.GetBlockPosFilename(pos))) {
+                break; // No block files left to reindex
             }
-            WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
-            fReindex = false;
-            LogPrintf("Reindexing finished\n");
-            // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-            chainman.ActiveChainstate().LoadGenesisBlock();
-        }
-
-        // -loadblock=
-        for (const fs::path& path : vImportFiles) {
-            AutoFile file{fsbridge::fopen(path, "rb")};
-            if (!file.IsNull()) {
-                LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
-                chainman.LoadExternalBlockFile(file);
-                if (chainman.m_interrupt) {
-                    LogPrintf("Interrupt requested. Exit %s\n", __func__);
-                    return;
-                }
-            } else {
-                LogPrintf("Warning: Could not open blocks file %s\n", fs::PathToString(path));
+            AutoFile file{chainman.m_blockman.OpenBlockFile(pos, true)};
+            if (file.IsNull()) {
+                break; // This error is logged in OpenBlockFile
             }
-        }
-
-        // scan for better chains in the block chain database, that are not yet connected in the active best chain
-
-        // We can't hold cs_main during ActivateBestChain even though we're accessing
-        // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-        // the relevant pointers before the ABC call.
-        for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-            BlockValidationState state;
-            if (!chainstate->ActivateBestChain(state, nullptr)) {
-                chainman.GetNotifications().fatalError(strprintf(_("Failed to connect best block (%s)."), state.ToString()));
+            LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
+            chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
+            if (chainman.m_interrupt) {
+                LogPrintf("Interrupt requested. Exit %s\n", __func__);
                 return;
             }
+            nFile++;
         }
-    } // End scope of ImportingNow
+        WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
+        fReindex = false;
+        LogPrintf("Reindexing finished\n");
+        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
+        chainman.ActiveChainstate().LoadGenesisBlock();
+    }
+
+    // -loadblock=
+    for (const fs::path& path : vImportFiles) {
+        AutoFile file{fsbridge::fopen(path, "rb")};
+        if (!file.IsNull()) {
+            LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
+            chainman.LoadExternalBlockFile(file);
+            if (chainman.m_interrupt) {
+                LogPrintf("Interrupt requested. Exit %s\n", __func__);
+                return;
+            }
+        } else {
+            LogPrintf("Warning: Could not open blocks file %s\n", fs::PathToString(path));
+        }
+    }
+
+    // scan for better chains in the block chain database, that are not yet connected in the active best chain
+
+    // We can't hold cs_main during ActivateBestChain even though we're accessing
+    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
+    // the relevant pointers before the ABC call.
+    for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
+        BlockValidationState state;
+        if (!chainstate->ActivateBestChain(state, nullptr)) {
+            chainman.GetNotifications().fatalError(strprintf(_("Failed to connect best block (%s)."), state.ToString()));
+            return;
+        }
+    }
+    // End scope of ImportingNow
 }
 
 std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {
