@@ -137,12 +137,12 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
                     // EraseTx should return 0 if m_orphans doesn't have the tx
                     {
-                        Assert(have_tx == orphanage.EraseTx(tx->GetHash()));
+                        Assert(have_tx == orphanage.EraseTx(tx->GetWitnessHash()));
                     }
                     have_tx = orphanage.HaveTx(tx->GetWitnessHash());
                     // have_tx should be false and EraseTx should fail
                     {
-                        Assert(!have_tx && !orphanage.EraseTx(tx->GetHash()));
+                        Assert(!have_tx && !orphanage.EraseTx(tx->GetWitnessHash()));
                     }
                 },
                 [&] {

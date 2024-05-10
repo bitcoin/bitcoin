@@ -54,16 +54,19 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     return true;
 }
 
-int TxOrphanage::EraseTx(const Txid& txid)
+int TxOrphanage::EraseTx(const Wtxid& wtxid)
 {
     LOCK(m_mutex);
-    return EraseTxNoLock(txid);
+    return EraseTxNoLock(wtxid);
 }
 
-int TxOrphanage::EraseTxNoLock(const Txid& txid)
+int TxOrphanage::EraseTxNoLock(const Wtxid& wtxid)
 {
     AssertLockHeld(m_mutex);
-    std::map<Txid, OrphanTx>::iterator it = m_orphans.find(txid);
+    auto it_by_wtxid = m_wtxid_to_orphan_it.find(wtxid);
+    if (it_by_wtxid == m_wtxid_to_orphan_it.end()) return 0;
+
+    std::map<Txid, OrphanTx>::iterator it = it_by_wtxid->second;
     if (it == m_orphans.end())
         return 0;
     for (const CTxIn& txin : it->second.tx->vin)
@@ -85,10 +88,10 @@ int TxOrphanage::EraseTxNoLock(const Txid& txid)
         m_orphan_list[old_pos] = it_last;
         it_last->second.list_pos = old_pos;
     }
-    const auto& wtxid = it->second.tx->GetWitnessHash();
+    const auto& txid = it->second.tx->GetHash();
     LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", txid.ToString(), wtxid.ToString());
     m_orphan_list.pop_back();
-    m_wtxid_to_orphan_it.erase(it->second.tx->GetWitnessHash());
+    m_wtxid_to_orphan_it.erase(wtxid);
 
     m_orphans.erase(it);
     return 1;
@@ -107,7 +110,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
         std::map<Txid, OrphanTx>::iterator maybeErase = iter++; // increment to avoid iterator becoming invalid
         if (maybeErase->second.fromPeer == peer)
         {
-            nErased += EraseTxNoLock(maybeErase->second.tx->GetHash());
+            nErased += EraseTxNoLock(maybeErase->second.tx->GetWitnessHash());
         }
     }
     if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx from peer=%d\n", nErased, peer);
@@ -129,7 +132,7 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
         {
             std::map<Txid, OrphanTx>::iterator maybeErase = iter++;
             if (maybeErase->second.nTimeExpire <= nNow) {
-                nErased += EraseTxNoLock(maybeErase->second.tx->GetHash());
+                nErased += EraseTxNoLock(maybeErase->second.tx->GetWitnessHash());
             } else {
                 nMinExpTime = std::min(maybeErase->second.nTimeExpire, nMinExpTime);
             }
@@ -142,7 +145,7 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
     {
         // Evict a random orphan:
         size_t randompos = rng.randrange(m_orphan_list.size());
-        EraseTxNoLock(m_orphan_list[randompos]->first);
+        EraseTxNoLock(m_orphan_list[randompos]->second.tx->GetWitnessHash());
         ++nEvicted;
     }
     if (nEvicted > 0) LogPrint(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
@@ -211,7 +214,7 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
 {
     LOCK(m_mutex);
 
-    std::vector<Txid> vOrphanErase;
+    std::vector<Wtxid> vOrphanErase;
 
     for (const CTransactionRef& ptx : block.vtx) {
         const CTransaction& tx = *ptx;
@@ -222,8 +225,7 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
             if (itByPrev == m_outpoint_to_orphan_it.end()) continue;
             for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
                 const CTransaction& orphanTx = *(*mi)->second.tx;
-                const auto& orphanHash = orphanTx.GetHash();
-                vOrphanErase.push_back(orphanHash);
+                vOrphanErase.push_back(orphanTx.GetWitnessHash());
             }
         }
     }
