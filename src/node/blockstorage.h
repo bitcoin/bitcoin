@@ -155,6 +155,16 @@ private:
     /** Return false if undo file flushing fails. */
     [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
 
+    /**
+     * Helper function performing various preparations before a block can be saved to disk:
+     * Returns the correct position for the block to be saved, which may be in the current or a new
+     * block file depending on nAddSize. May flush the previous blockfile to disk if full, updates
+     * blockfile info, and checks if there is enough disk space to save the block.
+     *
+     * If fKnown is false, the nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
+     * separator fields which are written before it by WriteBlockToDisk (BLOCK_SERIALIZATION_HEADER_SIZE).
+     * If fKnown is true, nAddSize should be just the size of the serialized CBlock.
+     */
     [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
@@ -164,6 +174,12 @@ private:
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
+    /**
+     * Write a block to disk. The pos argument passed to this function is modified by this call. Before this call, it should
+     * point to an unused file location where separator fields will be written, followed by the serialized CBlock data.
+     * After this call, it will point to the beginning of the serialized CBlock data, after the separator fields
+     * (BLOCK_SERIALIZATION_HEADER_SIZE)
+     */
     bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const;
     bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const;
 
@@ -312,7 +328,16 @@ public:
     bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
+    /** Store block on disk and update block file statistics.
+     *  If dbp is non-null, it means the block data is already stored, and dbp contains the file position.
+     *  In this case, the block data will not be written, only the block file statistics will be updated. This case should only happen during reindexing.
+     *
+     * @param[in]  block        the block to be stored
+     * @param[in]  nHeight      the height of the block
+     *
+     * @returns in case of success, the position to which the block was written to
+     *          in case of an error, an empty FlatFilePos
+     */
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
 
     /** Whether running in -prune mode. */
