@@ -3385,31 +3385,9 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
         if (fcntl(wakeupPipe[1], F_SETFL, fFlags | O_NONBLOCK) == -1) {
             LogPrint(BCLog::NET, "fcntl for O_NONBLOCK on wakeupPipe failed\n");
         }
-#ifdef USE_KQUEUE
-        if (socketEventsMode == SocketEventsMode::KQueue) {
-            struct kevent event;
-            EV_SET(&event, wakeupPipe[0], EVFILT_READ, EV_ADD, 0, 0, nullptr);
-            int r = kevent(Assert(m_edge_trig_events)->m_fd, &event, 1, nullptr, 0, nullptr);
-            if (r != 0) {
-                LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                         m_edge_trig_events->m_fd, EV_ADD, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
-                return false;
-            }
+        if (m_edge_trig_events && !m_edge_trig_events->RegisterPipe(wakeupPipe[0])) {
+            LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterPipe() failed\n");
         }
-#endif
-#ifdef USE_EPOLL
-        if (socketEventsMode == SocketEventsMode::EPoll) {
-            epoll_event event;
-            event.events = EPOLLIN;
-            event.data.fd = wakeupPipe[0];
-            int r = epoll_ctl(Assert(m_edge_trig_events)->m_fd, EPOLL_CTL_ADD, wakeupPipe[0], &event);
-            if (r != 0) {
-                LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                         m_edge_trig_events->m_fd, EPOLL_CTL_ADD, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
-                return false;
-            }
-        }
-#endif
     }
 #endif
 
@@ -3578,24 +3556,14 @@ void CConnman::StopNodes()
     semOutbound.reset();
     semAddnode.reset();
 
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SocketEventsMode::KQueue && Assert(m_edge_trig_events)->m_fd != -1) {
+    if (m_edge_trig_events) {
 #ifdef USE_WAKEUP_PIPE
-        struct kevent event;
-        EV_SET(&event, wakeupPipe[0], EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-        kevent(m_edge_trig_events->m_fd, &event, 1, nullptr, 0, nullptr);
+        if (!m_edge_trig_events->UnregisterPipe(wakeupPipe[0])) {
+            LogPrintf("EdgeTriggeredEvents::UnregisterPipe() failed\n");
+        }
 #endif
         m_edge_trig_events.reset();
     }
-#endif
-#ifdef USE_EPOLL
-    if (socketEventsMode == SocketEventsMode::EPoll && Assert(m_edge_trig_events)->m_fd != -1) {
-#ifdef USE_WAKEUP_PIPE
-        epoll_ctl(m_edge_trig_events->m_fd, EPOLL_CTL_DEL, wakeupPipe[0], nullptr);
-#endif
-        m_edge_trig_events.reset();
-    }
-#endif
 
 #ifdef USE_WAKEUP_PIPE
     if (wakeupPipe[0] != -1) close(wakeupPipe[0]);

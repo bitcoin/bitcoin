@@ -59,17 +59,17 @@ EdgeTriggeredEvents::~EdgeTriggeredEvents()
     }
 }
 
-bool EdgeTriggeredEvents::AddSocket(SOCKET socket) const
+bool EdgeTriggeredEvents::RegisterEntity(int entity, std::string entity_name) const
 {
     assert(m_valid);
 
     if (m_mode == SocketEventsMode::EPoll) {
 #ifdef USE_EPOLL
         epoll_event event;
-        event.data.fd = socket;
+        event.data.fd = entity;
         event.events = EPOLLIN;
-        if (epoll_ctl(m_fd, EPOLL_CTL_ADD, socket, &event) != 0) {
-            LogPrintf("Failed to add socket to epoll fd (epoll_ctl returned error %s)\n",
+        if (epoll_ctl(m_fd, EPOLL_CTL_ADD, entity, &event) != 0) {
+            LogPrintf("Failed to add %s to epoll fd (epoll_ctl returned error %s)\n", entity_name,
                       NetworkErrorString(WSAGetLastError()));
             return false;
         }
@@ -79,9 +79,9 @@ bool EdgeTriggeredEvents::AddSocket(SOCKET socket) const
     } else if (m_mode == SocketEventsMode::KQueue) {
 #ifdef USE_KQUEUE
         struct kevent event;
-        EV_SET(&event, socket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
+        EV_SET(&event, entity, EVFILT_READ, EV_ADD, 0, 0, nullptr);
         if (kevent(m_fd, &event, 1, nullptr, 0, nullptr) != 0) {
-            LogPrintf("Failed to add socket to kqueue fd (kevent returned error %s)\n",
+            LogPrintf("Failed to add %s to kqueue fd (kevent returned error %s)\n", entity_name,
                       NetworkErrorString(WSAGetLastError()));
             return false;
         }
@@ -94,14 +94,14 @@ bool EdgeTriggeredEvents::AddSocket(SOCKET socket) const
     return true;
 }
 
-bool EdgeTriggeredEvents::RemoveSocket(SOCKET socket) const
+bool EdgeTriggeredEvents::UnregisterEntity(int entity, std::string entity_name) const
 {
     assert(m_valid);
 
     if (m_mode == SocketEventsMode::EPoll) {
 #ifdef USE_EPOLL
-        if (epoll_ctl(m_fd, EPOLL_CTL_DEL, socket, nullptr) != 0) {
-            LogPrintf("Failed to remove socket from epoll fd (epoll_ctl returned error %s)\n",
+        if (epoll_ctl(m_fd, EPOLL_CTL_DEL, entity, nullptr) != 0) {
+            LogPrintf("Failed to remove %s from epoll fd (epoll_ctl returned error %s)\n", entity_name,
                       NetworkErrorString(WSAGetLastError()));
             return false;
         }
@@ -111,9 +111,9 @@ bool EdgeTriggeredEvents::RemoveSocket(SOCKET socket) const
     } else if (m_mode == SocketEventsMode::KQueue) {
 #ifdef USE_KQUEUE
         struct kevent event;
-        EV_SET(&event, socket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+        EV_SET(&event, entity, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
         if (kevent(m_fd, &event, 1, nullptr, 0, nullptr) != 0) {
-            LogPrintf("Failed to remove socket from kqueue fd (kevent returned error %s)\n",
+            LogPrintf("Failed to remove %s from kqueue fd (kevent returned error %s)\n", entity_name,
                       NetworkErrorString(WSAGetLastError()));
             return false;
         }
@@ -124,6 +124,38 @@ bool EdgeTriggeredEvents::RemoveSocket(SOCKET socket) const
         assert(false);
     }
     return true;
+}
+
+bool EdgeTriggeredEvents::AddSocket(SOCKET socket) const
+{
+    return RegisterEntity(socket, "socket");
+}
+
+bool EdgeTriggeredEvents::RemoveSocket(SOCKET socket) const
+{
+    return UnregisterEntity(socket, "socket");
+}
+
+bool EdgeTriggeredEvents::RegisterPipe(int wakeup_pipe)
+{
+    if (m_pipe_registered) {
+        LogPrintf("Pipe already registered, ignoring new registration request\n");
+        return false;
+    }
+    bool ret = RegisterEntity(wakeup_pipe, "wakeup pipe");
+    if (ret) m_pipe_registered = true;
+    return ret;
+}
+
+bool EdgeTriggeredEvents::UnregisterPipe(int wakeup_pipe)
+{
+    if (!m_pipe_registered) {
+        LogPrintf("No pipe currently registered to unregister, ignoring request\n");
+        return false;
+    }
+    bool ret = UnregisterEntity(wakeup_pipe, "wakeup pipe");
+    if (ret) m_pipe_registered = false;
+    return ret;
 }
 
 bool EdgeTriggeredEvents::RegisterEvents(SOCKET socket) const
