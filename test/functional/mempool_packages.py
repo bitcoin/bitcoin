@@ -199,13 +199,13 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert set(mempool1).issubset(set(mempool0))
         for tx in chain[:CUSTOM_ANCESTOR_LIMIT]:
             assert tx in mempool1
-        # TODO: more detailed check of node1's mempool (fees etc.)
-        # check transaction unbroadcast info (should be false if in both mempools)
-        mempool = self.nodes[0].getrawmempool(True)
-        for tx in mempool:
-            assert_equal(mempool[tx]['unbroadcast'], False)
-
-        # TODO: test ancestor size limits
+            entry0 = self.nodes[0].getmempoolentry(tx)
+            entry1 = self.nodes[1].getmempoolentry(tx)
+            assert not entry0['unbroadcast']
+            assert not entry1['unbroadcast']
+            assert_equal(entry1['fees']['base'], entry0['fees']['base'])
+            assert_equal(entry1['vsize'], entry0['vsize'])
+            assert_equal(entry1['depends'], entry0['depends'])
 
         # Now test descendant chain limits
 
@@ -251,10 +251,14 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert tx in mempool1
         for tx in chain[CUSTOM_DESCENDANT_LIMIT:]:
             assert tx not in mempool1
-        # TODO: more detailed check of node1's mempool (fees etc.)
-
-        # TODO: test descendant size limits
-
+        for tx in mempool1:
+            entry0 = self.nodes[0].getmempoolentry(tx)
+            entry1 = self.nodes[1].getmempoolentry(tx)
+            assert not entry0['unbroadcast']
+            assert not entry1['unbroadcast']
+            assert_equal(entry1['fees']['base'], entry0['fees']['base'])
+            assert_equal(entry1['vsize'], entry0['vsize'])
+            assert_equal(entry1['depends'], entry0['depends'])
         # Test reorg handling
         # First, the basics:
         self.generate(self.nodes[0], 1)
