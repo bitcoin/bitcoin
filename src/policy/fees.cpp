@@ -723,6 +723,19 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const Remo
     return true;
 }
 
+void CBlockPolicyEstimator::removeCPFPdParentTxs(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block)
+{
+    const auto mini_miner_input = GetMiniMinerInput(txs_removed_for_block);
+    const auto linearizedTransactions = node::MiniMiner(mini_miner_input.first, mini_miner_input.second).Linearize();
+    for (const auto& tx : txs_removed_for_block) {
+        const auto tx_inclusion_order = linearizedTransactions.inclusion_order.find(tx.info.m_tx->GetHash())->second;
+        const auto mining_score = linearizedTransactions.packages[tx_inclusion_order];
+        if (mining_score != CFeeRate(tx.info.m_fee, static_cast<int32_t>(tx.info.m_virtual_transaction_size))) {
+            // Ignore all transactions whose mining score is not the same with it's fee rate
+            _removeTx(tx.info.m_tx->GetHash(), /*inBlock=*/true);
+        }
+    }
+}
 void CBlockPolicyEstimator::processBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
                                          unsigned int nBlockHeight)
 {
@@ -750,6 +763,12 @@ void CBlockPolicyEstimator::processBlock(const std::vector<RemovedMempoolTransac
     feeStats->UpdateMovingAverages();
     shortStats->UpdateMovingAverages();
     longStats->UpdateMovingAverages();
+
+    // We only consider parent transactions that are mined
+    // solely by their own fee rate. All transactions that are
+    // CPFP'd by some child should be ignored. Child transactions
+    // are not tracked upon entry into the mempool.
+    removeCPFPdParentTxs(txs_removed_for_block);
 
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
