@@ -28,3 +28,17 @@ fs::path GetWalletDir()
 
     return path;
 }
+
+bool IsFeatureSupported(int wallet_version, int feature_version)
+{
+    return wallet_version >= feature_version;
+}
+
+WalletFeature GetClosestWalletFeature(int version)
+{
+    const std::array<WalletFeature, 5> wallet_features{{FEATURE_LATEST, FEATURE_HD, FEATURE_COMPRPUBKEY, FEATURE_WALLETCRYPT, FEATURE_BASE}};
+    for (const WalletFeature& wf : wallet_features) {
+        if (version >= wf) return wf;
+    }
+    return static_cast<WalletFeature>(0);
+}

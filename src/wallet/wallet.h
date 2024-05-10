@@ -128,6 +128,7 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE
     |   WALLET_FLAG_BLANK_WALLET
     |   WALLET_FLAG_KEY_ORIGIN_METADATA
+    |   WALLET_FLAG_LAST_HARDENED_XPUB_CACHED
     |   WALLET_FLAG_DISABLE_PRIVATE_KEYS
     |   WALLET_FLAG_DESCRIPTORS;
 
@@ -138,6 +139,7 @@ static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
     {"avoid_reuse", WALLET_FLAG_AVOID_REUSE},
     {"blank", WALLET_FLAG_BLANK_WALLET},
     {"key_origin_metadata", WALLET_FLAG_KEY_ORIGIN_METADATA},
+    {"last_hardened_xpub_cached", WALLET_FLAG_LAST_HARDENED_XPUB_CACHED},
     {"disable_private_keys", WALLET_FLAG_DISABLE_PRIVATE_KEYS},
     {"descriptor_wallet", WALLET_FLAG_DESCRIPTORS},
 };
@@ -706,9 +708,6 @@ private:
     //! the current wallet version: clients below this version are not able to load the wallet
     int nWalletVersion GUARDED_BY(cs_wallet){FEATURE_BASE};
 
-    //! the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
-    int nWalletMaxVersion GUARDED_BY(cs_wallet) = FEATURE_BASE;
-
     int64_t nNextResend = 0;
     bool fBroadcastTransactions = false;
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
@@ -911,8 +910,8 @@ public:
     const CWalletTx* GetWalletTx(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTrusted(const CWalletTx& wtx, std::set<uint256>& trusted_parents) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    //! check whether we are allowed to upgrade (or already support) to the named feature
-    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
+    //! check whether we support the named feature
+    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return IsFeatureSupported(nWalletVersion, wf); }
 
     /**
      * populate vCoins with vector of available COutputs.
@@ -981,7 +980,10 @@ public:
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
     void UpgradeKeyMetadata() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
+    //! Upgrade DescriptorCaches
+    void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
 
     //! Adds a destination data tuple to the store, without saving it to disk
     void LoadDestData(const CTxDestination& dest, const std::string& key, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -1198,11 +1200,8 @@ public:
 
     unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-    void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr, bool fExplicit = false) override;
-
-    //! change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
-    bool SetMaxVersion(int nVersion);
+    //! signify that a particular wallet feature is now used.
+    void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr) override;
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() const { LOCK(cs_wallet); return nWalletVersion; }
@@ -1334,7 +1333,9 @@ public:
 
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
-    bool SetWalletFlags(uint64_t overwriteFlags, bool memOnly);
+    bool AddWalletFlags(uint64_t flags);
+    /** Loads the flags into the wallet. (used by LoadWallet) */
+    bool LoadWalletFlags(uint64_t flags);
 
     /** Determine if we are a legacy wallet */
     bool IsLegacy() const;
@@ -1415,12 +1416,15 @@ public:
     //! Instantiate a descriptor ScriptPubKeyMan from the WalletDescriptor and load it
     void LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc);
 
-    //! Sets the active ScriptPubKeyMan for the specified type and internal
+    //! Adds the active ScriptPubKeyMan for the specified type and internal. Writes it to the wallet file
     //! @param[in] id The unique id for the ScriptPubKeyMan
-    //! @param[in] type The OutputType this ScriptPubKeyMan provides addresses for
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
-    //! @param[in] memonly Whether to record this update to the database. Set to true for wallet loading, normally false when actually updating the wallet.
-    void SetActiveScriptPubKeyMan(uint256 id, bool internal, bool memonly = false);
+    void AddActiveScriptPubKeyMan(uint256 id, bool internal);
+
+    //! Loads an active ScriptPubKeyMan for the specified type and internal. (used by LoadWallet)
+    //! @param[in] id The unique id for the ScriptPubKeyMan
+    //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
+    void LoadActiveScriptPubKeyMan(uint256 id, bool internal);
 
     //! Create new DescriptorScriptPubKeyMans and add them to the wallet
     void SetupDescriptorScriptPubKeyMans();

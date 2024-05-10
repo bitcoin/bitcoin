@@ -389,6 +389,19 @@ void CWallet::UpgradeKeyMetadata()
     SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
+void CWallet::UpgradeDescriptorCache()
+{
+    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) || IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
+        return;
+    }
+
+    for (ScriptPubKeyMan* spkm : GetAllScriptPubKeyMans()) {
+        DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+        desc_spkm->UpgradeDescriptorCache();
+    }
+    SetWalletFlag(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
+}
+
 bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase)
 {
     bool fWasLocked = IsLocked(true);
@@ -442,20 +455,12 @@ void CWallet::chainStateFlushed(const CBlockLocator& loc)
     batch.WriteBestBlock(loc);
 }
 
-void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, bool fExplicit)
+void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
     if (nWalletVersion >= nVersion)
         return;
-
-    // when doing an explicit upgrade, if we pass the max version permitted, upgrade all the way
-    if (fExplicit && nVersion > nWalletMaxVersion)
-            nVersion = FEATURE_LATEST;
-
     nWalletVersion = nVersion;
-
-    if (nVersion > nWalletMaxVersion)
-        nWalletMaxVersion = nVersion;
 
     {
         WalletBatch* batch = batch_in ? batch_in : new WalletBatch(GetDatabase());
@@ -464,18 +469,6 @@ void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, 
         if (!batch_in)
             delete batch;
     }
-}
-
-bool CWallet::SetMaxVersion(int nVersion)
-{
-    LOCK(cs_wallet);
-    // cannot downgrade below current version
-    if (nWalletVersion > nVersion)
-        return false;
-
-    nWalletMaxVersion = nVersion;
-
-    return true;
 }
 
 std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
@@ -665,7 +658,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch);
 
         if (!encrypted_batch->TxnCommit()) {
             delete encrypted_batch;
@@ -1684,19 +1677,28 @@ bool CWallet::IsWalletFlagSet(uint64_t flag) const
     return (m_wallet_flags & flag);
 }
 
-bool CWallet::SetWalletFlags(uint64_t overwriteFlags, bool memonly)
+bool CWallet::LoadWalletFlags(uint64_t flags)
 {
     LOCK(cs_wallet);
-    m_wallet_flags = overwriteFlags;
-    if (((overwriteFlags & KNOWN_WALLET_FLAGS) >> 32) ^ (overwriteFlags >> 32)) {
+    if (((flags & KNOWN_WALLET_FLAGS) >> 32) ^ (flags >> 32)) {
         // contains unknown non-tolerable wallet flags
         return false;
     }
-    if (!memonly && !WalletBatch(GetDatabase()).WriteWalletFlags(m_wallet_flags)) {
+    m_wallet_flags = flags;
+
+    return true;
+}
+
+bool CWallet::AddWalletFlags(uint64_t flags)
+{
+    LOCK(cs_wallet);
+    // We should never be writing unknown non-tolerable wallet flags
+    assert(((flags & KNOWN_WALLET_FLAGS) >> 32) == (flags >> 32));
+    if (!WalletBatch(GetDatabase()).WriteWalletFlags(flags)) {
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
     }
 
-    return true;
+    return LoadWalletFlags(flags);
 }
 
 int64_t CWalletTx::GetTxTime() const
@@ -4574,8 +4576,9 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
 
     if (fFirstRun)
     {
-        walletInstance->SetMaxVersion(FEATURE_LATEST);
-        walletInstance->SetWalletFlags(wallet_creation_flags, false);
+        walletInstance->SetMinVersion(FEATURE_LATEST);
+
+        walletInstance->AddWalletFlags(wallet_creation_flags);
 
         // Only create LegacyScriptPubKeyMan when not descriptor wallet
         if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
@@ -4600,8 +4603,8 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
                     }
                     LOCK(walletInstance->cs_wallet);
                     if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
-                        if (!spk_man->SetHDChainSingle(newHdChain, false)) {
-                            error = strprintf(_("%s failed"), "SetHDChainSingle");
+                        if (!spk_man->AddHDChainSingle(newHdChain)) {
+                            error = strprintf(_("%s failed"), "AddHDChainSingle");
                             return nullptr;
                         }
                     }
@@ -4887,6 +4890,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
 
 bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 {
+    int prev_version = GetVersion();
     int nMaxVersion = version;
     auto nMinVersion = DEFAULT_USE_HD_WALLET ? FEATURE_LATEST : FEATURE_COMPRPUBKEY;
     if (nMaxVersion == 0) {
@@ -4898,17 +4902,18 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
     }
 
     if (nMaxVersion < GetVersion()) {
-        error = Untranslated("Cannot downgrade wallet");
+        error = strprintf(_("Cannot downgrade wallet from version %i to version %i. Wallet version unchanged."), prev_version, version);
         return false;
     }
 
     // TODO: consider discourage users to skip passphrase for HD wallets for v21
     if (false && nMaxVersion >= FEATURE_HD && !IsHDEnabled()) {
         error = Untranslated("You should use upgradetohd RPC to upgrade non-HD wallet to HD");
+        error = strprintf(_("Cannot upgrade a non HD wallet from version %i to version %i which is non-HD wallet. Use upgradetohd RPC"), prev_version, version);
         return false;
     }
 
-    SetMaxVersion(nMaxVersion);
+    SetMinVersion(GetClosestWalletFeature(version));
 
     return true;
 }
@@ -5649,12 +5654,21 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
             spk_manager->SetupDescriptorGeneration(master_key);
             uint256 id = spk_manager->GetID();
             m_spk_managers[id] = std::move(spk_manager);
-            SetActiveScriptPubKeyMan(id, internal);
+            AddActiveScriptPubKeyMan(id, internal);
         }
     }
 }
 
-void CWallet::SetActiveScriptPubKeyMan(uint256 id, bool internal, bool memonly)
+void CWallet::AddActiveScriptPubKeyMan(uint256 id, bool internal)
+{
+    WalletBatch batch(GetDatabase());
+    if (!batch.WriteActiveScriptPubKeyMan(id, internal)) {
+        throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
+    }
+    LoadActiveScriptPubKeyMan(id, internal);
+}
+
+void CWallet::LoadActiveScriptPubKeyMan(uint256 id, bool internal)
 {
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(OutputType::LEGACY), static_cast<int>(internal));
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
@@ -5662,12 +5676,6 @@ void CWallet::SetActiveScriptPubKeyMan(uint256 id, bool internal, bool memonly)
     spk_man->SetInternal(internal);
     spk_mans = spk_man;
 
-    if (!memonly) {
-        WalletBatch batch(GetDatabase());
-        if (!batch.WriteActiveScriptPubKeyMan(id, internal)) {
-            throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
-        }
-    }
     NotifyCanGetAddressesChanged();
 
 }

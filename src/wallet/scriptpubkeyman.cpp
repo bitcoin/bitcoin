@@ -218,14 +218,14 @@ bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key
         if (keyFail) {
             return false;
         }
-        if (!keyPass && !accept_no_keys && (hdChain.IsNull() || !hdChain.IsNull() && !hdChain.IsCrypted())) {
+        if (!keyPass && !accept_no_keys && (m_hd_chain.IsNull() || !m_hd_chain.IsNull() && !m_hd_chain.IsCrypted())) {
             return false;
         }
 
-        if(!hdChain.IsNull() && !hdChain.IsCrypted()) {
+        if(!m_hd_chain.IsNull() && !m_hd_chain.IsCrypted()) {
             // try to decrypt seed and make sure it matches
             CHDChain hdChainTmp;
-            if (!DecryptHDChain(master_key, hdChainTmp) || (hdChain.GetID() != hdChainTmp.GetSeedHash())) {
+            if (!DecryptHDChain(master_key, hdChainTmp) || (m_hd_chain.GetID() != hdChainTmp.GetSeedHash())) {
                 return false;
             }
         }
@@ -267,8 +267,8 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     }
 
     if (!hdChainCurrent.IsNull()) {
-        assert(EncryptHDChain(master_key, hdChain));
-        assert(SetHDChain(hdChain));
+        assert(EncryptHDChain(master_key, m_hd_chain));
+        assert(LoadHDChain(m_hd_chain));
 
         CHDChain hdChainCrypted;
         assert(GetHDChain(hdChainCrypted));
@@ -277,7 +277,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
         assert(hdChainCurrent.GetID() == hdChainCrypted.GetID());
         assert(hdChainCurrent.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-        assert(SetHDChain(*encrypted_batch, hdChainCrypted, false));
+        assert(AddHDChain(*encrypted_batch, hdChainCrypted));
     }
 
     encrypted_batch = nullptr;
@@ -396,7 +396,7 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
     CHDChain hdChainPrev = hdChainTmp;
     bool res = EncryptHDChain(vMasterKey, hdChainTmp);
     assert(res);
-    res = SetHDChain(hdChainTmp);
+    res = LoadHDChain(hdChainTmp);
     assert(res);
 
     CHDChain hdChainCrypted;
@@ -407,8 +407,8 @@ void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secure
     assert(hdChainPrev.GetID() == hdChainCrypted.GetID());
     assert(hdChainPrev.GetSeedHash() != hdChainCrypted.GetSeedHash());
 
-    if (!SetHDChainSingle(hdChainCrypted, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
+    if (!AddHDChainSingle(hdChainCrypted)) {
+        throw std::runtime_error(std::string(__func__) + ": AddHDChainSingle failed");
     }
 }
 
@@ -426,8 +426,8 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
     // add default account
     newHdChain.AddAccount();
 
-    if (!SetHDChainSingle(newHdChain, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetHDChainSingle failed");
+    if (!AddHDChainSingle(newHdChain)) {
+        throw std::runtime_error(std::string(__func__) + ": AddHDChainSingle failed");
     }
 
     if (!NewKeyPool()) {
@@ -435,14 +435,24 @@ void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemoni
     }
 }
 
-bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly)
+bool LegacyScriptPubKeyMan::LoadHDChain(const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
 
-    if (!SetHDChain(chain))
+    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
+
+    m_hd_chain = chain;
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::AddHDChain(WalletBatch &batch, const CHDChain& chain)
+{
+    LOCK(cs_KeyStore);
+
+    if (!LoadHDChain(chain))
         return false;
 
-    if (!memonly) {
+    {
         if (chain.IsCrypted() && encrypted_batch) {
             if (!encrypted_batch->WriteHDChain(chain))
                 throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed for encrypted batch");
@@ -458,10 +468,10 @@ bool LegacyScriptPubKeyMan::SetHDChain(WalletBatch &batch, const CHDChain& chain
     return true;
 }
 
-bool LegacyScriptPubKeyMan::SetHDChainSingle(const CHDChain& chain, bool memonly)
+bool LegacyScriptPubKeyMan::AddHDChainSingle(const CHDChain& chain)
 {
     WalletBatch batch(m_storage.GetDatabase());
-    return SetHDChain(batch, chain, memonly);
+    return AddHDChain(batch, chain);
 }
 
 bool LegacyScriptPubKeyMan::GetDecryptedHDChain(CHDChain& hdChainRet)
@@ -539,40 +549,40 @@ bool LegacyScriptPubKeyMan::DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, 
     if (!m_storage.HasEncryptionKeys())
         return true;
 
-    if (hdChain.IsNull())
+    if (m_hd_chain.IsNull())
         return false;
 
-    if (!hdChain.IsCrypted())
+    if (!m_hd_chain.IsCrypted())
         return false;
 
     SecureVector vchSecureSeed;
-    SecureVector vchSecureCryptedSeed = hdChain.GetSeed();
+    SecureVector vchSecureCryptedSeed = m_hd_chain.GetSeed();
     std::vector<unsigned char> vchCryptedSeed(vchSecureCryptedSeed.begin(), vchSecureCryptedSeed.end());
-    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, hdChain.GetID(), vchSecureSeed))
+    if (!DecryptSecret(vMasterKeyIn, vchCryptedSeed, m_hd_chain.GetID(), vchSecureSeed))
         return false;
 
-    hdChainRet = hdChain;
+    hdChainRet = m_hd_chain;
     if (!hdChainRet.SetSeed(vchSecureSeed, false))
         return false;
 
     // hash of decrypted seed must match chain id
-    if (hdChainRet.GetSeedHash() != hdChain.GetID())
+    if (hdChainRet.GetSeedHash() != m_hd_chain.GetID())
         return false;
 
     SecureVector vchSecureCryptedMnemonic;
     SecureVector vchSecureCryptedMnemonicPassphrase;
 
     // it's ok to have no mnemonic if wallet was initialized via hdseed
-    if (hdChain.GetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase)) {
+    if (m_hd_chain.GetMnemonic(vchSecureCryptedMnemonic, vchSecureCryptedMnemonicPassphrase)) {
         SecureVector vchSecureMnemonic;
         SecureVector vchSecureMnemonicPassphrase;
 
         std::vector<unsigned char> vchCryptedMnemonic(vchSecureCryptedMnemonic.begin(), vchSecureCryptedMnemonic.end());
         std::vector<unsigned char> vchCryptedMnemonicPassphrase(vchSecureCryptedMnemonicPassphrase.begin(), vchSecureCryptedMnemonicPassphrase.end());
 
-        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, hdChain.GetID(), vchSecureMnemonic))
+        if (!vchCryptedMnemonic.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonic, m_hd_chain.GetID(), vchSecureMnemonic))
             return false;
-        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, hdChain.GetID(), vchSecureMnemonicPassphrase))
+        if (!vchCryptedMnemonicPassphrase.empty() && !DecryptSecret(vMasterKeyIn, vchCryptedMnemonicPassphrase, m_hd_chain.GetID(), vchSecureMnemonicPassphrase))
             return false;
 
         if (!hdChainRet.SetMnemonic(vchSecureMnemonic, vchSecureMnemonicPassphrase, false))
@@ -1090,16 +1100,6 @@ bool LegacyScriptPubKeyMan::AddWatchOnly(const CScript& dest, int64_t nCreateTim
     return AddWatchOnly(dest);
 }
 
-bool LegacyScriptPubKeyMan::SetHDChain(const CHDChain& chain)
-{
-    LOCK(cs_KeyStore);
-
-    if (m_storage.HasEncryptionKeys() != chain.IsCrypted()) return false;
-
-    hdChain = chain;
-    return true;
-}
-
 bool LegacyScriptPubKeyMan::HaveHDKey(const CKeyID &address, CHDChain& hdChainCurrent) const
 {
     LOCK(cs_KeyStore);
@@ -1322,8 +1322,8 @@ void LegacyScriptPubKeyMan::DeriveNewChildKey(WalletBatch &batch, CKeyMetadata& 
     if (!hdChainCurrent.SetAccount(nAccountIndex, acc))
         throw std::runtime_error(std::string(__func__) + ": SetAccount failed");
 
-    if (!SetHDChain(batch, hdChainCurrent, false)) {
-        throw std::runtime_error(std::string(__func__) + ": SetHDChain failed");
+    if (!AddHDChain(batch, hdChainCurrent)) {
+        throw std::runtime_error(std::string(__func__) + ": AddHDChain failed");
     }
 
     if (!AddHDPubKey(batch, childKey.Neuter(), fInternal))
@@ -1758,8 +1758,8 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 bool LegacyScriptPubKeyMan::GetHDChain(CHDChain& hdChainRet) const
 {
     LOCK(cs_KeyStore);
-    hdChainRet = hdChain;
-    return !hdChain.IsNull();
+    hdChainRet = m_hd_chain;
+    return !m_hd_chain.IsNull();
 }
 
 void LegacyScriptPubKeyMan::SetInternal(bool internal) {}
@@ -1950,34 +1950,10 @@ bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
             }
             m_map_pubkeys[pubkey] = i;
         }
-        // Write the cache
-        for (const auto& parent_xpub_pair : temp_cache.GetCachedParentExtPubKeys()) {
-            CExtPubKey xpub;
-            if (m_wallet_descriptor.cache.GetCachedParentExtPubKey(parent_xpub_pair.first, xpub)) {
-                if (xpub != parent_xpub_pair.second) {
-                    throw std::runtime_error(std::string(__func__) + ": New cached parent xpub does not match already cached parent xpub");
-                }
-                continue;
-            }
-            if (!batch.WriteDescriptorParentCache(parent_xpub_pair.second, id, parent_xpub_pair.first)) {
-                throw std::runtime_error(std::string(__func__) + ": writing cache item failed");
-            }
-            m_wallet_descriptor.cache.CacheParentExtPubKey(parent_xpub_pair.first, parent_xpub_pair.second);
-        }
-        for (const auto& derived_xpub_map_pair : temp_cache.GetCachedDerivedExtPubKeys()) {
-            for (const auto& derived_xpub_pair : derived_xpub_map_pair.second) {
-                CExtPubKey xpub;
-                if (m_wallet_descriptor.cache.GetCachedDerivedExtPubKey(derived_xpub_map_pair.first, derived_xpub_pair.first, xpub)) {
-                    if (xpub != derived_xpub_pair.second) {
-                        throw std::runtime_error(std::string(__func__) + ": New cached derived xpub does not match already cached derived xpub");
-                    }
-                    continue;
-                }
-                if (!batch.WriteDescriptorDerivedCache(derived_xpub_pair.second, id, derived_xpub_map_pair.first, derived_xpub_pair.first)) {
-                    throw std::runtime_error(std::string(__func__) + ": writing cache item failed");
-                }
-                m_wallet_descriptor.cache.CacheDerivedExtPubKey(derived_xpub_map_pair.first, derived_xpub_pair.first, derived_xpub_pair.second);
-            }
+        // Merge and write the cache
+        DescriptorCache new_items = m_wallet_descriptor.cache.MergeAndDiff(temp_cache);
+        if (!batch.WriteDescriptorCacheItems(id, new_items)) {
+            throw std::runtime_error(std::string(__func__) + ": writing cache items failed");
         }
         m_max_cached_index++;
     }
@@ -2402,15 +2378,41 @@ const std::vector<CScript> DescriptorScriptPubKeyMan::GetScriptPubKeys() const
     return script_pub_keys;
 }
 
-bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, bool priv) const
+bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out) const
 {
     LOCK(cs_desc_man);
-    if (m_storage.IsLocked()) {
-        return false;
-    }
 
     FlatSigningProvider provider;
     provider.keys = GetKeys();
 
-    return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, priv);
+    return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
+}
+
+void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
+{
+    LOCK(cs_desc_man);
+    if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
+        return;
+    }
+
+    // Skip if we have the last hardened xpub cache
+    if (m_wallet_descriptor.cache.GetCachedLastHardenedExtPubKeys().size() > 0) {
+        return;
+    }
+
+    // Expand the descriptor
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+    FlatSigningProvider out_keys;
+    std::vector<CScript> scripts_temp;
+    DescriptorCache temp_cache;
+    if (!m_wallet_descriptor.descriptor->Expand(0, provider, scripts_temp, out_keys, &temp_cache)){
+        throw std::runtime_error("Unable to expand descriptor");
+    }
+
+    // Cache the last hardened xpubs
+    DescriptorCache diff = m_wallet_descriptor.cache.MergeAndDiff(temp_cache);
+    if (!WalletBatch(m_storage.GetDatabase()).WriteDescriptorCacheItems(GetID(), diff)) {
+        throw std::runtime_error(std::string(__func__) + ": writing cache items failed");
+    }
 }

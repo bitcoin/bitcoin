@@ -9,6 +9,7 @@ from base64 import b64encode
 from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
 from subprocess import CalledProcessError
+import hashlib
 import inspect
 import json
 import logging
@@ -268,6 +269,14 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
     else:
         return False
 
+def sha256sum_file(filename):
+    h = hashlib.sha256()
+    with open(filename, 'rb') as f:
+        d = f.read(4096)
+        while len(d) > 0:
+            h.update(d)
+            d = f.read(4096)
+    return h.digest()
 
 # RPC/P2P connection constants and functions
 ############################################

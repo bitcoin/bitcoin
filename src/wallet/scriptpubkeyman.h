@@ -37,7 +37,7 @@ public:
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
     virtual bool CanSupportFeature(enum WalletFeature) const = 0;
-    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr, bool = false) = 0;
+    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr) = 0;
     virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
     virtual bool HasEncryptionKeys() const = 0;
     virtual bool IsLocked(bool fForMixing = false) const = 0;
@@ -278,15 +278,11 @@ private:
     /** Add a KeyOriginInfo to the wallet */
     bool AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info);
 
-    /* Set the HD chain model (chain child index counters) */
-    bool SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly);
-
     bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& chain);
     bool DecryptHDChain(const CKeyingMaterial& vMasterKeyIn, CHDChain& hdChainRet) const;
-    bool SetHDChain(const CHDChain& chain);
 
     /* the HD chain data model (external chain counters) */
-    CHDChain hdChain GUARDED_BY(cs_KeyStore);
+    CHDChain m_hd_chain GUARDED_BY(cs_KeyStore);
 
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
@@ -398,11 +394,15 @@ public:
     //! Generate a new key
     CPubKey GenerateNewKey(WalletBatch& batch, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
+    /* Set the HD chain model (chain child index counters) and writes it to the database */
+    bool AddHDChain(WalletBatch &batch, const CHDChain& chain);
+    //! Load a HD chain model (used by LoadWallet)
+    bool LoadHDChain(const CHDChain& chain);
     /**
      * Set the HD chain model (chain child index counters) using temporary wallet db object
      * which causes db flush every time these methods are used
      */
-    bool SetHDChainSingle(const CHDChain& chain, bool memonly);
+    bool AddHDChainSingle(const CHDChain& chain);
 
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
@@ -606,7 +606,9 @@ public:
     const WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     const std::vector<CScript> GetScriptPubKeys() const;
 
-    bool GetDescriptorString(std::string& out, bool priv) const;
+    bool GetDescriptorString(std::string& out) const;
+
+    void UpgradeDescriptorCache();
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

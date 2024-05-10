@@ -23,6 +23,8 @@ enum WalletFeature
     FEATURE_LATEST = FEATURE_HD
 };
 
+bool IsFeatureSupported(int wallet_version, int feature_version);
+WalletFeature GetClosestWalletFeature(int version);
 
 enum WalletFlags : uint64_t {
     // wallet flags in the upper section (> 1 << 31) will lead to not opening the wallet if flag is unknown
@@ -34,6 +36,9 @@ enum WalletFlags : uint64_t {
 
     // Indicates that the metadata has already been upgraded to contain key origins
     WALLET_FLAG_KEY_ORIGIN_METADATA = (1ULL << 1),
+
+    // Indicates that the descriptor cache has been upgraded to cache last hardened xpubs
+    WALLET_FLAG_LAST_HARDENED_XPUB_CACHED = (1ULL << 2),
 
     // will enforce the rule that the wallet can't contain any private keys (only watch-only/pubkeys)
     WALLET_FLAG_DISABLE_PRIVATE_KEYS = (1ULL << 32),
