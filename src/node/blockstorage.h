@@ -164,7 +164,7 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields which are written before it by WriteBlockToDisk (BLOCK_SERIALIZATION_HEADER_SIZE).
      */
-    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
+    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
@@ -221,7 +221,7 @@ private:
     //! effectively.
     //!
     //! This data structure maintains separate blockfile number cursors for each
-    //! BlockfileType. The ASSUMED state is initialized, when necessary, in FindBlockPos().
+    //! BlockfileType. The ASSUMED state is initialized, when necessary, in FindNextBlockPos().
     //!
     //! The first element is the NORMAL cursor, second is ASSUMED.
     std::array<std::optional<BlockfileCursor>, BlockfileType::NUM_TYPES>
