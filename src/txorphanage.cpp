@@ -169,14 +169,10 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
     }
 }
 
-bool TxOrphanage::HaveTx(const GenTxid& gtxid) const
+bool TxOrphanage::HaveTx(const Wtxid& wtxid) const
 {
     LOCK(m_mutex);
-    if (gtxid.IsWtxid()) {
-        return m_wtxid_to_orphan_it.count(Wtxid::FromUint256(gtxid.GetHash()));
-    } else {
-        return m_orphans.count(Txid::FromUint256(gtxid.GetHash()));
-    }
+    return m_wtxid_to_orphan_it.count(wtxid);
 }
 
 CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)

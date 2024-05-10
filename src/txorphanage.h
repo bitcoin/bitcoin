@@ -23,8 +23,8 @@ public:
     /** Add a new orphan transaction */
     bool AddTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Check if we already have an orphan transaction (by txid or wtxid) */
-    bool HaveTx(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Check if we already have an orphan transaction (by wtxid only) */
+    bool HaveTx(const Wtxid& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Extract a transaction from a peer's work set
      *  Returns nullptr if there are no transactions to work on.
