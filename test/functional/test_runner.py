@@ -387,6 +387,7 @@ BASE_SCRIPTS = [
     'p2p_node_network_limited.py --v1transport',
     'p2p_node_network_limited.py --v2transport',
     'p2p_permissions.py',
+    'rpc_getsilentpaymentblockdata.py',
     'feature_blocksdir.py',
     'wallet_startup.py',
     'feature_remove_pruned_files_on_startup.py',

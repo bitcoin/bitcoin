@@ -21,6 +21,7 @@
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
+#include <index/bip352.h>
 #include <kernel/coinstats.h>
 #include <logging/timer.h>
 #include <net.h>
@@ -665,6 +666,62 @@ const RPCResult getblock_vin{
         }},
     }
 };
+
+static RPCHelpMan getsilentpaymentblockdata()
+{
+    return RPCHelpMan{"getsilentpaymentblockdata",
+                "\nReturns an array of hex-encoded strings data for the tweaked public key sum of candidate silent transaction inputs in each transaction.\n",
+                {
+                    {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                },
+                {
+                    RPCResult{
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::ARR, "bip352_tweaks", "The tweaked public key for each transaction that could be a silent payment",
+                                {{RPCResult::Type::STR_HEX, "tweak", "Hex-encoded data for the public key sum of candidate silent transaction inputs in the transaction"}}
+                            }
+                        }},
+                },
+                RPCExamples{
+                    HelpExampleCli("getsilentpaymentblockdata", "\"00000000000000000002cbdf64ae445b53b545ba1e960f9e83787130d1530484\"")
+            + HelpExampleRpc("getsilentpaymentblockdata", "\"00000000000000000002cbdf64ae445b53b545ba1e960f9e83787130d1530484\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    // TODO: add cut-through argument, check which index to use here
+    if (!g_bip352_index) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Requires bip352index");
+    }
+
+    uint256 block_hash(ParseHashV(request.params[0], "block_hash"));
+    {
+        ChainstateManager& chainman = EnsureAnyChainman(request.context);
+        const CBlockIndex* block_index;
+        LOCK(cs_main);
+        block_index = chainman.m_blockman.LookupBlockIndex(block_hash);
+        if (!block_index) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+    }
+
+    BIP352Index::tweak_index_entry tweak_index_entry;
+    if (!g_bip352_index->FindSilentPayment(block_hash, tweak_index_entry)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block has not been indexed yet");
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    UniValue tweaks_res(UniValue::VARR);
+
+    for (const auto& entry : tweak_index_entry) {
+        tweaks_res.push_back(HexStr(entry));
+    }
+
+    ret.pushKV("bip352_tweaks", tweaks_res);
+    return ret;
+},
+    };
+}
 
 static RPCHelpMan getblock()
 {
@@ -2954,6 +3011,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockfrompeer},
         {"blockchain", &getblockhash},
         {"blockchain", &getblockheader},
+        {"blockchain", &getsilentpaymentblockdata},
         {"blockchain", &getchaintips},
         {"blockchain", &getdifficulty},
         {"blockchain", &getdeploymentinfo},

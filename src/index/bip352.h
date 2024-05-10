@@ -20,6 +20,14 @@ static constexpr bool DEFAULT_BIP352_CT_INDEX{false};
  */
 class BIP352Index final : public BaseIndex
 {
+public:
+    /**
+     * For each block hash we store and array of transactions. For each
+     * transaction we store:
+     * - the tweaked pubkey sum
+     */
+    using tweak_index_entry = std::vector<CPubKey>;
+
 protected:
     class DB;
 
