@@ -8,6 +8,9 @@ from decimal import Decimal
 import random
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     tx_from_hex,
@@ -18,12 +21,14 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_raises_rpc_error,
-    fill_mempool,
 )
 from test_framework.wallet import (
     DEFAULT_FEE,
     MiniWallet,
 )
+
+
+MAX_PACKAGE_COUNT = 25
 
 
 class RPCPackagesTest(BitcoinTestFramework):
@@ -344,6 +349,13 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
         assert_equal(legacy_pool, node.getrawmempool())
 
+        assert_raises_rpc_error(-8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
+        assert_raises_rpc_error(-8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [chain_hex[0]] * 1)
+        assert_raises_rpc_error(
+            -8, f"Array must contain between 2 and {MAX_PACKAGE_COUNT} transactions.",
+            node.submitpackage, [chain_hex[0]] * (MAX_PACKAGE_COUNT + 1)
+        )
+
         # Create a transaction chain such as only the parent gets accepted (by making the child's
         # version non-standard). Make sure the parent does get broadcast.
         self.log.info("If a package is partially submitted, transactions included in mempool get broadcast")
@@ -388,7 +400,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         ])
         self.wallet.rescan_utxos()
 
-        fill_mempool(self, node, self.wallet)
+        fill_mempool(self, node)
 
         minrelay = node.getmempoolinfo()["minrelaytxfee"]
         parent = self.wallet.create_self_transfer(

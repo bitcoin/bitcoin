@@ -18,7 +18,7 @@
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::Bench& bench)
 {
-    ECC_Start();
+    ECC_Context ecc_context{};
 
     FillableSigningProvider keystore;
     CCoinsView coinsDummy;
@@ -47,7 +47,6 @@ static void CCoinsCaching(benchmark::Bench& bench)
         bool success{AreInputsStandard(tx_1, coins)};
         assert(success);
     });
-    ECC_Stop();
 }
 
 BENCHMARK(CCoinsCaching, benchmark::PriorityLevel::HIGH);

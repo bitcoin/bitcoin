@@ -183,6 +183,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     m_node.kernel = std::make_unique<kernel::Context>();
+    m_node.ecc_context = std::make_unique<ECC_Context>();
     SetupEnvironment();
 
     ValidationCacheSizes validation_cache_sizes{};
@@ -200,6 +201,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+    m_node.ecc_context.reset();
     m_node.kernel.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();

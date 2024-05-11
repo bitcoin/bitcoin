@@ -489,12 +489,14 @@ class ASMap:
                     if ctx not in ret or cand.size < ret[ctx].size:
                         ret[ctx] = cand
 
-            for ctx in set(left) | set(right):
+            union = set(left) | set(right)
+            sorted_union = sorted(union, key=lambda x: (x is None, x))
+            for ctx in sorted_union:
                 candidate(ctx, left.get(ctx), right.get(ctx), _BinNode.make_branch)
                 candidate(ctx, left.get(None), right.get(ctx), _BinNode.make_branch)
                 candidate(ctx, left.get(ctx), right.get(None), _BinNode.make_branch)
             if not hole:
-                for ctx in set(ret) - set([None]):
+                for ctx in sorted(set(ret) - set([None])):
                     candidate(None, ctx, ret[ctx], _BinNode.make_default)
             if None in ret:
                 ret = {ctx:enc for ctx, enc in ret.items()

@@ -405,6 +405,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(snapshot['snapshot_blockhash'], dump_output['base_hash'])
         assert_equal(snapshot['validated'], False)
 
+        self.log.info("Check that loading the snapshot again will fail because there is already an active snapshot.")
+        with n2.assert_debug_log(expected_msgs=["[snapshot] can't activate a snapshot-based chainstate more than once"]):
+            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", n2.loadtxoutset, dump_output['path'])
+
         self.connect_nodes(0, 2)
         self.wait_until(lambda: n2.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
         self.sync_blocks()

@@ -17,6 +17,7 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
+#include <kernel/context.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <mapport.h>
@@ -99,6 +100,7 @@ public:
         if (!AppInitParameterInteraction(args())) return false;
 
         m_context->kernel = std::make_unique<kernel::Context>();
+        m_context->ecc_context = std::make_unique<ECC_Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
 
         if (!AppInitLockDataDirectory()) return false;

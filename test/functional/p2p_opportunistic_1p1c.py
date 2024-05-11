@@ -8,6 +8,9 @@ Test opportunistic 1p1c package submission logic.
 
 from decimal import Decimal
 import time
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.messages import (
     CInv,
     CTxInWitness,
@@ -24,7 +27,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    fill_mempool,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -386,8 +388,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.generate(self.wallet_nonsegwit, 10)
         self.generate(self.wallet, 20)
 
-        filler_wallet = MiniWallet(node)
-        fill_mempool(self, node, filler_wallet)
+        fill_mempool(self, node)
 
         self.log.info("Check opportunistic 1p1c logic when parent (txid != wtxid) is received before child")
         self.test_basic_parent_then_child(self.wallet)

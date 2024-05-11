@@ -14,6 +14,7 @@
 #include <node/abort.h>
 #include <node/interface_ui.h>
 #include <util/check.h>
+#include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>

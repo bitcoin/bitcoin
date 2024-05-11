@@ -432,7 +432,8 @@ bool ECC_InitSanityCheck() {
     return key.VerifyPubKey(pubkey);
 }
 
-void ECC_Start() {
+/** Initialize the elliptic curve support. May not be called twice without calling ECC_Stop first. */
+static void ECC_Start() {
     assert(secp256k1_context_sign == nullptr);
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
@@ -449,11 +450,22 @@ void ECC_Start() {
     secp256k1_context_sign = ctx;
 }
 
-void ECC_Stop() {
+/** Deinitialize the elliptic curve support. No-op if ECC_Start wasn't called first. */
+static void ECC_Stop() {
     secp256k1_context *ctx = secp256k1_context_sign;
     secp256k1_context_sign = nullptr;
 
     if (ctx) {
         secp256k1_context_destroy(ctx);
     }
+}
+
+ECC_Context::ECC_Context()
+{
+    ECC_Start();
+}
+
+ECC_Context::~ECC_Context()
+{
+    ECC_Stop();
 }

@@ -4,8 +4,8 @@
 
 #include <kernel/checks.h>
 
-#include <key.h>
 #include <random.h>
+#include <util/result.h>
 #include <util/translation.h>
 
 #include <memory>
@@ -14,10 +14,6 @@ namespace kernel {
 
 util::Result<void> SanityChecks(const Context&)
 {
-    if (!ECC_InitSanityCheck()) {
-        return util::Error{Untranslated("Elliptic curve cryptography sanity check failure. Aborting.")};
-    }
-
     if (!Random_SanityCheck()) {
         return util::Error{Untranslated("OS cryptographic RNG sanity check failure. Aborting.")};
     }
