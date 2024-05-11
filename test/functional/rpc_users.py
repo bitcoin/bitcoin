@@ -227,6 +227,18 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert cookie_path.exists()
         self.stop_node(0)
 
+        cookie_path.mkdir()
+        cookie_path_subdir = cookie_path / "subdir"
+        cookie_path_subdir.mkdir()
+        self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
+        cookie_path_subdir.rmdir()
+        cookie_path.rmdir()
+
+        self.log.info('Check that a non-writable cookie file will get replaced gracefully')
+        cookie_path.mkdir(mode=1)
+        self.restart_node(0)
+        self.stop_node(0)
+
         self.test_rpccookieperms()
 
         self.test_norpccookiefile(cookie_path)
