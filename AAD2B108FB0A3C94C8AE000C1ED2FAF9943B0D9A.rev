@@ -1,0 +1,24 @@
+This is a revocation certificate for the OpenPGP key:
+
+             maggie <yeeyee0V0@gmail.com>
+Fingerprint: AAD2B108FB0A3C94C8AE000C1ED2FAF9943B0D9A
+
+A revocation certificate is a kind of "kill switch" to publicly
+declare that a key shall not anymore be used.  It is not possible
+to retract such a revocation certificate once it has been published.
+
+Use it to revoke this key in case of a compromise or loss of
+the secret key.
+
+To avoid an accidental use of this file, a colon has been inserted
+before the 5 dashes below.  Remove this colon with a text editor
+before importing and publishing this revocation certificate.
+
+:-----BEGIN PGP PUBLIC KEY BLOCK-----
+Comment: This is a revocation certificate
+
+iHgEIBYKACAWIQSq0rEI+wo8lMiuAAwe0vr5lDsNmgUCZj+bnwIdAAAKCRAe0vr5
+lDsNmm/ZAP9ONyVQbOerTzkOBENB9h0NlYicEqSJYWzHmRQGDOCrxQD/c2Pa+FO5
+wE293sZNJhPoEPe3iy6yyAcfM50LiNXQjg0=
+=n66A
+-----END PGP PUBLIC KEY BLOCK-----
