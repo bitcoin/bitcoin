@@ -644,11 +644,11 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
                     print("\n".join(deque(combined_logs.splitlines(), combined_logs_len)))
 
                 if failfast:
-                    logging.debug("Early exiting after test failure")
+                    logging.debug("Exiting early after test failure")
                     break
 
                 if "[Errno 28] No space left on device" in stdout:
-                    sys.exit(f"Early exiting after test failure due to insuffient free space in {tmpdir}\n"
+                    sys.exit(f"Exiting early after test failure due to insufficient free space in {tmpdir}\n"
                              f"Test execution data left in {tmpdir}.\n"
                              f"Additional storage is needed to execute testing.")
 
