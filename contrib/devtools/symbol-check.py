@@ -295,6 +295,8 @@ if __name__ == '__main__':
     for filename in sys.argv[1:]:
         try:
             binary = lief.parse(filename)
+            if binary is None:
+                continue
             etype = binary.format
             if etype == lief.EXE_FORMATS.UNKNOWN:
                 print(f'{filename}: unknown executable format')

@@ -250,6 +250,8 @@ if __name__ == '__main__':
     for filename in sys.argv[1:]:
         try:
             binary = lief.parse(filename)
+            if binary is None:
+                continue
             etype = binary.format
             arch = binary.abstract.header.architecture
             binary.concrete
@@ -275,4 +277,3 @@ if __name__ == '__main__':
             print(f'{filename}: cannot open')
             retval = 1
     sys.exit(retval)
-
