@@ -118,9 +118,9 @@ if test -n "@STRIP@"; then
 fi
 
 if test "@host_os@" = darwin; then
-  if test -n "@OTOOL@"; then
-    OTOOL="@OTOOL@"
-    ac_cv_path_OTOOL="${OTOOL}"
+  if test -n "@OBJDUMP@"; then
+    OBJDUMP="@OBJDUMP@"
+    ac_cv_path_OBJDUMP="${OBJDUMP}"
   fi
 
   if test -n "@DSYMUTIL@"; then
