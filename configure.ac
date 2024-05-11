@@ -780,8 +780,8 @@ esac
 
 AM_CONDITIONAL([CAN_RENDER_ICONS], [test "$can_render_icons" = "yes"])
 if test "$can_render_icons" != "yes"; then
-  if test ! -f "${srcdir}/src/qt/res/rendered_icons/bitcoin.ico"; then
-    AC_MSG_ERROR([Couldn't find ${can_render_icons} (required to build from git)])
+  if test "$bitcoin_enable_qt" != "no" && test ! -f "${srcdir}/src/qt/res/rendered_icons/bitcoin.ico"; then
+    AC_MSG_ERROR([Couldn't find ${can_render_icons} (required to build GUI from git)])
   fi
   AC_MSG_WARN([Couldn't find ${can_render_icons}; you won't get the Knots-branded Bitcoin icon])
 fi
