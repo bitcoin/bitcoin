@@ -673,6 +673,7 @@ static RPCHelpMan getsilentpaymentblockdata()
                 "\nReturns an array of hex-encoded strings data for the tweaked public key sum of candidate silent transaction inputs in each transaction.\n",
                 {
                     {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"dust", RPCArg::Type::AMOUNT, RPCArg::Default{CAmount(0)}, strprintf("Dust threshold in satoshi (max %d): all outputs must be greater or equal. This filter has limited precision.", BIP352Index::max_dust_threshold)},
                 },
                 {
                     RPCResult{
@@ -705,6 +706,14 @@ static RPCHelpMan getsilentpaymentblockdata()
         }
     }
 
+    CAmount dust_threshold{0};
+    if (!request.params[1].isNull()) {
+        dust_threshold = AmountFromValue(request.params[1], 0);
+        if (dust_threshold > BIP352Index::max_dust_threshold) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("dust argument must be <= %d", BIP352Index::max_dust_threshold));
+        }
+    }
+
     BIP352Index::tweak_index_entry tweak_index_entry;
     if (!g_bip352_index->FindSilentPayment(block_hash, tweak_index_entry)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block has not been indexed yet");
@@ -714,7 +723,9 @@ static RPCHelpMan getsilentpaymentblockdata()
     UniValue tweaks_res(UniValue::VARR);
 
     for (const auto& entry : tweak_index_entry) {
-        tweaks_res.push_back(HexStr(entry.first));
+        if ((CAmount(entry.second) << BIP352Index::dust_shift) >= dust_threshold) {
+            tweaks_res.push_back(HexStr(entry.first));
+        }
     }
 
     ret.pushKV("bip352_tweaks", tweaks_res);
