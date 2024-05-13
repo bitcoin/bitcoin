@@ -53,13 +53,13 @@ static RPCHelpMan enumeratesigners()
                     UniValue signer_res = UniValue::VOBJ;
                     signer_res.pushKV("fingerprint", signer.m_fingerprint);
                     signer_res.pushKV("name", signer.m_name);
-                    signers_res.push_back(signer_res);
+                    signers_res.push_back(std::move(signer_res));
                 }
             } catch (const std::exception& e) {
                 throw JSONRPCError(RPC_MISC_ERROR, e.what());
             }
             UniValue result(UniValue::VOBJ);
-            result.pushKV("signers", signers_res);
+            result.pushKV("signers", std::move(signers_res));
             return result;
         }
     };

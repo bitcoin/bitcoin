@@ -241,15 +241,15 @@ static RPCHelpMan getrpcinfo()
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("method", info.method);
         entry.pushKV("duration", int64_t{Ticks<std::chrono::microseconds>(SteadyClock::now() - info.start)});
-        active_commands.push_back(entry);
+        active_commands.push_back(std::move(entry));
     }
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("active_commands", active_commands);
+    result.pushKV("active_commands", std::move(active_commands));
 
     const std::string path = LogInstance().m_file_path.utf8string();
     UniValue log_path(UniValue::VSTR, path);
-    result.pushKV("logpath", log_path);
+    result.pushKV("logpath", std::move(log_path));
 
     return result;
 }

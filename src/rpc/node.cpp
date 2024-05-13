@@ -351,7 +351,7 @@ static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_na
     UniValue entry(UniValue::VOBJ);
     entry.pushKV("synced", summary.synced);
     entry.pushKV("best_block_height", summary.best_block_height);
-    ret_summary.pushKV(summary.name, entry);
+    ret_summary.pushKV(summary.name, std::move(entry));
     return ret_summary;
 }
 
