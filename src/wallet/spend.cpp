@@ -1154,6 +1154,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
            result.GetSelectedValue());
 
     // vouts to the payees
+    txNew.vout.reserve(vecSend.size() + 1); // + 1 because of possible later insert
     for (const auto& recipient : vecSend)
     {
         txNew.vout.emplace_back(recipient.nAmount, GetScriptForDestination(recipient.dest));
