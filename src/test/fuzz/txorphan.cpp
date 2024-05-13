@@ -37,13 +37,12 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
-    std::vector<COutPoint> outpoints;
+    std::set<COutPoint> outpoints;
+
     // initial outpoints used to construct transactions later
     for (uint8_t i = 0; i < 4; i++) {
-        outpoints.emplace_back(Txid::FromUint256(uint256{i}), 0);
+        outpoints.emplace(Txid::FromUint256(uint256{i}), 0);
     }
-    // if true, allow duplicate input when constructing tx
-    const bool duplicate_input = fuzzed_data_provider.ConsumeBool();
 
     CTransactionRef ptx_potential_parent = nullptr;
 
@@ -53,29 +52,22 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         const CTransactionRef tx = [&] {
             CMutableTransaction tx_mut;
             const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, outpoints.size());
-            const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, outpoints.size());
-            // pick unique outpoints from outpoints as input
+            const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, 256);
+            // pick outpoints from outpoints as input. We allow input duplicates on purpose, given we are not
+            // running any transaction validation logic before adding transactions to the orphanage
             for (uint32_t i = 0; i < num_in; i++) {
                 auto& prevout = PickValue(fuzzed_data_provider, outpoints);
-                tx_mut.vin.emplace_back(prevout);
-                // pop the picked outpoint if duplicate input is not allowed
-                if (!duplicate_input) {
-                    std::swap(prevout, outpoints.back());
-                    outpoints.pop_back();
-                }
+                // try making transactions unique by setting a random nSequence, but allow duplicate transactions if they happen
+                tx_mut.vin.emplace_back(prevout, CScript{}, fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, CTxIn::SEQUENCE_FINAL));
             }
             // output amount will not affect txorphanage
             for (uint32_t i = 0; i < num_out; i++) {
                 tx_mut.vout.emplace_back(CAmount{0}, CScript{});
             }
-            // restore previously popped outpoints
-            for (auto& in : tx_mut.vin) {
-                outpoints.push_back(in.prevout);
-            }
             auto new_tx = MakeTransactionRef(tx_mut);
-            // add newly constructed transaction to outpoints
+            // add newly constructed outpoints to the coin pool
             for (uint32_t i = 0; i < num_out; i++) {
-                outpoints.emplace_back(new_tx->GetHash(), i);
+                outpoints.emplace(new_tx->GetHash(), i);
             }
             return new_tx;
         }();
