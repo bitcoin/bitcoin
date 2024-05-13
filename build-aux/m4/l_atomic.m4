@@ -7,7 +7,7 @@ dnl warranty.
 # Clang, when building for 32-bit,
 # and linking against libstdc++, requires linking with
 # -latomic if using the C++ atomic library.
-# Can be tested with: clang++ test.cpp -m32
+# Can be tested with: clang++ -std=c++20 test.cpp -m32
 #
 # Sourced from http://bugs.debian.org/797228
 
@@ -27,8 +27,11 @@ m4_define([_CHECK_ATOMIC_testbody], [[
     auto t1 = t.load();
     t.compare_exchange_strong(t1, 3s);
 
-    std::atomic<int64_t> a{};
+    std::atomic<double> d{};
+    d.store(3.14);
+    auto d1 = d.load();
 
+    std::atomic<int64_t> a{};
     int64_t v = 5;
     int64_t r = a.fetch_add(v);
     return static_cast<int>(r);
