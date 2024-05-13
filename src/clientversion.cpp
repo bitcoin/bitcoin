@@ -5,11 +5,11 @@
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
+#include <util/string.h>
 #include <util/translation.h>
 
 #include <tinyformat.h>
 
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -64,19 +64,9 @@ std::string FormatFullVersion()
  */
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {
-    std::ostringstream ss;
-    ss << "/";
-    ss << name << ":" << FormatVersion(nClientVersion);
-    if (!comments.empty())
-    {
-        std::vector<std::string>::const_iterator it(comments.begin());
-        ss << "(" << *it;
-        for(++it; it != comments.end(); ++it)
-            ss << "; " << *it;
-        ss << ")";
-    }
-    ss << "/";
-    return ss.str();
+    std::string comments_str;
+    if (!comments.empty()) comments_str = strprintf("(%s)", Join(comments, "; "));
+    return strprintf("/%s:%s%s/", name, FormatVersion(nClientVersion), comments_str);
 }
 
 std::string CopyrightHolders(const std::string& strPrefix)
