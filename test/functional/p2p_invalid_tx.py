@@ -165,7 +165,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
 
         self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')
-        with node.assert_debug_log(['Erased 100 orphan tx from peer=25']):
+        with node.assert_debug_log(['Erased 100 orphan transaction(s) from peer=25']):
             self.reconnect_p2p(num_connections=1)
 
         self.log.info('Test that a transaction in the orphan pool is included in a new tip block causes erase this transaction from the orphan pool')
@@ -190,7 +190,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         block_A.solve()
 
         self.log.info('Send the block that includes the previous orphan ... ')
-        with node.assert_debug_log(["Erased 1 orphan tx included or conflicted by block"]):
+        with node.assert_debug_log(["Erased 1 orphan transaction(s) included or conflicted by block"]):
             node.p2ps[0].send_blocks_and_test([block_A], node, success=True)
 
         self.log.info('Test that a transaction in the orphan pool conflicts with a new tip block causes erase this transaction from the orphan pool')
@@ -219,7 +219,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         block_B.solve()
 
         self.log.info('Send the block that includes a transaction which conflicts with the previous orphan ... ')
-        with node.assert_debug_log(["Erased 1 orphan tx included or conflicted by block"]):
+        with node.assert_debug_log(["Erased 1 orphan transaction(s) included or conflicted by block"]):
             node.p2ps[0].send_blocks_and_test([block_B], node, success=True)
 
 

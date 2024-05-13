@@ -47,7 +47,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         m_outpoint_to_orphan_it[txin.prevout].insert(ret.first);
     }
 
-    LogPrint(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s) (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(),
+    LogPrint(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n", hash.ToString(), wtxid.ToString(), sz,
              m_orphans.size(), m_outpoint_to_orphan_it.size());
     return true;
 }
@@ -84,7 +84,10 @@ int TxOrphanage::EraseTxNoLock(const Wtxid& wtxid)
         it_last->second.list_pos = old_pos;
     }
     const auto& txid = it->second.tx->GetHash();
-    LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", txid.ToString(), wtxid.ToString());
+    // Time spent in orphanage = difference between current and entry time.
+    // Entry time is equal to ORPHAN_TX_EXPIRE_TIME earlier than entry's expiry.
+    LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s) after %ds\n", txid.ToString(), wtxid.ToString(),
+             GetTime() + ORPHAN_TX_EXPIRE_TIME - it->second.nTimeExpire);
     m_orphan_list.pop_back();
 
     m_orphans.erase(it);
@@ -107,7 +110,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
             nErased += EraseTxNoLock(wtxid);
         }
     }
-    if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx from peer=%d\n", nErased, peer);
+    if (nErased > 0) LogPrint(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", nErased, peer);
 }
 
 void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
@@ -230,7 +233,7 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
         for (const auto& orphanHash : vOrphanErase) {
             nErased += EraseTxNoLock(orphanHash);
         }
-        LogPrint(BCLog::TXPACKAGES, "Erased %d orphan tx included or conflicted by block\n", nErased);
+        LogPrint(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) included or conflicted by block\n", nErased);
     }
 }
 
