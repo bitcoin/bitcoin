@@ -1205,6 +1205,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // behavior."
     bool use_anti_fee_sniping = true;
     const uint32_t default_sequence{coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL};
+    txNew.vin.reserve(selected_coins.size());
     for (const auto& coin : selected_coins) {
         std::optional<uint32_t> sequence = coin_control.GetSequence(coin->outpoint);
         if (sequence) {
