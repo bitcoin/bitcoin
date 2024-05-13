@@ -714,7 +714,7 @@ static RPCHelpMan getsilentpaymentblockdata()
     UniValue tweaks_res(UniValue::VARR);
 
     for (const auto& entry : tweak_index_entry) {
-        tweaks_res.push_back(HexStr(entry));
+        tweaks_res.push_back(HexStr(entry.first));
     }
 
     ret.pushKV("bip352_tweaks", tweaks_res);
