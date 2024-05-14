@@ -138,13 +138,13 @@ UniValue CDKGDebugStatus::ToJson(CDeterministicMNManager& dmnman, const Chainsta
 
 void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret) const
 {
-    LOCK(cs);
+    LOCK(cs_lockStatus);
     ret = localStatus;
 }
 
 void CDKGDebugManager::ResetLocalSessionStatus(Consensus::LLMQType llmqType, int quorumIndex)
 {
-    LOCK(cs);
+    LOCK(cs_lockStatus);
 
     auto it = localStatus.sessions.find(std::make_pair(llmqType, quorumIndex));
     if (it == localStatus.sessions.end()) {
@@ -157,7 +157,7 @@ void CDKGDebugManager::ResetLocalSessionStatus(Consensus::LLMQType llmqType, int
 
 void CDKGDebugManager::InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, int quorumIndex, const uint256& quorumHash, int quorumHeight)
 {
-    LOCK(cs);
+    LOCK(cs_lockStatus);
 
     auto it = localStatus.sessions.find(std::make_pair(llmqParams.type, quorumIndex));
     if (it == localStatus.sessions.end()) {
@@ -176,7 +176,7 @@ void CDKGDebugManager::InitLocalSessionStatus(const Consensus::LLMQParams& llmqP
 
 void CDKGDebugManager::UpdateLocalSessionStatus(Consensus::LLMQType llmqType, int quorumIndex, std::function<bool(CDKGDebugSessionStatus& status)>&& func)
 {
-    LOCK(cs);
+    LOCK(cs_lockStatus);
 
     auto it = localStatus.sessions.find(std::make_pair(llmqType, quorumIndex));
     if (it == localStatus.sessions.end()) {
@@ -190,7 +190,7 @@ void CDKGDebugManager::UpdateLocalSessionStatus(Consensus::LLMQType llmqType, in
 
 void CDKGDebugManager::UpdateLocalMemberStatus(Consensus::LLMQType llmqType, int quorumIndex, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func)
 {
-    LOCK(cs);
+    LOCK(cs_lockStatus);
 
     auto it = localStatus.sessions.find(std::make_pair(llmqType, quorumIndex));
     if (it == localStatus.sessions.end()) {
