@@ -28,9 +28,11 @@
 #include <sync.h>
 #include <threadinterrupt.h>
 #include <uint256.h>
-#include <util/system.h>
-#include <consensus/params.h>
 #include <util/check.h>
+#include <util/edge.h>
+#include <util/system.h>
+#include <util/wpipe.h>
+#include <consensus/params.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -43,10 +45,6 @@
 #include <optional>
 #include <queue>
 #include <vector>
-
-#ifndef WIN32
-#define USE_WAKEUP_PIPE
-#endif
 
 class CConnman;
 class CDeterministicMNList;
@@ -822,13 +820,6 @@ class CConnman
 {
 friend class CNode;
 public:
-    enum SocketEventsMode {
-        SOCKETEVENTS_SELECT = 0,
-        SOCKETEVENTS_POLL = 1,
-        SOCKETEVENTS_EPOLL = 2,
-        SOCKETEVENTS_KQUEUE = 3,
-    };
-
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
@@ -852,7 +843,7 @@ public:
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
-        SocketEventsMode socketEventsMode = SOCKETEVENTS_SELECT;
+        SocketEventsMode socketEventsMode = SocketEventsMode::Select;
         std::vector<bool> m_asmap;
         bool m_i2p_accept_incoming;
     };
@@ -1174,7 +1165,6 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
-    void WakeSelect() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     /** Attempts to obfuscate tx time through exponentially distributed emitting.
         Works assuming that a single interval is used.
@@ -1377,9 +1367,6 @@ private:
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
-    void RegisterEvents(CNode* pnode);
-    void UnregisterEvents(CNode* pnode);
-
     // Network usage totals
     mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
@@ -1514,19 +1501,19 @@ private:
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
 
-#ifdef USE_WAKEUP_PIPE
-    /** a pipe which is added to select() calls to wakeup before the timeout */
-    int wakeupPipe[2]{-1,-1};
-#endif
-    std::atomic<bool> wakeupSelectNeeded{false};
-
     SocketEventsMode socketEventsMode;
-#ifdef USE_KQUEUE
-    int kqueuefd{-1};
-#endif
-#ifdef USE_EPOLL
-    int epollfd{-1};
-#endif
+    std::unique_ptr<EdgeTriggeredEvents> m_edge_trig_events{nullptr};
+    std::unique_ptr<WakeupPipe> m_wakeup_pipe{nullptr};
+
+    template <typename Callable>
+    void ToggleWakeupPipe(Callable&& func)
+    {
+        if (m_wakeup_pipe) {
+            m_wakeup_pipe->Toggle(func);
+        } else {
+            func();
+        }
+    }
 
     Mutex cs_sendable_receivable_nodes;
     std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_sendable_receivable_nodes);

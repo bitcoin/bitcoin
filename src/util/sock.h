@@ -18,6 +18,54 @@
  */
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
+enum class SocketEventsMode : int8_t {
+    Select = 0,
+    Poll = 1,
+    EPoll = 2,
+    KQueue = 3,
+
+    Unknown = -1
+};
+
+/* Converts SocketEventsMode value to string with additional check to report modes not compiled for as unknown */
+static std::string SEMToString(const SocketEventsMode val)
+{
+    switch (val) {
+        case (SocketEventsMode::Select):
+            return "select";
+#ifdef USE_POLL
+        case (SocketEventsMode::Poll):
+            return "poll";
+#endif /* USE_POLL */
+#ifdef USE_EPOLL
+        case (SocketEventsMode::EPoll):
+            return "epoll";
+#endif /* USE_EPOLL */
+#ifdef USE_KQUEUE
+        case (SocketEventsMode::KQueue):
+            return "kqueue";
+#endif /* USE_KQUEUE */
+        default:
+            return "unknown";
+    };
+}
+
+/* Converts string to SocketEventsMode value with additional check to report modes not compiled for as unknown */
+static SocketEventsMode SEMFromString(const std::string str)
+{
+    if (str == "select") { return SocketEventsMode::Select; }
+#ifdef USE_POLL
+    else if (str == "poll")   { return SocketEventsMode::Poll;   }
+#endif /* USE_POLL */
+#ifdef USE_EPOLL
+    else if (str == "epoll")  { return SocketEventsMode::EPoll;  }
+#endif /* USE_EPOLL */
+#ifdef USE_KQUEUE
+    else if (str == "kqueue") { return SocketEventsMode::KQueue; }
+#endif /* USE_KQUEUE */
+    else { return SocketEventsMode::Unknown; }
+}
+
 /**
  * RAII helper class that manages a socket. Mimics `std::unique_ptr`, but instead of a pointer it
  * contains a socket and closes it automatically when it goes out of scope.

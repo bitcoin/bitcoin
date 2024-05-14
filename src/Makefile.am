@@ -327,6 +327,7 @@ BITCOIN_CORE_H = \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
+  util/edge.h \
   util/enumerate.h \
   util/epochguard.h \
   util/error.h \
@@ -362,6 +363,7 @@ BITCOIN_CORE_H = \
   util/ui_change_type.h \
   util/url.h \
   util/vector.h \
+  util/wpipe.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -776,6 +778,7 @@ libbitcoin_util_a_SOURCES = \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
   util/check.cpp \
+  util/edge.cpp \
   util/error.cpp \
   util/fees.cpp \
   util/hasher.cpp \
@@ -795,6 +798,7 @@ libbitcoin_util_a_SOURCES = \
   util/thread.cpp \
   util/threadnames.cpp \
   util/tokenpipe.cpp \
+  util/wpipe.cpp \
   $(BITCOIN_CORE_H)
 
 if USE_LIBEVENT

@@ -29,6 +29,7 @@
 #include <util/thread.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <util/wpipe.h>
 #include <validation.h> // for fDIP0001ActiveAtTip
 
 #include <masternode/meta.h>
@@ -119,7 +120,7 @@ static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
 // We are however still somewhat limited in how long we can sleep as there is periodic work (cleanup) to be done in
 // the socket handler thread
 static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 500;
-#endif
+#endif /* USE_WAKEUP_PIPE */
 
 const std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
@@ -563,7 +564,9 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
         }
     }
 
-    connman->UnregisterEvents(this);
+    if (connman->m_edge_trig_events && !connman->m_edge_trig_events->UnregisterEvents(hSocket)) {
+        LogPrint(BCLog::NET, "EdgeTriggeredEvents::UnregisterEvents() failed\n");
+    }
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
     CloseSocket(hSocket);
@@ -1276,8 +1279,15 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
         WITH_LOCK(cs_mapSocketToNode, mapSocketToNode.emplace(hSocket, pnode));
-        RegisterEvents(pnode);
-        WakeSelect();
+        if (m_edge_trig_events) {
+            LOCK(pnode->cs_hSocket);
+            if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
+                LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
+            }
+        }
+        if (m_wakeup_pipe) {
+            m_wakeup_pipe->Write();
+        }
     }
 
     // We received a new connection, harvest entropy from the time (and our peer count)
@@ -1562,14 +1572,14 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
         }
     }
 
-#ifdef USE_WAKEUP_PIPE
-    // We add a pipe to the read set so that the select() call can be woken up from the outside
-    // This is done when data is added to send buffers (vSendMsg) or when new peers are added
-    // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
-    // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
-    // run on Linux and friends.
-    recv_set.insert(wakeupPipe[0]);
-#endif
+    if (m_wakeup_pipe) {
+        // We add a pipe to the read set so that the select() call can be woken up from the outside
+        // This is done when data is added to send buffers (vSendMsg) or when new peers are added
+        // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
+        // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
+        // run on Linux and friends.
+        recv_set.insert(m_wakeup_pipe->m_pipe[0]);
+    }
 
     return !recv_set.empty() || !send_set.empty() || !error_set.empty();
 }
@@ -1587,9 +1597,8 @@ void CConnman::SocketEventsKqueue(std::set<SOCKET>& recv_set,
     timeout.tv_sec = only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS / 1000;
     timeout.tv_nsec = (only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS % 1000) * 1000 * 1000;
 
-    wakeupSelectNeeded = true;
-    int n = kevent(kqueuefd, nullptr, 0, events, maxEvents, &timeout);
-    wakeupSelectNeeded = false;
+    int n{-1};
+    ToggleWakeupPipe([&](){n = kevent(Assert(m_edge_trig_events)->GetFileDescriptor(), nullptr, 0, events, maxEvents, &timeout);});
     if (n == -1) {
         LogPrintf("kevent wait error\n");
     } else if (n > 0) {
@@ -1621,9 +1630,8 @@ void CConnman::SocketEventsEpoll(std::set<SOCKET>& recv_set,
     const size_t maxEvents = 64;
     epoll_event events[maxEvents];
 
-    wakeupSelectNeeded = true;
-    int n = epoll_wait(epollfd, events, maxEvents, only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
-    wakeupSelectNeeded = false;
+    int n{-1};
+    ToggleWakeupPipe([&](){n = epoll_wait(Assert(m_edge_trig_events)->GetFileDescriptor(), events, maxEvents, only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);});
     for (int i = 0; i < n; i++) {
         auto& e = events[i];
         if((e.events & EPOLLERR) || (e.events & EPOLLHUP)) {
@@ -1678,9 +1686,8 @@ void CConnman::SocketEventsPoll(const std::vector<CNode*>& nodes,
         vpollfds.push_back(std::move(it.second));
     }
 
-    wakeupSelectNeeded = true;
-    int r = poll(vpollfds.data(), vpollfds.size(), only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
-    wakeupSelectNeeded = false;
+    int r{-1};
+    ToggleWakeupPipe([&](){r = poll(vpollfds.data(), vpollfds.size(), only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);});
     if (r < 0) {
         return;
     }
@@ -1737,9 +1744,8 @@ void CConnman::SocketEventsSelect(const std::vector<CNode*>& nodes,
         hSocketMax = std::max(hSocketMax, hSocket);
     }
 
-    wakeupSelectNeeded = true;
-    int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-    wakeupSelectNeeded = false;
+    int nSelect{-1};
+    ToggleWakeupPipe([&](){nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);});
     if (interruptNet)
         return;
 
@@ -1782,21 +1788,21 @@ void CConnman::SocketEvents(const std::vector<CNode*>& nodes,
 {
     switch (socketEventsMode) {
 #ifdef USE_KQUEUE
-        case SOCKETEVENTS_KQUEUE:
+        case SocketEventsMode::KQueue:
             SocketEventsKqueue(recv_set, send_set, error_set, only_poll);
             break;
 #endif
 #ifdef USE_EPOLL
-        case SOCKETEVENTS_EPOLL:
+        case SocketEventsMode::EPoll:
             SocketEventsEpoll(recv_set, send_set, error_set, only_poll);
             break;
 #endif
 #ifdef USE_POLL
-        case SOCKETEVENTS_POLL:
+        case SocketEventsMode::Poll:
             SocketEventsPoll(nodes, recv_set, send_set, error_set, only_poll);
             break;
 #endif
-        case SOCKETEVENTS_SELECT:
+        case SocketEventsMode::Select:
             SocketEventsSelect(nodes, recv_set, send_set, error_set, only_poll);
             break;
         default:
@@ -1842,18 +1848,10 @@ void CConnman::SocketHandler(CMasternodeSync& mn_sync)
         // empty sets.
         SocketEvents(snap.Nodes(), recv_set, send_set, error_set, only_poll);
 
-#ifdef USE_WAKEUP_PIPE
-    // drain the wakeup pipe
-    if (recv_set.count(wakeupPipe[0])) {
-        char buf[128];
-        while (true) {
-            int r = read(wakeupPipe[0], buf, sizeof(buf));
-            if (r <= 0) {
-                break;
-            }
-        }
+    // Drain the wakeup pipe
+    if (m_wakeup_pipe && recv_set.count(m_wakeup_pipe->m_pipe[0])) {
+        m_wakeup_pipe->Drain();
     }
-#endif
 
         // Service (send/receive) each of the already connected nodes.
         SocketHandlerConnected(recv_set, send_set, error_set);
@@ -2129,22 +2127,6 @@ void CConnman::WakeMessageHandler()
         fMsgProcWake = true;
     }
     condMsgProc.notify_one();
-}
-
-void CConnman::WakeSelect()
-{
-#ifdef USE_WAKEUP_PIPE
-    if (wakeupPipe[1] == -1) {
-        return;
-    }
-
-    char buf{0};
-    if (write(wakeupPipe[1], &buf, sizeof(buf)) != 1) {
-        LogPrint(BCLog::NET, "write to wakeupPipe failed\n");
-    }
-#endif
-
-    wakeupSelectNeeded = false;
 }
 
 void CConnman::ThreadDNSAddressSeed()
@@ -2980,8 +2962,15 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
-        RegisterEvents(pnode);
-        WakeSelect();
+        if (m_edge_trig_events) {
+            LOCK(pnode->cs_hSocket);
+            if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
+                LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
+            }
+        }
+        if (m_wakeup_pipe) {
+            m_wakeup_pipe->Write();
+        }
     }
 }
 
@@ -3132,30 +3121,10 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-        struct kevent event;
-        EV_SET(&event, sock->Get(), EVFILT_READ, EV_ADD, 0, 0, nullptr);
-        if (kevent(kqueuefd, &event, 1, nullptr, 0, nullptr) != 0) {
-            strError = strprintf(_("Error: failed to add socket to kqueuefd (kevent returned error %s)"), NetworkErrorString(WSAGetLastError()));
-            LogPrintf("%s\n", strError.original);
-            return false;
-        }
+    if (m_edge_trig_events && !m_edge_trig_events->AddSocket(sock->Get())) {
+        LogPrintf("Error: EdgeTriggeredEvents::AddSocket() failed\n");
+        return false;
     }
-#endif
-
-#ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-        epoll_event event;
-        event.data.fd = sock->Get();
-        event.events = EPOLLIN;
-        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sock->Get(), &event) != 0) {
-            strError = strprintf(_("Error: failed to add socket to epollfd (epoll_ctl returned error %s)"), NetworkErrorString(WSAGetLastError()));
-            LogPrintf("%s\n", strError.original);
-            return false;
-        }
-    }
-#endif
 
     vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
 
@@ -3301,25 +3270,14 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     AssertLockNotHeld(m_total_bytes_sent_mutex);
     Init(connOptions);
 
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-        kqueuefd = kqueue();
-        if (kqueuefd == -1) {
-            LogPrintf("kqueue failed\n");
+    if (socketEventsMode == SocketEventsMode::EPoll || socketEventsMode == SocketEventsMode::KQueue) {
+        m_edge_trig_events = std::make_unique<EdgeTriggeredEvents>(socketEventsMode);
+        if (!m_edge_trig_events->IsValid()) {
+            LogPrintf("Unable to initialize EdgeTriggeredEvents instance\n");
+            m_edge_trig_events.reset();
             return false;
         }
     }
-#endif
-
-#ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-        epollfd = epoll_create1(0);
-        if (epollfd == -1) {
-            LogPrintf("epoll_create1 failed\n");
-            return false;
-        }
-    }
-#endif
 
     if (fListen && !InitBinds(connOptions.vBinds, connOptions.vWhiteBinds, connOptions.onion_binds)) {
         if (clientInterface) {
@@ -3392,45 +3350,13 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     }
 
 #ifdef USE_WAKEUP_PIPE
-    if (pipe(wakeupPipe) != 0) {
-        wakeupPipe[0] = wakeupPipe[1] = -1;
-        LogPrint(BCLog::NET, "pipe() for wakeupPipe failed\n");
-    } else {
-        int fFlags = fcntl(wakeupPipe[0], F_GETFL, 0);
-        if (fcntl(wakeupPipe[0], F_SETFL, fFlags | O_NONBLOCK) == -1) {
-            LogPrint(BCLog::NET, "fcntl for O_NONBLOCK on wakeupPipe failed\n");
-        }
-        fFlags = fcntl(wakeupPipe[1], F_GETFL, 0);
-        if (fcntl(wakeupPipe[1], F_SETFL, fFlags | O_NONBLOCK) == -1) {
-            LogPrint(BCLog::NET, "fcntl for O_NONBLOCK on wakeupPipe failed\n");
-        }
-#ifdef USE_KQUEUE
-        if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-            struct kevent event;
-            EV_SET(&event, wakeupPipe[0], EVFILT_READ, EV_ADD, 0, 0, nullptr);
-            int r = kevent(kqueuefd, &event, 1, nullptr, 0, nullptr);
-            if (r != 0) {
-                LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                         kqueuefd, EV_ADD, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
-                return false;
-            }
-        }
-#endif
-#ifdef USE_EPOLL
-        if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-            epoll_event event;
-            event.events = EPOLLIN;
-            event.data.fd = wakeupPipe[0];
-            int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, wakeupPipe[0], &event);
-            if (r != 0) {
-                LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                         epollfd, EPOLL_CTL_ADD, wakeupPipe[0], NetworkErrorString(WSAGetLastError()));
-                return false;
-            }
-        }
-#endif
+    m_wakeup_pipe = std::make_unique<WakeupPipe>(m_edge_trig_events.get());
+    if (!m_wakeup_pipe->IsValid()) {
+        /* We log the error but do not halt initialization */
+        LogPrintf("Unable to initialize WakeupPipe instance\n");
+        m_wakeup_pipe.reset();
     }
-#endif
+#endif /* USE_WAKEUP_PIPE */
 
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&util::TraceThread, "net", [this, &mn_sync] { ThreadSocketHandler(mn_sync); });
@@ -3564,23 +3490,15 @@ void CConnman::StopNodes()
         for (CNode *pnode : m_nodes)
             pnode->CloseSocketDisconnect(this);
     }
-    for (ListenSocket& hListenSocket : vhListenSocket)
+    for (ListenSocket& hListenSocket : vhListenSocket) {
         if (hListenSocket.socket != INVALID_SOCKET) {
-#ifdef USE_KQUEUE
-            if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-                struct kevent event;
-                EV_SET(&event, hListenSocket.socket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-                kevent(kqueuefd, &event, 1, nullptr, 0, nullptr);
+            if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.socket)) {
+                LogPrintf("EdgeTriggeredEvents::RemoveSocket() failed\n");
             }
-#endif
-#ifdef USE_EPOLL
-            if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-                epoll_ctl(epollfd, EPOLL_CTL_DEL, hListenSocket.socket, nullptr);
-            }
-#endif
             if (!CloseSocket(hListenSocket.socket))
                 LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
         }
+    }
 
     // clean up some globals (to help leak detection)
     std::vector<CNode*> nodes;
@@ -3604,33 +3522,12 @@ void CConnman::StopNodes()
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
-
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE && kqueuefd != -1) {
-#ifdef USE_WAKEUP_PIPE
-        struct kevent event;
-        EV_SET(&event, wakeupPipe[0], EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-        kevent(kqueuefd, &event, 1, nullptr, 0, nullptr);
-#endif
-        close(kqueuefd);
-    }
-    kqueuefd = -1;
-#endif
-#ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL && epollfd != -1) {
-#ifdef USE_WAKEUP_PIPE
-        epoll_ctl(epollfd, EPOLL_CTL_DEL, wakeupPipe[0], nullptr);
-#endif
-        close(epollfd);
-    }
-    epollfd = -1;
-#endif
-
-#ifdef USE_WAKEUP_PIPE
-    if (wakeupPipe[0] != -1) close(wakeupPipe[0]);
-    if (wakeupPipe[1] != -1) close(wakeupPipe[1]);
-    wakeupPipe[0] = wakeupPipe[1] = -1;
-#endif
+    /**
+     * m_wakeup_pipe must be reset *before* m_edge_trig_events as it may
+     * attempt to call EdgeTriggeredEvents::UnregisterPipe() in its destructor
+     */
+    m_wakeup_pipe.reset();
+    m_edge_trig_events.reset();
 }
 
 void CConnman::DeleteNode(CNode* pnode)
@@ -4143,8 +4040,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         }
 
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
-        if (!hasPendingData && wakeupSelectNeeded)
-            WakeSelect();
+        if (!hasPendingData && (m_wakeup_pipe && m_wakeup_pipe->m_need_wakeup.load()))
+            m_wakeup_pipe->Write();
     }
 }
 
@@ -4232,79 +4129,6 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
     std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.m_asmap));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
-}
-
-void CConnman::RegisterEvents(CNode *pnode)
-{
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-        LOCK(pnode->cs_hSocket);
-        assert(pnode->hSocket != INVALID_SOCKET);
-
-        struct kevent events[2];
-        EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_ADD, 0, 0, nullptr);
-        EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_ADD | EV_CLEAR, 0, 0, nullptr);
-
-        int r = kevent(kqueuefd, events, 2, nullptr, 0, nullptr);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                    kqueuefd, EV_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
-#ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-        LOCK(pnode->cs_hSocket);
-        assert(pnode->hSocket != INVALID_SOCKET);
-
-        epoll_event e;
-        // We're using edge-triggered mode, so it's important that we drain sockets even if no signals come in
-        e.events = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLERR | EPOLLHUP;
-        e.data.fd = pnode->hSocket;
-
-        int r = epoll_ctl(epollfd, EPOLL_CTL_ADD, pnode->hSocket, &e);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                    epollfd, EPOLL_CTL_ADD, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
-}
-
-void CConnman::UnregisterEvents(CNode *pnode)
-{
-#ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
-        AssertLockHeld(pnode->cs_hSocket);
-        if (pnode->hSocket == INVALID_SOCKET) {
-            return;
-        }
-
-        struct kevent events[2];
-        EV_SET(&events[0], pnode->hSocket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-        EV_SET(&events[1], pnode->hSocket, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
-
-        int r = kevent(kqueuefd, events, 2, nullptr, 0, nullptr);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- kevent(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                    kqueuefd, EV_DELETE, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
-#ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
-        AssertLockHeld(pnode->cs_hSocket);
-        if (pnode->hSocket == INVALID_SOCKET) {
-            return;
-        }
-
-        int r = epoll_ctl(epollfd, EPOLL_CTL_DEL, pnode->hSocket, nullptr);
-        if (r != 0) {
-            LogPrint(BCLog::NET, "%s -- epoll_ctl(%d, %d, %d, ...) failed. error: %s\n", __func__,
-                    epollfd, EPOLL_CTL_DEL, pnode->hSocket, NetworkErrorString(WSAGetLastError()));
-        }
-    }
-#endif
 }
 
 void CaptureMessageToFile(const CAddress& addr,
