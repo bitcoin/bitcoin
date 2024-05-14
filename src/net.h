@@ -28,9 +28,10 @@
 #include <sync.h>
 #include <threadinterrupt.h>
 #include <uint256.h>
+#include <util/check.h>
+#include <util/edge.h>
 #include <util/system.h>
 #include <consensus/params.h>
-#include <util/check.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -1514,12 +1515,7 @@ private:
     std::atomic<bool> wakeupSelectNeeded{false};
 
     SocketEventsMode socketEventsMode;
-#ifdef USE_KQUEUE
-    int kqueuefd{-1};
-#endif
-#ifdef USE_EPOLL
-    int epollfd{-1};
-#endif
+    std::unique_ptr<EdgeTriggeredEvents> m_edge_trig_events{nullptr};
 
     Mutex cs_sendable_receivable_nodes;
     std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_sendable_receivable_nodes);

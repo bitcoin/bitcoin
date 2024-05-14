@@ -327,6 +327,7 @@ BITCOIN_CORE_H = \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
+  util/edge.h \
   util/enumerate.h \
   util/epochguard.h \
   util/error.h \
@@ -776,6 +777,7 @@ libbitcoin_util_a_SOURCES = \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
   util/check.cpp \
+  util/edge.cpp \
   util/error.cpp \
   util/fees.cpp \
   util/hasher.cpp \
