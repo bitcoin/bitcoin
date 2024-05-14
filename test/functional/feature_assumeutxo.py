@@ -23,7 +23,6 @@ Interesting starting states could be loading a snapshot when the current chain t
 - TODO: An ancestor of snapshot block
 - TODO: Not an ancestor of the snapshot block but has less work
 - TODO: The snapshot block
-- TODO: A descendant of the snapshot block
 - TODO: Not an ancestor or a descendant of the snapshot block and has more work
 
 """
@@ -236,6 +235,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
         # will allow us to test n1's sync-to-tip on top of a snapshot.
         self.generate(n0, nblocks=100, sync_fun=self.no_op)
+
+        with n0.assert_debug_log(expected_msgs=[
+            "[snapshot] activation failed - work does not exceed active chainstate",
+            "[snapshot] activation failed - population failed"
+            ]):
+            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", n0.loadtxoutset, dump_output['path'])
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)
         assert_equal(n1.getblockcount(), START_HEIGHT)
