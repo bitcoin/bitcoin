@@ -1782,21 +1782,21 @@ void CConnman::SocketEvents(const std::vector<CNode*>& nodes,
 {
     switch (socketEventsMode) {
 #ifdef USE_KQUEUE
-        case SOCKETEVENTS_KQUEUE:
+        case SocketEventsMode::KQueue:
             SocketEventsKqueue(recv_set, send_set, error_set, only_poll);
             break;
 #endif
 #ifdef USE_EPOLL
-        case SOCKETEVENTS_EPOLL:
+        case SocketEventsMode::EPoll:
             SocketEventsEpoll(recv_set, send_set, error_set, only_poll);
             break;
 #endif
 #ifdef USE_POLL
-        case SOCKETEVENTS_POLL:
+        case SocketEventsMode::Poll:
             SocketEventsPoll(nodes, recv_set, send_set, error_set, only_poll);
             break;
 #endif
-        case SOCKETEVENTS_SELECT:
+        case SocketEventsMode::Select:
             SocketEventsSelect(nodes, recv_set, send_set, error_set, only_poll);
             break;
         default:
@@ -3133,7 +3133,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
     }
 
 #ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+    if (socketEventsMode == SocketEventsMode::KQueue) {
         struct kevent event;
         EV_SET(&event, sock->Get(), EVFILT_READ, EV_ADD, 0, 0, nullptr);
         if (kevent(kqueuefd, &event, 1, nullptr, 0, nullptr) != 0) {
@@ -3145,7 +3145,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 #endif
 
 #ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+    if (socketEventsMode == SocketEventsMode::EPoll) {
         epoll_event event;
         event.data.fd = sock->Get();
         event.events = EPOLLIN;
@@ -3302,7 +3302,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     Init(connOptions);
 
 #ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+    if (socketEventsMode == SocketEventsMode::KQueue) {
         kqueuefd = kqueue();
         if (kqueuefd == -1) {
             LogPrintf("kqueue failed\n");
@@ -3312,7 +3312,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
 #endif
 
 #ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+    if (socketEventsMode == SocketEventsMode::EPoll) {
         epollfd = epoll_create1(0);
         if (epollfd == -1) {
             LogPrintf("epoll_create1 failed\n");
@@ -3405,7 +3405,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
             LogPrint(BCLog::NET, "fcntl for O_NONBLOCK on wakeupPipe failed\n");
         }
 #ifdef USE_KQUEUE
-        if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+        if (socketEventsMode == SocketEventsMode::KQueue) {
             struct kevent event;
             EV_SET(&event, wakeupPipe[0], EVFILT_READ, EV_ADD, 0, 0, nullptr);
             int r = kevent(kqueuefd, &event, 1, nullptr, 0, nullptr);
@@ -3417,7 +3417,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
         }
 #endif
 #ifdef USE_EPOLL
-        if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+        if (socketEventsMode == SocketEventsMode::EPoll) {
             epoll_event event;
             event.events = EPOLLIN;
             event.data.fd = wakeupPipe[0];
@@ -3567,14 +3567,14 @@ void CConnman::StopNodes()
     for (ListenSocket& hListenSocket : vhListenSocket)
         if (hListenSocket.socket != INVALID_SOCKET) {
 #ifdef USE_KQUEUE
-            if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+            if (socketEventsMode == SocketEventsMode::KQueue) {
                 struct kevent event;
                 EV_SET(&event, hListenSocket.socket, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
                 kevent(kqueuefd, &event, 1, nullptr, 0, nullptr);
             }
 #endif
 #ifdef USE_EPOLL
-            if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+            if (socketEventsMode == SocketEventsMode::EPoll) {
                 epoll_ctl(epollfd, EPOLL_CTL_DEL, hListenSocket.socket, nullptr);
             }
 #endif
@@ -3606,7 +3606,7 @@ void CConnman::StopNodes()
     semAddnode.reset();
 
 #ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE && kqueuefd != -1) {
+    if (socketEventsMode == SocketEventsMode::KQueue && kqueuefd != -1) {
 #ifdef USE_WAKEUP_PIPE
         struct kevent event;
         EV_SET(&event, wakeupPipe[0], EVFILT_READ, EV_DELETE, 0, 0, nullptr);
@@ -3617,7 +3617,7 @@ void CConnman::StopNodes()
     kqueuefd = -1;
 #endif
 #ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL && epollfd != -1) {
+    if (socketEventsMode == SocketEventsMode::EPoll && epollfd != -1) {
 #ifdef USE_WAKEUP_PIPE
         epoll_ctl(epollfd, EPOLL_CTL_DEL, wakeupPipe[0], nullptr);
 #endif
@@ -4237,7 +4237,7 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
 void CConnman::RegisterEvents(CNode *pnode)
 {
 #ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+    if (socketEventsMode == SocketEventsMode::KQueue) {
         LOCK(pnode->cs_hSocket);
         assert(pnode->hSocket != INVALID_SOCKET);
 
@@ -4253,7 +4253,7 @@ void CConnman::RegisterEvents(CNode *pnode)
     }
 #endif
 #ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+    if (socketEventsMode == SocketEventsMode::EPoll) {
         LOCK(pnode->cs_hSocket);
         assert(pnode->hSocket != INVALID_SOCKET);
 
@@ -4274,7 +4274,7 @@ void CConnman::RegisterEvents(CNode *pnode)
 void CConnman::UnregisterEvents(CNode *pnode)
 {
 #ifdef USE_KQUEUE
-    if (socketEventsMode == SOCKETEVENTS_KQUEUE) {
+    if (socketEventsMode == SocketEventsMode::KQueue) {
         AssertLockHeld(pnode->cs_hSocket);
         if (pnode->hSocket == INVALID_SOCKET) {
             return;
@@ -4292,7 +4292,7 @@ void CConnman::UnregisterEvents(CNode *pnode)
     }
 #endif
 #ifdef USE_EPOLL
-    if (socketEventsMode == SOCKETEVENTS_EPOLL) {
+    if (socketEventsMode == SocketEventsMode::EPoll) {
         AssertLockHeld(pnode->cs_hSocket);
         if (pnode->hSocket == INVALID_SOCKET) {
             return;

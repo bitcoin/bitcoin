@@ -669,24 +669,9 @@ static RPCHelpMan getnetworkinfo()
         obj.pushKV("connections_mn",   (int)node.connman->GetNodeCount(ConnectionDirection::Verified));
         obj.pushKV("connections_mn_in",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedIn));
         obj.pushKV("connections_mn_out",   (int)node.connman->GetNodeCount(ConnectionDirection::VerifiedOut));
-        std::string strSocketEvents;
-        switch (node.connman->GetSocketEventsMode()) {
-            case CConnman::SOCKETEVENTS_SELECT:
-                strSocketEvents = "select";
-                break;
-            case CConnman::SOCKETEVENTS_POLL:
-                strSocketEvents = "poll";
-                break;
-            case CConnman::SOCKETEVENTS_EPOLL:
-                strSocketEvents = "epoll";
-                break;
-            case CConnman::SOCKETEVENTS_KQUEUE:
-                strSocketEvents = "kqueue";
-                break;
-            default:
-                CHECK_NONFATAL(false);
-        }
-        obj.pushKV("socketevents", strSocketEvents);
+        std::string sem_str = SEMToString(node.connman->GetSocketEventsMode());
+        CHECK_NONFATAL(sem_str != "unknown");
+        obj.pushKV("socketevents", sem_str);
     }
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
