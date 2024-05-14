@@ -1043,12 +1043,6 @@ if test "$use_thread_local" = "yes" || test "$use_thread_local" = "auto"; then
     ])],
     [
      case $host in
-       *mingw*)
-          dnl mingw32's implementation of thread_local has also been shown to behave
-          dnl erroneously under concurrent usage; see:
-          dnl https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
-          AC_MSG_RESULT([no])
-          ;;
         *)
           AC_DEFINE([HAVE_THREAD_LOCAL], [1], [Define if thread_local is supported.])
           AC_MSG_RESULT([yes])
