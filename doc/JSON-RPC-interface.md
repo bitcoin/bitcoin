@@ -66,8 +66,7 @@ bitcoin-cli -named createwallet mywallet load_on_startup=true
 
 The RPC interface might change from one major version of Bitcoin Core to the
 next. This makes the RPC interface implicitly versioned on the major version.
-The version tuple can be retrieved by e.g. the `getnetworkinfo` RPC in
-`version`.
+Node version information can be retrieved with the `getversion` RPC.
 
 Usually deprecated features can be re-enabled during the grace-period of one
 major version via the `-deprecatedrpc=` command line option. The release notes
