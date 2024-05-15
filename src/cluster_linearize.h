@@ -166,6 +166,45 @@ public:
         return ret;
     }
 
+    /** Find some connected component within the subset "left" of this graph.
+     *
+     * Complexity: O(ret.Count()).
+     */
+    SetType FindConnectedComponent(const SetType& left) const noexcept
+    {
+        if (left.None()) return left;
+        auto first = left.First();
+        SetType ret = Descendants(first) | Ancestors(first);
+        ret &= left;
+        SetType to_add = ret;
+        to_add.Reset(first);
+        do {
+            SetType old = ret;
+            for (auto add : to_add) {
+                ret |= Descendants(add);
+                ret |= Ancestors(add);
+            }
+            ret &= left;
+            to_add = ret - old;
+        } while (to_add.Any());
+        return ret;
+    }
+
+    /** Determine if a subset is connected.
+     *
+     * Complexity: O(subset.Count()).
+     */
+    bool IsConnected(const SetType& subset) const noexcept
+    {
+        return FindConnectedComponent(subset) == subset;
+    }
+
+    /** Determine if this entire graph is connected.
+     *
+     * Complexity: O(TxCount()).
+     */
+    bool IsConnected() const noexcept { return IsConnected(SetType::Fill(TxCount())); }
+
     /** Append the entries of select to list in a topologically valid order.
      *
      * Complexity: O(select.Count() * log(select.Count())).
