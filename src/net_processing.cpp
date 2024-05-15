@@ -2293,7 +2293,23 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconside
 
     const uint256& hash = gtxid.GetHash();
 
-    if (m_orphanage.HaveTx(gtxid)) return true;
+    if (gtxid.IsWtxid()) {
+        // Normal query by wtxid.
+        if (m_orphanage.HaveTx(Wtxid::FromUint256(hash))) return true;
+    } else {
+        // Never query by txid: it is possible that the transaction in the orphanage has the same
+        // txid but a different witness, which would give us a false positive result. If we decided
+        // not to request the transaction based on this result, an attacker could prevent us from
+        // downloading a transaction by intentionally creating a malleated version of it.  While
+        // only one (or none!) of these transactions can ultimately be confirmed, we have no way of
+        // discerning which one that is, so the orphanage can store multiple transactions with the
+        // same txid.
+        //
+        // While we won't query by txid, we can try to "guess" what the wtxid is based on the txid.
+        // A non-segwit transaction's txid == wtxid. Query this txid "casted" to a wtxid. This will
+        // help us find non-segwit transactions, saving bandwidth, and should have no false positives.
+        if (m_orphanage.HaveTx(Wtxid::FromUint256(hash))) return true;
+    }
 
     if (include_reconsiderable && m_recent_rejects_reconsiderable.contains(hash)) return true;
 
@@ -3239,7 +3255,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
 
     // If the tx failed in ProcessOrphanTx, it should be removed from the orphanage unless the
     // tx was still missing inputs. If the tx was not in the orphanage, EraseTx does nothing and returns 0.
-    if (Assume(state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) && m_orphanage.EraseTx(ptx->GetHash()) > 0) {
+    if (Assume(state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) && m_orphanage.EraseTx(ptx->GetWitnessHash()) > 0) {
         LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
     }
 }
@@ -3257,7 +3273,7 @@ void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, c
 
     m_orphanage.AddChildrenToWorkSet(*tx);
     // If it came from the orphanage, remove it. No-op if the tx is not in txorphanage.
-    m_orphanage.EraseTx(tx->GetHash());
+    m_orphanage.EraseTx(tx->GetWitnessHash());
 
     LogDebug(BCLog::MEMPOOL, "AcceptToMemoryPool: peer=%d: accepted %s (wtxid=%s) (poolsz %u txn, %u kB)\n",
              nodeid,

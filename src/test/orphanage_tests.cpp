@@ -30,8 +30,8 @@ public:
     CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         LOCK(m_mutex);
-        std::map<Txid, OrphanTx>::iterator it;
-        it = m_orphans.lower_bound(Txid::FromUint256(InsecureRand256()));
+        std::map<Wtxid, OrphanTx>::iterator it;
+        it = m_orphans.lower_bound(Wtxid::FromUint256(InsecureRand256()));
         if (it == m_orphans.end())
             it = m_orphans.begin();
         return it->second.tx;
@@ -68,6 +68,16 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
     tx.vout[1].nValue = 3 * CENT;
     tx.vout[1].scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(key.GetPubKey()));
     return MakeTransactionRef(tx);
+}
+
+// Make another (not necessarily valid) tx with the same txid but different wtxid.
+static CTransactionRef MakeMutation(const CTransactionRef& ptx)
+{
+    CMutableTransaction tx(*ptx);
+    tx.vin[0].scriptWitness.stack.push_back({5});
+    auto mutated_tx = MakeTransactionRef(tx);
+    assert(ptx->GetHash() == mutated_tx->GetHash());
+    return mutated_tx;
 }
 
 static bool EqualTxns(const std::set<CTransactionRef>& set_txns, const std::vector<CTransactionRef>& vec_txns)
@@ -179,6 +189,49 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     orphanage.LimitOrphans(0, rng);
     BOOST_CHECK(orphanage.CountOrphans() == 0);
 }
+
+BOOST_AUTO_TEST_CASE(same_txid_diff_witness)
+{
+    FastRandomContext det_rand{true};
+    TxOrphanage orphanage;
+    NodeId peer{0};
+
+    std::vector<COutPoint> empty_outpoints;
+    auto parent = MakeTransactionSpending(empty_outpoints, det_rand);
+
+    // Create children to go into orphanage.
+    auto child_normal = MakeTransactionSpending({{parent->GetHash(), 0}}, det_rand);
+    auto child_mutated = MakeMutation(child_normal);
+
+    const auto& normal_wtxid = child_normal->GetWitnessHash();
+    const auto& mutated_wtxid = child_mutated->GetWitnessHash();
+    BOOST_CHECK(normal_wtxid != mutated_wtxid);
+
+    BOOST_CHECK(orphanage.AddTx(child_normal, peer));
+    // EraseTx fails as transaction by this wtxid doesn't exist.
+    BOOST_CHECK_EQUAL(orphanage.EraseTx(mutated_wtxid), 0);
+    BOOST_CHECK(orphanage.HaveTx(normal_wtxid));
+    BOOST_CHECK(!orphanage.HaveTx(mutated_wtxid));
+
+    // Must succeed. Both transactions should be present in orphanage.
+    BOOST_CHECK(orphanage.AddTx(child_mutated, peer));
+    BOOST_CHECK(orphanage.HaveTx(normal_wtxid));
+    BOOST_CHECK(orphanage.HaveTx(mutated_wtxid));
+
+    // Outpoints map should track all entries: check that both are returned as children of the parent.
+    std::set<CTransactionRef> expected_children{child_normal, child_mutated};
+    BOOST_CHECK(EqualTxns(expected_children, orphanage.GetChildrenFromSamePeer(parent, peer)));
+
+    // Erase by wtxid: mutated first
+    BOOST_CHECK_EQUAL(orphanage.EraseTx(mutated_wtxid), 1);
+    BOOST_CHECK(orphanage.HaveTx(normal_wtxid));
+    BOOST_CHECK(!orphanage.HaveTx(mutated_wtxid));
+
+    BOOST_CHECK_EQUAL(orphanage.EraseTx(normal_wtxid), 1);
+    BOOST_CHECK(!orphanage.HaveTx(normal_wtxid));
+    BOOST_CHECK(!orphanage.HaveTx(mutated_wtxid));
+}
+
 
 BOOST_AUTO_TEST_CASE(get_children)
 {

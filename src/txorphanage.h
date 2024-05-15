@@ -23,8 +23,8 @@ public:
     /** Add a new orphan transaction */
     bool AddTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Check if we already have an orphan transaction (by txid or wtxid) */
-    bool HaveTx(const GenTxid& gtxid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Check if we already have an orphan transaction (by wtxid only) */
+    bool HaveTx(const Wtxid& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Extract a transaction from a peer's work set
      *  Returns nullptr if there are no transactions to work on.
@@ -33,8 +33,8 @@ public:
      */
     CTransactionRef GetTxToReconsider(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Erase an orphan by txid */
-    int EraseTx(const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Erase an orphan by wtxid */
+    int EraseTx(const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Erase all orphans announced by a peer (eg, after that peer disconnects) */
     void EraseForPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -77,12 +77,12 @@ protected:
         size_t list_pos;
     };
 
-    /** Map from txid to orphan transaction record. Limited by
+    /** Map from wtxid to orphan transaction record. Limited by
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-    std::map<Txid, OrphanTx> m_orphans GUARDED_BY(m_mutex);
+    std::map<Wtxid, OrphanTx> m_orphans GUARDED_BY(m_mutex);
 
     /** Which peer provided the orphans that need to be reconsidered */
-    std::map<NodeId, std::set<Txid>> m_peer_work_set GUARDED_BY(m_mutex);
+    std::map<NodeId, std::set<Wtxid>> m_peer_work_set GUARDED_BY(m_mutex);
 
     using OrphanMap = decltype(m_orphans);
 
@@ -102,12 +102,8 @@ protected:
     /** Orphan transactions in vector for quick random eviction */
     std::vector<OrphanMap::iterator> m_orphan_list GUARDED_BY(m_mutex);
 
-    /** Index from wtxid into the m_orphans to lookup orphan
-     *  transactions using their witness ids. */
-    std::map<Wtxid, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(m_mutex);
-
-    /** Erase an orphan by txid */
-    int EraseTxNoLock(const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    /** Erase an orphan by wtxid */
+    int EraseTxNoLock(const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 };
 
 #endif // BITCOIN_TXORPHANAGE_H
