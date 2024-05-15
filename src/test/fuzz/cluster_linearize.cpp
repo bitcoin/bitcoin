@@ -294,6 +294,81 @@ FUZZ_TARGET(clusterlin_depgraph_serialization)
     assert(IsAcyclic(depgraph));
 }
 
+FUZZ_TARGET(clusterlin_components)
+{
+    // Verify the behavior of DepGraphs's FindConnectedComponent and IsConnected functions.
+
+    // Construct a depgraph.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    TestBitSet todo = TestBitSet::Fill(depgraph.TxCount());
+    while (todo.Any()) {
+        // Find a connected component inside todo.
+        auto component = depgraph.FindConnectedComponent(todo);
+
+        // The component must be a subset of todo and non-empty.
+        assert(component.IsSubsetOf(todo));
+        assert(component.Any());
+
+        // If todo is the entire graph, and the entire graph is connected, then the component must
+        // be the entire graph.
+        if (todo == TestBitSet::Fill(depgraph.TxCount())) {
+            assert((component == todo) == depgraph.IsConnected());
+        }
+
+        // If subset is connected, then component must match subset.
+        assert((component == todo) == depgraph.IsConnected(todo));
+
+        // The component cannot have any ancestors or descendants outside of component but in todo.
+        for (auto i : component) {
+            assert((depgraph.Ancestors(i) & todo).IsSubsetOf(component));
+            assert((depgraph.Descendants(i) & todo).IsSubsetOf(component));
+        }
+
+        // Starting from any component element, we must be able to reach every element.
+        for (auto i : component) {
+            // Start with just i as reachable.
+            TestBitSet reachable = TestBitSet::Singleton(i);
+            // Add in-todo descendants and ancestors to reachable until it does not change anymore.
+            while (true) {
+                TestBitSet new_reachable = reachable;
+                for (auto j : new_reachable) {
+                    new_reachable |= depgraph.Ancestors(j) & todo;
+                    new_reachable |= depgraph.Descendants(j) & todo;
+                }
+                if (new_reachable == reachable) break;
+                reachable = new_reachable;
+            }
+            // Verify that the result is the entire component.
+            assert(component == reachable);
+        }
+
+        // Construct an arbitrary subset of todo.
+        uint64_t subset_bits{0};
+        try {
+            reader >> VARINT(subset_bits);
+        } catch (const std::ios_base::failure&) {}
+        TestBitSet subset;
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            if (todo[i]) {
+                if (subset_bits & 1) subset.Set(i);
+                subset_bits >>= 1;
+            }
+        }
+        // Which must be non-empty.
+        if (subset.None()) subset = TestBitSet::Singleton(todo.First());
+        // Remove it from todo.
+        todo -= subset;
+    }
+
+    // No components can be found in an empty subset.
+    assert(depgraph.FindConnectedComponent(todo).None());
+}
+
 FUZZ_TARGET(clusterlin_chunking)
 {
     // Verify the correctness of the ChunkLinearization function.
@@ -357,6 +432,7 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
         assert(best_anc.transactions.Any());
         assert(best_anc.transactions.IsSubsetOf(todo));
         assert(depgraph.FeeRate(best_anc.transactions) == best_anc.feerate);
+        assert(depgraph.IsConnected(best_anc.transactions));
         // Check that it is topologically valid.
         for (auto i : best_anc.transactions) {
             assert((depgraph.Ancestors(i) & todo).IsSubsetOf(best_anc.transactions));
@@ -443,6 +519,9 @@ FUZZ_TARGET(clusterlin_search_finder)
 
         // Perform quality checks only if SearchCandidateFinder claims an optimal result.
         if (iterations_done < max_iterations) {
+            // Optimal sets are always connected.
+            assert(depgraph.IsConnected(found.transactions));
+
             // Compare with SimpleCandidateFinder.
             auto [simple, simple_iters] = smp_finder.FindCandidateSet(MAX_SIMPLE_ITERATIONS);
             assert(found.feerate >= simple.feerate);
