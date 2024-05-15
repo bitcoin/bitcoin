@@ -131,15 +131,6 @@ public:
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock);
     void BlockDisconnected();
 
-    /** Check whether we already have this gtxid in:
-     *  - mempool
-     *  - orphanage
-     *  - m_recent_rejects
-     *  - m_recent_rejects_reconsiderable (if include_reconsiderable = true)
-     *  - m_recent_confirmed_transactions
-     *  */
-    bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable);
-
     /** Creates a new PeerInfo. Saves the connection info to calculate tx announcement delays later. */
     void ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info);
 
@@ -156,11 +147,6 @@ public:
 
     /** Should be called when a notfound for a tx has been received. */
     void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
-
-    /** Look for a child of this transaction in the orphanage to form a 1-parent-1-child package,
-     * skipping any combinations that have already been tried. Return the resulting package along with
-     * the senders of its respective transactions, or std::nullopt if no package is found. */
-    std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
 
     /** Respond to successful transaction submission to mempool */
     void MempoolAcceptedTx(const CTransactionRef& tx);
