@@ -182,9 +182,8 @@ const Out& AsBase(const In& x)
     static void SerializationOps(Type& obj, Stream& s, Operation ser_action)
 
 /**
- * Variant of FORMATTER_METHODS that supports a declared parameter type.
- *
- * If a formatter has a declared parameter type, it must be invoked directly or
+ * Formatter methods can retrieve parameters attached to a stream using the
+ * SER_PARAMS(type) macro as long as the stream is created directly or
  * indirectly with a parameter of that type. This permits making serialization
  * depend on run-time context in a type-safe way.
  *
@@ -192,7 +191,8 @@ const Out& AsBase(const In& x)
  *   struct BarParameter { bool fancy; ... };
  *   struct Bar { ... };
  *   struct FooFormatter {
- *     FORMATTER_METHODS(Bar, obj, BarParameter, param) {
+ *     FORMATTER_METHODS(Bar, obj) {
+ *       auto& param = SER_PARAMS(BarParameter);
  *       if (param.fancy) {
  *         READWRITE(VARINT(obj.value));
  *       } else {
@@ -214,13 +214,7 @@ const Out& AsBase(const In& x)
  * Compilation will fail in any context where serialization is invoked but
  * no parameter of a type convertible to BarParameter is provided.
  */
-#define FORMATTER_METHODS_PARAMS(cls, obj, paramcls, paramobj)                                                 \
-    template <typename Stream>                                                                                 \
-    static void Ser(Stream& s, const cls& obj) { SerializationOps(obj, s, ActionSerialize{}, s.GetParams()); } \
-    template <typename Stream>                                                                                 \
-    static void Unser(Stream& s, cls& obj) { SerializationOps(obj, s, ActionUnserialize{}, s.GetParams()); }   \
-    template <typename Stream, typename Type, typename Operation>                                              \
-    static void SerializationOps(Type& obj, Stream& s, Operation ser_action, const paramcls& paramobj)
+#define SER_PARAMS(type) (s.template GetParams<type>())
 
 #define BASE_SERIALIZE_METHODS(cls)                                                                 \
     template <typename Stream>                                                                      \
@@ -246,15 +240,6 @@ const Out& AsBase(const In& x)
 #define SERIALIZE_METHODS(cls, obj) \
     BASE_SERIALIZE_METHODS(cls)     \
     FORMATTER_METHODS(cls, obj)
-
-/**
- * Variant of SERIALIZE_METHODS that supports a declared parameter type.
- *
- *  See FORMATTER_METHODS_PARAMS for more information on parameters.
- */
-#define SERIALIZE_METHODS_PARAMS(cls, obj, paramcls, paramobj) \
-    BASE_SERIALIZE_METHODS(cls)                                \
-    FORMATTER_METHODS_PARAMS(cls, obj, paramcls, paramobj)
 
 // Templates for serializing to anything that looks like a stream,
 // i.e. anything that supports .read(Span<std::byte>) and .write(Span<const std::byte>)
@@ -1118,26 +1103,84 @@ size_t GetSerializeSize(const T& t)
     return (SizeComputer() << t).size();
 }
 
-/** Wrapper that overrides the GetParams() function of a stream (and hides GetVersion/GetType). */
-template <typename Params, typename SubStream>
+//! Check if type contains a stream by seeing if has a GetStream() method.
+template<typename T>
+concept ContainsStream = requires(T t) { t.GetStream(); };
+
+/** Wrapper that overrides the GetParams() function of a stream. */
+template <typename SubStream, typename Params>
 class ParamsStream
 {
     const Params& m_params;
-    SubStream& m_substream; // private to avoid leaking version/type into serialization code that shouldn't see it
+    // If ParamsStream constructor is passed an lvalue argument, Substream will
+    // be a reference type, and m_substream will reference that argument.
+    // Otherwise m_substream will be a substream instance and move from the
+    // argument. Letting ParamsStream contain a substream instance instead of
+    // just a reference is useful to make the ParamsStream object self contained
+    // and let it do cleanup when destroyed, for example by closing files if
+    // SubStream is a file stream.
+    SubStream m_substream;
 
 public:
-    ParamsStream(const Params& params LIFETIMEBOUND, SubStream& substream LIFETIMEBOUND) : m_params{params}, m_substream{substream} {}
+    ParamsStream(SubStream&& substream, const Params& params LIFETIMEBOUND) : m_params{params}, m_substream{std::forward<SubStream>(substream)} {}
+
+    template <typename NestedSubstream, typename Params1, typename Params2, typename... NestedParams>
+    ParamsStream(NestedSubstream&& s, const Params1& params1 LIFETIMEBOUND, const Params2& params2 LIFETIMEBOUND, const NestedParams&... params LIFETIMEBOUND)
+        : ParamsStream{::ParamsStream{std::forward<NestedSubstream>(s), params2, params...}, params1} {}
+
     template <typename U> ParamsStream& operator<<(const U& obj) { ::Serialize(*this, obj); return *this; }
     template <typename U> ParamsStream& operator>>(U&& obj) { ::Unserialize(*this, obj); return *this; }
-    void write(Span<const std::byte> src) { m_substream.write(src); }
-    void read(Span<std::byte> dst) { m_substream.read(dst); }
-    void ignore(size_t num) { m_substream.ignore(num); }
-    bool eof() const { return m_substream.eof(); }
-    size_t size() const { return m_substream.size(); }
-    const Params& GetParams() const { return m_params; }
-    int GetVersion() = delete; // Deprecated with Params usage
-    int GetType() = delete;    // Deprecated with Params usage
+    void write(Span<const std::byte> src) { GetStream().write(src); }
+    void read(Span<std::byte> dst) { GetStream().read(dst); }
+    void ignore(size_t num) { GetStream().ignore(num); }
+    bool eof() const { return GetStream().eof(); }
+    size_t size() const { return GetStream().size(); }
+
+    //! Get reference to stream parameters.
+    template <typename P>
+    const auto& GetParams() const
+    {
+        if constexpr (std::is_convertible_v<Params, P>) {
+            return m_params;
+        } else {
+            return m_substream.template GetParams<P>();
+        }
+    }
+
+    //! Get reference to underlying stream.
+    auto& GetStream()
+    {
+        if constexpr (ContainsStream<SubStream>) {
+            return m_substream.GetStream();
+        } else {
+            return m_substream;
+        }
+    }
+    const auto& GetStream() const
+    {
+        if constexpr (ContainsStream<SubStream>) {
+            return m_substream.GetStream();
+        } else {
+            return m_substream;
+        }
+    }
 };
+
+/**
+ * Explicit template deduction guide is required for single-parameter
+ * constructor so Substream&& is treated as a forwarding reference, and
+ * SubStream is deduced as reference type for lvalue arguments.
+ */
+template <typename Substream, typename Params>
+ParamsStream(Substream&&, const Params&) -> ParamsStream<Substream, Params>;
+
+/**
+ * Template deduction guide for multiple params arguments that creates a nested
+ * ParamsStream.
+ */
+template <typename Substream, typename Params1, typename Params2, typename... Params>
+ParamsStream(Substream&& s, const Params1& params1, const Params2& params2, const Params&... params) ->
+    ParamsStream<decltype(ParamsStream{std::forward<Substream>(s), params2, params...}), Params1>;
 
 /** Wrapper that serializes objects with the specified parameters. */
 template <typename Params, typename T>
@@ -1152,13 +1195,13 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        ParamsStream ss{m_params, s};
+        ParamsStream ss{s, m_params};
         ::Serialize(ss, m_object);
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        ParamsStream ss{m_params, s};
+        ParamsStream ss{s, m_params};
         ::Unserialize(ss, m_object);
     }
 };
@@ -1176,7 +1219,7 @@ public:
     /**                                                                                  \
      * Return a wrapper around t that (de)serializes it with specified parameter params. \
      *                                                                                   \
-     * See FORMATTER_METHODS_PARAMS for more information on serialization parameters.    \
+     * See SER_PARAMS for more information on serialization parameters.                  \
      */                                                                                  \
     template <typename T>                                                                \
     auto operator()(T&& t) const                                                         \

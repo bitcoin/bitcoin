@@ -375,9 +375,10 @@ public:
     static constexpr SerParams V1_DISK{{CNetAddr::Encoding::V1}, Format::Disk};
     static constexpr SerParams V2_DISK{{CNetAddr::Encoding::V2}, Format::Disk};
 
-    SERIALIZE_METHODS_PARAMS(CAddress, obj, SerParams, params)
+    SERIALIZE_METHODS(CAddress, obj)
     {
         bool use_v2;
+        auto& params = SER_PARAMS(SerParams);
         if (params.fmt == Format::Disk) {
             // In the disk serialization format, the encoding (v1 or v2) is determined by a flag version
             // that's part of the serialization itself. ADDRV2_FORMAT in the stream version only determines

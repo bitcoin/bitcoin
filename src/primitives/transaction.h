@@ -326,7 +326,7 @@ public:
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
-        SerializeTransaction(*this, s, s.GetParams());
+        SerializeTransaction(*this, s, s.template GetParams<TransactionSerParams>());
     }
 
     /** This deserializing constructor is provided instead of an Unserialize method.
@@ -334,7 +334,7 @@ public:
     template <typename Stream>
     CTransaction(deserialize_type, const TransactionSerParams& params, Stream& s) : CTransaction(CMutableTransaction(deserialize, params, s)) {}
     template <typename Stream>
-    CTransaction(deserialize_type, ParamsStream<TransactionSerParams,Stream>& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
+    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
 
     bool IsNull() const {
         return vin.empty() && vout.empty();
@@ -386,12 +386,12 @@ struct CMutableTransaction
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
-        SerializeTransaction(*this, s, s.GetParams());
+        SerializeTransaction(*this, s, s.template GetParams<TransactionSerParams>());
     }
 
     template <typename Stream>
     inline void Unserialize(Stream& s) {
-        UnserializeTransaction(*this, s, s.GetParams());
+        UnserializeTransaction(*this, s, s.template GetParams<TransactionSerParams>());
     }
 
     template <typename Stream>
@@ -400,7 +400,7 @@ struct CMutableTransaction
     }
 
     template <typename Stream>
-    CMutableTransaction(deserialize_type, ParamsStream<TransactionSerParams,Stream>& s) {
+    CMutableTransaction(deserialize_type, Stream& s) {
         Unserialize(s);
     }
 
