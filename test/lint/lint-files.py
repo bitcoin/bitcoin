@@ -21,7 +21,7 @@ ALL_SOURCE_FILENAMES_REGEXP = r"^.*\.(cpp|h|py|sh)$"
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
 ALLOWED_SOURCE_FILENAME_REGEXP = "^[a-z0-9_./-]+$"
 ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP = (
-    "^src/(secp256k1/|univalue/|test/fuzz/FuzzedDataProvider.h)"
+    "^src/(dashbls/|immer/|secp256k1/|univalue/|test/fuzz/FuzzedDataProvider.h)"
 )
 ALLOWED_PERMISSION_NON_EXECUTABLES = 0o644
 ALLOWED_PERMISSION_EXECUTABLES = 0o755
@@ -87,9 +87,10 @@ def check_all_filenames(files) -> int:
     """
     filenames = files.keys()
     filename_regex = re.compile(ALLOWED_FILENAME_REGEXP)
+    filename_exception_regex = re.compile(ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP)
     failed_tests = 0
     for filename in filenames:
-        if not filename_regex.match(filename):
+        if not filename_regex.match(filename) and not filename_exception_regex.match(filename):
             print(
                 f"""File {repr(filename)} does not not match the allowed filename regexp ('{ALLOWED_FILENAME_REGEXP}')."""
             )
@@ -123,8 +124,12 @@ def check_all_file_permissions(files) -> int:
 
     Additionally checks that for executable files, the file contains a shebang line
     """
+    filename_exception_regex = re.compile(ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP)
+
     failed_tests = 0
     for filename, file_meta in files.items():
+        if filename_exception_regex.match(filename):
+            continue
         if file_meta.permissions == ALLOWED_PERMISSION_EXECUTABLES:
             with open(filename, "rb") as f:
                 shebang = f.readline().rstrip(b"\n")
@@ -171,9 +176,12 @@ def check_shebang_file_permissions(files_meta) -> int:
     # The git grep command we use returns files which contain a shebang on any line within the file
     # so we need to filter the list to only files with the shebang on the first line
     filenames = [filename.split(":1:")[0] for filename in filenames if ":1:" in filename]
+    filename_exception_regex = re.compile(ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP)
 
     failed_tests = 0
     for filename in filenames:
+        if filename_exception_regex.match(filename):
+            continue
         file_meta = files_meta[filename]
         if file_meta.permissions != ALLOWED_PERMISSION_EXECUTABLES:
             # These file types are typically expected to be sourced and not executed directly
