@@ -19,4 +19,4 @@ mingw32_debug_CXXFLAGS=$(mingw32_debug_CFLAGS)
 
 mingw32_debug_CPPFLAGS=-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
 
-mingw32_cmake_system=Windows
+mingw32_cmake_system_name=Windows
