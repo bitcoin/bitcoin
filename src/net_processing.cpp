@@ -564,20 +564,6 @@ private:
      */
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
-    /** Handle a transaction whose result was not MempoolAcceptResult::ResultType::VALID.
-     * @param[in]   first_time_failure            Whether this tx should be added to vExtraTxnForCompact.
-     *                                            Set to false if the tx has already been rejected before,
-     *                                            e.g. is an orphan, to avoid adding duplicate entries.
-     * Updates m_txrequest, m_lazy_recent_rejects, m_lazy_recent_rejects_reconsiderable, m_orphanage, and vExtraTxnForCompact. */
-    void ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const TxValidationState& result,
-                          bool first_time_failure)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
-
-    /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
-     * Updates m_txrequest, m_orphanage, and vExtraTxnForCompact. Also queues the tx for relay. */
-    void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
-
     struct PackageToValidate {
         const Package m_txns;
         const std::vector<NodeId> m_senders;
@@ -601,6 +587,20 @@ private:
                              m_senders.back());
         }
     };
+
+    /** Handle a transaction whose result was not MempoolAcceptResult::ResultType::VALID.
+     * @param[in]   first_time_failure            Whether this tx should be added to vExtraTxnForCompact.
+     *                                            Set to false if the tx has already been rejected before,
+     *                                            e.g. is an orphan, to avoid adding duplicate entries.
+     * Updates m_txrequest, m_lazy_recent_rejects, m_lazy_recent_rejects_reconsiderable, m_orphanage, and vExtraTxnForCompact. */
+    void ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const TxValidationState& result,
+                          bool first_time_failure)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
+
+    /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
+     * Updates m_txrequest, m_orphanage, and vExtraTxnForCompact. Also queues the tx for relay. */
+    void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
 
     /** Handle the results of package validation: calls ProcessValidTx and ProcessInvalidTx for
      * individual transactions, and caches rejection for the package as a group.
