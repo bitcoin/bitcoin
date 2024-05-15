@@ -301,7 +301,6 @@ struct TxMempoolInfo
 class CTxMemPool
 {
 protected:
-    const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
 
     uint64_t totalTxSize GUARDED_BY(cs){0};      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
@@ -436,20 +435,7 @@ public:
 
     using Options = kernel::MemPoolOptions;
 
-    const int64_t m_max_size_bytes;
-    const std::chrono::seconds m_expiry;
-    const CFeeRate m_incremental_relay_feerate;
-    const CFeeRate m_min_relay_feerate;
-    const CFeeRate m_dust_relay_feerate;
-    const bool m_permit_bare_multisig;
-    const std::optional<unsigned> m_max_datacarrier_bytes;
-    const bool m_require_standard;
-    const bool m_full_rbf;
-    const bool m_persist_v1_dat;
-
-    const Limits m_limits;
-
-    ValidationSignals* const m_signals;
+    const Options m_opts;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
@@ -625,7 +611,7 @@ public:
      *  would otherwise be half of this, it is set to 0 instead.
      */
     CFeeRate GetMinFee() const {
-        return GetMinFee(m_max_size_bytes);
+        return GetMinFee(m_opts.max_size_bytes);
     }
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.

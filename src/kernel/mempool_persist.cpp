@@ -96,7 +96,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (amountdelta && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
-            if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_expiry)) {
+            if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
                 LOCK(cs_main);
                 const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
@@ -174,11 +174,11 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
     }
 
     try {
-        const uint64_t version{pool.m_persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
+        const uint64_t version{pool.m_opts.persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
         file << version;
 
         std::vector<std::byte> xor_key(8);
-        if (!pool.m_persist_v1_dat) {
+        if (!pool.m_opts.persist_v1_dat) {
             FastRandomContext{}.fillrand(xor_key);
             file << xor_key;
         }

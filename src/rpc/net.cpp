@@ -697,8 +697,8 @@ static RPCHelpMan getnetworkinfo()
     obj.pushKV("networks",      GetNetworksInfo());
     if (node.mempool) {
         // Those fields can be deprecated, to be replaced by the getmempoolinfo fields
-        obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_min_relay_feerate.GetFeePerK()));
-        obj.pushKV("incrementalfee", ValueFromAmount(node.mempool->m_incremental_relay_feerate.GetFeePerK()));
+        obj.pushKV("relayfee", ValueFromAmount(node.mempool->m_opts.min_relay_feerate.GetFeePerK()));
+        obj.pushKV("incrementalfee", ValueFromAmount(node.mempool->m_opts.incremental_relay_feerate.GetFeePerK()));
     }
     UniValue localAddresses(UniValue::VARR);
     {
