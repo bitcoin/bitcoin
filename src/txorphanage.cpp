@@ -8,13 +8,14 @@
 #include <logging.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <util/time.h>
 
 #include <cassert>
 
-/** Expiration time for orphan transactions in seconds */
-static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
-/** Minimum time between orphan transactions expire time checks in seconds */
-static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
+/** Expiration time for orphan transactions */
+static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
+/** Minimum time between orphan transactions expire time checks */
+static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
 
 
 bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
@@ -40,7 +41,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         return false;
     }
 
-    auto ret = m_orphans.emplace(wtxid, OrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size()});
+    auto ret = m_orphans.emplace(wtxid, OrphanTx{tx, peer, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size()});
     assert(ret.second);
     m_orphan_list.push_back(ret.first);
     for (const CTxIn& txin : tx->vin) {
@@ -87,7 +88,7 @@ int TxOrphanage::EraseTxNoLock(const Wtxid& wtxid)
     // Time spent in orphanage = difference between current and entry time.
     // Entry time is equal to ORPHAN_TX_EXPIRE_TIME earlier than entry's expiry.
     LogPrint(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s) after %ds\n", txid.ToString(), wtxid.ToString(),
-             GetTime() + ORPHAN_TX_EXPIRE_TIME - it->second.nTimeExpire);
+             Ticks<std::chrono::seconds>(NodeClock::now() + ORPHAN_TX_EXPIRE_TIME - it->second.nTimeExpire));
     m_orphan_list.pop_back();
 
     m_orphans.erase(it);
@@ -118,12 +119,12 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
     LOCK(m_mutex);
 
     unsigned int nEvicted = 0;
-    static int64_t nNextSweep;
-    int64_t nNow = GetTime();
+    static NodeSeconds nNextSweep;
+    auto nNow{Now<NodeSeconds>()};
     if (nNextSweep <= nNow) {
         // Sweep out expired orphan pool entries:
         int nErased = 0;
-        int64_t nMinExpTime = nNow + ORPHAN_TX_EXPIRE_TIME - ORPHAN_TX_EXPIRE_INTERVAL;
+        auto nMinExpTime{nNow + ORPHAN_TX_EXPIRE_TIME - ORPHAN_TX_EXPIRE_INTERVAL};
         std::map<Wtxid, OrphanTx>::iterator iter = m_orphans.begin();
         while (iter != m_orphans.end())
         {
