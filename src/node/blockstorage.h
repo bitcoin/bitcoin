@@ -155,7 +155,16 @@ private:
     /** Return false if undo file flushing fails. */
     [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
 
-    [[nodiscard]] bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown);
+    /**
+     * Helper function performing various preparations before a block can be saved to disk:
+     * Returns the correct position for the block to be saved, which may be in the current or a new
+     * block file depending on nAddSize. May flush the previous blockfile to disk if full, updates
+     * blockfile info, and checks if there is enough disk space to save the block.
+     *
+     * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
+     * separator fields which are written before it by WriteBlockToDisk (BLOCK_SERIALIZATION_HEADER_SIZE).
+     */
+    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
@@ -164,6 +173,12 @@ private:
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
+    /**
+     * Write a block to disk. The pos argument passed to this function is modified by this call. Before this call, it should
+     * point to an unused file location where separator fields will be written, followed by the serialized CBlock data.
+     * After this call, it will point to the beginning of the serialized CBlock data, after the separator fields
+     * (BLOCK_SERIALIZATION_HEADER_SIZE)
+     */
     bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const;
     bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const uint256& hashBlock) const;
 
@@ -206,7 +221,7 @@ private:
     //! effectively.
     //!
     //! This data structure maintains separate blockfile number cursors for each
-    //! BlockfileType. The ASSUMED state is initialized, when necessary, in FindBlockPos().
+    //! BlockfileType. The ASSUMED state is initialized, when necessary, in FindNextBlockPos().
     //!
     //! The first element is the NORMAL cursor, second is ASSUMED.
     std::array<std::optional<BlockfileCursor>, BlockfileType::NUM_TYPES>
@@ -312,8 +327,24 @@ public:
     bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /** Store block on disk. If dbp is not nullptr, then it provides the known position of the block within a block file on disk. */
-    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const FlatFilePos* dbp);
+    /** Store block on disk and update block file statistics.
+     *
+     * @param[in]  block        the block to be stored
+     * @param[in]  nHeight      the height of the block
+     *
+     * @returns in case of success, the position to which the block was written to
+     *          in case of an error, an empty FlatFilePos
+     */
+    FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight);
+
+    /** Update blockfile info while processing a block during reindex. The block must be available on disk.
+     *
+     * @param[in]  block        the block being processed
+     * @param[in]  nHeight      the height of the block
+     * @param[in]  pos          the position of the serialized CBlock on disk. This is the position returned
+     *                          by WriteBlockToDisk pointing at the CBlock, not the separator fields before it
+     */
+    void UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos);
 
     /** Whether running in -prune mode. */
     [[nodiscard]] bool IsPruneMode() const { return m_prune_mode; }

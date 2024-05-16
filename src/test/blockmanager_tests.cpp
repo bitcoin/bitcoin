@@ -35,20 +35,20 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     };
     BlockManager blockman{*Assert(m_node.shutdown), blockman_opts};
     // simulate adding a genesis block normally
-    BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0, nullptr).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);
+    BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);
     // simulate what happens during reindex
     // simulate a well-formed genesis block being found at offset 8 in the blk00000.dat file
     // the block is found at offset 8 because there is an 8 byte serialization header
     // consisting of 4 magic bytes + 4 length bytes before each block in a well-formed blk file.
-    FlatFilePos pos{0, BLOCK_SERIALIZATION_HEADER_SIZE};
-    BOOST_CHECK_EQUAL(blockman.SaveBlockToDisk(params->GenesisBlock(), 0, &pos).nPos, BLOCK_SERIALIZATION_HEADER_SIZE);
+    const FlatFilePos pos{0, BLOCK_SERIALIZATION_HEADER_SIZE};
+    blockman.UpdateBlockInfo(params->GenesisBlock(), 0, pos);
     // now simulate what happens after reindex for the first new block processed
     // the actual block contents don't matter, just that it's a block.
     // verify that the write position is at offset 0x12d.
     // this is a check to make sure that https://github.com/bitcoin/bitcoin/issues/21379 does not recur
     // 8 bytes (for serialization header) + 285 (for serialized genesis block) = 293
     // add another 8 bytes for the second block's serialization header and we get 293 + 8 = 301
-    FlatFilePos actual{blockman.SaveBlockToDisk(params->GenesisBlock(), 1, nullptr)};
+    FlatFilePos actual{blockman.SaveBlockToDisk(params->GenesisBlock(), 1)};
     BOOST_CHECK_EQUAL(actual.nPos, BLOCK_SERIALIZATION_HEADER_SIZE + ::GetSerializeSize(TX_WITH_WITNESS(params->GenesisBlock())) + BLOCK_SERIALIZATION_HEADER_SIZE);
 }
 
@@ -156,12 +156,11 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     // Blockstore is empty
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), 0);
 
-    // Write the first block; dbp=nullptr means this block doesn't already have a disk
-    // location, so allocate a free location and write it there.
-    FlatFilePos pos1{blockman.SaveBlockToDisk(block1, /*nHeight=*/1, /*dbp=*/nullptr)};
+    // Write the first block to a new location.
+    FlatFilePos pos1{blockman.SaveBlockToDisk(block1, /*nHeight=*/1)};
 
     // Write second block
-    FlatFilePos pos2{blockman.SaveBlockToDisk(block2, /*nHeight=*/2, /*dbp=*/nullptr)};
+    FlatFilePos pos2{blockman.SaveBlockToDisk(block2, /*nHeight=*/2)};
 
     // Two blocks in the file
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), (TEST_BLOCK_SIZE + BLOCK_SERIALIZATION_HEADER_SIZE) * 2);
@@ -181,22 +180,19 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
         BOOST_CHECK_EQUAL(read_block.nVersion, 2);
     }
 
-    // When FlatFilePos* dbp is given, SaveBlockToDisk() will not write or
-    // overwrite anything to the flat file block storage. It will, however,
-    // update the blockfile metadata. This is to facilitate reindexing
-    // when the user has the blocks on disk but the metadata is being rebuilt.
+    // During reindex, the flat file block storage will not be written to.
+    // UpdateBlockInfo will, however, update the blockfile metadata.
     // Verify this behavior by attempting (and failing) to write block 3 data
     // to block 2 location.
     CBlockFileInfo* block_data = blockman.GetBlockFileInfo(0);
     BOOST_CHECK_EQUAL(block_data->nBlocks, 2);
-    BOOST_CHECK(blockman.SaveBlockToDisk(block3, /*nHeight=*/3, /*dbp=*/&pos2) == pos2);
+    blockman.UpdateBlockInfo(block3, /*nHeight=*/3, /*pos=*/pos2);
     // Metadata is updated...
     BOOST_CHECK_EQUAL(block_data->nBlocks, 3);
     // ...but there are still only two blocks in the file
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), (TEST_BLOCK_SIZE + BLOCK_SERIALIZATION_HEADER_SIZE) * 2);
 
     // Block 2 was not overwritten:
-    //   SaveBlockToDisk() did not call WriteBlockToDisk() because `FlatFilePos* dbp` was non-null
     blockman.ReadBlockFromDisk(read_block, pos2);
     BOOST_CHECK_EQUAL(read_block.nVersion, 2);
 }
