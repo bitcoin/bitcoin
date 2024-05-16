@@ -88,7 +88,14 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(401, call_with_auth(node, user + 'wrong', password + 'wrong').status)
 
     def test_rpccookieperms(self):
-        p = {"owner": 0o600, "group": 0o640, "all": 0o644}
+        p = {
+            "owner": 0o600,
+            "group": 0o640,
+            "all": 0o644,
+            "440": 0o440,
+            "640": 0o640,
+            "444": 0o444,
+        }
 
         if platform.system() == 'Windows':
             self.log.info(f"Skip cookie file permissions checks as OS detected as: {platform.system()=}")
@@ -118,7 +125,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         test_perm(None)
 
         self.log.info('Check custom cookie permissions')
-        for perm in ["owner", "group", "all"]:
+        for perm in p.keys():
             test_perm(perm)
 
     def test_norpccookiefile(self, node0_cookie_path):
