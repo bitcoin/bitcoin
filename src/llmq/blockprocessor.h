@@ -79,9 +79,6 @@ private:
     size_t GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     static uint256 GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight, int quorumIndex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
-
-extern std::unique_ptr<CQuorumBlockProcessor> quorumBlockProcessor;
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_BLOCKPROCESSOR_H

@@ -24,11 +24,7 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     is_masternode{mn_activeman != nullptr},
     bls_worker{std::make_shared<CBLSWorker>()},
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
-    quorum_block_processor{[&]() -> llmq::CQuorumBlockProcessor* const {
-        assert(llmq::quorumBlockProcessor == nullptr);
-        llmq::quorumBlockProcessor = std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db, peerman);
-        return llmq::quorumBlockProcessor.get();
-    }()},
+    quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db, peerman)},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman, mn_metaman, *quorum_block_processor, mn_activeman, sporkman, peerman, unit_tests, wipe)},
     qman{[&]() -> llmq::CQuorumManager* const {
         assert(llmq::quorumManager == nullptr);
@@ -59,7 +55,6 @@ LLMQContext::~LLMQContext() {
     llmq::quorumInstantSendManager.reset();
     llmq::chainLocksHandler.reset();
     llmq::quorumManager.reset();
-    llmq::quorumBlockProcessor.reset();
 }
 
 void LLMQContext::Interrupt() {
@@ -71,7 +66,6 @@ void LLMQContext::Interrupt() {
 }
 
 void LLMQContext::Start() {
-    assert(quorum_block_processor == llmq::quorumBlockProcessor.get());
     assert(qman == llmq::quorumManager.get());
     assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
@@ -90,7 +84,6 @@ void LLMQContext::Start() {
 }
 
 void LLMQContext::Stop() {
-    assert(quorum_block_processor == llmq::quorumBlockProcessor.get());
     assert(qman == llmq::quorumManager.get());
     assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
