@@ -15,6 +15,7 @@ add_library(bitcoin_util STATIC EXCLUDE_FROM_ALL
   fs_helpers.cpp
   hasher.cpp
   moneystr.cpp
+  netif.cpp
   rbf.cpp
   readwritefile.cpp
   serfloat.cpp
@@ -42,4 +43,5 @@ target_link_libraries(bitcoin_util
     bitcoin_clientversion
     bitcoin_crypto
     $<$<PLATFORM_ID:Windows>:ws2_32>
+    $<$<PLATFORM_ID:Windows>:iphlpapi>
 )
