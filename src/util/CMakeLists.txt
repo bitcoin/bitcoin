@@ -16,6 +16,7 @@ add_library(bitcoin_util STATIC EXCLUDE_FROM_ALL
   hasher.cpp
   moneystr.cpp
   netif.cpp
+  pcp.cpp
   rbf.cpp
   readwritefile.cpp
   serfloat.cpp
