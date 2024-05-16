@@ -389,7 +389,7 @@ int main(int argc, char** argv) {
     }
 
     /* Recreate the ecmult{,_gen} tables using the right generator (as selected via EXHAUSTIVE_TEST_ORDER) */
-    secp256k1_ecmult_gen_compute_table(&secp256k1_ecmult_gen_prec_table[0][0], &secp256k1_ge_const_g, ECMULT_GEN_PREC_BITS);
+    secp256k1_ecmult_gen_compute_table(&secp256k1_ecmult_gen_prec_table[0][0], &secp256k1_ge_const_g, COMB_BLOCKS, COMB_TEETH, COMB_SPACING);
     secp256k1_ecmult_compute_two_tables(secp256k1_pre_g, secp256k1_pre_g_128, WINDOW_G, &secp256k1_ge_const_g);
 
     while (count--) {
