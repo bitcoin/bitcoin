@@ -74,6 +74,22 @@ major version via the `-deprecatedrpc=` command line option. The release notes
 of a new major release come with detailed instructions on what RPC features
 were deprecated and how to re-enable them temporarily.
 
+## JSON-RPC 1.1 vs 2.0
+
+The server recognizes [JSON-RPC v2.0](https://www.jsonrpc.org/specification) requests
+and responds accordingly. A 2.0 request is identified by the presence of
+`"jsonrpc": "2.0"` in the request body. If that key + value is not present in a request,
+the legacy JSON-RPC v1.1 protocol is followed instead, which was the only available
+protocol in previous releases.
+
+|| 1.1 | 2.0 |
+|-|-|-|
+| Request marker | `"version": "1.1"` (or none) | `"jsonrpc": "2.0"` |
+| Response marker | (none) | `"jsonrpc": "2.0"` |
+| `"error"` and `"result"` fields in response | both present | only one is present |
+| HTTP codes in response | `200` unless there is any kind of RPC error (invalid parameters, method not found, etc) | Always `200` unless there is an actual HTTP server error (request parsing error, endpoint not found, etc) |
+| Notifications: requests that get no reply | (not supported) | Supported for requests that exclude the "id" field |
+
 ## Security
 
 The RPC interface allows other programs to control Bitcoin Core,

@@ -26,6 +26,17 @@
  *
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ *
+ * If the server receives a request with the JSON-RPC 2.0 marker `{"jsonrpc": "2.0"}`
+ * then Bitcoin will respond with a strictly specified response.
+ * It will only return an HTTP error code if an actual HTTP error is encountered
+ * such as the endpoint is not found (404) or the request is not formatted correctly (500).
+ * Otherwise the HTTP code is always OK (200) and RPC errors will be included in the
+ * response body.
+ *
+ * 2.0 spec: https://www.jsonrpc.org/specification
+ *
+ * Also see http://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
  */
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
@@ -37,22 +48,23 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue> id, JSONRPCVersion jsonrpc_version)
 {
     UniValue reply(UniValue::VOBJ);
-    if (!error.isNull())
-        reply.pushKV("result", NullUniValue);
-    else
-        reply.pushKV("result", result);
-    reply.pushKV("error", error);
-    reply.pushKV("id", id);
-    return reply;
-}
+    // Add JSON-RPC version number field in v2 only.
+    if (jsonrpc_version == JSONRPCVersion::V2) reply.pushKV("jsonrpc", "2.0");
 
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
-{
-    UniValue reply = JSONRPCReplyObj(result, error, id);
-    return reply.write() + "\n";
+    // Add both result and error fields in v1, even though one will be null.
+    // Omit the null field in v2.
+    if (error.isNull()) {
+        reply.pushKV("result", std::move(result));
+        if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("error", NullUniValue);
+    } else {
+        if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("result", NullUniValue);
+        reply.pushKV("error", std::move(error));
+    }
+    if (id.has_value()) reply.pushKV("id", std::move(id.value()));
+    return reply;
 }
 
 UniValue JSONRPCError(int code, const std::string& message)
@@ -171,7 +183,30 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     const UniValue& request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
-    id = request.find_value("id");
+    if (request.exists("id")) {
+        id = request.find_value("id");
+    } else {
+        id = std::nullopt;
+    }
+
+    // Check for JSON-RPC 2.0 (default 1.1)
+    m_json_version = JSONRPCVersion::V1_LEGACY;
+    const UniValue& jsonrpc_version = request.find_value("jsonrpc");
+    if (!jsonrpc_version.isNull()) {
+        if (!jsonrpc_version.isStr()) {
+            throw JSONRPCError(RPC_INVALID_REQUEST, "jsonrpc field must be a string");
+        }
+        // The "jsonrpc" key was added in the 2.0 spec, but some older documentation
+        // incorrectly included {"jsonrpc":"1.0"} in a request object, so we
+        // maintain that for backwards compatibility.
+        if (jsonrpc_version.get_str() == "1.0") {
+            m_json_version = JSONRPCVersion::V1_LEGACY;
+        } else if (jsonrpc_version.get_str() == "2.0") {
+            m_json_version = JSONRPCVersion::V2;
+        } else {
+            throw JSONRPCError(RPC_INVALID_REQUEST, "JSON-RPC version not supported");
+        }
+    }
 
     // Parse method
     const UniValue& valMethod{request.find_value("method")};

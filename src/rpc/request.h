@@ -7,13 +7,18 @@
 #define BITCOIN_RPC_REQUEST_H
 
 #include <any>
+#include <optional>
 #include <string>
 
 #include <univalue.h>
 
+enum class JSONRPCVersion {
+    V1_LEGACY,
+    V2
+};
+
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
+UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue> id, JSONRPCVersion jsonrpc_version);
 UniValue JSONRPCError(int code, const std::string& message);
 
 /** Generate a new RPC authentication cookie and write it to disk */
@@ -28,7 +33,7 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in);
 class JSONRPCRequest
 {
 public:
-    UniValue id;
+    std::optional<UniValue> id = UniValue::VNULL;
     std::string strMethod;
     UniValue params;
     enum Mode { EXECUTE, GET_HELP, GET_ARGS } mode = EXECUTE;
@@ -36,8 +41,10 @@ public:
     std::string authUser;
     std::string peerAddr;
     std::any context;
+    JSONRPCVersion m_json_version = JSONRPCVersion::V1_LEGACY;
 
     void parse(const UniValue& valRequest);
+    [[nodiscard]] bool IsNotification() const { return !id.has_value() && m_json_version == JSONRPCVersion::V2; };
 };
 
 #endif // BITCOIN_RPC_REQUEST_H
