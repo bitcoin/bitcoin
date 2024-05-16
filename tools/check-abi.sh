@@ -49,7 +49,7 @@ checkout_and_build() {
         -DSECP256K1_BUILD_CTIME_TESTS=OFF \
         -DSECP256K1_BUILD_EXAMPLES=OFF
     cmake --build . -j "$(nproc)"
-    abi-dumper src/libsecp256k1.so -o ABI.dump -lver "$2"
+    abi-dumper src/libsecp256k1.so -o ABI.dump -lver "$2" -public-headers ../include/
     cd "$_orig_dir"
 }
 
