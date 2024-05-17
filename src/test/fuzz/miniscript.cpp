@@ -309,9 +309,6 @@ const struct KeyComparator {
 // A dummy scriptsig to pass to VerifyScript (we always use Segwit v0).
 const CScript DUMMY_SCRIPTSIG;
 
-//! Public key to be used as internal key for dummy Taproot spends.
-const std::vector<unsigned char> NUMS_PK{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
-
 //! Construct a miniscript node as a shared_ptr.
 template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
     return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, std::forward<Args>(args)...);
@@ -1018,7 +1015,7 @@ CScript ScriptPubKey(MsCtx ctx, const CScript& script, TaprootBuilder& builder)
 
     // For Taproot outputs we always use a tree with a single script and a dummy internal key.
     builder.Add(0, script, TAPROOT_LEAF_TAPSCRIPT);
-    builder.Finalize(XOnlyPubKey{NUMS_PK});
+    builder.Finalize(XOnlyPubKey::NUMS_H);
     return GetScriptForDestination(builder.GetOutput());
 }
 

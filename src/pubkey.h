@@ -233,6 +233,11 @@ private:
     uint256 m_keydata;
 
 public:
+    /** Nothing Up My Sleeve point H
+     *  Used as an internal key for provably disabling the key path spend
+     *  see BIP341 for more details */
+    static const XOnlyPubKey NUMS_H;
+
     /** Construct an empty x-only pubkey. */
     XOnlyPubKey() = default;
 

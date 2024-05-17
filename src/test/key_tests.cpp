@@ -6,6 +6,7 @@
 
 #include <common/system.h>
 #include <key_io.h>
+#include <span.h>
 #include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -362,6 +363,15 @@ BOOST_AUTO_TEST_CASE(key_ellswift)
         }
         BOOST_CHECK(key.GetPubKey() == decoded_pubkey);
     }
+}
+
+BOOST_AUTO_TEST_CASE(bip341_test_h)
+{
+    std::vector<unsigned char> G_uncompressed = ParseHex("0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8");
+    HashWriter hw;
+    hw.write(MakeByteSpan(G_uncompressed));
+    XOnlyPubKey H{hw.GetSHA256()};
+    BOOST_CHECK(XOnlyPubKey::NUMS_H == H);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
