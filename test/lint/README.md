@@ -50,6 +50,10 @@ Individual tests can be run by directly calling the test script, e.g.:
 test/lint/lint-files.py
 ```
 
+However, doing this with dependency versions that differ from the [CI
+setup](../../ci/lint/04_install.sh) is generally unsupported, and you may see
+additional warnings or errors when doing so.
+
 check-doc.py
 ============
 Check for missing documentation of command line options.
