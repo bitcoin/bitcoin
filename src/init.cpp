@@ -2516,9 +2516,11 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
     }
 
     std::string sem_str = args.GetArg("-socketevents", DEFAULT_SOCKETEVENTS);
-    if (SEMFromString(sem_str) == SocketEventsMode::Unknown) {
+    const auto sem = SEMFromString(sem_str);
+    if (sem == SocketEventsMode::Unknown) {
         return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), sem_str, GetSupportedSocketEventsStr()));
     }
+    connOptions.socketEventsMode = sem;
 
     const std::string& i2psam_arg = args.GetArg("-i2psam", "");
     if (!i2psam_arg.empty()) {
