@@ -153,13 +153,22 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.log.info("Test disabled RPCs")
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importprivkey, "cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW")
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importpubkey, send_wrpc.getaddressinfo(send_wrpc.getnewaddress())["pubkey"])
-        assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importaddress, recv_wrpc.getnewaddress())
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importmulti, [])
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.addmultisigaddress, 1, [recv_wrpc.getnewaddress()])
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.dumpprivkey, recv_wrpc.getnewaddress())
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.dumpwallet, 'wallet.dump')
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.importwallet, 'wallet.dump')
         assert_raises_rpc_error(-4, "Only legacy wallets are supported by this command", recv_wrpc.rpc.sethdseed)
+
+        # Test importaddress
+        self.log.info("Test watch-only descriptor wallet")
+        self.nodes[0].createwallet(wallet_name="watch-only-desc", disable_private_keys=True, descriptors=True, blank=True)
+        wallet_watch_only = self.nodes[0].get_wallet_rpc("watch-only-desc")
+        wallet_watch_only.importaddress(addr)
+        assert_equal(wallet_watch_only.getaddressinfo(addr)['ismine'], True)
+        assert_equal(wallet_watch_only.getaddressinfo(addr)['solvable'], False)
+        assert_equal(wallet_watch_only.getbalances()["mine"]['untrusted_pending'], 10)
+        self.nodes[0].unloadwallet("watch-only-desc")
 
         self.log.info("Test encryption")
         # Get the master fingerprint before encrypt
