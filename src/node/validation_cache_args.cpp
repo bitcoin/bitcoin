@@ -27,7 +27,6 @@ void ApplyArgsManOptions(const ArgsManager& argsman, ValidationCacheSizes& cache
         size_t clamped_size_each = std::max<int64_t>(*max_size, 0) * (1 << 20) / 2;
         cache_sizes = {
             .signature_cache_bytes = clamped_size_each,
-            .script_execution_cache_bytes = clamped_size_each,
         };
     }
 }

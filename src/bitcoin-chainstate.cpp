@@ -68,7 +68,6 @@ int main(int argc, char* argv[])
     // performing the check with the signature cache.
     kernel::ValidationCacheSizes validation_cache_sizes{};
     Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
-    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
 
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 

@@ -191,7 +191,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     ValidationCacheSizes validation_cache_sizes{};
     ApplyArgsManOptions(*m_node.args, validation_cache_sizes);
     Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
-    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
 
     m_node.chain = interfaces::MakeChain(m_node);
     static bool noui_connected = false;

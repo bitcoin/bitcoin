@@ -16,6 +16,7 @@
 // systems). Due to how we count cache size, actual memory usage is slightly
 // more (~32.25 MiB)
 static constexpr size_t DEFAULT_MAX_SIG_CACHE_BYTES{32 << 20};
+static constexpr size_t DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES{DEFAULT_MAX_SIG_CACHE_BYTES / 2};
 
 class CPubKey;
 
