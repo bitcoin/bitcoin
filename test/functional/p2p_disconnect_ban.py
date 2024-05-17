@@ -10,6 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    p2p_port,
 )
 
 class DisconnectBanTest(BitcoinTestFramework):
@@ -129,7 +130,8 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid subnet", self.nodes[0].disconnectnode, address="1.2.3.0/24\0")
 
         self.log.info("disconnectnode: successfully disconnect node by address")
-        address1 = self.nodes[0].getpeerinfo()[0]['addr']
+        address1 = "127.0.0.1:" + str(p2p_port(1))
+        assert [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
         self.nodes[0].disconnectnode(address=address1)
         self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 1, timeout=10)
         assert not [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
@@ -140,12 +142,15 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1]
 
         self.log.info("disconnectnode: successfully disconnect node by node id")
-        id1 = self.nodes[0].getpeerinfo()[0]['id']
+        id1 = [node for node in self.nodes[0].getpeerinfo() if node['addr'] == address1][0]['id']
         self.nodes[0].disconnectnode(nodeid=id1)
         self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 1, timeout=10)
         assert not [node for node in self.nodes[0].getpeerinfo() if node['id'] == id1]
+        self.connect_nodes(0, 1)  # reconnect the node
 
         self.log.info("disconnectnode: successfully disconnect node by subnet")
+        nodes = self.nodes[0].getpeerinfo()
+        assert nodes and all(node['addr'].startswith('127.0.0.') for node in nodes)
         self.nodes[0].disconnectnode(address='127.0.0.1/24')
         self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)
 
