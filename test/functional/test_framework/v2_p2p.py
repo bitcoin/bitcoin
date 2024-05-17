@@ -19,7 +19,6 @@ HEADER_LEN = 1
 IGNORE_BIT_POS = 7
 LENGTH_FIELD_LEN = 3
 MAX_GARBAGE_LEN = 4095
-TRANSPORT_VERSION = b''
 
 SHORTID = {
     1: b"addr",
@@ -93,6 +92,7 @@ class EncryptedP2PState:
         # has been decrypted. set to -1 if decryption hasn't been done yet.
         self.contents_len = -1
         self.found_garbage_terminator = False
+        self.transport_version = b''
 
     @staticmethod
     def v2_ecdh(priv, ellswift_theirs, ellswift_ours, initiating):
@@ -169,7 +169,7 @@ class EncryptedP2PState:
             msg_to_send += self.v2_enc_packet(decoy_content_len * b'\x00', aad=aad, ignore=True)
             aad = b''
         # Send version packet.
-        msg_to_send += self.v2_enc_packet(TRANSPORT_VERSION, aad=aad)
+        msg_to_send += self.v2_enc_packet(self.transport_version, aad=aad)
         return 64 - len(self.received_prefix), msg_to_send
 
     def authenticate_handshake(self, response):
