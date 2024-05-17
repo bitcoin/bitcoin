@@ -4790,7 +4790,6 @@ bool ChainstateManager::LoadBlockIndex()
 {
     AssertLockHeld(cs_main);
     // Load block index from databases
-    bool needs_init = m_blockman.m_reindexing;
     if (!m_blockman.m_reindexing) {
         bool ret{m_blockman.LoadBlockIndexDB(SnapshotBlockhash())};
         if (!ret) return false;
@@ -4822,18 +4821,6 @@ bool ChainstateManager::LoadBlockIndex()
             if (pindex->IsValid(BLOCK_VALID_TREE) && (m_best_header == nullptr || CBlockIndexWorkComparator()(m_best_header, pindex)))
                 m_best_header = pindex;
         }
-
-        needs_init = m_blockman.m_block_index.empty();
-    }
-
-    if (needs_init) {
-        // Everything here is for *new* reindex/DBs. Thus, though
-        // LoadBlockIndexDB may have set m_reindexing if we shut down
-        // mid-reindex previously, we don't check m_reindexing and
-        // instead only check it prior to LoadBlockIndexDB to set
-        // needs_init.
-
-        LogPrintf("Initializing databases...\n");
     }
     return true;
 }
