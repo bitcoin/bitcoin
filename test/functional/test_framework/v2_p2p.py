@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for v2 P2P protocol (see BIP 324)"""
 
-import logging
 import random
 
 from .crypto.bip324_cipher import FSChaCha20Poly1305
@@ -14,7 +13,6 @@ from .crypto.hkdf import hkdf_sha256
 from .key import TaggedHash
 from .messages import MAGIC_BYTES
 
-logger = logging.getLogger("TestFramework.v2_p2p")
 
 CHACHA20POLY1305_EXPANSION = 16
 HEADER_LEN = 1
@@ -116,7 +114,6 @@ class EncryptedP2PState:
         self.privkey_ours, self.ellswift_ours = ellswift_create()
         garbage_len = random.randrange(MAX_GARBAGE_LEN + 1)
         self.sent_garbage = random.randbytes(garbage_len)
-        logger.debug(f"sending {garbage_len} bytes of garbage data")
         return self.ellswift_ours + self.sent_garbage
 
     def initiate_v2_handshake(self):

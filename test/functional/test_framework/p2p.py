@@ -223,6 +223,7 @@ class P2PConnection(asyncio.Protocol):
         # send the initial handshake immediately
         if self.supports_v2_p2p and self.v2_state.initiating and not self.v2_state.tried_v2_handshake:
             send_handshake_bytes = self.v2_state.initiate_v2_handshake()
+            logger.debug(f"sending {len(self.v2_state.sent_garbage)} bytes of garbage data")
             self.send_raw_message(send_handshake_bytes)
         # for v1 outbound connections, send version message immediately after opening
         # (for v2 outbound connections, send it after the initial v2 handshake)
@@ -262,6 +263,7 @@ class P2PConnection(asyncio.Protocol):
                     self.v2_state = None
                     return
                 elif send_handshake_bytes:
+                    logger.debug(f"sending {len(self.v2_state.sent_garbage)} bytes of garbage data")
                     self.send_raw_message(send_handshake_bytes)
                 elif send_handshake_bytes == b"":
                     return  # only after send_handshake_bytes are sent can `complete_handshake()` be done
