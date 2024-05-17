@@ -705,7 +705,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
 
     // SFFO frequently causes issues in the context of changeless input sets: skip BnB when SFFO is active
     if (!coin_selection_params.m_subtract_fee_outputs) {
-        if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_cost_of_change, max_selection_weight, coin_selection_params.m_add_excess_to_recipient_position.has_value())}) {
+        if (auto bnb_result{SelectCoinsBnB(groups.positive_group, nTargetValue, coin_selection_params.m_max_excess, max_selection_weight, coin_selection_params.m_add_excess_to_recipient_position.has_value())}) {
             results.push_back(*bnb_result);
         } else append_error(std::move(bnb_result));
     }
@@ -1118,6 +1118,12 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
 
     coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
+
+    if (coin_control.m_max_excess) {
+        coin_selection_params.m_max_excess = std::max(coin_control.m_max_excess.value(), coin_selection_params.m_cost_of_change);
+    } else {
+        coin_selection_params.m_max_excess = coin_selection_params.m_cost_of_change;
+    }
 
     // The smallest change amount should be:
     // 1. at least equal to dust threshold
