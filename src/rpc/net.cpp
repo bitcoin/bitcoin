@@ -454,15 +454,19 @@ static RPCHelpMan disconnectnode()
 
     if (!address_arg.isNull() && id_arg.isNull()) {
         /* handle disconnect-by-address */
-        if (address_arg.get_str().find('/') != std::string::npos) {
+        const bool only_subnet{address_arg.get_str().find('/') != std::string::npos};
+        if (only_subnet) {
+            success = false;
+        } else {
+            success = connman.DisconnectNode(address_arg.get_str());
+        }
+        if (!success) {
             const CSubNet subnet = LookupSubNet(address_arg.get_str());
             if (subnet.IsValid()) {
                 success = connman.DisconnectNode(subnet);
-            } else {
+            } else if (only_subnet) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid subnet");
             }
-        } else {
-            success = connman.DisconnectNode(address_arg.get_str());
         }
     } else if (!id_arg.isNull() && (address_arg.isNull() || (address_arg.isStr() && address_arg.get_str().empty()))) {
         /* handle disconnect-by-id */
