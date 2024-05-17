@@ -21,7 +21,6 @@ from test_framework.wallet import MiniWallet
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-maxorphantx=1000"]]
 
     def chain_tx(self, utxos_to_spend, *, num_outputs=1):
         return self.wallet.send_self_transfer_multi(
