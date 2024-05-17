@@ -60,8 +60,8 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
-    // Note that it also sets fReindex global based on the disk flag!
-    // From here on, fReindex and options.reindex values may be different!
+    // Note that it also sets m_reindexing based on the disk flag!
+    // From here on, m_reindexing and options.reindex values may be different!
     if (!chainman.LoadBlockIndex()) {
         if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
         return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
@@ -84,7 +84,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // If we're not mid-reindex (based on disk + args), add a genesis block on disk
     // (otherwise we use the one already on disk).
     // This is called again in ImportBlocks after the reindex completes.
-    if (!fReindex && !chainman.ActiveChainstate().LoadGenesisBlock()) {
+    if (!chainman.m_blockman.m_reindexing && !chainman.ActiveChainstate().LoadGenesisBlock()) {
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
 
