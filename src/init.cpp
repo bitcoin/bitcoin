@@ -1558,7 +1558,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         node::ChainstateLoadOptions options;
         options.mempool = Assert(node.mempool.get());
-        options.reindex = chainman.m_blockman.m_reindexing;
+        options.reindex = blockman_opts.reindex;
         options.reindex_chainstate = fReindexChainState;
         options.prune = chainman.m_blockman.IsPruneMode();
         options.check_blocks = args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
@@ -1600,13 +1600,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         if (!fLoaded && !ShutdownRequested(node)) {
             // first suggest a reindex
-            if (!options.reindex) {
+            if (!blockman_opts.reindex) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
                     error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
                     error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
-                    chainman.m_blockman.m_reindexing = true;
+                    blockman_opts.reindex = true;
                     if (!Assert(node.shutdown)->reset()) {
                         LogPrintf("Internal error: failed to reset shutdown signal.\n");
                     }
