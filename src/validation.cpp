@@ -4918,6 +4918,12 @@ bool Chainstate::ReplayBlocks()
         LogInfo("Rolling forward %s (%i)", pindex.GetBlockHash().ToString(), nHeight);
         m_chainman.GetNotifications().progress(_("Replaying blocks…"), (int)((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)), false);
         if (!RollforwardBlock(&pindex, cache)) return false;
+        if (m_chainman.m_interrupt) {
+            LogInfo("Flushing intermediate state of replay\n");
+            cache.SetBestBlock(pindex.GetBlockHash());
+            cache.Flush();
+            return false;
+        }
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
