@@ -102,9 +102,9 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
         bool fStop = false;
 
         while (!fStop) {
-            block.posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, *index, block, m_node.chainman->GetConsensus());
+            block.posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, index, block, m_node.chainman->GetConsensus());
 
-            if (blsct::ProofOfStakeLogic::Verify(coins_view_cache, *index, block, m_node.chainman->GetConsensus()))
+            if (blsct::ProofOfStakeLogic::Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()))
                 fStop = true;
             else
                 block.nTime += 1;
@@ -112,7 +112,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
 
         blsct::ProofOfStakeLogic posProofLogic(block.posProof);
 
-        BOOST_CHECK(posProofLogic.Verify(coins_view_cache, *index, block, m_node.chainman->GetConsensus()));
+        BOOST_CHECK(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
     }
 }
 

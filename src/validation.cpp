@@ -2416,7 +2416,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         auto posProof = blsct::ProofOfStakeLogic(block.posProof);
 
         try {
-            if (!posProof.Verify(view, *(pindex->pprev), block, params.GetConsensus()))
+            if (!posProof.Verify(view, pindex->pprev, block, params.GetConsensus()))
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blsct-pos-proof");
         } catch (const std::runtime_error& e) {
             LogPrintf("%s: Validation of PoS proof failed: %s\n", __func__, e.what());
@@ -2441,7 +2441,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
 
     if (block.IsProofOfStake())
-        pindex->SetKernelHash(blsct::CalculateKernelHash(*(pindex->pprev), block));
+        pindex->SetKernelHash(blsct::CalculateKernelHash(pindex->pprev, block));
 
     const auto time_2{SteadyClock::now()};
     time_pos_calc += time_2 - time_2_;

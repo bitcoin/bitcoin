@@ -19,9 +19,9 @@ unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t 
 bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModifier, int64_t& nModifierTime) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 int64_t GetStakeModifierSelectionIntervalSection(int nSection, const Consensus::Params& params);
 int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params);
-std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev);
-blsct::Message CalculateSetMemProofGeneratorSeed(const CBlockIndex& pindexPrev);
-uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block);
+std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex* pindexPrev);
+blsct::Message CalculateSetMemProofGeneratorSeed(const CBlockIndex* pindexPrev);
+uint256 CalculateKernelHash(const CBlockIndex* pindexPrev, const CBlock& block);
 } // namespace blsct
 
 #endif // BLSCT_POS_H

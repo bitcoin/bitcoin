@@ -1023,8 +1023,8 @@ static RPCHelpMan getblocktemplate()
                     stakedCommitments.push_back(HexStr(stakedCommitmentsElements[i].GetVch()));
 
                 result.pushKV("staked_commitments", stakedCommitments);
-                result.pushKV("eta_fiat_shamir", HexStr(blsct::CalculateSetMemProofRandomness(*pindexPrev)));
-                result.pushKV("eta_phi", HexStr(blsct::CalculateSetMemProofGeneratorSeed(*pindexPrev)));
+                result.pushKV("eta_fiat_shamir", HexStr(blsct::CalculateSetMemProofRandomness(pindexPrev)));
+                result.pushKV("eta_phi", HexStr(blsct::CalculateSetMemProofGeneratorSeed(pindexPrev)));
                 result.pushKV("prev_time", pindexPrev->nTime);
                 result.pushKV("modifier", pindexPrev->nStakeModifier);
             }

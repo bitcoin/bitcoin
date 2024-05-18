@@ -106,11 +106,11 @@ int64_t GetStakeModifierSelectionInterval(const Consensus::Params& params)
     return nSelectionInterval;
 }
 
-std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pindexPrev)
+std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex* pindexPrev)
 {
     HashWriter ss{};
 
-    ss << pindexPrev.GetBlockHash() << pindexPrev.nStakeModifier;
+    ss << pindexPrev->GetBlockHash() << pindexPrev->nStakeModifier;
 
     auto hash = ss.GetHash();
 
@@ -119,19 +119,19 @@ std::vector<unsigned char> CalculateSetMemProofRandomness(const CBlockIndex& pin
 
 
 blsct::Message
-CalculateSetMemProofGeneratorSeed(const CBlockIndex& pindexPrev)
+CalculateSetMemProofGeneratorSeed(const CBlockIndex* pindexPrev)
 {
     HashWriter ss{};
 
-    ss << pindexPrev.nHeight << pindexPrev.nStakeModifier;
+    ss << pindexPrev->nHeight << pindexPrev->nStakeModifier;
 
     auto hash = ss.GetHash();
 
     return std::vector<unsigned char>(hash.begin(), hash.end());
 }
 
-uint256 CalculateKernelHash(const CBlockIndex& pindexPrev, const CBlock& block)
+uint256 CalculateKernelHash(const CBlockIndex* pindexPrev, const CBlock& block)
 {
-    return CalculateKernelHash(pindexPrev.nTime, pindexPrev.nStakeModifier, block.posProof.setMemProof.phi, block.nTime);
+    return CalculateKernelHash(pindexPrev->nTime, pindexPrev->nStakeModifier, block.posProof.setMemProof.phi, block.nTime);
 }
 } // namespace blsct
