@@ -117,8 +117,6 @@ BASE_SCRIPTS = [
     'mempool_updatefromblock.py',
     'p2p_tx_download.py',
     'wallet_dump.py --legacy-wallet',
-    'wallet_listtransactions.py --legacy-wallet',
-    'wallet_listtransactions.py --descriptors',
     'feature_multikeysporks.py',
     'feature_dip3_v19.py',
     'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
@@ -179,6 +177,8 @@ BASE_SCRIPTS = [
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py --descriptors',
     'wallet_reorgsrestore.py',
+    'wallet_listtransactions.py --legacy-wallet',
+    'wallet_listtransactions.py --descriptors',
     'wallet_watchonly.py --legacy-wallet',
     'wallet_watchonly.py --usecli --legacy-wallet',
     'interface_http.py',
