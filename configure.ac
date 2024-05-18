@@ -392,6 +392,19 @@ if test "$use_sanitizers" != ""; then
     extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
     __attribute__((weak)) // allow for libFuzzer linking
     ]],[[]])])
+
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$SANITIZER_CXXFLAGS $CXXFLAGS"
+  AC_MSG_CHECKING(whether MemorySanitizer is enabled)
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+    #if defined(__has_feature)
+    #  if __has_feature(memory_sanitizer)
+    #    error "MemorySanitizer is enabled."
+    #  endif
+    #endif
+    ]])], [msan_enabled=no], [msan_enabled=yes])
+  AC_MSG_RESULT([$msan_enabled])
+  CXXFLAGS="$TEMP_CXXFLAGS"
 fi
 
 ERROR_CXXFLAGS=
@@ -923,10 +936,11 @@ if test "$use_hardening" != "no"; then
     ;;
   esac
 
-  dnl When enable_debug is yes, all optimizations are disabled.
+  dnl 1. When enable_debug is yes, all optimizations are disabled.
   dnl However, FORTIFY_SOURCE requires that there is some level of optimization, otherwise it does nothing and just creates a compiler warning.
   dnl Since FORTIFY_SOURCE is a no-op without optimizations, do not enable it when enable_debug is yes.
-  if test "$enable_debug" != "yes"; then
+  dnl 2. FORTIFY_SOURCE causes MSan false positives, so do not enable it when msan_enabled is yes.
+  if test "$enable_debug" != "yes" && test "$msan_enabled" != "yes"; then
     AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=3],[
       AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
         HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
@@ -944,6 +958,10 @@ if test "$use_hardening" != "no"; then
   AX_CHECK_LINK_FLAG([-Wl,-z,separate-code], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,separate-code"], [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-fPIE -pie], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"], [], [$CXXFLAG_WERROR])
 fi
+if test "$msan_enabled" = "yes"; then
+  AX_CHECK_COMPILE_FLAG([-Wp,-U_FORTIFY_SOURCE], [SANITIZER_CXXFLAGS="$SANITIZER_CXXFLAGS -Wp,-U_FORTIFY_SOURCE"])
+fi
+
 
 dnl These flags are specific to ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will interpret -dead_strip as -de and then try and use
