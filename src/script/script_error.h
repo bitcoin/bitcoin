@@ -78,6 +78,9 @@ typedef enum ScriptError_t
     SCRIPT_ERR_TAPSCRIPT_CHECKMULTISIG,
     SCRIPT_ERR_TAPSCRIPT_MINIMALIF,
 
+    /* OP_CAT re-activation */
+    SCRIPT_ERR_DISCOURAGE_OP_CAT,
+
     /* Constant scriptCode */
     SCRIPT_ERR_OP_CODESEPARATOR,
     SCRIPT_ERR_SIG_FINDANDDELETE,
