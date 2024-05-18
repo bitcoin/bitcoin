@@ -157,6 +157,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         consensus.nModifierInterval = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
+        consensus.fPosNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1815; // 90% of 2016
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -286,6 +287,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         consensus.nModifierInterval = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.fPosNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -430,6 +432,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             consensus.nModifierInterval = 10 * 60;
             consensus.fPowAllowMinDifficultyBlocks = false;
             consensus.fPowNoRetargeting = false;
+            consensus.fPosNoRetargeting = false;
             consensus.nRuleChangeActivationThreshold = 1815; // 90% of 2016
             consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
             consensus.MinBIP9WarningHeight = 0;
@@ -510,6 +513,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             consensus.nModifierInterval = 10 * 60;
             consensus.fPowAllowMinDifficultyBlocks = true;
             consensus.fPowNoRetargeting = true;
+            consensus.fPosNoRetargeting = true;
             consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
             consensus.nMinerConfirmationWindow = 144;       // Faster than normal for regtest (144 instead of 2016)
 
@@ -645,6 +649,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
             consensus.nModifierInterval = 10 * 60;
             consensus.fPowAllowMinDifficultyBlocks = true;
             consensus.fPowNoRetargeting = true;
+            consensus.fPosNoRetargeting = false;
             consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
             consensus.nMinerConfirmationWindow = 144;       // Faster than normal for regtest (144 instead of 2016)
 
