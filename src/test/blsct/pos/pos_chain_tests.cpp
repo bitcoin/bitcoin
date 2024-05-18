@@ -94,16 +94,16 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment3));
     BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment2));
 
-    CBlockIndex index;
-    index.phashBlock = new uint256(InsecureRand256());
+    CBlockIndex* index = new CBlockIndex();
+    index->phashBlock = new uint256(InsecureRand256());
     CBlock block;
 
     bool fStop = false;
 
     while (!fStop) {
-        block.posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, index, block, m_node.chainman->GetConsensus());
+        block.posProof = blsct::ProofOfStakeLogic::Create(coins_view_cache, out3.value, out3.gamma, *index, block, m_node.chainman->GetConsensus());
 
-        if (blsct::ProofOfStakeLogic::Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()))
+        if (blsct::ProofOfStakeLogic::Verify(coins_view_cache, *index, block, m_node.chainman->GetConsensus()))
             fStop = true;
         else
             block.nTime += 1;
@@ -111,7 +111,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
 
     blsct::ProofOfStakeLogic posProofLogic(block.posProof);
 
-    BOOST_CHECK(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
+    BOOST_CHECK(posProofLogic.Verify(coins_view_cache, *index, block, m_node.chainman->GetConsensus()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
