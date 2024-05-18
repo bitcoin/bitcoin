@@ -454,7 +454,7 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
     if (formatted.size() > 1) {
-        informative_text = tr("To review recipient list click \"Show Details...\"");
+        informative_text = tr("To review recipient list click \"Show Details…\"");
         detailed_text = formatted.join("\n\n");
     }
 

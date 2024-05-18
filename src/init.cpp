@@ -1929,7 +1929,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         };
         bilingual_str strLoadError;
 
-        uiInterface.InitMessage(_("Loading block index...").translated);
+        uiInterface.InitMessage(_("Loading block index…").translated);
 
         do {
             bool failed_verification = false;
@@ -2120,7 +2120,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
                 for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
-                        uiInterface.InitMessage(_("Verifying blocks...").translated);
+                        uiInterface.InitMessage(_("Verifying blocks…").translated);
                         if (fHavePruned && args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
                             LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                 MIN_BLOCKS_TO_KEEP);
@@ -2302,7 +2302,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
         if (!fReindex) {
             LOCK(cs_main);
             for (CChainState* chainstate : chainman.GetAll()) {
-                uiInterface.InitMessage(_("Pruning blockstore...").translated);
+                uiInterface.InitMessage(_("Pruning blockstore…").translated);
                 chainstate->PruneAndFlush();
             }
         }
