@@ -606,7 +606,7 @@ static std::string OnionToString(Span<const uint8_t> addr)
     return EncodeBase32(address) + ".onion";
 }
 
-std::string CNetAddr::ToStringIP(bool fUseGetnameinfo) const
+std::string CNetAddr::ToStringIP() const
 {
     switch (m_net) {
     case NET_IPV4:
@@ -1027,18 +1027,18 @@ std::string CService::ToStringPort() const
     return strprintf("%u", port);
 }
 
-std::string CService::ToStringIPPort(bool fUseGetnameinfo) const
+std::string CService::ToStringIPPort() const
 {
     if (IsIPv4() || IsTor() || IsI2P() || IsInternal()) {
-        return ToStringIP(fUseGetnameinfo) + ":" + ToStringPort();
+        return ToStringIP() + ":" + ToStringPort();
     } else {
-        return "[" + ToStringIP(fUseGetnameinfo) + "]:" + ToStringPort();
+        return "[" + ToStringIP() + "]:" + ToStringPort();
     }
 }
 
-std::string CService::ToString(bool fUseGetnameinfo) const
+std::string CService::ToString() const
 {
-    return ToStringIPPort(fUseGetnameinfo);
+    return ToStringIPPort();
 }
 
 void CService::SetPort(uint16_t portIn)

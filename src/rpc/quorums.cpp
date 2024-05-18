@@ -336,7 +336,7 @@ static UniValue quorum_dkgstatus(const JSONRPCRequest& request, CDeterministicMN
                         ecj.pushKV("proTxHash", ec.ToString());
                         if (foundConnections.count(ec)) {
                             ecj.pushKV("connected", true);
-                            ecj.pushKV("address", foundConnections[ec].ToString(false));
+                            ecj.pushKV("address", foundConnections[ec].ToString());
                         } else {
                             ecj.pushKV("connected", false);
                         }

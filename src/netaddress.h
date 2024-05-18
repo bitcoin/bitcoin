@@ -201,7 +201,7 @@ public:
 
     enum Network GetNetwork() const;
     std::string ToString() const;
-    std::string ToStringIP(bool fUseGetnameinfo = true) const;
+    std::string ToStringIP() const;
     uint64_t GetHash() const;
     bool GetInAddr(struct in_addr* pipv4Addr) const;
     Network GetNetClass() const;
@@ -569,9 +569,9 @@ public:
     friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
     friend bool operator<(const CService& a, const CService& b);
     std::vector<unsigned char> GetKey() const;
-    std::string ToString(bool fUseGetnameinfo = true) const;
+    std::string ToString() const;
     std::string ToStringPort() const;
-    std::string ToStringIPPort(bool fUseGetnameinfo = true) const;
+    std::string ToStringIPPort() const;
 
     CService(const struct in6_addr& ipv6Addr, uint16_t port);
     explicit CService(const struct sockaddr_in6& addr);
