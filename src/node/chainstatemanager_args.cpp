@@ -63,6 +63,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         // 2. Multiply first, divide after to avoid integer truncation.
         size_t clamped_size_each = std::max<int64_t>(*max_size, 0) * (1 << 20) / 2;
         opts.script_execution_cache_bytes = clamped_size_each;
+        opts.signature_cache_bytes = clamped_size_each;
     }
 
     return {};

@@ -17,7 +17,7 @@
 #include <shared_mutex>
 #include <vector>
 
-SignatureCache::SignatureCache()
+SignatureCache::SignatureCache(const size_t max_size_bytes)
 {
     uint256 nonce = GetRandHash();
     // We want the nonce to be 64 bytes long to force the hasher to process
@@ -30,6 +30,10 @@ SignatureCache::SignatureCache()
     m_salted_hasher_ecdsa.Write(PADDING_ECDSA, 32);
     m_salted_hasher_schnorr.Write(nonce.begin(), 32);
     m_salted_hasher_schnorr.Write(PADDING_SCHNORR, 32);
+
+    const auto [num_elems, approx_size_bytes] = setValid.setup_bytes(max_size_bytes);
+    LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
+              approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
 }
 
 void SignatureCache::ComputeEntryECDSA(uint256& entry, const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const
@@ -56,48 +60,25 @@ void SignatureCache::Set(const uint256& entry)
     setValid.insert(entry);
 }
 
-std::pair<uint32_t, size_t> SignatureCache::setup_bytes(size_t n)
-{
-    return setValid.setup_bytes(n);
-}
-
-/* In previous versions of this code, signatureCache was a local static variable
- * in CachingTransactionSignatureChecker::VerifySignature.  We initialize
- * signatureCache outside of VerifySignature to avoid the atomic operation per
- * call overhead associated with local static variables even though
- * signatureCache could be made local to VerifySignature.
-*/
-static SignatureCache signatureCache;
-
-// To be called once in AppInitMain/BasicTestingSetup to initialize the
-// signatureCache.
-bool InitSignatureCache(size_t max_size_bytes)
-{
-    const auto [num_elems, approx_size_bytes] = signatureCache.setup_bytes(max_size_bytes);
-    LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
-              approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
-    return true;
-}
-
 bool CachingTransactionSignatureChecker::VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     uint256 entry;
-    signatureCache.ComputeEntryECDSA(entry, sighash, vchSig, pubkey);
-    if (signatureCache.Get(entry, !store))
+    m_signature_cache.ComputeEntryECDSA(entry, sighash, vchSig, pubkey);
+    if (m_signature_cache.Get(entry, !store))
         return true;
     if (!TransactionSignatureChecker::VerifyECDSASignature(vchSig, pubkey, sighash))
         return false;
     if (store)
-        signatureCache.Set(entry);
+        m_signature_cache.Set(entry);
     return true;
 }
 
 bool CachingTransactionSignatureChecker::VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const
 {
     uint256 entry;
-    signatureCache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);
-    if (signatureCache.Get(entry, !store)) return true;
+    m_signature_cache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);
+    if (m_signature_cache.Get(entry, !store)) return true;
     if (!TransactionSignatureChecker::VerifySchnorrSignature(sig, pubkey, sighash)) return false;
-    if (store) signatureCache.Set(entry);
+    if (store) m_signature_cache.Set(entry);
     return true;
 }

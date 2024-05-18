@@ -15,21 +15,20 @@
 #include <util/hasher.h>
 
 #include <cstddef>
-#include <cstdint>
 #include <shared_mutex>
-#include <utility>
 #include <vector>
 
+class CPubKey;
 class CTransaction;
 class XOnlyPubKey;
 
 // DoS prevention: limit cache size to 32MiB (over 1000000 entries on 64-bit
 // systems). Due to how we count cache size, actual memory usage is slightly
 // more (~32.25 MiB)
-static constexpr size_t DEFAULT_MAX_SIG_CACHE_BYTES{32 << 20};
-static constexpr size_t DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES{DEFAULT_MAX_SIG_CACHE_BYTES / 2};
-
-class CPubKey;
+static constexpr size_t DEFAULT_VALIDATION_CACHE_BYTES{32 << 20};
+static constexpr size_t DEFAULT_SIGNATURE_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
+static constexpr size_t DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
+static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES);
 
 /**
  * Valid signature cache, to avoid doing expensive ECDSA signature checking
@@ -47,7 +46,10 @@ private:
     std::shared_mutex cs_sigcache;
 
 public:
-    SignatureCache();
+    SignatureCache(size_t max_size_bytes);
+
+    SignatureCache(const SignatureCache&) = delete;
+    SignatureCache& operator=(const SignatureCache&) = delete;
 
     void ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
 
@@ -56,22 +58,19 @@ public:
     bool Get(const uint256& entry, const bool erase);
 
     void Set(const uint256& entry);
-
-    std::pair<uint32_t, size_t> setup_bytes(size_t n);
 };
 
 class CachingTransactionSignatureChecker : public TransactionSignatureChecker
 {
 private:
     bool store;
+    SignatureCache& m_signature_cache;
 
 public:
-    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn) {}
+    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, SignatureCache& signature_cache, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn), m_signature_cache(signature_cache)  {}
 
     bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
     bool VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
 };
-
-[[nodiscard]] bool InitSignatureCache(size_t max_size_bytes);
 
 #endif // BITCOIN_SCRIPT_SIGCACHE_H

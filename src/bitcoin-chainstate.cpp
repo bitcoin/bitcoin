@@ -15,7 +15,6 @@
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/checks.h>
 #include <kernel/context.h>
-#include <kernel/validation_cache_sizes.h>
 #include <kernel/warning.h>
 
 #include <consensus/validation.h>
@@ -62,12 +61,6 @@ int main(int argc, char* argv[])
     // things instantiated so far requires running the epilogue to be torn down
     // properly
     assert(kernel::SanityChecks(kernel_context));
-
-    // Necessary for CheckInputScripts (eventually called by ProcessNewBlock),
-    // which will try the script cache first and fall back to actually
-    // performing the check with the signature cache.
-    kernel::ValidationCacheSizes validation_cache_sizes{};
-    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
 
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 
