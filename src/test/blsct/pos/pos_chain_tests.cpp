@@ -95,7 +95,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     BOOST_CHECK(coins_view_cache.GetStakedCommitments().Exists(commitment2));
 
     {
-        CBlockIndex* index;
+        CBlockIndex* index = new CBlockIndex();
         const uint256 randomHash{InsecureRand256()};
         index->phashBlock = &randomHash;
         CBlock block;
