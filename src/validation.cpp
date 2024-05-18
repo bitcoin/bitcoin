@@ -2094,8 +2094,6 @@ bool CScriptCheck::operator()() {
     return VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *txdata), &error);
 }
 
-static CSHA256 g_scriptExecutionCacheHasher;
-
 ValidationCache::ValidationCache(const size_t script_execution_cache_bytes)
 {
     // Setup the salted hasher
@@ -2103,8 +2101,8 @@ ValidationCache::ValidationCache(const size_t script_execution_cache_bytes)
     // We want the nonce to be 64 bytes long to force the hasher to process
     // this chunk, which makes later hash computations more efficient. We
     // just write our 32-byte entropy twice to fill the 64 bytes.
-    g_scriptExecutionCacheHasher.Write(nonce.begin(), 32);
-    g_scriptExecutionCacheHasher.Write(nonce.begin(), 32);
+    m_script_execution_cache_hasher.Write(nonce.begin(), 32);
+    m_script_execution_cache_hasher.Write(nonce.begin(), 32);
 
     const auto [num_elems, approx_size_bytes] = m_script_execution_cache.setup_bytes(script_execution_cache_bytes);
     LogPrintf("Using %zu MiB out of %zu MiB requested for script execution cache, able to store %zu elements\n",
@@ -2148,7 +2146,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     // properly commits to the scriptPubKey in the inputs view of that
     // transaction).
     uint256 hashCacheEntry;
-    CSHA256 hasher = g_scriptExecutionCacheHasher;
+    CSHA256 hasher = validation_cache.ScriptExecutionCacheHasher();
     hasher.Write(UCharCast(tx.GetWitnessHash().begin()), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
     AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
     if (validation_cache.m_script_execution_cache.contains(hashCacheEntry, !cacheFullScriptStore)) {
