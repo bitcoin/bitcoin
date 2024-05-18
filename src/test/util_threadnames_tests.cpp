@@ -11,8 +11,6 @@
 #include <thread>
 #include <vector>
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
-
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(util_threadnames_tests)
@@ -52,11 +50,6 @@ std::set<std::string> RenameEnMasse(int num_threads)
  */
 BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 {
-#if !defined(HAVE_THREAD_LOCAL)
-    // This test doesn't apply to platforms where we don't have thread_local.
-    return;
-#endif
-
     std::set<std::string> names = RenameEnMasse(100);
 
     BOOST_CHECK_EQUAL(names.size(), 100U);

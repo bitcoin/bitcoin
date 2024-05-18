@@ -37,10 +37,6 @@ static void SetThreadName(const char* name)
 #endif
 }
 
-// If we have thread_local, just keep thread ID and name in a thread_local
-// global.
-#if defined(HAVE_THREAD_LOCAL)
-
 /**
  * The name of the thread. We use char array instead of std::string to avoid
  * complications with running a destructor when the thread exits. Avoid adding
@@ -57,13 +53,6 @@ static void SetInternalName(const std::string& name)
     std::memcpy(g_thread_name, name.data(), copy_bytes);
     g_thread_name[copy_bytes] = '\0';
 }
-
-// Without thread_local available, don't handle internal name at all.
-#else
-
-std::string util::ThreadGetInternalName() { return ""; }
-static void SetInternalName(const std::string& name) { }
-#endif
 
 void util::ThreadRename(const std::string& name)
 {

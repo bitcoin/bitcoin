@@ -244,12 +244,6 @@ AC_ARG_ENABLE([lcov-branch-coverage],
   [use_lcov_branch=yes],
   [use_lcov_branch=no])
 
-AC_ARG_ENABLE([threadlocal],
-  [AS_HELP_STRING([--enable-threadlocal],
-  [enable features that depend on the c++ thread_local keyword (currently just thread names in debug logs). (default is to enable if there is platform support)])],
-  [use_thread_local=$enableval],
-  [use_thread_local=auto])
-
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
@@ -1027,34 +1021,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
   ],
   [AC_MSG_RESULT([no])]
 )
-
-if test "$use_thread_local" = "yes" || test "$use_thread_local" = "auto"; then
-  TEMP_LDFLAGS="$LDFLAGS"
-  LDFLAGS="$TEMP_LDFLAGS $PTHREAD_CFLAGS"
-  AC_MSG_CHECKING([for thread_local support])
-  AC_LINK_IFELSE([AC_LANG_SOURCE([
-    #include <thread>
-    static thread_local int foo = 0;
-    static void run_thread() { foo++;}
-    int main(){
-    for(int i = 0; i < 10; i++) { std::thread(run_thread).detach();}
-    return foo;
-    }
-    ])],
-    [
-     case $host in
-        *)
-          AC_DEFINE([HAVE_THREAD_LOCAL], [1], [Define if thread_local is supported.])
-          AC_MSG_RESULT([yes])
-          ;;
-      esac
-    ],
-    [
-      AC_MSG_RESULT([no])
-    ]
-  )
-  LDFLAGS="$TEMP_LDFLAGS"
-fi
 
 dnl Check for different ways of gathering OS randomness
 AC_MSG_CHECKING([for Linux getrandom function])
