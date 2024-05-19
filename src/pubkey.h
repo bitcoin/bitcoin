@@ -12,7 +12,7 @@
 #include <uint256.h>
 
 #include <array>
-#include <stdexcept>
+#include <cstring>
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
