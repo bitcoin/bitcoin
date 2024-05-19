@@ -456,6 +456,9 @@ class BlockchainTest(BitcoinTestFramework):
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')
 
+        assert 'previousblockhash' not in node.getblock(node.getblockhash(0))
+        assert 'nextblockhash' not in node.getblock(node.getbestblockhash())
+
 
 if __name__ == '__main__':
     BlockchainTest().main()

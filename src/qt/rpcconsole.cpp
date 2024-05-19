@@ -489,7 +489,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     ui->lineEdit->setMaxLength(16 * 1024 * 1024);
     ui->messagesWidget->installEventFilter(this);
 
-    connect(ui->clearButton, &QPushButton::clicked, this, &RPCConsole::clear);
+    connect(ui->clearButton, &QPushButton::clicked, [this] { clear(); });
     connect(ui->fontBiggerButton, &QPushButton::clicked, this, &RPCConsole::fontBigger);
     connect(ui->fontSmallerButton, &QPushButton::clicked, this, &RPCConsole::fontSmaller);
     connect(ui->btnClearTrafficGraph, &QPushButton::clicked, ui->trafficGraph, &TrafficGraphWidget::clear);
@@ -822,7 +822,7 @@ void RPCConsole::setFontSize(int newSize)
 
     // clear console (reset icon sizes, default stylesheet) and re-add the content
     float oldPosFactor = 1.0 / ui->messagesWidget->verticalScrollBar()->maximum() * ui->messagesWidget->verticalScrollBar()->value();
-    clear(false);
+    clear(/* keep_prompt */ true);
     ui->messagesWidget->setHtml(str);
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
@@ -873,15 +873,10 @@ void RPCConsole::buildParameterlist(QString arg)
     Q_EMIT handleRestart(args);
 }
 
-void RPCConsole::clear(bool clearHistory)
+void RPCConsole::clear(bool keep_prompt)
 {
     ui->messagesWidget->clear();
-    if(clearHistory)
-    {
-        history.clear();
-        historyPtr = 0;
-    }
-    ui->lineEdit->clear();
+    if (!keep_prompt) ui->lineEdit->clear();
     ui->lineEdit->setFocus();
 
     // Set default style sheet
@@ -1232,7 +1227,7 @@ void RPCConsole::updateDetailWidget()
     const CNodeCombinedStats *stats = clientModel->getPeerTableModel()->getNodeStats(selected_rows.first().row());
     // update the detail ui with latest node information
     QString peerAddrDetails(QString::fromStdString(stats->nodeStats.m_addr_name) + " ");
-    peerAddrDetails += tr("(peer id: %1)").arg(QString::number(stats->nodeStats.nodeid));
+    peerAddrDetails += tr("(peer: %1)").arg(QString::number(stats->nodeStats.nodeid));
     if (!stats->nodeStats.addrLocal.empty())
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
     ui->peerHeading->setText(peerAddrDetails);
