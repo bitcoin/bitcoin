@@ -93,8 +93,8 @@ void CMasternodeSync::SwitchToNextAsset()
 std::string CMasternodeSync::GetSyncStatus() const
 {
     switch (nCurrentAsset) {
-        case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...").translated;
-        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...").translated;
+        case MASTERNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain…").translated;
+        case MASTERNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects…").translated;
         case MASTERNODE_SYNC_FINISHED:      return _("Synchronization finished").translated;
         default:                            return "";
     }

@@ -191,7 +191,7 @@
            <item row="0" column="1">
             <widget class="QLabel" name="numberOfBlocksLeft">
              <property name="text">
-              <string>Unknown...</string>
+              <string>Unknown…</string>
              </property>
             </widget>
            </item>
@@ -211,7 +211,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Unknown...</string>
+              <string>Unknown…</string>
              </property>
             </widget>
            </item>
@@ -243,7 +243,7 @@
            <item row="4" column="1">
             <widget class="QLabel" name="progressIncreasePerH">
              <property name="text">
-              <string>calculating...</string>
+              <string>calculating…</string>
              </property>
             </widget>
            </item>
@@ -257,7 +257,7 @@
            <item row="5" column="1">
             <widget class="QLabel" name="expectedTimeLeft">
              <property name="text">
-              <string>calculating...</string>
+              <string>calculating…</string>
              </property>
             </widget>
            </item>

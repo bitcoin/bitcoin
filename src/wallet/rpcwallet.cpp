@@ -3738,7 +3738,7 @@ static RPCHelpMan wipewallettxes()
     const size_t STEPS{20};
     const size_t BATCH_SIZE = std::max(WALLET_SIZE / STEPS, size_t(1000));
 
-    pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 0);
+    pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions…").translated, pwallet->GetDisplayName()), 0);
 
     for (size_t progress = 0; progress < STEPS; ++progress) {
         std::vector<uint256> vHashIn;
@@ -3752,21 +3752,21 @@ static RPCHelpMan wipewallettxes()
         }
 
         if (vHashIn.size() > 0 && pwallet->ZapSelectTx(vHashIn, vHashOut) != DBErrors::LOAD_OK) {
-            pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 100);
+            pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions…").translated, pwallet->GetDisplayName()), 100);
             throw JSONRPCError(RPC_WALLET_ERROR, "Could not properly delete transactions.");
         }
 
         CHECK_NONFATAL(vHashOut.size() == vHashIn.size());
 
         if (pwallet->IsAbortingRescan() || pwallet->chain().shutdownRequested()) {
-            pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 100);
+            pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions…").translated, pwallet->GetDisplayName()), 100);
             throw JSONRPCError(RPC_MISC_ERROR, "Wiping was aborted by user.");
         }
 
-        pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), std::max(1, std::min(99, int(progress * 100 / STEPS))));
+        pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions…").translated, pwallet->GetDisplayName()), std::max(1, std::min(99, int(progress * 100 / STEPS))));
     }
 
-    pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions...").translated, pwallet->GetDisplayName()), 100);
+    pwallet->ShowProgress(strprintf("%s " + _("Wiping wallet transactions…").translated, pwallet->GetDisplayName()), 100);
 
     return NullUniValue;
 },

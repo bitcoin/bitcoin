@@ -1433,7 +1433,7 @@ bool LegacyScriptPubKeyMan::TopUpInner(unsigned int kpSize)
 
         constexpr int64_t PROGRESS_REPORT_INTERVAL = 1; // in seconds
         const bool should_show_progress = total_missing > 100;
-        const std::string strMsg = _("Topping up keypool...").translated;
+        const std::string strMsg = _("Topping up keypool…").translated;
 
         int64_t progress_report_time = GetTime();
         WalletLogPrintf("%s\n", strMsg);
