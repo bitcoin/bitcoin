@@ -114,6 +114,8 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
         blsct::ProofOfStakeLogic posProofLogic(block.posProof);
 
         BOOST_CHECK(posProofLogic.Verify(coins_view_cache, index, block, m_node.chainman->GetConsensus()));
+
+        delete index;
     }
 }
 
