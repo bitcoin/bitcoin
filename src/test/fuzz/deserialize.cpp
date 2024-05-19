@@ -212,7 +212,7 @@ FUZZ_TARGET_DESERIALIZE(coins_deserialize, {
     Coin coin;
     DeserializeFromFuzzingInput(buffer, coin);
 })
-FUZZ_TARGET_DESERIALIZE(net_address_deserialize, {
+FUZZ_TARGET_DESERIALIZE(netaddr_deserialize, {
     CNetAddr na;
     DeserializeFromFuzzingInput(buffer, na);
     if (na.IsAddrV1Compatible()) {
@@ -220,7 +220,7 @@ FUZZ_TARGET_DESERIALIZE(net_address_deserialize, {
     }
     AssertEqualAfterSerializeDeserialize(na, INIT_PROTO_VERSION | ADDRV2_FORMAT);
 })
-FUZZ_TARGET_DESERIALIZE(net_service_deserialize, {
+FUZZ_TARGET_DESERIALIZE(service_deserialize, {
     CService s;
     DeserializeFromFuzzingInput(buffer, s);
     if (s.IsAddrV1Compatible()) {

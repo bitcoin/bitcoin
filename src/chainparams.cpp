@@ -854,7 +854,7 @@ public:
         nDefaultPort = 19899;
         nDefaultPlatformP2PPort = 22200;
         nDefaultPlatformHTTPPort = 22201;
-        nPruneAfterHeight = gArgs.GetBoolArg("-fastprune", false) ? 100 : 1000;
+        nPruneAfterHeight = args.GetBoolArg("-fastprune", false) ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
