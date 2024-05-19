@@ -5,6 +5,7 @@
 """Test basic signet functionality"""
 
 from decimal import Decimal
+from os import path
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -100,6 +101,23 @@ class SignetBasicTest(BitcoinTestFramework):
         self.log.info("pregenerated signet blocks check (incompatible solution)")
 
         assert_equal(self.nodes[4].submitblock(signet_blocks[0]), 'bad-signet-blksig')
+
+        def assert_node_datadir(node, expected_dirname):
+            datadir = node.chain_path
+            self.log.info(f"Checking node datadir: {datadir}")
+            assert_equal(path.basename(datadir), expected_dirname)
+
+            assert datadir.is_dir() # check if the directory exists
+
+            #check if the directory is being used
+            rpc_log_path = node.getrpcinfo()['logpath']
+            assert rpc_log_path.startswith(str(datadir))
+
+        self.log.info("Test that the signet data directory with -signetchallenge=51 is 'signet_da1745e9'")
+        assert_node_datadir(self.nodes[0], "signet_da1745e9")
+
+        self.log.info("Test that the main signet data directory is 'signet'")
+        assert_node_datadir(self.nodes[3], "signet")
 
         self.log.info("test that signet logs the network magic on node start")
         with self.nodes[0].assert_debug_log(["Signet derived magic (message start)"]):
