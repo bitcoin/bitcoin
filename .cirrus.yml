@@ -163,6 +163,7 @@ task:
   persistent_worker:
     labels:
       type: noble  # Must use this specific worker (needed for USDT functional tests)
+  timeout_in: 300m  # Use longer timeout for the *rare* case where a full build (llvm + msan + depends + ...) needs to be done.
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
