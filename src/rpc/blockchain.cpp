@@ -102,7 +102,7 @@ double GetAverageSpacing(CBlockIndex& blockindex, const size_t& nCount = 100)
     uint64_t nSum = 0;
 
     while (index->pprev && i < nCount) {
-        nSum += index->nTime - index->pprev->nTime;
+        nSum += index->nTime > index->pprev->nTime ? index->nTime - index->pprev->nTime : 0;
         index = index->pprev;
         i++;
     }
