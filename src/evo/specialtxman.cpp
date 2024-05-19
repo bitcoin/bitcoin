@@ -54,7 +54,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const llmq::CQu
             if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetlocks-before-v20");
             }
-            return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
+            return CheckAssetLockUnlockTx(qman, tx, pindexPrev, indexes, state);
         case TRANSACTION_ASSET_UNLOCK:
             if (Params().NetworkIDString() == CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 // TODO:  adjust functional tests to make it activated by MN_RR on regtest too
@@ -63,7 +63,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const llmq::CQu
             if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-mn_rr");
             }
-            return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
+            return CheckAssetLockUnlockTx(qman, tx, pindexPrev, indexes, state);
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -276,7 +276,7 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
     try {
         if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
 
-        auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
+        auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_qman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;
 
         // If we get there we have v20 activated and credit pool amount must be included in block CbTx

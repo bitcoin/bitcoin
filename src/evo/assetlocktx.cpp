@@ -22,13 +22,13 @@
 /**
  *  Common code for Asset Lock and Asset Unlock
  */
-bool CheckAssetLockUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
+bool CheckAssetLockUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     switch (tx.nType) {
     case TRANSACTION_ASSET_LOCK:
         return CheckAssetLockTx(tx, state);
     case TRANSACTION_ASSET_UNLOCK:
-        return CheckAssetUnlockTx(tx, pindexPrev, indexes, state);
+        return CheckAssetUnlockTx(qman, tx, pindexPrev, indexes, state);
     default:
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-not-asset-locks-at-all");
     }
@@ -107,7 +107,7 @@ std::string CAssetLockPayload::ToString() const
 
 const std::string ASSETUNLOCK_REQUESTID_PREFIX = "plwdtx";
 
-bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const CBlockIndex*> pindexTip, TxValidationState& state) const
+bool CAssetUnlockPayload::VerifySig(const llmq::CQuorumManager& qman, const uint256& msgHash, gsl::not_null<const CBlockIndex*> pindexTip, TxValidationState& state) const
 {
     // That quourm hash must be active at `requestHeight`,
     // and at the quorumHash must be active in either the current or previous quorum cycle
@@ -116,7 +116,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
     Consensus::LLMQType llmqType = Params().GetConsensus().llmqTypePlatform;
 
     // We check at most 2 quorums
-    const auto quorums = llmq::quorumManager->ScanQuorums(llmqType, pindexTip, 2);
+    const auto quorums = qman.ScanQuorums(llmqType, pindexTip, 2);
 
     if (bool isActive = std::any_of(quorums.begin(), quorums.end(), [&](const auto &q) { return q->qc->quorumHash == quorumHash; }); !isActive) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-active-quorum");
@@ -128,7 +128,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-too-late");
     }
 
-    const auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+    const auto quorum = qman.GetQuorum(llmqType, quorumHash);
     assert(quorum);
 
     const uint256 requestId = ::SerializeHash(std::make_pair(ASSETUNLOCK_REQUESTID_PREFIX, index));
@@ -141,7 +141,7 @@ bool CAssetUnlockPayload::VerifySig(const uint256& msgHash, gsl::not_null<const 
     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-verified");
 }
 
-bool CheckAssetUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
+bool CheckAssetUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     // Some checks depends from blockchain status also, such as `known indexes` and `withdrawal limits`
     // They are omitted here and done by CCreditPool
@@ -182,7 +182,7 @@ bool CheckAssetUnlockTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*
 
     uint256 msgHash = tx_copy.GetHash();
 
-    return assetUnlockTx.VerifySig(msgHash, pindexPrev, state);
+    return assetUnlockTx.VerifySig(qman, msgHash, pindexPrev, state);
 }
 
 bool GetAssetUnlockFee(const CTransaction& tx, CAmount& txfee, TxValidationState& state)
