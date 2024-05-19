@@ -101,6 +101,21 @@ void BenchLinearizeNoItersWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
     });
 }
 
+template<typename SetType>
+void BenchPostLinearizeWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
+{
+    DepGraph<SetType> depgraph;
+    for (ClusterIndex i = 0; i < ntx; ++i) {
+        depgraph.AddTransaction({i, 1});
+        if (i) depgraph.AddDependency(0, i);
+    }
+    std::vector<ClusterIndex> lin(ntx);
+    bench.run([&] {
+        for (ClusterIndex i = 0; i < ntx; ++i) lin[i] = i;
+        PostLinearize(depgraph, lin);
+    });
+}
+
 } // namespace
 
 static void LinearizePerIter16TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<16>>(16, bench); }
@@ -117,6 +132,13 @@ static void LinearizeNoIters64TxWorstCase(benchmark::Bench& bench) { BenchLinear
 static void LinearizeNoIters75TxWorstCase(benchmark::Bench& bench) { BenchLinearizeNoItersWorstCase<BitSet<75>>(75, bench); }
 static void LinearizeNoIters99TxWorstCase(benchmark::Bench& bench) { BenchLinearizeNoItersWorstCase<BitSet<99>>(99, bench); }
 
+static void PostLinearize16TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<16>>(16, bench); }
+static void PostLinearize32TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<32>>(32, bench); }
+static void PostLinearize48TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<48>>(48, bench); }
+static void PostLinearize64TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<64>>(64, bench); }
+static void PostLinearize75TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<75>>(75, bench); }
+static void PostLinearize99TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<99>>(99, bench); }
+
 BENCHMARK(LinearizePerIter16TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizePerIter32TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizePerIter48TxWorstCase, benchmark::PriorityLevel::HIGH);
@@ -130,3 +152,10 @@ BENCHMARK(LinearizeNoIters48TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters64TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters75TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters99TxWorstCase, benchmark::PriorityLevel::HIGH);
+
+BENCHMARK(PostLinearize16TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize32TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize48TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize64TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize75TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize99TxWorstCase, benchmark::PriorityLevel::HIGH);

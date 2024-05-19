@@ -120,6 +120,8 @@ public:
     auto TxCount() const noexcept { return entries.size(); }
     /** Get the feerate of a given transaction i. Complexity: O(1). */
     const FeeFrac& FeeRate(ClusterIndex i) const noexcept { return entries[i].feerate; }
+    /** Get the mutable feerate of a given transaction i. Complexity: O(1). */
+    FeeFrac& FeeRate(ClusterIndex i) noexcept { return entries[i].feerate; }
     /** Get the ancestors of a given transaction i. Complexity: O(1). */
     const SetType& Ancestors(ClusterIndex i) const noexcept { return entries[i].ancestors; }
     /** Get the descendants of a given transaction i. Complexity: O(1). */
@@ -633,6 +635,189 @@ std::pair<std::vector<ClusterIndex>, uint64_t> Linearize(const DepGraph<SetType>
     }
 
     return {std::move(linearization), optimal};
+}
+
+/** Improve a given linearization.
+ *
+ * @param[in]     depgraph       Dependency graph of the cluster being linearized.
+ * @param[in,out] linearization  On input, an existing linearization for depgraph. On output, a
+ *                               potentially better linearization for the same graph.
+ *
+ * Postlinearization guarantees:
+ * - The resulting chunks are connected.
+ * - If the input has a tree shape (either all transactions have at most one child, or all
+ *   transactions have at most one parent), the result is optimal.
+ * - Given a linearization L1 and a leaf transaction T in it. Let L2 be L1 with T moved to the end,
+ *   optionally with its fee increased. Let L3 be the postlinearization of L2. L3 will be at least
+ *   as good as L1.
+ */
+template<typename SetType>
+void PostLinearize(const DepGraph<SetType>& depgraph, Span<ClusterIndex> linearization)
+{
+    // This algorithm performs a number of passes (currently 2); the even ones from back to front,
+    // the odd ones from front to back. Starting with an even (back to front) pass guarantees the
+    // moved-leaf property listed above.
+    //
+    // During an odd pass, the high-level operation is:
+    // - Start with an empty list of groups L=[].
+    // - For every transaction i in the old linearization, from front to back:
+    //   - Append a new group C=[i], containing just i, to the back of L.
+    //   - While there is a group P in L immediately preceding C, which has lower feerate than C:
+    //     - If C depends on P:
+    //       - Merge P into C, making C the concatenation of P+C, continuing with the combined C.
+    //     - Otherwise:
+    //       - Swap P with C, continuing with the now-moved C.
+    // - The output linearization is the concatenation of the groups in L.
+    //
+    // During even passes, i iterates from the back to the front of the existing linearization,
+    // and new groups are prepended instead of appended to the list L. To enable more code reuse,
+    // appending is kept, but instead the meaning of parent/child and high/low fee are swapped,
+    // and the final concatenation is reversed on output.
+    //
+    // In the implementation below, the groups are represented by singly-linked lists (pointing
+    // from the back to the front), which are themselves organized in a singly-linked circular
+    // list (each group pointing to its predecessor, with a special sentinel group at the front
+    // that points back to the last group).
+    //
+    // Information about transaction t is stored in entries[t + 1], while the sentinel is in
+    // entries[0].
+
+    /** Data structure per transaction entry. */
+    struct TxEntry
+    {
+        /** The index of the previous transaction in this group; 0 if this is the first entry of
+         *  a group. */
+        ClusterIndex prev_tx;
+
+        // Fields that are only used for transactions that are the last one in a group:
+        /** Index of the first transaction in this group, possibly itself. */
+        ClusterIndex first_tx;
+        /** Index of the last transaction in the previous group. The first group (the sentinel)
+         *  points back to the last group here, making it a singly-linked circular list. */
+        ClusterIndex prev_group;
+        /** All transactions in the group. Empty for the sentinel. */
+        SetType group;
+        /** All dependencies of the group (descendants in even passes; ancestors in odd ones). */
+        SetType deps;
+        /** The combined fee/size of transactions in the group. Fee is negated in even passes. */
+        FeeFrac feerate;
+    };
+
+    // As an example, consider the state corresponding to the linearization [1,0,3,2], with
+    // groups [1,0,3] and [2], in an odd pass. The linked lists would be:
+    //
+    //                                        +-----+
+    //                                 0<-P-- | 0 S | ---\     Legend:
+    //                                        +-----+    |
+    //                                           ^       |     - digit in box: entries index
+    //             /--------------F---------+    G       |       (note: one more than tx value)
+    //             v                         \   |       |     - S: sentinel group
+    //          +-----+        +-----+        +-----+    |          (empty feerate)
+    //   0<-P-- | 2   | <--P-- | 1   | <--P-- | 4 T |    |     - T: tail transaction, contains
+    //          +-----+        +-----+        +-----+    |          fields beyond prev_tv.
+    //                                           ^       |     - P: prev_tx reference
+    //                                           G       G     - F: first_tx reference
+    //                                           |       |     - G: prev_group reference
+    //                                        +-----+    |
+    //                                 0<-P-- | 3 T | <--/
+    //                                        +-----+
+    //                                         ^   |
+    //                                         \-F-/
+    //
+    // During an even pass, the diagram above would correspond to linearization [2,3,0,1], with
+    // groups [2] and [3,0,1].
+
+    std::vector<TxEntry> entries(linearization.size() + 1);
+
+    // Perform two passes over the linearization.
+    for (int pass = 0; pass < 2; ++pass) {
+        int rev = !(pass & 1);
+        // Construct a sentinel group, identifying the start of the list.
+        entries[0].prev_group = 0;
+        Assume(entries[0].feerate.IsEmpty());
+
+        // Iterate over all elements in the existing linearization.
+        for (ClusterIndex i = 0; i < linearization.size(); ++i) {
+            // Even passes are from back to front; odd passes from front to back.
+            ClusterIndex idx = linearization[rev ? linearization.size() - 1 - i : i];
+            // Construct a new group containing just idx. In even passes, the meaning of
+            // parent/child and high/low feerate are swapped.
+            ClusterIndex cur_group = idx + 1;
+            entries[cur_group].group = SetType::Singleton(idx);
+            entries[cur_group].deps = rev ? depgraph.Descendants(idx): depgraph.Ancestors(idx);
+            entries[cur_group].feerate = depgraph.FeeRate(idx);
+            if (rev) entries[cur_group].feerate.fee = -entries[cur_group].feerate.fee;
+            entries[cur_group].prev_tx = 0; // No previous transaction in group.
+            entries[cur_group].first_tx = cur_group; // Transaction itself is first of group.
+            // Insert the new group at the back of the groups linked list.
+            entries[cur_group].prev_group = entries[0].prev_group;
+            entries[0].prev_group = cur_group;
+
+            // Start merge/swap cycle.
+            ClusterIndex next_group = 0; // We inserted at the end, so next group is sentinel.
+            ClusterIndex prev_group = entries[cur_group].prev_group;
+            // Continue as long as the current group has higher feerate than the previous one.
+            while (entries[cur_group].feerate >> entries[prev_group].feerate) {
+                // prev_group/cur_group/next_group refer to (the last transactions of) 3
+                // consecutive entries in groups list.
+                Assume(cur_group == entries[next_group].prev_group);
+                Assume(prev_group == entries[cur_group].prev_group);
+                // The sentinel has empty feerate, which is neither higher or lower than other
+                // feerates. Thus, the while loop we are in here guarantees that cur_group and
+                // prev_group are not the sentinel.
+                Assume(cur_group != 0);
+                Assume(prev_group != 0);
+                if (entries[cur_group].deps.Overlaps(entries[prev_group].group)) {
+                    // There is a dependency between cur_group and prev_group; merge prev_group
+                    // into cur_group.
+                    entries[cur_group].group |= entries[prev_group].group;
+                    entries[cur_group].deps |= entries[prev_group].deps;
+                    entries[cur_group].feerate += entries[prev_group].feerate;
+                    // Make the first of the current group point to the tail of the previous group.
+                    entries[entries[cur_group].first_tx].prev_tx = prev_group;
+                    // The first of the previous group becomes the first of the newly-merged group.
+                    entries[cur_group].first_tx = entries[prev_group].first_tx;
+                    // The previous group becomes whatever group was before the former one.
+                    prev_group = entries[prev_group].prev_group;
+                    entries[cur_group].prev_group = prev_group;
+                } else {
+                    // There is no dependency between cur_group and prev_group; swap them.
+                    ClusterIndex preprev_group = entries[prev_group].prev_group;
+                    // If PP, P, C, N were the old preprev, prev, cur, next groups, then the new
+                    // layout becomes [PP, C, P, N]. Update prev_groups to reflect that order.
+                    entries[next_group].prev_group = prev_group;
+                    entries[prev_group].prev_group = cur_group;
+                    entries[cur_group].prev_group = preprev_group;
+                    // The current group remains the same, but the groups before/after it have
+                    // changed.
+                    next_group = prev_group;
+                    prev_group = preprev_group;
+                }
+            }
+        }
+
+        // Convert the entries back to linearization (overwriting the existing one).
+        ClusterIndex cur_group = entries[0].prev_group;
+        ClusterIndex done = 0;
+        while (cur_group != 0) {
+            ClusterIndex cur_tx = cur_group;
+            // Traverse the transactions of cur_group (from back to front), and write them in the
+            // same order during odd passes, and reversed (front to back) in even passes.
+            if (rev) {
+                do {
+                    *(linearization.begin() + (done++)) = cur_tx - 1;
+                    cur_tx = entries[cur_tx].prev_tx;
+                } while (cur_tx != 0);
+            } else {
+                do {
+                    *(linearization.end() - (++done)) = cur_tx - 1;
+                    cur_tx = entries[cur_tx].prev_tx;
+                } while (cur_tx != 0);
+            }
+            cur_group = entries[cur_group].prev_group;
+        }
+        Assume(done == linearization.size());
+    }
 }
 
 } // namespace cluster_linearize

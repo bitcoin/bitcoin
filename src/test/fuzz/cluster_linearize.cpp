@@ -800,3 +800,146 @@ FUZZ_TARGET(clusterlin_linearize)
         }
     }
 }
+
+FUZZ_TARGET(clusterlin_postlinearize)
+{
+    // Verify expected properties of PostLinearize() on arbitrary linearizations.
+
+    // Retrieve a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    MakeConnected(depgraph);
+
+    // Retrieve a linearization from the fuzz input.
+    std::vector<ClusterIndex> linearization;
+    linearization = ReadLinearization(depgraph, reader);
+    SanityCheck(depgraph, linearization);
+
+    // Produce a post-processed version.
+    auto post_linearization = linearization;
+    PostLinearize(depgraph, post_linearization);
+    SanityCheck(depgraph, linearization);
+
+    // Compare diagrams.
+    auto old_chunking = ChunkLinearization(depgraph, linearization);
+    auto new_chunking = ChunkLinearization(depgraph, post_linearization);
+    auto cmp = CompareChunks(new_chunking, old_chunking);
+    assert(cmp >= 0);
+
+    // The chunks that come out of postlinearizing are always connected.
+    ClusterIndex idx = 0;
+    for (const auto& chunk_feerate : new_chunking) {
+        // Construct chunk from chunk_feerate.
+        TestBitSet chunk;
+        int32_t size{0};
+        while (size < chunk_feerate.size) {
+            chunk.Set(post_linearization[idx]);
+            size += depgraph.FeeRate(post_linearization[idx]).size;
+            ++idx;
+        }
+        assert(size == chunk_feerate.size);
+        assert(idx <= post_linearization.size());
+        // Test that it is connected.
+        assert(depgraph.IsConnected(chunk));
+    }
+}
+
+FUZZ_TARGET(clusterlin_postlinearize_tree)
+{
+    // Verify expected properties of PostLinearize() on linearizations of graphs that form either
+    // an upright or reverse tree structure.
+
+    // Construct a direction, RNG seed, and an arbitrary graph from the fuzz input.
+    SpanReader reader(buffer);
+    uint64_t rng_seed{0};
+    DepGraph<TestBitSet> depgraph_gen;
+    uint8_t direction{0};
+    try {
+        reader >> direction >> rng_seed >> Using<DepGraphFormatter>(depgraph_gen);
+    } catch (const std::ios_base::failure&) {}
+    MakeConnected(depgraph_gen);
+
+    // Now construct a new graph, copying the nodes, but leaving only the first parent (even
+    // direction) or the first child (odd direction).
+    DepGraph<TestBitSet> depgraph_tree;
+    for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
+        depgraph_tree.AddTransaction(depgraph_gen.FeeRate(i));
+    }
+    if (direction & 1) {
+        for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
+            auto children = GetReducedChildren(depgraph_gen, i);
+            if (children.Any()) depgraph_tree.AddDependency(i, children.First());
+        }
+    } else {
+        for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
+            auto parents = GetReducedParents(depgraph_gen, i);
+            if (parents.Any()) depgraph_tree.AddDependency(parents.First(), i);
+        }
+    }
+
+    // Retrieve a linearization from the fuzz input.
+    std::vector<ClusterIndex> linearization;
+    linearization = ReadLinearization(depgraph_tree, reader);
+    SanityCheck(depgraph_tree, linearization);
+
+    // Produce a post-processed version.
+    auto post_linearization = linearization;
+    PostLinearize(depgraph_tree, post_linearization);
+    SanityCheck(depgraph_tree, linearization);
+
+    // Compare diagrams.
+    auto old_chunking = ChunkLinearization(depgraph_tree, linearization);
+    auto new_chunking = ChunkLinearization(depgraph_tree, post_linearization);
+    auto cmp = CompareChunks(new_chunking, old_chunking);
+    assert(cmp >= 0);
+
+    // Try to find an even better linearization; the result must be identical as post_linearization
+    // ought to be optimal already with a tree-structured graph.
+    auto [opt_linearization, _optimal] = Linearize(depgraph_tree, 100000, rng_seed, post_linearization);
+    auto opt_chunking = ChunkLinearization(depgraph_tree, opt_linearization);
+    auto cmp_opt = CompareChunks(opt_chunking, new_chunking);
+    assert(cmp_opt == 0);
+}
+
+FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
+{
+    // Verify that taking an existing linearized, and moving a leaf to the back, potentially
+    // increasing its fee, and then post-linearizing, results in something as good as the original.
+
+    // Construct an arbitrary graph and a fee from the fuzz input.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    int32_t fee_inc{0};
+    try {
+        uint64_t fee_inc_code;
+        reader >> Using<DepGraphFormatter>(depgraph) >> VARINT(fee_inc_code);
+        fee_inc = fee_inc_code & 0x3ffff;
+    } catch (const std::ios_base::failure&) {}
+    if (depgraph.TxCount() == 0) return;
+    MakeConnected(depgraph);
+
+    // Retrieve two linearizations from the fuzz input.
+    auto lin = ReadLinearization(depgraph, reader);
+    auto lin_leaf = ReadLinearization(depgraph, reader);
+
+    // Construct a linearization identical to lin, but with the tail end of lin_leaf moved to the
+    // back.
+    std::vector<ClusterIndex> lin_moved;
+    for (auto i : lin) {
+        if (i != lin_leaf.back()) lin_moved.push_back(i);
+    }
+    lin_moved.push_back(lin_leaf.back());
+
+    // Postlinearize lin_moved.
+    PostLinearize(depgraph, lin_moved);
+
+    // Compare diagrams (applying the fee delta after computing the old one).
+    auto old_chunking = ChunkLinearization(depgraph, lin);
+    depgraph.FeeRate(lin_leaf.back()).fee += fee_inc;
+    auto new_chunking = ChunkLinearization(depgraph, lin_moved);
+    auto cmp = CompareChunks(new_chunking, old_chunking);
+    assert(cmp >= 0);
+}
