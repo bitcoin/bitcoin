@@ -41,6 +41,9 @@ class TxConfirmStats;
 struct RemovedMempoolTransactionInfo;
 struct NewMempoolTransactionInfo;
 
+namespace node {
+    class MiniMinerMempoolEntry;
+};
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
 enum class FeeEstimateHorizon {
@@ -65,6 +68,10 @@ using TxAncestorsAndDescendants = std::map<Txid, std::pair<std::set<Txid>, std::
  * also included as a descendant and ancestor of itself.
  */
 TxAncestorsAndDescendants GetTxAncestorsAndDescendants(const std::vector<RemovedMempoolTransactionInfo>& transactions);
+
+using MiniMinerInput = std::pair<std::vector<node::MiniMinerMempoolEntry>, std::map<Txid, std::set<Txid>>>;
+
+MiniMinerInput GetMiniMinerInput(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block);
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
 
