@@ -455,6 +455,7 @@ public:
          * the mempool.
          */
         std::vector<COutPoint>& m_coins_to_uncache;
+        /** When true, the transaction or package will not be submitted to the mempool. */
         const bool m_test_accept;
         /** Whether we allow transactions to replace mempool transactions by BIP125 rules. If false,
          * any transaction spending the same inputs as a transaction in the mempool is considered
