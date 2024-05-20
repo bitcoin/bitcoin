@@ -23,6 +23,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
+    COIN,
     DEFAULT_FEE,
     MiniWallet,
 )
@@ -241,6 +242,37 @@ class RPCPackagesTest(BitcoinTestFramework):
             {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
             {"txid": tx2["txid"], "wtxid": tx2["wtxid"], "package-error": "conflict-in-package"}
         ])
+
+        # Add a child that spends both at high feerate to submit via submitpackage
+        tx_child = self.wallet.create_self_transfer_multi(
+            fee_per_output=int(DEFAULT_FEE * 5 * COIN),
+            utxos_to_spend=[tx1["new_utxo"], tx2["new_utxo"]],
+        )
+
+        testres = node.testmempoolaccept([tx1["hex"], tx2["hex"], tx_child["hex"]])
+
+        assert_equal(testres, [
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
+            {"txid": tx2["txid"], "wtxid": tx2["wtxid"], "package-error": "conflict-in-package"},
+            {"txid": tx_child["txid"], "wtxid": tx_child["wtxid"], "package-error": "conflict-in-package"}
+        ])
+
+        submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
+        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+
+        # Submit tx1 to mempool, then try the same package again
+        node.sendrawtransaction(tx1["hex"])
+
+        submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
+        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        assert tx_child["txid"] not in node.getrawmempool()
+
+        # ... and without the in-mempool ancestor tx1 included in the call
+        submitres = node.submitpackage([tx2["hex"], tx_child["hex"]])
+        assert_equal(submitres, {'package_msg': 'package-not-child-with-unconfirmed-parents', 'tx-results': {}, 'replaced-transactions': []})
+
+        # Regardless of error type, the child can never enter the mempool
+        assert tx_child["txid"] not in node.getrawmempool()
 
     def test_rbf(self):
         node = self.nodes[0]
