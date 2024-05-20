@@ -457,10 +457,12 @@ public:
         std::vector<COutPoint>& m_coins_to_uncache;
         /** When true, the transaction or package will not be submitted to the mempool. */
         const bool m_test_accept;
-        /** Whether we allow transactions to replace mempool transactions by BIP125 rules. If false,
+        /** Whether we allow transactions to replace mempool transactions. If false,
          * any transaction spending the same inputs as a transaction in the mempool is considered
          * a conflict. */
         const bool m_allow_replacement;
+        /** When true, allow sibling eviction. This only occurs in single transaction package settings. */
+        const bool m_allow_sibling_eviction;
         /** When true, the mempool will not be trimmed when any transactions are submitted in
          * Finalize(). Instead, limits should be enforced at the end to ensure the package is not
          * partially submitted.
@@ -486,6 +488,7 @@ public:
                             /* m_coins_to_uncache */ coins_to_uncache,
                             /* m_test_accept */ test_accept,
                             /* m_allow_replacement */ true,
+                            /* m_allow_sibling_eviction */ true,
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false,
                             /* m_client_maxfeerate */ {}, // checked by caller
@@ -501,6 +504,7 @@ public:
                             /* m_coins_to_uncache */ coins_to_uncache,
                             /* m_test_accept */ true,
                             /* m_allow_replacement */ false,
+                            /* m_allow_sibling_eviction */ false,
                             /* m_package_submission */ false, // not submitting to mempool
                             /* m_package_feerates */ false,
                             /* m_client_maxfeerate */ {}, // checked by caller
@@ -516,6 +520,7 @@ public:
                             /* m_coins_to_uncache */ coins_to_uncache,
                             /* m_test_accept */ false,
                             /* m_allow_replacement */ false,
+                            /* m_allow_sibling_eviction */ false,
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
                             /* m_client_maxfeerate */ client_maxfeerate,
@@ -530,6 +535,7 @@ public:
                             /* m_coins_to_uncache */ package_args.m_coins_to_uncache,
                             /* m_test_accept */ package_args.m_test_accept,
                             /* m_allow_replacement */ true,
+                            /* m_allow_sibling_eviction */ true,
                             /* m_package_submission */ true, // do not LimitMempoolSize in Finalize()
                             /* m_package_feerates */ false, // only 1 transaction
                             /* m_client_maxfeerate */ package_args.m_client_maxfeerate,
@@ -545,6 +551,7 @@ public:
                  std::vector<COutPoint>& coins_to_uncache,
                  bool test_accept,
                  bool allow_replacement,
+                 bool allow_sibling_eviction,
                  bool package_submission,
                  bool package_feerates,
                  std::optional<CFeeRate> client_maxfeerate)
@@ -554,6 +561,7 @@ public:
               m_coins_to_uncache{coins_to_uncache},
               m_test_accept{test_accept},
               m_allow_replacement{allow_replacement},
+              m_allow_sibling_eviction{allow_sibling_eviction},
               m_package_submission{package_submission},
               m_package_feerates{package_feerates},
               m_client_maxfeerate{client_maxfeerate}
@@ -981,8 +989,11 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
     if (const auto err{SingleV3Checks(ws.m_ptx, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
-        // Disabled within package validation.
-        if (err->second != nullptr && args.m_allow_replacement) {
+        // Single transaction contexts only.
+        if (args.m_allow_sibling_eviction && err->second != nullptr) {
+            // We should only be considering where replacement is considered valid as well.
+            Assume(args.m_allow_replacement);
+
             // Potential sibling eviction. Add the sibling to our list of mempool conflicts to be
             // included in RBF checks.
             ws.m_conflicts.insert(err->second->GetHash());
