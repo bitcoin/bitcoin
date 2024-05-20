@@ -2100,10 +2100,7 @@ bool InitScriptExecutionCache(size_t max_size_bytes)
     g_scriptExecutionCacheHasher.Write(nonce.begin(), 32);
     g_scriptExecutionCacheHasher.Write(nonce.begin(), 32);
 
-    auto setup_results = g_scriptExecutionCache.setup_bytes(max_size_bytes);
-    if (!setup_results) return false;
-
-    const auto [num_elems, approx_size_bytes] = *setup_results;
+    const auto [num_elems, approx_size_bytes] = g_scriptExecutionCache.setup_bytes(max_size_bytes);
     LogPrintf("Using %zu MiB out of %zu MiB requested for script execution cache, able to store %zu elements\n",
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
     return true;

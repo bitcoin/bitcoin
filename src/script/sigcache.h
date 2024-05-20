@@ -10,7 +10,6 @@
 #include <span.h>
 #include <util/hasher.h>
 
-#include <optional>
 #include <vector>
 
 // DoS prevention: limit cache size to 32MiB (over 1000000 entries on 64-bit

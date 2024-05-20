@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <mutex>
-#include <optional>
 #include <shared_mutex>
 #include <vector>
 
@@ -77,7 +76,7 @@ public:
         std::unique_lock<std::shared_mutex> lock(cs_sigcache);
         setValid.insert(entry);
     }
-    std::optional<std::pair<uint32_t, size_t>> setup_bytes(size_t n)
+    std::pair<uint32_t, size_t> setup_bytes(size_t n)
     {
         return setValid.setup_bytes(n);
     }
@@ -96,10 +95,7 @@ static CSignatureCache signatureCache;
 // signatureCache.
 bool InitSignatureCache(size_t max_size_bytes)
 {
-    auto setup_results = signatureCache.setup_bytes(max_size_bytes);
-    if (!setup_results) return false;
-
-    const auto [num_elems, approx_size_bytes] = *setup_results;
+    const auto [num_elems, approx_size_bytes] = signatureCache.setup_bytes(max_size_bytes);
     LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
     return true;

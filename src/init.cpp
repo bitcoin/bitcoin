@@ -1156,11 +1156,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ValidationCacheSizes validation_cache_sizes{};
     ApplyArgsManOptions(args, validation_cache_sizes);
-    if (!InitSignatureCache(validation_cache_sizes.signature_cache_bytes)
-        || !InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes))
-    {
-        return InitError(strprintf(_("Unable to allocate memory for -maxsigcachesize: '%s' MiB"), args.GetIntArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_BYTES >> 20)));
-    }
+    (void)InitSignatureCache(validation_cache_sizes.signature_cache_bytes);
+    (void)InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes);
 
     assert(!node.scheduler);
     node.scheduler = std::make_unique<CScheduler>();
