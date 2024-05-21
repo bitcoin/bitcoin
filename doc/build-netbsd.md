@@ -1,6 +1,6 @@
 # NetBSD Build Guide
 
-Updated for NetBSD [9.2](https://netbsd.org/releases/formal-9/NetBSD-9.2.html).
+**Updated for NetBSD [10.0](https://netbsd.org/releases/formal-10/NetBSD-10.0.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on NetBSD.
 
@@ -12,23 +12,23 @@ Install the required dependencies the usual way you [install software on NetBSD]
 The example commands below use `pkgin`.
 
 ```bash
-pkgin install autoconf automake libtool pkg-config git gmake boost libevent
+pkgin install autoconf automake libtool pkg-config git gmake boost-headers libevent
 
 ```
 
 NetBSD currently ships with an older version of `gcc` than is needed to build. You should upgrade your `gcc` and then pass this new version to the configure script.
 
-For example, grab `gcc9`:
+For example, grab `gcc12`:
 ```
-pkgin install gcc9
+pkgin install gcc12
 ```
 
 Then, when configuring, pass the following:
 ```bash
 ./configure
     ...
-    CC="/usr/pkg/gcc9/bin/gcc" \
-    CXX="/usr/pkg/gcc9/bin/g++" \
+    CC="/usr/pkg/gcc12/bin/gcc" \
+    CXX="/usr/pkg/gcc12/bin/g++" \
     ...
 ```
 
@@ -66,10 +66,10 @@ pkgin install db4
 
 #### GUI Dependencies
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install `qt5`.
+Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, Qt 5 is required.
 
 ```bash
-pkgin install qt5
+pkgin install qt5-qtbase qt5-qttools
 ```
 
 The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `qrencode`.
@@ -84,7 +84,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkgin install python37
+pkgin install python39
 ```
 
 ### Building Bitcoin Core
