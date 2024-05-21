@@ -53,6 +53,7 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-walletrejectlongchains",
         "-walletcrosschain",
         "-unsafesqlitesync",
+        "-swapbdbendian",
     });
 }
 

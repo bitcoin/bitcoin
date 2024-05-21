@@ -16,6 +16,7 @@
 #ifdef USE_SQLITE
 #include <wallet/sqlite.h>
 #endif
+#include <wallet/migrate.h>
 #include <wallet/test/util.h>
 #include <wallet/walletutil.h> // for WALLET_FLAG_DESCRIPTORS
 
@@ -132,6 +133,8 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
     bilingual_str error;
 #ifdef USE_BDB
     dbs.emplace_back(MakeBerkeleyDatabase(path_root / "bdb", options, status, error));
+    // Needs BDB to make the DB to read
+    dbs.emplace_back(std::make_unique<BerkeleyRODatabase>(BDBDataFile(path_root / "bdb"), /*open=*/false));
 #endif
 #ifdef USE_SQLITE
     dbs.emplace_back(MakeSQLiteDatabase(path_root / "sqlite", options, status, error));
@@ -146,11 +149,16 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
     for (const auto& database : TestDatabases(m_path_root)) {
         std::vector<std::string> prefixes = {"", "FIRST", "SECOND", "P\xfe\xff", "P\xff\x01", "\xff\xff"};
 
-        // Write elements to it
         std::unique_ptr<DatabaseBatch> handler = Assert(database)->MakeBatch();
-        for (unsigned int i = 0; i < 10; i++) {
-            for (const auto& prefix : prefixes) {
-                BOOST_CHECK(handler->Write(std::make_pair(prefix, i), i));
+        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+            // For BerkeleyRO, open the file now. This must happen after BDB has written to the file
+            database->Open();
+        } else {
+            // Write elements to it if not berkeleyro
+            for (unsigned int i = 0; i < 10; i++) {
+                for (const auto& prefix : prefixes) {
+                    BOOST_CHECK(handler->Write(std::make_pair(prefix, i), i));
+                }
             }
         }
 
@@ -178,6 +186,8 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
             // Let's now read it once more, it should return DONE
             BOOST_CHECK(cursor->Next(key, value) == DatabaseCursor::Status::DONE);
         }
+        handler.reset();
+        database->Close();
     }
 }
 
@@ -197,13 +207,23 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_byte_test)
         ffs{StringData("\xff\xffsuffix"), StringData("ffs")};
     for (const auto& database : TestDatabases(m_path_root)) {
         std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
-        for (const auto& [k, v] : {e, p, ps, f, fs, ff, ffs}) {
-            batch->Write(Span{k}, Span{v});
+
+        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+            // For BerkeleyRO, open the file now. This must happen after BDB has written to the file
+            database->Open();
+        } else {
+            // Write elements to it if not berkeleyro
+            for (const auto& [k, v] : {e, p, ps, f, fs, ff, ffs}) {
+                batch->Write(Span{k}, Span{v});
+            }
         }
+
         CheckPrefix(*batch, StringBytes(""), {e, p, ps, f, fs, ff, ffs});
         CheckPrefix(*batch, StringBytes("prefix"), {p, ps});
         CheckPrefix(*batch, StringBytes("\xff"), {f, fs, ff, ffs});
         CheckPrefix(*batch, StringBytes("\xff\xff"), {ff, ffs});
+        batch.reset();
+        database->Close();
     }
 }
 
@@ -213,6 +233,10 @@ BOOST_AUTO_TEST_CASE(db_availability_after_write_error)
     // To simulate the behavior, record overwrites are disallowed, and the test verifies
     // that the database remains active after failing to store an existing record.
     for (const auto& database : TestDatabases(m_path_root)) {
+        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+            // Skip this test if BerkeleyRO
+            continue;
+        }
         // Write original record
         std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
         std::string key = "key";
@@ -241,6 +265,10 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
     auto make_key = [](std::string type, std::string id) { return std::make_pair(type, id); };
 
     for (const auto& database : TestDatabases(m_path_root)) {
+        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+            // Skip this test if BerkeleyRO
+            continue;
+        }
         std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
 
         // Write two entries with the same key type prefix, a third one with a different prefix

@@ -192,6 +192,11 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
         DatabaseStatus status;
+
+        if (args.GetBoolArg("-withinternalbdb", false) && IsBDBFile(BDBDataFile(path))) {
+            options.require_format = DatabaseFormat::BERKELEY_RO;
+        }
+
         bilingual_str error;
         std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
         if (!database) {

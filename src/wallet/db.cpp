@@ -16,6 +16,9 @@
 #include <vector>
 
 namespace wallet {
+bool operator<(BytePrefix a, Span<const std::byte> b) { return a.prefix < b.subspan(0, std::min(a.prefix.size(), b.size())); }
+bool operator<(Span<const std::byte> a, BytePrefix b) { return a.subspan(0, std::min(a.size(), b.prefix.size())) < b.prefix; }
+
 std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
 {
     std::vector<fs::path> paths;

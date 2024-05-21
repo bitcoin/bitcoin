@@ -435,6 +435,9 @@ public:
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(Span<std::byte> dst);
 
+    void seek(int64_t offset, int origin);
+    int64_t tell();
+
     //
     // Stream subset
     //
