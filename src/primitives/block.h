@@ -137,6 +137,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.posProof       = posProof;
         return block;
     }
 
