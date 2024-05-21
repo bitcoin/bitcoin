@@ -11,9 +11,9 @@ for how to properly configure Tor.
 ## How to see information about your Tor configuration via Dash Core
 
 There are several ways to see your local onion address in Dash Core:
-- in the debug log (grep for "tor:" or "AddLocal")
-- in the output of RPC `getnetworkinfo` in the "localaddresses" section
-- in the output of the CLI `-netinfo` peer connections dashboard
+- in the "Local addresses" output of CLI `-netinfo`
+- in the "localaddresses" output of RPC `getnetworkinfo`
+- in the debug log (grep for "AddLocal"; the Tor address ends in `.onion`)
 
 You may set the `-debug=tor` config logging option to have additional
 information in the debug log about your Tor configuration.
@@ -21,6 +21,9 @@ information in the debug log about your Tor configuration.
 CLI `-addrinfo` returns the number of addresses known to your node per
 network. This can be useful to see how many onion peers your node knows,
 e.g. for `-onlynet=onion`.
+
+To fetch a number of onion addresses that your node knows, for example seven
+addresses, use the `getnodeaddresses 7 onion` RPC.
 
 ## 1. Run Dash Core behind a Tor proxy
 
@@ -51,7 +54,7 @@ outgoing connections, but more is possible.
     -onlynet=onion  Make automatic outbound connections only to .onion addresses.
                     Inbound and manual connections are not affected by this option.
                     It can be specified multiple times to allow multiple networks,
-                    e.g. onlynet=onion, onlynet=i2p.
+                    e.g. onlynet=onion, onlynet=i2p, onlynet=cjdns.
 
 An example how to start the client if the Tor proxy is running on local host on
 port 9050 and only allows .onion nodes to connect:
