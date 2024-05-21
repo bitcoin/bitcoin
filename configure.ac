@@ -1049,11 +1049,6 @@ if test "$use_thread_local" = "yes" || test "$use_thread_local" = "auto"; then
           dnl https://gist.github.com/jamesob/fe9a872051a88b2025b1aa37bfa98605
           AC_MSG_RESULT([no])
           ;;
-        *freebsd*)
-          dnl FreeBSD's implementation of thread_local is also buggy (per
-          dnl https://groups.google.com/d/msg/bsdmailinglist/22ncTZAbDp4/Dii_pII5AwAJ)
-          AC_MSG_RESULT([no])
-          ;;
         *)
           AC_DEFINE([HAVE_THREAD_LOCAL], [1], [Define if thread_local is supported.])
           AC_MSG_RESULT([yes])
