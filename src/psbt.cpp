@@ -65,6 +65,7 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
     outputs.push_back(psbtout);
     return true;
 }
+
 bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
 {
     const PSBTInput& input = inputs[input_index];

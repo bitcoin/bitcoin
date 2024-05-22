@@ -8,8 +8,8 @@
 #include <nevm/nevm.h>
 #include <nevm/address.h>
 #include <nevm/sha3.h>
-#include <addresstype.h>
 #include <messagesigner.h>
+#include <logging.h>
 #include <util/rbf.h>
 #include <undo.h>
 #include <validationinterface.h>
