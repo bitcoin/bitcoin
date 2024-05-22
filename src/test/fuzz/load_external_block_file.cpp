@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <clientversion.h>
 #include <flatfile.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -27,8 +28,8 @@ FUZZ_TARGET(load_external_block_file, .init = initialize_load_external_block_fil
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
-    FILE* fuzzed_block_file = fuzzed_file_provider.open();
-    if (fuzzed_block_file == nullptr) {
+    CAutoFile fuzzed_block_file{fuzzed_file_provider.open(), CLIENT_VERSION};
+    if (fuzzed_block_file.IsNull()) {
         return;
     }
     if (fuzzed_data_provider.ConsumeBool()) {

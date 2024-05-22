@@ -46,57 +46,77 @@ public:
         "COMPRESSED_SIZE is larger than SIZE");
 
 private:
-    //! Whether this private key is valid. We check for correctness when modifying the key
-    //! data, so fValid should always correspond to the actual state.
-    bool fValid{false};
+    /** Internal data container for private key material. */
+    using KeyType = std::array<unsigned char, 32>;
 
     //! Whether the public key corresponding to this private key is (to be) compressed.
     bool fCompressed{false};
 
-    //! The actual byte data
-    std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
+    //! The actual byte data. nullptr for invalid keys.
+    secure_unique_ptr<KeyType> keydata;
 
     //! Check whether the 32-byte array pointed to by vch is valid keydata.
     bool static Check(const unsigned char* vch);
 
-public:
-    //! Construct an invalid private key.
-    CKey()
+    void MakeKeyData()
     {
-        // Important: vch must be 32 bytes in length to not break serialization
-        keydata.resize(32);
+        if (!keydata) keydata = make_secure_unique<KeyType>();
     }
+
+    void ClearKeyData()
+    {
+        keydata.reset();
+    }
+
+public:
+    CKey() noexcept = default;
+    CKey(CKey&&) noexcept = default;
+    CKey& operator=(CKey&&) noexcept = default;
+
+    CKey& operator=(const CKey& other)
+    {
+        if (other.keydata) {
+            MakeKeyData();
+            *keydata = *other.keydata;
+        } else {
+            ClearKeyData();
+        }
+        fCompressed = other.fCompressed;
+        return *this;
+    }
+
+    CKey(const CKey& other) { *this = other; }
 
     friend bool operator==(const CKey& a, const CKey& b)
     {
         return a.fCompressed == b.fCompressed &&
             a.size() == b.size() &&
-            memcmp(a.keydata.data(), b.keydata.data(), a.size()) == 0;
+            memcmp(a.data(), b.data(), a.size()) == 0;
     }
 
     //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
     {
-        if (size_t(pend - pbegin) != keydata.size()) {
-            fValid = false;
+        if (size_t(pend - pbegin) != std::tuple_size_v<KeyType>) {
+            ClearKeyData();
         } else if (Check(&pbegin[0])) {
-            memcpy(keydata.data(), (unsigned char*)&pbegin[0], keydata.size());
-            fValid = true;
+            MakeKeyData();
+            memcpy(keydata->data(), (unsigned char*)&pbegin[0], keydata->size());
             fCompressed = fCompressedIn;
         } else {
-            fValid = false;
+            ClearKeyData();
         }
     }
 
     //! Simple read-only vector-like interface.
-    unsigned int size() const { return (fValid ? keydata.size() : 0); }
-    const std::byte* data() const { return reinterpret_cast<const std::byte*>(keydata.data()); }
-    const unsigned char* begin() const { return keydata.data(); }
-    const unsigned char* end() const { return keydata.data() + size(); }
+    unsigned int size() const { return keydata ? keydata->size() : 0; }
+    const std::byte* data() const { return keydata ? reinterpret_cast<const std::byte*>(keydata->data()) : nullptr; }
+    const unsigned char* begin() const { return keydata ? keydata->data() : nullptr; }
+    const unsigned char* end() const { return begin() + size(); }
 
     //! Check whether this private key is valid.
-    bool IsValid() const { return fValid; }
+    bool IsValid() const { return !!keydata; }
 
     //! Check whether the public key corresponding to this private key is (to be) compressed.
     bool IsCompressed() const { return fCompressed; }

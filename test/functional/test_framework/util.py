@@ -244,7 +244,7 @@ def get_fee(tx_size, feerate_btc_kvb):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.05, lock=None, timeout_factor=1.0, do_assert=True):
+def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
     """Sleep until the predicate resolves to be True.
 
     Warning: Note that this method is not recommended to be used in tests as it is
@@ -268,19 +268,16 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
             if predicate():
                 return
         attempt += 1
-        time.sleep(sleep)
-    # SYSCOIN
-    if do_assert:
-        # Print the cause of the timeout
-        predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
-        logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
-        if attempt >= attempts:
-            raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
-        elif time.time() >= time_end:
-            raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
-        raise RuntimeError('Unreachable')
-    else:
-        return False
+        time.sleep(0.05)
+
+    # Print the cause of the timeout
+    predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
+    logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
+    if attempt >= attempts:
+        raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
+    elif time.time() >= time_end:
+        raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
+    raise RuntimeError('Unreachable')
 
 
 def sha256sum_file(filename):
@@ -420,7 +417,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
 
 
 def get_datadir_path(dirname, n):
-    return os.path.join(dirname, "node" + str(n))
+    return pathlib.Path(dirname) / f"node{n}"
 
 
 def get_temp_default_datadir(temp_dir: pathlib.Path) -> Tuple[dict, pathlib.Path]:

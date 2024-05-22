@@ -488,7 +488,9 @@ To enable LCOV report generation during test runs:
 make
 make cov
 
-# A coverage report will now be accessible at `./test_syscoin.coverage/index.html`.
+# A coverage report will now be accessible at `./test_syscoin.coverage/index.html`,
+# which covers unit tests, and `./total.coverage/index.html`, which covers
+# unit and functional tests.
 ```
 
 ### Performance profiling with perf
@@ -738,12 +740,6 @@ Common misconceptions are clarified in those sections:
 
 - Passing (non-)fundamental types in the [C++ Core
   Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
-
-- Assertions should not have side-effects.
-
-  - *Rationale*: Even though the source code is set to refuse to compile
-    with assertions disabled, having side-effects in assertions is unexpected and
-    makes the code harder to understand.
 
 - If you use the `.h`, you must link the `.cpp`.
 

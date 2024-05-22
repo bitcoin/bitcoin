@@ -15,9 +15,9 @@
 #include <optional>
 class UniValue;
 class PeerManager;
+class CInv;
 namespace llmq
 {
-
 class CFinalCommitment;
 class CDKGSession;
 class CDKGSessionManager;

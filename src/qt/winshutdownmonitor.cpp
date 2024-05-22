@@ -43,7 +43,7 @@ bool WinShutdownMonitor::nativeEventFilter(const QByteArray &eventType, void *pM
 void WinShutdownMonitor::registerShutdownBlockReason(const QString& strReason, const HWND& mainWinId)
 {
     typedef BOOL (WINAPI *PSHUTDOWNBRCREATE)(HWND, LPCWSTR);
-    PSHUTDOWNBRCREATE shutdownBRCreate = (PSHUTDOWNBRCREATE)GetProcAddress(GetModuleHandleA("User32.dll"), "ShutdownBlockReasonCreate");
+    PSHUTDOWNBRCREATE shutdownBRCreate = (PSHUTDOWNBRCREATE)(void*)GetProcAddress(GetModuleHandleA("User32.dll"), "ShutdownBlockReasonCreate");
     if (shutdownBRCreate == nullptr) {
         qWarning() << "registerShutdownBlockReason: GetProcAddress for ShutdownBlockReasonCreate failed";
         return;

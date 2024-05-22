@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ලිපිනය හෝ නම්පත සංශෝධනයට දකුණු බොත්තම  ඔබන්න</translation>
+        <translation type="unfinished">ලිපිනය හෝ ලේබලය සංස්කරණය කිරීමට දකුණු-ක්ලික් කරන්න</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">තෝ&amp;රන්න</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">යවන ලිපින</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">ලැබෙන ලිපින</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -225,6 +217,10 @@
 <context>
     <name>SyscoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">සැකසීම් ගොනුව %1 දූෂිත හෝ අවලංගු විය හැක.</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">අභ්‍යන්තර දෝෂයකි</translation>
     </message>
@@ -300,61 +296,10 @@
     </message>
     </context>
 <context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">සැකසීම් ගොනුව කියවිය නොහැක</translation>
-    </message>
-    <message>
-        <source>The %s developers</source>
-        <translation type="unfinished">%s සංවර්ධකයින්</translation>
-    </message>
-    <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">%s සෑදීමේ දෝෂයකි</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation type="unfinished">%s පූරණය වීමේ දෝෂයකි</translation>
-    </message>
-    <message>
-        <source>Error: Unable to make a backup of your wallet</source>
-        <translation type="unfinished">දෝෂය: ඔබගේ පසුම්බිය ප්‍රතිස්ථාපනය කල නොහැකි විය.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">ආයාත වෙමින්…</translation>
-    </message>
-    <message>
-        <source>Loading wallet…</source>
-        <translation type="unfinished">පසුම්බිය පූරණය වෙමින්…</translation>
-    </message>
-    <message>
-        <source>Rescanning…</source>
-        <translation type="unfinished">යළි සුපිරික්සමින්…</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">මෙය පර්යේෂණාත්මක මෘදුකාංගයකි.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">'%s' නොදන්නා ලිපින වර්ගයකි</translation>
-    </message>
-    </context>
-<context>
     <name>SyscoinGUI</name>
     <message>
         <source>&amp;Overview</source>
         <translation type="unfinished">&amp;දළ විශ්ලේෂණය</translation>
-    </message>
-    <message>
-        <source>Show general overview of wallet</source>
-        <translation type="unfinished">පසුම්බිය පිළිබඳ සාමාන්‍ය දළ විශ්ලේෂණය පෙන්වන්න</translation>
-    </message>
-    <message>
-        <source>&amp;Transactions</source>
-        <translation type="unfinished">&amp;ගනුදෙනු</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -477,10 +422,6 @@
         <translation type="unfinished">තොරතුර</translation>
     </message>
     <message>
-        <source>Up to date</source>
-        <translation type="unfinished">යාවත්කාලීනයි</translation>
-    </message>
-    <message>
         <source>&amp;Sending addresses</source>
         <translation type="unfinished">&amp;යවන ලිපින</translation>
     </message>
@@ -490,11 +431,11 @@
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බිය බලන්න</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation type="unfinished">පසුම්බියක් විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බියක් බලන්න</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -671,14 +612,6 @@
         <translation type="unfinished">බයිට පිටපත් කරන්න</translation>
     </message>
     <message>
-        <source>yes</source>
-        <translation type="unfinished">ඔව්</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">නැත</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation type="unfinished">(නම්පතක් නැත)</translation>
     </message>
@@ -704,7 +637,7 @@
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
+        <translation type="unfinished">පසුම්බිය බලන්න</translation>
     </message>
     </context>
 <context>
@@ -1000,6 +933,11 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
+        <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
+        <translation type="unfinished">සකසන ලද මෙම සම වයසේ මිතුරාගෙන් ලැබුණු මුළු ලිපින ගණන (අනුපාත සීමා කිරීම හේතුවෙන් අතහැර දැමූ ලිපින හැර).</translation>
+    </message>
     <message>
         <source>&amp;Copy address</source>
         <extracomment>Context menu action to copy the address of a peer.</extracomment>
@@ -1334,4 +1272,47 @@
         <translation type="unfinished">අවලංගු</translation>
     </message>
 </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>The %s developers</source>
+        <translation type="unfinished">%s සංවර්ධකයින්</translation>
+    </message>
+    <message>
+        <source>Error creating %s</source>
+        <translation type="unfinished">%s සෑදීමේ දෝෂයකි</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished">%s පූරණය වීමේ දෝෂයකි</translation>
+    </message>
+    <message>
+        <source>Error: Unable to make a backup of your wallet</source>
+        <translation type="unfinished">දෝෂය: ඔබගේ පසුම්බිය ප්‍රතිස්ථාපනය කල නොහැකි විය.</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">ආයාත වෙමින්…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">පසුම්බිය පූරණය වෙමින්…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">යළි සුපිරික්සමින්…</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">මෙය පර්යේෂණාත්මක මෘදුකාංගයකි.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">'%s' නොදන්නා ලිපින වර්ගයකි</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">සැකසීම් ගොනුව කියවිය නොහැක</translation>
+    </message>
+    </context>
 </TS>

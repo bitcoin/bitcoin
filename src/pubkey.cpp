@@ -204,6 +204,13 @@ std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
     return out;
 }
 
+CPubKey XOnlyPubKey::GetEvenCorrespondingCPubKey() const
+{
+    unsigned char full_key[CPubKey::COMPRESSED_SIZE] = {0x02};
+    std::copy(begin(), end(), full_key + 1);
+    return CPubKey{full_key};
+}
+
 bool XOnlyPubKey::IsFullyValid() const
 {
     secp256k1_xonly_pubkey pubkey;
@@ -334,6 +341,12 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
     secp256k1_ec_pubkey_serialize(secp256k1_context_static, pub, &publen, &pubkey, SECP256K1_EC_COMPRESSED);
     pubkeyChild.Set(pub, pub + publen);
     return true;
+}
+
+EllSwiftPubKey::EllSwiftPubKey(Span<const std::byte> ellswift) noexcept
+{
+    assert(ellswift.size() == SIZE);
+    std::copy(ellswift.begin(), ellswift.end(), m_pubkey.begin());
 }
 
 CPubKey EllSwiftPubKey::Decode() const

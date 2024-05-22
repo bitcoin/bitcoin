@@ -44,6 +44,14 @@ typedef struct {
 
 #define SECP256K1_GE_STORAGE_CONST_GET(t) SECP256K1_FE_STORAGE_CONST_GET(t.x), SECP256K1_FE_STORAGE_CONST_GET(t.y)
 
+/** Maximum allowed magnitudes for group element coordinates
+ *  in affine (x, y) and jacobian (x, y, z) representation. */
+#define SECP256K1_GE_X_MAGNITUDE_MAX  4
+#define SECP256K1_GE_Y_MAGNITUDE_MAX  3
+#define SECP256K1_GEJ_X_MAGNITUDE_MAX 4
+#define SECP256K1_GEJ_Y_MAGNITUDE_MAX 4
+#define SECP256K1_GEJ_Z_MAGNITUDE_MAX 1
+
 /** Set a group element equal to the point with given X and Y coordinates */
 static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y);
 

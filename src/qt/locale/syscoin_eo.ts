@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;Elekti</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Sendaj adresoj</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Ricevaj adresoj</translation>
-    </message>
-    <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
     </message>
@@ -244,10 +236,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Eraro: la elektita dosierujo por datumoj "%1" ne ekzistas.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Eraro: %1</translation>
     </message>
@@ -312,81 +300,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>syscoin-core</name>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished">Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">Difektita blokdatumbazo trovita</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Ĉu vi volas rekonstrui la blokdatumbazon nun?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Ŝargado finiĝis</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Eraro dum pravalorizado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Eraro dum pravalorizado de monuj-datumbaza ĉirkaŭaĵo %s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished">Eraro dum ŝargado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">Eraro dum malfermado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Geneza bloko aŭ netrovita aŭ neĝusta. Ĉu eble la datadir de la reto malĝustas?</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Nesufiĉa mono</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Subskriba transakcio fiaskis</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">ĝi estas eksperimenta programo</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">Transakcia sumo tro malgranda</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Transakcio estas tro granda</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Nekonata reto specifita en -onlynet: '%s'</translation>
     </message>
     </context>
 <context>
@@ -680,10 +593,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Krompago:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Polvo:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Post krompago:</translation>
     </message>
@@ -748,24 +657,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopii bajtojn</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopii polvon</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopii restmonon</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 ŝlosita)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">jes</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ne</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1243,6 +1140,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Fermi</translation>
     </message>
     <message>
+        <source>own address</source>
+        <translation type="unfinished">propra adreso</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation type="unfinished">Totala Sumo</translation>
     </message>
@@ -1613,10 +1514,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Malplenigi ĉiujn kampojn de la formularo.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Polvo:</translation>
-    </message>
-    <message>
         <source>Clear &amp;All</source>
         <translation type="unfinished">&amp;Forigi Ĉion</translation>
     </message>
@@ -1651,10 +1548,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopii bajtojn</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopii polvon</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2035,10 +1928,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Sendita al</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Pago al vi mem</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Minita</translation>
     </message>
@@ -2100,10 +1989,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Sendita al</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Al vi mem</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -2198,6 +2083,81 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Backup Successful</source>
         <translation type="unfinished">Sukcesis krei sekurkopion</translation>
+    </message>
+    </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation type="unfinished">Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished">Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">Difektita blokdatumbazo trovita</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">Ĉu vi volas rekonstrui la blokdatumbazon nun?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Ŝargado finiĝis</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Eraro dum pravalorizado de blokdatumbazo</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished">Eraro dum pravalorizado de monuj-datumbaza ĉirkaŭaĵo %s!</translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished">Eraro dum ŝargado de blokdatumbazo</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Eraro dum malfermado de blokdatumbazo</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
+    </message>
+    <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation type="unfinished">Geneza bloko aŭ netrovita aŭ neĝusta. Ĉu eble la datadir de la reto malĝustas?</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Nesufiĉa mono</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished">Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Subskriba transakcio fiaskis</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">ĝi estas eksperimenta programo</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Transakcia sumo tro malgranda</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transakcio estas tro granda</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Nekonata reto specifita en -onlynet: '%s'</translation>
     </message>
     </context>
 </TS>

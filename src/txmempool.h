@@ -6,27 +6,17 @@
 #ifndef SYSCOIN_TXMEMPOOL_H
 #define SYSCOIN_TXMEMPOOL_H
 
-#include <atomic>
-#include <map>
-#include <optional>
-#include <set>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
-
-#include <kernel/mempool_limits.h>
-#include <kernel/mempool_options.h>
-
 #include <coins.h>
 #include <consensus/amount.h>
 #include <indirectmap.h>
 #include <kernel/cs_main.h>
-#include <kernel/mempool_entry.h>
+#include <kernel/mempool_entry.h>          // IWYU pragma: export
+#include <kernel/mempool_limits.h>         // IWYU pragma: export
+#include <kernel/mempool_options.h>        // IWYU pragma: export
+#include <kernel/mempool_removal_reason.h> // IWYU pragma: export
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
-#include <random.h>
 #include <sync.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>
@@ -37,15 +27,25 @@
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
-// SYSCOIN
-#include <netaddress.h>
+#include <netaddress.h>     // SYSCOIN
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
+
+// SYSCOIN
 #include <pubkey.h>
 class CBlockIndex;
 class CChain;
 class CBLSPublicKey;
 class Chainstate;
+
+#include <atomic>
+#include <map>
+#include <optional>
+#include <set>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -230,20 +230,6 @@ struct TxMempoolInfo
     /** The fee delta. */
     int64_t nFeeDelta;
 };
-
-/** Reason why a transaction was removed from the mempool,
- * this is passed to the notification signal.
- */
-enum class MemPoolRemovalReason {
-    EXPIRY,      //!< Expired from mempool
-    SIZELIMIT,   //!< Removed in size limiting
-    REORG,       //!< Removed for reorganization
-    BLOCK,       //!< Removed for block
-    CONFLICT,    //!< Removed for conflict with in-block transaction
-    REPLACED,    //!< Removed for replacement
-};
-
-std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
 
 /**
  * CTxMemPool stores valid-according-to-the-current-best-chain transactions
@@ -649,11 +635,11 @@ public:
      * @param[in]       package                 Transaction package being evaluated for acceptance
      *                                          to mempool. The transactions need not be direct
      *                                          ancestors/descendants of each other.
-     * @param[in]       limits                  Maximum number and size of ancestors and descendants
+     * @param[in]       total_vsize             Sum of virtual sizes for all transactions in package.
      * @param[out]      errString               Populated with error reason if a limit is hit.
      */
     bool CheckPackageLimits(const Package& package,
-                            const Limits& limits,
+                            int64_t total_vsize,
                             std::string &errString) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Populate setDescendants with all in-mempool descendants of hash.
@@ -870,106 +856,26 @@ class CCoinsViewMemPool : public CCoinsViewBacked
     * validation, since we can access transaction outputs without submitting them to mempool.
     */
     std::unordered_map<COutPoint, Coin, SaltedOutpointHasher> m_temp_added;
+
+    /**
+     * Set of all coins that have been fetched from mempool or created using PackageAddTransaction
+     * (not base). Used to track the origin of a coin, see GetNonBaseCoins().
+     */
+    mutable std::unordered_set<COutPoint, SaltedOutpointHasher> m_non_base_coins;
 protected:
     const CTxMemPool& mempool;
 
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
+    /** GetCoin, returning whether it exists and is not spent. Also updates m_non_base_coins if the
+     * coin is not fetched from base. */
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     /** Add the coins created by this transaction. These coins are only temporarily stored in
      * m_temp_added and cannot be flushed to the back end. Only used for package validation. */
     void PackageAddTransaction(const CTransactionRef& tx);
+    /** Get all coins in m_non_base_coins. */
+    std::unordered_set<COutPoint, SaltedOutpointHasher> GetNonBaseCoins() const { return m_non_base_coins; }
+    /** Clear m_temp_added and m_non_base_coins. */
+    void Reset();
 };
-
-/**
- * DisconnectedBlockTransactions
-
- * During the reorg, it's desirable to re-add previously confirmed transactions
- * to the mempool, so that anything not re-confirmed in the new chain is
- * available to be mined. However, it's more efficient to wait until the reorg
- * is complete and process all still-unconfirmed transactions at that time,
- * since we expect most confirmed transactions to (typically) still be
- * confirmed in the new chain, and re-accepting to the memory pool is expensive
- * (and therefore better to not do in the middle of reorg-processing).
- * Instead, store the disconnected transactions (in order!) as we go, remove any
- * that are included in blocks in the new chain, and then process the remaining
- * still-unconfirmed transactions at the end.
- */
-
-// multi_index tag names
-struct txid_index {};
-struct insertion_order {};
-
-struct DisconnectedBlockTransactions {
-    typedef boost::multi_index_container<
-        CTransactionRef,
-        boost::multi_index::indexed_by<
-            // sorted by txid
-            boost::multi_index::hashed_unique<
-                boost::multi_index::tag<txid_index>,
-                mempoolentry_txid,
-                SaltedTxidHasher
-            >,
-            // sorted by order in the blockchain
-            boost::multi_index::sequenced<
-                boost::multi_index::tag<insertion_order>
-            >
-        >
-    > indexed_disconnected_transactions;
-
-    // It's almost certainly a logic bug if we don't clear out queuedTx before
-    // destruction, as we add to it while disconnecting blocks, and then we
-    // need to re-process remaining transactions to ensure mempool consistency.
-    // For now, assert() that we've emptied out this object on destruction.
-    // This assert() can always be removed if the reorg-processing code were
-    // to be refactored such that this assumption is no longer true (for
-    // instance if there was some other way we cleaned up the mempool after a
-    // reorg, besides draining this object).
-    ~DisconnectedBlockTransactions() { assert(queuedTx.empty()); }
-
-    indexed_disconnected_transactions queuedTx;
-    uint64_t cachedInnerUsage = 0;
-
-    // Estimate the overhead of queuedTx to be 6 pointers + an allocation, as
-    // no exact formula for boost::multi_index_contained is implemented.
-    size_t DynamicMemoryUsage() const {
-        return memusage::MallocUsage(sizeof(CTransactionRef) + 6 * sizeof(void*)) * queuedTx.size() + cachedInnerUsage;
-    }
-
-    void addTransaction(const CTransactionRef& tx)
-    {
-        queuedTx.insert(tx);
-        cachedInnerUsage += RecursiveDynamicUsage(tx);
-    }
-
-    // Remove entries based on txid_index, and update memory usage.
-    void removeForBlock(const std::vector<CTransactionRef>& vtx)
-    {
-        // Short-circuit in the common case of a block being added to the tip
-        if (queuedTx.empty()) {
-            return;
-        }
-        for (auto const &tx : vtx) {
-            auto it = queuedTx.find(tx->GetHash());
-            if (it != queuedTx.end()) {
-                cachedInnerUsage -= RecursiveDynamicUsage(*it);
-                queuedTx.erase(it);
-            }
-        }
-    }
-
-    // Remove an entry by insertion_order index, and update memory usage.
-    void removeEntry(indexed_disconnected_transactions::index<insertion_order>::type::iterator entry)
-    {
-        cachedInnerUsage -= RecursiveDynamicUsage(*entry);
-        queuedTx.get<insertion_order>().erase(entry);
-    }
-
-    void clear()
-    {
-        cachedInnerUsage = 0;
-        queuedTx.clear();
-    }
-};
-
 #endif // SYSCOIN_TXMEMPOOL_H

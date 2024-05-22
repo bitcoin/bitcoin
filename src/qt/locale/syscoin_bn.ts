@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ঠিকানা বা লেবেল পরিবর্তন করতে ডান ক্লিক করুন।</translation>
+        <translation type="unfinished">ঠিকানা বা লেবেল সম্পাদনা করতে ডান-ক্লিক করুন</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;কপি</translation>
+        <translation type="unfinished">এবং কপি করুন</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -34,12 +34,20 @@
         <translation type="unfinished">খুঁজতে ঠিকানা বা লেবেল লিখুন</translation>
     </message>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">বর্তমান ট্যাবের তথ্যগুলো একটি আলাদা নথিতে লিপিবদ্ধ করুন </translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation type="unfinished">&amp;মুছুন</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
         <translation type="unfinished">কয়েন পাঠানোর ঠিকানা বাছাই করুন</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">কয়েন গ্রহণ করার ঠিকানা বাছাই করুন।</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -50,6 +58,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">কমা দিয়ে আলাদা করা ফাইল</translation>
+    </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">টিকেট</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">ঠিকানা</translation>
+    </message>
+    </context>
+<context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">ওয়ালেট ডিক্রিপশনের জন্য প্রবেশ করা পাসফ্রেজটি ভুল। এটিতে একটি শূন্য অক্ষর রয়েছে (যেমন - একটি শূন্য বাইট)। যদি পাসফ্রেজটি 25.0 এর আগে এই সফ্টওয়্যারটির একটি সংস্করণের সাথে সেট করা থাকে, অনুগ্রহ করে শুধুমাত্র প্রথম শূন্য অক্ষর পর্যন্ত — কিন্তু অন্তর্ভুক্ত নয় — পর্যন্ত অক্ষর দিয়ে আবার চেষ্টা করুন। এটি সফল হলে, ভবিষ্যতে এই সমস্যাটি এড়াতে অনুগ্রহ করে একটি নতুন পাসফ্রেজ সেট করুন৷</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">পাসফ্রেজ পরিবর্তন ব্যর্থ হয়েছে৷</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">ওয়ালেট ডিক্রিপশনের জন্য পুরানো পাসফ্রেজটি ভুল। এটিতে একটি শূন্য অক্ষর রয়েছে (যেমন - একটি শূন্য বাইট)। যদি পাসফ্রেজটি 25.0 এর আগে এই সফ্টওয়্যারটির একটি সংস্করণের সাথে সেট করা থাকে, অনুগ্রহ করে শুধুমাত্র প্রথম শূন্য অক্ষর পর্যন্ত — কিন্তু অন্তর্ভুক্ত নয় — পর্যন্ত অক্ষর দিয়ে আবার চেষ্টা করুন।</translation>
     </message>
     </context>
 <context>
@@ -80,7 +114,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
-        <translation type="unfinished">আপনি কি সেটিংস পুনরায় ডিফল্ট করতে,অথবা কোনো পরিবর্তন ছাড়াই ফিরে যেতে চান? </translation>
+        <translation type="unfinished">আপনি কি ডিফল্ট মানগুলিতে সেটিংস রিসেট করতে চান, নাকি পরিবর্তন না করেই বাতিল করতে চান?</translation>
     </message>
     <message>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
@@ -145,37 +179,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>syscoin-core</name>
-    <message>
-        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
-        <translation type="unfinished">এস. কিয়ু. লাইট ডাটাবেস : অপ্রত্যাশিত এপ্লিকেশন আই.ডি. প্রত্যাশিত %u, পাওয়া গেলো %u </translation>
-    </message>
-    <message>
-        <source>Starting network threads…</source>
-        <translation type="unfinished">নেটওয়ার্ক থ্রেড শুরু হচ্ছে...</translation>
-    </message>
-    <message>
-        <source>The specified config file %s does not exist</source>
-        <translation type="unfinished">নির্দিষ্ট কনফিগ ফাইল %s এর অস্তিত্ব নেই</translation>
-    </message>
-    <message>
-        <source>Unable to open %s for writing</source>
-        <translation type="unfinished">লেখার জন্যে %s খোলা যাচ্ছে না</translation>
-    </message>
-    <message>
-        <source>Unknown new rules activated (versionbit %i)</source>
-        <translation type="unfinished">অজানা নতুন নিয়ম সক্রিয় হলো (ভার্শনবিট %i)</translation>
-    </message>
-    <message>
-        <source>Verifying blocks…</source>
-        <translation type="unfinished">ব্লকস যাচাই করা হচ্ছে...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">ওয়ালেট(স) যাচাই করা হচ্ছে...</translation>
-    </message>
-    </context>
-<context>
     <name>SyscoinGUI</name>
     <message>
         <source>Create a new wallet</source>
@@ -192,6 +195,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Encrypt Wallet…</source>
         <translation type="unfinished">&amp;ওয়ালেট এনক্রিপ্ট করুন...</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished">ব্যাকআপ ওয়ালেট…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;পাসফ্রেজ পরিবর্তন করুন...</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">সাইন এবং বার্তা...</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">বার্তা যাচাই করুন...</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished">ফাইল থেকে PSBT লোড করুন...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">URI খুলুন...</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -222,10 +249,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ডিস্কে ব্লক প্রসেস করা হচ্ছে...</translation>
     </message>
     <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">ডিস্ক এ ব্লকস পুনর্বিন্যাস করা হচ্ছে...</translation>
-    </message>
-    <message>
         <source>Connecting to peers…</source>
         <translation type="unfinished">সহকর্মীদের সাথে সংযোগ করা হচ্ছে...</translation>
     </message>
@@ -235,6 +258,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">ধরা…</translation>
     </message>
     <message>
         <source>Load Partially Signed Syscoin Transaction</source>
@@ -367,19 +394,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Advanced Options</source>
         <translation type="unfinished">উন্নত বিকল্প </translation>
     </message>
-    <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">ScriptPub-এর জন্য বর্ণনাকারীর ব্যবস্থা করুন 
- </translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">বর্ণনাকারী ওয়ালেট </translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">sqlite সমর্থন ছাড়াই সংকলিত (বরণাকারী  ওয়ালেটের জন্য প্রয়োজনীয়)</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -415,6 +429,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">ঠিকানা</translation>
+    </message>
     <message>
         <source>Type</source>
         <extracomment>Title of Peers Table column which describes the type of peer connection. The "type" describes why the connection exists.</extracomment>
@@ -476,9 +495,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Date</source>
         <translation type="unfinished">তারিখ</translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">টিকেট</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">পরিমাণ</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">পারিশ্রমিক</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">পরিবর্তন</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -518,6 +553,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Type</source>
         <translation type="unfinished">টাইপ</translation>
     </message>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">টিকেট</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
@@ -555,6 +594,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">টাইপ</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation type="unfinished">টিকেট</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">ঠিকানা</translation>
+    </message>
+    <message>
         <source>ID</source>
         <translation type="unfinished">আইডি</translation>
     </message>
@@ -580,6 +627,48 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">একটি নতুন ওয়ালেট তৈরি করুন</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">বর্তমান ট্যাবের তথ্যগুলো একটি আলাদা নথিতে লিপিবদ্ধ করুন </translation>
+    </message>
+    </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation type="unfinished">এস. কিয়ু. লাইট ডাটাবেস : অপ্রত্যাশিত এপ্লিকেশন আই.ডি. প্রত্যাশিত %u, পাওয়া গেলো %u </translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">নেটওয়ার্ক থ্রেড শুরু হচ্ছে...</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">নির্দিষ্ট কনফিগ ফাইল %s এর অস্তিত্ব নেই</translation>
+    </message>
+    <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">লেখার জন্যে %s খোলা যাচ্ছে না</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">অজানা নতুন নিয়ম সক্রিয় হলো (ভার্শনবিট %i)</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">ব্লকস যাচাই করা হচ্ছে...</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">ওয়ালেট(স) যাচাই করা হচ্ছে...</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Settingsসেটিংস ফাইল পড়া যাবে না।fileসেটিংস ফাইল পড়া যাবে না।couldসেটিংস ফাইল পড়া যাবে না।notসেটিংস ফাইল পড়া যাবে না।beসেটিংস ফাইল পড়া যাবে না।read</translation>
     </message>
     </context>
 </TS>

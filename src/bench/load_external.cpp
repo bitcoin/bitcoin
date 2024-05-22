@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <bench/data.h>
 #include <chainparams.h>
+#include <clientversion.h>
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
 #include <validation.h>
@@ -54,7 +55,7 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
     bench.run([&] {
         // "rb" is "binary, O_RDONLY", positioned to the start of the file.
         // The file will be closed by LoadExternalBlockFile().
-        FILE* file{fsbridge::fopen(blkfile, "rb")};
+        CAutoFile file{fsbridge::fopen(blkfile, "rb"), CLIENT_VERSION};
         testing_setup->m_node.chainman->LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
     });
     fs::remove(blkfile);

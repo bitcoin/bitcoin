@@ -51,7 +51,7 @@ private:
 
         // open output file, and associate with CAutoFile
         FILE *file = fopen(fs::PathToString(pathDB).c_str(), "wb");
-        CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+        CAutoFile fileout(file, CLIENT_VERSION);
         if (fileout.IsNull())
             return error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
 
@@ -77,7 +77,7 @@ private:
         int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         // open input file, and associate with CAutoFile
         FILE *file = fopen(fs::PathToString(pathDB).c_str(), "rb");
-        CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
+        CAutoFile filein(file, CLIENT_VERSION);
         if (filein.IsNull())
         {
             error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
@@ -116,7 +116,6 @@ private:
         }
 
 
-        unsigned char pchMsgTmp[4];
         std::string strMagicMessageTmp;
         try {
             // de-serialize file header (file specific magic message) and ..
@@ -128,18 +127,15 @@ private:
                 error("%s: Invalid magic message", __func__);
                 return IncorrectMagicMessage;
             }
-
-
+            
+            HashVerifier verifier{ssObj};
             // de-serialize file header (network specific magic number) and ..
-            ssObj >> pchMsgTmp;
-
+            MessageStartChars pchMsgTmp;
+            verifier >> pchMsgTmp;
             // ... verify the network matches ours
-            if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-            {
-                error("%s: Invalid network magic number", __func__);
-                return IncorrectMagicNumber;
+            if (pchMsgTmp != Params().MessageStart()) {
+                throw std::runtime_error{"Invalid network magic number"};
             }
-
             // de-serialize data into T object
             ssObj >> objToLoad;
         }

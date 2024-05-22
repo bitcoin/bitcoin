@@ -38,8 +38,8 @@ static void ge_equals_ge(const secp256k1_ge *a, const secp256k1_ge *b) {
     if (a->infinity) {
         return;
     }
-    CHECK(secp256k1_fe_equal_var(&a->x, &b->x));
-    CHECK(secp256k1_fe_equal_var(&a->y, &b->y));
+    CHECK(secp256k1_fe_equal(&a->x, &b->x));
+    CHECK(secp256k1_fe_equal(&a->y, &b->y));
 }
 
 static void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
@@ -52,11 +52,11 @@ static void ge_equals_gej(const secp256k1_ge *a, const secp256k1_gej *b) {
     /* Check a.x * b.z^2 == b.x && a.y * b.z^3 == b.y, to avoid inverses. */
     secp256k1_fe_sqr(&z2s, &b->z);
     secp256k1_fe_mul(&u1, &a->x, &z2s);
-    u2 = b->x; secp256k1_fe_normalize_weak(&u2);
+    u2 = b->x;
     secp256k1_fe_mul(&s1, &a->y, &z2s); secp256k1_fe_mul(&s1, &s1, &b->z);
-    s2 = b->y; secp256k1_fe_normalize_weak(&s2);
-    CHECK(secp256k1_fe_equal_var(&u1, &u2));
-    CHECK(secp256k1_fe_equal_var(&s1, &s2));
+    s2 = b->y;
+    CHECK(secp256k1_fe_equal(&u1, &u2));
+    CHECK(secp256k1_fe_equal(&s1, &s2));
 }
 
 static void random_fe(secp256k1_fe *x) {
@@ -219,14 +219,14 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, and xd=NULL. */
                 ret = secp256k1_ecmult_const_xonly(&tmpf, &group[i].x, NULL, &ng, 0);
                 CHECK(ret);
-                CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
+                CHECK(secp256k1_fe_equal(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
 
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, with random xd. */
                 random_fe_non_zero(&xd);
                 secp256k1_fe_mul(&xn, &xd, &group[i].x);
                 ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 0);
                 CHECK(ret);
-                CHECK(secp256k1_fe_equal_var(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
+                CHECK(secp256k1_fe_equal(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
             }
         }
     }
@@ -475,8 +475,8 @@ int main(int argc, char** argv) {
 
                 CHECK(group[i].infinity == 0);
                 CHECK(generated.infinity == 0);
-                CHECK(secp256k1_fe_equal_var(&generated.x, &group[i].x));
-                CHECK(secp256k1_fe_equal_var(&generated.y, &group[i].y));
+                CHECK(secp256k1_fe_equal(&generated.x, &group[i].x));
+                CHECK(secp256k1_fe_equal(&generated.y, &group[i].y));
             }
         }
 

@@ -1,7 +1,7 @@
 [main]
 host = https://www.transifex.com
 
-[o:syscoin:p:syscoin:r:qt-translation-444x]
+[o:syscoin:p:syscoin:r:qt-translation-45xx]
 file_filter = src/qt/locale/syscoin_<lang>.xlf
 source_file = src/qt/locale/syscoin_en.xlf
 source_lang = en

@@ -548,14 +548,12 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
 
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "rb")};
 
-    // Whenever the fee estimation file is not present return early
     if (est_file.IsNull()) {
         LogPrintf("%s is not found. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
         return;
     }
 
     std::chrono::hours file_age = GetFeeEstimatorFileAge();
-    // fee estimate file must not be too old to avoid wrong fee estimates.
     if (file_age > MAX_FILE_AGE && !read_stale_estimates) {
         LogPrintf("Fee estimation file %s too old (age=%lld > %lld hours) and will not be used to avoid serving stale estimates.\n", fs::PathToString(m_estimation_filepath), Ticks<std::chrono::hours>(file_age), Ticks<std::chrono::hours>(MAX_FILE_AGE));
         return;
@@ -1057,8 +1055,9 @@ static std::set<double> MakeFeeSet(const CFeeRate& min_incremental_fee,
     return fee_set;
 }
 
-FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
-    : m_fee_set{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)}
+FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee, FastRandomContext& rng)
+    : m_fee_set{MakeFeeSet(minIncrementalFee, MAX_FILTER_FEERATE, FEE_FILTER_SPACING)},
+      insecure_rand{rng}
 {
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC calls related to net.
@@ -12,6 +12,7 @@ from itertools import product
 import time
 
 import test_framework.messages
+from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
 from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
@@ -61,10 +62,13 @@ class NetTest(SyscoinTestFramework):
         self.test_getpeerinfo()
         self.test_getnettotals()
         self.test_getnetworkinfo()
-        self.test_getaddednodeinfo()
+        self.test_addnode_getaddednodeinfo()
         self.test_service_flags()
         self.test_getnodeaddresses()
         self.test_addpeeraddress()
+        self.test_sendmsgtopeer()
+        self.test_getaddrmaninfo()
+        self.test_getrawaddrman()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -140,6 +144,7 @@ class NetTest(SyscoinTestFramework):
                 "relaytxes": False,
                 "services": "0000000000000000",
                 "servicesnames": [],
+                "session_id": "",
                 # SYSCOIN
                 'masternode': False,
                 "startingheight": -1,
@@ -147,6 +152,7 @@ class NetTest(SyscoinTestFramework):
                 "synced_blocks": -1,
                 "synced_headers": -1,
                 "timeoffset": 0,
+                "transport_protocol_type": "v1",
                 "version": 0,
             },
         )
@@ -205,8 +211,8 @@ class NetTest(SyscoinTestFramework):
         # Check dynamically generated networks list in getnetworkinfo help output.
         assert "(ipv4, ipv6, onion, i2p, cjdns)" in self.nodes[0].help("getnetworkinfo")
 
-    def test_getaddednodeinfo(self):
-        self.log.info("Test getaddednodeinfo")
+    def test_addnode_getaddednodeinfo(self):
+        self.log.info("Test addnode and getaddednodeinfo")
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
         # add a node (node2) to node0
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
@@ -220,6 +226,8 @@ class NetTest(SyscoinTestFramework):
         # check that node can be removed
         self.nodes[0].addnode(node=ip_port, command='remove')
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
+        # check that an invalid command returns an error
+        assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         # check that trying to remove the node again returns an error
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         # check that a non-existent node returns an error
@@ -310,9 +318,11 @@ class NetTest(SyscoinTestFramework):
 
         self.log.debug("Test that adding an address with invalid port fails")
         assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress,address="1.2.3.4", port=65536)
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=65536)
 
         self.log.debug("Test that adding a valid address to the tried table succeeds")
+        self.addr_time = int(time.time())
+        node.setmocktime(self.addr_time)
         assert_equal(node.addpeeraddress(address="1.2.3.4", tried=True, port=8333), {"success": True})
         with node.assert_debug_log(expected_msgs=["CheckAddrman: new 0, tried 1, total 1 started"]):
             addrs = node.getnodeaddresses(count=0)  # getnodeaddresses re-runs the addrman checks
@@ -330,6 +340,163 @@ class NetTest(SyscoinTestFramework):
         with node.assert_debug_log(expected_msgs=["CheckAddrman: new 1, tried 1, total 2 started"]):
             addrs = node.getnodeaddresses(count=0)  # getnodeaddresses re-runs the addrman checks
             assert_equal(len(addrs), 2)
+
+    def test_sendmsgtopeer(self):
+        node = self.nodes[0]
+
+        self.restart_node(0)
+        self.connect_nodes(0, 1)
+
+        self.log.info("Test sendmsgtopeer")
+        self.log.debug("Send a valid message")
+        with self.nodes[1].assert_debug_log(expected_msgs=["received: addr"]):
+            node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FFFFFF")
+
+        self.log.debug("Test error for sending to non-existing peer")
+        assert_raises_rpc_error(-1, "Error: Could not send message to peer", node.sendmsgtopeer, peer_id=100, msg_type="addr", msg="FF")
+
+        self.log.debug("Test that zero-length msg_type is allowed")
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="")
+
+        self.log.debug("Test error for msg_type that is too long")
+        assert_raises_rpc_error(-8, "Error: msg_type too long, max length is 12", node.sendmsgtopeer, peer_id=0, msg_type="long_msg_type", msg="FF")
+
+        self.log.debug("Test that unknown msg_type is allowed")
+        node.sendmsgtopeer(peer_id=0, msg_type="unknown", msg="FF")
+
+        self.log.debug("Test that empty msg is allowed")
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FF")
+
+        self.log.debug("Test that oversized messages are allowed, but get us disconnected")
+        zero_byte_string = b'\x00' * 4000001
+        node.sendmsgtopeer(peer_id=0, msg_type="addr", msg=zero_byte_string.hex())
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0, timeout=10)
+
+    def test_getaddrmaninfo(self):
+        self.log.info("Test getaddrmaninfo")
+        node = self.nodes[1]
+
+        # current count of ipv4 addresses in addrman is {'new':1, 'tried':1}
+        self.log.info("Test that count of addresses in addrman match expected values")
+        res = node.getaddrmaninfo()
+        assert_equal(res["ipv4"]["new"], 1)
+        assert_equal(res["ipv4"]["tried"], 1)
+        assert_equal(res["ipv4"]["total"], 2)
+        assert_equal(res["all_networks"]["new"], 1)
+        assert_equal(res["all_networks"]["tried"], 1)
+        assert_equal(res["all_networks"]["total"], 2)
+        for net in ["ipv6", "onion", "i2p", "cjdns"]:
+            assert_equal(res[net]["new"], 0)
+            assert_equal(res[net]["tried"], 0)
+            assert_equal(res[net]["total"], 0)
+
+    def test_getrawaddrman(self):
+        self.log.info("Test getrawaddrman")
+        node = self.nodes[1]
+
+        self.log.debug("Test that getrawaddrman is a hidden RPC")
+        # It is hidden from general help, but its detailed help may be called directly.
+        assert "getrawaddrman" not in node.help()
+        assert "getrawaddrman" in node.help("getrawaddrman")
+
+        def check_addr_information(result, expected):
+            """Utility to compare a getrawaddrman result entry with an expected entry"""
+            assert_equal(result["address"], expected["address"])
+            assert_equal(result["port"], expected["port"])
+            assert_equal(result["services"], expected["services"])
+            assert_equal(result["network"], expected["network"])
+            assert_equal(result["source"], expected["source"])
+            assert_equal(result["source_network"], expected["source_network"])
+            assert_equal(result["time"], self.addr_time)
+
+        def check_getrawaddrman_entries(expected):
+            """Utility to compare a getrawaddrman result with expected addrman contents"""
+            getrawaddrman = node.getrawaddrman()
+            getaddrmaninfo = node.getaddrmaninfo()
+            for (table_name, table_info) in expected.items():
+                assert_equal(len(getrawaddrman[table_name]), len(table_info["entries"]))
+                assert_equal(len(getrawaddrman[table_name]), getaddrmaninfo["all_networks"][table_name])
+
+                for bucket_position in getrawaddrman[table_name].keys():
+                    bucket = int(bucket_position.split("/")[0])
+                    position = int(bucket_position.split("/")[1])
+
+                    # bucket and position only be sanity checked here as the
+                    # test-addrman isn't deterministic
+                    assert 0 <= int(bucket) < table_info["bucket_count"]
+                    assert 0 <= int(position) < ADDRMAN_BUCKET_SIZE
+
+                    entry = getrawaddrman[table_name][bucket_position]
+                    expected_entry = list(filter(lambda e: e["address"] == entry["address"], table_info["entries"]))[0]
+                    check_addr_information(entry, expected_entry)
+
+        # we expect one addrman new and tried table entry, which were added in a previous test
+        expected = {
+            "new": {
+                "bucket_count": ADDRMAN_NEW_BUCKET_COUNT,
+                "entries": [
+                    {
+                        "address": "2.0.0.0",
+                        "port": 8333,
+                        "services": 9,
+                        "network": "ipv4",
+                        "source": "2.0.0.0",
+                        "source_network": "ipv4",
+                    }
+                ]
+            },
+            "tried": {
+                "bucket_count": ADDRMAN_TRIED_BUCKET_COUNT,
+                "entries": [
+                    {
+                        "address": "1.2.3.4",
+                        "port": 8333,
+                        "services": 9,
+                        "network": "ipv4",
+                        "source": "1.2.3.4",
+                        "source_network": "ipv4",
+                    }
+                ]
+            }
+        }
+
+        self.log.debug("Test that the getrawaddrman contains information about the addresses added in a previous test")
+        check_getrawaddrman_entries(expected)
+
+        self.log.debug("Add one new address to each addrman table")
+        expected["new"]["entries"].append({
+            "address": "2803:0:1234:abcd::1",
+            "services": 9,
+            "network": "ipv6",
+            "source": "2803:0:1234:abcd::1",
+            "source_network": "ipv6",
+            "port": -1,  # set once addpeeraddress is successful
+        })
+        expected["tried"]["entries"].append({
+            "address": "nrfj6inpyf73gpkyool35hcmne5zwfmse3jl3aw23vk7chdemalyaqad.onion",
+            "services": 9,
+            "network": "onion",
+            "source": "nrfj6inpyf73gpkyool35hcmne5zwfmse3jl3aw23vk7chdemalyaqad.onion",
+            "source_network": "onion",
+            "port": -1,  # set once addpeeraddress is successful
+        })
+
+        port = 0
+        for (table_name, table_info) in expected.items():
+            # There's a slight chance that the to-be-added address collides with an already
+            # present table entry. To avoid this, we increment the port until an address has been
+            # added. Incrementing the port changes the position in the new table bucket (bucket
+            # stays the same) and changes both the bucket and the position in the tried table.
+            while True:
+                if node.addpeeraddress(address=table_info["entries"][1]["address"], port=port, tried=table_name == "tried")["success"]:
+                    table_info["entries"][1]["port"] = port
+                    self.log.debug(f"Added {table_info['entries'][1]['address']} to {table_name} table")
+                    break
+                else:
+                    port += 1
+
+        self.log.debug("Test that the newly added addresses appear in getrawaddrman")
+        check_getrawaddrman_entries(expected)
 
 
 if __name__ == '__main__':

@@ -363,11 +363,14 @@ SECONDARY: $(QT_QM)
 
 $(srcdir)/qt/syscoinstrings.cpp: FORCE
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $(libsyscoin_node_a_SOURCES) $(libsyscoin_wallet_a_SOURCES) $(libsyscoin_common_a_SOURCES) $(libsyscoin_zmq_a_SOURCES) $(libsyscoin_consensus_a_SOURCES) $(libsyscoin_util_a_SOURCES)
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py \
+            $(libsyscoin_node_a_SOURCES) $(libsyscoin_wallet_a_SOURCES) $(libsyscoin_common_a_SOURCES) \
+            $(libsyscoin_zmq_a_SOURCES) $(libsyscoin_consensus_a_SOURCES) $(libsyscoin_util_a_SOURCES) \
+            $(SYSCOIN_QT_BASE_CPP) $(SYSCOIN_QT_WINDOWS_CPP) $(SYSCOIN_QT_WALLET_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
 
 # The resulted syscoin_en.xlf source file should follow Transifex requirements.
 # See: https://docs.transifex.com/formats/xliff#how-to-distinguish-between-a-source-file-and-a-translation-file
-translate: $(srcdir)/qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_BASE_CPP) qt/syscoin.cpp $(SYSCOIN_QT_WINDOWS_CPP) $(SYSCOIN_QT_WALLET_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
+translate: $(srcdir)/qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_BASE_CPP) $(SYSCOIN_QT_WINDOWS_CPP) $(SYSCOIN_QT_WALLET_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) -no-obsolete -I $(srcdir) -locations relative $^ -ts $(srcdir)/qt/locale/syscoin_en.ts
 	@test -n $(LCONVERT) || echo "lconvert is required for updating translations"

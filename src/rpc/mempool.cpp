@@ -764,7 +764,7 @@ static RPCHelpMan importmempool()
                   "Whether to apply the unbroadcast set metadata from the mempool file.\n"
                   "Warning: Importing untrusted metadata may lead to unexpected issues and undesirable behavior."},
              },
-             RPCArgOptions{.oneline_description = "\"options\""}},
+             RPCArgOptions{.oneline_description = "options"}},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{HelpExampleCli("importmempool", "/path/to/mempool.dat") + HelpExampleRpc("importmempool", "/path/to/mempool.dat")},
@@ -772,9 +772,10 @@ static RPCHelpMan importmempool()
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
 
             CTxMemPool& mempool{EnsureMemPool(node)};
-            Chainstate& chainstate = EnsureChainman(node).ActiveChainstate();
+            ChainstateManager& chainman = EnsureChainman(node);
+            Chainstate& chainstate = chainman.ActiveChainstate();
 
-            if (chainstate.IsInitialBlockDownload()) {
+            if (chainman.IsInitialBlockDownload()) {
                 throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Can only import the mempool after the block download and sync is done.");
             }
 
@@ -838,11 +839,11 @@ static RPCHelpMan savemempool()
 static RPCHelpMan submitpackage()
 {
     return RPCHelpMan{"submitpackage",
-        "Submit a package of raw transactions (serialized, hex-encoded) to local node (-regtest only).\n"
+        "Submit a package of raw transactions (serialized, hex-encoded) to local node.\n"
+        "The package must consist of a child with its parents, and none of the parents may depend on one another.\n"
         "The package will be validated according to consensus and mempool policy rules. If all transactions pass, they will be accepted to mempool.\n"
         "This RPC is experimental and the interface may be unstable. Refer to doc/policy/packages.md for documentation on package policies.\n"
-        "Warning: until package relay is in use, successful submission does not mean the transaction will propagate to other nodes on the network.\n"
-        "Currently, each transaction is broadcasted individually after submission, which means they must meet other nodes' feerate requirements alone.\n"
+        "Warning: successful submission does not mean the transactions will propagate throughout the network.\n"
         ,
         {
             {"package", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of raw transactions.",
@@ -881,9 +882,6 @@ static RPCHelpMan submitpackage()
         },
         [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
         {
-            if (!Params().IsMockableChain()) {
-                throw std::runtime_error("submitpackage is for regression testing (-regtest mode) only");
-            }
             const UniValue raw_transactions = request.params[0].get_array();
             if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
@@ -899,6 +897,9 @@ static RPCHelpMan submitpackage()
                                        "TX decode failed: " + rawtx.get_str() + " Make sure the tx has at least one input.");
                 }
                 txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+            }
+            if (!IsChildWithParentsTree(txns)) {
+                throw JSONRPCTransactionError(TransactionError::INVALID_PACKAGE, "package topology disallowed. not child-with-parents or parents depend on each other.");
             }
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -1002,7 +1003,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getrawmempool},
         {"blockchain", &importmempool},
         {"blockchain", &savemempool},
-        {"hidden", &submitpackage},
+        {"rawtransactions", &submitpackage},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

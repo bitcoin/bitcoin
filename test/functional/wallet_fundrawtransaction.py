@@ -25,7 +25,7 @@ from test_framework.util import (
     find_vout_for_address,
     get_fee,
 )
-from test_framework.wallet_util import generate_keypair
+from test_framework.wallet_util import generate_keypair, WalletUnlock
 
 ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cover the transaction target. " \
                                "Please allow other inputs to be automatically selected or include more coins manually"
@@ -556,8 +556,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         funded_psbt = wmulti.walletcreatefundedpsbt(inputs=inputs, outputs=outputs, changeAddress=w2.getrawchangeaddress())['psbt']
 
         signed_psbt = w2.walletprocesspsbt(funded_psbt)
-        final_psbt = w2.finalizepsbt(signed_psbt['psbt'])
-        self.nodes[2].sendrawtransaction(final_psbt['hex'])
+        self.nodes[2].sendrawtransaction(signed_psbt['hex'])
         self.generate(self.nodes[2], 1)
 
         # Make sure funds are received at node1.
@@ -582,19 +581,18 @@ class RawTransactionsTest(SyscoinTestFramework):
         wallet.encryptwallet("test")
 
         if self.options.descriptors:
-            wallet.walletpassphrase('test', 10)
-            wallet.importdescriptors([{
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
-                'timestamp': 'now',
-                'active': True
-            },
-            {
-                'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
-                'timestamp': 'now',
-                'active': True,
-                'internal': True
-            }])
-            wallet.walletlock()
+            with WalletUnlock(wallet, "test"):
+                wallet.importdescriptors([{
+                    'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/0h/*h)'),
+                    'timestamp': 'now',
+                    'active': True
+                },
+                {
+                    'desc': descsum_create('wpkh(tprv8ZgxMBicQKsPdYeeZbPSKd2KYLmeVKtcFA7kqCxDvDR13MQ6us8HopUR2wLcS2ZKPhLyKsqpDL2FtL73LMHcgoCL7DXsciA8eX8nbjCR2eG/1h/*h)'),
+                    'timestamp': 'now',
+                    'active': True,
+                    'internal': True
+                }])
 
         # Drain the keypool.
         wallet.getnewaddress()
@@ -620,9 +618,8 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it.", wallet.fundrawtransaction, rawtx)
 
         # Refill the keypool.
-        wallet.walletpassphrase("test", 100)
-        wallet.keypoolrefill(8) #need to refill the keypool to get an internal change address
-        wallet.walletlock()
+        with WalletUnlock(wallet, "test"):
+            wallet.keypoolrefill(8) #need to refill the keypool to get an internal change address
 
         assert_raises_rpc_error(-13, "walletpassphrase", wallet.sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
 
@@ -635,16 +632,16 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert fundedTx["changepos"] != -1
 
         # Now we need to unlock.
-        wallet.walletpassphrase("test", 600)
-        signedTx = wallet.signrawtransactionwithwallet(fundedTx['hex'])
-        wallet.sendrawtransaction(signedTx['hex'])
-        self.generate(self.nodes[1], 1)
+        with WalletUnlock(wallet, "test"):
+            signedTx = wallet.signrawtransactionwithwallet(fundedTx['hex'])
+            wallet.sendrawtransaction(signedTx['hex'])
+            self.generate(self.nodes[1], 1)
 
-        # Make sure funds are received at node1.
-        assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
+            # Make sure funds are received at node1.
+            assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
 
-        # Restore pre-test wallet state
-        wallet.sendall(recipients=[df_wallet.getnewaddress(), df_wallet.getnewaddress(), df_wallet.getnewaddress()])
+            # Restore pre-test wallet state
+            wallet.sendall(recipients=[df_wallet.getnewaddress(), df_wallet.getnewaddress(), df_wallet.getnewaddress()])
         wallet.unloadwallet()
         self.generate(self.nodes[1], 1)
 
@@ -1064,19 +1061,19 @@ class RawTransactionsTest(SyscoinTestFramework):
         high_input_weight = input_weight * 2
 
         # Funding should also work if the input weight is provided
-        funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}])
+        funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": input_weight}], fee_rate=2)
         signed_tx = wallet.signrawtransactionwithwallet(funded_tx["hex"])
         signed_tx = self.nodes[0].signrawtransactionwithwallet(signed_tx["hex"])
         assert_equal(self.nodes[0].testmempoolaccept([signed_tx["hex"]])[0]["allowed"], True)
         assert_equal(signed_tx["complete"], True)
         # Reducing the weight should have a lower fee
-        funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}])
+        funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}], fee_rate=2)
         assert_greater_than(funded_tx["fee"], funded_tx2["fee"])
         # Increasing the weight should have a higher fee
-        funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}])
+        funded_tx2 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}], fee_rate=2)
         assert_greater_than(funded_tx2["fee"], funded_tx["fee"])
         # The provided weight should override the calculated weight when solving data is provided
-        funded_tx3 = wallet.fundrawtransaction(raw_tx, solving_data={"descriptors": [desc]}, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}])
+        funded_tx3 = wallet.fundrawtransaction(raw_tx, solving_data={"descriptors": [desc]}, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}], fee_rate=2)
         assert_equal(funded_tx2["fee"], funded_tx3["fee"])
         # The feerate should be met
         funded_tx4 = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}], fee_rate=10)
@@ -1086,8 +1083,8 @@ class RawTransactionsTest(SyscoinTestFramework):
         assert_fee_amount(funded_tx4["fee"], tx4_vsize, Decimal(0.0001))
 
         # Funding with weight at csuint boundaries should not cause problems
-        funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 255}])
-        funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 65539}])
+        funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 255}], fee_rate=2)
+        funded_tx = wallet.fundrawtransaction(raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 65539}], fee_rate=2)
 
         self.nodes[2].unloadwallet("extfund")
 

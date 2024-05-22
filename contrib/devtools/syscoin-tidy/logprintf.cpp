@@ -36,14 +36,12 @@ void LogPrintfCheck::registerMatchers(clang::ast_matchers::MatchFinder* finder)
         this);
 
     /*
-      CWallet wallet;
       auto walletptr = &wallet;
       wallet.WalletLogPrintf("foo");
       wallet->WalletLogPrintf("foo");
     */
     finder->addMatcher(
         cxxMemberCallExpr(
-            thisPointerType(qualType(hasDeclaration(cxxRecordDecl(hasName("CWallet"))))),
             callee(cxxMethodDecl(hasName("WalletLogPrintf"))),
             hasArgument(0, stringLiteral(unterminated()).bind("logstring"))),
         this);

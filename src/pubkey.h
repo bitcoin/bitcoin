@@ -191,6 +191,12 @@ public:
         return size() > 0;
     }
 
+    /** Check if a public key is a syntactically valid compressed or uncompressed key. */
+    bool IsValidNonHybrid() const noexcept
+    {
+        return size() > 0 && (vch[0] == 0x02 || vch[0] == 0x03 || vch[0] == 0x04);
+    }
+
     //! fully validate whether this is a valid public key (more expensive than IsValid())
     bool IsFullyValid() const;
 
@@ -276,6 +282,8 @@ public:
      */
     std::vector<CKeyID> GetKeyIDs() const;
 
+    CPubKey GetEvenCorrespondingCPubKey() const;
+
     const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
     const unsigned char* data() const { return m_keydata.begin(); }
     static constexpr size_t size() { return decltype(m_keydata)::size(); }
@@ -303,8 +311,7 @@ public:
     EllSwiftPubKey() noexcept = default;
 
     /** Construct a new ellswift public key from a given serialization. */
-    EllSwiftPubKey(const std::array<std::byte, SIZE>& ellswift) :
-        m_pubkey(ellswift) {}
+    EllSwiftPubKey(Span<const std::byte> ellswift) noexcept;
 
     /** Decode to normal compressed CPubKey (for debugging purposes). */
     CPubKey Decode() const;

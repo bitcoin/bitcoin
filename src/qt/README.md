@@ -72,7 +72,7 @@ To run:
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for general guidelines.
 
-**Note:** Do not change `local/bitcoin_en.ts`. It is updated [automatically](/doc/translation_process.md#writing-code-with-translations).
+**Note:** Do not change `locale/syscoin_en.ts`. It is updated [automatically](/doc/translation_process.md#writing-code-with-translations).
 
 ## Using Qt Creator as an IDE
 

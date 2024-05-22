@@ -22,7 +22,7 @@ public:
     static constexpr unsigned SESSION_ID_LEN{32};
     static constexpr unsigned GARBAGE_TERMINATOR_LEN{16};
     static constexpr unsigned REKEY_INTERVAL{224};
-    static constexpr unsigned LENGTH_LEN{3};
+    static constexpr unsigned LENGTH_LEN{4};
     static constexpr unsigned HEADER_LEN{1};
     static constexpr unsigned EXPANSION = LENGTH_LEN + HEADER_LEN + FSChaCha20Poly1305::EXPANSION;
     static constexpr std::byte IGNORE_BIT{0x80};
@@ -41,8 +41,8 @@ private:
     std::array<std::byte, GARBAGE_TERMINATOR_LEN> m_recv_garbage_terminator;
 
 public:
-    /** Initialize a BIP324 cipher with securely generated random keys. */
-    BIP324Cipher() noexcept;
+    /** No default constructor; keys must be provided to create a BIP324Cipher. */
+    BIP324Cipher() = delete;
 
     /** Initialize a BIP324 cipher with specified key and encoding entropy (testing only). */
     BIP324Cipher(const CKey& key, Span<const std::byte> ent32) noexcept;

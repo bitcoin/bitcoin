@@ -98,7 +98,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
-            SpanReader v{SER_NETWORK, INIT_PROTO_VERSION, signet_solution};
+            SpanReader v{INIT_PROTO_VERSION, signet_solution};
             v >> tx_spending.vin[0].scriptSig;
             v >> tx_spending.vin[0].scriptWitness.stack;
             if (!v.empty()) return std::nullopt; // extraneous data encountered
@@ -109,7 +109,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
     uint256 signet_merkle = ComputeModifiedMerkleRoot(modified_cb, block);
 
     std::vector<uint8_t> block_data;
-    CVectorWriter writer(SER_NETWORK, INIT_PROTO_VERSION, block_data, 0);
+    CVectorWriter writer{INIT_PROTO_VERSION, block_data, 0};
     writer << block.nVersion;
     writer << block.hashPrevBlock;
     writer << signet_merkle;

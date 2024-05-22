@@ -21,6 +21,7 @@
 #include <test/util/setup_common.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <validationinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
@@ -48,7 +49,7 @@ BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t index, const CKey& key, const CScript& pubkey)
 {
     CMutableTransaction mtx;
-    mtx.vout.push_back({from.vout[index].nValue - DEFAULT_TRANSACTION_MAXFEE, pubkey});
+    mtx.vout.emplace_back(from.vout[index].nValue - DEFAULT_TRANSACTION_MAXFEE, pubkey);
     mtx.vin.push_back({CTxIn{from.GetHash(), index}});
     FillableSigningProvider keystore;
     keystore.AddKey(key);
@@ -604,7 +605,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     // returns the coin associated with the change address underneath the
     // coinbaseKey pubkey, even though the change address has a different
     // pubkey.
-    AddTx(CRecipient{GetScriptForRawPubKey({}), 1 * COIN, /*subtract_fee=*/false});
+    AddTx(CRecipient{PubKeyDestination{{}}, 1 * COIN, /*subtract_fee=*/false});
     {
         LOCK(wallet->cs_wallet);
         list = ListCoins(*wallet);
@@ -644,7 +645,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
 {
     LOCK(context.wallet->cs_wallet);
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
-    CWalletTx& wtx = context.AddTx(CRecipient{{GetScriptForDestination(*dest)}, amount, /*fSubtractFeeFromAmount=*/true});
+    CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
@@ -751,14 +752,14 @@ bool malformed_descriptor(std::ios_base::failure e)
 BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 {
     std::vector<unsigned char> malformed_record;
-    CVectorWriter vw(0, 0, malformed_record, 0);
+    CVectorWriter vw{0, malformed_record, 0};
     vw << std::string("notadescriptor");
     vw << uint64_t{0};
     vw << int32_t{0};
     vw << int32_t{0};
     vw << int32_t{1};
 
-    SpanReader vr{0, 0, malformed_record};
+    SpanReader vr{0, malformed_record};
     WalletDescriptor w_desc;
     BOOST_CHECK_EXCEPTION(vr >> w_desc, std::ios_base::failure, malformed_descriptor);
 }
@@ -944,8 +945,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     const auto op_dest{*Assert(wallet.GetNewDestination(OutputType::BECH32M, ""))};
 
     CMutableTransaction mtx;
-    mtx.vout.push_back({COIN, GetScriptForDestination(op_dest)});
-    mtx.vin.push_back(CTxIn(g_insecure_rand_ctx.rand256(), 0));
+    mtx.vout.emplace_back(COIN, GetScriptForDestination(op_dest));
+    mtx.vin.emplace_back(g_insecure_rand_ctx.rand256(), 0);
     const auto& tx_id_to_spend = wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInMempool{})->GetHash();
 
     {
@@ -960,7 +961,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     // 2) Verify that the available balance of this new tx and the old one is updated (prev tx is marked dirty)
 
     mtx.vin.clear();
-    mtx.vin.push_back(CTxIn(tx_id_to_spend, 0));
+    mtx.vin.emplace_back(tx_id_to_spend, 0);
     wallet.transactionAddedToMempool(MakeTransactionRef(mtx));
     const uint256& good_tx_id = mtx.GetHash();
 
@@ -981,7 +982,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     //    verify that we are not moving forward if the wallet cannot store it
     GetMockableDatabase(wallet).m_pass = false;
     mtx.vin.clear();
-    mtx.vin.push_back(CTxIn(good_tx_id, 0));
+    mtx.vin.emplace_back(good_tx_id, 0);
     BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx)),
                           std::runtime_error,
                           HasReason("DB error adding transaction to wallet, write failed"));

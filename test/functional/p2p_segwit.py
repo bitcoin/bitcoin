@@ -70,9 +70,9 @@ from test_framework.script import (
     SIGHASH_ANYONECANPAY,
     SIGHASH_NONE,
     SIGHASH_SINGLE,
-    SegwitV0SignatureHash,
-    LegacySignatureHash,
     hash160,
+    sign_input_legacy,
+    sign_input_segwitv0,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
@@ -121,10 +121,8 @@ def subtest(func):
 
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness script."""
-    tx_hash = SegwitV0SignatureHash(script, tx_to, in_idx, hashtype, value)
-    signature = key.sign_ecdsa(tx_hash) + chr(hashtype).encode('latin-1')
-    tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script]
-    tx_to.rehash()
+    tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [script]
+    sign_input_segwitv0(tx_to, in_idx, script, value, key, hashtype)
 
 def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=None):
     """Send a transaction to the node and check that it's accepted to the mempool
@@ -513,10 +511,10 @@ class SegWitTest(SyscoinTestFramework):
             # without a witness is invalid).
             # Note: The reject reason for this failure could be
             # 'block-validation-failed' (if script check threads > 1) or
-            # 'non-mandatory-script-verify-flag (Witness program was passed an
+            # 'mandatory-script-verify-flag-failed (Witness program was passed an
             # empty witness)' (otherwise).
             test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=False,
-                               reason='non-mandatory-script-verify-flag (Witness program was passed an empty witness)')
+                               reason='mandatory-script-verify-flag-failed (Witness program was passed an empty witness)')
 
         self.utxo.pop(0)
         self.utxo.append(UTXO(txid, 2, value))
@@ -709,14 +707,14 @@ class SegWitTest(SyscoinTestFramework):
         # segwit activation.  Note that older syscoind's that are not
         # segwit-aware would also reject this for failing CLEANSTACK.
         with self.nodes[0].assert_debug_log(
-                expected_msgs=(spend_tx.hash, 'was not accepted: non-mandatory-script-verify-flag (Witness program was passed an empty witness)')):
+                expected_msgs=[spend_tx.hash, 'was not accepted: mandatory-script-verify-flag-failed (Witness program was passed an empty witness)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Try to put the witness script in the scriptSig, should also fail.
         spend_tx.vin[0].scriptSig = CScript([p2wsh_pubkey, b'a'])
         spend_tx.rehash()
         with self.nodes[0].assert_debug_log(
-                expected_msgs=(spend_tx.hash, 'was not accepted: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)')):
+                expected_msgs=[spend_tx.hash, 'was not accepted: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)']):
             test_transaction_acceptance(self.nodes[0], self.test_node, spend_tx, with_witness=False, accepted=False)
 
         # Now put the witness script in the witness, should succeed after
@@ -1000,7 +998,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Extra witness data should not be allowed.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Witness provided for non-witness script)')
+                           reason='mandatory-script-verify-flag-failed (Witness provided for non-witness script)')
 
         # Try extra signature data.  Ok if we're not spending a witness output.
         block.vtx[1].wit.vtxinwit = []
@@ -1026,7 +1024,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # This has extra witness data, so it should fail.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Stack size must be exactly one after execution)')
+                           reason='mandatory-script-verify-flag-failed (Stack size must be exactly one after execution)')
 
         # Now get rid of the extra witness, but add extra scriptSig data
         tx2.vin[0].scriptSig = CScript([OP_TRUE])
@@ -1039,7 +1037,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # This has extra signature data for a witness input, so it should fail.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Witness requires empty scriptSig)')
+                           reason='mandatory-script-verify-flag-failed (Witness requires empty scriptSig)')
 
         # Now get rid of the extra scriptsig on the witness input, and verify
         # success (even with extra scriptsig data in the non-witness input)
@@ -1078,7 +1076,7 @@ class SegWitTest(SyscoinTestFramework):
 
         self.update_witness_block_with_transactions(block, [tx, tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Push value size limit exceeded)')
+                           reason='mandatory-script-verify-flag-failed (Push value size limit exceeded)')
 
         # Now reduce the length of the stack element
         tx2.wit.vtxinwit[0].scriptWitness.stack[0] = b'a' * (MAX_SCRIPT_ELEMENT_SIZE)
@@ -1119,7 +1117,7 @@ class SegWitTest(SyscoinTestFramework):
         self.update_witness_block_with_transactions(block, [tx, tx2])
 
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Script is too big)')
+                           reason='mandatory-script-verify-flag-failed (Script is too big)')
 
         # Try again with one less byte in the witness script
         witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
@@ -1211,7 +1209,7 @@ class SegWitTest(SyscoinTestFramework):
         block.vtx = [block.vtx[0]]
         self.update_witness_block_with_transactions(block, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
+                           reason='mandatory-script-verify-flag-failed (Operation not valid with the current stack size)')
 
         # Fix the broken witness and the block should be accepted.
         tx2.wit.vtxinwit[5].scriptWitness.stack = [b'a', witness_script]
@@ -1477,11 +1475,9 @@ class SegWitTest(SyscoinTestFramework):
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, script_wsh))
         script = keyhash_to_p2pkh_script(pubkeyhash)
-        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
-        signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
         tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [signature, pubkey]
-        tx2.rehash()
+        tx2.wit.vtxinwit[0].scriptWitness.stack = [pubkey]
+        sign_input_segwitv0(tx2, 0, script, tx.vout[0].nValue, key)
 
         # Should fail policy test.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, True, False, 'non-mandatory-script-verify-flag (Using non-compressed keys in segwit)')
@@ -1530,10 +1526,8 @@ class SegWitTest(SyscoinTestFramework):
         tx5 = CTransaction()
         tx5.vin.append(CTxIn(COutPoint(tx4.sha256, 0), b""))
         tx5.vout.append(CTxOut(tx4.vout[0].nValue - 1000, CScript([OP_TRUE])))
-        (sig_hash, err) = LegacySignatureHash(script_pubkey, tx5, 0, SIGHASH_ALL)
-        signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
-        tx5.vin[0].scriptSig = CScript([signature, pubkey])
-        tx5.rehash()
+        tx5.vin[0].scriptSig = CScript([pubkey])
+        sign_input_legacy(tx5, 0, script_pubkey, key)
         # Should pass policy and consensus.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx5, True, True)
         block = self.build_next_block()
@@ -1575,7 +1569,7 @@ class SegWitTest(SyscoinTestFramework):
                 sign_p2pk_witness_input(witness_script, tx, 0, hashtype, prev_utxo.nValue + 1, key)
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                                   reason='non-mandatory-script-verify-flag (Script evaluated without error '
+                                   reason='mandatory-script-verify-flag-failed (Script evaluated without error '
                                           'but finished with a false/empty top stack element')
 
                 # Too-small input value
@@ -1583,7 +1577,7 @@ class SegWitTest(SyscoinTestFramework):
                 block.vtx.pop()  # remove last tx
                 self.update_witness_block_with_transactions(block, [tx])
                 test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                                   reason='non-mandatory-script-verify-flag (Script evaluated without error '
+                                   reason='mandatory-script-verify-flag-failed (Script evaluated without error '
                                           'but finished with a false/empty top stack element')
 
                 # Now try correct value
@@ -1679,15 +1673,17 @@ class SegWitTest(SyscoinTestFramework):
         tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
 
         script = keyhash_to_p2pkh_script(pubkeyhash)
-        sig_hash = SegwitV0SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)
-        signature = key.sign_ecdsa(sig_hash) + b'\x01'  # 0x1 is SIGHASH_ALL
+        tx2.wit.vtxinwit.append(CTxInWitness())
+        sign_input_segwitv0(tx2, 0, script, tx.vout[0].nValue, key)
+        signature = tx2.wit.vtxinwit[0].scriptWitness.stack.pop()
 
         # Check that we can't have a scriptSig
         tx2.vin[0].scriptSig = CScript([signature, pubkey])
+        tx2.rehash()
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx, tx2])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='non-mandatory-script-verify-flag (Witness requires empty scriptSig)')
+                           reason='mandatory-script-verify-flag-failed (Witness requires empty scriptSig)')
 
         # Move the signature to the witness.
         block.vtx.pop()

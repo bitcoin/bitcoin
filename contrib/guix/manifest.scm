@@ -3,7 +3,6 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
-             ((gnu packages cdrom) #:select (xorriso))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
@@ -20,7 +19,6 @@
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-tomli))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
-             ((gnu packages python-web) #:select (python-requests))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -40,41 +38,7 @@ FILE-NAME found in ./patches relative to the current file."
       ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
     (list (search-patch file-name) ...)))
 
-(define (make-ssp-fixed-gcc xgcc)
-  "Given a XGCC package, return a modified package that uses the SSP function
-from glibc instead of from libssp.so. Our `symbol-check' script will complain if
-we link against libssp.so, and thus will ensure that this works properly.
-
-Taken from:
-http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
-  (package
-    (inherit xgcc)
-    (arguments
-     (substitute-keyword-arguments (package-arguments xgcc)
-       ((#:make-flags flags)
-        `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
-
-(define (make-gcc-rpath-link xgcc)
-  "Given a XGCC package, return a modified package that replace each instance of
--rpath in the default system spec that's inserted by Guix with -rpath-link"
-  (package
-    (inherit xgcc)
-    (arguments
-     (substitute-keyword-arguments (package-arguments xgcc)
-       ((#:phases phases)
-        `(modify-phases ,phases
-           (add-after 'pre-configure 'replace-rpath-with-rpath-link
-             (lambda _
-               (substitute* (cons "gcc/config/rs6000/sysv4.h"
-                                  (find-files "gcc/config"
-                                              "^gnu-user.*\\.h$"))
-                 (("-rpath=") "-rpath-link="))
-               #t))))))))
-
-(define building-on (string-append (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
-
-(define (explicit-cross-configure package)
-  (package-with-extra-configure-variable package "--build" building-on))
+(define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
 
 (define (make-cross-toolchain target
                               base-gcc-for-libc
@@ -85,28 +49,28 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
   (let* ((xbinutils (cross-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
-         (xgcc-sans-libc (explicit-cross-configure (cross-gcc target
-                                                              #:xgcc base-gcc-for-libc
-                                                              #:xbinutils xbinutils)))
+         (xgcc-sans-libc (cross-gcc target
+                                    #:xgcc base-gcc-for-libc
+                                    #:xbinutils xbinutils))
          ;; 2. Build cross-compiled kernel headers with XGCC-SANS-LIBC, derived
          ;; from BASE-KERNEL-HEADERS
          (xkernel (cross-kernel-headers target
-                                        base-kernel-headers
-                                        xgcc-sans-libc
-                                        xbinutils))
+                                        #:linux-headers base-kernel-headers
+                                        #:xgcc xgcc-sans-libc
+                                        #:xbinutils xbinutils))
          ;; 3. Build a cross-compiled libc with XGCC-SANS-LIBC and XKERNEL,
          ;; derived from BASE-LIBC
-         (xlibc (explicit-cross-configure (cross-libc target
-                                                      base-libc
-                                                      xgcc-sans-libc
-                                                      xbinutils
-                                                      xkernel)))
+         (xlibc (cross-libc target
+                            #:libc base-libc
+                            #:xgcc xgcc-sans-libc
+                            #:xbinutils xbinutils
+                            #:xheaders xkernel))
          ;; 4. Build a cross-compiling gcc targeting XLIBC, derived from
          ;; BASE-GCC
-         (xgcc (explicit-cross-configure (cross-gcc target
-                                                    #:xgcc base-gcc
-                                                    #:xbinutils xbinutils
-                                                    #:libc xlibc))))
+         (xgcc (cross-gcc target
+                          #:xgcc base-gcc
+                          #:xbinutils xbinutils
+                          #:libc xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
     ;; XGCC
     (package
@@ -130,21 +94,12 @@ chain for " target " development."))
 (define base-gcc gcc-10)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
-;; https://gcc.gnu.org/install/configure.html
-(define (hardened-gcc gcc)
-  (package-with-extra-configure-variable (
-    package-with-extra-configure-variable (
-      package-with-extra-configure-variable gcc
-      "--enable-initfini-array" "yes")
-      "--enable-default-ssp" "yes")
-      "--enable-default-pie" "yes"))
-
 (define* (make-syscoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc base-gcc)
+                                       (base-gcc-for-libc linux-base-gcc)
                                        (base-kernel-headers base-linux-kernel-headers)
-                                       (base-libc (hardened-glibc glibc-2.27))
-                                       (base-gcc (make-gcc-rpath-link (hardened-gcc base-gcc))))
+                                       (base-libc glibc-2.27)
+                                       (base-gcc linux-base-gcc))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Syscoin Core release binaries."
   (make-cross-toolchain target
@@ -153,26 +108,19 @@ desirable for building Syscoin Core release binaries."
                         base-libc
                         base-gcc))
 
-(define (make-gcc-with-pthreads gcc)
-  (package-with-extra-configure-variable
-    (package-with-extra-patches gcc
-      (search-our-patches "gcc-10-remap-guix-store.patch"))
-    "--enable-threads" "posix"))
-
-(define (make-mingw-w64-cross-gcc cross-gcc)
-  (package-with-extra-patches cross-gcc
-    (search-our-patches "vmov-alignment.patch"
-                        "gcc-broken-longjmp.patch")))
+(define (gcc-mingw-patches gcc)
+  (package-with-extra-patches gcc
+    (search-our-patches "gcc-remap-guix-store.patch"
+                        "vmov-alignment.patch")))
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
   (let* ((xbinutils (cross-binutils target))
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
-         (pthreads-xgcc (make-gcc-with-pthreads
-                         (cross-gcc target
-                                    #:xgcc (make-ssp-fixed-gcc (make-mingw-w64-cross-gcc base-gcc))
+         (pthreads-xgcc (cross-gcc target
+                                    #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
-                                    #:libc pthreads-xlibc))))
+                                    #:libc pthreads-xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
     ;; XGCC
     (package
@@ -191,11 +139,6 @@ desirable for building Syscoin Core release binaries."
 chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
-
-(define (make-nsis-for-gcc-10 base-nsis)
-  (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-gcc-10-memmove.patch"
-                        "nsis-disable-installer-reloc.patch")))
 
 ;; While LIEF is packaged in Guix, we maintain our own package,
 ;; to simplify building, and more easily apply updates.
@@ -292,7 +235,7 @@ thus should be able to compile on most platforms where these exist.")
 (define-public python-oscrypto
   (package
     (name "python-oscrypto")
-    (version "1.2.1")
+    (version "1.3.0")
     (source
      (origin
        (method git-fetch)
@@ -302,7 +245,7 @@ thus should be able to compile on most platforms where these exist.")
        (file-name (git-file-name name version))
        (sha256
         (base32
-         "1d4d8s4z340qhvb3g5m5v3436y3a71yc26wk4749q64m09kxqc3l"))
+         "1v5wkmzcyiqy39db8j2dvkdrv2nlsc48556h73x4dzjwd6kg4q0a"))
        (patches (search-our-patches "oscrypto-hard-code-openssl.patch"))))
     (build-system python-build-system)
     (native-search-paths
@@ -501,7 +444,7 @@ and endian independent.")
     (license license:expat)))
 
 (define-public python-signapple
-  (let ((commit "8a945a2e7583be2665cf3a6a89d665b70ecd1ab6"))
+  (let ((commit "7a96b4171a360abf0f0f56e499f8f9ed2116280d"))
     (package
       (name "python-signapple")
       (version (git-version "0.1" "1" commit))
@@ -514,14 +457,13 @@ and endian independent.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "0fr1hangvfyiwflca6jg5g8zvg3jc9qr7vd2c12ff89pznf38dlg"))))
+           "0aa4k180jnpal15yhncnm3g3z9gzmi7qb25q5l0kaj444a1p2pm4"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
          ("python-oscrypto" ,python-oscrypto)
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
-         ("python-requests" ,python-requests)
          ("python-macholib" ,python-macholib)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
@@ -532,16 +474,45 @@ and endian independent.")
 inspecting signatures in Mach-O binaries.")
       (license license:expat))))
 
-;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
-;; We don't use --disable-werror directly, as that would be passed through to bash,
-;; and cause it's build to fail.
-(define (hardened-glibc glibc)
-  (package-with-extra-configure-variable (
-    package-with-extra-configure-variable (
-      package-with-extra-configure-variable glibc
-      "enable_werror" "no")
-      "--enable-stack-protector" "all")
-      "--enable-bind-now" "yes"))
+(define-public mingw-w64-base-gcc
+  (package
+    (inherit base-gcc)
+    (arguments
+      (substitute-keyword-arguments (package-arguments base-gcc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://gcc.gnu.org/install/configure.html
+            (list "--enable-threads=posix",
+                  building-on)))
+        ((#:make-flags flags)
+          ;; Uses the SSP functions from glibc instead of from libssp.so.
+          ;; Our 'symbol-check' script will complain if we link against libssp.so,
+          ;; and thus will ensure that this works properly.
+          `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
+
+(define-public linux-base-gcc
+  (package
+    (inherit base-gcc)
+    (arguments
+      (substitute-keyword-arguments (package-arguments base-gcc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://gcc.gnu.org/install/configure.html
+            (list "--enable-initfini-array=yes",
+                  "--enable-default-ssp=yes",
+                  "--enable-default-pie=yes",
+                  building-on)))
+        ((#:phases phases)
+          `(modify-phases ,phases
+            ;; Given a XGCC package, return a modified package that replace each instance of
+            ;; -rpath in the default system spec that's inserted by Guix with -rpath-link
+            (add-after 'pre-configure 'replace-rpath-with-rpath-link
+             (lambda _
+               (substitute* (cons "gcc/config/rs6000/sysv4.h"
+                                  (find-files "gcc/config"
+                                              "^gnu-user.*\\.h$"))
+                 (("-rpath=") "-rpath-link="))
+               #t))))))))
 
 (define-public glibc-2.27
   (package
@@ -559,7 +530,29 @@ inspecting signatures in Mach-O binaries.")
               (patches (search-our-patches "glibc-2.27-riscv64-Use-__has_include-to-include-asm-syscalls.h.patch"
                                            "glibc-2.27-fcommon.patch"
                                            "glibc-2.27-guix-prefix.patch"
-                                           "glibc-2.27-no-librt.patch"))))))
+                                           "glibc-2.27-no-librt.patch"
+                                           "glibc-2.27-powerpc-ldbrx.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-stack-protector=all",
+                  "--enable-bind-now",
+                  "--disable-werror",
+                  building-on)))
+    ((#:phases phases)
+        `(modify-phases ,phases
+           (add-before 'configure 'set-etc-rpc-installation-directory
+             (lambda* (#:key outputs #:allow-other-keys)
+               ;; Install the rpc data base file under `$out/etc/rpc'.
+               ;; Otherwise build will fail with "Permission denied."
+               (let ((out (assoc-ref outputs "out")))
+                 (substitute* "sunrpc/Makefile"
+                   (("^\\$\\(inst_sysconfdir\\)/rpc(.*)$" _ suffix)
+                    (string-append out "/etc/rpc" suffix "\n"))
+                   (("^install-others =.*$")
+                    (string-append "install-others = " out "/etc/rpc\n"))))))))))))
 
 (packages->manifest
  (append
@@ -585,7 +578,7 @@ inspecting signatures in Mach-O binaries.")
         xz
         ;; Build tools
         gnu-make
-        libtool-2.4.7
+        libtool
         autoconf-2.71
         automake
         pkg-config
@@ -594,7 +587,7 @@ inspecting signatures in Mach-O binaries.")
         gcc-toolchain-10
         (list gcc-toolchain-10 "static")
         ;; Scripting
-        python-minimal ;; (3.9)
+        python-minimal ;; (3.10)
         ;; Git
         git-minimal
         ;; Tests
@@ -604,11 +597,11 @@ inspecting signatures in Mach-O binaries.")
            ;; Windows
            (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 (make-nsis-for-gcc-10 nsis-x86_64)
+                 nsis-x86_64
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
            (list (make-syscoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-11 binutils cmake-minimal xorriso python-signapple))
+           (list clang-toolchain-15 binutils cmake-minimal python-signapple zip))
           (else '())))))

@@ -573,13 +573,13 @@ RPCHelpMan importwallet()
                     }
                 }
                 nTimeBegin = std::min(nTimeBegin, nTime);
-                keys.push_back(std::make_tuple(key, nTime, fLabel, strLabel));
+                keys.emplace_back(key, nTime, fLabel, strLabel);
             } else if(IsHex(vstr[0])) {
                 std::vector<unsigned char> vData(ParseHex(vstr[0]));
                 CScript script = CScript(vData.begin(), vData.end());
                 int64_t birth_time = ParseISO8601DateTime(vstr[1]);
                 if (birth_time > 0) nTimeBegin = std::min(nTimeBegin, birth_time);
-                scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
+                scripts.emplace_back(script, birth_time);
             }
         }
         file.close();
@@ -759,7 +759,7 @@ RPCHelpMan dumpwallet()
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
     vKeyBirth.reserve(mapKeyBirth.size());
     for (const auto& entry : mapKeyBirth) {
-        vKeyBirth.push_back(std::make_pair(entry.second, entry.first));
+        vKeyBirth.emplace_back(entry.second, entry.first);
     }
     mapKeyBirth.clear();
     std::sort(vKeyBirth.begin(), vKeyBirth.end());

@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;Izaberite</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Adrese pošiljalaca</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Adrese primalaca</translation>
-    </message>
-    <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Ovo su vaše Syscoin adrese za slanje novca. Uvijek provjerite iznos i adresu primaoca prije slanja novca.</translation>
     </message>
@@ -241,6 +233,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>SyscoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Datoteka postavki %1 je možda oštećena ili nevažeća.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Odbegli izuzetak</translation>
     </message>
@@ -268,14 +264,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation type="unfinished">Došlo je do fatalne greške. Provjerite da li se u datoteku postavki može pisati ili pokušajte pokrenuti s -nosettings.</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">Greška: Navedeni direktorij podataka "%1" ne postoji.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">Greška: Nije moguće parsirati konfiguracijsku datoteku: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -342,185 +330,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     </context>
-<context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Settings file could not be read</source>
-        <translation type="unfinished">Nije moguće pročitati fajl postavki</translation>
-    </message>
-    <message>
-        <source>Settings file could not be written</source>
-        <translation type="unfinished">Nije moguće upisati datoteku postavki</translation>
-    </message>
-    <message>
-        <source>Replaying blocks…</source>
-        <translation type="unfinished">Reprodukcija blokova…</translation>
-    </message>
-    <message>
-        <source>Rescanning…</source>
-        <translation type="unfinished">Ponovno skeniranje…</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Izvršenje naredbe za provjeru baze podataka nije uspjelo: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Nije uspjela priprema naredbe za provjeru baze podataka: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation type="unfinished">SQLiteDatabase: Neuspjelo čitanje greške verifikacije baze podataka: %s</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
-        <translation type="unfinished">SQLiteDatabase: Neočekivani ID aplikacije. Ocekivao %u, dobio %u</translation>
-    </message>
-    <message>
-        <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Odjeljak [%s] nije prepoznat.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished">Potpisivanje transakcije nije uspjelo</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Navedeni -walletdir "%s" ne postoji</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Navedeni -walletdir "%s" je relativna putanja</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Navedeni -walletdir "%s" nije direktorij</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">Navedeni direktorij blokova "%s" ne postoji.</translation>
-    </message>
-    <message>
-        <source>Starting network threads…</source>
-        <translation type="unfinished">Pokretanje mrežnih niti…</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">Izvorni kod je dostupan od %s.</translation>
-    </message>
-    <message>
-        <source>The specified config file %s does not exist</source>
-        <translation type="unfinished">Navedena konfiguracijska datoteka %s ne postoji</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">Iznos transakcije je premali za plaćanje naknade</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Novčanik će izbjeći plaćanje manje od minimalne relejne naknade.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">Ovo je eksperimentalni softver.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished">Ovo je minimalna naknada za transakciju koju plaćate za svaku transakciju.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Ovo je naknada za transakciju koju ćete platiti ako pošaljete transakciju.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">Iznos transakcije je premali</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Iznosi transakcija ne smiju biti negativni</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Transakcija ima predugačak mempool lanac </translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished">Transakcija mora imati najmanje jednog primaoca</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Transakcija je prevelika</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished">Nije moguće povezati se na %s na ovom računaru (povezivanje je vratilo grešku %s)</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished">Nije moguće povezati se na %s na ovom računaru. %s vjerovatno već radi.</translation>
-    </message>
-    <message>
-        <source>Unable to create the PID file '%s': %s</source>
-        <translation type="unfinished">Nije moguće kreirati PID fajl '%s': %s</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Nije moguće generirati početne ključeve</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Nije moguće generirati ključeve</translation>
-    </message>
-    <message>
-        <source>Unable to open %s for writing</source>
-        <translation type="unfinished">Nije moguće otvoriti %s za pisanje</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished">Nije moguće pokrenuti HTTP server. Pogledajte dnevnik otklanjanja grešaka za detalje.</translation>
-    </message>
-    <message>
-        <source>Unknown -blockfilterindex value %s.</source>
-        <translation type="unfinished">Nepoznata vrijednost -blockfilterindex %s.</translation>
-    </message>
-    <message>
-        <source>Unknown address type '%s'</source>
-        <translation type="unfinished">Nepoznata vrsta adrese '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown change type '%s'</source>
-        <translation type="unfinished">Nepoznata vrsta promjene '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">Nepoznata mreža navedena u -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown new rules activated (versionbit %i)</source>
-        <translation type="unfinished">Nepoznata nova pravila aktivirana (versionbit %i)</translation>
-    </message>
-    <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished">Nepodržana kategorija logivanja %s=%s.</translation>
-    </message>
-    <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished">Komentar korisničkog agenta (%s) sadrži nesigurne znakove.</translation>
-    </message>
-    <message>
-        <source>Verifying blocks…</source>
-        <translation type="unfinished">Provjera blokova…</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">Provjera novčanika…</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished">Novčanik je trebao biti prepisan: ponovo pokrenite %s da biste završili</translation>
-    </message>
-</context>
 <context>
     <name>SyscoinGUI</name>
     <message>
@@ -661,6 +470,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Alatna traka kartica</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Sinhroniziranje zaglavlja (%1%)…</translation>
+    </message>
+    <message>
         <source>Synchronizing with network…</source>
         <translation type="unfinished">Sinhronizacija sa mrežom...</translation>
     </message>
@@ -673,8 +486,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Procesuiraju se blokovi na disku...</translation>
     </message>
     <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Reindekiraju se blokovi na disku...</translation>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">Povezivanje sa kolegama…</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and syscoin: URIs)</source>
@@ -931,10 +744,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Naknada:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Prašina:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Poslije Naknade:</translation>
     </message>
@@ -999,10 +808,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kopiraj bajte</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopiraj prašinu</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopiraj promjenu</translation>
     </message>
@@ -1011,16 +816,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">(%1 zaključano)</translation>
     </message>
     <message>
-        <source>yes</source>
-        <translation type="unfinished">da</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ne</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Ova naljepnica postaje crvena ako bilo koji primatelj primi količinu manju od trenutnog praga prašine.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation type="unfinished">Može varirati +/- %1 satoshi (a) po upisu vrijednosti.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1117,20 +914,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Napravi Prazan Novčanik</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">Koristite deskriptore za upravljanje scriptPubKey</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Deskriptor Novčanik</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation type="unfinished">Napravi</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Sastavljeno bez podrške za sqlite (potrebno za deskriptorske novčanike)</translation>
     </message>
     </context>
 <context>
@@ -1596,10 +1381,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Sakrij</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Prašina:</translation>
-    </message>
-    <message>
         <source>Copy quantity</source>
         <translation type="unfinished">Kopiraj količinu</translation>
     </message>
@@ -1618,10 +1399,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">Kopiraj bajte</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopiraj prašinu</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -1755,4 +1532,183 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Izvezite podatke trenutne kartice u datoteku</translation>
     </message>
     </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Reprodukcija blokova…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">Ponovno skeniranje…</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation type="unfinished">SQLiteDatabase: Izvršenje naredbe za provjeru baze podataka nije uspjelo: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation type="unfinished">SQLiteDatabase: Nije uspjela priprema naredbe za provjeru baze podataka: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation type="unfinished">SQLiteDatabase: Neuspjelo čitanje greške verifikacije baze podataka: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation type="unfinished">SQLiteDatabase: Neočekivani ID aplikacije. Ocekivao %u, dobio %u</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished">Odjeljak [%s] nije prepoznat.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished">Potpisivanje transakcije nije uspjelo</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation type="unfinished">Navedeni -walletdir "%s" ne postoji</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation type="unfinished">Navedeni -walletdir "%s" je relativna putanja</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation type="unfinished">Navedeni -walletdir "%s" nije direktorij</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation type="unfinished">Navedeni direktorij blokova "%s" ne postoji.</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Pokretanje mrežnih niti…</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Izvorni kod je dostupan od %s.</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Navedena konfiguracijska datoteka %s ne postoji</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">Iznos transakcije je premali za plaćanje naknade</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished">Novčanik će izbjeći plaćanje manje od minimalne relejne naknade.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">Ovo je eksperimentalni softver.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished">Ovo je minimalna naknada za transakciju koju plaćate za svaku transakciju.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished">Ovo je naknada za transakciju koju ćete platiti ako pošaljete transakciju.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">Iznos transakcije je premali</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished">Iznosi transakcija ne smiju biti negativni</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">Transakcija ima predugačak mempool lanac </translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished">Transakcija mora imati najmanje jednog primaoca</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transakcija je prevelika</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished">Nije moguće povezati se na %s na ovom računaru (povezivanje je vratilo grešku %s)</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation type="unfinished">Nije moguće povezati se na %s na ovom računaru. %s vjerovatno već radi.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation type="unfinished">Nije moguće kreirati PID fajl '%s': %s</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">Nije moguće generirati početne ključeve</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">Nije moguće generirati ključeve</translation>
+    </message>
+    <message>
+        <source>Unable to open %s for writing</source>
+        <translation type="unfinished">Nije moguće otvoriti %s za pisanje</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished">Nije moguće pokrenuti HTTP server. Pogledajte dnevnik otklanjanja grešaka za detalje.</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation type="unfinished">Nepoznata vrijednost -blockfilterindex %s.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation type="unfinished">Nepoznata vrsta adrese '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation type="unfinished">Nepoznata vrsta promjene '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">Nepoznata mreža navedena u -onlynet: '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown new rules activated (versionbit %i)</source>
+        <translation type="unfinished">Nepoznata nova pravila aktivirana (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished">Nepodržana kategorija logivanja %s=%s.</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished">Komentar korisničkog agenta (%s) sadrži nesigurne znakove.</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">Provjera blokova…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Provjera novčanika…</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished">Novčanik je trebao biti prepisan: ponovo pokrenite %s da biste završili</translation>
+    </message>
+    <message>
+        <source>Settings file could not be read</source>
+        <translation type="unfinished">Nije moguće pročitati fajl postavki</translation>
+    </message>
+    <message>
+        <source>Settings file could not be written</source>
+        <translation type="unfinished">Nije moguće upisati datoteku postavki</translation>
+    </message>
+</context>
 </TS>

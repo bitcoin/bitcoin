@@ -50,14 +50,6 @@
         <translation type="unfinished">P&amp;ilinan</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Address king pamag-Send</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Address king pamag-Tanggap</translation>
-    </message>
-    <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Reni reng kekang Syscoin address king pamagpadalang kabayaran. Lawan mulang masalese reng alaga ampo ing address na ning tumanggap bayu ka magpadalang barya.</translation>
     </message>
@@ -209,45 +201,6 @@
         <translation type="unfinished">
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation type="unfinished">Mekapansin lang me-corrupt a block database</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Buri meng buuan pasibayu ing block database ngene?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Yari ne ing pamag-load</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Kamalian king pamag-initialize king block na ning database</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation type="unfinished">Kamalian king pamag buklat king block database</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished">Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Kulang a pondo</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Maragul yang masiadu ing transaksion</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation type="unfinished">E kilalang network ing mepili king -onlynet: '%s'</translation>
     </message>
     </context>
 <context>
@@ -578,6 +531,13 @@
     <message>
         <source>Your current total balance</source>
         <translation type="unfinished">Ing kekang kasalungsungan kabuuang balanse</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">sariling address</translation>
     </message>
     </context>
 <context>
@@ -1008,10 +968,6 @@
         <translation type="unfinished">Mipadala kang</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Kabayaran keka</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Me-mina</translation>
     </message>
@@ -1071,10 +1027,6 @@
         <translation type="unfinished">Mipadala kang</translation>
     </message>
     <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Keng sarili mu</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Me-mina</translation>
     </message>
@@ -1119,6 +1071,45 @@
     <message>
         <source>Send Coins</source>
         <translation type="unfinished">Magpadalang Barya</translation>
+    </message>
+    </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished">Mekapansin lang me-corrupt a block database</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished">Buri meng buuan pasibayu ing block database ngene?</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Yari ne ing pamag-load</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Kamalian king pamag-initialize king block na ning database</translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished">Kamalian king pamag buklat king block database</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished">Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Kulang a pondo</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Maragul yang masiadu ing transaksion</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation type="unfinished">E kilalang network ing mepili king -onlynet: '%s'</translation>
     </message>
     </context>
 </TS>

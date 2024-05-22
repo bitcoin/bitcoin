@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
+        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(0);
 
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(scriptSig));
         scriptSig = CScript() << ToByteVector(scriptSig);
         CScriptWitness scriptWitness;
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
+        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(0);
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 1);
@@ -203,9 +203,9 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
-        scriptWitness.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
+        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);
@@ -220,9 +220,9 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CScriptWitness scriptWitness;
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
-        scriptWitness.stack.push_back(std::vector<unsigned char>(0));
-        scriptWitness.stack.push_back(std::vector<unsigned char>(witnessScript.begin(), witnessScript.end()));
+        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(0);
+        scriptWitness.stack.emplace_back(witnessScript.begin(), witnessScript.end());
 
         BuildTxs(spendingTx, coins, creationTx, scriptPubKey, scriptSig, scriptWitness);
         assert(GetTransactionSigOpCost(CTransaction(spendingTx), coins, flags) == 2);

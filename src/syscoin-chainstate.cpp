@@ -22,6 +22,7 @@
 #include <node/blockstorage.h>
 #include <node/caches.h>
 #include <node/chainstate.h>
+#include <random.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <util/chaintype.h>
@@ -120,7 +121,8 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Chainstate
-    auto chainparams = CChainParams::Main();
+    // SYSCOIN
+    auto chainparams = CChainParams::Main(CChainParams::MainNetOptions{});
     const ChainstateManager::Options chainman_opts{
         .chainparams = *chainparams,
         .datadir = abs_datadir,
@@ -179,7 +181,7 @@ int main(int argc, char* argv[])
         << "\t" << "Reindexing: " << std::boolalpha << node::fReindex.load() << std::noboolalpha << std::endl
         << "\t" << "Snapshot Active: " << std::boolalpha << chainman.IsSnapshotActive() << std::noboolalpha << std::endl
         << "\t" << "Active Height: " << chainman.ActiveHeight() << std::endl
-        << "\t" << "Active IBD: " << std::boolalpha << chainman.ActiveChainstate().IsInitialBlockDownload() << std::noboolalpha << std::endl;
+        << "\t" << "Active IBD: " << std::boolalpha << chainman.IsInitialBlockDownload() << std::noboolalpha << std::endl;
         CBlockIndex* tip = chainman.ActiveTip();
         if (tip) {
             std::cout << "\t" << tip->ToString() << std::endl;

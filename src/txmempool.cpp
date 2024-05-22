@@ -204,19 +204,34 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimit
 }
 
 bool CTxMemPool::CheckPackageLimits(const Package& package,
-                                    const Limits& limits,
+                                    const int64_t total_vsize,
                                     std::string &errString) const
 {
+    size_t pack_count = package.size();
+
+    // Package itself is busting mempool limits; should be rejected even if no staged_ancestors exist
+    if (pack_count > static_cast<uint64_t>(m_limits.ancestor_count)) {
+        errString = strprintf("package count %u exceeds ancestor count limit [limit: %u]", pack_count, m_limits.ancestor_count);
+        return false;
+    } else if (pack_count > static_cast<uint64_t>(m_limits.descendant_count)) {
+        errString = strprintf("package count %u exceeds descendant count limit [limit: %u]", pack_count, m_limits.descendant_count);
+        return false;
+    } else if (total_vsize > m_limits.ancestor_size_vbytes) {
+        errString = strprintf("package size %u exceeds ancestor size limit [limit: %u]", total_vsize, m_limits.ancestor_size_vbytes);
+        return false;
+    } else if (total_vsize > m_limits.descendant_size_vbytes) {
+        errString = strprintf("package size %u exceeds descendant size limit [limit: %u]", total_vsize, m_limits.descendant_size_vbytes);
+        return false;
+    }
+
     CTxMemPoolEntry::Parents staged_ancestors;
-    int64_t total_size = 0;
     for (const auto& tx : package) {
-        total_size += GetVirtualTransactionSize(*tx);
         for (const auto& input : tx->vin) {
             std::optional<txiter> piter = GetIter(input.prevout.hash);
             if (piter) {
                 staged_ancestors.insert(**piter);
-                if (staged_ancestors.size() + package.size() > static_cast<uint64_t>(limits.ancestor_count)) {
-                    errString = strprintf("too many unconfirmed parents [limit: %u]", limits.ancestor_count);
+                if (staged_ancestors.size() + package.size() > static_cast<uint64_t>(m_limits.ancestor_count)) {
+                    errString = strprintf("too many unconfirmed parents [limit: %u]", m_limits.ancestor_count);
                     return false;
                 }
             }
@@ -225,8 +240,8 @@ bool CTxMemPool::CheckPackageLimits(const Package& package,
     // When multiple transactions are passed in, the ancestors and descendants of all transactions
     // considered together must be within limits even if they are not interdependent. This may be
     // stricter than the limits for each individual transaction.
-    const auto ancestors{CalculateAncestorsAndCheckLimits(total_size, package.size(),
-                                                          staged_ancestors, limits)};
+    const auto ancestors{CalculateAncestorsAndCheckLimits(total_vsize, package.size(),
+                                                          staged_ancestors, m_limits)};
     // It's possible to overestimate the ancestor/descendant totals.
     if (!ancestors.has_value()) errString = "possibly " + util::ErrorString(ancestors).original;
     return ancestors.has_value();
@@ -1367,6 +1382,7 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+            m_non_base_coins.emplace(outpoint);
             return true;
         } else {
             return false;
@@ -1379,7 +1395,13 @@ void CCoinsViewMemPool::PackageAddTransaction(const CTransactionRef& tx)
 {
     for (unsigned int n = 0; n < tx->vout.size(); ++n) {
         m_temp_added.emplace(COutPoint(tx->GetHash(), n), Coin(tx->vout[n], MEMPOOL_HEIGHT, false));
+        m_non_base_coins.emplace(tx->GetHash(), n);
     }
+}
+void CCoinsViewMemPool::Reset()
+{
+    m_temp_added.clear();
+    m_non_base_coins.clear();
 }
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
@@ -1570,19 +1592,6 @@ void CTxMemPool::SetLoadTried(bool load_tried)
 {
     LOCK(cs);
     m_load_tried = load_tried;
-}
-
-std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept
-{
-    switch (r) {
-        case MemPoolRemovalReason::EXPIRY: return "expiry";
-        case MemPoolRemovalReason::SIZELIMIT: return "sizelimit";
-        case MemPoolRemovalReason::REORG: return "reorg";
-        case MemPoolRemovalReason::BLOCK: return "block";
-        case MemPoolRemovalReason::CONFLICT: return "conflict";
-        case MemPoolRemovalReason::REPLACED: return "replaced";
-    }
-    assert(false);
 }
 
 std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<uint256>& txids) const

@@ -43,8 +43,7 @@ from test_framework.script import (
     OP_INVALIDOPCODE,
     OP_RETURN,
     OP_TRUE,
-    SIGHASH_ALL,
-    LegacySignatureHash,
+    sign_input_legacy,
 )
 from test_framework.script_util import (
     script_to_p2sh_script,
@@ -541,12 +540,8 @@ class FullBlockTest(SyscoinTestFramework):
             # second input is corresponding P2SH output from b39
             tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
-            (sighash, err) = LegacySignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
-            sig = self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))
-            scriptSig = CScript([sig, redeem_script])
-
-            tx.vin[1].scriptSig = scriptSig
-            tx.rehash()
+            tx.vin[1].scriptSig = CScript([redeem_script])
+            sign_input_legacy(tx, 1, redeem_script, self.coinbase_key)
             new_txs.append(tx)
             lastOutpoint = COutPoint(tx.sha256, 0)
 
@@ -596,7 +591,6 @@ class FullBlockTest(SyscoinTestFramework):
         height = self.block_heights[self.tip.sha256] + 1
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         b44 = CBlock()
-        b44.nVersion = 4
         b44.nTime = self.tip.nTime + 1
         b44.hashPrevBlock = self.tip.sha256
         b44.nBits = 0x207fffff
@@ -613,7 +607,6 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Reject a block with a non-coinbase as the first tx")
         non_coinbase = self.create_tx(out[15], 0, 1)
         b45 = CBlock()
-        b45.nVersion = 4
         b45.nTime = self.tip.nTime + 1
         b45.hashPrevBlock = self.tip.sha256
         b45.nBits = 0x207fffff
@@ -628,7 +621,6 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Reject a block with no transactions")
         self.move_tip(44)
         b46 = CBlock()
-        b46.nVersion = 4
         b46.nTime = b44.nTime + 1
         b46.hashPrevBlock = b44.sha256
         b46.nBits = 0x207fffff
@@ -1343,8 +1335,7 @@ class FullBlockTest(SyscoinTestFramework):
         if (scriptPubKey[0] == OP_TRUE):  # an anyone-can-spend
             tx.vin[0].scriptSig = CScript()
             return
-        (sighash, err) = LegacySignatureHash(spend_tx.vout[0].scriptPubKey, tx, 0, SIGHASH_ALL)
-        tx.vin[0].scriptSig = CScript([self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))])
+        sign_input_legacy(tx, 0, spend_tx.vout[0].scriptPubKey, self.coinbase_key)
 
     def create_and_sign_transaction(self, spend_tx, value, script=CScript([OP_TRUE])):
         tx = self.create_tx(spend_tx, 0, value, script)

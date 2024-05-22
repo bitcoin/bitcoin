@@ -14,6 +14,19 @@
 
 #include <memory>
 
+std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, Span<const uint8_t> byte_data, const bool compressed) noexcept
+{
+    uint8_t pk_type;
+    if (compressed) {
+        pk_type = fuzzed_data_provider.PickValueInArray({0x02, 0x03});
+    } else {
+        pk_type = fuzzed_data_provider.PickValueInArray({0x04, 0x06, 0x07});
+    }
+    std::vector<uint8_t> pk_data{byte_data.begin(), byte_data.begin() + (compressed ? CPubKey::COMPRESSED_SIZE : CPubKey::SIZE)};
+    pk_data[0] = pk_type;
+    return pk_data;
+}
+
 CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::optional<CAmount>& max) noexcept
 {
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, max.value_or(MAX_MONEY));
@@ -103,16 +116,12 @@ CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const bool maybe
                     // navigate the highly structured multisig format.
                     r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
                     int num_data{fuzzed_data_provider.ConsumeIntegralInRange(1, 22)};
-                    std::vector<uint8_t> pubkey_comp{buffer.begin(), buffer.begin() + CPubKey::COMPRESSED_SIZE};
-                    pubkey_comp.front() = fuzzed_data_provider.ConsumeIntegralInRange(2, 3); // Set first byte for GetLen() to pass
-                    std::vector<uint8_t> pubkey_uncomp{buffer.begin(), buffer.begin() + CPubKey::SIZE};
-                    pubkey_uncomp.front() = fuzzed_data_provider.ConsumeIntegralInRange(4, 7); // Set first byte for GetLen() to pass
                     while (num_data--) {
-                        auto& pubkey{fuzzed_data_provider.ConsumeBool() ? pubkey_uncomp : pubkey_comp};
+                        auto pubkey_bytes{ConstructPubKeyBytes(fuzzed_data_provider, buffer, fuzzed_data_provider.ConsumeBool())};
                         if (fuzzed_data_provider.ConsumeBool()) {
-                            pubkey.back() = num_data; // Make each pubkey different
+                            pubkey_bytes.back() = num_data; // Make each pubkey different
                         }
-                        r_script << pubkey;
+                        r_script << pubkey_bytes;
                     }
                     r_script << fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 22);
                 },
@@ -164,6 +173,15 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = CNoDestination{};
         },
         [&] {
+            bool compressed = fuzzed_data_provider.ConsumeBool();
+            CPubKey pk{ConstructPubKeyBytes(
+                    fuzzed_data_provider,
+                    ConsumeFixedLengthByteVector(fuzzed_data_provider, (compressed ? CPubKey::COMPRESSED_SIZE : CPubKey::SIZE)),
+                    compressed
+            )};
+            tx_destination = PubKeyDestination{pk};
+        },
+        [&] {
             tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
         },
         [&] {
@@ -179,18 +197,24 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
         },
         [&] {
-            WitnessUnknown witness_unknown{};
-            witness_unknown.version = fuzzed_data_provider.ConsumeIntegralInRange(2, 16);
-            std::vector<uint8_t> witness_unknown_program_1{fuzzed_data_provider.ConsumeBytes<uint8_t>(40)};
-            if (witness_unknown_program_1.size() < 2) {
-                witness_unknown_program_1 = {0, 0};
+            std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};
+            if (program.size() < 2) {
+                program = {0, 0};
             }
-            witness_unknown.length = witness_unknown_program_1.size();
-            std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown.program);
-            tx_destination = witness_unknown;
+            tx_destination = WitnessUnknown{fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(2, 16), program};
         })};
     Assert(call_size == std::variant_size_v<CTxDestination>);
     return tx_destination;
+}
+
+CKey ConsumePrivateKey(FuzzedDataProvider& fuzzed_data_provider, std::optional<bool> compressed) noexcept
+{
+    auto key_data = fuzzed_data_provider.ConsumeBytes<uint8_t>(32);
+    key_data.resize(32);
+    CKey key;
+    bool compressed_value = compressed ? *compressed : fuzzed_data_provider.ConsumeBool();
+    key.Set(key_data.begin(), key_data.end(), compressed_value);
+    return key;
 }
 
 bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept

@@ -71,13 +71,13 @@ bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& output,
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
 {
     std::vector<std::string> strings;
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::BloomFilter)) strings.push_back("bloomfilter");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::NoBan)) strings.push_back("noban");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::ForceRelay)) strings.push_back("forcerelay");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Relay)) strings.push_back("relay");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Mempool)) strings.push_back("mempool");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Download)) strings.push_back("download");
-    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Addr)) strings.push_back("addr");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::BloomFilter)) strings.emplace_back("bloomfilter");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::NoBan)) strings.emplace_back("noban");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::ForceRelay)) strings.emplace_back("forcerelay");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Relay)) strings.emplace_back("relay");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Mempool)) strings.emplace_back("mempool");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Download)) strings.emplace_back("download");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Addr)) strings.emplace_back("addr");
     return strings;
 }
 

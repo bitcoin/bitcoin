@@ -18,7 +18,6 @@
 
 #include <string>
 #include <vector>
-
 typedef uint256 ChainCode;
 
 /** A hasher class for Syscoin's 256-bit hash (double SHA-256). */
@@ -153,12 +152,19 @@ public:
     void seek(size_t _nSize) {return;}
     int GetTxVersion() { return nTxVersion; }
     int GetType() const { return nType; }
+    const void* GetParams() const { return nullptr; }
 };
 
 class CHashWriter : public HashWriter
 {
+private:
+    int nVersion{0};
+
 public:
     CHashWriter(int nTypeIn, int nVersionIn) : HashWriter(nTypeIn, nVersionIn) {}
+    CHashWriter(int nVersionIn) : nVersion{nVersionIn} {}
+
+    int GetVersion() const { return nVersion; }
 
     template<typename T>
     CHashWriter& operator<<(const T& obj) {
@@ -201,53 +207,20 @@ public:
     }
 };
 
-template<typename Source>
-class CHashVerifier : public CHashWriter
-{
-private:
-    Source* source;
-
-public:
-    explicit CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
-
-    void read(Span<std::byte> dst)
-    {
-        source->read(dst);
-        this->write(dst);
-    }
-
-    void ignore(size_t nSize)
-    {
-        std::byte data[1024];
-        while (nSize > 0) {
-            size_t now = std::min<size_t>(nSize, 1024);
-            read({data, now});
-            nSize -= now;
-        }
-    }
-
-    template<typename T>
-    CHashVerifier<Source>& operator>>(T&& obj)
-    {
-        ::Unserialize(*this, obj);
-        return (*this);
-    }
-};
-
 /** Writes data to an underlying source stream, while hashing the written data. */
 template <typename Source>
-class HashedSourceWriter : public CHashWriter
+class HashedSourceWriter : public HashWriter
 {
 private:
     Source& m_source;
 
 public:
-    explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : CHashWriter{source.GetType(), source.GetVersion()}, m_source{source} {}
+    explicit HashedSourceWriter(Source& source LIFETIMEBOUND) : HashWriter{}, m_source{source} {}
 
     void write(Span<const std::byte> src)
     {
         m_source.write(src);
-        CHashWriter::write(src);
+        HashWriter::write(src);
     }
 
     template <typename T>
@@ -258,6 +231,7 @@ public:
     }
 };
 
+// SYSCOIN
 /** Compute the 256-bit hash of an object's serialization. */
 template<typename T>
 uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)

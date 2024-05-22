@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;Veldu</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Veski sem senda frá sér</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Veski sem þiggja til sín</translation>
-    </message>
-    <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Þetta eru Syscoin veskin sem senda greiðslur. Skoðið ævinlega vel upphæðina og veskin sem þiggja greiðslur áður en rafmynt er send.</translation>
     </message>
@@ -255,13 +247,6 @@
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished">Villa við lestur %s! Allir lyklar fóru inn á réttan hátt, en færslugögn eða færslugildi gætu verið röng eða horfin.</translation>
     </message>
     </context>
 <context>
@@ -508,10 +493,6 @@
         <translation type="unfinished">Gjald:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Ryk:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Eftirgjald:</translation>
     </message>
@@ -542,10 +523,6 @@
     <message>
         <source>Received with address</source>
         <translation type="unfinished">Móttekið með færslugildi</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">Þetta merki verður rautt ef einhver viðtakandi tekur við upphæð sem er lægri en núgildandi þröskuldur.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -771,10 +748,6 @@
     <message>
         <source>Change:</source>
         <translation type="unfinished">Skiptimynt:</translation>
-    </message>
-    <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Ryk:</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>

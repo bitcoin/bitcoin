@@ -167,6 +167,9 @@ void AskPassphraseDialog::accept()
                                              "passphrase to avoid this issue in the future."));
                 }
             } else {
+                if (m_passphrase_out) {
+                    m_passphrase_out->assign(oldpass);
+                }
                 QDialog::accept(); // Success
             }
         } catch (const std::runtime_error& e) {

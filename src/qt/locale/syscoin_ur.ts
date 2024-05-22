@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;نیا</translation>
+        <translation type="unfinished">اور نیا</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">چننا</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">پتے ارسال کیے جارہے ہیں</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">پتے موصول ہورہے ہیں</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -227,6 +219,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">والیٹ کا پاسفریز کامیابی کے ساتھ تبدیل کردیا گیا تھا۔</translation>
     </message>
     <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">پاس فریز کی تبدیلی ناکام ہوگئی</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">بٹوے کے ڈکرپشن کے لیے درج کیا گیا پرانا پاس فریز غلط ہے۔ اس میں ایک خالی کریکٹر ہے (یعنی - ایک صفر بائٹ)۔ اگر پاس فریز 25.0 سے پہلے اس سافٹ ویئر کے ورژن کے ساتھ سیٹ کیا گیا تھا، تو براہ کرم صرف حروف کے ساتھ دوبارہ کوشش کریں — لیکن شامل نہیں — پہلے خالی کریکٹر۔</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation type="unfinished">انتباہ: کیپس لاک کی آن ہے!</translation>
     </message>
@@ -269,14 +269,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">کیا آپ ترتیبات کو ڈیفالٹ اقدار پر دوبارہ ترتیب دینا چاہتے ہیں، یا تبدیلیاں کیے بغیر اسقاط کرنا چاہتے ہیں؟</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation type="unfinished">خرابی: مخصوص ڈیٹا ڈائریکٹری ""  %1 موجود نہیں ہے۔</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1.</source>
-        <translation type="unfinished">خرابی: کنفگریشن فائل کا تجزیہ نہیں کیا جاسکتا۔%1.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">خرابی:%1</translation>
     </message>
@@ -295,10 +287,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unroutable</source>
         <translation type="unfinished">ناقابل استعمال</translation>
-    </message>
-    <message>
-        <source>Internal</source>
-        <translation type="unfinished">اندرونی</translation>
     </message>
     <message>
         <source>Address Fetch</source>
@@ -350,13 +338,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">ناکافی فنڈز</translation>
     </message>
     </context>
 <context>
@@ -516,15 +497,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Indexing blocks on disk…</source>
-        <translation type="unfinished">ڈسک پر بلاکس کو ترتیب دینا</translation>
+        <translation type="unfinished">ڈسک پر بلاکس کو انڈیکس کرنا</translation>
     </message>
     <message>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">ڈسک پر بلاکس کو پراسیس کرنا</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">ڈسک پر بلاکس کو دوبارہ ترتیب دینا</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -797,10 +774,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">فیس:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">نہ ہونے کے برابر</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">فیس کے بعد:</translation>
     </message>
@@ -885,28 +858,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">بائٹس کاپی کریں</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">باقی شدہ کاپی کریں</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">تبدیلی کاپی کریں</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">مقفل'%1</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">جی ہاں</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">نہیں</translation>
-    </message>
-    <message>
-        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation type="unfinished">یہ لیبل سرخ ہو جاتا ہے اگر کوئی وصول کنندہ موجودہ کم سے کم مقرر کردہ حد سے کم رقم وصول کرتا ہے۔</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1032,14 +989,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">خالی والیٹ بنائیں</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management</source>
-        <translation type="unfinished">ScriptPubKeys کے انتظام کے لیے وضاحت کنندگان کا استعمال کریں۔</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">وضاحتی والیٹ</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">بیرونی دستخط کرنے والا آلہ استعمال کریں جیسے ہارڈ ویئر والیٹ۔ پہلے والیٹ کی ترجیحات میں بیرونی دستخط کنندہ اسکرپٹ کو ترتیب دیں۔</translation>
     </message>
@@ -1050,10 +999,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation type="unfinished">بنائیں</translation>
-    </message>
-    <message>
-        <source>Compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished"> SQliteسپورٹ کے بغیر مرتب کیا گیا (ڈسکرپٹر والیٹس کے لیے درکار)</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1973,10 +1918,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">ایک ساتھ متعدد وصول کنندگان کو بھیجیں۔</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">نہ ہونے کے برابر</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">منتخب کریں…</translation>
     </message>
@@ -2019,10 +1960,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Copy bytes</source>
         <translation type="unfinished">بائٹس کاپی کریں</translation>
-    </message>
-    <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">باقی شدہ کاپی کریں</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2369,6 +2306,13 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
+    </message>
+    </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">ناکافی فنڈز</translation>
     </message>
     </context>
 </TS>

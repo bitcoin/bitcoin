@@ -58,10 +58,7 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         ui->descriptor_checkbox->setChecked(checked);
         ui->encrypt_wallet_checkbox->setChecked(false);
         ui->disable_privkeys_checkbox->setChecked(checked);
-        // The blank check box is ambiguous. This flag is always true for a
-        // watch-only wallet, even though we immedidately fetch keys from the
-        // external signer.
-        ui->blank_wallet_checkbox->setChecked(checked);
+        ui->blank_wallet_checkbox->setChecked(false);
     });
 
     connect(ui->disable_privkeys_checkbox, &QCheckBox::toggled, [this](bool checked) {
@@ -69,9 +66,10 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         // set to true, enable it when isDisablePrivateKeysChecked is false.
         ui->encrypt_wallet_checkbox->setEnabled(!checked);
 
-        // Wallets without private keys start out blank
+        // Wallets without private keys cannot set blank
+        ui->blank_wallet_checkbox->setEnabled(!checked);
         if (checked) {
-            ui->blank_wallet_checkbox->setChecked(true);
+            ui->blank_wallet_checkbox->setChecked(false);
         }
 
         // When the encrypt_wallet_checkbox is disabled, uncheck it.
@@ -81,8 +79,11 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     });
 
     connect(ui->blank_wallet_checkbox, &QCheckBox::toggled, [this](bool checked) {
-        if (!checked) {
-          ui->disable_privkeys_checkbox->setChecked(false);
+        // Disable the disable_privkeys_checkbox when blank_wallet_checkbox is checked
+        // as blank-ness only pertains to wallets with private keys.
+        ui->disable_privkeys_checkbox->setEnabled(!checked);
+        if (checked) {
+            ui->disable_privkeys_checkbox->setChecked(false);
         }
     });
 

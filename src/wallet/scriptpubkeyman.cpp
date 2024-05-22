@@ -1716,8 +1716,23 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetScriptPub
     }
 
     // All watchonly scripts are raw
-    spks.insert(setWatchOnly.begin(), setWatchOnly.end());
+    for (const CScript& script : setWatchOnly) {
+        // As the legacy wallet allowed to import any script, we need to verify the validity here.
+        // LegacyScriptPubKeyMan::IsMine() return 'ISMINE_NO' for invalid or not watched scripts (IsMineResult::INVALID or IsMineResult::NO).
+        // e.g. a "sh(sh(pkh()))" which legacy wallets allowed to import!.
+        if (IsMine(script) != ISMINE_NO) spks.insert(script);
+    }
 
+    return spks;
+}
+
+std::unordered_set<CScript, SaltedSipHasher> LegacyScriptPubKeyMan::GetNotMineScriptPubKeys() const
+{
+    LOCK(cs_KeyStore);
+    std::unordered_set<CScript, SaltedSipHasher> spks;
+    for (const CScript& script : setWatchOnly) {
+        if (IsMine(script) == ISMINE_NO) spks.insert(script);
+    }
     return spks;
 }
 
@@ -1887,7 +1902,7 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
         std::string desc_str;
         bool watchonly = !desc->ToPrivateString(*this, desc_str);
         if (watchonly && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-            out.watch_descs.push_back({desc->ToString(), creation_time});
+            out.watch_descs.emplace_back(desc->ToString(), creation_time);
 
             // Get the scriptPubKeys without writing this to the wallet
             FlatSigningProvider provider;
@@ -1956,14 +1971,14 @@ std::optional<MigrationData> LegacyScriptPubKeyMan::MigrateToDescriptor()
             assert(IsMine(sh_spk) == ISMINE_NO && IsMine(witprog) == ISMINE_NO && IsMine(sh_wsh_spk) == ISMINE_NO);
 
             std::unique_ptr<Descriptor> sh_desc = InferDescriptor(sh_spk, *GetSolvingProvider(sh_spk));
-            out.solvable_descs.push_back({sh_desc->ToString(), creation_time});
+            out.solvable_descs.emplace_back(sh_desc->ToString(), creation_time);
 
             const auto desc = InferDescriptor(witprog, *this);
             if (desc->IsSolvable()) {
                 std::unique_ptr<Descriptor> wsh_desc = InferDescriptor(witprog, *GetSolvingProvider(witprog));
-                out.solvable_descs.push_back({wsh_desc->ToString(), creation_time});
+                out.solvable_descs.emplace_back(wsh_desc->ToString(), creation_time);
                 std::unique_ptr<Descriptor> sh_wsh_desc = InferDescriptor(sh_wsh_spk, *GetSolvingProvider(sh_wsh_spk));
-                out.solvable_descs.push_back({sh_wsh_desc->ToString(), creation_time});
+                out.solvable_descs.emplace_back(sh_wsh_desc->ToString(), creation_time);
             }
         }
     }

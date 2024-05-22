@@ -1024,9 +1024,9 @@ BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
 {
     std::vector<std::string> comments;
-    comments.push_back(std::string("comment1"));
+    comments.emplace_back("comment1");
     std::vector<std::string> comments2;
-    comments2.push_back(std::string("comment1"));
+    comments2.emplace_back("comment1");
     comments2.push_back(SanitizeString(std::string("Comment2; .,_?@-; !\"#$%&'()*+/<=>[]\\^`{|}~"), SAFE_CHARS_UA_COMMENT)); // Semicolon is discouraged but not forbidden by BIP-0014
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, std::vector<std::string>()),std::string("/Test:9.99.0/"));
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:9.99.0(comment1)/"));
@@ -1792,4 +1792,29 @@ BOOST_AUTO_TEST_CASE(util_WriteBinaryFile)
     BOOST_CHECK(valid);
     BOOST_CHECK_EQUAL(actual_text, expected_text);
 }
+
+BOOST_AUTO_TEST_CASE(clearshrink_test)
+{
+    {
+        std::vector<uint8_t> v = {1, 2, 3};
+        ClearShrink(v);
+        BOOST_CHECK_EQUAL(v.size(), 0);
+        BOOST_CHECK_EQUAL(v.capacity(), 0);
+    }
+
+    {
+        std::vector<bool> v = {false, true, false, false, true, true};
+        ClearShrink(v);
+        BOOST_CHECK_EQUAL(v.size(), 0);
+        BOOST_CHECK_EQUAL(v.capacity(), 0);
+    }
+
+    {
+        std::deque<int> v = {1, 3, 3, 7};
+        ClearShrink(v);
+        BOOST_CHECK_EQUAL(v.size(), 0);
+        // std::deque has no capacity() we can observe.
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

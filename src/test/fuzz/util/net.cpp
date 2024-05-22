@@ -36,7 +36,11 @@ CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider) noexcept
     } else if (network == Network::NET_IPV6) {
         if (fuzzed_data_provider.remaining_bytes() >= 16) {
             in6_addr v6_addr = {};
-            memcpy(v6_addr.s6_addr, fuzzed_data_provider.ConsumeBytes<uint8_t>(16).data(), 16);
+            auto addr_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(16);
+            if (addr_bytes[0] == CJDNS_PREFIX) { // Avoid generating IPv6 addresses that look like CJDNS.
+                addr_bytes[0] = 0x55; // Just an arbitrary number, anything != CJDNS_PREFIX would do.
+            }
+            memcpy(v6_addr.s6_addr, addr_bytes.data(), 16);
             net_addr = CNetAddr{v6_addr, fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
         }
     } else if (network == Network::NET_INTERNAL) {
@@ -55,10 +59,32 @@ CAddress ConsumeAddress(FuzzedDataProvider& fuzzed_data_provider) noexcept
     return {ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS), NodeSeconds{std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<uint32_t>()}}};
 }
 
-FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
-    : m_fuzzed_data_provider{fuzzed_data_provider}, m_selectable{fuzzed_data_provider.ConsumeBool()}
+template <typename P>
+P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    m_socket = fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET);
+    constexpr std::array ADDR_ENCODINGS{
+        CNetAddr::Encoding::V1,
+        CNetAddr::Encoding::V2,
+    };
+    constexpr std::array ADDR_FORMATS{
+        CAddress::Format::Disk,
+        CAddress::Format::Network,
+    };
+    if constexpr (std::is_same_v<P, CNetAddr::SerParams>) {
+        return P{PickValue(fuzzed_data_provider, ADDR_ENCODINGS)};
+    }
+    if constexpr (std::is_same_v<P, CAddress::SerParams>) {
+        return P{{PickValue(fuzzed_data_provider, ADDR_ENCODINGS)}, PickValue(fuzzed_data_provider, ADDR_FORMATS)};
+    }
+}
+template CNetAddr::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
+template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
+
+FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
+    : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
+      m_fuzzed_data_provider{fuzzed_data_provider},
+      m_selectable{fuzzed_data_provider.ConsumeBool()}
+{
 }
 
 FuzzedSock::~FuzzedSock()

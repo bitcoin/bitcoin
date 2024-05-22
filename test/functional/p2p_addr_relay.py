@@ -133,7 +133,7 @@ class AddrTest(SyscoinTestFramework):
         self.mock_time += 10 * 60
         self.nodes[0].setmocktime(self.mock_time)
         for peer in receivers:
-            peer.sync_send_with_ping()
+            peer.sync_with_ping()
 
     def oversized_addr_test(self):
         self.log.info('Send an addr message that is too large')
@@ -299,6 +299,16 @@ class AddrTest(SyscoinTestFramework):
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
         assert_equal(block_relay_peer.num_ipv4_received, 0)
         assert inbound_peer.num_ipv4_received > 100
+
+        self.log.info('Check that we answer getaddr messages only once per connection')
+        received_addrs_before = inbound_peer.num_ipv4_received
+        with self.nodes[0].assert_debug_log(['Ignoring repeated "getaddr".']):
+            inbound_peer.send_and_ping(msg_getaddr())
+        self.mocktime += 10 * 60
+        self.nodes[0].setmocktime(self.mocktime)
+        inbound_peer.sync_with_ping()
+        received_addrs_after = inbound_peer.num_ipv4_received
+        assert_equal(received_addrs_before, received_addrs_after)
 
         self.nodes[0].disconnect_p2ps()
 

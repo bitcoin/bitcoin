@@ -10,6 +10,7 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <hash.h>
+#include <kernel/messagestartchars.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -266,7 +267,6 @@ public:
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
         fRequireRoutableExternalIP = true;
         vSporkAddresses = {"sys1qx0zzzjag402apkw4kn8unr0qa0k3pv3258v4sr", "sys1qk2kq7hhp58ycaevzzu5hugh7flxs7qcg8rjjlh", "sys1qm4ka204x3mn46sk6ussrex8um87qkj0r5xakyg"};
         nMinSporkKeys = 2;
@@ -276,7 +276,6 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
-        m_is_test_chain = false;
         m_is_mockable_chain = false;
 
         checkpointData = {
@@ -307,15 +306,15 @@ public:
             }
         };
 
-        m_assumeutxo_data = MapAssumeutxo{
-         // TODO to be specified in a future patch.
+        m_assumeutxo_data = {
+            // TODO to be specified in a future patch.
         };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats at block 1632040
-            /* nTime    */ 1686627799,
-            /* nTxCount */ 2799398,
-            /* dTxRate  */ 0.008854098030063829
+            .nTime    = 1686627799,
+            .nTxCount = 2799398,
+            .dTxRate  = 0.008854098030063829
         };
     }
 };
@@ -424,9 +423,7 @@ public:
         // vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
         fRequireRoutableExternalIP = true;
-        m_is_test_chain = true;
 
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX", "tsys1qgmafz3mqa7glqy92r549w8qmq5535uc2e8ahjm", "tsys1q68gu0fhcchr27w08sjdxwt3rtgwef0nyh9zwk0"};
@@ -453,14 +450,14 @@ public:
             }
         };
 
-        m_assumeutxo_data = MapAssumeutxo{
+        m_assumeutxo_data = {
             // TODO to be specified in a future patch.
         };
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75
-            /* nTime    */ 1669101140,
-            /* nTxCount */ 1043445,
-            /* dTxRate  */ 0.001586750190549993
+            .nTime    = 1669101140,
+            .nTxCount = 1043445,
+            .dTxRate  = 0.001586750190549993
         };
     }
 };
@@ -540,7 +537,7 @@ public:
         HashWriter h{};
         h << consensus.signet_challenge;
         uint256 hash = h.GetHash();
-        memcpy(pchMessageStart, hash.begin(), 4);
+        std::copy_n(hash.begin(), 4, pchMessageStart.begin());
 
         nDefaultPort = 38333;
         nPruneAfterHeight = 1000;
@@ -561,8 +558,6 @@ public:
         bech32_hrp = "tb";
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        m_is_test_chain = true;
         m_is_mockable_chain = false;
     }
 };
@@ -684,9 +679,7 @@ public:
         vSeeds.emplace_back("dummySeed.invalid.");
 
         fDefaultConsistencyChecks = true;
-        fRequireStandard = true;
         fRequireRoutableExternalIP = false;
-        m_is_test_chain = true;
         m_is_mockable_chain = true;
         // privKey: cVpF924EspNh8KjYsfhgY96mmxvT6DgdWiTYMtMjuM74hJaU5psW
         vSporkAddresses = {"mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"};
@@ -696,22 +689,33 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-        
+
         checkpointData = {
             {
                 {0, uint256S("0x28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194")},
             }
         };
 
-        m_assumeutxo_data = MapAssumeutxo{
+        m_assumeutxo_data = {
             {
-                110,
-                {AssumeutxoHash{uint256S("0x70b3b480f5476ad86dfd98db1f12bda867a90b6cf1b37644332eb52c2ba74ac9")}, 110},
+                .height = 110,
+                .hash_serialized = AssumeutxoHash{uint256S("0x70b3b480f5476ad86dfd98db1f12bda867a90b6cf1b37644332eb52c2ba74ac9")},
+                // TODO fill with SYS data
+                // .nChainTx = 111,
+                // .blockhash = uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c")
             },
             {
-                200,
-                {AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")}, 200},
+                .height = 200,
+                .hash_serialized = AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")},
             },
+            // TODO fill with SYS data
+            // {
+            //     // For use by test/functional/feature_assumeutxo.py
+            //     .height = 299,
+            //     .hash_serialized = AssumeutxoHash{uint256S("0x61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53")},
+            //     .nChainTx = 300,
+            //     .blockhash = uint256S("0x7e0517ef3ea6ecbed9117858e42eedc8eb39e8698a38dcbd1b3962a283233f4c")
+            // },
         };
 
         chainTxData = ChainTxData{

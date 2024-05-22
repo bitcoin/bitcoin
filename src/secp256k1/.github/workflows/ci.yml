@@ -1,0 +1,806 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ### compiler options
+  HOST:
+  WRAPPER_CMD:
+  # Specific warnings can be disabled with -Wno-error=foo.
+  # -pedantic-errors is not equivalent to -Werror=pedantic and thus not implied by -Werror according to the GCC manual.
+  WERROR_CFLAGS: '-Werror -pedantic-errors'
+  MAKEFLAGS: '-j4'
+  BUILD: 'check'
+  ### secp256k1 config
+  ECMULTWINDOW: 'auto'
+  ECMULTGENPRECISION: 'auto'
+  ASM: 'no'
+  WIDEMUL: 'auto'
+  WITH_VALGRIND: 'yes'
+  EXTRAFLAGS:
+  ### secp256k1 modules
+  EXPERIMENTAL: 'no'
+  ECDH: 'no'
+  RECOVERY: 'no'
+  SCHNORRSIG: 'no'
+  ELLSWIFT: 'no'
+  ### test options
+  SECP256K1_TEST_ITERS:
+  BENCH: 'yes'
+  SECP256K1_BENCH_ITERS: 2
+  CTIMETESTS: 'yes'
+  # Compile and run the examples.
+  EXAMPLES: 'yes'
+
+jobs:
+  docker_cache:
+    name: "Build Docker image"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          # See: https://github.com/moby/buildkit/issues/3969.
+          driver-opts: |
+            network=host
+
+      - name: Build container
+        uses: docker/build-push-action@v4
+        with:
+          file: ./ci/linux-debian.Dockerfile
+          tags: linux-debian-image
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+
+  linux_debian:
+    name: "x86_64: Linux (Debian stable)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars: { WIDEMUL: 'int64',  RECOVERY: 'yes' }
+          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128' }
+          - env_vars: { WIDEMUL: 'int128_struct',                                           ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                   ELLSWIFT: 'yes' }
+          - env_vars: {                    RECOVERY: 'yes',              SCHNORRSIG: 'yes' }
+          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', CPPFLAGS: '-DVERIFY' }
+          - env_vars: { BUILD: 'distcheck', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no' }
+          - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
+          - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
+          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { ECMULTGENPRECISION: 8, ECMULTWINDOW: 4 }
+        cc:
+          - 'gcc'
+          - 'clang'
+          - 'gcc-snapshot'
+          - 'clang-snapshot'
+
+    env:
+      CC: ${{ matrix.cc }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  i686_debian:
+    name: "i686: Linux (Debian stable)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        cc:
+          - 'i686-linux-gnu-gcc'
+          - 'clang --target=i686-pc-linux-gnu -isystem /usr/i686-linux-gnu/include'
+
+    env:
+      HOST: 'i686-linux-gnu'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CC: ${{ matrix.cc }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  s390x_debian:
+    name: "s390x (big-endian): Linux (Debian stable, QEMU)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    env:
+      WRAPPER_CMD: 'qemu-s390x'
+      SECP256K1_TEST_ITERS: 16
+      HOST: 's390x-linux-gnu'
+      WITH_VALGRIND: 'no'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  arm32_debian:
+    name: "ARM32: Linux (Debian stable, QEMU)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars: {}
+          - env_vars: { EXPERIMENTAL: 'yes', ASM: 'arm32' }
+
+    env:
+      WRAPPER_CMD: 'qemu-arm'
+      SECP256K1_TEST_ITERS: 16
+      HOST: 'arm-linux-gnueabihf'
+      WITH_VALGRIND: 'no'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  arm64_debian:
+    name: "ARM64: Linux (Debian stable, QEMU)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    env:
+      WRAPPER_CMD: 'qemu-aarch64'
+      SECP256K1_TEST_ITERS: 16
+      HOST: 'aarch64-linux-gnu'
+      WITH_VALGRIND: 'no'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars: { } # gcc
+          - env_vars: # clang
+              CC: 'clang --target=aarch64-linux-gnu'
+          - env_vars: # clang-snapshot
+              CC: 'clang-snapshot --target=aarch64-linux-gnu'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  ppc64le_debian:
+    name: "ppc64le: Linux (Debian stable, QEMU)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    env:
+      WRAPPER_CMD: 'qemu-ppc64le'
+      SECP256K1_TEST_ITERS: 16
+      HOST: 'powerpc64le-linux-gnu'
+      WITH_VALGRIND: 'no'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  valgrind_debian:
+    name: "Valgrind (memcheck)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars: { CC: 'clang',                                      ASM: 'auto' }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
+          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+
+    env:
+      # The `--error-exitcode` is required to make the test fail if valgrind found errors,
+      # otherwise it will return 0 (https://www.valgrind.org/docs/manual/manual-core.html).
+      WRAPPER_CMD: 'valgrind --error-exitcode=42'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+      SECP256K1_TEST_ITERS: 2
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  sanitizers_debian:
+    name: "UBSan, ASan, LSan"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars: { CC: 'clang',                                      ASM: 'auto' }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
+          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+
+    env:
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+      CFLAGS: '-fsanitize=undefined,address -g'
+      UBSAN_OPTIONS: 'print_stacktrace=1:halt_on_error=1'
+      ASAN_OPTIONS: 'strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1'
+      LSAN_OPTIONS: 'use_unaligned=1'
+      SECP256K1_TEST_ITERS: 32
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  msan_debian:
+    name: "MSan"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars:
+              CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g'
+          - env_vars:
+              ECMULTGENPRECISION: 2
+              ECMULTWINDOW: 2
+              CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g -O3'
+
+    env:
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'yes'
+      CC: 'clang'
+      SECP256K1_TEST_ITERS: 32
+      ASM: 'no'
+      WITH_VALGRIND: 'no'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  mingw_debian:
+    name: ${{ matrix.configuration.job_name }}
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    env:
+      WRAPPER_CMD: 'wine'
+      WITH_VALGRIND: 'no'
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+      CTIMETESTS: 'no'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - job_name: 'x86_64 (mingw32-w64): Windows (Debian stable, Wine)'
+            env_vars:
+              HOST: 'x86_64-w64-mingw32'
+          - job_name: 'i686 (mingw32-w64): Windows (Debian stable, Wine)'
+            env_vars:
+              HOST: 'i686-w64-mingw32'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        env: ${{ matrix.configuration.env_vars }}
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  macos-native:
+    name: "x86_64: macOS Monterey"
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: macos-12 # Use M1 once available https://github.com/github/roadmap/issues/528
+
+    env:
+      CC: 'clang'
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        env_vars:
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
+          - BUILD: 'distcheck'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Homebrew packages
+        run: |
+          brew install automake libtool gcc
+          ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
+
+      - name: Install and cache Valgrind
+        uses: ./.github/actions/install-homebrew-valgrind
+
+      - name: CI script
+        env: ${{ matrix.env_vars }}
+        run: ./ci/ci.sh
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  win64-native:
+    name: ${{ matrix.configuration.job_name }}
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: windows-2022
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - job_name: 'x64 (MSVC): Windows (VS 2022, shared)'
+            cmake_options: '-A x64 -DBUILD_SHARED_LIBS=ON'
+          - job_name: 'x64 (MSVC): Windows (VS 2022, static)'
+            cmake_options: '-A x64 -DBUILD_SHARED_LIBS=OFF'
+          - job_name: 'x64 (MSVC): Windows (VS 2022, int128_struct)'
+            cmake_options: '-A x64 -DSECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY=int128_struct'
+          - job_name: 'x64 (MSVC): Windows (VS 2022, int128_struct with __(u)mulh)'
+            cmake_options: '-A x64 -DSECP256K1_TEST_OVERRIDE_WIDE_MULTIPLY=int128_struct'
+            cpp_flags: '/DSECP256K1_MSVC_MULH_TEST_OVERRIDE'
+          - job_name: 'x86 (MSVC): Windows (VS 2022)'
+            cmake_options: '-A Win32'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate buildsystem
+        run: cmake -E env CFLAGS="/WX ${{ matrix.configuration.cpp_flags }}" cmake -B build -DSECP256K1_ENABLE_MODULE_RECOVERY=ON -DSECP256K1_BUILD_EXAMPLES=ON ${{ matrix.configuration.cmake_options }}
+
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo -- /p:UseMultiToolTask=true /maxCpuCount
+
+      - name: Binaries info
+        # Use the bash shell included with Git for Windows.
+        shell: bash
+        run: |
+          cd build/src/RelWithDebInfo && file *tests.exe bench*.exe libsecp256k1-*.dll || true
+
+      - name: Check
+        run: |
+          ctest -C RelWithDebInfo --test-dir build -j ([int]$env:NUMBER_OF_PROCESSORS + 1)
+          build\src\RelWithDebInfo\bench_ecmult.exe
+          build\src\RelWithDebInfo\bench_internal.exe
+          build\src\RelWithDebInfo\bench.exe
+
+  win64-native-headers:
+    name: "x64 (MSVC): C++ (public headers)"
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add cl.exe to PATH
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: C++ (public headers)
+        run: |
+          cl.exe -c -WX -TP include/*.h
+
+  cxx_fpermissive_debian:
+    name: "C++ -fpermissive (entire project)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    env:
+      CC: 'g++'
+      CFLAGS: '-fpermissive -g'
+      CPPFLAGS: '-DSECP256K1_CPLUSPLUS_TEST_OVERRIDE'
+      WERROR_CFLAGS:
+      ECDH: 'yes'
+      RECOVERY: 'yes'
+      SCHNORRSIG: 'yes'
+      ELLSWIFT: 'yes'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+
+      - run: cat tests.log || true
+        if: ${{ always() }}
+      - run: cat noverify_tests.log || true
+        if: ${{ always() }}
+      - run: cat exhaustive_tests.log || true
+        if: ${{ always() }}
+      - run: cat ctime_tests.log || true
+        if: ${{ always() }}
+      - run: cat bench.log || true
+        if: ${{ always() }}
+      - run: cat config.log || true
+        if: ${{ always() }}
+      - run: cat test_env.log || true
+        if: ${{ always() }}
+      - name: CI env
+        run: env
+        if: ${{ always() }}
+
+  cxx_headers_debian:
+    name: "C++ (public headers)"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        uses: ./.github/actions/run-in-docker-action
+        with:
+          dockerfile: ./ci/linux-debian.Dockerfile
+          tag: linux-debian-image
+          command: |
+            g++ -Werror include/*.h
+            clang -Werror -x c++-header include/*.h
+
+  sage:
+    name: "SageMath prover"
+    runs-on: ubuntu-latest
+    container:
+      image: sagemath/sagemath:latest
+      options: --user root
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: CI script
+        run: |
+          cd sage
+          sage prove_group_implementations.sage
+
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - run: ./autogen.sh && ./configure --enable-dev-mode && make distcheck
+
+      - name: Check installation with Autotools
+        env:
+          CI_INSTALL: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}
+        run: |
+          ./autogen.sh && ./configure --prefix=${{ env.CI_INSTALL }} && make clean && make install && ls -RlAh ${{ env.CI_INSTALL }}
+          gcc -o ecdsa examples/ecdsa.c $(PKG_CONFIG_PATH=${{ env.CI_INSTALL }}/lib/pkgconfig pkg-config --cflags --libs libsecp256k1) -Wl,-rpath,"${{ env.CI_INSTALL }}/lib" && ./ecdsa
+
+      - name: Check installation with CMake
+        env:
+          CI_BUILD: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}/build
+          CI_INSTALL: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}/install
+        run: |
+          cmake -B ${{ env.CI_BUILD }} -DCMAKE_INSTALL_PREFIX=${{ env.CI_INSTALL }} && cmake --build ${{ env.CI_BUILD }} --target install && ls -RlAh ${{ env.CI_INSTALL }}
+          gcc -o ecdsa examples/ecdsa.c -I ${{ env.CI_INSTALL }}/include -L ${{ env.CI_INSTALL }}/lib*/ -l secp256k1 -Wl,-rpath,"${{ env.CI_INSTALL }}/lib",-rpath,"${{ env.CI_INSTALL }}/lib64" && ./ecdsa

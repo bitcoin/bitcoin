@@ -34,7 +34,7 @@ void auxMiningCheck(const node::JSONRPCRequest& request)
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
                         "Syscoin is not connected!");
 
-  if (node.chainman->ActiveChainstate().IsInitialBlockDownload ()
+  if (node.chainman->IsInitialBlockDownload ()
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_IN_INITIAL_DOWNLOAD,
                         "Syscoin is downloading blocks...");

@@ -36,7 +36,7 @@ from .util import (
     get_auth_cookie,
     get_rpc_proxy,
     rpc_url,
-    wait_until_helper,
+    wait_until_helper_internal,
     p2p_port,
 )
 
@@ -67,7 +67,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, *, chain, rpchost, timewait, timeout_factor, syscoind, syscoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
+    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, syscoind, syscoin_cli, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -76,10 +76,10 @@ class TestNode():
 
         self.index = i
         self.p2p_conn_index = 1
-        self.datadir = datadir
-        self.syscoinconf = os.path.join(self.datadir, "syscoin.conf")
-        self.stdout_dir = os.path.join(self.datadir, "stdout")
-        self.stderr_dir = os.path.join(self.datadir, "stderr")
+        self.datadir_path = datadir_path
+        self.syscoinconf = self.datadir_path / "syscoin.conf"
+        self.stdout_dir = self.datadir_path / "stdout"
+        self.stderr_dir = self.datadir_path / "stderr"
         self.chain = chain
         self.rpchost = rpchost
         self.rpc_timeout = timewait
@@ -88,7 +88,7 @@ class TestNode():
         self.cwd = cwd
         self.descriptors = descriptors
         if extra_conf is not None:
-            append_config(datadir, extra_conf)
+            append_config(self.datadir_path, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
@@ -99,7 +99,7 @@ class TestNode():
         # spam debug.log.
         self.args = [
             self.binary,
-            "-datadir=" + self.datadir,
+            f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
             "-debugexclude=libevent",
@@ -110,10 +110,9 @@ class TestNode():
         if self.descriptors is None:
             self.args.append("-disablewallet")
 
-        if use_valgrind:
-            default_suppressions_file = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "..", "..", "..", "contrib", "valgrind.supp")
+        # Use valgrind, expect for previous release binaries
+        if use_valgrind and version is None:
+            default_suppressions_file = Path(__file__).parents[3] / "contrib" / "valgrind.supp"
             suppressions_file = os.getenv("VALGRIND_SUPPRESSIONS_FILE",
                                           default_suppressions_file)
             self.args = ["valgrind", "--suppressions={}".format(suppressions_file),
@@ -127,7 +126,7 @@ class TestNode():
         if self.version_is_at_least(4040000):
             self.args.append("-loglevel=trace")
 
-        self.cli = TestNodeCLI(syscoin_cli, self.datadir)
+        self.cli = TestNodeCLI(syscoin_cli, self.datadir_path)
         self.use_cli = use_cli
         self.start_perf = start_perf
 
@@ -143,6 +142,8 @@ class TestNode():
 
         self.p2ps = []
         self.timeout_factor = timeout_factor
+
+        self.mocktime = None
 
     AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
     PRIV_KEYS = [
@@ -214,7 +215,7 @@ class TestNode():
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by syscoind, and
         # potentially interfere with our attempt to authenticate
-        delete_cookie_file(self.datadir, self.chain)
+        delete_cookie_file(self.datadir_path, self.chain)
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
@@ -235,11 +236,16 @@ class TestNode():
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
+                # Attach abrupt shutdown error/s to the exception message
+                self.stderr.seek(0)
+                str_error = ''.join(line.decode('utf-8') for line in self.stderr)
+                str_error += "************************\n" if str_error else ''
+
                 raise FailedToStartError(self._node_msg(
-                    'syscoind exited with status {} during initialization'.format(self.process.returncode)))
+                    f'syscoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
                 rpc = get_rpc_proxy(
-                    rpc_url(self.datadir, self.index, self.chain, self.rpchost),
+                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
                     self.index,
                     timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
                     coveragedir=self.coverage_dir,
@@ -249,7 +255,7 @@ class TestNode():
                 if self.version_is_at_least(190000):
                     # getmempoolinfo.loaded is available since commit
                     # bb8ae2c (version 0.19.0)
-                    wait_until_helper(lambda: rpc.getmempoolinfo()['loaded'], timeout_factor=self.timeout_factor)
+                    wait_until_helper_internal(lambda: rpc.getmempoolinfo()['loaded'], timeout_factor=self.timeout_factor)
                     # Wait for the node to finish reindex, block import, and
                     # loading the mempool. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
@@ -303,7 +309,7 @@ class TestNode():
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             try:
-                get_auth_cookie(self.datadir, self.chain)
+                get_auth_cookie(self.datadir_path, self.chain)
                 self.log.debug("Cookie credentials successfully retrieved")
                 return
             except ValueError:  # cookie file not found and no rpcuser or rpcpassword; syscoind is still starting
@@ -326,6 +332,15 @@ class TestNode():
     def generatetodescriptor(self, *args, invalid_call, **kwargs):
         assert not invalid_call
         return self.__getattr__('generatetodescriptor')(*args, **kwargs)
+
+    def setmocktime(self, timestamp):
+        """Wrapper for setmocktime RPC, sets self.mocktime"""
+        if timestamp == 0:
+            # setmocktime(0) resets to system time.
+            self.mocktime = None
+        else:
+            self.mocktime = timestamp
+        return self.__getattr__('setmocktime')(timestamp)
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
@@ -394,7 +409,7 @@ class TestNode():
 
     def wait_until_stopped(self, *, timeout=SYSCOIND_PROC_WAIT_TIMEOUT, expect_error=False, **kwargs):
         expected_ret_code = 1 if expect_error else 0  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
-        wait_until_helper(lambda: self.is_node_stopped(expected_ret_code=expected_ret_code, **kwargs), timeout=timeout, timeout_factor=self.timeout_factor)
+        wait_until_helper_internal(lambda: self.is_node_stopped(expected_ret_code=expected_ret_code, **kwargs), timeout=timeout, timeout_factor=self.timeout_factor)
 
     def replace_in_config(self, replacements):
         """
@@ -410,10 +425,6 @@ class TestNode():
             conf_data = conf_data.replace(old, new)
         with open(self.syscoinconf, 'w', encoding='utf8') as conf:
             conf.write(conf_data)
-
-    @property
-    def datadir_path(self) -> Path:
-        return Path(self.datadir)
 
     @property
     def chain_path(self) -> Path:
@@ -440,6 +451,9 @@ class TestNode():
     def assert_debug_log(self, expected_msgs, unexpected_msgs=None, timeout=2):
         if unexpected_msgs is None:
             unexpected_msgs = []
+        assert_equal(type(expected_msgs), list)
+        assert_equal(type(unexpected_msgs), list)
+
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
 
@@ -543,7 +557,7 @@ class TestNode():
                 "perf output won't be very useful without debug symbols compiled into syscoind")
 
         output_path = tempfile.NamedTemporaryFile(
-            dir=self.datadir,
+            dir=self.datadir_path,
             prefix="{}.perf.data.".format(profile_name or 'test'),
             delete=False,
         ).name
@@ -706,7 +720,14 @@ class TestNode():
             p.peer_disconnect()
         del self.p2ps[:]
 
-        wait_until_helper(lambda: self.num_test_p2p_connections() == 0, timeout_factor=self.timeout_factor)
+        wait_until_helper_internal(lambda: self.num_test_p2p_connections() == 0, timeout_factor=self.timeout_factor)
+
+    def bumpmocktime(self, seconds):
+        """Fast forward using setmocktime to self.mocktime + seconds. Requires setmocktime to have
+        been called at some point in the past."""
+        assert self.mocktime
+        self.mocktime += seconds
+        self.setmocktime(self.mocktime)
 
 
 class TestNodeCLIAttr:
@@ -764,7 +785,7 @@ class TestNodeCLI():
         """Run syscoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
-        p_args = [self.binary, "-datadir=" + self.datadir] + self.options
+        p_args = [self.binary, f"-datadir={self.datadir}"] + self.options
         if named_args:
             p_args += ["-named"]
         if command is not None:

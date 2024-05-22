@@ -58,14 +58,6 @@
         <translation type="unfinished">&amp;Aukeratu</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Helbideak bidaltzen</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Helbideak jasotzen</translation>
-    </message>
-    <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">Hauek dira zuk dirua jaso dezaketen Syscoin helbideak. Egiaztatu beti diru-kopurua eta dirua jasoko duen helbidea zuzen egon daitezen, txanponak bidali baino lehen.</translation>
     </message>
@@ -269,10 +261,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Kopurua</translation>
     </message>
     <message>
-        <source>Internal</source>
-        <translation type="unfinished">Barnekoa</translation>
-    </message>
-    <message>
         <source>%1 d</source>
         <translation type="unfinished">%1 e</translation>
     </message>
@@ -321,77 +309,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
             <numerusform />
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Zamaketa amaitua</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Inportatzen...</translation>
-    </message>
-    <message>
-        <source>Loading wallet…</source>
-        <translation type="unfinished">Diruzorroa kargatzen...</translation>
-    </message>
-    <message>
-        <source>Missing amount</source>
-        <translation type="unfinished">Zenbatekoa falta da</translation>
-    </message>
-    <message>
-        <source>No addresses available</source>
-        <translation type="unfinished">Ez dago helbiderik eskuragarri</translation>
-    </message>
-    <message>
-        <source>Replaying blocks…</source>
-        <translation type="unfinished">Blokeak errepikatzen...</translation>
-    </message>
-    <message>
-        <source>Rescanning…</source>
-        <translation type="unfinished">Bereskaneatzen...</translation>
-    </message>
-    <message>
-        <source>Starting network threads…</source>
-        <translation type="unfinished">Sareko hariak abiarazten...</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation type="unfinished">Iturri kodea %s-tik dago eskuragarri.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished">Transakzio kantitatea txikiegia da kuota ordaintzeko.</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation type="unfinished">Hau software esperimentala da</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished">transakzio kopurua txikiegia</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation type="unfinished">Transakzio luzeegia</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">hasierako giltzak sortzeko ezgai</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Giltzak sortzeko ezgai</translation>
-    </message>
-    <message>
-        <source>Verifying blocks…</source>
-        <translation type="unfinished">Blokeak egiaztatzen...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">Diruzorroak egiaztatzen...</translation>
     </message>
     </context>
 <context>
@@ -564,10 +481,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Diskoko blokeak prozesatzen...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk…</source>
-        <translation type="unfinished">Diskoko blokeak berzerrendatzen</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
@@ -818,10 +731,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Ordainketa:</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Hautsa:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation type="unfinished">Ordaindu ondoren:</translation>
     </message>
@@ -886,24 +795,12 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Kopiatu byte-ak</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopiatu hautsa</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopiatu aldaketa</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
         <translation type="unfinished">(%1 blokeatuta)</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">bai</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">ez</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1021,10 +918,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">Egin diruzorro hutsa...</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet</source>
-        <translation type="unfinished">Deskriptorearen zorroa</translation>
     </message>
     <message>
         <source>External signer</source>
@@ -1386,10 +1279,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
-        <source>Dialog</source>
-        <translation type="unfinished">Elkarrizketa</translation>
-    </message>
-    <message>
         <source>Sign Tx</source>
         <translation type="unfinished">Sinatu Tx</translation>
     </message>
@@ -1412,6 +1301,10 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT diskoan gorde da.</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">zure helbidea</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -1795,10 +1688,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Garbitu formularioko eremu guztiak.</translation>
     </message>
     <message>
-        <source>Dust:</source>
-        <translation type="unfinished">Hautsa:</translation>
-    </message>
-    <message>
         <source>Choose…</source>
         <translation type="unfinished">Aukeratu...</translation>
     </message>
@@ -1835,10 +1724,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Kopiatu byte-ak</translation>
     </message>
     <message>
-        <source>Copy dust</source>
-        <translation type="unfinished">Kopiatu hautsa</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopiatu aldaketa</translation>
     </message>
@@ -1871,6 +1756,7 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     </message>
     <message>
         <source>PSBT saved</source>
+        <extracomment>Popup message when a PSBT has been saved to a file</extracomment>
         <translation type="unfinished">PSBT gordeta</translation>
     </message>
     <message>
@@ -2134,10 +2020,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Hona bidalia</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Zure buruarentzat ordainketa</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Meatua</translation>
     </message>
@@ -2199,10 +2081,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Sent to</source>
         <translation type="unfinished">Hona bidalia</translation>
-    </message>
-    <message>
-        <source>To yourself</source>
-        <translation type="unfinished">Zeure buruari</translation>
     </message>
     <message>
         <source>Mined</source>
@@ -2293,6 +2171,77 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Uneko fitxategian datuak esportatu</translation>
+    </message>
+    </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished">Zamaketa amaitua</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation type="unfinished">Inportatzen...</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation type="unfinished">Diruzorroa kargatzen...</translation>
+    </message>
+    <message>
+        <source>Missing amount</source>
+        <translation type="unfinished">Zenbatekoa falta da</translation>
+    </message>
+    <message>
+        <source>No addresses available</source>
+        <translation type="unfinished">Ez dago helbiderik eskuragarri</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation type="unfinished">Blokeak errepikatzen...</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation type="unfinished">Bereskaneatzen...</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation type="unfinished">Sareko hariak abiarazten...</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished">Iturri kodea %s-tik dago eskuragarri.</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished">Transakzio kantitatea txikiegia da kuota ordaintzeko.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished">Hau software esperimentala da</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished">transakzio kopurua txikiegia</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished">Transakzio luzeegia</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished">hasierako giltzak sortzeko ezgai</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation type="unfinished">Giltzak sortzeko ezgai</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation type="unfinished">Blokeak egiaztatzen...</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation type="unfinished">Diruzorroak egiaztatzen...</translation>
     </message>
     </context>
 </TS>

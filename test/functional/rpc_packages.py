@@ -212,8 +212,8 @@ class RPCPackagesTest(SyscoinTestFramework):
         coin = self.wallet.get_utxo()
 
         # tx1 and tx2 share the same inputs
-        tx1 = self.wallet.create_self_transfer(utxo_to_spend=coin)
-        tx2 = self.wallet.create_self_transfer(utxo_to_spend=coin)
+        tx1 = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=DEFAULT_FEE)
+        tx2 = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=2*DEFAULT_FEE)
 
         # Ensure tx1 and tx2 are valid by themselves
         assert node.testmempoolaccept([tx1["hex"]])[0]["allowed"]
@@ -222,8 +222,8 @@ class RPCPackagesTest(SyscoinTestFramework):
         self.log.info("Test duplicate transactions in the same package")
         testres = node.testmempoolaccept([tx1["hex"], tx1["hex"]])
         assert_equal(testres, [
-            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
-            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"}
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"},
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "package-contains-duplicates"}
         ])
 
         self.log.info("Test conflicting transactions in the same package")
@@ -335,7 +335,7 @@ class RPCPackagesTest(SyscoinTestFramework):
         self.log.info("Submitpackage only allows packages of 1 child with its parents")
         # Chain of 3 transactions has too many generations
         chain_hex = [t["hex"] for t in self.wallet.create_self_transfer_chain(chain_length=25)]
-        assert_raises_rpc_error(-25, "not-child-with-parents", node.submitpackage, chain_hex)
+        assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
 
 
 if __name__ == "__main__":

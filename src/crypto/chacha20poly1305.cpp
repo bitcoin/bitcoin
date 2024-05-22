@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <cstddef>
 
-AEADChaCha20Poly1305::AEADChaCha20Poly1305(Span<const std::byte> key) noexcept : m_chacha20(UCharCast(key.data()))
+AEADChaCha20Poly1305::AEADChaCha20Poly1305(Span<const std::byte> key) noexcept : m_chacha20(key)
 {
     assert(key.size() == KEYLEN);
 }
@@ -21,7 +21,7 @@ AEADChaCha20Poly1305::AEADChaCha20Poly1305(Span<const std::byte> key) noexcept :
 void AEADChaCha20Poly1305::SetKey(Span<const std::byte> key) noexcept
 {
     assert(key.size() == KEYLEN);
-    m_chacha20.SetKey32(UCharCast(key.data()));
+    m_chacha20.SetKey(key);
 }
 
 namespace {
@@ -46,8 +46,8 @@ void ComputeTag(ChaCha20& chacha20, Span<const std::byte> aad, Span<const std::b
     static const std::byte PADDING[16] = {{}};
 
     // Get block of keystream (use a full 64 byte buffer to avoid the need for chacha20's own buffering).
-    std::byte first_block[64];
-    chacha20.Keystream(UCharCast(first_block), sizeof(first_block));
+    std::byte first_block[ChaCha20Aligned::BLOCKLEN];
+    chacha20.Keystream(first_block);
 
     // Use the first 32 bytes of the first keystream block as poly1305 key.
     Poly1305 poly1305{Span{first_block}.first(Poly1305::KEYLEN)};
@@ -76,12 +76,12 @@ void AEADChaCha20Poly1305::Encrypt(Span<const std::byte> plain1, Span<const std:
     assert(cipher.size() == plain1.size() + plain2.size() + EXPANSION);
 
     // Encrypt using ChaCha20 (starting at block 1).
-    m_chacha20.Seek64(nonce, 1);
-    m_chacha20.Crypt(UCharCast(plain1.data()), UCharCast(cipher.data()), plain1.size());
-    m_chacha20.Crypt(UCharCast(plain2.data()), UCharCast(cipher.data() + plain1.size()), plain2.size());
+    m_chacha20.Seek(nonce, 1);
+    m_chacha20.Crypt(plain1, cipher.first(plain1.size()));
+    m_chacha20.Crypt(plain2, cipher.subspan(plain1.size()).first(plain2.size()));
 
     // Seek to block 0, and compute tag using key drawn from there.
-    m_chacha20.Seek64(nonce, 0);
+    m_chacha20.Seek(nonce, 0);
     ComputeTag(m_chacha20, aad, cipher.first(cipher.size() - EXPANSION), cipher.last(EXPANSION));
 }
 
@@ -90,22 +90,22 @@ bool AEADChaCha20Poly1305::Decrypt(Span<const std::byte> cipher, Span<const std:
     assert(cipher.size() == plain1.size() + plain2.size() + EXPANSION);
 
     // Verify tag (using key drawn from block 0).
-    m_chacha20.Seek64(nonce, 0);
+    m_chacha20.Seek(nonce, 0);
     std::byte expected_tag[EXPANSION];
     ComputeTag(m_chacha20, aad, cipher.first(cipher.size() - EXPANSION), expected_tag);
     if (timingsafe_bcmp(UCharCast(expected_tag), UCharCast(cipher.last(EXPANSION).data()), EXPANSION)) return false;
 
     // Decrypt (starting at block 1).
-    m_chacha20.Crypt(UCharCast(cipher.data()), UCharCast(plain1.data()), plain1.size());
-    m_chacha20.Crypt(UCharCast(cipher.data() + plain1.size()), UCharCast(plain2.data()), plain2.size());
+    m_chacha20.Crypt(cipher.first(plain1.size()), plain1);
+    m_chacha20.Crypt(cipher.subspan(plain1.size()).first(plain2.size()), plain2);
     return true;
 }
 
 void AEADChaCha20Poly1305::Keystream(Nonce96 nonce, Span<std::byte> keystream) noexcept
 {
     // Skip the first output block, as it's used for generating the poly1305 key.
-    m_chacha20.Seek64(nonce, 1);
-    m_chacha20.Keystream(UCharCast(keystream.data()), keystream.size());
+    m_chacha20.Seek(nonce, 1);
+    m_chacha20.Keystream(keystream);
 }
 
 void FSChaCha20Poly1305::NextPacket() noexcept
@@ -113,7 +113,7 @@ void FSChaCha20Poly1305::NextPacket() noexcept
     if (++m_packet_counter == m_rekey_interval) {
         // Generate a full block of keystream, to avoid needing the ChaCha20 buffer, even though
         // we only need KEYLEN (32) bytes.
-        std::byte one_block[64];
+        std::byte one_block[ChaCha20Aligned::BLOCKLEN];
         m_aead.Keystream({0xFFFFFFFF, m_rekey_counter}, one_block);
         // Switch keys.
         m_aead.SetKey(Span{one_block}.first(KEYLEN));

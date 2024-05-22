@@ -145,8 +145,7 @@ using CCoinsMap = std::unordered_map<COutPoint,
                                      SaltedOutpointHasher,
                                      std::equal_to<COutPoint>,
                                      PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
-                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4,
-                                                   alignof(void*)>>;
+                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
@@ -383,6 +382,7 @@ public:
     }
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    bool HaveCoin(const COutPoint &outpoint) const override;
 
 private:
     /** A list of callbacks to execute upon leveldb read error. */

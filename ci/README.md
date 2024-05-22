@@ -20,10 +20,11 @@ requires `bash`, `docker`, and `python3` to be installed. To install all require
 sudo apt install bash docker.io python3
 ```
 
-To run the test stage with a specific configuration,
+It is recommended to run the ci system in a clean env. To run the test stage
+with a specific configuration,
 
 ```
-FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
 ```
 
 ### Configurations
@@ -38,14 +39,11 @@ the system package manager to install build dependencies. This guarantees that
 the tester is using the same versions as the release builds, which also use
 `./depends`.
 
-If no `FILE_ENV` has been specified or values are left out, `00_setup_env.sh`
-is used as the default configuration with fallback values.
-
 It is also possible to force a specific configuration without modifying the
 file. For example,
 
 ```
-MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" bash -c 'MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh'
 ```
 
 The files starting with `0n` (`n` greater than 0) are the scripts that are run

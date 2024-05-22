@@ -152,14 +152,6 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
     return ret;
 }
 
-static SECP256K1_INLINE void *checked_realloc(const secp256k1_callback* cb, void *ptr, size_t size) {
-    void *ret = realloc(ptr, size);
-    if (ret == NULL) {
-        secp256k1_callback_call(cb, "Out of memory");
-    }
-    return ret;
-}
-
 #if defined(__BIGGEST_ALIGNMENT__)
 #define ALIGNMENT __BIGGEST_ALIGNMENT__
 #else

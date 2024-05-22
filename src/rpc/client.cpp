@@ -266,13 +266,13 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "bumpfee", 1, "fee_rate"},
     { "bumpfee", 1, "replaceable"},
     { "bumpfee", 1, "outputs"},
-    { "bumpfee", 1, "reduce_output"},
+    { "bumpfee", 1, "original_change_index"},
     { "psbtbumpfee", 1, "options" },
     { "psbtbumpfee", 1, "conf_target"},
     { "psbtbumpfee", 1, "fee_rate"},
     { "psbtbumpfee", 1, "replaceable"},
     { "psbtbumpfee", 1, "outputs"},
-    { "psbtbumpfee", 1, "reduce_output"},
+    { "psbtbumpfee", 1, "original_change_index"},
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
@@ -302,7 +302,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getnodeaddresses", 0, "count"},
     { "addpeeraddress", 1, "port"},
     { "addpeeraddress", 2, "tried"},
+    { "sendmsgtopeer", 0, "peer_id" },
     { "stop", 0, "wait" },
+    { "addnode", 2, "v2transport" },
     { "getsuperblockbudget", 0, "index" },
     { "spork", 1, "value" },
     { "voteraw", 1, "collateralTxIndex" },
@@ -359,7 +361,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gobject_list_prepared", 0, "count" },
     { "masternode_winners", 0, "count" },
     { "masternode_payments", 1, "count" },
-
 };
 // clang-format on
 

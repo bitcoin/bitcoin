@@ -63,7 +63,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
 }
 
 //! Check if the user provided a valid feeRate
-static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
+static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTransaction& mtx, const CFeeRate& newFeerate, const int64_t maxTxSize, CAmount old_fee, std::vector<bilingual_str>& errors)
 {
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
@@ -80,7 +80,17 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CFeeRate& new
         return feebumper::Result::WALLET_ERROR;
     }
 
-    CAmount new_total_fee = newFeerate.GetFee(maxTxSize);
+    std::vector<COutPoint> reused_inputs;
+    reused_inputs.reserve(mtx.vin.size());
+    for (const CTxIn& txin : mtx.vin) {
+        reused_inputs.push_back(txin.prevout);
+    }
+
+    std::optional<CAmount> combined_bump_fee = wallet.chain().CalculateCombinedBumpFee(reused_inputs, newFeerate);
+    if (!combined_bump_fee.has_value()) {
+        errors.push_back(strprintf(Untranslated("Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.")));
+    }
+    CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + combined_bump_fee.value();
 
     CFeeRate incrementalRelayFee = std::max(wallet.chain().relayIncrementalFee(), CFeeRate(WALLET_INCREMENTAL_RELAY_FEE));
 
@@ -152,11 +162,11 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> reduce_output)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
 {
-    // Cannot both specify new outputs and an output to reduce
-    if (!outputs.empty() && reduce_output.has_value()) {
-        errors.push_back(Untranslated("Cannot specify both new outputs to use and an output index to reduce"));
+    // For now, cannot specify both new outputs to use and an output index to send change
+    if (!outputs.empty() && original_change_index.has_value()) {
+        errors.push_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
         return Result::INVALID_PARAMETER;
     }
 
@@ -172,8 +182,8 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     }
     const CWalletTx& wtx = it->second;
 
-    // Make sure that reduce_output is valid
-    if (reduce_output.has_value() && reduce_output.value() >= wtx.tx->vout.size()) {
+    // Make sure that original_change_index is valid
+    if (original_change_index.has_value() && original_change_index.value() >= wtx.tx->vout.size()) {
         errors.push_back(Untranslated("Change position is out of range"));
         return Result::INVALID_PARAMETER;
     }
@@ -247,16 +257,16 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     const auto& txouts = outputs.empty() ? wtx.tx->vout : outputs;
     for (size_t i = 0; i < txouts.size(); ++i) {
         const CTxOut& output = txouts.at(i);
-        if (reduce_output.has_value() ?  reduce_output.value() == i : OutputIsChange(wallet, output)) {
-            CTxDestination change_dest;
-            ExtractDestination(output.scriptPubKey, change_dest);
-            new_coin_control.destChange = change_dest;
+        CTxDestination dest;
+        ExtractDestination(output.scriptPubKey, dest);
+        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
+            new_coin_control.destChange = dest;
         } else {
             // SYSCOIN
             if(new_coin_control.m_nevmdata.empty() && !output.vchNEVMData.empty()) {
-                new_coin_control.m_nevmdata = output.vchNEVMData; 
+                new_coin_control.m_nevmdata = output.vchNEVMData;
             }
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
+            CRecipient recipient = {dest, output.nValue, false};
             recipients.push_back(recipient);
         }
         new_outputs_value += output.nValue;
@@ -272,7 +282,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
 
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
         // If the output differs from the original tx output (because the user customized it) a new change output will be created.
-        recipients.emplace_back(CRecipient{GetScriptForDestination(new_coin_control.destChange), new_outputs_value, /*fSubtractFeeFromAmount=*/true});
+        recipients.emplace_back(CRecipient{new_coin_control.destChange, new_outputs_value, /*fSubtractFeeFromAmount=*/true});
         new_coin_control.destChange = CNoDestination();
     }
 
@@ -287,7 +297,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         }
         temp_mtx.vout = txouts;
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
-        Result res = CheckFeeRate(wallet, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
+        Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
             return res;
         }

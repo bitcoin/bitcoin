@@ -15,6 +15,7 @@
 #include <dbwrapper.h>
 #include <chainparams.h>
 #include <versionbits.h>
+#include <util/strencodings.h>
 
 class CBlockIndex;
 class CDeterministicMN;

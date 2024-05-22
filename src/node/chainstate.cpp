@@ -97,10 +97,10 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
-    // new CBlockTreeDB tries to delete the existing file, which
+    // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
-    pblocktree = std::make_unique<CBlockTreeDB>(DBParams{
+    pblocktree = std::make_unique<BlockTreeDB>(DBParams{
         .path = chainman.m_options.datadir / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
         .memory_only = options.block_tree_db_in_memory,
@@ -300,7 +300,14 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     chainman.InitializeChainstate(options.mempool);
 
     // Load a chain created from a UTXO snapshot, if any exist.
-    chainman.DetectSnapshotChainstate(options.mempool);
+    bool has_snapshot = chainman.DetectSnapshotChainstate();
+
+    if (has_snapshot && (options.reindex || options.reindex_chainstate)) {
+        LogPrintf("[snapshot] deleting snapshot chainstate due to reindexing\n");
+        if (!chainman.DeleteSnapshotChainstate()) {
+            return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
+        }
+    }
 
     auto [init_status, init_error] = CompleteChainstateInitialization(chainman, cache_sizes, options);
     if (init_status != ChainstateLoadStatus::SUCCESS) {

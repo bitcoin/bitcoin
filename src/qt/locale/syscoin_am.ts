@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለመቀየር ቀኙን ጠቅ ያድርጉ</translation>
+        <translation type="unfinished">አድራሻ ወይም መለያ ስም ለማርተዕ ቀኙን ጠቅ ያድርጉ</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">አዲስ አድራሻ ፍጠር</translation>
+        <translation type="unfinished">አዲስ አድራሻ ይፍጠሩ</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ወደ ሲስተሙ ቅንጥብ ሰሌዳ ቅዳ</translation>
+        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ወደ ስርዓቱ ቅንጥብ ሰሌዳ ቅዳ</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,11 +27,15 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ከዝርዝሩ ውስጥ ሰርዝ</translation>
+        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ከዝርዝሩ ውስጥ አጥፋ</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">ለመፈለግ አድራሻ ወይም መለያ ያስገቡ</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
+        <translation type="unfinished">በዚህ ማውጫ ውስጥ ያለውን ውሂብ ወደ አንድ ፋይል ቀይረህ አስቀምጥ</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -43,7 +47,7 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished">ገንዘብ/ኮይኖች የሚልኩለትን አድራሻ ይምረጡ</translation>
+        <translation type="unfinished">ገንዘብ/ኮይኖች የሚልኩበትን አድራሻ ይምረጡ</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -54,16 +58,14 @@
         <translation type="unfinished">ምረጥ</translation>
     </message>
     <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">የመላኪያ አድራሻዎች</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">የመቀበያ አድራሻዎች</translation>
-    </message>
-    <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">እነኚ የቢትኮይን ክፍያ የመላኪያ አድራሻዎችዎ ናቸው:: ገንዘብ/ኮይኖች ከመላክዎ በፊት መጠኑን እና የመቀበያ አድራሻውን ሁልጊዜ ያረጋግጡ::</translation>
+        <translation type="unfinished">ክፍያዎችን ለመላክ እነዚህ  የእርስዎ ቢትኮይን አድራሻዎች ናቸው። ሳንቲሞችን/ኮይኖች ከመላክዎ በፊት ሁል ጊዜ መጠኑን እና የተቀባዩን አድራሻ ያረጋግጡ።</translation>
+    </message>
+    <message>
+        <source>These are your Syscoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">እነኚህ የቢትኮይን አድራሻዎች የክፍያ መቀበያ አድራሻዎችዎ ናችው። "ተቀበል" በሚለው መደብ ውስጥ ያለውን "አዲስ የመቀበያ አድራሻ ይፍጠሩ" የሚለውን አዝራር ይጠቀሙ።
+መፈረም የሚቻለው "ሌጋሲ" በሚል ምድብ ስር በተመደቡ አድራሻዎች ብቻ ነው።</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -80,6 +82,11 @@
     <message>
         <source>Export Address List</source>
         <translation type="unfinished">የአድራሻ ዝርዝር ላክ</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">በንዑስ ሰረዝ የተለዩ ፋይሎች</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -125,6 +132,10 @@
         <translation type="unfinished">አዲስ የይለፍ-ሐረጉን ይድገሙት</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation type="unfinished">የይለፍ-ሀረጉን አሳይ</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation type="unfinished">የቢትኮይን ቦርሳውን አመስጥር</translation>
     </message>
@@ -155,6 +166,18 @@
     <message>
         <source>Wallet encrypted</source>
         <translation type="unfinished">ቦርሳዎ ምስጢር ተደርጓል</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">ለመመስጠር የተዘጋጀ ዋሌት</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">ቦርሳዎ ሊመሰጠር ነው። </translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">ቦርሳዎ አሁን ተመስጥሯል። </translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -201,7 +224,23 @@
     </message>
 </context>
 <context>
+    <name>SyscoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">ውስጣዊ ስህተት</translation>
+    </message>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">ውስጣዊ ችግር ተፈጥሯል።  %1 ደህንነቱን ጠብቆ ለመቀጠል ይሞክራል። ይህ ችግር ያልተጠበቀ ሲሆን ከታች በተገለፀው መሰረት ችግሩን ማመልከት ይቻላል። </translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">ቅንብሩን መጀመሪያ ወደነበረው ነባሪ ዋጋ መመለስ ይፈልጋሉ? ወይስ ምንም አይነት ለውጥ ሳያደርጉ እንዲከሽፍ ይፈልጋሉ?</translation>
+    </message>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">ስህተት፥ %1</translation>
@@ -213,43 +252,43 @@
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n second(s)</numerusform>
+            <numerusform>%n second(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minute(s)</numerusform>
+            <numerusform>%n minute(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hour(s)</numerusform>
+            <numerusform>%n hour(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n day(s)</numerusform>
+            <numerusform>%n day(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n week(s)</numerusform>
+            <numerusform>%n week(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n year(s)</numerusform>
+            <numerusform>%n year(s)</numerusform>
         </translation>
     </message>
     </context>
@@ -326,8 +365,8 @@
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -371,8 +410,8 @@
         <source>%n active connection(s) to Syscoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n active connection(s) to Syscoin network.</numerusform>
+            <numerusform>%n active connection(s) to Syscoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -433,14 +472,6 @@
         <translation type="unfinished">ክፍያው ቅዳ</translation>
     </message>
     <message>
-        <source>yes</source>
-        <translation type="unfinished">አዎ</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">አይ</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation type="unfinished">(መለያ ስም የለም)</translation>
     </message>
@@ -491,30 +522,30 @@
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n GB of space available</numerusform>
+            <numerusform>%n GB of space available</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(of %n GB needed)</numerusform>
+            <numerusform>(of %n GB needed)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(%n GB needed for full chain)</numerusform>
+            <numerusform>(%n GB needed for full chain)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
     <message>
@@ -629,8 +660,8 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
         </translation>
     </message>
     <message>
@@ -647,8 +678,8 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>matures in %n more block(s)</numerusform>
+            <numerusform>matures in %n more block(s)</numerusform>
         </translation>
     </message>
     <message>
@@ -673,6 +704,11 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">በንዑስ ሰረዝ የተለዩ ፋይሎች</translation>
+    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">ቀን</translation>
@@ -716,7 +752,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
+        <translation type="unfinished">በዚህ ማውጫ ውስጥ ያለውን ውሂብ ወደ አንድ ፋይል ቀይረህ አስቀምጥ</translation>
     </message>
     </context>
 </TS>

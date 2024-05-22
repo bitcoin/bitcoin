@@ -229,8 +229,9 @@ static std::vector<RPCArg> CreateTxDoc()
                 },
             },
         },
-        {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs (key-value pairs), where none of the keys are duplicated.\n"
-                "That is, each address can only appear once and there can only be one 'data' object.\n"
+        {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs specified as key-value pairs.\n"
+                "Each key may only appear once, i.e. there can only be one 'data' output, and no address may be duplicated.\n"
+                "At least one output of either type must be specified.\n"
                 "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                 "                             accepted as second parameter.",
             {
@@ -1670,10 +1671,10 @@ static RPCHelpMan createpsbt()
     PartiallySignedTransaction psbtx;
     psbtx.tx = rawTx;
     for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        psbtx.inputs.emplace_back();
     }
     for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        psbtx.outputs.emplace_back();
     }
 
     // Serialize the PSBT
@@ -1737,10 +1738,10 @@ static RPCHelpMan converttopsbt()
     PartiallySignedTransaction psbtx;
     psbtx.tx = tx;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        psbtx.inputs.push_back(PSBTInput());
+        psbtx.inputs.emplace_back();
     }
     for (unsigned int i = 0; i < tx.vout.size(); ++i) {
-        psbtx.outputs.push_back(PSBTOutput());
+        psbtx.outputs.emplace_back();
     }
 
     // Serialize the PSBT
@@ -2038,6 +2039,7 @@ RPCHelpMan descriptorprocesspsbt()
                     {
                         {RPCResult::Type::STR, "psbt", "The base64-encoded partially signed transaction"},
                         {RPCResult::Type::BOOL, "complete", "If the transaction has a complete set of signatures"},
+                        {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The hex-encoded network transaction if complete"},
                     }
                 },
                 RPCExamples{
@@ -2078,7 +2080,14 @@ RPCHelpMan descriptorprocesspsbt()
 
     result.pushKV("psbt", EncodeBase64(ssTx));
     result.pushKV("complete", complete);
-
+    if (complete) {
+        CMutableTransaction mtx;
+        PartiallySignedTransaction psbtx_copy = psbtx;
+        CHECK_NONFATAL(FinalizeAndExtractPSBT(psbtx_copy, mtx));
+        CDataStream ssTx_final(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx_final << mtx;
+        result.pushKV("hex", HexStr(ssTx_final));
+    }
     return result;
 },
     };

@@ -85,11 +85,12 @@ mkdir -p "$DISTSRC"
             # Apply detached codesignatures to dist/ (in-place)
             signapple apply dist/Syscoin-Qt.app codesignatures/osx/dist
 
-            # Make a DMG from dist/
-            xorrisofs -D -l -V "$(< osx_volname)" -no-pad -r -dir-mode 0755 \
-                      -o "${OUTDIR}/${DISTNAME}-${HOST}.dmg" \
-                      dist \
-                      -- -volume_date all_file_dates ="$SOURCE_DATE_EPOCH"
+            # Make a .zip from dist/
+            cd dist/
+            find . -print0 \
+                | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
+            find . | sort \
+                | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST}.zip"
             ;;
         *)
             exit 1

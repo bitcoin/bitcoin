@@ -119,16 +119,16 @@ static void CheckValues(const common::Settings& settings, const std::string& sin
 BOOST_AUTO_TEST_CASE(Simple)
 {
     common::Settings settings;
-    settings.command_line_options["name"].push_back("val1");
-    settings.command_line_options["name"].push_back("val2");
-    settings.ro_config["section"]["name"].push_back(2);
+    settings.command_line_options["name"].emplace_back("val1");
+    settings.command_line_options["name"].emplace_back("val2");
+    settings.ro_config["section"]["name"].emplace_back(2);
 
     // The last given arg takes precedence when specified via commandline.
     CheckValues(settings, R"("val2")", R"(["val1","val2",2])");
 
     common::Settings settings2;
-    settings2.ro_config["section"]["name"].push_back("val2");
-    settings2.ro_config["section"]["name"].push_back("val3");
+    settings2.ro_config["section"]["name"].emplace_back("val2");
+    settings2.ro_config["section"]["name"].emplace_back("val3");
 
     // The first given arg takes precedence when specified via config file.
     CheckValues(settings2, R"("val2")", R"(["val2","val3"])");
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(Simple)
 BOOST_AUTO_TEST_CASE(NullOverride)
 {
     common::Settings settings;
-    settings.command_line_options["name"].push_back("value");
+    settings.command_line_options["name"].emplace_back("value");
     BOOST_CHECK_EQUAL(R"("value")", GetSetting(settings, "section", "name", false, false, false).write().c_str());
     settings.forced_settings["name"] = {};
     BOOST_CHECK_EQUAL(R"(null)", GetSetting(settings, "section", "name", false, false, false).write().c_str());
@@ -202,11 +202,11 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
                                std::vector<common::SettingsValue>& dest) {
             if (action == SET || action == SECTION_SET) {
                 for (int i = 0; i < 2; ++i) {
-                    dest.push_back(value_prefix + ToString(++value_suffix));
+                    dest.emplace_back(value_prefix + ToString(++value_suffix));
                     desc += " " + name_prefix + name + "=" + dest.back().get_str();
                 }
             } else if (action == NEGATE || action == SECTION_NEGATE) {
-                dest.push_back(false);
+                dest.emplace_back(false);
                 desc += " " + name_prefix + "no" + name;
             }
         };

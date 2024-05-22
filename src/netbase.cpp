@@ -32,6 +32,8 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 std::chrono::milliseconds g_socks5_recv_timeout = 20s;
 static std::atomic<bool> interruptSocks5Recv(false);
 
+ReachableNets g_reachable_nets;
+
 std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup)
 {
     addrinfo ai_hint{};
@@ -514,10 +516,6 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
     // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    if (sock.Get() == INVALID_SOCKET) {
-        LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToStringAddrPort());
-        return false;
-    }
     if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
         LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToStringAddrPort());
         return false;
@@ -655,9 +653,10 @@ bool LookupSubNet(const std::string& subnet_str, CSubNet& subnet_out)
 
     const size_t slash_pos{subnet_str.find_last_of('/')};
     const std::string str_addr{subnet_str.substr(0, slash_pos)};
-    const std::optional<CNetAddr> addr{LookupHost(str_addr, /*fAllowLookup=*/false)};
+    std::optional<CNetAddr> addr{LookupHost(str_addr, /*fAllowLookup=*/false)};
 
     if (addr.has_value()) {
+        addr = static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{addr.value(), /*port=*/0}));
         if (slash_pos != subnet_str.npos) {
             const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
             uint8_t netmask;
@@ -775,4 +774,13 @@ bool IsBadPort(uint16_t port)
         return true;
     }
     return false;
+}
+
+CService MaybeFlipIPv6toCJDNS(const CService& service)
+{
+    CService ret{service};
+    if (ret.IsIPv6() && ret.HasCJDNSPrefix() && g_reachable_nets.Contains(NET_CJDNS)) {
+        ret.m_net = NET_CJDNS;
+    }
+    return ret;
 }

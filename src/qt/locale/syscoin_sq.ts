@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen.</translation>
+        <translation type="unfinished">Kliko me të djathtën për të ndryshuar adresën ose etiketen</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">afer</translation>
+        <translation type="unfinished">afër</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -56,14 +56,6 @@
     <message>
         <source>C&amp;hoose</source>
         <translation type="unfinished">Zgjidh</translation>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished">Duke derguar adresen</translation>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished">Duke marr adresen</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -279,13 +271,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>syscoin-core</name>
-    <message>
-        <source>Insufficient funds</source>
-        <translation type="unfinished">Fonde te pamjaftueshme</translation>
-    </message>
-    </context>
-<context>
     <name>SyscoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -404,14 +389,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Date</source>
         <translation type="unfinished">Data</translation>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished">po</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished">jo</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -770,10 +747,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Dërguar drejt</translation>
     </message>
     <message>
-        <source>Payment to yourself</source>
-        <translation type="unfinished">Pagesë ndaj vetvetes</translation>
-    </message>
-    <message>
         <source>Mined</source>
         <translation type="unfinished">Minuar</translation>
     </message>
@@ -844,6 +817,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Eksporto të dhënat e skedës korrente në një skedar</translation>
+    </message>
+    </context>
+<context>
+    <name>syscoin-core</name>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">Fonde te pamjaftueshme</translation>
     </message>
     </context>
 </TS>

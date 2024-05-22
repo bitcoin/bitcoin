@@ -31,6 +31,9 @@ public:
     bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache = nullptr) const override { return false; };
     bool ExpandFromCache(int pos, const DescriptorCache& read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const override { return false; }
     void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const override {}
+    std::optional<int64_t> ScriptSize() const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override { return {}; }
+    std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 };
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)

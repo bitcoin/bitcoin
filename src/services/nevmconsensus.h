@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_SERVICES_SYSCOINCONSENSUS_H
-#define SYSCOIN_SERVICES_SYSCOINCONSENSUS_H
+#ifndef SYSCOIN_SERVICES_NEVMCONSENSUS_H
+#define SYSCOIN_SERVICES_NEVMCONSENSUS_H
 #include <primitives/transaction.h>
 #include <dbwrapper.h>
 #include <consensus/params.h>
@@ -57,4 +57,4 @@ extern std::unique_ptr<CNEVMDataDB> pnevmdatadb;
 bool DisconnectMint(const CTransaction &tx, const uint256& txHash, NEVMMintTxMap &mapMintKeys);
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const uint256& txHash, const CTxUndo& txundo, CCoinsViewCache& view, NEVMMintTxMap &mapMintKeys, NEVMDataVec &NEVMDataVecOut);
 bool CheckSyscoinMint(const CTransaction& tx, TxValidationState &tstate, const bool &fJustCheck, const uint32_t& nHeight, NEVMMintTxMap &mapMintKeys, CAmount &nValue);
-#endif // SYSCOIN_SERVICES_SYSCOINCONSENSUS_H
+#endif // SYSCOIN_SERVICES_NEVMCONSENSUS_H

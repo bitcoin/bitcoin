@@ -25,6 +25,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     const CNetMsgMaker mm{0};
 
     peerman.InitializeNode(node, local_services);
+    FlushSendBuffer(node); // Drop the version message added by InitializeNode.
 
     CSerializedNetMsg msg_version{
         mm.Make(NetMsgType::VERSION,
@@ -32,19 +33,20 @@ void ConnmanTestMsg::Handshake(CNode& node,
                 Using<CustomUintFormatter<8>>(remote_services), //
                 int64_t{},                                      // dummy time
                 int64_t{},                                      // ignored service bits
-                CService{},                                     // dummy
+                CNetAddr::V1(CService{}),                       // dummy
                 int64_t{},                                      // ignored service bits
-                CService{},                                     // ignored
+                CNetAddr::V1(CService{}),                       // ignored
                 uint64_t{1},                                    // dummy nonce
                 std::string{},                                  // dummy subver
                 int32_t{},                                      // dummy starting_height
                 relay_txs),
     };
 
-    (void)connman.ReceiveMsgFrom(node, msg_version);
+    (void)connman.ReceiveMsgFrom(node, std::move(msg_version));
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
     peerman.SendMessages(&node);
+    FlushSendBuffer(node); // Drop the verack message added by SendMessages.
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
@@ -54,7 +56,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     assert(statestats.their_services == remote_services);
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
-        (void)connman.ReceiveMsgFrom(node, msg_verack);
+        (void)connman.ReceiveMsgFrom(node, std::move(msg_verack));
         node.fPauseSend = false;
         connman.ProcessMessagesOnce(node);
         peerman.SendMessages(&node);
@@ -70,14 +72,29 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
     }
 }
 
-bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const
+void ConnmanTestMsg::FlushSendBuffer(CNode& node) const
 {
-    std::vector<uint8_t> ser_msg_header;
-    node.m_serializer->prepareForTransport(ser_msg, ser_msg_header);
+    LOCK(node.cs_vSend);
+    node.vSendMsg.clear();
+    node.m_send_memusage = 0;
+    while (true) {
+        const auto& [to_send, _more, _msg_type] = node.m_transport->GetBytesToSend(false);
+        if (to_send.empty()) break;
+        node.m_transport->MarkBytesSent(to_send.size());
+    }
+}
 
-    bool complete;
-    NodeReceiveMsgBytes(node, ser_msg_header, complete);
-    NodeReceiveMsgBytes(node, ser_msg.data, complete);
+bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const
+{
+    bool queued = node.m_transport->SetMessageToSend(ser_msg);
+    assert(queued);
+    bool complete{false};
+    while (true) {
+        const auto& [to_send, _more, _msg_type] = node.m_transport->GetBytesToSend(false);
+        if (to_send.empty()) break;
+        NodeReceiveMsgBytes(node, to_send, complete);
+        node.m_transport->MarkBytesSent(to_send.size());
+    }
     return complete;
 }
 

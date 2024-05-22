@@ -31,18 +31,12 @@ elif [ "$CI_OS_NAME" != "macos" ]; then
 fi
 
 if [ -n "$PIP_PACKAGES" ]; then
-  if [ "$CI_OS_NAME" == "macos" ]; then
-    sudo -H pip3 install --upgrade pip
-    # shellcheck disable=SC2086
-    IN_GETOPT_BIN="$(brew --prefix gnu-getopt)/bin/getopt" ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-  else
-    # shellcheck disable=SC2086
-    ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
-  fi
+  # shellcheck disable=SC2086
+  ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-16.0.6 /msan/llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-17.0.2 /msan/llvm-project
 
   cmake -G Ninja -B /msan/clang_build/ \
     -DLLVM_ENABLE_PROJECTS="clang" \
@@ -51,7 +45,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
     -S /msan/llvm-project/llvm
 
-  ninja -C /msan/clang_build/ "$MAKEJOBS"
+  ninja -C /msan/clang_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
   ninja -C /msan/clang_build/ install-runtimes
 
   update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
@@ -66,17 +60,17 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DCMAKE_CXX_COMPILER=clang++ \
     -DLLVM_TARGETS_TO_BUILD=Native \
     -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
-    -DLIBCXX_ENABLE_DEBUG_MODE=ON \
-    -DLIBCXX_ENABLE_ASSERTIONS=ON \
+    -DLIBCXX_HARDENING_MODE=debug \
     -S /msan/llvm-project/runtimes
 
-  ninja -C /msan/cxx_build/ "$MAKEJOBS"
+  ninja -C /msan/cxx_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
-  git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_15 /include-what-you-use
-  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-15 -S /include-what-you-use
-  make -C /iwyu-build/ install "$MAKEJOBS"
+  ${CI_RETRY_EXE} git clone https://github.com/include-what-you-use/include-what-you-use -b master /include-what-you-use
+  git -C /include-what-you-use checkout a138eaac254e5a472464e31d5ec418fe6e6f1fc7
+  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
+  make -C /iwyu-build/ install "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
 fi
 
 mkdir -p "${DEPENDS_DIR}/SDKs" "${DEPENDS_DIR}/sdk-sources"
@@ -87,7 +81,7 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
   OSX_SDK_FILENAME="${OSX_SDK_BASENAME}.tar.gz"
   OSX_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OSX_SDK_FILENAME}"
   if [ ! -f "$OSX_SDK_PATH" ]; then
-    curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
+    ${CI_RETRY_EXE} curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
   fi
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
@@ -95,11 +89,11 @@ fi
 if [ -n "$ANDROID_HOME" ] && [ ! -d "$ANDROID_HOME" ]; then
   ANDROID_TOOLS_PATH=${DEPENDS_DIR}/sdk-sources/android-tools.zip
   if [ ! -f "$ANDROID_TOOLS_PATH" ]; then
-    curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
+    ${CI_RETRY_EXE} curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
   fi
   mkdir -p "$ANDROID_HOME"
   unzip -o "$ANDROID_TOOLS_PATH" -d "$ANDROID_HOME"
-  yes | "${ANDROID_HOME}"/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_HOME}" --install "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" "platform-tools" "platforms;android-${ANDROID_API_LEVEL}" "ndk;${ANDROID_NDK_VERSION}"
+  yes | "${ANDROID_HOME}"/cmdline-tools/bin/sdkmanager --sdk_root="${ANDROID_HOME}" --install "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" "platform-tools" "platforms;android-31" "platforms;android-${ANDROID_API_LEVEL}" "ndk;${ANDROID_NDK_VERSION}"
 fi
 
 git config --global ${CFG_DONE} "true"

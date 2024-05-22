@@ -38,7 +38,7 @@ static RPCHelpMan syscoindecoderawtransaction()
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             {RPCResult::Type::STR_HEX, "blockhash", "Block confirming the transaction, if any"},
             {RPCResult::Type::NUM, "value", "The total amount in this transaction"},
-        }}, 
+        }},
     RPCExamples{
         HelpExampleCli("syscoindecoderawtransaction", "\"hexstring\"")
         + HelpExampleRpc("syscoindecoderawtransaction", "\"hexstring\"")
@@ -58,7 +58,7 @@ static RPCHelpMan syscoindecoderawtransaction()
     CTransactionRef rawTx(MakeTransactionRef(std::move(tx)));
     if (rawTx->IsNull())
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
-    
+
     CBlockIndex* blockindex = nullptr;
     uint256 hashBlock;
     if (g_txindex) {
@@ -182,10 +182,10 @@ static RPCHelpMan getnevmblobdata()
         }
         if (pblockindex == nullptr) {
             uint32_t nBlockHeight;
-            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {	    
+            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {
                 pblockindex = node.chainman->ActiveChain()[nBlockHeight];
             }
-        } 
+        }
         hashBlock.SetNull();
         if(pblockindex != nullptr) {
             tx = GetTransaction(pblockindex, nullptr, txhash, hashBlock, node.chainman->m_blockman);
@@ -201,7 +201,7 @@ static RPCHelpMan getnevmblobdata()
             vchVH = nevmData.vchVersionHash;
         }
     }
-    
+
     UniValue oNEVM(UniValue::VOBJ);
     BlockValidationState state;
     std::vector<uint8_t> vchData;
@@ -230,7 +230,7 @@ static RPCHelpMan getnevmblobdata()
     };
 }
 
-static RPCHelpMan settestparams() 
+static RPCHelpMan settestparams()
 {
     return RPCHelpMan{"settestparams",
         "\nSet test setting. Used in testing only.\n",
@@ -243,8 +243,8 @@ static RPCHelpMan settestparams()
             + HelpExampleRpc("settestparams", "\"1\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
-{ 
-        fTestSetting = false;
+{
+        bool fTestSetting = false;
         if(request.params[0].get_str() == "1") {
             fTestSetting = true;
         }
@@ -304,11 +304,11 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
                             }
                             oBlob.pushKV("data", HexStr(vchData));
                         }
-                        oRes.push_back(oBlob); 
+                        oRes.push_back(oBlob);
                     }
                 } else {
            			pcursor->Next();
-					continue;         
+					continue;
                 }
 				index += 1;
 				if (index <= from) {
@@ -416,10 +416,10 @@ static RPCHelpMan syscoingetspvproof()
         }
         if (pblockindex == nullptr) {
             uint32_t nBlockHeight;
-            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {	    
+            if(pblockindexdb != nullptr && pblockindexdb->ReadBlockHeight(txhash, nBlockHeight)) {
                 pblockindex = node.chainman->ActiveChain()[nBlockHeight];
             }
-        } 
+        }
     }
 
     // Allow txindex to catch up if we need to query it and before we acquire cs_main.
@@ -450,7 +450,7 @@ static RPCHelpMan syscoingetspvproof()
         // blocks, we add the headers to our index, but don't accept the
         // block).
         throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
-    }   
+    }
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(*node.chainman);
     const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
@@ -469,12 +469,12 @@ static RPCHelpMan syscoingetspvproof()
         siblings.push_back(txHashFromBlock.GetHex());
     }
     res.pushKVEnd("siblings", siblings);
-    res.pushKVEnd("index", nIndex);  
+    res.pushKVEnd("index", nIndex);
     CNEVMHeader evmBlock;
     BlockValidationState state;
     if(!GetNEVMData(state, block, evmBlock)) {
         throw JSONRPCError(RPC_MISC_ERROR, state.ToString());
-    }  
+    }
     std::reverse (evmBlock.nBlockHash.begin (), evmBlock.nBlockHash.end ()); // correct endian
     res.pushKVEnd("nevm_blockhash", evmBlock.nBlockHash.GetHex());
     // SYSCOIN
@@ -489,7 +489,7 @@ static RPCHelpMan syscoinstopgeth()
 {
     return RPCHelpMan{"syscoinstopgeth",
     "\nStops Geth from running.\n",
-    {},       
+    {},
     RPCResult{
         RPCResult::Type::OBJ, "", "",
         {
@@ -575,12 +575,12 @@ static RPCHelpMan syscoingettxroots()
     if(!pnevmtxrootsdb || !pnevmtxrootsdb->ReadTxRoots(nBlockHash, txRootDB)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read transaction roots");
     }
-      
-    UniValue ret(UniValue::VOBJ);  
+
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("blockhash", nBlockHash.GetHex());
     ret.pushKV("txroot", txRootDB.nTxRoot.GetHex());
     ret.pushKV("receiptroot", txRootDB.nReceiptRoot.GetHex());
-    
+
     return ret;
 },
     };
@@ -597,7 +597,7 @@ static RPCHelpMan syscoincheckmint()
         RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-        }}, 
+        }},
     RPCExamples{
         HelpExampleCli("syscoincheckmint", "d8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")
         + HelpExampleRpc("syscoincheckmint", "d8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10")

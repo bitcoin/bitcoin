@@ -136,6 +136,7 @@ private:
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
+    void CleanupOldQuorumData(const CBlockIndex* pIndex) const;
 };
 
 extern CQuorumManager* quorumManager;

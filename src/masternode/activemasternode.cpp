@@ -129,7 +129,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    
+
     if (sockPtr->Get() == INVALID_SOCKET) {
         state = MASTERNODE_ERROR;
         strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToStringAddrPort();
@@ -243,5 +243,5 @@ bool CActiveMasternodeManager::IsValidNetAddr(CService addrIn)
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
     return !Params().RequireRoutableExternalIP() ||
-           (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
+           (addrIn.IsIPv4() && g_reachable_nets.Contains(addrIn) && addrIn.IsRoutable());
 }

@@ -25,8 +25,9 @@
 // How often to flush fee estimates to fee_estimates.dat.
 static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
 
-/** fee_estimates.dat that are more than 60 hours (2.5 days) will not be read,
- * as the estimates in the file are stale.
+/** fee_estimates.dat that are more than 60 hours (2.5 days) old will not be read,
+ * as fee estimates are based on historical data and may be inaccurate if
+ * network activity has changed.
  */
 static constexpr std::chrono::hours MAX_FILE_AGE{60};
 
@@ -319,7 +320,7 @@ private:
 
 public:
     /** Create new FeeFilterRounder */
-    explicit FeeFilterRounder(const CFeeRate& min_incremental_fee);
+    explicit FeeFilterRounder(const CFeeRate& min_incremental_fee, FastRandomContext& rng);
 
     /** Quantize a minimum fee for privacy purpose before broadcast. */
     CAmount round(CAmount currentMinFee) EXCLUSIVE_LOCKS_REQUIRED(!m_insecure_rand_mutex);
@@ -327,7 +328,7 @@ public:
 private:
     const std::set<double> m_fee_set;
     Mutex m_insecure_rand_mutex;
-    FastRandomContext insecure_rand GUARDED_BY(m_insecure_rand_mutex);
+    FastRandomContext& insecure_rand GUARDED_BY(m_insecure_rand_mutex);
 };
 
 #endif // SYSCOIN_POLICY_FEES_H

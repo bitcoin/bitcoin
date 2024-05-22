@@ -24,7 +24,6 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-override"
 #endif
-#include <script/script.h>
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
@@ -82,12 +81,12 @@ CMutableTransaction::CMutableTransaction(const CTransaction& tx) : vin(tx.vin), 
 
 uint256 CMutableTransaction::GetHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    return (CHashWriter{SERIALIZE_TRANSACTION_NO_WITNESS} << *this).GetHash();
 }
 
 uint256 CTransaction::ComputeHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
+    return (CHashWriter{SERIALIZE_TRANSACTION_NO_WITNESS} << *this).GetHash();
 }
 
 uint256 CTransaction::ComputeWitnessHash() const
@@ -95,7 +94,7 @@ uint256 CTransaction::ComputeWitnessHash() const
     if (!HasWitness()) {
         return hash;
     }
-    return SerializeHash(*this, SER_GETHASH, 0);
+    return (CHashWriter{0} << *this).GetHash();
 }
 CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
 CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), nVersion(tx.nVersion), nLockTime(tx.nLockTime), hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
@@ -170,7 +169,7 @@ bool IsMasternodeTx(const int &nVersion) {
     return nVersion == SYSCOIN_TX_VERSION_MN_COINBASE ||
      nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT ||
      nVersion == SYSCOIN_TX_VERSION_MN_REGISTER ||
-     nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE || 
+     nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE ||
      nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR ||
      nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE;
 }
@@ -251,7 +250,7 @@ int CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData)
     } catch (std::exception &e) {
         SetNull();
     }
-    
+
     return -1;
 }
 
@@ -264,7 +263,7 @@ bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
         return false;
     }
 	if(UnserializeFromData(vchData) != 0)
-	{	
+	{
 		SetNull();
 		return false;
 	}
@@ -279,10 +278,10 @@ bool CMintSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
         return false;
     }
 	if(UnserializeFromData(vchData) != 0)
-	{	
+	{
 		SetNull();
 		return false;
-	} 
+	}
     return true;
 }
 CNEVMData::CNEVMData(const CTransaction &tx, const int nVersion) {
@@ -322,7 +321,7 @@ bool CNEVMData::UnserializeFromTx(const CTransaction &tx, const int nVersion) {
 		return false;
 	}
 	if(UnserializeFromData(vchData, nVersion) != 0)
-	{	
+	{
 		SetNull();
 		return false;
 	}
@@ -332,7 +331,7 @@ bool CNEVMData::UnserializeFromTx(const CTransaction &tx, const int nVersion) {
             // avoid from deleting in SetNull because vchNEVMData memory isn't owned by CNEVMData
             vchNEVMData = nullptr;
             SetNull();
-            return false;    
+            return false;
         }
     }
     return true;
@@ -345,7 +344,7 @@ bool CNEVMData::UnserializeFromScript(const CScript &scriptPubKey) {
 		return false;
 	}
 	if(UnserializeFromData(vchData, PROTOCOL_VERSION) != 0)
-	{	
+	{
 		SetNull();
 		return false;
 	}

@@ -8,6 +8,7 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <clientversion.h>
 #include <coins.h>
 #include <common/args.h>
 #include <consensus/amount.h>
@@ -298,12 +299,12 @@ static RPCHelpMan getchainlocks()
             RPCResult{
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::OBJ, "previous_chainlock", "previous chainlock information", 
+                    {RPCResult::Type::OBJ, "previous_chainlock", "previous chainlock information",
                     {
                         {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
                         {RPCResult::Type::NUM, "height", "Block Height"},
                     }},
-                    {RPCResult::Type::OBJ, "recent_chainlock", "Most recent chainlock information", 
+                    {RPCResult::Type::OBJ, "recent_chainlock", "Most recent chainlock information",
                     {
                         {RPCResult::Type::STR_HEX, "blockhash", "Block Hash"},
                         {RPCResult::Type::NUM, "height", "Block Height"},
@@ -989,7 +990,7 @@ static RPCHelpMan pruneblockchain()
 
 CoinStatsHashType ParseHashType(const std::string& hash_type_input)
 {
-    if (hash_type_input == "hash_serialized_2") {
+    if (hash_type_input == "hash_serialized_3") {
         return CoinStatsHashType::HASH_SERIALIZED;
     } else if (hash_type_input == "muhash") {
         return CoinStatsHashType::MUHASH;
@@ -1036,7 +1037,7 @@ static RPCHelpMan gettxoutsetinfo()
                 "\nReturns statistics about the unspent transaction output set.\n"
                 "Note this call may take some time if you are not using coinstatsindex.\n",
                 {
-                    {"hash_type", RPCArg::Type::STR, RPCArg::Default{"hash_serialized_2"}, "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'muhash', 'none'."},
+                    {"hash_type", RPCArg::Type::STR, RPCArg::Default{"hash_serialized_3"}, "Which UTXO set hash should be calculated. Options: 'hash_serialized_3' (the legacy algorithm), 'muhash', 'none'."},
                     {"hash_or_height", RPCArg::Type::NUM, RPCArg::DefaultHint{"the current best block"}, "The block hash or height of the target height (only available with coinstatsindex).",
                      RPCArgOptions{
                          .skip_type_check = true,
@@ -1051,7 +1052,7 @@ static RPCHelpMan gettxoutsetinfo()
                         {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at which these statistics are calculated"},
                         {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs"},
                         {RPCResult::Type::NUM, "bogosize", "Database-independent, meaningless metric indicating the UTXO set size"},
-                        {RPCResult::Type::STR_HEX, "hash_serialized_2", /*optional=*/true, "The serialized hash (only present if 'hash_serialized_2' hash_type is chosen)"},
+                        {RPCResult::Type::STR_HEX, "hash_serialized_3", /*optional=*/true, "The serialized hash (only present if 'hash_serialized_3' hash_type is chosen)"},
                         {RPCResult::Type::STR_HEX, "muhash", /*optional=*/true, "The serialized hash (only present if 'muhash' hash_type is chosen)"},
                         {RPCResult::Type::NUM, "transactions", /*optional=*/true, "The number of transactions with unspent outputs (not available when coinstatsindex is used)"},
                         {RPCResult::Type::NUM, "disk_size", /*optional=*/true, "The estimated size of the chainstate on disk (not available when coinstatsindex is used)"},
@@ -1111,7 +1112,7 @@ static RPCHelpMan gettxoutsetinfo()
         }
 
         if (hash_type == CoinStatsHashType::HASH_SERIALIZED) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "hash_serialized_2 hash type cannot be queried for a specific block");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "hash_serialized_3 hash type cannot be queried for a specific block");
         }
 
         if (!index_requested) {
@@ -1140,7 +1141,7 @@ static RPCHelpMan gettxoutsetinfo()
         ret.pushKV("txouts", (int64_t)stats.nTransactionOutputs);
         ret.pushKV("bogosize", (int64_t)stats.nBogoSize);
         if (hash_type == CoinStatsHashType::HASH_SERIALIZED) {
-            ret.pushKV("hash_serialized_2", stats.hashSerialized.GetHex());
+            ret.pushKV("hash_serialized_3", stats.hashSerialized.GetHex());
         }
         if (hash_type == CoinStatsHashType::MUHASH) {
             ret.pushKV("muhash", stats.hashSerialized.GetHex());
@@ -1430,7 +1431,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("time", tip.GetBlockTime());
     obj.pushKV("mediantime", tip.GetMedianTimePast());
     obj.pushKV("verificationprogress", GuessVerificationProgress(chainman.GetParams().TxData(), &tip));
-    obj.pushKV("initialblockdownload", active_chainstate.IsInitialBlockDownload());
+    obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
     obj.pushKV("chainwork", tip.nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
@@ -1630,7 +1631,7 @@ static RPCHelpMan getchaintips()
         } else if (block->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
             // This block or one of its ancestors is conflicting with ChainLocks.
             status = "conflicting";
-        } else if (!block->HaveTxsDownloaded()) {
+        } else if (!block->HaveNumChainTxs()) {
             // This block cannot be connected because full block data for it or one of its parents is missing.
             status = "headers-only";
         } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
@@ -2104,7 +2105,7 @@ static RPCHelpMan getblockstats()
             // New feerate uses satoshis per virtual byte instead of per serialized byte
             CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : 0;
             if (do_feerate_percentiles) {
-                feerate_array.emplace_back(std::make_pair(feerate, weight));
+                feerate_array.emplace_back(feerate, weight);
             }
             maxfeerate = std::max(maxfeerate, feerate);
             minfeerate = std::min(minfeerate, feerate);
@@ -2851,7 +2852,7 @@ UniValue CreateUTXOSnapshot(
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), maybe_stats->coins_count, tip->nChainTx};
+    SnapshotMetadata metadata{tip->GetBlockHash(), maybe_stats->coins_count};
 
     afile << metadata;
 
@@ -2882,11 +2883,181 @@ UniValue CreateUTXOSnapshot(
     result.pushKV("base_height", tip->nHeight);
     result.pushKV("path", path.u8string());
     result.pushKV("txoutset_hash", maybe_stats->hashSerialized.ToString());
-    // Cast required because univalue doesn't have serialization specified for
-    // `unsigned int`, nChainTx's type.
-    result.pushKV("nchaintx", uint64_t{tip->nChainTx});
+    result.pushKV("nchaintx", tip->nChainTx);
     return result;
 }
+
+static RPCHelpMan loadtxoutset()
+{
+    return RPCHelpMan{
+        "loadtxoutset",
+        "Load the serialized UTXO set from disk.\n"
+        "Once this snapshot is loaded, its contents will be "
+        "deserialized into a second chainstate data structure, which is then used to sync to "
+        "the network's tip. "
+        "Meanwhile, the original chainstate will complete the initial block download process in "
+        "the background, eventually validating up to the block that the snapshot is based upon.\n\n"
+
+        "The result is a usable bitcoind instance that is current with the network tip in a "
+        "matter of minutes rather than hours. UTXO snapshot are typically obtained from "
+        "third-party sources (HTTP, torrent, etc.) which is reasonable since their "
+        "contents are always checked by hash.\n\n"
+
+        "You can find more information on this process in the `assumeutxo` design "
+        "document (<https://github.com/bitcoin/bitcoin/blob/master/doc/design/assumeutxo.md>).",
+        {
+            {"path",
+                RPCArg::Type::STR,
+                RPCArg::Optional::NO,
+                "path to the snapshot file. If relative, will be prefixed by datadir."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "coins_loaded", "the number of coins loaded from the snapshot"},
+                    {RPCResult::Type::STR_HEX, "tip_hash", "the hash of the base of the snapshot"},
+                    {RPCResult::Type::NUM, "base_height", "the height of the base of the snapshot"},
+                    {RPCResult::Type::STR, "path", "the absolute path that the snapshot was loaded from"},
+                }
+        },
+        RPCExamples{
+            HelpExampleCli("loadtxoutset", "utxo.dat")
+        },
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(request.params[0].get_str()))};
+
+    FILE* file{fsbridge::fopen(path, "rb")};
+    AutoFile afile{file};
+    if (afile.IsNull()) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            "Couldn't open file " + path.u8string() + " for reading.");
+    }
+
+    SnapshotMetadata metadata;
+    afile >> metadata;
+
+    uint256 base_blockhash = metadata.m_base_blockhash;
+    if (!chainman.GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot, "
+            "assumeutxo block hash in snapshot metadata not recognized (%s)", base_blockhash.ToString()));
+    }
+    int max_secs_to_wait_for_headers = 60 * 10;
+    CBlockIndex* snapshot_start_block = nullptr;
+
+    LogPrintf("[snapshot] waiting to see blockheader %s in headers chain before snapshot activation\n",
+        base_blockhash.ToString());
+
+    while (max_secs_to_wait_for_headers > 0) {
+        snapshot_start_block = WITH_LOCK(::cs_main,
+            return chainman.m_blockman.LookupBlockIndex(base_blockhash));
+        max_secs_to_wait_for_headers -= 1;
+
+        if (!IsRPCRunning()) {
+            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
+        }
+
+        if (!snapshot_start_block) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        } else {
+            break;
+        }
+    }
+
+    if (!snapshot_start_block) {
+        LogPrintf("[snapshot] timed out waiting for snapshot start blockheader %s\n",
+            base_blockhash.ToString());
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "Timed out waiting for base block header to appear in headers chain");
+    }
+    if (!chainman.ActivateSnapshot(afile, metadata, false)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to load UTXO snapshot " + fs::PathToString(path));
+    }
+    CBlockIndex* new_tip{WITH_LOCK(::cs_main, return chainman.ActiveTip())};
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("coins_loaded", metadata.m_coins_count);
+    result.pushKV("tip_hash", new_tip->GetBlockHash().ToString());
+    result.pushKV("base_height", new_tip->nHeight);
+    result.pushKV("path", fs::PathToString(path));
+    return result;
+},
+    };
+}
+
+const std::vector<RPCResult> RPCHelpForChainstate{
+    {RPCResult::Type::NUM, "blocks", "number of blocks in this chainstate"},
+    {RPCResult::Type::STR_HEX, "bestblockhash", "blockhash of the tip"},
+    {RPCResult::Type::NUM, "difficulty", "difficulty of the tip"},
+    {RPCResult::Type::NUM, "verificationprogress", "progress towards the network tip"},
+    {RPCResult::Type::STR_HEX, "snapshot_blockhash", /*optional=*/true, "the base block of the snapshot this chainstate is based on, if any"},
+    {RPCResult::Type::NUM, "coins_db_cache_bytes", "size of the coinsdb cache"},
+    {RPCResult::Type::NUM, "coins_tip_cache_bytes", "size of the coinstip cache"},
+    {RPCResult::Type::BOOL, "validated", "whether the chainstate is fully validated. True if all blocks in the chainstate were validated, false if the chain is based on a snapshot and the snapshot has not yet been validated."},
+};
+
+static RPCHelpMan getchainstates()
+{
+return RPCHelpMan{
+        "getchainstates",
+        "\nReturn information about chainstates.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "headers", "the number of headers seen so far"},
+                {RPCResult::Type::ARR, "chainstates", "list of the chainstates ordered by work, with the most-work (active) chainstate last", {{RPCResult::Type::OBJ, "", "", RPCHelpForChainstate},}},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getchainstates", "")
+    + HelpExampleRpc("getchainstates", "")
+        },
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    LOCK(cs_main);
+    UniValue obj(UniValue::VOBJ);
+
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+
+    auto make_chain_data = [&](const Chainstate& cs, bool validated) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
+        UniValue data(UniValue::VOBJ);
+        if (!cs.m_chain.Tip()) {
+            return data;
+        }
+        const CChain& chain = cs.m_chain;
+        const CBlockIndex* tip = chain.Tip();
+
+        data.pushKV("blocks",                (int)chain.Height());
+        data.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
+        data.pushKV("difficulty",            (double)GetDifficulty(tip));
+        data.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
+        data.pushKV("coins_db_cache_bytes",  cs.m_coinsdb_cache_size_bytes);
+        data.pushKV("coins_tip_cache_bytes", cs.m_coinstip_cache_size_bytes);
+        if (cs.m_from_snapshot_blockhash) {
+            data.pushKV("snapshot_blockhash", cs.m_from_snapshot_blockhash->ToString());
+        }
+        data.pushKV("validated", validated);
+        return data;
+    };
+
+    obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
+
+    const auto& chainstates = chainman.GetAll();
+    UniValue obj_chainstates{UniValue::VARR};
+    for (Chainstate* cs : chainstates) {
+      obj_chainstates.push_back(make_chain_data(*cs, !cs->m_from_snapshot_blockhash || chainstates.size() == 1));
+    }
+    obj.pushKV("chainstates", std::move(obj_chainstates));
+    return obj;
+}
+    };
+}
+
 
 void RegisterBlockchainRPCCommands(CRPCTable& t)
 {
@@ -2911,6 +3082,9 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &scantxoutset},
         {"blockchain", &scanblocks},
         {"blockchain", &getblockfilter},
+        {"blockchain", &dumptxoutset},
+        {"blockchain", &loadtxoutset},
+        {"blockchain", &getchainstates},
         // SYSCOIN
         {"blockchain", &getchainlocks},
         {"hidden", &invalidateblock},
@@ -2919,7 +3093,6 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"hidden", &waitforblock},
         {"hidden", &waitforblockheight},
         {"hidden", &syncwithvalidationinterfacequeue},
-        {"hidden", &dumptxoutset},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

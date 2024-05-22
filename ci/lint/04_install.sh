@@ -18,7 +18,7 @@ ${CI_RETRY_EXE} apt-get install -y curl xz-utils git gpg
 PYTHON_PATH="/python_build"
 if [ ! -d "${PYTHON_PATH}/bin" ]; then
   (
-    git clone https://github.com/pyenv/pyenv.git
+    ${CI_RETRY_EXE} git clone https://github.com/pyenv/pyenv.git
     cd pyenv/plugins/python-build || exit 1
     ./install.sh
   )

@@ -73,6 +73,7 @@
 #include <stdexcept>
 #include <llmq/quorums_blockprocessor.h>
 
+using kernel::BlockTreeDB;
 using kernel::ValidationCacheSizes;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
@@ -208,7 +209,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
         .notifications = chainman_opts.notifications,
     };
     m_node.chainman = std::make_unique<ChainstateManager>(m_node.kernel->interrupt, chainman_opts, blockman_opts);
-    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(DBParams{
+    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<BlockTreeDB>(DBParams{
         .path = m_args.GetDataDirNet() / "blocks" / "index",
         .cache_bytes = static_cast<size_t>(m_cache_sizes.block_tree_db),
         .memory_only = true});
@@ -218,7 +219,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
                                                /*deterministic=*/false,
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()); // Deterministic randomness for tests.
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
@@ -297,9 +298,10 @@ TestingSetup::TestingSetup(
                                                /*deterministic=*/false,
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()); // Deterministic randomness for tests.
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
+    peerman_opts.deterministic_rng = true;
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
                                        *m_node.mempool, peerman_opts);
@@ -498,7 +500,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         for (size_t n{0}; n < num_inputs; ++n) {
             if (unspent_prevouts.empty()) break;
             const auto& [prevout, amount] = unspent_prevouts.front();
-            mtx.vin.push_back(CTxIn(prevout, CScript()));
+            mtx.vin.emplace_back(prevout, CScript());
             total_in += amount;
             unspent_prevouts.pop_front();
         }
@@ -507,7 +509,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         const CAmount amount_per_output = (total_in - fee) / num_outputs;
         for (size_t n{0}; n < num_outputs; ++n) {
             CScript spk = CScript() << CScriptNum(num_transactions + n);
-            mtx.vout.push_back(CTxOut(amount_per_output, spk));
+            mtx.vout.emplace_back(amount_per_output, spk);
         }
         CTransactionRef ptx = MakeTransactionRef(mtx);
         mempool_transactions.push_back(ptx);
@@ -516,7 +518,7 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
             // it can be used to build a more complex transaction graph. Insert randomly into
             // unspent_prevouts for extra randomness in the resulting structures.
             for (size_t n{0}; n < num_outputs; ++n) {
-                unspent_prevouts.push_back(std::make_pair(COutPoint(ptx->GetHash(), n), amount_per_output));
+                unspent_prevouts.emplace_back(COutPoint(ptx->GetHash(), n), amount_per_output);
                 std::swap(unspent_prevouts.back(), unspent_prevouts[det_rand.randrange(unspent_prevouts.size())]);
             }
         }
@@ -546,8 +548,8 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     // Manually create an invalid transaction. Manually set the fee in the CTxMemPoolEntry to
     // achieve the exact target feerate.
     CMutableTransaction mtx = CMutableTransaction();
-    mtx.vin.push_back(CTxIn{COutPoint{g_insecure_rand_ctx.rand256(), 0}});
-    mtx.vout.push_back(CTxOut(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE))));
+    mtx.vin.emplace_back(COutPoint{g_insecure_rand_ctx.rand256(), 0});
+    mtx.vout.emplace_back(1 * COIN, GetScriptForDestination(WitnessV0ScriptHash(CScript() << OP_TRUE)));
     const auto tx{MakeTransactionRef(mtx)};
     LockPoints lp;
     // The new mempool min feerate is equal to the removed package's feerate + incremental feerate.

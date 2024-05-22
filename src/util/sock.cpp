@@ -24,8 +24,6 @@ static inline bool IOErrorIsPermanent(int err)
     return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
 }
 
-Sock::Sock() : m_socket(INVALID_SOCKET) {}
-
 Sock::Sock(SOCKET s) : m_socket(s) {}
 
 Sock::Sock(Sock&& other)
@@ -44,6 +42,7 @@ Sock& Sock::operator=(Sock&& other)
     return *this;
 }
 
+// SYSCOIN
 SOCKET Sock::Get() const { return m_socket; }
 
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
@@ -410,6 +409,11 @@ void Sock::Close()
     }
     m_socket = INVALID_SOCKET;
 }
+
+bool Sock::operator==(SOCKET s) const
+{
+    return m_socket == s;
+};
 
 std::string NetworkErrorString(int err)
 {

@@ -53,7 +53,7 @@ FUZZ_TARGET(net, .init = initialize_net)
                 }
             },
             [&] {
-                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider);
+                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider, ConsumeDeserializationParams<CNetAddr::SerParams>(fuzzed_data_provider));
                 if (!service_opt) {
                     return;
                 }
