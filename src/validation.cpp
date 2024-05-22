@@ -575,6 +575,14 @@ public:
               m_client_maxfeerate{client_maxfeerate},
               m_allow_carveouts{allow_carveouts}
         {
+            // If we are using package feerates, we must be doing package submission.
+            // It also means carveouts and sibling eviction are not permitted.
+            if (m_package_feerates) {
+                Assume(m_package_submission);
+                Assume(!m_allow_carveouts);
+                Assume(!m_allow_sibling_eviction);
+            }
+            if (m_allow_sibling_eviction) Assume(m_allow_replacement);
         }
     };
 
