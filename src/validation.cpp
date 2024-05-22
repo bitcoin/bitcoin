@@ -2808,6 +2808,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
     bool RolluxContext = pindex->nHeight >= params.GetConsensus().nRolluxStartBlock;
+    fScriptChecks = fScriptChecks && RolluxContext; 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
