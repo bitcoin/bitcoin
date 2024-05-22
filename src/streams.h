@@ -218,7 +218,9 @@ protected:
     using vector_type = SerializeData;
     vector_type vch;
     vector_type::size_type m_read_pos{0};
-
+    // SYSCOIN
+    int nTxVersion{0};
+    int nType{0};
 
 public:
     typedef vector_type::allocator_type   allocator_type;
@@ -230,10 +232,10 @@ public:
     typedef vector_type::iterator         iterator;
     typedef vector_type::const_iterator   const_iterator;
     typedef vector_type::reverse_iterator reverse_iterator;
-
-    explicit DataStream() {}
-    explicit DataStream(Span<const uint8_t> sp) : DataStream{AsBytes(sp)} {}
-    explicit DataStream(Span<const value_type> sp) : vch(sp.data(), sp.data() + sp.size()) {}
+    // SYSCOIN
+    explicit DataStream(int nTypeIn = 0) {nType = nTypeIn;}
+    explicit DataStream(Span<const uint8_t> sp, int nTypeIn = 0) : DataStream{AsBytes(sp), nTypeIn} {}
+    explicit DataStream(Span<const value_type> sp, int nTypeIn = 0) : vch(sp.data(), sp.data() + sp.size()), nType(nTypeIn) {}
 
     std::string str() const
     {
@@ -355,32 +357,30 @@ public:
     {
         util::Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
     }
+    // SYSCOIN
+    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
+    int GetTxVersion()           { return nTxVersion; }
+    int GetType() const          { return nType; }
+    void seek(size_t _nSize) {return;}
 };
 
 class CDataStream : public DataStream
 {
 private:
-    int nType;
     int nVersion;
-    // SYSCOIN
-    int nTxVersion{0};
 public:
     explicit CDataStream(int nTypeIn, int nVersionIn)
-        : nType{nTypeIn},
+        : DataStream{nTypeIn},
           nVersion{nVersionIn} {}
 
     explicit CDataStream(Span<const uint8_t> sp, int type, int version) : CDataStream{AsBytes(sp), type, version} {}
     explicit CDataStream(Span<const value_type> sp, int nTypeIn, int nVersionIn)
-        : DataStream{sp},
-          nType{nTypeIn},
+        : DataStream{sp, nTypeIn},
           nVersion{nVersionIn} {}
 
     int GetType() const          { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
-    // SYSCOIN
-    void SetTxVersion(int nTxVersionIn) { nTxVersion = nTxVersionIn; }
-    int GetTxVersion()           { return nTxVersion; }
     void seek(size_t _nSize) {return;}
     template <typename T>
     CDataStream& operator<<(const T& obj)

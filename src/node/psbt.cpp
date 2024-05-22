@@ -33,8 +33,8 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         // We set next role here and ratchet backwards as required
         input_analysis.next = PSBTRole::EXTRACTOR;
 
-        // SYSCOIN Check for a UTXO
-        CTxOutCoin utxo;
+        // Check for a UTXO
+        CTxOut utxo;
         if (psbtx.GetInputUTXO(utxo, i)) {
             if (!MoneyRange(utxo.nValue) || !MoneyRange(in_amt + utxo.nValue)) {
                 result.SetInvalid(strprintf("PSBT is not valid. Input %u has invalid value", i));

@@ -31,9 +31,8 @@
 class Coin
 {
 public:
-    // SYSCOIN
     //! unspent transaction output
-    CTxOutCoin out;
+    CTxOut out;
 
     //! whether containing transaction was a coinbase
     unsigned int fCoinBase : 1;
@@ -42,9 +41,7 @@ public:
     uint32_t nHeight : 31;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOutCoin&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOutCoin& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
 
     void Clear() {

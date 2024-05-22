@@ -191,8 +191,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        // SYSCOIN
-        const CTxOutCoin& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+        const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
@@ -230,8 +229,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // If the script is invalid without witness, it would be caught sooner or later during validation.
         if (tx.vin[i].scriptWitness.IsNull())
             continue;
-        // SYSCOIN
-        const CTxOutCoin &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+        const CTxOut &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;

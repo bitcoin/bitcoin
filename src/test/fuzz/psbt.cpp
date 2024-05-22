@@ -58,8 +58,7 @@ FUZZ_TARGET(psbt)
     }
 
     for (size_t i = 0; i < psbt.tx->vin.size(); ++i) {
-        // SYSCOIN
-        CTxOutCoin tx_out;
+        CTxOut tx_out;
         if (psbt.GetInputUTXO(tx_out, i)) {
             (void)tx_out.IsNull();
             (void)tx_out.ToString();

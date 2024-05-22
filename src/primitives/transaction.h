@@ -371,58 +371,6 @@ public:
     }
     std::string ToString() const;
 };
-/** An output of a transaction.  It contains the public key that the next input
- * must be able to sign with to claim it.
- */
-class CTxOutCoin
-{
-public:
-    CAmount nValue;
-    CScript scriptPubKey;
-    CTxOutCoin()
-    {
-        SetNull();
-    }
-    // SYSCOIN
-    CTxOutCoin(const CTxOut& txOutIn) {
-        nValue = txOutIn.nValue;
-        scriptPubKey = txOutIn.scriptPubKey;
-    }
-    CTxOutCoin(CTxOut&& txOutIn) {
-        nValue = std::move(txOutIn.nValue);
-        scriptPubKey = std::move(txOutIn.scriptPubKey);
-    }
-    CTxOutCoin(const CAmount& nValueIn, const CScript &scriptPubKeyIn);
-    SERIALIZE_METHODS(CTxOutCoin, obj)
-    {
-        READWRITE(obj.nValue, obj.scriptPubKey);
-    }
-
-
-    void SetNull()
-    {
-        nValue = -1;
-        scriptPubKey.clear();
-    }
-
-    bool IsNull() const
-    {
-        return (nValue == -1);
-    }
-
-    friend bool operator==(const CTxOutCoin& a, const CTxOutCoin& b)
-    {
-        return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
-    }
-
-    friend bool operator!=(const CTxOutCoin& a, const CTxOutCoin& b)
-    {
-        return !(a == b);
-    }
-    std::string ToString() const;
-};
-
 
 template<typename TxType>
 inline CAmount CalculateOutputValue(const TxType& tx)

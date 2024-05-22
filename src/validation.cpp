@@ -1950,8 +1950,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     }
 
     if (!txdata.m_spent_outputs_ready) {
-        // SYSCOIN
-        std::vector<CTxOutCoin> spent_outputs;
+        std::vector<CTxOut> spent_outputs;
         spent_outputs.reserve(tx.vin.size());
 
         for (const auto& txin : tx.vin) {

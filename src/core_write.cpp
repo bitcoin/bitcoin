@@ -29,20 +29,20 @@
 bool SyscoinMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint256& hashBlock, UniValue &entry) {
     CMintSyscoin mintSyscoin(tx);
     if (!mintSyscoin.IsNull()) {
-        entry.__pushKV("txid", txHash.GetHex());
-        entry.__pushKV("blockhash", hashBlock.GetHex());  
+        entry.pushKV("txid", txHash.GetHex());
+        entry.pushKV("blockhash", hashBlock.GetHex());  
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.__pushKV("txhash", mintSyscoin.nTxHash.GetHex());  
-        oSPVProofObj.__pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
-        oSPVProofObj.__pushKV("postx", mintSyscoin.posTx);
-        oSPVProofObj.__pushKV("txroot", mintSyscoin.nTxRoot.GetHex()); 
-        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
-        oSPVProofObj.__pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
-        oSPVProofObj.__pushKV("posReceipt", mintSyscoin.posReceipt);  
-        oSPVProofObj.__pushKV("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
-        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
-        oSPVProofObj.__pushKV("amount", ValueFromAmount(mintSyscoin.nValue));  
-        entry.__pushKV("spv_proof", oSPVProofObj);
+        oSPVProofObj.pushKV("txhash", mintSyscoin.nTxHash.GetHex());  
+        oSPVProofObj.pushKV("blockhash", mintSyscoin.nBlockHash.GetHex());  
+        oSPVProofObj.pushKV("postx", mintSyscoin.posTx);
+        oSPVProofObj.pushKV("txroot", mintSyscoin.nTxRoot.GetHex()); 
+        oSPVProofObj.pushKV("txparentnodes", HexStr(mintSyscoin.vchTxParentNodes)); 
+        oSPVProofObj.pushKV("txpath", HexStr(mintSyscoin.vchTxPath)); 
+        oSPVProofObj.pushKV("posReceipt", mintSyscoin.posReceipt);  
+        oSPVProofObj.pushKV("receiptroot", mintSyscoin.nReceiptRoot.GetHex());  
+        oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintSyscoin.vchReceiptParentNodes));  
+        oSPVProofObj.pushKV("amount", ValueFromAmount(mintSyscoin.nValue));  
+        entry.pushKV("spv_proof", oSPVProofObj);
         return true;
     } 
     return false;
@@ -247,8 +247,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         }
         if (have_undo) {
             const Coin& prev_coin = txundo->vprevout[i];
-            // SYSCOIN
-            const CTxOutCoin& prev_txout = prev_coin.out;
+            const CTxOut& prev_txout = prev_coin.out;
 
             amt_total_in += prev_txout.nValue;
 

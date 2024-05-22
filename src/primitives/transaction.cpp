@@ -73,17 +73,7 @@ CTxOut::CTxOut(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
     scriptPubKey = scriptPubKeyIn;
     vchNEVMData.clear();
 }
-// SYSCOIN
-CTxOutCoin::CTxOutCoin(const CAmount& nValueIn,  const CScript &scriptPubKeyIn)
-{
-    nValue = nValueIn;
-    scriptPubKey = scriptPubKeyIn;
-}
 std::string CTxOut::ToString() const
-{
-    return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
-}
-std::string CTxOutCoin::ToString() const
 {
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
 }

@@ -264,11 +264,11 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
     const auto & mapCache = pnevmdatadb.GetMapCache();
     for (auto const& [key, val] :mapCache) {
         UniValue oBlob(UniValue::VOBJ);
-        oBlob.__pushKV("versionhash",  HexStr(key));
-        oBlob.__pushKV("mpt", val.second);
-        oBlob.__pushKV("datasize", (uint32_t)val.first.size());
+        oBlob.pushKV("versionhash",  HexStr(key));
+        oBlob.pushKV("mpt", val.second);
+        oBlob.pushKV("datasize", (uint32_t)val.first.size());
         if(getdata) {
-            oBlob.__pushKV("data", HexStr(val.first));
+            oBlob.pushKV("data", HexStr(val.first));
         }
         index += 1;
         if (index <= from) {
@@ -290,19 +290,19 @@ bool ScanBlobs(CNEVMDataDB& pnevmdatadb, const uint32_t count, const uint32_t fr
                     UniValue oBlob(UniValue::VOBJ);
                     uint64_t nMedianTime;
                     if(pcursor->GetValue(nMedianTime)) {
-                        oBlob.__pushKV("versionhash",  HexStr(key.first));
-                        oBlob.__pushKV("mpt", nMedianTime);
+                        oBlob.pushKV("versionhash",  HexStr(key.first));
+                        oBlob.pushKV("mpt", nMedianTime);
                         uint32_t nSize = 0;
                         std::vector<uint8_t> vchData;
                         if(!pnevmdatadb.ReadDataSize(key.first, nSize)) {
                            pnevmdatadb.ReadData(key.first, vchData);
                         }
-                        oBlob.__pushKV("datasize", nSize);
+                        oBlob.pushKV("datasize", nSize);
                         if(getdata) {
                             if(vchData.empty()) {
                                 pnevmdatadb.ReadData(key.first, vchData);
                             }
-                            oBlob.__pushKV("data", HexStr(vchData));
+                            oBlob.pushKV("data", HexStr(vchData));
                         }
                         oRes.push_back(oBlob); 
                     }

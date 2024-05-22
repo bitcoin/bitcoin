@@ -575,8 +575,8 @@ struct Stacks
 };
 }
 
-// SYSCOIN Extracts signatures and scripts from incomplete scriptSigs. Please do not extend this, use PSBT instead
-SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOutCoin& txout)
+// Extracts signatures and scripts from incomplete scriptSigs. Please do not extend this, use PSBT instead
+SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn, const CTxOut& txout)
 {
     SignatureData data;
     assert(tx.vin.size() > nIn);
@@ -762,8 +762,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
     const CTransaction txConst(mtx);
 
     PrecomputedTransactionData txdata;
-    // SYSCOIN
-    std::vector<CTxOutCoin> spent_outputs;
+    std::vector<CTxOut> spent_outputs;
     for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
         CTxIn& txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
