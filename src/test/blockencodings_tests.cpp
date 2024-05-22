@@ -14,7 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-std::vector<CTransactionRef> extra_txn;
+const std::vector<CTransactionRef> empty_extra_txn;
 
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK( partialBlock.IsTxAvailable(0));
         BOOST_CHECK(!partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(!partialBlock.IsTxAvailable(0));
         BOOST_CHECK( partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK( partialBlock.IsTxAvailable(0));
         BOOST_CHECK( partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         stream >> shortIDs2;
 
         PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(partialBlock.IsTxAvailable(0));
 
         CBlock block2;
