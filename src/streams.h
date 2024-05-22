@@ -383,6 +383,7 @@ public:
     int GetTxVersion()           { return nTxVersion; }
     int GetType() const          { return nType; }
     void seek(size_t _nSize) {return;}
+    const void* GetParams() const { return nullptr; }
 };
 
 class CDataStream : public DataStream
