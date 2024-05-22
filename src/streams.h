@@ -194,7 +194,7 @@ public:
         : m_version{version}, m_data{data} {}
     // SYSCOIN
     SpanReader(int type, int version, Span<const unsigned char> data)
-        : m_type(type), m_version(version), m_data(data) {}
+        : m_version(version), m_data(data), m_type(type) {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)
