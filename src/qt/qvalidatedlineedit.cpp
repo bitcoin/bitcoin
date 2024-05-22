@@ -7,6 +7,8 @@
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/guiconstants.h>
 
+#include <cmath>
+
 #include <QColor>
 #include <QCoreApplication>
 #include <QFont>
@@ -29,6 +31,14 @@ void QValidatedLineEdit::setText(const QString& text)
 {
     QLineEdit::setText(text);
     checkValidity();
+}
+
+double ColourLuminosity(QColor c)
+{
+    const auto Lr = std::pow(c.redF(),   2.2) * .2126;
+    const auto Lg = std::pow(c.greenF(), 2.2) * .7152;
+    const auto Lb = std::pow(c.blueF(),  2.2) * .0722;
+    return Lr + Lg + Lb;
 }
 
 void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vector<int>&error_locations)
@@ -55,11 +65,27 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vec
     {
         setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
         if (!error_locations.empty()) {
+            const QColor normal_text_colour = palette().color(foregroundRole());
+            const QColor bg_colour = palette().color(backgroundRole());
+            const bool dark_mode = ColourLuminosity(bg_colour) < .36;
+            QColor error_colour;
+            if (normal_text_colour.red() > normal_text_colour.green() && normal_text_colour.red() > normal_text_colour.blue()) {
+                // red is dominant, avoid fg red
+                if (bg_colour.red() > bg_colour.blue() && bg_colour.green() > bg_colour.blue()) {
+                    // bg is yellowish, fallback to blues
+                    error_colour = dark_mode ? Qt::cyan : Qt::blue;
+                } else {
+                    error_colour = dark_mode ? Qt::yellow : Qt::darkYellow;
+                }
+            } else {
+                error_colour = dark_mode ? QColor(255, 159, 159) : Qt::red;
+            }
+
             QTextCharFormat format;
             format.setFontUnderline(true);
             format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-            format.setUnderlineColor(Qt::yellow);
-            format.setForeground(Qt::yellow);
+            format.setUnderlineColor(error_colour);
+            format.setForeground(error_colour);
             format.setFontWeight(QFont::Bold);
             for (auto error_pos : error_locations) {
                 attributes.append(QInputMethodEvent::Attribute(QInputMethodEvent::TextFormat, error_pos - cursorPosition(), /*length=*/ 1, format));
