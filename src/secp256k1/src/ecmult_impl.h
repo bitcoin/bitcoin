@@ -42,7 +42,7 @@
 #endif
 
 #define WNAF_BITS 128
-#define WNAF_SIZE_BITS(bits, w) (((bits) + (w) - 1) / (w))
+#define WNAF_SIZE_BITS(bits, w) CEIL_DIV(bits, w)
 #define WNAF_SIZE(w) WNAF_SIZE_BITS(WNAF_BITS, w)
 
 /* The number of objects allocated on the scratch space for ecmult_multi algorithms */
@@ -174,7 +174,7 @@ static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, 
     memset(wnaf, 0, len * sizeof(wnaf[0]));
 
     s = *a;
-    if (secp256k1_scalar_get_bits(&s, 255, 1)) {
+    if (secp256k1_scalar_get_bits_limb32(&s, 255, 1)) {
         secp256k1_scalar_negate(&s, &s);
         sign = -1;
     }
@@ -182,7 +182,7 @@ static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, 
     while (bit < len) {
         int now;
         int word;
-        if (secp256k1_scalar_get_bits(&s, bit, 1) == (unsigned int)carry) {
+        if (secp256k1_scalar_get_bits_limb32(&s, bit, 1) == (unsigned int)carry) {
             bit++;
             continue;
         }
@@ -209,7 +209,7 @@ static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar *a, 
         VERIFY_CHECK(carry == 0);
 
         while (verify_bit < 256) {
-            VERIFY_CHECK(secp256k1_scalar_get_bits(&s, verify_bit, 1) == 0);
+            VERIFY_CHECK(secp256k1_scalar_get_bits_limb32(&s, verify_bit, 1) == 0);
             verify_bit++;
         }
     }
@@ -808,8 +808,8 @@ static int secp256k1_ecmult_multi_batch_size_helper(size_t *n_batches, size_t *n
         return 1;
     }
     /* Compute ceil(n/max_n_batch_points) and ceil(n/n_batches) */
-    *n_batches = 1 + (n - 1) / max_n_batch_points;
-    *n_batch_points = 1 + (n - 1) / *n_batches;
+    *n_batches = CEIL_DIV(n, max_n_batch_points);
+    *n_batch_points = CEIL_DIV(n, *n_batches);
     return 1;
 }
 

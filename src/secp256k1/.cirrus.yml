@@ -11,7 +11,7 @@ env:
   BUILD: check
   ### secp256k1 config
   ECMULTWINDOW: auto
-  ECMULTGENPRECISION: auto
+  ECMULTGENKB: auto
   ASM: no
   WIDEMUL: auto
   WITH_VALGRIND: yes

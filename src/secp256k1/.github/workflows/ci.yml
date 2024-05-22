@@ -22,7 +22,7 @@ env:
   BUILD: 'check'
   ### secp256k1 config
   ECMULTWINDOW: 'auto'
-  ECMULTGENPRECISION: 'auto'
+  ECMULTGENKB: 'auto'
   ASM: 'no'
   WIDEMUL: 'auto'
   WITH_VALGRIND: 'yes'
@@ -83,8 +83,8 @@ jobs:
           - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
           - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
           - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
-          - env_vars: { ECMULTGENPRECISION: 8, ECMULTWINDOW: 4 }
+          - env_vars: { ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+          - env_vars: { ECMULTGENKB: 86, ECMULTWINDOW: 4 }
         cc:
           - 'gcc'
           - 'clang'
@@ -377,8 +377,8 @@ jobs:
         configuration:
           - env_vars: { CC: 'clang',                                      ASM: 'auto' }
           - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
-          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
-          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
 
     env:
       # The `--error-exitcode` is required to make the test fail if valgrind found errors,
@@ -431,8 +431,8 @@ jobs:
         configuration:
           - env_vars: { CC: 'clang',                                      ASM: 'auto' }
           - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
-          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
-          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
 
     env:
       ECDH: 'yes'
@@ -487,7 +487,7 @@ jobs:
           - env_vars:
               CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g'
           - env_vars:
-              ECMULTGENPRECISION: 2
+              ECMULTGENKB: 2
               ECMULTWINDOW: 2
               CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g -O3'
 
@@ -600,7 +600,7 @@ jobs:
       matrix:
         env_vars:
           - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
+          - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
           - { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
