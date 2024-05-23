@@ -15,8 +15,9 @@
 #include <set>
 #include <string>
 
-// This module enforces rules for transactions with nVersion=3 ("v3 transactions") which help make
+// This module enforces rules for BIP 431 TRUC transactions (with nVersion=3) which help make
 // RBF abilities more robust.
+static constexpr decltype(CTransaction::nVersion) TRUC_VERSION{3};
 
 // v3 only allows 1 parent and 1 child when unconfirmed.
 /** Maximum number of transactions including an unconfirmed tx and its descendants. */
