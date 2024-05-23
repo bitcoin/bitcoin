@@ -33,10 +33,12 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     hash256,
+    ser_compact_size,
 )
 from test_framework.script import (
     CScript,
     LEAF_VERSION_TAPSCRIPT,
+    OP_1,
     OP_NOP,
     OP_RETURN,
     OP_TRUE,
@@ -119,13 +121,16 @@ class MiniWallet:
         """Pad a transaction with extra outputs until it reaches a target weight (or higher).
         returns the tx
         """
-        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, b'a'])))
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN])))
+        # determine number of needed padding bytes by converting weight difference to vbytes
         dummy_vbytes = (target_weight - tx.get_weight() + 3) // 4
-        tx.vout[-1].scriptPubKey = CScript([OP_RETURN, b'a' * dummy_vbytes])
-        # Lower bound should always be off by at most 3
+        # compensate for the increase of the compact-size encoded script length
+        # (note that the length encoding of the unpadded output script needs one byte)
+        dummy_vbytes -= len(ser_compact_size(dummy_vbytes)) - 1
+        tx.vout[-1].scriptPubKey = CScript([OP_RETURN] + [OP_1] * dummy_vbytes)
+        # Actual weight should be at most 3 higher than target weight
         assert_greater_than_or_equal(tx.get_weight(), target_weight)
-        # Higher bound should always be off by at most 3 + 12 weight (for encoding the length)
-        assert_greater_than_or_equal(target_weight + 15, tx.get_weight())
+        assert_greater_than_or_equal(target_weight + 3, tx.get_weight())
 
     def get_balance(self):
         return sum(u['value'] for u in self._utxos)
