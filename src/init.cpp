@@ -1716,11 +1716,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.mempool = std::make_unique<CTxMemPool>(mempool_opts);
 
         node.chainman = std::make_unique<ChainstateManager>(node.kernel->interrupt, chainman_opts, blockman_opts);
-        ChainstateManager& chainman = *node.chainman;
+        ChainstateManager& chainman = *Assert(node.chainman);
         // SYSCOIN
         node.peerman = PeerManager::make(*node.connman, *node.addrman, node.banman.get(),
                                      chainman, *node.mempool, peerman_opts);
-
+        RegisterValidationInterface(node.peerman.get());
         // This is defined and set here instead of inline in validation.h to avoid a hard
         // dependency between validation and index/base, since the latter is not in
         // libbitcoinkernel.
@@ -1822,10 +1822,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     pdsNotificationInterface = new CDSNotificationInterface(*node.connman, *node.peerman);
     RegisterValidationInterface(pdsNotificationInterface);
-    node.peerman = PeerManager::make(*node.connman, *node.addrman,
-                                     node.banman.get(), chainman,
-                                     *node.mempool, peerman_opts);
-    RegisterValidationInterface(node.peerman.get());
     if (fMasternodeMode) {
         // Create and register activeMasternodeManager, will init later in ThreadImport
         activeMasternodeManager = std::make_unique<CActiveMasternodeManager>(*node.connman);
