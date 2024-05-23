@@ -67,6 +67,12 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
 
     // Now we have all ancestors, so we can start checking v3 rules.
     if (ptx->nVersion == 3) {
+        // SingleV3Checks should have checked this already.
+        if (!Assume(vsize <= V3_MAX_VSIZE)) {
+            return strprintf("v3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
+                             ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_MAX_VSIZE);
+        }
+
         if (mempool_ancestors.size() + in_package_parents.size() + 1 > V3_ANCESTOR_LIMIT) {
             return strprintf("tx %s (wtxid=%s) would have too many ancestors",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
@@ -185,6 +191,12 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
 
     // The rest of the rules only apply to transactions with nVersion=3.
     if (ptx->nVersion != 3) return std::nullopt;
+
+    if (vsize > V3_MAX_VSIZE) {
+        return std::make_pair(strprintf("v3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
+                         ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_MAX_VSIZE),
+            nullptr);
+    }
 
     // Check that V3_ANCESTOR_LIMIT would not be violated.
     if (mempool_ancestors.size() + 1 > V3_ANCESTOR_LIMIT) {
