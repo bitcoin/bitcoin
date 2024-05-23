@@ -88,7 +88,7 @@ static RPCHelpMan estimatesmartfee()
                 result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
             } else {
                 errors.push_back("Insufficient data or no feerate found");
-                result.pushKV("errors", errors);
+                result.pushKV("errors", std::move(errors));
             }
             result.pushKV("blocks", feeCalc.returnedTarget);
             return result;
@@ -198,18 +198,18 @@ static RPCHelpMan estimaterawfee()
                     horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", (int)buckets.scale);
-                    horizon_result.pushKV("pass", passbucket);
+                    horizon_result.pushKV("pass", std::move(passbucket));
                     // buckets.fail.start == -1 indicates that all buckets passed, there is no fail bucket to output
-                    if (buckets.fail.start != -1) horizon_result.pushKV("fail", failbucket);
+                    if (buckets.fail.start != -1) horizon_result.pushKV("fail", std::move(failbucket));
                 } else {
                     // Output only information that is still meaningful in the event of error
                     horizon_result.pushKV("decay", buckets.decay);
                     horizon_result.pushKV("scale", (int)buckets.scale);
-                    horizon_result.pushKV("fail", failbucket);
+                    horizon_result.pushKV("fail", std::move(failbucket));
                     errors.push_back("Insufficient data or no feerate found which meets threshold");
-                    horizon_result.pushKV("errors", errors);
+                    horizon_result.pushKV("errors", std::move(errors));
                 }
-                result.pushKV(StringForFeeEstimateHorizon(horizon), horizon_result);
+                result.pushKV(StringForFeeEstimateHorizon(horizon), std::move(horizon_result));
             }
             return result;
         },

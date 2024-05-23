@@ -235,11 +235,11 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         key.pushKV("scriptPubKey", HexStr(GetScriptForRawPubKey(futureKey.GetPubKey())));
         key.pushKV("timestamp", newTip->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1);
         key.pushKV("internal", UniValue(true));
-        keys.push_back(key);
+        keys.push_back(std::move(key));
         JSONRPCRequest request;
         request.context = &context;
         request.params.setArray();
-        request.params.push_back(keys);
+        request.params.push_back(std::move(keys));
 
         UniValue response = importmulti().HandleRequest(request);
         BOOST_CHECK_EQUAL(response.write(),

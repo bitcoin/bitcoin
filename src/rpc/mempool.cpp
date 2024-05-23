@@ -202,7 +202,7 @@ static RPCHelpMan testmempoolaccept()
                 auto it = package_result.m_tx_results.find(tx->GetWitnessHash());
                 if (exit_early || it == package_result.m_tx_results.end()) {
                     // Validation unfinished. Just return the txid and wtxid.
-                    rpc_result.push_back(result_inner);
+                    rpc_result.push_back(std::move(result_inner));
                     continue;
                 }
                 const auto& tx_result = it->second;
@@ -229,8 +229,8 @@ static RPCHelpMan testmempoolaccept()
                         for (const auto& wtxid : tx_result.m_wtxids_fee_calculations.value()) {
                             effective_includes_res.push_back(wtxid.ToString());
                         }
-                        fees.pushKV("effective-includes", effective_includes_res);
-                        result_inner.pushKV("fees", fees);
+                        fees.pushKV("effective-includes", std::move(effective_includes_res));
+                        result_inner.pushKV("fees", std::move(fees));
                     }
                 } else {
                     result_inner.pushKV("allowed", false);
@@ -241,7 +241,7 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("reject-reason", state.GetRejectReason());
                     }
                 }
-                rpc_result.push_back(result_inner);
+                rpc_result.push_back(std::move(result_inner));
             }
             return rpc_result;
         },
@@ -295,7 +295,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     fees.pushKV("modified", ValueFromAmount(e.GetModifiedFee()));
     fees.pushKV("ancestor", ValueFromAmount(e.GetModFeesWithAncestors()));
     fees.pushKV("descendant", ValueFromAmount(e.GetModFeesWithDescendants()));
-    info.pushKV("fees", fees);
+    info.pushKV("fees", std::move(fees));
 
     const CTransaction& tx = e.GetTx();
     std::set<std::string> setDepends;
@@ -311,14 +311,14 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
         depends.push_back(dep);
     }
 
-    info.pushKV("depends", depends);
+    info.pushKV("depends", std::move(depends));
 
     UniValue spent(UniValue::VARR);
     for (const CTxMemPoolEntry& child : e.GetMemPoolChildrenConst()) {
         spent.push_back(child.GetTx().GetHash().ToString());
     }
 
-    info.pushKV("spentby", spent);
+    info.pushKV("spentby", std::move(spent));
 
     // Add opt-in RBF status
     bool rbfStatus = false;
@@ -347,7 +347,7 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
             // Mempool has unique entries so there is no advantage in using
             // UniValue::pushKV, which checks if the key already exists in O(N).
             // UniValue::pushKVEnd is used instead which currently is O(1).
-            o.pushKVEnd(e.GetTx().GetHash().ToString(), info);
+            o.pushKVEnd(e.GetTx().GetHash().ToString(), std::move(info));
         }
         return o;
     } else {
@@ -364,7 +364,7 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
             return a;
         } else {
             UniValue o(UniValue::VOBJ);
-            o.pushKV("txids", a);
+            o.pushKV("txids", std::move(a));
             o.pushKV("mempool_sequence", mempool_sequence);
             return o;
         }
@@ -474,7 +474,7 @@ static RPCHelpMan getmempoolancestors()
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
             entryToJSON(mempool, info, e);
-            o.pushKV(_hash.ToString(), info);
+            o.pushKV(_hash.ToString(), std::move(info));
         }
         return o;
     }
@@ -539,7 +539,7 @@ static RPCHelpMan getmempooldescendants()
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
             entryToJSON(mempool, info, e);
-            o.pushKV(_hash.ToString(), info);
+            o.pushKV(_hash.ToString(), std::move(info));
         }
         return o;
     }
@@ -653,7 +653,7 @@ static RPCHelpMan gettxspendingprevout()
                     o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
                 }
 
-                result.push_back(o);
+                result.push_back(std::move(o));
             }
 
             return result;
@@ -992,20 +992,20 @@ static RPCHelpMan submitpackage()
                         for (const auto& wtxid : tx_result.m_wtxids_fee_calculations.value()) {
                             effective_includes_res.push_back(wtxid.ToString());
                         }
-                        fees.pushKV("effective-includes", effective_includes_res);
+                        fees.pushKV("effective-includes", std::move(effective_includes_res));
                     }
-                    result_inner.pushKV("fees", fees);
+                    result_inner.pushKV("fees", std::move(fees));
                     for (const auto& ptx : it->second.m_replaced_transactions) {
                         replaced_txids.insert(ptx->GetHash());
                     }
                     break;
                 }
-                tx_result_map.pushKV(tx->GetWitnessHash().GetHex(), result_inner);
+                tx_result_map.pushKV(tx->GetWitnessHash().GetHex(), std::move(result_inner));
             }
-            rpc_result.pushKV("tx-results", tx_result_map);
+            rpc_result.pushKV("tx-results", std::move(tx_result_map));
             UniValue replaced_list(UniValue::VARR);
             for (const uint256& hash : replaced_txids) replaced_list.push_back(hash.ToString());
-            rpc_result.pushKV("replaced-transactions", replaced_list);
+            rpc_result.pushKV("replaced-transactions", std::move(replaced_list));
             return rpc_result;
         },
     };

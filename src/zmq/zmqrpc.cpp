@@ -47,7 +47,7 @@ static RPCHelpMan getzmqnotifications()
             obj.pushKV("type", n->GetType());
             obj.pushKV("address", n->GetAddress());
             obj.pushKV("hwm", n->GetOutboundMessageHighWaterMark());
-            result.push_back(obj);
+            result.push_back(std::move(obj));
         }
     }
 
