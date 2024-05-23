@@ -123,6 +123,13 @@ int64_t ClientModel::getHeaderTipTime() const
     return cachedBestHeaderTime;
 }
 
+
+std::map<CNetAddr, LocalServiceInfo> ClientModel::getNetLocalAddresses() const
+{
+    return m_node.getNetLocalAddresses();
+}
+
+
 int ClientModel::getNumBlocks() const
 {
     if (m_cached_num_blocks == -1) {

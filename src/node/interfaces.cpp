@@ -281,6 +281,13 @@ public:
         }
         return false;
     }
+    std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() override
+    {
+        if (m_context->connman)
+            return m_context->connman->getNetLocalAddresses();
+        else
+            return {};
+    }
     int getNumBlocks() override
     {
         LOCK(::cs_main);

@@ -13,12 +13,15 @@
 #include <sync.h>
 #include <uint256.h>
 
+#include <netaddress.h>
+
 class BanTableModel;
 class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
 class PeerTableSortProxy;
 enum class SynchronizationState;
+struct LocalServiceInfo;
 
 namespace interfaces {
 class Handler;
@@ -68,6 +71,7 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
+    std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     int getNumBlocks() const;
     uint256 getBestBlockHash() EXCLUSIVE_LOCKS_REQUIRED(!m_cached_tip_mutex);
     int getHeaderTipHeight() const;
