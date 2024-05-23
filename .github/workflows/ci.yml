@@ -343,3 +343,22 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
           key: ${{ github.job }}-ccache-${{ github.run_id }}
+
+  freebsd:
+    name: 'FreeBSD, no depends, sqlite only, no gui'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: vmactions/freebsd-vm@v1
+      with:
+        prepare: |
+          pkg install -y autoconf automake boost-libs gmake libevent libtool pkgconf sqlite3 libzmq4 python3 databases/py-sqlite3
+        run: |
+          ./autogen.sh
+          ./configure --enable-werror MAKE=gmake
+          gmake -j $(sysctl -n hw.ncpu)
+          gmake -j $(sysctl -n hw.ncpu) check
+          ./test/functional/test_runner.py
+        copyback: false
