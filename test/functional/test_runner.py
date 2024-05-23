@@ -361,6 +361,7 @@ BASE_SCRIPTS = [
     'feature_addrman.py',
     'feature_asmap.py',
     'feature_fastprune.py',
+    'feature_framework_miniwallet.py',
     'mempool_unbroadcast.py',
     'mempool_compatibility.py',
     'mempool_accept_wtxid.py',
