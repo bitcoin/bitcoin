@@ -93,6 +93,7 @@ public:
     const Consensus::Params& GetConsensus() const { return consensus; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
+    std::vector<int> GetAvailableSnapshotHeights() const;
 
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
@@ -182,5 +183,7 @@ protected:
     std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
 };
+
+std::optional<ChainType> GetNetworkForMagic(MessageStartChars& pchMessageStart);
 
 #endif // BITCOIN_KERNEL_CHAINPARAMS_H

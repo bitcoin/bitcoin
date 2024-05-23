@@ -885,6 +885,12 @@ private:
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
     //! Internal helper for ActivateSnapshot().
+    //!
+    //! De-serialization of a snapshot that is created with
+    //! CreateUTXOSnapshot() in rpc/blockchain.cpp.
+    //! To reduce space the serialization format of the snapshot avoids
+    //! duplication of tx hashes. The code takes advantage of the guarantee by
+    //! leveldb that keys are lexicographically sorted.
     [[nodiscard]] bool PopulateAndValidateSnapshot(
         Chainstate& snapshot_chainstate,
         AutoFile& coins_file,

@@ -5666,69 +5666,81 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         return false;
     }
 
-    COutPoint outpoint;
-    Coin coin;
     const uint64_t coins_count = metadata.m_coins_count;
     uint64_t coins_left = metadata.m_coins_count;
 
-    LogPrintf("[snapshot] loading coins from snapshot %s\n", base_blockhash.ToString());
+    LogPrintf("[snapshot] loading %d coins from snapshot %s\n", coins_left, base_blockhash.ToString());
     int64_t coins_processed{0};
 
     while (coins_left > 0) {
         try {
-            coins_file >> outpoint;
-            coins_file >> coin;
-        } catch (const std::ios_base::failure&) {
-            LogPrintf("[snapshot] bad snapshot format or truncated snapshot after deserializing %d coins\n",
-                      coins_count - coins_left);
-            return false;
-        }
-        if (coin.nHeight > base_height ||
-            outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash
-        ) {
-            LogPrintf("[snapshot] bad snapshot data after deserializing %d coins\n",
-                      coins_count - coins_left);
-            return false;
-        }
-        if (!MoneyRange(coin.out.nValue)) {
-            LogPrintf("[snapshot] bad snapshot data after deserializing %d coins - bad tx out value\n",
-                      coins_count - coins_left);
-            return false;
-        }
+            Txid txid;
+            coins_file >> txid;
+            size_t coins_per_txid{0};
+            coins_per_txid = ReadCompactSize(coins_file);
 
-        coins_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
-
-        --coins_left;
-        ++coins_processed;
-
-        if (coins_processed % 1000000 == 0) {
-            LogPrintf("[snapshot] %d coins loaded (%.2f%%, %.2f MB)\n",
-                coins_processed,
-                static_cast<float>(coins_processed) * 100 / static_cast<float>(coins_count),
-                coins_cache.DynamicMemoryUsage() / (1000 * 1000));
-        }
-
-        // Batch write and flush (if we need to) every so often.
-        //
-        // If our average Coin size is roughly 41 bytes, checking every 120,000 coins
-        // means <5MB of memory imprecision.
-        if (coins_processed % 120000 == 0) {
-            if (m_interrupt) {
+            if (coins_per_txid > coins_left) {
+                LogPrintf("[snapshot] mismatch in coins count in snapshot metadata and actual snapshot data\n");
                 return false;
             }
 
-            const auto snapshot_cache_state = WITH_LOCK(::cs_main,
-                return snapshot_chainstate.GetCoinsCacheSizeState());
+            for (size_t i = 0; i < coins_per_txid; i++) {
+                COutPoint outpoint;
+                Coin coin;
+                outpoint.n = static_cast<uint32_t>(ReadCompactSize(coins_file));
+                outpoint.hash = txid;
+                coins_file >> coin;
+                if (coin.nHeight > base_height ||
+                    outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash
+                ) {
+                    LogPrintf("[snapshot] bad snapshot data after deserializing %d coins\n",
+                              coins_count - coins_left);
+                    return false;
+                }
+                if (!MoneyRange(coin.out.nValue)) {
+                    LogPrintf("[snapshot] bad snapshot data after deserializing %d coins - bad tx out value\n",
+                              coins_count - coins_left);
+                    return false;
+                }
+                coins_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
 
-            if (snapshot_cache_state >= CoinsCacheSizeState::CRITICAL) {
-                // This is a hack - we don't know what the actual best block is, but that
-                // doesn't matter for the purposes of flushing the cache here. We'll set this
-                // to its correct value (`base_blockhash`) below after the coins are loaded.
-                coins_cache.SetBestBlock(GetRandHash());
+                --coins_left;
+                ++coins_processed;
 
-                // No need to acquire cs_main since this chainstate isn't being used yet.
-                FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false);
+                if (coins_processed % 1000000 == 0) {
+                    LogPrintf("[snapshot] %d coins loaded (%.2f%%, %.2f MB)\n",
+                        coins_processed,
+                        static_cast<float>(coins_processed) * 100 / static_cast<float>(coins_count),
+                        coins_cache.DynamicMemoryUsage() / (1000 * 1000));
+                }
+
+                // Batch write and flush (if we need to) every so often.
+                //
+                // If our average Coin size is roughly 41 bytes, checking every 120,000 coins
+                // means <5MB of memory imprecision.
+                if (coins_processed % 120000 == 0) {
+                    if (m_interrupt) {
+                        return false;
+                    }
+
+                    const auto snapshot_cache_state = WITH_LOCK(::cs_main,
+                        return snapshot_chainstate.GetCoinsCacheSizeState());
+
+                    if (snapshot_cache_state >= CoinsCacheSizeState::CRITICAL) {
+                        // This is a hack - we don't know what the actual best block is, but that
+                        // doesn't matter for the purposes of flushing the cache here. We'll set this
+                        // to its correct value (`base_blockhash`) below after the coins are loaded.
+                        coins_cache.SetBestBlock(GetRandHash());
+
+                        // No need to acquire cs_main since this chainstate isn't being used yet.
+                        FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false);
+                    }
+                }
             }
+        } catch (const std::ios_base::failure&) {
+            LogPrintf("[snapshot] bad snapshot format or truncated snapshot after deserializing %d coins\n",
+                      coins_processed);
+            return false;
         }
     }
 
@@ -5741,7 +5753,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     bool out_of_coins{false};
     try {
-        coins_file >> outpoint;
+        Txid txid;
+        coins_file >> txid;
     } catch (const std::ios_base::failure&) {
         // We expect an exception since we should be out of coins.
         out_of_coins = true;

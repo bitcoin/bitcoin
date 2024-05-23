@@ -34,6 +34,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
@@ -2696,29 +2697,60 @@ UniValue CreateUTXOSnapshot(
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{tip->GetBlockHash(), maybe_stats->coins_count};
+    SnapshotMetadata metadata{tip->GetBlockHash(), tip->nHeight, maybe_stats->coins_count};
 
     afile << metadata;
 
     COutPoint key;
+    Txid last_hash;
     Coin coin;
     unsigned int iter{0};
+    size_t written_coins_count{0};
+    std::vector<std::pair<uint32_t, Coin>> coins;
 
+    // To reduce space the serialization format of the snapshot avoids
+    // duplication of tx hashes. The code takes advantage of the guarantee by
+    // leveldb that keys are lexicographically sorted.
+    // In the coins vector we collect all coins that belong to a certain tx hash
+    // (key.hash) and when we have them all (key.hash != last_hash) we write
+    // them to file using the below lambda function.
+    // See also https://github.com/bitcoin/bitcoin/issues/25675
+    auto write_coins_to_file = [&](AutoFile& afile, const Txid& last_hash, const std::vector<std::pair<uint32_t, Coin>>& coins, size_t& written_coins_count) {
+        afile << last_hash;
+        WriteCompactSize(afile, coins.size());
+        for (const auto& [n, coin] : coins) {
+            WriteCompactSize(afile, n);
+            afile << coin;
+            ++written_coins_count;
+        }
+    };
+
+    pcursor->GetKey(key);
+    last_hash = key.hash;
     while (pcursor->Valid()) {
         if (iter % 5000 == 0) node.rpc_interruption_point();
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            afile << key;
-            afile << coin;
+            if (key.hash != last_hash) {
+                write_coins_to_file(afile, last_hash, coins, written_coins_count);
+                last_hash = key.hash;
+                coins.clear();
+            }
+            coins.emplace_back(key.n, coin);
         }
-
         pcursor->Next();
     }
+
+    if (!coins.empty()) {
+        write_coins_to_file(afile, last_hash, coins, written_coins_count);
+    }
+
+    CHECK_NONFATAL(written_coins_count == maybe_stats->coins_count);
 
     afile.fclose();
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("coins_written", maybe_stats->coins_count);
+    result.pushKV("coins_written", written_coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
     result.pushKV("path", path.utf8string());
@@ -2778,12 +2810,22 @@ static RPCHelpMan loadtxoutset()
     }
 
     SnapshotMetadata metadata;
-    afile >> metadata;
+    try {
+        afile >> metadata;
+    } catch (const std::ios_base::failure& e) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
+    }
 
     uint256 base_blockhash = metadata.m_base_blockhash;
+    int base_blockheight = metadata.m_base_blockheight;
     if (!chainman.GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
+        auto available_heights = chainman.GetParams().GetAvailableSnapshotHeights();
+        std::string heights_formatted = Join(available_heights, ", ", [&](const auto& i) { return ToString(i); });
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot, "
-            "assumeutxo block hash in snapshot metadata not recognized (%s)", base_blockhash.ToString()));
+            "assumeutxo block hash in snapshot metadata not recognized (hash: %s, height: %s). The following snapshot heights are available: %s.",
+            base_blockhash.ToString(),
+            base_blockheight,
+            heights_formatted));
     }
     CBlockIndex* snapshot_start_block = WITH_LOCK(::cs_main,
             return chainman.m_blockman.LookupBlockIndex(base_blockhash));
