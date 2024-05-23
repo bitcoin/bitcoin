@@ -397,6 +397,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/utxo_snapshot.cpp \
  test/fuzz/utxo_total_supply.cpp \
  test/fuzz/validation_load_mempool.cpp \
+ test/fuzz/vecdeque.cpp \
  test/fuzz/versionbits.cpp
 endif # ENABLE_FUZZ_BINARY
 
