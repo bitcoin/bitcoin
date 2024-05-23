@@ -7,6 +7,7 @@
 from copy import deepcopy
 from decimal import Decimal
 from enum import Enum
+import math
 from typing import (
     Any,
     Optional,
@@ -34,6 +35,7 @@ from test_framework.messages import (
     CTxOut,
     hash256,
     ser_compact_size,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.script import (
     CScript,
@@ -54,6 +56,7 @@ from test_framework.script_util import (
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
+    get_fee,
 )
 from test_framework.wallet_util import generate_keypair
 
@@ -372,6 +375,10 @@ class MiniWallet:
             vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         else:
             assert False
+        if target_weight and not fee:  # respect fee_rate if target weight is passed
+            # the actual weight might be off by 3 WUs, so calculate based on that (see self._bulk_tx)
+            max_actual_weight = target_weight + 3
+            fee = get_fee(math.ceil(max_actual_weight / WITNESS_SCALE_FACTOR), fee_rate)
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
 
         # create tx
