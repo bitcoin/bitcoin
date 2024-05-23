@@ -60,7 +60,6 @@ The interface is defined in the C header `syscoinconsensus.h` located in `src/sc
 - `syscoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT` - Enable TAPROOT ([BIP340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki), [BIP341](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki), [BIP342](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki))
 
 ##### Errors
-<<<<<<< HEAD
 - `syscoinconsensus_ERR_OK` - No errors with input parameters *(see the return value of `syscoinconsensus_verify_script` for the verification status)*
 - `syscoinconsensus_ERR_TX_INDEX` - An invalid index for `txTo`
 - `syscoinconsensus_ERR_TX_SIZE_MISMATCH` - `txToLen` did not match with the size of `txTo`

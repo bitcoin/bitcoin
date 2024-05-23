@@ -83,7 +83,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Error: Unable to produce descriptors for this legacy wallet. Make sure to "
 "provide the wallet's passphrase if it is encrypted."),
-<<<<<<< HEAD:src/qt/syscoinstrings.cpp
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous "
 "cluster of unconfirmed transactions."),
