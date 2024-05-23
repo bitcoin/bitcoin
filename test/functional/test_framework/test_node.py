@@ -106,7 +106,7 @@ class TestNode():
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
             "-debugexclude=rand",
-            "-uacomment=testnode%d" % i,
+            "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers
         ]
         if self.descriptors is None:
             self.args.append("-disablewallet")
