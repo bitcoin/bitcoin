@@ -2774,7 +2774,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                             if (pnode->nTimeFirstMessageReceived != 0 && GetTimeSeconds() - pnode->nTimeFirstMessageReceived > 5) {
                                 // clearly not expecting mnauth to take that long even if it wasn't the first message
                                 // we received (as it should normally), disconnect
-                                LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- dropping non-mnauth connection to %s, service=%s\n", _func_, proRegTxHash.ToString(), addr2.ToString(false));
+                                LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- dropping non-mnauth connection to %s, service=%s\n", _func_, proRegTxHash.ToString(), addr2.ToString());
                                 pnode->fDisconnect = true;
                                 return true;
                             }
@@ -2833,7 +2833,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                 auto dmn = mnList.GetValidMN(vPendingMasternodes.front());
                 vPendingMasternodes.erase(vPendingMasternodes.begin());
                 if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
-                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString());
                     return dmn;
                 }
             }
@@ -2842,7 +2842,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                 // not-null
                 auto dmn = pending[GetRand(pending.size())];
                 LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening quorum connection to %s, service=%s\n",
-                         _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+                         _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString());
                 return dmn;
             }
 
@@ -2852,7 +2852,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
                 masternodePendingProbes.erase(dmn->proTxHash);
                 isProbe = MasternodeProbeConn::IsConnection;
 
-                LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- probing masternode %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+                LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- probing masternode %s, service=%s\n", _func_, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString());
                 return dmn;
             }
             return nullptr;
@@ -2877,7 +2877,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
             return true;
         });
         if (!connected) {
-            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
+            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
             // Will take a few consequent failed attempts to PoSe-punish a MN.
             if (mn_metaman.GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {
                 LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- failed to connect to masternode %s too many times\n", __func__, connectToDmn->proTxHash.ToString());
@@ -2903,7 +2903,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
     auto getIpStr = [&]() {
         if (fLogIPs) {
-            return addrConnect.ToString(false);
+            return addrConnect.ToString();
         } else {
             return std::string("new peer");
         }
