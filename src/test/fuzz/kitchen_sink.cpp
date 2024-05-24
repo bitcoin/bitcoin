@@ -49,6 +49,7 @@ FUZZ_TARGET(kitchen_sink)
     const std::string& output_type_string = FormatOutputType(output_type);
     const std::optional<OutputType> parsed = ParseOutputType(output_type_string);
     assert(parsed);
+    std::cout << FormatOutputType(output_type) << " " << FormatOutputType(parsed.value()) << "\n";
     assert(output_type == parsed.value());
     (void)ParseOutputType(fuzzed_data_provider.ConsumeRandomLengthString(64));
 
