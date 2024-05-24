@@ -1102,12 +1102,12 @@ static RPCHelpMan getaddrmaninfo()
     };
 }
 
-UniValue AddrmanEntryToJSON(const AddrInfo& info, CConnman& connman)
+UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("address", info.ToStringAddr());
-    const auto mapped_as{connman.GetMappedAS(info)};
-    if (mapped_as != 0) {
+    const uint32_t mapped_as{connman.GetMappedAS(info)};
+    if (mapped_as) {
         ret.pushKV("mapped_as", mapped_as);
     }
     ret.pushKV("port", info.GetPort());
@@ -1116,14 +1116,14 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, CConnman& connman)
     ret.pushKV("network", GetNetworkName(info.GetNetClass()));
     ret.pushKV("source", info.source.ToStringAddr());
     ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));
-    const auto source_mapped_as{connman.GetMappedAS(info.source)};
-    if (source_mapped_as != 0) {
+    const uint32_t source_mapped_as{connman.GetMappedAS(info.source)};
+    if (source_mapped_as) {
         ret.pushKV("source_mapped_as", source_mapped_as);
     }
     return ret;
 }
 
-UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos, CConnman& connman)
+UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos, const CConnman& connman)
 {
     UniValue table(UniValue::VOBJ);
     for (const auto& e : tableInfos) {
