@@ -56,7 +56,7 @@ CreateAndActivateUTXOSnapshot(
     //
     FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
     AutoFile auto_infile{infile};
-    node::SnapshotMetadata metadata;
+    node::SnapshotMetadata metadata{node.chainman->GetParams().MessageStart()};
     auto_infile >> metadata;
 
     malleation(auto_infile, metadata);
