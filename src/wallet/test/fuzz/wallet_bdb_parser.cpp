@@ -61,8 +61,8 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 #ifdef USE_BDB
         bdb_ro_err = true;
 #endif
-        if (error.original == "AutoFile::ignore: end of file: iostream error" ||
-            error.original == "AutoFile::read: end of file: iostream error" ||
+        if (error.original.starts_with("AutoFile::ignore: end of file") ||
+            error.original.starts_with("AutoFile::read: end of file") ||
             error.original == "Not a BDB file" ||
             error.original == "Unsupported BDB data file version number" ||
             error.original == "Unexpected page type, should be 9 (BTree Metadata)" ||
