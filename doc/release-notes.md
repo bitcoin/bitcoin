@@ -1,11 +1,11 @@
-26.1 Release Notes
+26.2rc1 Release Notes
 ==================
 
-Bitcoin Core version 26.1 is now available from:
+Bitcoin Core version 26.2rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-26.1/>
+  <https://bitcoincore.org/bin/bitcoin-core-26.2/test.rc1/>
 
-This release includes various bug fixes and performance
+This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -40,66 +40,51 @@ unsupported systems.
 Notable changes
 ===============
 
-### Wallet
+### Script
 
-- #28994 wallet: skip BnB when SFFO is enabled
-- #28920 wallet: birth time update during tx scanning
-- #29176 wallet: Fix use-after-free in WalletBatch::EraseRecords
-- #29510 wallet: getrawchangeaddress and getnewaddress failures should not affect keypools for descriptor wallets
-
-### RPC
-
-- #29003 rpc: fix getrawtransaction segfault
-- #28784 rpc: keep .cookie file if it was not generated
-
-### Logs
-
-- #29227 log mempool loading progress
+- #29853: sign: don't assume we are parsing a sane TapMiniscript
 
 ### P2P and network changes
 
-- #29200 net: create I2P sessions using both ECIES-X25519 and ElGamal encryption
-- #29412 p2p: Don't process mutated blocks
-- #29524 p2p: Don't consider blocks mutated if they don't connect to known prev block
+- #29691: Change Luke Dashjr seed to dashjr-list-of-p2p-nodes.us
+- #30085: p2p: detect addnode cjdns peers in GetAddedNodeInfo()
+
+### RPC
+
+- #29869: rpc, bugfix: Enforce maximum value for setmocktime
+- #28554: bugfix: throw an error if an invalid parameter is passed to getnetworkhashps RPC
+- #30094: rpc: move UniValue in blockToJSON
+- #29870: rpc: Reword SighashFromStr error message
 
 ### Build
 
-- #29127 Use hardened runtime on macOS release builds.
-- #29195 build: Fix -Xclang -internal-isystem option
+- #29747: depends: fix mingw-w64 Qt DEBUG=1 build
+- #29985: depends: Fix build of Qt for 32-bit platforms with recent glibc
 
-### CI
+### Misc
 
-- #28992 ci: Use Ubuntu 24.04 Noble for asan,tsan,tidy,fuzz
-- #29080 ci: Set HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK to avoid unrelated failures
-- #29610 ci: Fix "macOS native" job
-
-### Miscellaneous
-
-- #28391 refactor: Simplify CTxMempool/BlockAssembler fields, remove some external mapTx access
-- #29179 test: wallet rescan with reorged parent + IsFromMe child in mempool
-- #28791 snapshots: don't core dump when running -checkblockindex after loadtxoutset
-- #29357 test: Drop x modifier in fsbridge::fopen call for MinGW builds
-- #29529 fuzz: restrict fopencookie usage to Linux & FreeBSD
+- #29776: ThreadSanitizer: Fix #29767
+- #29856: ci: Bump s390x to ubuntu:24.04
+- #29764: doc: Suggest installing dev packages for debian/ubuntu qt5 build
+- #30149: contrib: Renew Windows code signing certificate
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Antoine Poinsot
+- Ava Chow
 - dergoegge
 - fanquake
-- furszy
 - glozow
-- Greg Sanders
-- Hennadii Stepanov
-- Jon Atack
+- Jameson Lopp
+- jonatack
+- laanwj
+- Luke Dashjr
 - MarcoFalke
-- Mark Friedenbach
-- Martin Zumsande
-- Murch
-- Roman Zeyde
-- stickies-v
-- UdjinM6
+- nanlour
+- willcl-ark
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
