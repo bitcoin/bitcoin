@@ -881,6 +881,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     const CAmount in_amt{3 * COIN};
     const CAmount target{2 * COIN};
     const CAmount excess{80};
+    const CAmount exact_target{in_amt - fee * 2}; // Maximum spendable amount after fees: no change, no excess
 
     // In the following, we test that the waste is calculated correctly in various scenarios.
     // Usually, RecalculateWaste would compute change_fee and change_cost on basis of the
@@ -889,7 +890,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
     {
         // Waste with change is the change cost and difference between fee and long term fee
         SelectionResult selection1{target, SelectionAlgorithm::MANUAL};
-        add_coin(1 * COIN, 1, selection1, fee, fee - fee_diff);
+        add_coin(1 * COIN, 1, selection1, /*fee=*/fee, /*long_term_fee=*/fee - fee_diff);
         add_coin(2 * COIN, 2, selection1, fee, fee - fee_diff);
         selection1.RecalculateWaste(min_viable_change, change_cost, change_fee);
         BOOST_CHECK_EQUAL(fee_diff * 2 + change_cost, selection1.GetWaste());
@@ -913,7 +914,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
 
     {
         // Waste without change is the excess and difference between fee and long term fee
-        SelectionResult selection_nochange1{/*target creates no change*/in_amt - 2 * fee - excess, SelectionAlgorithm::MANUAL};
+        SelectionResult selection_nochange1{exact_target - excess, SelectionAlgorithm::MANUAL};
         add_coin(1 * COIN, 1, selection_nochange1, fee, fee - fee_diff);
         add_coin(2 * COIN, 2, selection_nochange1, fee, fee - fee_diff);
         selection_nochange1.RecalculateWaste(min_viable_change, change_cost, change_fee);
@@ -921,7 +922,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
 
         // Waste without change is the excess and difference between fee and long term fee
         // With long term fee greater than fee, waste should be less than when long term fee is less than fee
-        SelectionResult selection_nochange2{/*target creates no change*/in_amt - 2 * fee - excess, SelectionAlgorithm::MANUAL};
+        SelectionResult selection_nochange2{exact_target - excess, SelectionAlgorithm::MANUAL};
         add_coin(1 * COIN, 1, selection_nochange2, fee, fee + fee_diff);
         add_coin(2 * COIN, 2, selection_nochange2, fee, fee + fee_diff);
         selection_nochange2.RecalculateWaste(min_viable_change, change_cost, change_fee);
@@ -940,7 +941,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
 
     {
         // Waste without change and fee == long term fee is just the excess
-        SelectionResult selection{/*target creates no change*/in_amt - 2 * fee - excess, SelectionAlgorithm::MANUAL};
+        SelectionResult selection{exact_target - excess, SelectionAlgorithm::MANUAL};
         add_coin(1 * COIN, 1, selection, fee, fee);
         add_coin(2 * COIN, 2, selection, fee, fee);
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
@@ -949,7 +950,6 @@ BOOST_AUTO_TEST_CASE(waste_test)
 
     {
         // Waste is 0 when fee == long_term_fee, no change, and no excess
-        const CAmount exact_target{in_amt - fee * 2};
         SelectionResult selection{exact_target, SelectionAlgorithm::MANUAL};
         add_coin(1 * COIN, 1, selection, fee, fee);
         add_coin(2 * COIN, 2, selection, fee, fee);
@@ -968,7 +968,7 @@ BOOST_AUTO_TEST_CASE(waste_test)
 
     {
         // Waste is 0 when (fee - long_term_fee) == (-excess), no change cost
-        const CAmount new_target{in_amt - fee * 2 - /*excess=*/fee_diff * 2};
+        const CAmount new_target{exact_target - /*excess=*/fee_diff * 2};
         SelectionResult selection{new_target, SelectionAlgorithm::MANUAL};
         add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
         add_coin(2 * COIN, 2, selection, fee, fee + fee_diff);
@@ -978,7 +978,6 @@ BOOST_AUTO_TEST_CASE(waste_test)
 
     {
         // Negative waste when the long term fee is greater than the current fee and the selected value == target
-        const CAmount exact_target{in_amt - 2 * fee};
         SelectionResult selection{exact_target, SelectionAlgorithm::MANUAL};
         const CAmount target_waste1{-2 * fee_diff}; // = (2 * fee) - (2 * (fee + fee_diff))
         add_coin(1 * COIN, 1, selection, fee, fee + fee_diff);
@@ -991,7 +990,11 @@ BOOST_AUTO_TEST_CASE(waste_test)
         // Negative waste when the long term fee is greater than the current fee and change_cost < - (inputs * (fee - long_term_fee))
         SelectionResult selection{target, SelectionAlgorithm::MANUAL};
         const CAmount large_fee_diff{90};
-        const CAmount target_waste2{-2 * large_fee_diff + change_cost}; // = (2 * fee) - (2 * (fee + large_fee_diff)) + change_cost
+        const CAmount target_waste2{-2 * large_fee_diff + change_cost};
+        // = (2 * fee) - (2 * (fee + large_fee_diff)) + change_cost
+        // = (2 * 100) - (2 * (100 + 90)) + 125
+        // = 200 - 380 + 125 = -55
+        assert(target_waste2 == -55);
         add_coin(1 * COIN, 1, selection, fee, fee + large_fee_diff);
         add_coin(2 * COIN, 2, selection, fee, fee + large_fee_diff);
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
