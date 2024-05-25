@@ -5,7 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Download or build previous releases.
-# Needs curl and tar to download a release, or the build dependencies when
+# Needs tar to download a release, or the build dependencies when
 # building a release.
 
 import argparse
@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import hashlib
+from urllib.request import urlopen, Request, HTTPError
 
 SHA256_SUMS = {
     "0e2819135366f150d9906e294b61dff58fd1996ebd26c2f8e979d6c0b7a79580": {"tag": "v0.14.3", "tarball": "bitcoin-0.14.3-aarch64-linux-gnu.tar.gz"},
@@ -133,20 +134,22 @@ def download_binary(tag, args) -> int:
 
     print('Fetching: {tarballUrl}'.format(tarballUrl=tarballUrl))
 
-    header, status = subprocess.Popen(
-        ['curl', '--head', tarballUrl], stdout=subprocess.PIPE).communicate()
-    if re.search("404 Not Found", header.decode("utf-8")):
-        print("Binary tag was not found")
+    try:
+        response = urlopen(Request(tarballUrl, method='HEAD'))
+    except HTTPError as e:
+        if e.code == 404:
+            print("Binary tag was not found")
+            return 1
+        else:
+            raise
+
+    try:
+        response = urlopen(tarballUrl)
+        with open(tarball, 'wb') as file:
+            file.write(response.read())
+    except Exception as e:
+        print(f"Failed to download file. Error: {str(e)}")
         return 1
-
-    curlCmds = [
-        ['curl', '--remote-name', tarballUrl]
-    ]
-
-    for cmd in curlCmds:
-        ret = subprocess.run(cmd).returncode
-        if ret:
-            return ret
 
     hasher = hashlib.sha256()
     with open(tarball, "rb") as afile:
