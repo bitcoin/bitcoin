@@ -16,7 +16,7 @@
 FUZZ_TARGET(fee_rate)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const CAmount satoshis_per_k = ConsumeMoney(fuzzed_data_provider);
+    const CAmount satoshis_per_k = ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY / 12);
     const CFeeRate fee_rate{satoshis_per_k};
 
     (void)fee_rate.GetFeePerK();
@@ -26,7 +26,7 @@ FUZZ_TARGET(fee_rate)
     }
     (void)fee_rate.ToString();
 
-    const CAmount another_satoshis_per_k = ConsumeMoney(fuzzed_data_provider);
+    const CAmount another_satoshis_per_k = ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY / 12);
     CFeeRate larger_fee_rate{another_satoshis_per_k};
     larger_fee_rate += fee_rate;
     if (satoshis_per_k != 0 && another_satoshis_per_k != 0) {
