@@ -692,7 +692,7 @@ static RPCHelpMan getblocktemplate()
                                                                      {RPCResult::Type::STR_HEX, "eta_fiat_shamir", /*optional=*/true, "Only on Proof of Stake"},
                                                                      {RPCResult::Type::NUM, "modifier", /*optional=*/true, "Only on Proof of Stake"},
                                                                      {RPCResult::Type::NUM, "prev_time", /*optional=*/true, "Only on Proof of Stake"},
-                                                                     {RPCResult::Type::ANY, "staked_commitments", /*optional=*/true, "Only on Proof of Stake"},
+                                                                     {RPCResult::Type::OBJ, "staked_commitments", /*optional=*/true, "Only on Proof of Stake"},
                                                                      {RPCResult::Type::STR_HEX, "default_witness_commitment", /*optional=*/true, "a valid witness commitment for the unmodified block template"},
                                                                  }},
         },
@@ -1036,7 +1036,6 @@ static RPCHelpMan getblocktemplate()
             if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
                 result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment));
             }
-
             return result;
         },
     };
