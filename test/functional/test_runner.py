@@ -280,6 +280,7 @@ BASE_SCRIPTS = [
     'feature_new_quorum_type_activation.py',
     'feature_governance_objects.py',
     'feature_governance.py --legacy-wallet',
+    'feature_governance_cl.py --legacy-wallet',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py --legacy-wallet',
     'wallet_resendwallettransactions.py --descriptors',
