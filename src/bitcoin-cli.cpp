@@ -374,9 +374,12 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
+    static constexpr int8_t NET_I2P{3}; // pos of "i2p" in m_networks
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
-    static constexpr std::array m_networks{"ipv4", "ipv6", "onion"};
-    std::array<std::array<uint16_t, m_networks.size() + 2>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total/block-relay)
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
+    std::array<std::array<uint16_t, m_networks.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
+    uint8_t m_block_relay_peers_count{0};
+    uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
         for (size_t i = 0; i < m_networks.size(); ++i) {
@@ -390,12 +393,14 @@ private:
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     bool m_is_asmap_on{false};
+    bool m_is_i2p_on{false};
     size_t m_max_addr_length{0};
     size_t m_max_age_length{4};
     size_t m_max_id_length{2};
     struct Peer {
         std::string addr;
         std::string sub_version;
+        std::string conn_type;
         std::string network;
         std::string age;
         double min_ping;
@@ -425,6 +430,14 @@ private:
         const double milliseconds{round(1000 * seconds)};
         return milliseconds > 999999 ? "-" : ToString(milliseconds);
     }
+    std::string ConnectionTypeForNetinfo(const std::string& conn_type) const
+    {
+        if (conn_type == "outbound-full-relay") return "full";
+        if (conn_type == "block-relay-only") return "block";
+        if (conn_type == "manual" || conn_type == "feeler") return conn_type;
+        if (conn_type == "addr-fetch") return "addr";
+        return "";
+    }
     const UniValue NetinfoHelp()
     {
         return std::string{
@@ -453,6 +466,9 @@ private:
             "  type     Type of peer connection\n"
             "           \"full\"   - full relay, the default\n"
             "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
+            "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
+            "           \"feeler\" - short-lived connection for testing addresses\n"
+            "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
             "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
             "  mping    Minimum observed ping time, in milliseconds (ms)\n"
             "  ping     Last observed ping time, in milliseconds (ms)\n"
@@ -467,7 +483,7 @@ private:
             "  address  IP address and port of the peer\n"
             "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
             "* The connection counts table displays the number of peers by direction, network, and the totals\n"
-            "  for each, as well as a column for block relay peers.\n\n"
+            "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
             "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
             "Examples:\n\n"
             "Connection counts and local addresses only\n"
@@ -524,16 +540,16 @@ public:
             const std::string network{peer["network"].get_str()};
             const int8_t network_id{NetworkStringToId(network)};
             if (network_id == UNKNOWN_NETWORK) continue;
+            m_is_i2p_on |= (network_id == NET_I2P);
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{peer["relaytxes"].isNull() ? false : !peer["relaytxes"].get_bool()};
+            const std::string conn_type{peer["connection_type"].get_str()};
             ++m_counts.at(is_outbound).at(network_id);        // in/out by network
             ++m_counts.at(is_outbound).at(m_networks.size()); // in/out overall
             ++m_counts.at(2).at(network_id);                  // total by network
             ++m_counts.at(2).at(m_networks.size());           // total overall
-            if (is_block_relay) {
-                ++m_counts.at(is_outbound).at(m_networks.size() + 1); // in/out block-relay
-                ++m_counts.at(2).at(m_networks.size() + 1);           // total block-relay
-            }
+            if (is_block_relay) ++m_block_relay_peers_count;
+            if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].get_int()};
@@ -549,7 +565,7 @@ public:
                 const std::string addr{peer["addr"].get_str()};
                 const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
                 const std::string sub_version{peer["subver"].get_str()};
-                m_peers.push_back({addr, sub_version, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
+                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_age_length = std::max(age.length(), m_max_age_length);
                 m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
@@ -563,15 +579,15 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<-> relay   net mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
+            result += strprintf("<->   type   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %5s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
-                    peer.is_block_relay ? "block" : "full",
+                    ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
@@ -589,18 +605,27 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                    ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
+            result += strprintf("                     ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
-        result += "        ipv4    ipv6   onion   total  block-relay\n";
+        result += "        ipv4    ipv6   onion";
+        if (m_is_i2p_on) result += "     i2p";
+        result += "   total   block";
+        if (m_manual_peers_count) result += "  manual";
         const std::array rows{"in", "out", "total"};
         for (uint8_t i = 0; i < 3; ++i) {
-            result += strprintf("%-5s  %5i   %5i   %5i   %5i   %5i\n", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2), m_counts.at(i).at(m_networks.size()), m_counts.at(i).at(m_networks.size() + 1));
+            result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
+            if (m_is_i2p_on) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
+            result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
+            if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
+                result += strprintf("   %5i", m_block_relay_peers_count);
+                if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
+            }
         }
 
         // Report local addresses, ports, and scores.
-        result += "\nLocal addresses";
+        result += "\n\nLocal addresses";
         const std::vector<UniValue>& local_addrs{networkinfo["localaddresses"].getValues()};
         if (local_addrs.empty()) {
             result += ": n/a\n";
