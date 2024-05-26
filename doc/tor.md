@@ -18,10 +18,9 @@ There are several ways to see your local onion address in Dash Core:
 You may set the `-debug=tor` config logging option to have additional
 information in the debug log about your Tor configuration.
 
-CLI `-addrinfo` returns the number of addresses known to your node per network
-type, including Tor v2 and v3. This is useful to see how many onion addresses
-are known to your node for `-onlynet=onion` and how many Tor v3 addresses it
-knows when upgrading to current and future Tor releases that support Tor v3 only.
+CLI `-addrinfo` returns the number of addresses known to your node per
+network. This can be useful to see how many onion peers your node knows,
+e.g. for `-onlynet=onion`.
 
 ## 1. Run Dash Core behind a Tor proxy
 
