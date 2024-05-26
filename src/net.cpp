@@ -475,18 +475,27 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     proxyType proxy;
     CAddress addr_bind;
     assert(!addr_bind.IsValid());
+    std::unique_ptr<i2p::sam::Session> i2p_transient_session;
 
     if (addrConnect.IsValid()) {
+        const bool use_proxy{GetProxy(addrConnect.GetNetwork(), proxy)};
         bool proxyConnectionFailed = false;
 
-        if (addrConnect.GetNetwork() == NET_I2P && m_i2p_sam_session.get() != nullptr) {
+        if (addrConnect.GetNetwork() == NET_I2P && use_proxy) {
             i2p::Connection conn;
-            if (m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed)) {
-                connected = true;
+
+            if (m_i2p_sam_session) {
+                connected = m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed);
+            } else {
+                i2p_transient_session = std::make_unique<i2p::sam::Session>(proxy.proxy, &interruptNet);
+                connected = i2p_transient_session->Connect(addrConnect, conn, proxyConnectionFailed);
+            }
+
+            if (connected) {
                 sock = std::move(conn.sock);
                 addr_bind = CAddress{conn.me, NODE_NONE};
             }
-        } else if (GetProxy(addrConnect.GetNetwork(), proxy)) {
+        } else if (use_proxy) {
             sock = CreateSock(proxy.proxy);
             if (!sock) {
                 return nullptr;
@@ -528,7 +537,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     if (!addr_bind.IsValid()) {
         addr_bind = GetBindAddress(sock->Get());
     }
-    CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type, /* inbound_onion */ false);
+    CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type, /* inbound_onion */ false, std::move(i2p_transient_session));
     pnode->AddRef();
     statsClient.inc("peers.connect", 1.0f);
 
@@ -571,6 +580,8 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
     CloseSocket(hSocket);
+    m_i2p_sam_session.reset();
+
     statsClient.inc("peers.disconnect", 1.0f);
 }
 
@@ -3342,7 +3353,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     }
 
     proxyType i2p_sam;
-    if (GetProxy(NET_I2P, i2p_sam)) {
+    if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
         m_i2p_sam_session = std::make_unique<i2p::sam::Session>(GetDataDir() / "i2p_private_key",
                                                                 i2p_sam.proxy, &interruptNet);
     }
@@ -3444,7 +3455,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
     // Process messages
     threadMessageHandler = std::thread(&util::TraceThread, "msghand", [this] { ThreadMessageHandler(); });
 
-    if (connOptions.m_i2p_accept_incoming && m_i2p_sam_session.get() != nullptr) {
+    if (m_i2p_sam_session) {
         threadI2PAcceptIncoming =
             std::thread(&util::TraceThread, "i2paccept", [this, &mn_sync] { ThreadI2PAcceptIncoming(mn_sync); });
     }
@@ -4012,17 +4023,18 @@ ServiceFlags CConnman::GetLocalServices() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion)
-    : nTimeConnected(GetTimeSeconds()),
-      addr(addrIn),
-      addrBind(addrBindIn),
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
+    : nTimeConnected{GetTimeSeconds()},
+      addr{addrIn},
+      addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
-      m_inbound_onion(inbound_onion),
-      nKeyedNetGroup(nKeyedNetGroupIn),
-      id(idIn),
-      nLocalHostNonce(nLocalHostNonceIn),
-      m_conn_type(conn_type_in),
-      nLocalServices(nLocalServicesIn)
+      m_inbound_onion{inbound_onion},
+      nKeyedNetGroup{nKeyedNetGroupIn},
+      id{idIn},
+      nLocalHostNonce{nLocalHostNonceIn},
+      m_conn_type{conn_type_in},
+      nLocalServices{nLocalServicesIn},
+      m_i2p_sam_session{std::move(i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
