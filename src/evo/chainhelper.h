@@ -20,6 +20,7 @@ namespace Consensus { struct Params; }
 namespace llmq {
 class CChainLocksHandler;
 class CQuorumBlockProcessor;
+class CQuorumManager;
 }
 
 class CChainstateHelper
@@ -27,7 +28,8 @@ class CChainstateHelper
 public:
     explicit CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
                                llmq::CQuorumBlockProcessor& qblockman, const Consensus::Params& consensus_params,
-                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler);
+                               const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler,
+                               const llmq::CQuorumManager& qman);
     ~CChainstateHelper();
 
     CChainstateHelper() = delete;

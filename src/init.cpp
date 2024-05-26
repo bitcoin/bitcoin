@@ -1978,7 +1978,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
                 node.chain_helper.reset();
                 node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
-                                                                        chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
+                                                                        chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler), *(node.llmq_ctx->qman));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

@@ -10,9 +10,10 @@
 
 CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
                                      llmq::CQuorumBlockProcessor& qblockman, const Consensus::Params& consensus_params,
-                                     const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler)
+                                     const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler,
+                                     const llmq::CQuorumManager& qman)
     : mn_payments{std::make_unique<CMNPaymentsProcessor>(dmnman, govman, consensus_params, mn_sync, sporkman)},
-      special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, mnhfman, qblockman, consensus_params, clhandler)}
+      special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, mnhfman, qblockman, consensus_params, clhandler, qman)}
 {}
 
 CChainstateHelper::~CChainstateHelper() = default;

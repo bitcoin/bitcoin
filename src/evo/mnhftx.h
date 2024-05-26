@@ -22,6 +22,9 @@ class CBlock;
 class CBlockIndex;
 class CEvoDB;
 class TxValidationState;
+namespace llmq {
+class CQuorumManager;
+}
 
 // mnhf signal special transaction
 class MNHFTx
@@ -32,7 +35,8 @@ public:
     CBLSSignature sig{};
 
     MNHFTx() = default;
-    bool Verify(const uint256& quorumHash, const uint256& requestId, const uint256& msgHash, TxValidationState& state) const;
+    bool Verify(const llmq::CQuorumManager& qman, const uint256& quorumHash, const uint256& requestId, const uint256& msgHash,
+                TxValidationState& state) const;
 
     SERIALIZE_METHODS(MNHFTx, obj)
     {
@@ -148,6 +152,6 @@ private:
 };
 
 std::optional<uint8_t> extractEHFSignal(const CTransaction& tx);
-bool CheckMNHFTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
+bool CheckMNHFTx(const llmq::CQuorumManager& qman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
 #endif // BITCOIN_EVO_MNHFTX_H

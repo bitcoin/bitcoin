@@ -24,6 +24,7 @@ struct MNListUpdates;
 namespace Consensus { struct Params; }
 namespace llmq {
 class CQuorumBlockProcessor;
+class CQuorumManager;
 class CChainLocksHandler;
 } // namespace llmq
 
@@ -38,6 +39,7 @@ private:
     llmq::CQuorumBlockProcessor& m_qblockman;
     const Consensus::Params& m_consensus_params;
     const llmq::CChainLocksHandler& m_clhandler;
+    const llmq::CQuorumManager& m_qman;
 
 private:
     [[nodiscard]] bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state);
@@ -45,8 +47,9 @@ private:
 
 public:
     explicit CSpecialTxProcessor(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, llmq::CQuorumBlockProcessor& qblockman,
-                                 const Consensus::Params& consensus_params, const llmq::CChainLocksHandler& clhandler) :
-        m_cpoolman(cpoolman), m_dmnman{dmnman}, m_mnhfman{mnhfman}, m_qblockman{qblockman}, m_consensus_params{consensus_params}, m_clhandler{clhandler} {}
+                                 const Consensus::Params& consensus_params, const llmq::CChainLocksHandler& clhandler, const llmq::CQuorumManager& qman) :
+        m_cpoolman(cpoolman), m_dmnman{dmnman}, m_mnhfman{mnhfman}, m_qblockman{qblockman}, m_consensus_params{consensus_params}, m_clhandler{clhandler},
+        m_qman{qman} {}
 
     bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
