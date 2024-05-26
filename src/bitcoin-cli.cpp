@@ -595,7 +595,7 @@ public:
         // Report peer connection totals by type.
         result += "        ipv4    ipv6   onion   total  block-relay\n";
         const std::array rows{"in", "out", "total"};
-        for (uint8_t i = 0; i < m_networks.size(); ++i) {
+        for (uint8_t i = 0; i < 3; ++i) {
             result += strprintf("%-5s  %5i   %5i   %5i   %5i   %5i\n", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2), m_counts.at(i).at(m_networks.size()), m_counts.at(i).at(m_networks.size() + 1));
         }
 
