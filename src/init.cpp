@@ -1975,7 +1975,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.llmq_ctx = std::make_unique<LLMQContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman,
                                                               *node.mempool, node.mn_activeman.get(), *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
                 // Enable CMNHFManager::{Process, Undo}Block
-                node.mnhf_manager->ConnectManagers(node.llmq_ctx->qman);
+                node.mnhf_manager->ConnectManagers(node.llmq_ctx->qman.get());
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 

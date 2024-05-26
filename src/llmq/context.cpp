@@ -26,24 +26,20 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db, peerman)},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman, mn_metaman, *quorum_block_processor, mn_activeman, sporkman, peerman, unit_tests, wipe)},
-    qman{[&]() -> llmq::CQuorumManager* const {
-        assert(llmq::quorumManager == nullptr);
-        llmq::quorumManager = std::make_unique<llmq::CQuorumManager>(*bls_worker, chainstate, connman, dmnman, *qdkgsman, evo_db, *quorum_block_processor, mn_activeman, mn_sync, sporkman);
-        return llmq::quorumManager.get();
-    }()},
-    sigman{std::make_unique<llmq::CSigningManager>(connman, mn_activeman, *llmq::quorumManager, peerman, unit_tests, wipe)},
-    shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *llmq::quorumManager, sporkman, peerman)},
+    qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, chainstate, connman, dmnman, *qdkgsman, evo_db, *quorum_block_processor, mn_activeman, mn_sync, sporkman)},
+    sigman{std::make_unique<llmq::CSigningManager>(connman, mn_activeman, *qman, peerman, unit_tests, wipe)},
+    shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *qman, sporkman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
         assert(llmq::chainLocksHandler == nullptr);
-        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode);
+        llmq::chainLocksHandler = std::make_unique<llmq::CChainLocksHandler>(chainstate, *qman, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode);
         return llmq::chainLocksHandler.get();
     }()},
     isman{[&]() -> llmq::CInstantSendManager* const {
         assert(llmq::quorumInstantSendManager == nullptr);
-        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *llmq::quorumManager, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode, unit_tests, wipe);
+        llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *qman, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode, unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
-    ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *llmq::quorumManager, sporkman, peerman)}
+    ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *qman, sporkman, peerman)}
 {
     // NOTE: we use this only to wipe the old db, do NOT use it for anything else
     // TODO: remove it in some future version
@@ -54,7 +50,6 @@ LLMQContext::~LLMQContext() {
     // LLMQContext doesn't own these objects, but still need to care of them for consistency:
     llmq::quorumInstantSendManager.reset();
     llmq::chainLocksHandler.reset();
-    llmq::quorumManager.reset();
 }
 
 void LLMQContext::Interrupt() {
@@ -66,7 +61,6 @@ void LLMQContext::Interrupt() {
 }
 
 void LLMQContext::Start() {
-    assert(qman == llmq::quorumManager.get());
     assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
 
@@ -84,7 +78,6 @@ void LLMQContext::Start() {
 }
 
 void LLMQContext::Stop() {
-    assert(qman == llmq::quorumManager.get());
     assert(clhandler == llmq::chainLocksHandler.get());
     assert(isman == llmq::quorumInstantSendManager.get());
 

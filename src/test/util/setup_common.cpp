@@ -119,7 +119,7 @@ void DashTestSetup(NodeContext& node, const CChainParams& chainparams)
 #endif // ENABLE_WALLET
     node.llmq_ctx = std::make_unique<LLMQContext>(chainstate, *node.connman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman, *node.mempool,
                                                   /* mn_activeman = */ nullptr, *node.mn_sync, node.peerman, /* unit_tests = */ true, /* wipe = */ false);
-    Assert(node.mnhf_manager)->ConnectManagers(node.llmq_ctx->qman);
+    Assert(node.mnhf_manager)->ConnectManagers(node.llmq_ctx->qman.get());
     node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
                                                             chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler), *(node.llmq_ctx->qman));
 }

@@ -54,7 +54,7 @@ public:
      *
      *  Please note, that members here should not be re-ordered, because initialization
      *  some of them requires other member initialized.
-     *  For example, constructor `quorumManager` requires `bls_worker`.
+     *  For example, constructor `qman` requires `bls_worker`.
      *
      *  Some objects are still global variables and their de-globalization is not trivial
      *  at this point. LLMQContext keeps just a pointer to them and doesn't own these objects,
@@ -64,7 +64,7 @@ public:
     const std::unique_ptr<llmq::CDKGDebugManager> dkg_debugman;
     const std::unique_ptr<llmq::CQuorumBlockProcessor> quorum_block_processor;
     const std::unique_ptr<llmq::CDKGSessionManager> qdkgsman;
-    llmq::CQuorumManager* const qman;
+    const std::unique_ptr<llmq::CQuorumManager> qman;
     const std::unique_ptr<llmq::CSigningManager> sigman;
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     llmq::CChainLocksHandler* const clhandler;
