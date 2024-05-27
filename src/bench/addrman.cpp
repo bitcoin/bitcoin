@@ -71,11 +71,9 @@ static void AddrManAdd(benchmark::Bench& bench)
 {
     CreateAddresses();
 
-    CAddrMan addrman(/* deterministic */ false, /* consistency_check_ratio */ 0);
-
     bench.run([&] {
+        CAddrMan addrman{/* deterministic */ false, /* consistency_check_ratio */ 0};
         AddAddressesToAddrMan(addrman);
-        addrman.Clear();
     });
 }
 
