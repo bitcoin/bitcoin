@@ -1500,7 +1500,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Неизвестно. Синхронизиране на Глави (%1, %2%)...</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Неизвестно. Предварителна синхронизация на хедъри (%1, %2%)…</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>

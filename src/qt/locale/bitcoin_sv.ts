@@ -1397,6 +1397,10 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">Denna första synkronisering är väldigt krävande, och kan påvisa hårdvaruproblem hos din dator som tidigare inte visat sig. Varje gång du kör %1, kommer nerladdningen att fortsätta där den avslutades.</translation>
     </message>
     <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">När du trycker OK kommer %1 att börja ladda ner och bearbeta den fullständiga %4-blockkedjan (%2 GB), med början vid de tidigaste transaktionerna %3 när %4 först startades.</translation>
+    </message>
+    <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
         <translation type="unfinished">Om du valt att begränsa storleken på blockkedjan (gallring), måste historiska data ändå laddas ner och behandlas, men kommer därefter att tas bort för att spara lagringsutrymme.</translation>
     </message>
@@ -1481,7 +1485,15 @@ Om den här plånboken innehåller lösbara</translation>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
         <translation type="unfinished">%1 synkroniserar. Den kommer att ladda ner metadata och block från noder och validera dem fram tills att toppen på blockkedjan är nådd.</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Okänd. Synkar huvuden (%1, %2%)...</translation>
+    </message>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Okänd. För-synkar rubriker (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1513,12 +1525,20 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">&amp;Starta %1 vid systemlogin</translation>
     </message>
     <message>
+        <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation type="unfinished">Aktivering av ansning reducerar diskutrymmet som behövs för att lagra transaktioner. Alla block är fortfarande fullt validerade. Inaktivering av denna funktion betyder att hela blockkedjan måste laddas ner på nytt.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">Storleken på &amp;databascache</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Antalet skript&amp;verifikationstrådar</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Hela sökvägen till ett %1 kompatibelt script (t,ex. C:\Downloads\hwi.exe eller /Users/du/Downloads/hwi.py). Varning: Skadlig programvara kan stjäla dina mynt!</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1535,6 +1555,10 @@ Om den här plånboken innehåller lösbara</translation>
     <message>
         <source>Font in the Overview tab: </source>
         <translation type="unfinished">Typsnitt på översiktsfliken:</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">Alternativ som anges i denna dialog åsidosätts av kommandoraden:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>

@@ -2,12 +2,20 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">برای ویرایش آدرس یا برچسب زدن کلیک ‌راست کنید</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation type="unfinished">یک آدرس جدید ایجاد کنید</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation type="unfinished">کپی آدرسی که اکنون انتخاب کردید در کلیپ بورد سیستم</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">آدرس‌های گیرنده - %1</translation>
     </message>
     </context>
 <context>
@@ -519,6 +527,14 @@
         <translation type="unfinished">همه‌ی کیف پول‌ها را ببند</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">انتقال کیف پول</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">انتقال یک کیف پول</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation type="unfinished">کیف پول پیش فرض
  </translation>
@@ -597,6 +613,14 @@
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">پیش‌همگام‌سازی سرصفحه‌ها (%1%)…</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">خطا در ایجاد کیف پول</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">نمی‌توان کیف پول جدیدی ایجاد کرد، نرم‌افزار بدون پشتیبانی sqlite کامپایل شده است (برای کیف پول‌های توصیف‌گر این ویژگی لازم است)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -815,6 +839,37 @@
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">انتقال کیف پول</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">آیا برای انتقال کیف پول مطمئن هستید &lt;i&gt;%1&lt;/i&gt;؟</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">انتقال کیف پول</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">در حال انتقال کیف پول &lt;b&gt;%1&lt;/b&gt;... </translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">کیف پول '%1' با موفقیت منتقل گردید.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">انتقال موفق نبود</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">انتقال موفق بود</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -890,6 +945,10 @@
         <source>Create Wallet</source>
         <translation type="unfinished">ایجاد کیف پول
  </translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">تنها یک قدم با ایجاد کیف پول جدیدتان فاصله دارید!</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1842,6 +1901,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">انتخاب همتا یا جفت برای جزییات اطلاعات</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">جابه‌جایی</translation>
     </message>
     <message>
         <source>Version</source>
@@ -3431,6 +3494,10 @@ The wallet might have been tampered with or created with malicious intent.
 </translation>
     </message>
     <message>
+        <source>Block verification was interrupted</source>
+        <translation type="unfinished">تايید بلوک دچار قطعی شد</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation type="unfinished">کپی رایت (C) %i-%i</translation>
     </message>
@@ -3469,6 +3536,10 @@ The wallet might have been tampered with or created with malicious intent.
     <message>
         <source>Error opening block database</source>
         <translation type="unfinished">خطا در بازکردن پایگاه داده بلاک block</translation>
+    </message>
+    <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">خطا در خواندن فایل تنظیمات: %s</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>

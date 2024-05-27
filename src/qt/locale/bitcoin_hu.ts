@@ -303,6 +303,14 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
         <translation type="unfinished">ismeretlen</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Beágyazva "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Alapértelmezett betűtípus "%1"</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Összeg</translation>
     </message>

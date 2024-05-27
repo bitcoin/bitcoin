@@ -299,6 +299,10 @@ Solo es posible firmar con direcciones de tipo legacy.</translation>
         <translation type="unfinished">desconocido</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">"%1" integrado</translation>
+    </message>
+    <message>
         <source>Default system font "%1"</source>
         <translation type="unfinished">Fuente predeterminada del sistema "%1"</translation>
     </message>
@@ -704,7 +708,7 @@ Solo es posible firmar con direcciones de tipo legacy.</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
-        <translation type="unfinished">Ocultar los valores en la pestaña de vista general</translation>
+        <translation type="unfinished">Ocultar los valores en la pestaña "Vista general"</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -1087,11 +1091,11 @@ El proceso de migración creará una copia de seguridad de la billetera antes de
     </message>
     <message>
         <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Guiones vigilantes han sido migrados a un monedero con el nombre '%1'.</translation>
+        <translation type="unfinished">Los scripts solo de observación se migraron a una nueva billetera llamada "%1".</translation>
     </message>
     <message>
         <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Solucionable pero ninguno de los guiones vigilados han sido migrados a un monedero llamados '%1'.</translation>
+        <translation type="unfinished">Los scripts solucionables pero no de observación se migraron a una nueva billetera llamada "%1".</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1565,7 +1569,7 @@ El proceso de migración creará una copia de seguridad de la billetera antes de
     </message>
     <message>
         <source>Font in the Overview tab: </source>
-        <translation type="unfinished">Fuente en la pestaña Resumen:</translation>
+        <translation type="unfinished">Fuente en la pestaña "Vista general":</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
@@ -2646,7 +2650,7 @@ Para obtener más información sobre cómo usar esta consola, escribe %6.
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Para</translation>
+        <translation type="unfinished">A</translation>
     </message>
     <message>
         <source>From</source>
@@ -3121,7 +3125,7 @@ Nota: Dado que la comisión se calcula por byte, una tasa de "100 satoshis por k
     </message>
     <message>
         <source>%1 from wallet '%2'</source>
-        <translation type="unfinished">%1 desde monedero "%2"</translation>
+        <translation type="unfinished">%1 desde billetera "%2"</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3194,7 +3198,7 @@ Nota: Dado que la comisión se calcula por byte, una tasa de "100 satoshis por k
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished">¡Fallo al crear la transacción!</translation>
+        <translation type="unfinished">Fallo al crear la transacción</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -3510,7 +3514,7 @@ Nota: Dado que la comisión se calcula por byte, una tasa de "100 satoshis por k
     </message>
     <message>
         <source>To</source>
-        <translation type="unfinished">Para</translation>
+        <translation type="unfinished">A</translation>
     </message>
     <message>
         <source>own address</source>
@@ -4342,7 +4346,7 @@ Ir a "Archivo &gt; Abrir billetera" para cargar una.
 
 The wallet might have been tampered with or created with malicious intent.
 </source>
-        <translation type="unfinished">Se encontró una entrada heredada inesperada en la billetera basada en descriptores. Cargando billetera%s
+        <translation type="unfinished">Se encontró una entrada inesperada tipo "legacy" en la billetera basada en descriptores. Cargando billetera%s
 
 Es posible que la billetera haya sido manipulada o creada con malas intenciones.
 </translation>
@@ -4533,7 +4537,7 @@ No se puede restaurar la copia de seguridad de la billetera.</translation>
     </message>
     <message>
         <source>Error: Unable to read wallet's best block locator record</source>
-        <translation type="unfinished">Error: no es capaz de leer el mejor registro del localizador del bloque del monedero</translation>
+        <translation type="unfinished">Error: No se pudo leer el registro del mejor localizador de bloques de la billetera.</translation>
     </message>
     <message>
         <source>Error: Unable to remove watchonly address book data</source>
@@ -4545,16 +4549,15 @@ No se puede restaurar la copia de seguridad de la billetera.</translation>
     </message>
     <message>
         <source>Error: Unable to write solvable wallet best block locator record</source>
-        <translation type="unfinished">Error: no es capaz de escribir el mejor registro del localizador del bloque del monedero</translation>
+        <translation type="unfinished">Error: No se pudo escribir el registro del mejor localizador de bloques de la billetera solucionable.</translation>
     </message>
     <message>
         <source>Error: Unable to write watchonly wallet best block locator record</source>
-        <translation type="unfinished">Error: no es capaz de escribir el mejor monedero vigilado del bloque del registro localizador</translation>
+        <translation type="unfinished">Error: No se pudo escribir el registro del mejor localizador de bloques de la billetera solo de observación.</translation>
     </message>
     <message>
         <source>Error: address book copy failed for wallet %s</source>
-        <translation type="unfinished">Error: falló copia de la libreta de direcciones para la billetera 1%s
- </translation>
+        <translation type="unfinished">Error: falló copia de la libreta de direcciones para la billetera %s</translation>
     </message>
     <message>
         <source>Error: database transaction cannot be executed for wallet %s</source>
@@ -4578,7 +4581,7 @@ No se puede restaurar la copia de seguridad de la billetera.</translation>
     </message>
     <message>
         <source>Failure removing transaction: %s</source>
-        <translation type="unfinished">Error al eliminar la transacción: 1%s</translation>
+        <translation type="unfinished">Error al eliminar la transacción: %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4898,7 +4901,7 @@ No se puede restaurar la copia de seguridad de la billetera.</translation>
     </message>
     <message>
         <source>Wallet file creation failed: %s</source>
-        <translation type="unfinished">Creación errónea del fichero monedero: %s</translation>
+        <translation type="unfinished">Error al crear el archivo de la billetera: %s</translation>
     </message>
     <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
@@ -4910,11 +4913,11 @@ No se puede restaurar la copia de seguridad de la billetera.</translation>
     </message>
     <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
-        <translation type="unfinished">Error: no pudo agregar tx de solo vigía %s para monedero de solo vigía</translation>
+        <translation type="unfinished">Error: No se pudo agregar la transacción %s a la billetera solo de observación.</translation>
     </message>
     <message>
         <source>Error: Could not delete watchonly transactions. </source>
-        <translation type="unfinished">Error: no se pudieron eliminar las transacciones de watchonly.</translation>
+        <translation type="unfinished">Error: No se pudieron eliminar las transacciones solo de observación</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
