@@ -232,7 +232,7 @@ public:
      */
     bool IsRelayable() const
     {
-        return IsIPv4() || IsIPv6() || IsTor() || IsI2P();
+        return IsIPv4() || IsIPv6() || IsTor() || IsI2P() || IsCJDNS();
     }
 
     /**
@@ -581,6 +581,8 @@ public:
         READWRITEAS(CNetAddr, obj);
         READWRITE(Using<BigEndianFormatter<2>>(obj.port));
     }
+
+    friend CService MaybeFlipIPv6toCJDNS(const CService& service);
 };
 
 bool SanityCheckASMap(const std::vector<bool>& asmap);

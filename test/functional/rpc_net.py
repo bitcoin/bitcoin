@@ -99,7 +99,7 @@ class NetTest(DashTestFramework):
             assert_net_servicesnames(int(info[0]["services"], 0x10), info[0]["servicesnames"])
 
         # Check dynamically generated networks list in getpeerinfo help output.
-        assert "(ipv4, ipv6, onion, i2p, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
+        assert "(ipv4, ipv6, onion, i2p, cjdns, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
         # This part is slightly different comparing to the Bitcoin implementation. This is expected because we create connections on network setup a bit differently too.
         # We also create more connection during the test itself to test mn specific stats
         assert_equal(peer_info[0][0]['connection_type'], 'inbound')
@@ -167,7 +167,7 @@ class NetTest(DashTestFramework):
             assert_net_servicesnames(int(info["localservices"], 0x10), info["localservicesnames"])
 
         # Check dynamically generated networks list in getnetworkinfo help output.
-        assert "(ipv4, ipv6, onion, i2p)" in self.nodes[0].help("getnetworkinfo")
+        assert "(ipv4, ipv6, onion, i2p, cjdns)" in self.nodes[0].help("getnetworkinfo")
 
         self.log.info('Test extended connections info')
         # Connect nodes both ways.
@@ -252,8 +252,8 @@ class NetTest(DashTestFramework):
         assert_equal(res[0]["port"], 8333)
         assert_equal(res[0]["services"], services)
 
-        # Test for the absence of onion and I2P addresses.
-        for network in ["onion", "i2p"]:
+        # Test for the absence of onion, I2P and CJDNS addresses.
+        for network in ["onion", "i2p", "cjdns"]:
             assert_equal(self.nodes[0].getnodeaddresses(0, network), [])
 
         # Test invalid arguments.
