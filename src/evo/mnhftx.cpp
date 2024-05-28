@@ -192,9 +192,11 @@ static bool extractSignals(const llmq::CQuorumManager& qman, const CBlock& block
 
 std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state)
 {
+    assert(m_qman);
+
     try {
         std::vector<uint8_t> new_signals;
-        if (!extractSignals(*Assert(llmq::quorumManager), block, pindex, new_signals, state)) {
+        if (!extractSignals(*m_qman, block, pindex, new_signals, state)) {
             // state is set inside extractSignals
             return std::nullopt;
         }
@@ -244,9 +246,11 @@ std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& bl
 
 bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pindex)
 {
+    assert(m_qman);
+
     std::vector<uint8_t> excluded_signals;
     BlockValidationState state;
-    if (!extractSignals(*Assert(llmq::quorumManager), block, pindex, excluded_signals, state)) {
+    if (!extractSignals(*m_qman, block, pindex, excluded_signals, state)) {
         LogPrintf("CMNHFManager::%s: failed to extract signals\n", __func__);
         return false;
     }
@@ -348,6 +352,13 @@ void CMNHFManager::AddSignal(const CBlockIndex* const pindex, int bit)
     auto signals = GetForBlock(pindex->pprev);
     signals.emplace(bit, pindex->nHeight);
     AddToCache(signals, pindex);
+}
+
+void CMNHFManager::ConnectManagers(gsl::not_null<llmq::CQuorumManager*> qman)
+{
+    // Do not allow double-initialization
+    assert(m_qman == nullptr);
+    m_qman = qman;
 }
 
 std::string MNHFTx::ToString() const
