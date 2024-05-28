@@ -119,7 +119,6 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
     LOCK(m_mutex);
 
     unsigned int nEvicted = 0;
-    static NodeSeconds nNextSweep;
     auto nNow{Now<NodeSeconds>()};
     if (nNextSweep <= nNow) {
         // Sweep out expired orphan pool entries:
