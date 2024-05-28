@@ -347,11 +347,11 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator, int check_ratio)
     _clear(); //lock free clear
 }
 
-void CTxMemPool::ConnectManagers(CDeterministicMNManager* dmnman)
+void CTxMemPool::ConnectManagers(gsl::not_null<CDeterministicMNManager*> dmnman)
 {
     // Do not allow double-initialization
     assert(m_dmnman == nullptr);
-    m_dmnman = Assert(dmnman);
+    m_dmnman = dmnman;
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const

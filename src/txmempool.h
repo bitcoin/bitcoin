@@ -18,6 +18,7 @@
 #include <spentindex.h>
 #include <amount.h>
 #include <coins.h>
+#include <gsl/pointers.h>
 #include <indirectmap.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -607,7 +608,7 @@ public:
      * Separated from constructor as it's initialized after CTxMemPool
      * is created. Required for ProTx processing.
      */
-    void ConnectManagers(CDeterministicMNManager* dmnman);
+    void ConnectManagers(gsl::not_null<CDeterministicMNManager*> dmnman);
 
     /**
      * Reset CDeterministicMNManager pointer.
