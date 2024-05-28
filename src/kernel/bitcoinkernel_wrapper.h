@@ -11,6 +11,7 @@
 #include <memory>
 #include <span>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -618,6 +619,24 @@ public:
 
     Context()
         : Handle{btck_context_create(ContextOptions{}.get())} {}
+};
+
+class ChainstateManagerOptions : public UniqueHandle<btck_ChainstateManagerOptions, btck_chainstate_manager_options_destroy>
+{
+public:
+    ChainstateManagerOptions(const Context& context, const std::string& data_dir, const std::string& blocks_dir)
+        : UniqueHandle{btck_chainstate_manager_options_create(context.get(), data_dir.c_str(), data_dir.length(), blocks_dir.c_str(), blocks_dir.length())}
+    {
+    }
+};
+
+class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
+{
+public:
+    ChainMan(const Context& context, const ChainstateManagerOptions& chainman_opts)
+        : UniqueHandle{btck_chainstate_manager_create(chainman_opts.get())}
+    {
+    }
 };
 
 } // namespace btck
