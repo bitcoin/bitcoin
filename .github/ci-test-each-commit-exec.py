@@ -42,6 +42,8 @@ def main():
         "-DBUILD_BENCH=ON",
         "-DBUILD_FUZZ_BINARY=ON",
         "-DWITH_USDT=ON",
+        "-DBUILD_KERNEL_LIB=ON",
+        "-DBUILD_KERNEL_TEST=ON",
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function",
     ])
     run(["cmake", "--build", "build", "-j", str(num_procs)])

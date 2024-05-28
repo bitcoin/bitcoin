@@ -13,4 +13,4 @@ export PACKAGES="python3-zmq python3-pip clang-16 llvm-16 libc++abi-16-dev libc+
 export PIP_PACKAGES="--break-system-packages pycapnp"
 export DEP_OPTS="NO_WALLET=1 CC=clang-16 CXX='clang++-16 -stdlib=libc++'"
 export GOAL="install"
-export BITCOIN_CONFIG="-DREDUCE_EXPORTS=ON -DBUILD_UTIL_CHAINSTATE=ON -DBUILD_KERNEL_LIB=ON -DBUILD_SHARED_LIBS=ON"
+export BITCOIN_CONFIG="-DREDUCE_EXPORTS=ON -DBUILD_UTIL_CHAINSTATE=ON -DBUILD_KERNEL_LIB=ON -DBUILD_KERNEL_TEST=ON -DBUILD_SHARED_LIBS=ON"
