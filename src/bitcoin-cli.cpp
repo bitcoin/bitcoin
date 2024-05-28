@@ -11,6 +11,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <compat.h>
+#include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -30,6 +31,10 @@
 #include <stdio.h>
 #include <string>
 #include <tuple>
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 #include <event2/buffer.h>
 #include <event2/keyvalq_struct.h>
@@ -51,6 +56,9 @@ static constexpr int8_t UNKNOWN_NETWORK{-1};
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
 
+/** Default -color setting. */
+static const std::string DEFAULT_COLOR_SETTING{"auto"};
+
 static void SetupCliArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
@@ -66,6 +74,8 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+
+    argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_STRING, OptionsCategory::OPTIONS);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -249,7 +259,7 @@ public:
 class AddrinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr std::array m_networks{"ipv4", "ipv6", "torv2", "torv3", "i2p"};
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
     int8_t NetworkStringToId(const std::string& str) const
     {
         for (size_t i = 0; i < m_networks.size(); ++i) {
@@ -275,13 +285,10 @@ public:
         if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
             throw std::runtime_error("-addrinfo requires dashd server to be running v21.0 and up");
         }
-        // Count the number of peers we know by network, including torv2 versus torv3.
+        // Count the number of peers known to our node, by network.
         std::array<uint64_t, m_networks.size()> counts{{}};
         for (const UniValue& node : nodes) {
             std::string network_name{node["network"].get_str()};
-            if (network_name == "onion") {
-                network_name = node["address"].get_str().size() > 22 ? "torv3" : "torv2";
-            }
             const int8_t network_id{NetworkStringToId(network_name)};
             if (network_id == UNKNOWN_NETWORK) continue;
             ++counts.at(network_id);
@@ -350,12 +357,14 @@ public:
         connections.pushKV("mn_total", batch[ID_NETWORKINFO]["result"]["connections_mn"]);
         result.pushKV("connections", connections);
 
-        result.pushKV("proxy", batch[ID_NETWORKINFO]["result"]["networks"][0]["proxy"]);
+        result.pushKV("networks", batch[ID_NETWORKINFO]["result"]["networks"]);
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("chain", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"]));
         if (!batch[ID_WALLETINFO]["result"].isNull()) {
             result.pushKV("coinjoin_balance", batch[ID_WALLETINFO]["result"]["coinjoin_balance"]);
+            result.pushKV("has_wallet", true);
             result.pushKV("keypoolsize", batch[ID_WALLETINFO]["result"]["keypoolsize"]);
+            result.pushKV("walletname", batch[ID_WALLETINFO]["result"]["walletname"]);
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
                 result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);
             }
@@ -375,8 +384,10 @@ class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
-    static constexpr std::array m_networks{"ipv4", "ipv6", "onion"};
-    std::array<std::array<uint16_t, m_networks.size() + 2>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total/block-relay)
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
+    std::array<std::array<uint16_t, m_networks.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
+    uint8_t m_block_relay_peers_count{0};
+    uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
         for (size_t i = 0; i < m_networks.size(); ++i) {
@@ -384,8 +395,7 @@ private:
         }
         return UNKNOWN_NETWORK;
     }
-    uint8_t m_details_level{0};      //!< Optional user-supplied arg to set dashboard details level
-    bool m_is_help_requested{false}; //!< Optional user-supplied arg to print help documentation
+    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
@@ -396,6 +406,7 @@ private:
     struct Peer {
         std::string addr;
         std::string sub_version;
+        std::string conn_type;
         std::string network;
         std::string age;
         double min_ping;
@@ -425,61 +436,13 @@ private:
         const double milliseconds{round(1000 * seconds)};
         return milliseconds > 999999 ? "-" : ToString(milliseconds);
     }
-    const UniValue NetinfoHelp()
+    std::string ConnectionTypeForNetinfo(const std::string& conn_type) const
     {
-        return std::string{
-            "-netinfo level|\"help\" \n\n"
-            "Returns a network peer connections dashboard with information from the remote server.\n"
-            "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
-            "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
-            "Pass \"help\" to see this detailed help documentation.\n"
-            "If more than one argument is passed, only the first one is read and parsed.\n"
-            "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
-            "Arguments:\n"
-            "1. level (integer 0-4, optional)  Specify the info level of the peers dashboard (default 0):\n"
-            "                                  0 - Connection counts and local addresses\n"
-            "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
-            "                                  2 - Like 1 but with an address column\n"
-            "                                  3 - Like 1 but with a version column\n"
-            "                                  4 - Like 1 but with both address and version columns\n"
-            "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
-            "Result:\n\n"
-            "* The peers listing in levels 1-4 displays all of the peers sorted by direction and minimum ping time:\n\n"
-            "  Column   Description\n"
-            "  ------   -----------\n"
-            "  <->      Direction\n"
-            "           \"in\"  - inbound connections are those initiated by the peer\n"
-            "           \"out\" - outbound connections are those initiated by us\n"
-            "  type     Type of peer connection\n"
-            "           \"full\"   - full relay, the default\n"
-            "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
-            "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
-            "  mping    Minimum observed ping time, in milliseconds (ms)\n"
-            "  ping     Last observed ping time, in milliseconds (ms)\n"
-            "  send     Time since last message sent to the peer, in seconds\n"
-            "  recv     Time since last message received from the peer, in seconds\n"
-            "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
-            "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
-            "  age      Duration of connection to the peer, in minutes\n"
-            "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
-            "           peer selection (only displayed if the -asmap config option is set)\n"
-            "  id       Peer index, in increasing order of peer connections since node startup\n"
-            "  address  IP address and port of the peer\n"
-            "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
-            "* The connection counts table displays the number of peers by direction, network, and the totals\n"
-            "  for each, as well as a column for block relay peers.\n\n"
-            "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
-            "Examples:\n\n"
-            "Connection counts and local addresses only\n"
-            "> dash-cli -netinfo\n\n"
-            "Compact peers listing\n"
-            "> dash-cli -netinfo 1\n\n"
-            "Full dashboard\n"
-            "> dash-cli -netinfo 4\n\n"
-            "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
-            "> watch --interval 1 --no-title dash-cli -netinfo 4\n\n"
-            "See this help\n"
-            "> dash-cli -netinfo help\n"};
+        if (conn_type == "outbound-full-relay") return "full";
+        if (conn_type == "block-relay-only") return "block";
+        if (conn_type == "manual" || conn_type == "feeler") return conn_type;
+        if (conn_type == "addr-fetch") return "addr";
+        return "";
     }
     const int64_t m_time_now{GetTimeSeconds()};
 
@@ -493,10 +456,8 @@ public:
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
                 m_details_level = std::min(n, MAX_DETAIL_LEVEL);
-            } else if (args.at(0) == "help") {
-                m_is_help_requested = true;
             } else {
-                throw std::runtime_error(strprintf("invalid -netinfo argument: %s", args.at(0)));
+                throw std::runtime_error(strprintf("invalid -netinfo argument: %s\nFor more information, run: dash-cli -netinfo help", args.at(0)));
             }
         }
         UniValue result(UniValue::VARR);
@@ -507,9 +468,6 @@ public:
 
     UniValue ProcessReply(const UniValue& batch_in) override
     {
-        if (m_is_help_requested) {
-            return JSONRPCReplyObj(NetinfoHelp(), NullUniValue, 1);
-        }
         const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
         if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
@@ -526,14 +484,13 @@ public:
             if (network_id == UNKNOWN_NETWORK) continue;
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{peer["relaytxes"].isNull() ? false : !peer["relaytxes"].get_bool()};
+            const std::string conn_type{peer["connection_type"].get_str()};
             ++m_counts.at(is_outbound).at(network_id);        // in/out by network
             ++m_counts.at(is_outbound).at(m_networks.size()); // in/out overall
             ++m_counts.at(2).at(network_id);                  // total by network
             ++m_counts.at(2).at(m_networks.size());           // total overall
-            if (is_block_relay) {
-                ++m_counts.at(is_outbound).at(m_networks.size() + 1); // in/out block-relay
-                ++m_counts.at(2).at(m_networks.size() + 1);           // total block-relay
-            }
+            if (is_block_relay) ++m_block_relay_peers_count;
+            if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].get_int()};
@@ -549,7 +506,7 @@ public:
                 const std::string addr{peer["addr"].get_str()};
                 const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
                 const std::string sub_version{peer["subver"].get_str()};
-                m_peers.push_back({addr, sub_version, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
+                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_age_length = std::max(age.length(), m_max_age_length);
                 m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
@@ -563,15 +520,15 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<-> relay   net mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
+            result += strprintf("<->   type   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %5s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
-                    peer.is_block_relay ? "block" : "full",
+                    ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
@@ -589,18 +546,39 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                    ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
+            result += strprintf("                     ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
-        result += "        ipv4    ipv6   onion   total  block-relay\n";
+        result += "     ";
+        std::vector<int8_t> reachable_networks;
+        for (const UniValue& network : networkinfo["networks"].getValues()) {
+            if (network["reachable"].get_bool()) {
+                const std::string& network_name{network["name"].get_str()};
+                const int8_t network_id{NetworkStringToId(network_name)};
+                if (network_id == UNKNOWN_NETWORK) continue;
+                result += strprintf("%8s", network_name); // column header
+                reachable_networks.push_back(network_id);
+            }
+        };
+        result += "   total   block";
+        if (m_manual_peers_count) result += "  manual";
+
         const std::array rows{"in", "out", "total"};
-        for (uint8_t i = 0; i < m_networks.size(); ++i) {
-            result += strprintf("%-5s  %5i   %5i   %5i   %5i   %5i\n", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2), m_counts.at(i).at(m_networks.size()), m_counts.at(i).at(m_networks.size() + 1));
+        for (size_t i = 0; i < rows.size(); ++i) {
+            result += strprintf("\n%-5s", rows[i]); // row header
+            for (int8_t n : reachable_networks) {
+                result += strprintf("%8i", m_counts.at(i).at(n)); // network peers count
+            }
+            result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
+            if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
+                result += strprintf("   %5i", m_block_relay_peers_count);
+                if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
+            }
         }
 
         // Report local addresses, ports, and scores.
-        result += "\nLocal addresses";
+        result += "\n\nLocal addresses";
         const std::vector<UniValue>& local_addrs{networkinfo["localaddresses"].getValues()};
         if (local_addrs.empty()) {
             result += ": n/a\n";
@@ -616,6 +594,64 @@ public:
 
         return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
+
+    const std::string m_help_doc{
+        "-netinfo level|\"help\" \n\n"
+        "Returns a network peer connections dashboard with information from the remote server.\n"
+        "This human-readable interface will change regularly and is not intended to be a stable API.\n"
+        "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
+        + strprintf("An optional integer argument from 0 to %d can be passed for different peers listings; %d to 255 are parsed as %d.\n", MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL) +
+        "Pass \"help\" to see this detailed help documentation.\n"
+        "If more than one argument is passed, only the first one is read and parsed.\n"
+        "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
+        "Arguments:\n"
+        + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", MAX_DETAIL_LEVEL) +
+        "                                  0 - Connection counts and local addresses\n"
+        "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
+        "                                  2 - Like 1 but with an address column\n"
+        "                                  3 - Like 1 but with a version column\n"
+        "                                  4 - Like 1 but with both address and version columns\n"
+        "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
+        "Result:\n\n"
+        + strprintf("* The peers listing in levels 1-%d displays all of the peers sorted by direction and minimum ping time:\n\n", MAX_DETAIL_LEVEL) +
+        "  Column   Description\n"
+        "  ------   -----------\n"
+        "  <->      Direction\n"
+        "           \"in\"  - inbound connections are those initiated by the peer\n"
+        "           \"out\" - outbound connections are those initiated by us\n"
+        "  type     Type of peer connection\n"
+        "           \"full\"   - full relay, the default\n"
+        "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
+        "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
+        "           \"feeler\" - short-lived connection for testing addresses\n"
+        "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
+        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
+        "  mping    Minimum observed ping time, in milliseconds (ms)\n"
+        "  ping     Last observed ping time, in milliseconds (ms)\n"
+        "  send     Time since last message sent to the peer, in seconds\n"
+        "  recv     Time since last message received from the peer, in seconds\n"
+        "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
+        "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
+        "  age      Duration of connection to the peer, in minutes\n"
+        "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
+        "           peer selection (only displayed if the -asmap config option is set)\n"
+        "  id       Peer index, in increasing order of peer connections since node startup\n"
+        "  address  IP address and port of the peer\n"
+        "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
+        "* The connection counts table displays the number of peers by direction, network, and the totals\n"
+        "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
+        "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
+        "Examples:\n\n"
+        "Connection counts and local addresses only\n"
+        "> dash-cli -netinfo\n\n"
+        "Compact peers listing\n"
+        "> dash-cli -netinfo 1\n\n"
+        "Full dashboard\n"
+        + strprintf("> dash-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
+        "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
+        + strprintf("> watch --interval 1 --no-title dash-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
+        "See this help\n"
+        "> dash-cli -netinfo help\n"};
 };
 
 /** Process RPC generatetoaddress request. */
@@ -867,6 +903,156 @@ static void GetWalletBalances(UniValue& result)
 }
 
 /**
+ * GetProgressBar contructs a progress bar with 5% intervals.
+ *
+ * @param[in]   progress      The proportion of the progress bar to be filled between 0 and 1.
+ * @param[out]  progress_bar  String representation of the progress bar.
+ */
+static void GetProgressBar(double progress, std::string& progress_bar)
+{
+    if (progress < 0 || progress > 1) return;
+
+    static constexpr double INCREMENT{0.05};
+    static const std::string COMPLETE_BAR{"\u2592"};
+    static const std::string INCOMPLETE_BAR{"\u2591"};
+
+    for (int i = 0; i < progress / INCREMENT; ++i) {
+        progress_bar += COMPLETE_BAR;
+    }
+
+    for (int i = 0; i < (1 - progress) / INCREMENT; ++i) {
+        progress_bar += INCOMPLETE_BAR;
+    }
+}
+
+/**
+ * ParseGetInfoResult takes in -getinfo result in UniValue object and parses it
+ * into a user friendly UniValue string to be printed on the console.
+ * @param[out] result  Reference to UniValue result containing the -getinfo output.
+ */
+static void ParseGetInfoResult(UniValue& result)
+{
+    if (!find_value(result, "error").isNull()) return;
+
+    std::string RESET, GREEN, BLUE, YELLOW, MAGENTA, CYAN;
+    bool should_colorize = false;
+
+#ifndef WIN32
+    if (isatty(fileno(stdout))) {
+        // By default, only print colored text if OS is not WIN32 and stdout is connected to a terminal.
+        should_colorize = true;
+    }
+#endif
+
+    if (gArgs.IsArgSet("-color")) {
+        const std::string color{gArgs.GetArg("-color", DEFAULT_COLOR_SETTING)};
+        if (color == "always") {
+            should_colorize = true;
+        } else if (color == "never") {
+            should_colorize = false;
+        } else if (color != "auto") {
+            throw std::runtime_error("Invalid value for -color option. Valid values: always, auto, never.");
+        }
+    }
+
+    if (should_colorize) {
+        RESET = "\x1B[0m";
+        GREEN = "\x1B[32m";
+        BLUE = "\x1B[34m";
+        YELLOW = "\x1B[33m";
+        MAGENTA = "\x1B[35m";
+        CYAN = "\x1B[36m";
+    }
+
+    std::string result_string = strprintf("%sChain: %s%s\n", BLUE, result["chain"].getValStr(), RESET);
+    result_string += strprintf("Blocks: %s\n", result["blocks"].getValStr());
+    result_string += strprintf("Headers: %s\n", result["headers"].getValStr());
+
+    const double ibd_progress{result["verificationprogress"].get_real()};
+    std::string ibd_progress_bar;
+    // Display the progress bar only if IBD progress is less than 99%
+    if (ibd_progress < 0.99) {
+      GetProgressBar(ibd_progress, ibd_progress_bar);
+      // Add padding between progress bar and IBD progress
+      ibd_progress_bar += " ";
+    }
+
+    result_string += strprintf("Verification progress: %s%.4f%%\n", ibd_progress_bar, ibd_progress * 100);
+    result_string += strprintf("Difficulty: %s\n\n", result["difficulty"].getValStr());
+
+    result_string += strprintf(
+        "%sNetwork: in %s, out %s, total %s, mn_in %s, mn_out %s, mn_total %s%s\n",
+        GREEN,
+        result["connections"]["in"].getValStr(),
+        result["connections"]["out"].getValStr(),
+        result["connections"]["total"].getValStr(),
+        result["connections"]["mn_in"].getValStr(),
+        result["connections"]["mn_out"].getValStr(),
+        result["connections"]["mn_total"].getValStr(),
+        RESET);
+    result_string += strprintf("Version: %s\n", result["version"].getValStr());
+    result_string += strprintf("Time offset (s): %s\n", result["timeoffset"].getValStr());
+
+    // proxies
+    std::map<std::string, std::vector<std::string>> proxy_networks;
+    std::vector<std::string> ordered_proxies;
+
+    for (const UniValue& network : result["networks"].getValues()) {
+        const std::string proxy = network["proxy"].getValStr();
+        if (proxy.empty()) continue;
+        // Add proxy to ordered_proxy if has not been processed
+        if (proxy_networks.find(proxy) == proxy_networks.end()) ordered_proxies.push_back(proxy);
+
+        proxy_networks[proxy].push_back(network["name"].getValStr());
+    }
+
+    std::vector<std::string> formatted_proxies;
+    for (const std::string& proxy : ordered_proxies) {
+        formatted_proxies.emplace_back(strprintf("%s (%s)", proxy, Join(proxy_networks.find(proxy)->second, ", ")));
+    }
+    result_string += strprintf("Proxies: %s\n", formatted_proxies.empty() ? "n/a" : Join(formatted_proxies, ", "));
+
+    result_string += strprintf("Min tx relay fee rate (%s/kB): %s\n\n", CURRENCY_UNIT, result["relayfee"].getValStr());
+
+    if (!result["has_wallet"].isNull()) {
+        const std::string walletname = result["walletname"].getValStr();
+        result_string += strprintf("%sWallet: %s%s\n", MAGENTA, walletname.empty() ? "\"\"" : walletname, RESET);
+
+        result_string += strprintf("%sCoinJoin balance:%s %s\n", CYAN, RESET, result["coinjoin_balance"].getValStr());
+
+        result_string += strprintf("Keypool size: %s\n", result["keypoolsize"].getValStr());
+        if (!result["unlocked_until"].isNull()) {
+            result_string += strprintf("Unlocked until: %s\n", result["unlocked_until"].getValStr());
+        }
+        result_string += strprintf("Transaction fee rate (-paytxfee) (%s/kB): %s\n\n", CURRENCY_UNIT, result["paytxfee"].getValStr());
+    }
+    if (!result["balance"].isNull()) {
+        result_string += strprintf("%sBalance:%s %s\n\n", CYAN, RESET, result["balance"].getValStr());
+    }
+
+    if (!result["balances"].isNull()) {
+        result_string += strprintf("%sBalances%s\n", CYAN, RESET);
+
+        size_t max_balance_length{10};
+
+        for (const std::string& wallet : result["balances"].getKeys()) {
+            max_balance_length = std::max(result["balances"][wallet].getValStr().length(), max_balance_length);
+        }
+
+        for (const std::string& wallet : result["balances"].getKeys()) {
+            result_string += strprintf("%*s %s\n",
+                                       max_balance_length,
+                                       result["balances"][wallet].getValStr(),
+                                       wallet.empty() ? "\"\"" : wallet);
+        }
+        result_string += "\n";
+    }
+
+    result_string += strprintf("%sWarnings:%s %s", YELLOW, RESET, result["warnings"].getValStr());
+    result.setStr(result_string);
+}
+
+/**
  * Call RPC getnewaddress.
  * @returns getnewaddress response as a UniValue object.
  */
@@ -953,6 +1139,10 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-netinfo", false)) {
+            if (!args.empty() && args.at(0) == "help") {
+                tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
+                return 0;
+            }
             rh.reset(new NetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-generate", false)) {
             const UniValue getnewaddress{GetNewAddress()};
@@ -983,9 +1173,13 @@ static int CommandLineRPC(int argc, char *argv[])
             UniValue result = find_value(reply, "result");
             const UniValue& error = find_value(reply, "error");
             if (error.isNull()) {
-                if (gArgs.IsArgSet("-getinfo") && !gArgs.IsArgSet("-rpcwallet")) {
-                    GetWalletBalances(result); // fetch multiwallet balances and append to result
+                if (gArgs.GetBoolArg("-getinfo", false)) {
+                    if (!gArgs.IsArgSet("-rpcwallet")) {
+                        GetWalletBalances(result); // fetch multiwallet balances and append to result
+                    }
+                    ParseGetInfoResult(result);
                 }
+
                 ParseResult(result, strPrint);
             } else {
                 ParseError(error, strPrint, nRet);
