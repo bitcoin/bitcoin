@@ -107,7 +107,7 @@ protected:
     int EraseTxNoLock(const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /** Timestamp for the next scheduled sweep of expired orphans */
-    NodeSeconds nNextSweep GUARDED_BY(m_mutex){0s};
+    NodeSeconds m_next_sweep GUARDED_BY(m_mutex){0s};
 };
 
 #endif // BITCOIN_TXORPHANAGE_H
