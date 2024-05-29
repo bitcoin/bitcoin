@@ -36,7 +36,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                CAddrMan addrman(/* deterministic */ false, /* consistency_check_ratio */ 0);
+                CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
                 CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
                 node.CloseSocketDisconnect(&connman);
             },
@@ -46,7 +46,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
                     return;
                 }
                 CNodeStats stats;
-                node.copyStats(stats, asmap);
+                node.CopyStats(stats, asmap);
             },
             [&] {
                 const CNode* add_ref_node = node.AddRef();

@@ -679,7 +679,7 @@ public:
 
     void CloseSocketDisconnect(CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_hSocket);
 
-    void copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
+    void CopyStats(CNodeStats& stats, const std::vector<bool>& asmap) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
     ServiceFlags GetLocalServices() const
     {
@@ -1185,8 +1185,6 @@ public:
         Variable intervals will result in privacy decrease.
     */
     std::chrono::microseconds PoissonNextSendInbound(std::chrono::microseconds now, std::chrono::seconds average_interval);
-
-    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
     bool ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const;
