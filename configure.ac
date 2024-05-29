@@ -1340,13 +1340,6 @@ if test "$use_boost" = "yes"; then
   dnl we don't use multi_index serialization
   BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_MULTI_INDEX_DISABLE_SERIALIZATION"
 
-  dnl Prevent use of std::unary_function, which was removed in C++17,
-  dnl and will generate warnings with newer compilers for Boost
-  dnl older than 1.80.
-  dnl See: https://github.com/boostorg/config/pull/430.
-  AX_CHECK_PREPROC_FLAG([-DBOOST_NO_CXX98_FUNCTION_BASE], [BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"], [], [$CXXFLAG_WERROR],
-                        [AC_LANG_PROGRAM([[#include <boost/config.hpp>]])])
-
   if test "$suppress_external_warnings" != "no"; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
