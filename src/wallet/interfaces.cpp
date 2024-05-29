@@ -271,8 +271,9 @@ public:
         LOCK(m_wallet->cs_wallet);
         ReserveDestination m_dest(m_wallet.get());
         CTransactionRef tx;
+        FeeCalculation fee_calc_out;
         if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos,
-                fail_reason, coin_control, sign)) {
+                fail_reason, coin_control, fee_calc_out, sign)) {
             return {};
         }
         return tx;

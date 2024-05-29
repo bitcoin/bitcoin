@@ -7,6 +7,7 @@
 import os
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
+
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -95,6 +96,9 @@ class NotificationsTest(DashTestFramework):
             # directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: notify_outputname(self.wallet, t['txid']), self.nodes[1].listtransactions("*", block_count)))
             assert_equal(sorted(txids_rpc), sorted(os.listdir(self.walletnotify_dir)))
+            for tx_file in os.listdir(self.walletnotify_dir):
+                os.remove(os.path.join(self.walletnotify_dir, tx_file))
+
 
         self.log.info("test -chainlocknotify")
 
@@ -140,6 +144,7 @@ class NotificationsTest(DashTestFramework):
             assert_equal(sorted(txids_rpc), sorted(os.listdir(self.instantsendnotify_dir)))
 
         # TODO: add test for `-alertnotify` large fork notifications
+
 
 if __name__ == '__main__':
     NotificationsTest().main()

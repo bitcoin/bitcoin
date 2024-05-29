@@ -274,7 +274,8 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     CTransactionRef tx;
     {
         LOCK2(pwallet->cs_wallet, cs_main);
-        if (!pwallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
+        FeeCalculation fee_calc_out;
+        if (!pwallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
             return false;
         }
     }
