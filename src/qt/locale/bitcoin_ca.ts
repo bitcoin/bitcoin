@@ -311,6 +311,12 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">No encaminable</translation>
     </message>
     <message>
+        <source>Onion</source>
+        <comment>network name</comment>
+        <extracomment>Name of Tor network in peer info</extracomment>
+        <translation type="unfinished">Ceba</translation>
+    </message>
+    <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
         <translation type="unfinished">Entrant</translation>
@@ -347,36 +353,36 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n segons</numerusform>
+            <numerusform>%n segon(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuts</numerusform>
+            <numerusform>%n minuts</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n hores</numerusform>
+            <numerusform>%n hores</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n dies</numerusform>
+            <numerusform>%n dies</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n setmanes</numerusform>
+            <numerusform>%n setmanes</numerusform>
         </translation>
     </message>
     <message>
@@ -386,8 +392,8 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n any</numerusform>
+            <numerusform>%n anys</numerusform>
         </translation>
     </message>
     </context>
@@ -1136,7 +1142,22 @@ El procés de migració crearà una còpia de seguretat de la cartera abans de m
         <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
         <translation type="unfinished">Restaurant cartera &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
-    </context>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Reestablir cartera ha fallat</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Avís al restaurar la cartera</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Missatge al restaurar la cartera</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1165,6 +1186,14 @@ El procés de migració crearà una còpia de seguretat de la cartera abans de m
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Crear cartera</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Només et queda un pas per a crear la teva nova cartera</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Si us plau, proporciona un nom i, si vols, activa qualsevol opció avançada</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1304,8 +1333,8 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n GB d'espai lliure disponible</numerusform>
+            <numerusform>%n GB d'espai lliure disponibles</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1377,6 +1406,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Aquesta sincronització inicial és molt exigent i pot exposar problemes de maquinari amb l'equip que anteriorment havien passat desapercebuts. Cada vegada que executeu %1, continuarà descarregant des del punt on es va deixar.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Quan feu clic a D'acord, %1 començarà a descarregar i processar la cadena de blocs %4 completa (%2 GB) començant per les primeres transaccions de %3, any de llençament inicial de %4.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1471,7 +1504,11 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Desconegut. Sincronització de les capçaleres (%1, %2%)...</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Desconegut. Sincronització de les capçaleres (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1527,6 +1564,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Minimitza en comptes de sortir de l'aplicació quan la finestra es tanca. Quan s'habilita aquesta opció l'aplicació es tancarà només quan se selecciona Surt del menú. </translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">Les opcions configurades en aquest diàleg són sobreescrites per la línia de comandes:</translation>
+    </message>
+    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation type="unfinished">Obriu el fitxer de configuració %1 des del directori de treball.</translation>
     </message>
@@ -1559,6 +1600,11 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">(0 = auto, &lt;0 = deixa tants nuclis lliures)</translation>
     </message>
     <message>
+        <source>Enable R&amp;PC server</source>
+        <extracomment>An Options window setting to enable the RPC server.</extracomment>
+        <translation type="unfinished">Activa el servidor R&amp;PC</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">&amp;Moneder</translation>
     </message>
@@ -1573,6 +1619,11 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Gasta el canvi sense confirmar</translation>
+    </message>
+    <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation type="unfinished">Activa els controls &amp;PSBT</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -1671,6 +1722,14 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Selecciona la unitat de subdivisió per defecte per a mostrar en la interfície quan s'envien monedes.</translation>
     </message>
     <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">URL de terceres parts (p. ex. explorador de blocs) que apareix en la pestanya de transaccions com elements del menú contextual. %s en l'URL es reemplaçat pel resum de la transacció. Diferents URL estan separades per una barra vertical |.</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">URL de transaccions de tercers</translation>
+    </message>
+    <message>
         <source>Whether to show coin control features or not.</source>
         <translation type="unfinished">Si voleu mostrar les funcions de control de monedes o no.</translation>
     </message>
@@ -1727,6 +1786,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
         <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
         <translation type="unfinished">El fitxer de configuració s'utilitza per a especificar les opcions d'usuari avançades que substitueixen la configuració de la interfície gràfica d'usuari. A més, qualsevol opció de la línia d'ordres substituirà aquest fitxer de configuració.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continua</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1818,6 +1881,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
 </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">Operacions PSBT</translation>
+    </message>
     <message>
         <source>Sign Tx</source>
         <translation type="unfinished">Signa Tx</translation>
@@ -1916,6 +1983,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">La transacció encara necessita una o vàries firmes.</translation>
     </message>
     <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">(Cap cartera ha estat carregada.)</translation>
+    </message>
+    <message>
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(Però aquesta cartera no pot firmar transaccions.)</translation>
     </message>
@@ -1978,6 +2049,11 @@ Si rebeu aquest error, haureu de sol·licitar al comerciant que proporcioni un U
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
         <translation type="unfinished">Igual</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">Edat</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2864,6 +2940,11 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
         <translation type="unfinished">Si us plau, revisa la teva proposta de transacció. Es produirà una transacció de Bitcoin amb firma parcial (PSBT) que podeu guardar o copiar i després firmar, per exemple, amb una cartera %1, o amb una cartera física compatible amb PSBT.</translation>
     </message>
     <message>
+        <source>Do you want to create this transaction?</source>
+        <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
+        <translation type="unfinished">Voleu crear aquesta transacció?</translation>
+    </message>
+    <message>
         <source>Please, review your transaction.</source>
         <extracomment>Text to prompt a user to review the details of the transaction they are attempting to send.</extracomment>
         <translation type="unfinished">Reviseu la transacció</translation>
@@ -3247,8 +3328,10 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>madura en %n bloc més
+</numerusform>
+            <numerusform>madura en %n blocs més
+</numerusform>
         </translation>
     </message>
     <message>
@@ -3897,6 +3980,23 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">No es pot escriure en el directori de dades "%s". Reviseu-ne els permisos.</translation>
     </message>
     <message>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">%s especificat molt alt! Tarifes tan grans podrien pagar-se en una única transacció.
+</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
+        <translation type="unfinished">S'ha produït un error en llegir %s. Totes les claus es llegeixen correctament, però les dades de la transacció o les entra des de la llibreta d'adreces podrien faltar o ser incorrectes.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
+        <translation type="unfinished">L'estimació de la quota ha fallat. Fallbackfee està desactivat. Espereu uns quants blocs o activeu %s.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation type="unfinished">Import no vàlid per a %s=&lt;amount&gt;: '%s' (cal que sigui com a mínim la comissió de minrelay de %s per evitar que les comissions s'encallin)</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Configuració per a %s únicament aplicada a  %s de la xarxa quan es troba a la secció [%s].</translation>
     </message>
@@ -4070,12 +4170,24 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">Permís P2P no vàlid: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">Import no vàlid per a %s=&lt;amount&gt;: «%s» (ha de ser com a mínim %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Import invàlid per a %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Import invàlid per a -%s=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation type="unfinished">S'ha especificat una màscara de xarxa no vàlida a -whitelist: «%s»</translation>
+    </message>
+    <message>
+        <source>Listening for incoming connections failed (listen returned error %s)</source>
+        <translation type="unfinished">ha fallat escoltar les connexions entrants (l'escoltament ha retornat l'error %s)</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
@@ -4164,6 +4276,10 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation type="unfinished">El directori de blocs especificat "%s" no existeix.</translation>
+    </message>
+    <message>
+        <source>Specified data directory "%s" does not exist.</source>
+        <translation type="unfinished">El directori de dades especificat «%s» no existeix.</translation>
     </message>
     <message>
         <source>Starting network threads…</source>

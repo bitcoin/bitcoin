@@ -13,6 +13,13 @@
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
+#if defined(__clang__) && !defined(__OPTIMIZE__)
+  /*
+  clang is unable to compile this with -O0 and -fsanitize=address.
+  See upstream bug: https://github.com/llvm/llvm-project/issues/92182
+  */
+  __attribute__((no_sanitize("address")))
+#endif
 {
     static const uint32_t K256 alignas(16) [] = {
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
