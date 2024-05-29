@@ -15,6 +15,7 @@ $(package)_patches += no-xlib.patch
 $(package)_patches += fix_android_jni_static.patch
 $(package)_patches += dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch
+$(package)_patches += no_warnings_for_symbols.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += duplicate_lcqpafonts.patch
 $(package)_patches += guix_cross_lib_path.patch
@@ -138,7 +139,7 @@ ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin += -xplatform macx-clang-linux
 $(package)_config_opts_darwin += -device-option MAC_SDK_PATH=$(OSX_SDK)
 $(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION)
-$(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_darwin += -device-option CROSS_COMPILE="llvm-"
 $(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
 $(package)_config_opts_darwin += -device-option XCODE_VERSION=$(XCODE_VERSION)
 endif
@@ -247,6 +248,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/memory_resource.patch && \
+  patch -p1 -i $($(package)_patch_dir)/no_warnings_for_symbols.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
   patch -p1 -i $($(package)_patch_dir)/duplicate_lcqpafonts.patch && \
   patch -p1 -i $($(package)_patch_dir)/utc_from_string_no_optimize.patch && \
