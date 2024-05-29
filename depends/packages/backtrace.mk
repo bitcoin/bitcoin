@@ -1,8 +1,9 @@
 package=backtrace
-$(package)_version=rust-snapshot-2018-05-22
-$(package)_download_path=https://github.com/rust-lang-nursery/libbacktrace/archive
-$(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=8da6daa0a582c9bbd1f2933501168b4c43664700f604f43e922e85b99e5049bc
+$(package)_version=11427f31a64b11583fec94b4c2a265c7dafb1ab3
+$(package)_download_path=https://github.com/ianlancetaylor/libbacktrace/archive
+$(package)_download_file=$($(package)_version).tar.gz
+$(package)_file_name=$(package)_$($(package)_version).tar.gz
+$(package)_sha256_hash=76a8348ff04d80141aeb1c0e55879f17f241f38238def0eb1df7c6d1ac1a2c26
 
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared --enable-host-shared --prefix=$(host_prefix)
