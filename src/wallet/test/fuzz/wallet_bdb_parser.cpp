@@ -52,7 +52,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 
 #ifdef USE_BDB
     bool bdb_ro_err = false;
-    bool bdb_ro_pgno_err = false;
+    bool bdb_ro_strict_err = false;
 #endif
     auto db{MakeBerkeleyRODatabase(wallet_path, options, status, error)};
     if (db) {
@@ -64,14 +64,11 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
         if (error.original.starts_with("AutoFile::ignore: end of file") ||
             error.original.starts_with("AutoFile::read: end of file") ||
             error.original == "Not a BDB file" ||
-            error.original == "Unsupported BDB data file version number" ||
             error.original == "Unexpected page type, should be 9 (BTree Metadata)" ||
             error.original == "Unexpected database flags, should only be 0x20 (subdatabases)" ||
             error.original == "Unexpected outer database root page type" ||
             error.original == "Unexpected number of entries in outer database root page" ||
-            error.original == "Subdatabase has an unexpected name" ||
             error.original == "Subdatabase page number has unexpected length" ||
-            error.original == "Unexpected inner database page type" ||
             error.original == "Unknown record type in records page" ||
             error.original == "Unknown record type in internal page" ||
             error.original == "Unexpected page size" ||
@@ -79,15 +76,21 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
             error.original == "Page number mismatch" ||
             error.original == "Bad btree level" ||
             error.original == "Bad page size" ||
-            error.original == "File size is not a multiple of page size" ||
-            error.original == "Meta page number mismatch") {
+            error.original == "Meta page number mismatch" ||
+            error.original == "Data record position not in page" ||
+            error.original == "Internal record position not in page" ||
+            error.original == "LSNs are not reset, this database is not completely flushed. Please reopen then close the database with a version that has BDB support" ||
+            error.original == "Records page has odd number of records" ||
+            error.original == "Bad overflow record page type") {
             // Do nothing
         } else if (error.original == "Subdatabase last page is greater than database last page" ||
                    error.original == "Page number is greater than database last page" ||
-                   error.original == "Page number is greater than subdatabase last page" ||
-                   error.original == "Last page number could not fit in file") {
+                   error.original == "Last page number could not fit in file" ||
+                   error.original == "Subdatabase has an unexpected name" ||
+                   error.original == "Unsupported BDB data file version number" ||
+                   error.original == "BDB builtin encryption is not supported") {
 #ifdef USE_BDB
-            bdb_ro_pgno_err = true;
+            bdb_ro_strict_err = true;
 #endif
         } else {
             throw std::runtime_error(error.original);
@@ -108,9 +111,8 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
             return;
         }
         assert(db);
-        if (bdb_ro_pgno_err) {
-            // BerkeleyRO will throw on opening for errors involving bad page numbers, but BDB does not.
-            // Ignore those.
+        if (bdb_ro_strict_err) {
+            // BerkeleyRO will be stricter than BDB. Ignore when those specific errors are hit.
             return;
         }
         assert(!bdb_ro_err);
