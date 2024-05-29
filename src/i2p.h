@@ -71,6 +71,19 @@ public:
             CThreadInterrupt* interrupt);
 
     /**
+     * Construct a transient session which will generate its own I2P private key
+     * rather than read the one from disk (it will not be saved on disk either and
+     * will be lost once this object is destroyed). This will not initiate any IO,
+     * the session will be lazily created later when first used.
+     * @param[in] control_host Location of the SAM proxy.
+     * @param[in,out] interrupt If this is signaled then all operations are canceled as soon as
+     * possible and executing methods throw an exception. Notice: only a pointer to the
+     * `CThreadInterrupt` object is saved, so it must not be destroyed earlier than this
+     * `Session` object.
+     */
+    Session(const CService& control_host, CThreadInterrupt* interrupt);
+
+    /**
      * Destroy the session, closing the internally used sockets. The sockets that have been
      * returned by `Accept()` or `Connect()` will not be closed, but they will be closed by
      * the SAM proxy because the session is destroyed. So they will return an error next time
@@ -262,6 +275,12 @@ private:
      * SAM session id.
      */
     std::string m_session_id GUARDED_BY(m_mutex);
+
+    /**
+     * Whether this is a transient session (the I2P private key will not be
+     * read or written to disk).
+     */
+    const bool m_transient;
 };
 
 } // namespace sam
