@@ -740,7 +740,8 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_destroy(btck_ChainstateMa
 
 /**
  * @brief Create a chainstate manager. This is the main object for many
- * validation tasks as well as for retrieving data from the chain. *
+ * validation tasks as well as for retrieving data from the chain and
+ * interacting with its chainstate and indexes.
  *
  * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
  * @return                               The allocated chainstate manager, or null on error.
