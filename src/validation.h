@@ -1065,7 +1065,17 @@ public:
      */
     std::set<CBlockIndex*> m_failed_blocks;
 
-    /** Best header we've seen so far (used for getheaders queries' starting points). */
+    /**
+     * Best header we've seen so far for a block that is not known to be invalid.
+     * Should not be relied upon in critical parts of the code, because it is
+     * determined on a best-effort basis andd can be off in certain situations
+     * with invalid blocks and/or invalidateblock/reconsiderblock where we'd need
+     * to walk through the entire block index to compute the correct value, but
+     * currently don't for performance reasons.
+     *
+     * Used for example for getheaders queries' starting points and reporting
+     * (rpc, gui).
+     */
     CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
 
     //! The total number of bytes available for us to use across all in-memory
