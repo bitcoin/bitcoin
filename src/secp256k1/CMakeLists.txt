@@ -54,7 +54,7 @@ option(SECP256K1_INSTALL "Enable installation." ${PROJECT_IS_TOP_LEVEL})
 ## Modules
 
 # We declare all options before processing them, to make sure we can express
-# dependendencies while processing.
+# dependencies while processing.
 option(SECP256K1_ENABLE_MODULE_ECDH "Enable ECDH module." ON)
 option(SECP256K1_ENABLE_MODULE_RECOVERY "Enable ECDSA pubkey recovery module." OFF)
 option(SECP256K1_ENABLE_MODULE_EXTRAKEYS "Enable extrakeys module." ON)

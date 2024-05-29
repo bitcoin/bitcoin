@@ -363,7 +363,7 @@ Low-level RPC changes
 
 ### Block and transaction handling
 - #9801 `a8c5751` Removed redundant parameter from mempool.PrioritiseTransaction (gubatron)
-- #9819 `1efc99c` Remove harmless read of unusued priority estimates (morcos)
+- #9819 `1efc99c` Remove harmless read of unused priority estimates (morcos)
 - #9822 `b7547fa` Remove block file location upgrade code (benma)
 - #9602 `30ff3a2` Remove coin age priority and free transactions - implementation (morcos)
 - #9548 `47510ad` Remove min reasonable fee (morcos)
@@ -527,7 +527,7 @@ Low-level RPC changes
 - #10455 `0747d33` Simplify feebumper minimum fee code slightly (ryanofsky)
 - #10522 `2805d60` [wallet] Remove unused variables (practicalswift)
 - #8694 `177433a` Basic multiwallet support (luke-jr)
-- #10598 `7a74f88` Supress struct/class mismatch warnings introduced in #10284 (paveljanik)
+- #10598 `7a74f88` Suppress struct/class mismatch warnings introduced in #10284 (paveljanik)
 - #9343 `209eef6` Don't create change at dust limit (morcos)
 - #10744 `ed88e31` Use method name via __func__ macro (darksh1ne)
 - #10712 `e8b9523` Add change output if necessary to reduce excess fee (morcos)

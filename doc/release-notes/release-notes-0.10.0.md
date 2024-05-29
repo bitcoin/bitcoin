@@ -413,7 +413,7 @@ Block and transaction handling:
 - `bc42503` Use unordered_map for CCoinsViewCache with salted hash (optimization)
 - `d4d3fbd` Do not flush the cache after every block outside of IBD (optimization)
 - `ad08d0b` Bugfix: make CCoinsViewMemPool support pruned entries in underlying cache
-- `5734d4d` Only remove actualy failed blocks from setBlockIndexValid
+- `5734d4d` Only remove actually failed blocks from setBlockIndexValid
 - `d70bc52` Rework block processing benchmark code
 - `714a3e6` Only keep setBlockIndexValid entries that are possible improvements
 - `ea100c7` Reduce maximum coinscache size during verification (reduce memory usage)
@@ -461,10 +461,10 @@ P2P protocol and network code:
 - `20a5f61` Don't relay alerts to peers before version negotiation
 - `b4ee0bd` Introduce preferred download peers
 - `845c86d` Do not use third party services for IP detection
-- `12a49ca` Limit the number of new addressses to accumulate
+- `12a49ca` Limit the number of new addresses to accumulate
 - `35e408f` Regard connection failures as attempt for addrman
 - `a3a7317` Introduce 10 minute block download timeout
-- `3022e7d` Require sufficent priority for relay of free transactions
+- `3022e7d` Require sufficient priority for relay of free transactions
 - `58fda4d` Update seed IPs, based on bitcoin.sipa.be crawler data
 - `18021d0` Remove bitnodes.io from dnsseeds.
 

@@ -1,7 +1,7 @@
 build: disable zlib
 
 This isn't needed, and causes issues when clang-tblgen
-is built, but trys to reach for a system libz.so.
+is built, but tries to reach for a system libz.so.
 
 diff --git a/build.sh b/build.sh
 index e25d2f732..ec8422621 100755

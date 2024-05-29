@@ -260,7 +260,7 @@ void ClientModel::subscribeToCoreSignals()
         }));
     m_event_handlers.emplace_back(m_node.handleBannedListChanged(
         [this]() {
-            qDebug() << "ClienModel: Requesting update for peer banlist";
+            qDebug() << "ClientModel: Requesting update for peer banlist";
             QMetaObject::invokeMethod(banTableModel, [this] { banTableModel->refresh(); });
         }));
     m_event_handlers.emplace_back(m_node.handleNotifyBlockTip(

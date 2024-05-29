@@ -110,7 +110,7 @@ Memory pool limiting
 Previous versions of Bitcoin Core had their mempool limited by checking
 a transaction's fees against the node's minimum relay fee. There was no
 upper bound on the size of the mempool and attackers could send a large
-number of transactions paying just slighly more than the default minimum
+number of transactions paying just slightly more than the default minimum
 relay fee to crash nodes with relatively low RAM. A temporary workaround
 for previous versions of Bitcoin Core was to raise the default minimum
 relay fee.
@@ -484,7 +484,7 @@ git merge commit are mentioned.
 - #6307 `7ecdcd9` rpcban fixes (Jonas Schnelli)
 - #6290 `5753988` rpc: make `gettxoutsettinfo` run lock-free (Wladimir J. van der Laan)
 - #6262 `247b914` Return all available information via RPC call "validateaddress" (dexX7)
-- #6339 `c3f0490` UniValue: don't escape solidus, keep espacing of reverse solidus (Jonas Schnelli)
+- #6339 `c3f0490` UniValue: don't escape solidus, keep escaping of reverse solidus (Jonas Schnelli)
 - #6353 `6bcb0a2` Show softfork status in getblockchaininfo (Wladimir J. van der Laan)
 - #6247 `726e286` Add getblockheader RPC call (Peter Todd)
 - #6362 `d6db115` Fix null id in RPC response during startup (Forrest Voight)
@@ -782,7 +782,7 @@ git merge commit are mentioned.
 - #6103 `13b8282` Add ZeroMQ notifications (João Barbosa)
 - #6692 `d5d1d2e` devtools: don't push if signing fails in github-merge (Wladimir J. van der Laan)
 - #6728 `2b0567b` timedata: Prevent warning overkill (Wladimir J. van der Laan)
-- #6713 `f6ce59c` SanitizeString: Allow hypen char (MarcoFalke)
+- #6713 `f6ce59c` SanitizeString: Allow hyphen char (MarcoFalke)
 - #5987 `4899a04` Bugfix: Fix testnet-in-a-box use case (Luke-Jr)
 - #6733 `b7d78fd` Simple benchmarking framework (Gavin Andresen)
 - #6854 `a092970` devtools: Add security-check.py (Wladimir J. van der Laan)

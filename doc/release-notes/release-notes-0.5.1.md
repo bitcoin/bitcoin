@@ -4,7 +4,7 @@ http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.5.1/
 This is a bugfix-only release.
 
 This release includes 13 translations, including 5 new translations:
-Italian, Hungarian, Ukranian, Portuguese (Brazilian) and Simplified Chinese.
+Italian, Hungarian, Ukrainian, Portuguese (Brazilian) and Simplified Chinese.
 More translations are welcome; join the project at Transifex if you can help:
 https://www.transifex.net/projects/p/bitcoin/
 

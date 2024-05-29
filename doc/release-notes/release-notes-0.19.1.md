@@ -68,7 +68,7 @@ distribution provides binaries for the RISC-V platform.
 - #17427 Fix missing qRegisterMetaType for `size_t` (hebasto)
 - #17695 disable File-\>CreateWallet during startup (fanquake)
 - #17634 Fix comparison function signature (hebasto)
-- #18062 Fix unintialized WalletView::progressDialog (promag)
+- #18062 Fix uninitialized WalletView::progressDialog (promag)
 
 ### Tests and QA
 - #17416 Appveyor improvement - text file for vcpkg package list (sipsorcery)

@@ -48,7 +48,7 @@ They are not necessary to compile QT.
      cursor = createNonStandardCursor(cshape);
  
 +#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
-     // Create a glpyh cursor if everything else failed
+     // Create a glyph cursor if everything else failed
      if (!cursor && cursorId) {
          cursor = xcb_generate_id(conn);
 @@ -597,6 +604,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)

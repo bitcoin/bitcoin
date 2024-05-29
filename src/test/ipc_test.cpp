@@ -25,7 +25,7 @@
 //! on the object through FooInterface (defined in ipc_test.capnp).
 void IpcTest()
 {
-    // Setup: create FooImplemention object and listen for FooInterface requests
+    // Setup: create FooImplementation object and listen for FooInterface requests
     std::promise<std::unique_ptr<mp::ProxyClient<gen::FooInterface>>> foo_promise;
     std::function<void()> disconnect_client;
     std::thread thread([&]() {

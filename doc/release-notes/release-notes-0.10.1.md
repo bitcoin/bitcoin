@@ -91,7 +91,7 @@ Wallet:
 - N/A
 
 GUI:
-- `2c08406` some mac specifiy cleanup (memory handling, unnecessary code)
+- `2c08406` some mac specify cleanup (memory handling, unnecessary code)
 - `81145a6` fix OSX dock icon window reopening
 - `786cf72` fix a issue where "command line options"-action overwrite "Preference"-action (on OSX)
 
