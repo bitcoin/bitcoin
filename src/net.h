@@ -678,7 +678,7 @@ public:
 
     void CloseSocketDisconnect(CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_hSocket);
 
-    void CopyStats(CNodeStats& stats, const std::vector<bool>& asmap) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
+    void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
     ServiceFlags GetLocalServices() const
     {
@@ -855,7 +855,6 @@ public:
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
         SocketEventsMode socketEventsMode = SocketEventsMode::Select;
-        std::vector<bool> m_asmap;
         bool m_i2p_accept_incoming;
     };
 
