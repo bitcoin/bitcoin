@@ -12,8 +12,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <ranges>
 #include <span>
+#include <string_view>
 #include <vector>
 
 using namespace btck;
@@ -48,6 +50,15 @@ void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> 
         actual.begin(), actual.end(),
         expected.begin(), expected.end());
 }
+
+class TestLog
+{
+public:
+    void LogMessage(std::string_view message)
+    {
+        std::cout << "kernel: " << message;
+    }
+};
 
 void run_verify_test(
     const ScriptPubkey& spent_script_pubkey,
@@ -347,4 +358,29 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
         /*amount*/ 88480,
         /*input_index*/ 0,
         /*is_taproot*/ true);
+}
+
+BOOST_AUTO_TEST_CASE(logging_tests)
+{
+    btck_LoggingOptions logging_options = {
+        .log_timestamps = true,
+        .log_time_micros = true,
+        .log_threadnames = false,
+        .log_sourcelocations = false,
+        .always_print_category_levels = true,
+    };
+
+    logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
+    logging_disable_category(LogCategory::BENCH);
+    logging_enable_category(LogCategory::VALIDATION);
+    logging_disable_category(LogCategory::VALIDATION);
+
+    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
+    {
+        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
+        logging_enable_category(LogCategory::KERNEL);
+        Logger logger{std::make_unique<TestLog>(TestLog{}), logging_options};
+        Logger logger_2{std::make_unique<TestLog>(TestLog{}), logging_options};
+    }
+    Logger logger{std::make_unique<TestLog>(TestLog{}), logging_options};
 }

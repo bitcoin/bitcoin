@@ -8,17 +8,22 @@
 
 #include <consensus/amount.h>
 #include <kernel/context.h>
+#include <kernel/cs_main.h>
+#include <logging.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
+#include <tinyformat.h>
 #include <util/translation.h>
 
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <list>
 #include <span>
 #include <string>
 #include <utility>
@@ -103,11 +108,125 @@ struct Handle {
     }
 };
 
+BCLog::Level get_bclog_level(btck_LogLevel level)
+{
+    switch (level) {
+    case btck_LogLevel_INFO: {
+        return BCLog::Level::Info;
+    }
+    case btck_LogLevel_DEBUG: {
+        return BCLog::Level::Debug;
+    }
+    case btck_LogLevel_TRACE: {
+        return BCLog::Level::Trace;
+    }
+    }
+    assert(false);
+}
+
+BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
+{
+    switch (category) {
+    case btck_LogCategory_BENCH: {
+        return BCLog::LogFlags::BENCH;
+    }
+    case btck_LogCategory_BLOCKSTORAGE: {
+        return BCLog::LogFlags::BLOCKSTORAGE;
+    }
+    case btck_LogCategory_COINDB: {
+        return BCLog::LogFlags::COINDB;
+    }
+    case btck_LogCategory_LEVELDB: {
+        return BCLog::LogFlags::LEVELDB;
+    }
+    case btck_LogCategory_MEMPOOL: {
+        return BCLog::LogFlags::MEMPOOL;
+    }
+    case btck_LogCategory_PRUNE: {
+        return BCLog::LogFlags::PRUNE;
+    }
+    case btck_LogCategory_RAND: {
+        return BCLog::LogFlags::RAND;
+    }
+    case btck_LogCategory_REINDEX: {
+        return BCLog::LogFlags::REINDEX;
+    }
+    case btck_LogCategory_VALIDATION: {
+        return BCLog::LogFlags::VALIDATION;
+    }
+    case btck_LogCategory_KERNEL: {
+        return BCLog::LogFlags::KERNEL;
+    }
+    case btck_LogCategory_ALL: {
+        return BCLog::LogFlags::ALL;
+    }
+    }
+    assert(false);
+}
+
+struct LoggingConnection {
+    std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
+    void* m_user_data;
+    std::function<void(void* user_data)> m_deleter;
+
+    LoggingConnection(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback, const btck_LoggingOptions options)
+    {
+        LOCK(cs_main);
+
+        LogInstance().m_log_timestamps = options.log_timestamps;
+        LogInstance().m_log_time_micros = options.log_time_micros;
+        LogInstance().m_log_threadnames = options.log_threadnames;
+        LogInstance().m_log_sourcelocations = options.log_sourcelocations;
+        LogInstance().m_always_print_category_level = options.always_print_category_levels;
+
+        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
+
+        try {
+            // Only start logging if we just added the connection.
+            if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
+                LogError("Logger start failed.");
+                LogInstance().DeleteCallback(connection);
+                user_data_destroy_callback(user_data);
+            }
+        } catch (std::exception& e) {
+            LogError("Logger start failed: %s", e.what());
+            LogInstance().DeleteCallback(connection);
+            user_data_destroy_callback(user_data);
+            throw;
+        }
+
+        m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
+        m_user_data = user_data;
+        m_deleter = user_data_destroy_callback;
+
+        LogDebug(BCLog::KERNEL, "Logger connected.");
+    }
+
+    ~LoggingConnection()
+    {
+        LOCK(cs_main);
+
+        LogDebug(BCLog::KERNEL, "Logger disconnected.");
+        LogInstance().DeleteCallback(*m_connection);
+        m_connection.reset();
+        if (m_user_data && m_deleter) {
+            m_deleter(m_user_data);
+        }
+
+        // Switch back to buffering by calling DisconnectTestLogger if the
+        // connection that was just removed was the last one.
+        if (!LogInstance().Enabled()) {
+            LogInstance().DisconnectTestLogger();
+        }
+    }
+};
+
 } // namespace
 
 struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransaction>> {};
 struct btck_TransactionOutput : Handle<btck_TransactionOutput, CTxOut> {};
 struct btck_ScriptPubkey : Handle<btck_ScriptPubkey, CScript> {};
+struct btck_LoggingConnection : Handle<btck_LoggingConnection, LoggingConnection> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -250,4 +369,42 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
                                TransactionSignatureChecker(&tx, input_index, amount, txdata, MissingDataBehavior::FAIL),
                                nullptr);
     return result ? 1 : 0;
+}
+
+void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level)
+{
+    LOCK(cs_main);
+    if (category == btck_LogCategory_ALL) {
+        LogInstance().SetLogLevel(get_bclog_level(level));
+    }
+
+    LogInstance().AddCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
+}
+
+void btck_logging_enable_category(btck_LogCategory category)
+{
+    LogInstance().EnableCategory(get_bclog_flag(category));
+}
+
+void btck_logging_disable_category(btck_LogCategory category)
+{
+    LogInstance().DisableCategory(get_bclog_flag(category));
+}
+
+void btck_logging_disable()
+{
+    LogInstance().DisableLogging();
+}
+
+btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback,
+                                                       void* user_data,
+                                                       btck_DestroyCallback user_data_destroy_callback,
+                                                       const btck_LoggingOptions options)
+{
+    return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback, options);
+}
+
+void btck_logging_connection_destroy(btck_LoggingConnection* connection)
+{
+    delete connection;
 }
