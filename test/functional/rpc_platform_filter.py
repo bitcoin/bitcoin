@@ -42,18 +42,24 @@ class HTTPBasicsTest(BitcoinTestFramework):
     def run_test(self):
         url = urllib.parse.urlparse(self.nodes[0].url)
 
-        def test_command(method, params, auth, expexted_status, should_not_match=False):
+        def test_command(method, params, auth, expected_status, should_not_match=False):
+            test_command_helper(method, params, '/', auth, expected_status, should_not_match)
+
+        def test_external_command(method, params, auth, expected_status, should_not_match=False):
+            test_command_helper(method, params, '/external', auth, expected_status, should_not_match)
+
+        def test_command_helper(method, params, path, auth, expected_status, should_not_match):
             conn = http.client.HTTPConnection(url.hostname, url.port)
             conn.connect()
             body = {"method": method}
             if len(params):
                 body["params"] = params
-            conn.request('POST', '/', json.dumps(body), {"Authorization": "Basic " + str_to_b64str(auth)})
+            conn.request('POST', path, json.dumps(body), {"Authorization": "Basic " + str_to_b64str(auth)})
             resp = conn.getresponse()
             if should_not_match:
-                assert resp.status != expexted_status
+                assert resp.status != expected_status
             else:
-                assert_equal(resp.status, expexted_status)
+                assert_equal(resp.status, expected_status)
             conn.close()
 
         whitelisted = ["getassetunlockstatuses",
@@ -112,6 +118,18 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
         self.log.info('Try running a not whitelisted command as the operator...')
         test_command("debug", ["1"], rpcuser_authpair_operator, 200)
+
+
+        self.log.info("Restart node with /external handler...")
+        test_external_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
+        test_external_command("getblockchaininfo", [], rpcuser_authpair_platform, 403)
+
+        self.restart_node(0, extra_args=["-rpcexternaluser=platform-user"])
+        test_command("getbestblockhash", [], rpcuser_authpair_platform, 403)
+        test_external_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
+        test_external_command("getblockchaininfo", [], rpcuser_authpair_platform, 403)
+        test_external_command("getbestblockhash", [], rpcuser_authpair_operator, 200)
+
 
 
 if __name__ == '__main__':
