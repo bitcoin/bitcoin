@@ -6367,7 +6367,7 @@ void ChainstateManager::RecalculateBestHeader()
 bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs)
 {
     AssertLockHeld(::cs_main);
-    if (!this->IsSnapshotValidated()) {
+    if (unvalidated_cs.m_assumeutxo != Assumeutxo::VALIDATED) {
         // No need to clean up.
         return false;
     }
