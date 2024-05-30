@@ -1880,7 +1880,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     } else {
         // Prior to setting NODE_NETWORK, check if we can provide historical blocks.
-        if (!WITH_LOCK(chainman.GetMutex(), return chainman.BackgroundSyncInProgress())) {
+        if (!WITH_LOCK(chainman.GetMutex(), return chainman.HistoricalChainstate())) {
             LogInfo("Setting NODE_NETWORK in non-prune mode");
             g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
         } else {

@@ -561,6 +561,9 @@ protected:
     //! Cached result of LookupBlockIndex(*m_from_snapshot_blockhash)
     mutable const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main){nullptr};
 
+    //! Cached result of LookupBlockIndex(*m_target_blockhash)
+    mutable const CBlockIndex* m_cached_target_block GUARDED_BY(::cs_main){nullptr};
+
     std::optional<const char*> m_last_script_check_reason_logged GUARDED_BY(::cs_main){};
 
 public:
@@ -620,12 +623,38 @@ public:
      */
     const std::optional<uint256> m_from_snapshot_blockhash;
 
+    //! Target block for this chainstate. If this is not set, chainstate will
+    //! target the most-work, valid block. If this is set, ChainstateManager
+    //! considers this a "historical" chainstate since it will only contain old
+    //! blocks up to the target block, not newer blocks.
+    std::optional<uint256> m_target_blockhash GUARDED_BY(::cs_main);
+
     /**
      * The base of the snapshot this chainstate was created from.
      *
      * nullptr if this chainstate was not created from a snapshot.
      */
     const CBlockIndex* SnapshotBase() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return target block which chainstate tip is expected to reach, if this
+    //! is a historic chainstate being used to validate a snapshot, or null if
+    //! chainstate targets the most-work block.
+    const CBlockIndex* TargetBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! Set target block for this chainstate. If null, chainstate will target
+    //! the most-work valid block. If non-null chainstate will be a historic
+    //! chainstate and target the specified block.
+    void SetTargetBlock(CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! Set target block for this chainstate using just a block hash. Useful
+    //! when the block database has not been loaded yet.
+    void SetTargetBlockHash(uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return true if chainstate reached target block.
+    bool ReachedTarget() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        const CBlockIndex* target_block{TargetBlock()};
+        assert(!target_block || target_block->GetAncestor(m_chain.Height()) == m_chain.Tip());
+        return target_block && target_block == m_chain.Tip();
+    }
 
     /**
      * The set of all CBlockIndex entries that have as much work as our current
@@ -862,10 +891,6 @@ enum class SnapshotCompletionResult {
     // The UTXO set hash of the background validation chainstate does not match
     // the one expected by assumeutxo chainparams.
     HASH_MISMATCH,
-
-    // The blockhash of the current tip of the background validation chainstate does
-    // not match the one expected by the snapshot chainstate.
-    BASE_BLOCKHASH_MISMATCH,
 };
 
 /**
@@ -1121,21 +1146,18 @@ public:
     //! Returns nullptr if no snapshot has been loaded.
     const CBlockIndex* GetSnapshotBaseBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Return historical chainstate targeting a specific block, if any.
+    Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
+    {
+        auto* cs{m_ibd_chainstate.get()};
+        return IsUsable(cs) && cs->m_target_blockhash ? cs : nullptr;
+    }
+
     //! The most-work chain.
     Chainstate& ActiveChainstate() const;
     CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
     int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
     CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
-
-    //! The state of a background sync (for net processing)
-    bool BackgroundSyncInProgress() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
-        return IsUsable(m_snapshot_chainstate.get()) && IsUsable(m_ibd_chainstate.get());
-    }
-
-    //! The tip of the background sync chain
-    const CBlockIndex* GetBackgroundSyncTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) {
-        return BackgroundSyncInProgress() ? m_ibd_chainstate->m_chain.Tip() : nullptr;
-    }
 
     node::BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
@@ -1336,6 +1358,9 @@ public:
     //! Return the height of the base block of the snapshot in use, if one exists, else
     //! nullopt.
     std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Get range of historical blocks to download.
+    std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! If, due to invalidation / reconsideration of blocks, the previous
     //! best header is no longer valid / guaranteed to be the most-work

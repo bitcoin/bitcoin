@@ -5921,18 +5921,19 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 return std::max(0, MAX_BLOCKS_IN_TRANSIT_PER_PEER - static_cast<int>(state.vBlocksInFlight.size()));
             };
 
-            // If a snapshot chainstate is in use, we want to find its next blocks
-            // before the background chainstate to prioritize getting to network tip.
+            // If there are multiple chainstates, download blocks for the
+            // current chainstate first, to prioritize getting to network tip
+            // before downloading historical blocks.
             FindNextBlocksToDownload(*peer, get_inflight_budget(), vToDownload, staller);
-            if (m_chainman.BackgroundSyncInProgress() && !IsLimitedPeer(*peer)) {
-                // If the background tip is not an ancestor of the snapshot block,
+            auto historical_blocks{m_chainman.GetHistoricalBlockRange()};
+            if (historical_blocks && !IsLimitedPeer(*peer)) {
+                // If the first needed historical block is not an ancestor of the last,
                 // we need to start requesting blocks from their last common ancestor.
-                const CBlockIndex *from_tip = LastCommonAncestor(m_chainman.GetBackgroundSyncTip(), m_chainman.GetSnapshotBaseBlock());
+                const CBlockIndex* from_tip = LastCommonAncestor(historical_blocks->first, historical_blocks->second);
                 TryDownloadingHistoricalBlocks(
                     *peer,
                     get_inflight_budget(),
-                    vToDownload, from_tip,
-                    Assert(m_chainman.GetSnapshotBaseBlock()));
+                    vToDownload, from_tip, historical_blocks->second);
             }
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(*peer);

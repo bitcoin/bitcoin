@@ -1891,6 +1891,29 @@ const CBlockIndex* Chainstate::SnapshotBase() const
     return m_cached_snapshot_base;
 }
 
+const CBlockIndex* Chainstate::TargetBlock() const
+{
+    if (!m_target_blockhash) return nullptr;
+    if (!m_cached_target_block) m_cached_target_block = Assert(m_chainman.m_blockman.LookupBlockIndex(*m_target_blockhash));
+    return m_cached_target_block;
+}
+
+void Chainstate::SetTargetBlock(CBlockIndex* block)
+{
+    if (block) {
+        m_target_blockhash = block->GetBlockHash();
+    } else {
+        m_target_blockhash.reset();
+    }
+    m_cached_target_block = block;
+}
+
+void Chainstate::SetTargetBlockHash(uint256 block_hash)
+{
+    m_target_blockhash = block_hash;
+    m_cached_target_block = nullptr;
+}
+
 void Chainstate::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
@@ -3144,8 +3167,6 @@ bool Chainstate::ConnectTip(
     // If we are the background validation chainstate, check to see if we are done
     // validating the snapshot (i.e. our tip has reached the snapshot's base block).
     if (this != &m_chainman.ActiveChainstate()) {
-        // This call may set `m_disabled`, which is referenced immediately afterwards in
-        // ActivateBestChain, so that we stop connecting blocks past the snapshot base.
         m_chainman.MaybeCompleteSnapshotValidation();
     }
 
@@ -3439,12 +3460,8 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                     }
                 }
 
-                // This will have been toggled in
-                // ActivateBestChainStep -> ConnectTip -> MaybeCompleteSnapshotValidation,
-                // if at all, so we should catch it here.
-                //
-                // Break this do-while to ensure we don't advance past the base snapshot.
-                if (m_disabled) {
+                // Break this do-while to ensure we don't advance past the target block.
+                if (ReachedTarget()) {
                     break;
                 }
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
@@ -3486,7 +3503,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         } // release cs_main
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        bool disabled{false};
+        bool reached_target;
         {
             LOCK(m_chainman.GetMutex());
             if (exited_ibd) {
@@ -3500,15 +3517,14 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                 return false;
             }
 
-            disabled = m_disabled;
+            reached_target = ReachedTarget();
         }
 
-        if (disabled) {
-            // Background chainstate has reached the snapshot base block, so exit.
-
-            // Restart indexes to resume indexing for all blocks unique to the snapshot
-            // chain. This resumes indexing "in order" from where the indexing on the
-            // background validation chain left off.
+        if (reached_target) {
+            // Chainstate has reached the target block, so exit.
+            //
+            // Restart indexes so indexes can resync and index new blocks after
+            // the target block.
             //
             // This cannot be done while holding cs_main (within
             // MaybeCompleteSnapshotValidation) or a cs_main deadlock will occur.
@@ -3789,17 +3805,15 @@ void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
         return;
     }
 
-    bool is_active_chainstate = this == &m_chainman.ActiveChainstate();
-    if (is_active_chainstate) {
-        // The active chainstate should always add entries that have more
+    const CBlockIndex* target_block{TargetBlock()};
+    if (!target_block) {
+        // If no specific target block, add all entries that have more
         // work than the tip.
         setBlockIndexCandidates.insert(pindex);
-    } else if (!m_disabled) {
-        // For the background chainstate, we only consider connecting blocks
-        // towards the snapshot base (which can't be nullptr or else we'll
-        // never make progress).
-        const CBlockIndex* snapshot_base{Assert(m_chainman.GetSnapshotBaseBlock())};
-        if (snapshot_base->GetAncestor(pindex->nHeight) == pindex) {
+    } else {
+        // If there is a target block, only consider connecting blocks
+        // towards the target block.
+        if (target_block->GetAncestor(pindex->nHeight) == pindex) {
             setBlockIndexCandidates.insert(pindex);
         }
     }
@@ -4483,7 +4497,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         return false;
     }
 
-    Chainstate* bg_chain{WITH_LOCK(cs_main, return BackgroundSyncInProgress() ? m_ibd_chainstate.get() : nullptr)};
+    Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
     BlockValidationState bg_state;
     if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
         LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
@@ -5787,6 +5801,11 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip();
     assert(chaintip_loaded);
 
+    // Set snapshot block as the target block for the historical chainstate.
+    assert(m_ibd_chainstate.get());
+    assert(!m_ibd_chainstate->m_target_blockhash);
+    m_ibd_chainstate->SetTargetBlockHash(base_blockhash);
+
     // Transfer possession of the mempool to the snapshot chainstate.
     // Mempool is empty at this point because we're still in IBD.
     Assert(m_active_chainstate->m_mempool->size() == 0);
@@ -6048,23 +6067,25 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
 {
     AssertLockHeld(cs_main);
+
+    // If a snapshot does not need to be validated...
     if (m_ibd_chainstate.get() == &this->ActiveChainstate() ||
+            // Or if either chainstate is unusable...
             !this->IsUsable(m_snapshot_chainstate.get()) ||
             !this->IsUsable(m_ibd_chainstate.get()) ||
-            !m_ibd_chainstate->m_chain.Tip()) {
-       // Nothing to do - this function only applies to the background
-       // validation chainstate.
+            !m_snapshot_chainstate->m_from_snapshot_blockhash ||
+            !m_ibd_chainstate->m_chain.Tip() ||
+            // Or the validated chainstate is not targeting the snapshot block...
+            !m_ibd_chainstate->m_target_blockhash ||
+            *m_ibd_chainstate->m_target_blockhash != *m_snapshot_chainstate->m_from_snapshot_blockhash ||
+            // Or the validated chainstate has not reached the snapshot block yet...
+            !m_ibd_chainstate->ReachedTarget()) {
+       // Then a snapshot cannot be validated and there is nothing to do.
        return SnapshotCompletionResult::SKIPPED;
     }
     const int snapshot_tip_height = this->ActiveHeight();
     const int snapshot_base_height = *Assert(this->GetSnapshotBaseHeight());
     const CBlockIndex& index_new = *Assert(m_ibd_chainstate->m_chain.Tip());
-
-    if (index_new.nHeight < snapshot_base_height) {
-        // Background IBD not complete yet.
-        return SnapshotCompletionResult::SKIPPED;
-    }
-
     assert(SnapshotBlockhash());
     uint256 snapshot_blockhash = *Assert(SnapshotBlockhash());
 
@@ -6087,6 +6108,9 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
         LogError("[snapshot] !!! %s\n", user_error.original);
         LogError("[snapshot] deleting snapshot, reverting to validated chain, and stopping node\n");
 
+        // Reset chainstate target to network tip instead of snapshot block.
+        m_ibd_chainstate->SetTargetBlock(nullptr);
+
         m_active_chainstate = m_ibd_chainstate.get();
         m_snapshot_chainstate->m_disabled = true;
         assert(!this->IsUsable(m_snapshot_chainstate.get()));
@@ -6100,14 +6124,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
         GetNotifications().fatalError(user_error);
     };
 
-    if (index_new.GetBlockHash() != snapshot_blockhash) {
-        LogWarning("[snapshot] supposed base block %s does not match the "
-          "snapshot base block %s (height %d). Snapshot is not valid.",
-          index_new.ToString(), snapshot_blockhash.ToString(), snapshot_base_height);
-        handle_invalid_snapshot();
-        return SnapshotCompletionResult::BASE_BLOCKHASH_MISMATCH;
-    }
-
+    assert(index_new.GetBlockHash() == snapshot_blockhash);
     assert(index_new.nHeight == snapshot_base_height);
 
     int curr_height = m_ibd_chainstate->m_chain.Height();
@@ -6286,6 +6303,12 @@ Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
         std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash);
     LogInfo("[snapshot] switching active chainstate to %s", m_snapshot_chainstate->ToString());
 
+    // Set target block for historical chainstate to snapshot block.
+    assert(m_ibd_chainstate.get());
+    assert(!m_ibd_chainstate->m_target_blockhash);
+    m_ibd_chainstate->SetTargetBlockHash(base_blockhash);
+
+    // Transfer possession of the mempool to the chainstate.
     // Mempool is empty at this point because we're still in IBD.
     Assert(m_active_chainstate->m_mempool->size() == 0);
     Assert(!m_snapshot_chainstate->m_mempool);
@@ -6521,4 +6544,11 @@ std::pair<int, int> ChainstateManager::GetPruneRange(const Chainstate& chainstat
     int prune_end = std::min(last_height_can_prune, max_prune);
 
     return {prune_start, prune_end};
+}
+
+std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> ChainstateManager::GetHistoricalBlockRange() const
+{
+    const Chainstate* chainstate{HistoricalChainstate()};
+    if (!chainstate) return {};
+    return std::make_pair(chainstate->m_chain.Tip(), chainstate->TargetBlock());
 }

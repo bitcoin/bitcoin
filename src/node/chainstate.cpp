@@ -166,12 +166,14 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     chainman.m_total_coinsdb_cache = cache_sizes.coins_db;
 
     // Load the fully validated chainstate.
-    chainman.InitializeChainstate(options.mempool);
+    Chainstate& validated_cs{chainman.InitializeChainstate(options.mempool)};
 
     // Load a chain created from a UTXO snapshot, if any exist.
     bool has_snapshot = chainman.DetectSnapshotChainstate();
 
     if (has_snapshot && options.wipe_chainstate_db) {
+        // Reset chainstate target to network tip instead of snapshot block.
+        validated_cs.SetTargetBlock(nullptr);
         LogInfo("[snapshot] deleting snapshot chainstate due to reindexing");
         if (!chainman.DeleteSnapshotChainstate()) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
