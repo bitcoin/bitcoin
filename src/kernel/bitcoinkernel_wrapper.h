@@ -604,6 +604,34 @@ public:
     virtual void FatalErrorHandler(std::string_view error) {}
 };
 
+class BlockValidationState
+{
+private:
+    const btck_BlockValidationState* m_state;
+
+public:
+    BlockValidationState(const btck_BlockValidationState* state) : m_state{state} {}
+
+    BlockValidationState(const BlockValidationState&) = delete;
+    BlockValidationState& operator=(const BlockValidationState&) = delete;
+    BlockValidationState(BlockValidationState&&) = delete;
+    BlockValidationState& operator=(BlockValidationState&&) = delete;
+};
+
+class ValidationInterface
+{
+public:
+    virtual ~ValidationInterface() = default;
+
+    virtual void BlockChecked(Block block, const BlockValidationState state) {}
+
+    virtual void PowValidBlock(BlockTreeEntry entry, Block block) {}
+
+    virtual void BlockConnected(Block block, BlockTreeEntry entry) {}
+
+    virtual void BlockDisconnected(Block block, BlockTreeEntry entry) {}
+};
+
 class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_copy, btck_chain_parameters_destroy>
 {
 public:
@@ -639,6 +667,24 @@ public:
                 .warning_unset = +[](void* user_data, btck_Warning warning) { (*static_cast<user_type>(user_data))->WarningUnsetHandler(static_cast<Warning>(warning)); },
                 .flush_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FlushErrorHandler({error, error_len}); },
                 .fatal_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FatalErrorHandler({error, error_len}); },
+            });
+    }
+
+    template <typename T>
+    void SetValidationInterface(std::shared_ptr<T> validation_interface)
+    {
+        static_assert(std::is_base_of_v<ValidationInterface, T>);
+        auto heap_vi = std::make_unique<std::shared_ptr<T>>(std::move(validation_interface));
+        using user_type = std::shared_ptr<T>*;
+        btck_context_options_set_validation_interface(
+            get(),
+            btck_ValidationInterfaceCallbacks{
+                .user_data = heap_vi.release(),
+                .user_data_destroy = +[](void* user_data) { delete static_cast<user_type>(user_data); },
+                .block_checked = +[](void* user_data, btck_Block* block, const btck_BlockValidationState* state) { (*static_cast<user_type>(user_data))->BlockChecked(Block{block}, BlockValidationState{state}); },
+                .pow_valid_block = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->PowValidBlock(BlockTreeEntry{entry}, Block{block}); },
+                .block_connected = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->BlockConnected(Block{block}, BlockTreeEntry{entry}); },
+                .block_disconnected = +[](void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry) { (*static_cast<user_type>(user_data))->BlockDisconnected(Block{block}, BlockTreeEntry{entry}); },
             });
     }
 };
