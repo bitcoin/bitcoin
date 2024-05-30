@@ -1315,15 +1315,14 @@ public:
     //! snapshot that is in the process of being validated.
     bool DetectSnapshotChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Add new chainstate.
+    Chainstate& AddChainstate(std::unique_ptr<Chainstate> chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Remove the snapshot-based chainstate and all on-disk artifacts.
     //! Used when reindex{-chainstate} is called during snapshot use.
     [[nodiscard]] bool DeleteSnapshotChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Switch the active chainstate to one based on a UTXO snapshot that was loaded
-    //! previously.
-    Chainstate& ActivateExistingSnapshot(uint256 base_blockhash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! If we have validated a snapshot chain during this runtime, copy its
     //! chainstate directory over to the main `chainstate` location, completing

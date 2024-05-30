@@ -5796,28 +5796,14 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         }
     }
 
-    assert(!m_snapshot_chainstate);
-    m_snapshot_chainstate.swap(snapshot_chainstate);
-    const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip();
+    Chainstate& chainstate{AddChainstate(std::move(snapshot_chainstate))};
+    const bool chaintip_loaded{chainstate.LoadChainTip()};
     assert(chaintip_loaded);
-
-    // Set snapshot block as the target block for the historical chainstate.
-    assert(m_ibd_chainstate.get());
-    assert(!m_ibd_chainstate->m_target_blockhash);
-    m_ibd_chainstate->SetTargetBlockHash(base_blockhash);
-
-    // Transfer possession of the mempool to the snapshot chainstate.
-    // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
-    Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
-    m_active_chainstate = m_snapshot_chainstate.get();
-    m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
+    m_blockman.m_snapshot_height = Assert(chainstate.SnapshotBase())->nHeight;
 
     LogInfo("[snapshot] successfully activated snapshot %s", base_blockhash.ToString());
     LogInfo("[snapshot] (%.2f MB)",
-        m_snapshot_chainstate->CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
+              chainstate.CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
 
     this->MaybeRebalanceCaches();
     return snapshot_start_block;
@@ -6288,21 +6274,21 @@ bool ChainstateManager::DetectSnapshotChainstate()
     LogInfo("[snapshot] detected active snapshot chainstate (%s) - loading",
         fs::PathToString(*path));
 
-    this->ActivateExistingSnapshot(*base_blockhash);
+    auto snapshot_chainstate{std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash)};
+    LogInfo("[snapshot] switching active chainstate to %s", snapshot_chainstate->ToString());
+    this->AddChainstate(std::move(snapshot_chainstate));
     return true;
 }
 
-Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
+Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainstate)
 {
     assert(!m_snapshot_chainstate);
-    m_snapshot_chainstate =
-        std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash);
-    LogInfo("[snapshot] switching active chainstate to %s", m_snapshot_chainstate->ToString());
+    m_snapshot_chainstate = std::move(chainstate);
 
     // Set target block for historical chainstate to snapshot block.
     assert(m_ibd_chainstate.get());
     assert(!m_ibd_chainstate->m_target_blockhash);
-    m_ibd_chainstate->SetTargetBlockHash(base_blockhash);
+    m_ibd_chainstate->SetTargetBlockHash(*Assert(m_snapshot_chainstate->m_from_snapshot_blockhash));
 
     // Transfer possession of the mempool to the chainstate.
     // Mempool is empty at this point because we're still in IBD.
