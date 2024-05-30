@@ -1337,6 +1337,9 @@ public:
     //! Get range of historical blocks to download.
     std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Call ActivateBestChain() on every chainstate.
+    util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);
+
     //! If, due to invalidation / reconsideration of blocks, the previous
     //! best header is no longer valid / guaranteed to be the most-work
     //! header in our block-index not known to be invalid, recalculate it.
