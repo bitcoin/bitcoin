@@ -1046,10 +1046,11 @@ public:
 
     /**
      * In order to efficiently track invalidity of headers, we keep the set of
-     * blocks which we tried to connect and found to be invalid here (ie which
-     * were set to BLOCK_FAILED_VALID since the last restart). We can then
+     * blocks which were found to be invalid while connecting or accepting do disk
+     * (ie which were set to BLOCK_FAILED_VALID since the last restart). We can then
      * walk this set and check if a new header is a descendant of something in
-     * this set, preventing us from having to walk m_block_index when we try
+     * this set, preventing us from accepting headers building on invalid blocks into
+     * our blockindex and from having to walk m_block_index when we try
      * to connect a bad block and fail.
      *
      * While this is more complicated than marking everything which descends

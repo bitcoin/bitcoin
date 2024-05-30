@@ -75,7 +75,7 @@ class InvalidChainTest (BitcoinTestFramework):
         block_time += 1
         block3 = create_block(block2a.sha256, create_coinbase(start_height + 3), block_time)
         block3.solve()
-        node.submitheader(block3.serialize().hex())  # No error, we accept more headers building on a block we have marked as invalid.
+        assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(block3.serialize().hex()))
 
         self.log.info("Test chain with an invalid block (found invalid before acceptance)")
         # Create invalid block (too large)
