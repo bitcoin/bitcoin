@@ -3811,6 +3811,15 @@ void Chainstate::ResetBlockFailureFlags(CBlockIndex *pindex) {
 void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
+
+    // Do not continue building a chainstate that is based on an invalid
+    // snapshot. This is a belt-and-suspenders type of check because if an
+    // invalid snapshot is loaded, the node will shut down to force a manual
+    // intervention. But it is good to handle this case correctly regardless.
+    if (m_assumeutxo == Assumeutxo::INVALID) {
+        return;
+    }
+
     // The block only is a candidate for the most-work-chain if it has the same
     // or more work than our current tip.
     if (m_chain.Tip() != nullptr && setBlockIndexCandidates.value_comp()(pindex, m_chain.Tip())) {
@@ -3877,7 +3886,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
             }
             pindex->m_chain_tx_count = prev_tx_sum(*pindex);
             pindex->nSequenceId = nBlockSequenceId++;
-            for (Chainstate *c : GetAll()) {
+            for (const auto& c : m_chainstates) {
                 c->TryAddBlockIndexCandidate(pindex);
             }
             std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> range = m_blockman.m_blocks_unlinked.equal_range(pindex);
@@ -4980,7 +4989,7 @@ bool ChainstateManager::LoadBlockIndex()
                     (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                      (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
 
-                for (Chainstate* chainstate : GetAll()) {
+                for (const auto& chainstate : m_chainstates) {
                     chainstate->TryAddBlockIndexCandidate(pindex);
                 }
             }
@@ -5593,18 +5602,6 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
     }
 
     return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
-}
-
-std::vector<Chainstate*> ChainstateManager::GetAll()
-{
-    LOCK(::cs_main);
-    std::vector<Chainstate*> out;
-
-    for (const auto& cs : m_chainstates) {
-        if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->m_target_utxohash) out.push_back(cs.get());
-    }
-
-    return out;
 }
 
 Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
@@ -6354,9 +6351,7 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chain
     // The caller of this method will be responsible for reinitializing chainstates
     // if they want to continue operation.
     this->ResetChainstates();
-
-    // No chainstates should be considered usable.
-    assert(this->GetAll().size() == 0);
+    assert(this->m_chainstates.size() == 0);
 
     LogInfo("[snapshot] deleting background chainstate directory (now unnecessary) (%s)",
               fs::PathToString(validated_path));
@@ -6445,7 +6440,17 @@ util::Result<void> ChainstateManager::ActivateBestChains()
     // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
     // the relevant pointers before the ABC call.
     AssertLockNotHeld(cs_main);
-    for (Chainstate* chainstate : GetAll()) {
+    std::vector<Chainstate*> chainstates;
+    {
+        LOCK(GetMutex());
+        chainstates.reserve(m_chainstates.size());
+        for (const auto& chainstate : m_chainstates) {
+            if (chainstate && chainstate->m_assumeutxo != Assumeutxo::INVALID && !chainstate->m_target_utxohash) {
+                chainstates.push_back(chainstate.get());
+            }
+        }
+    }
+    for (Chainstate* chainstate : chainstates) {
         BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, nullptr)) {
             LOCK(GetMutex());
