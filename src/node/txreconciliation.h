@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <tuple>
+#include <optional>
 
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
@@ -25,6 +26,23 @@ enum class ReconciliationRegisterResult {
     SUCCESS,
     ALREADY_REGISTERED,
     PROTOCOL_VIOLATION,
+};
+
+/**
+ * Record whether or not a wtxid was successfully added to a reconciliation set.
+ * In case of failure, check whether this was due to a shortid collision and record
+ * the colliding wtxid.
+*/
+class AddToSetResult
+{
+    public:
+        bool m_succeeded;
+        std::optional<Wtxid> m_collision;
+
+        explicit AddToSetResult(bool added, std::optional<Wtxid> conflict);
+        static AddToSetResult Succeeded();
+        static AddToSetResult Failed();
+        static AddToSetResult Collision(Wtxid);
 };
 
 /**
@@ -85,7 +103,7 @@ public:
      * of the peer, so that it will be reconciled later, unless the set limit is reached.
      * Returns whether the transaction appears in the set.
      */
-    bool AddToSet(NodeId peer_id, const Wtxid& wtxid);
+    AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
      * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
