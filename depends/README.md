@@ -49,11 +49,11 @@ The paths are automatically configured and no other options are needed.
 
 #### For macOS cross compilation
 
-    sudo apt-get install g++ zip
+    apt install clang lld llvm g++ zip
 
-Note: You must obtain the macOS SDK before proceeding with a cross-compile.
-Under the depends directory, create a subdirectory named `SDKs`.
-Then, place the extracted SDK under this new directory.
+Clang 18 or later is required. You must also obtain the macOS SDK before
+proceeding with a cross-compile. Under the depends directory, create a
+subdirectory named `SDKs`. Then, place the extracted SDK under this new directory.
 For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
 
 #### For Win64 cross compilation
