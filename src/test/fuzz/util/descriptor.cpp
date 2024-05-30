@@ -4,6 +4,8 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <stack>
+
 void MockedDescriptorConverter::Init() {
     // The data to use as a private key or a seed for an xprv.
     std::array<std::byte, 32> key_data{std::byte{1}};
@@ -80,6 +82,30 @@ bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
             depth = 0;
         } else if (ch == '/') {
             if (++depth > max_depth) return true;
+        }
+    }
+    return false;
+}
+
+bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const size_t max_nested_subs)
+{
+    // We use a stack because there may be many nested sub-frags.
+    std::stack<int> counts;
+    for (const auto& ch: buff) {
+        // The fuzzer may generate an input with a ton of parentheses. Rule out pathological cases.
+        if (counts.size() > max_nested_subs) return true;
+
+        if (ch == '(') {
+            // A new fragment was opened, create a new sub-count for it and start as one since any fragment with
+            // parentheses has at least one sub.
+            counts.push(1);
+        } else if (ch == ',' && !counts.empty()) {
+            // When encountering a comma, account for an additional sub in the last opened fragment. If it exceeds the
+            // limit, bail.
+            if (++counts.top() > max_subs) return true;
+        } else if (ch == ')' && !counts.empty()) {
+            // Fragment closed! Drop its sub count and resume to counting the number of subs for its parent.
+            counts.pop();
         }
     }
     return false;
