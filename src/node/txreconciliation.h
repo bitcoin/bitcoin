@@ -91,6 +91,12 @@ public:
      */
     uint64_t PreRegisterPeer(NodeId peer_id);
 
+
+    /**
+     * For testing purposes only. This SHOULD NEVER be used in production.
+    */
+    void PreRegisterPeerWithSalt(NodeId peer_id, uint64_t local_salt);
+
     /**
      * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
      * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
@@ -99,9 +105,9 @@ public:
                                               uint32_t peer_recon_version, uint64_t remote_salt);
 
     /**
-     * Step 1. Add a new transaction we want to announce to the peer to the local reconciliation set
-     * of the peer, so that it will be reconciled later, unless the set limit is reached.
-     * Returns whether the transaction appears in the set.
+     * Step 1. Add a to-be-announced transaction to the local reconciliation set of the target peer.
+     * Returns false if the set is at capacity, or if the set contains a colliding transaction (alongside
+     * the colliding wtxid). Returns true if the transaction is added to the set (or if it was already in it).
      */
     AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid);
 

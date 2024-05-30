@@ -2211,11 +2211,35 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
             }
         }
 
-        if (fanout || !m_txreconciliation->AddToSet(peer_id, Wtxid::FromUint256(wtxid)).m_succeeded) {
-            // If the transaction cannot be added to the set, we simply fanout, and do not do any special handling here regarding ancestors.
-            // This should not happen under normal conditions, given the set size should be well over the number of transactions received
-            // between reconciling intervals. A peer hitting the limit is likely to be either a broken implementation or an attacker.
+        if (fanout) {
+            // We fanout if force relay is set, if the peer does not reconcile transactions, or if it does but it has been picked for fanout.
             invs_to_send.push_back(peer->m_wtxid_relay ? wtxid : txid);
+        } else {
+            // Otherwise, we try to add the transaction to the peer's reconciliation set.
+            Assume(peer->m_wtxid_relay);
+            const auto result = m_txreconciliation->AddToSet(peer_id, Wtxid::FromUint256(wtxid));
+            if (!result.m_succeeded) {
+                // If the transaction cannot be added to the set, we simply fanout, and do not do any special handling here regarding ancestors.
+                // This should not happen under normal conditions, given the set size should be well over the number of transactions received
+                // between reconciling intervals. A peer hitting the limit is likely to be either a broken implementation or an attacker.
+                invs_to_send.push_back(wtxid);
+                // If the transaction fails because it collides with an existing one, we also remove and fanout the conflict and all its descendants.
+                // This is because our peer may have added the conflicting transaction to its set, in which case the two transactions mapped to the same
+                // short id won't be announced between these two peers. Descendants are also announced in this case because otherwise they may
+                // get reconciled before the INV containing the parent is sent, in which case they will be treated as orphans.
+                if (const auto collision = result.m_conflict; collision.has_value()) {
+                    CTxMemPool::setEntries descendants;
+                    WITH_LOCK(m_mempool.cs, m_mempool.CalculateDescendants(m_mempool.get_iter_from_wtxid(collision.value()), descendants));
+                    for (const auto &txit: descendants) {
+                        const auto desc_wtxid = txit->GetTx().GetWitnessHash();
+                        // Only include the descendants that were part of the set, others
+                        // may have already been sent
+                        if (m_txreconciliation->TryRemovingFromSet(peer_id, desc_wtxid)) {
+                            invs_to_send.push_back(desc_wtxid);
+                        }
+                    }
+                }
+            }
         }
 
         for (const auto& hash : invs_to_send) {

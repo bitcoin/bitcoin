@@ -123,16 +123,54 @@ BOOST_AUTO_TEST_CASE(AddToSetTest)
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id1, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
     BOOST_CHECK(tracker.IsPeerRegistered(peer_id1));
 
-    // As long as the peer is registered and the transaction is not in the set, adding it should succeed
-    for (size_t i = 0; i < MAX_RECONSET_SIZE; ++i)
-        r = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256()));
-        BOOST_REQUIRE(r.m_succeeded);
-        BOOST_REQUIRE(!r.m_conflict.has_value());
+    // As long as the peer is registered, the transaction is not in the set, and there is no short id
+    // collision, adding should work
+    size_t added_txs = 0;
+    while (added_txs < MAX_RECONSET_SIZE) {
+        wtxid = Wtxid::FromUint256(frc.rand256());
+        Wtxid collision;
 
-    // Trying to add the same item twice should fail
+        r = tracker.AddToSet(peer_id1, wtxid);
+        if (r.m_succeeded) {
+            BOOST_REQUIRE(!r.m_conflict.has_value());
+            ++added_txs;
+        } else {
+            BOOST_REQUIRE_EQUAL(r.m_conflict.value(), collision);
+        }
+    }
+
+    // Adding one more item will fail due to the set being full
     r = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256()));
     BOOST_REQUIRE(!r.m_succeeded);
     BOOST_REQUIRE(!r.m_conflict.has_value());
+
+    // Trying to add the same item twice will just bypass
+    r = tracker.AddToSet(peer_id1, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_conflict.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
+{
+    CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, hasher);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    // Precompute collision
+    Wtxid wtxid{Wtxid::FromUint256(uint256("c70d778bccef36a81aed8da0b819d2bd28bd8653e56a5d40903df1a0ade0b876"))};
+    Wtxid collision{Wtxid::FromUint256(uint256("ae52a6ecb8733fba1f7af6022a8b9dd327d7825054229fafcad7e03c38ae2a50"))};
+
+    // Register the peer with a predefined salt so we can force the collision
+    tracker.PreRegisterPeerWithSalt(peer_id0, 2);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerRegistered(peer_id0));
+
+    // Once the peer is registered, we can try to add both transactions and check
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid).m_succeeded);
+    auto r = tracker.AddToSet(peer_id0, collision);
+    BOOST_REQUIRE(!r.m_succeeded);
+    BOOST_REQUIRE_EQUAL(r.m_conflict.value(), wtxid);
 }
 
 BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
