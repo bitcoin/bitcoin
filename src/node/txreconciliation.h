@@ -44,13 +44,26 @@ public:
     std::unordered_set<Wtxid, SaltedWtxidHasher> m_local_set;
 
     /**
-     * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     * These values are used to salt short IDs, which is necessary for transaction reconciliations.
+     * Reconciliation sketches are computed over short transaction IDs.
+     * This is a cache of these IDs enabling faster lookups of full wtxids,
+     * useful when the peer asks for missing transactions by short IDs
+     * at the end of a reconciliation round.
+     * We also use this to keep track of short ID collisions. In case of a
+     * collision, both transactions should be fanout.
      */
-    uint64_t m_k0, m_k1;
+    std::map<uint32_t, Wtxid> m_short_id_mapping;
 
     TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
+
+    /**
+     * Reconciliation sketches are computed over short transaction IDs.
+     * Short IDs are salted with a link-specific constant value.
+     */
+    uint32_t ComputeShortID(const Wtxid& wtxid) const;
+
+private:
+    /** These values are used to salt short IDs, which is necessary for transaction reconciliations. */
+    uint64_t m_k0, m_k1;
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
