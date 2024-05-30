@@ -13,6 +13,7 @@
 #include <span.h>
 #include <util/string.h>
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <charconv>
@@ -352,6 +353,30 @@ struct Hex {
     }
 };
 } // namespace detail
+
+struct CaseInsensitiveKeyEqual {
+    bool operator()(const std::string& s1, const std::string& s2) const
+    {
+        return ToLower(s1) == ToLower(s2);
+    }
+};
+
+struct CaseInsensitiveHash {
+    size_t operator()(const std::string& s) const {
+        std::string lowered;
+        lowered.resize(s.size());
+        std::transform(s.begin(), s.end(), lowered.begin(),
+            [](char c) {
+                // Avoid implicit-integer-sign-change UB by only
+                // processing ASCII.
+                unsigned char uc = static_cast<unsigned char>(c);
+                if (uc >= 128) return c;
+
+                return ToLower(c);
+            });
+        return std::hash<std::string>{}(lowered);
+    }
+};
 
 /**
  * ""_hex is a compile-time user-defined literal returning a
