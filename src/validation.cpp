@@ -6422,7 +6422,7 @@ void ChainstateManager::RecalculateBestHeader()
 bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_chainstate, Chainstate& from_snapshot_chainstate)
 {
     AssertLockHeld(::cs_main);
-    if (!this->IsSnapshotValidated()) {
+    if (from_snapshot_chainstate.Validity() != ChainValidity::VALIDATED) {
         // No need to clean up.
         return false;
     }
