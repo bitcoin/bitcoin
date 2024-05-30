@@ -210,7 +210,6 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         // ChainstateManager::ResetChainstates(), reinitialize them here without
         // duplicating the blockindex work above.
         assert(chainman.GetAll().empty());
-        assert(!chainman.IsSnapshotValidated());
 
         chainman.InitializeChainstate(options.mempool);
 

@@ -1191,12 +1191,6 @@ public:
 
     std::optional<uint256> SnapshotBlockhash() const;
 
-    //! Is there a snapshot in use and has it been fully validated?
-    bool IsSnapshotValidated() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        return m_snapshot_chainstate && m_snapshot_chainstate->m_assumeutxo == Assumeutxo::VALIDATED;
-    }
-
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
 
