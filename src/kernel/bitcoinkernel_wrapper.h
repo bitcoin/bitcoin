@@ -267,6 +267,72 @@ public:
     explicit operator bool() const noexcept { return bool{m_context}; }
 };
 
+class UnownedBlock
+{
+private:
+    const kernel_BlockPointer* m_block;
+
+public:
+    UnownedBlock(const kernel_BlockPointer* block) noexcept : m_block{block} {}
+
+    UnownedBlock(const UnownedBlock&) = delete;
+    UnownedBlock& operator=(const UnownedBlock&) = delete;
+    UnownedBlock(UnownedBlock&&) = delete;
+    UnownedBlock& operator=(UnownedBlock&&) = delete;
+};
+
+class BlockValidationState
+{
+private:
+    const kernel_BlockValidationState* m_state;
+
+public:
+    BlockValidationState(const kernel_BlockValidationState* state) noexcept : m_state{state} {}
+
+    BlockValidationState(const BlockValidationState&) = delete;
+    BlockValidationState& operator=(const BlockValidationState&) = delete;
+    BlockValidationState(BlockValidationState&&) = delete;
+    BlockValidationState& operator=(BlockValidationState&&) = delete;
+};
+
+template <typename T>
+class ValidationInterface
+{
+private:
+    struct Deleter {
+        void operator()(kernel_ValidationInterface* ptr) const
+        {
+            kernel_validation_interface_destroy(ptr);
+        }
+    };
+
+    const std::unique_ptr<kernel_ValidationInterface, Deleter> m_validation_interface;
+
+public:
+    ValidationInterface() noexcept : m_validation_interface{kernel_validation_interface_create(kernel_ValidationInterfaceCallbacks{
+                                .user_data = this,
+                                .block_checked = [](void* user_data, const kernel_BlockPointer* block, const kernel_BlockValidationState* state) {
+                                    static_cast<T*>(user_data)->BlockChecked(UnownedBlock{block}, BlockValidationState{state});
+                                },
+                            })}
+    {
+    }
+
+    virtual ~ValidationInterface() = default;
+
+    virtual void BlockChecked(UnownedBlock block, const BlockValidationState state) {}
+
+    bool Register(Context& context) const noexcept
+    {
+        return kernel_validation_interface_register(context.m_context.get(), m_validation_interface.get());
+    }
+
+    bool Unregister(Context& context) const noexcept
+    {
+        return kernel_validation_interface_unregister(context.m_context.get(), m_validation_interface.get());
+    }
+};
+
 class ChainstateManagerOptions
 {
 private:

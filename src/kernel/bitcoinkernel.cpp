@@ -28,8 +28,10 @@
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
+#include <util/task_runner.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <cassert>
 #include <cstddef>
@@ -43,6 +45,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+using util::ImmediateTaskRunner;
 
 // Define G_TRANSLATION_FUN symbol in libbitcoinkernel library so users of the
 // library aren't required to export this symbol
@@ -200,11 +204,14 @@ public:
 
     std::unique_ptr<util::SignalInterrupt> m_interrupt;
 
+    std::unique_ptr<ValidationSignals> m_signals;
+
     std::unique_ptr<const CChainParams> m_chainparams;
 
     Context(const ContextOptions* options, bool& sane)
         : m_context{std::make_unique<kernel::Context>()},
-          m_interrupt{std::make_unique<util::SignalInterrupt>()}
+          m_interrupt{std::make_unique<util::SignalInterrupt>()},
+          m_signals{std::make_unique<ValidationSignals>(std::make_unique<ImmediateTaskRunner>())}
     {
         if (options && options->m_notifications) {
             m_notifications = std::make_unique<KernelNotifications>(*options->m_notifications);
@@ -221,6 +228,24 @@ public:
 
         if (!kernel::SanityChecks(*m_context)) {
             sane = false;
+        }
+    }
+};
+
+class KernelValidationInterface final : public CValidationInterface
+{
+public:
+    const kernel_ValidationInterfaceCallbacks m_cbs;
+
+    explicit KernelValidationInterface(const kernel_ValidationInterfaceCallbacks vi_cbs) : m_cbs{vi_cbs} {}
+
+protected:
+    void BlockChecked(const CBlock& block, const BlockValidationState& stateIn) override
+    {
+        if (m_cbs.block_checked) {
+            m_cbs.block_checked(m_cbs.user_data,
+                                reinterpret_cast<const kernel_BlockPointer*>(&block),
+                                reinterpret_cast<const kernel_BlockValidationState*>(&stateIn));
         }
     }
 };
@@ -307,6 +332,12 @@ std::shared_ptr<CBlock>* cast_cblocksharedpointer(kernel_Block* block)
 {
     assert(block);
     return reinterpret_cast<std::shared_ptr<CBlock>*>(block);
+}
+
+std::shared_ptr<KernelValidationInterface>* cast_validation_interface(kernel_ValidationInterface* interface)
+{
+    assert(interface);
+    return reinterpret_cast<std::shared_ptr<KernelValidationInterface>*>(interface);
 }
 
 } // namespace
@@ -584,6 +615,44 @@ void kernel_context_destroy(kernel_Context* context)
     }
 }
 
+kernel_ValidationInterface* kernel_validation_interface_create(kernel_ValidationInterfaceCallbacks vi_cbs)
+{
+    return reinterpret_cast<kernel_ValidationInterface*>(new std::shared_ptr<KernelValidationInterface>(new KernelValidationInterface(vi_cbs)));
+}
+
+bool kernel_validation_interface_register(kernel_Context* context_, kernel_ValidationInterface* validation_interface_)
+{
+    auto context{cast_context(context_)};
+    auto validation_interface{cast_validation_interface(validation_interface_)};
+    if (!context->m_signals) {
+        LogError("Cannot register validation interface with context that has no validation signals.\n");
+        return false;
+    }
+    context->m_signals->RegisterSharedValidationInterface(*validation_interface);
+    return true;
+}
+
+bool kernel_validation_interface_unregister(kernel_Context* context_, kernel_ValidationInterface* validation_interface_)
+{
+    auto context{cast_context(context_)};
+    auto validation_interface{cast_validation_interface(validation_interface_)};
+    if (!context->m_signals) {
+        LogError("Cannot de-register validation interface with context that has no validation signals.\n");
+        return false;
+    }
+    context->m_signals->SyncWithValidationInterfaceQueue();
+    context->m_signals->FlushBackgroundCallbacks();
+    context->m_signals->UnregisterSharedValidationInterface(*validation_interface);
+    return true;
+}
+
+void kernel_validation_interface_destroy(kernel_ValidationInterface* validation_interface)
+{
+    if (validation_interface) {
+        delete cast_validation_interface(validation_interface);
+    }
+}
+
 kernel_ChainstateManagerOptions* kernel_chainstate_manager_options_create(const kernel_Context* context_, const char* data_dir)
 {
     try {
@@ -593,7 +662,8 @@ kernel_ChainstateManagerOptions* kernel_chainstate_manager_options_create(const 
         return reinterpret_cast<kernel_ChainstateManagerOptions*>(new ChainstateManager::Options{
             .chainparams = *context->m_chainparams,
             .datadir = abs_data_dir,
-            .notifications = *context->m_notifications});
+            .notifications = *context->m_notifications,
+            .signals = context->m_signals.get()});
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager options: %s\n", e.what());
         return nullptr;
