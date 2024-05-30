@@ -1127,8 +1127,11 @@ public:
     //! Otherwise, revert to using the ibd chainstate and shutdown.
     SnapshotCompletionResult MaybeCompleteSnapshotValidation(Chainstate& validated_chainstate, Chainstate& from_snapshot_chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Returns nullptr if no snapshot has been loaded.
-    const CBlockIndex* GetSnapshotBaseBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! Return current chainstate targeting the most-work, network tip.
+    Chainstate& CurrentChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
+    {
+        return *Assert(m_active_chainstate);
+    }
 
     //! Return historical chainstate targeting a specific block, if any.
     Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
@@ -1137,11 +1140,16 @@ public:
         return cs && cs->m_target_blockhash && !cs->m_target_utxohash ? cs : nullptr;
     }
 
-    //! The most-work chain.
+    //! Alternatives to CurrentChainstate() used by older code to query latest
+    //! chainstate information without locking cs_main. Newer code should avoid
+    //! querying ChainstateManager and use Chainstate objects directly, or
+    //! should use CurrentChainstate() instead.
+    //! @{
     Chainstate& ActiveChainstate() const;
     CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
     int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
     CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
+    //! @}
 
     node::BlockMap& BlockIndex() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
