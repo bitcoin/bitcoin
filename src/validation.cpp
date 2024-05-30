@@ -3926,7 +3926,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     // m_chain_tx_count value is not zero, assert that value is actually correct.
     auto prev_tx_sum = [](CBlockIndex& block) { return block.nTx + (block.pprev ? block.pprev->m_chain_tx_count : 0); };
     if (!Assume(pindexNew->m_chain_tx_count == 0 || pindexNew->m_chain_tx_count == prev_tx_sum(*pindexNew) ||
-                pindexNew == GetSnapshotBaseBlock())) {
+                pindexNew == CurrentChainstate().SnapshotBase())) {
         LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
             pindexNew->nHeight, pindexNew->m_chain_tx_count, prev_tx_sum(*pindexNew), CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
         pindexNew->m_chain_tx_count = 0;
@@ -5046,7 +5046,7 @@ bool ChainstateManager::LoadBlockIndex()
             // VALID_TRANSACTIONS (eg if we haven't yet downloaded the block),
             // so we special-case the snapshot block as a potential candidate
             // here.
-            if (pindex == GetSnapshotBaseBlock() ||
+            if (pindex == CurrentChainstate().SnapshotBase() ||
                     (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                      (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
 
@@ -5334,7 +5334,7 @@ void ChainstateManager::CheckBlockIndex()
     // to earlier blocks that have not been downloaded or validated yet, so
     // checks for later blocks can assume the earlier blocks were validated and
     // be stricter, testing for more requirements.
-    const CBlockIndex* snap_base{GetSnapshotBaseBlock()};
+    const CBlockIndex* snap_base{CurrentChainstate().SnapshotBase()};
     CBlockIndex *snap_first_missing{}, *snap_first_notx{}, *snap_first_notv{}, *snap_first_nocv{}, *snap_first_nosv{};
     auto snap_update_firsts = [&] {
         if (pindex == snap_base) {
@@ -6414,11 +6414,6 @@ bool ChainstateManager::DeleteSnapshotChainstate()
 ChainstateRole Chainstate::GetRole() const
 {
     return m_target_blockhash ? ChainstateRole::BACKGROUND : m_validity == ChainValidity::ASSUMED_VALID ? ChainstateRole::ASSUMEDVALID : ChainstateRole::NORMAL;
-}
-
-const CBlockIndex* ChainstateManager::GetSnapshotBaseBlock() const
-{
-    return m_active_chainstate ? m_active_chainstate->SnapshotBase() : nullptr;
 }
 
 void ChainstateManager::RecalculateBestHeader()
