@@ -4,6 +4,7 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <ranges>
 #include <stack>
 
 void MockedDescriptorConverter::Init() {
@@ -108,5 +109,37 @@ bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const siz
             counts.pop();
         }
     }
+    return false;
+}
+
+bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers)
+{
+    // The number of nested wrappers. Nested wrappers are always characters which follow each other so we don't have to
+    // use a stack as we do above when counting the number of sub-fragments.
+    std::optional<int> count;
+
+    // We want to detect nested wrappers. A wrapper is a character prepended to a fragment, separated by a colon. There
+    // may be more than one wrapper, in which case the colon is not repeated. For instance `jjjjj:pk()`.  To count
+    // wrappers we iterate in reverse and use the colon to detect the end of a wrapper expression and count how many
+    // characters there are since the beginning of the expression. We stop counting when we encounter a character
+    // indicating the beginning of a new expression.
+    for (const auto ch: buff | std::views::reverse) {
+        // A colon, start counting.
+        if (ch == ':') {
+            // The colon itself is not a wrapper so we start at 0.
+            count = 0;
+        } else if (count) {
+            // If we are counting wrappers, stop when we crossed the beginning of the wrapper expression. Otherwise keep
+            // counting and bail if we reached the limit.
+            // A wrapper may only ever occur as the first sub of a descriptor/miniscript expression ('('), as the
+            // first Taproot leaf in a pair ('{') or as the nth sub in each case (',').
+            if (ch == ',' || ch == '(' || ch == '{') {
+                count.reset();
+            } else if (++*count > max_wrappers) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
