@@ -14,6 +14,13 @@
 #include <variant>
 
 namespace node {
+uint32_t TxReconciliationState::ComputeShortID(const Wtxid& wtxid) const
+{
+    const uint64_t s = SipHashUint256(m_k0, m_k1, wtxid.ToUint256());
+    const uint32_t short_txid = 1 + (s & 0xFFFFFFFF);
+    return short_txid;
+}
+
 /** Actual implementation for TxReconciliationTracker's data structure. */
 class TxReconciliationTrackerImpl {
 private:
