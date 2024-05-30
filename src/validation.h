@@ -1153,6 +1153,17 @@ public:
         return cs && cs->m_target_blockhash && !cs->m_target_utxohash ? cs : nullptr;
     }
 
+    //! Return fully validated chainstate that should be used for indexing, to
+    //! support indexes that need to index blocks in order and can't start from
+    //! the snapshot block.
+    Chainstate& ValidatedChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
+    {
+        for (auto* cs : {&CurrentChainstate(), HistoricalChainstate()}) {
+            if (cs && cs->m_assumeutxo == Assumeutxo::VALIDATED) return *cs;
+        }
+        abort();
+    }
+
     //! Alternatives to CurrentChainstate() used by older code to query latest
     //! chainstate information without locking cs_main. Newer code should avoid
     //! querying ChainstateManager and use Chainstate objects directly, or
@@ -1343,16 +1354,6 @@ public:
     //!
     //! @sa node/chainstate:LoadChainstate()
     bool ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! @returns the chainstate that indexes should consult when ensuring that an
-    //!   index is synced with a chain where we can expect block index entries to have
-    //!   BLOCK_HAVE_DATA beneath the tip.
-    //!
-    //!   In other words, give us the chainstate for which we can reasonably expect
-    //!   that all blocks beneath the tip have been indexed. In practice this means
-    //!   when using an assumed-valid chainstate based upon a snapshot, return only the
-    //!   fully validated chain.
-    Chainstate& GetChainstateForIndexing() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Return the [start, end] (inclusive) of block heights we can prune.
     //!

@@ -2229,7 +2229,7 @@ bool StartIndexBackgroundSync(NodeContext& node)
     std::optional<const CBlockIndex*> indexes_start_block;
     std::string older_index_name;
     ChainstateManager& chainman = *Assert(node.chainman);
-    const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.GetChainstateForIndexing());
+    const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.ValidatedChainstate());
     const CChain& index_chain = chainstate.m_chain;
 
     for (auto index : node.indexes) {

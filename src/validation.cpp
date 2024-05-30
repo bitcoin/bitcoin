@@ -6437,14 +6437,6 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chain
     return true;
 }
 
-Chainstate& ChainstateManager::GetChainstateForIndexing()
-{
-    // We can't always return `m_ibd_chainstate` because after background validation
-    // has completed, `m_snapshot_chainstate == m_active_chainstate`, but it can be
-    // indexed.
-    return (this->GetAll().size() > 1) ? *m_ibd_chainstate : *m_active_chainstate;
-}
-
 std::pair<int, int> ChainstateManager::GetPruneRange(const Chainstate& chainstate, int last_height_can_prune)
 {
     if (chainstate.m_chain.Height() <= 0) {
