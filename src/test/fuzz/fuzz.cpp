@@ -101,8 +101,9 @@ void ResetCoverageCounters() {}
 
 void initialize()
 {
-    // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
-    CreateSock = [](const sa_family_t&) -> std::unique_ptr<Sock> { std::terminate(); };
+    // Terminate immediately if a fuzzing harness ever tries to create a socket.
+    // Individual tests can override this by pointing CreateSock to a mocked alternative.
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { std::terminate(); };
 
     // Terminate immediately if a fuzzing harness ever tries to perform a DNS lookup.
     g_dns_lookup = [](const std::string& name, bool allow_lookup) {

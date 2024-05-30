@@ -39,15 +39,14 @@ public:
 
 private:
     const BCLog::Level m_prev_log_level;
-    const std::function<std::unique_ptr<Sock>(const sa_family_t&)> m_create_sock_orig;
+    const decltype(CreateSock) m_create_sock_orig;
 };
 
 BOOST_FIXTURE_TEST_SUITE(i2p_tests, EnvTestingSetup)
 
 BOOST_AUTO_TEST_CASE(unlimited_recv)
 {
-    // Mock CreateSock() to create MockSock.
-    CreateSock = [](const sa_family_t&) {
+    CreateSock = [](int, int, int) {
         return std::make_unique<StaticContentsSock>(std::string(i2p::sam::MAX_MSG_SIZE + 1, 'a'));
     };
 
@@ -69,7 +68,7 @@ BOOST_AUTO_TEST_CASE(unlimited_recv)
 BOOST_AUTO_TEST_CASE(listen_ok_accept_fail)
 {
     size_t num_sockets{0};
-    CreateSock = [&num_sockets](const sa_family_t&) {
+    CreateSock = [&num_sockets](int, int, int) {
         // clang-format off
         ++num_sockets;
         // First socket is the control socket for creating the session.
@@ -133,9 +132,7 @@ BOOST_AUTO_TEST_CASE(listen_ok_accept_fail)
 
 BOOST_AUTO_TEST_CASE(damaged_private_key)
 {
-    const auto CreateSockOrig = CreateSock;
-
-    CreateSock = [](const sa_family_t&) {
+    CreateSock = [](int, int, int) {
         return std::make_unique<StaticContentsSock>("HELLO REPLY RESULT=OK VERSION=3.1\n"
                                                     "SESSION STATUS RESULT=OK DESTINATION=\n");
     };
@@ -172,8 +169,6 @@ BOOST_AUTO_TEST_CASE(damaged_private_key)
             BOOST_CHECK(!session.Connect(CService{}, conn, proxy_error));
         }
     }
-
-    CreateSock = CreateSockOrig;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
