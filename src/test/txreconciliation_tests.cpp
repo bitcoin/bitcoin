@@ -89,27 +89,43 @@ BOOST_AUTO_TEST_CASE(AddToSetTest)
 
     Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
 
+    // If the peer is not registered, adding to the set fails
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
-    BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid));
+    auto r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(!r.m_succeeded);
+    BOOST_REQUIRE(!r.m_collision.has_value());
 
+    // As long as the peer is registered, adding a new wtxid to the set should work
     tracker.PreRegisterPeer(peer_id0);
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
     BOOST_CHECK(tracker.IsPeerRegistered(peer_id0));
 
-    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid));
+    r = tracker.AddToSet(peer_id0, wtxid);
+    BOOST_REQUIRE(r.m_succeeded);
+    BOOST_REQUIRE(!r.m_collision.has_value());
 
+    // If the peer is dropped, adding wtxids to its set should fail
     tracker.ForgetPeer(peer_id0);
     Wtxid wtxid2{Wtxid::FromUint256(frc.rand256())};
-    BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid2));
+    r = tracker.AddToSet(peer_id0, wtxid2);
+    BOOST_REQUIRE(!r.m_succeeded);
+    BOOST_REQUIRE(!r.m_collision.has_value());
 
     NodeId peer_id1 = 1;
     tracker.PreRegisterPeer(peer_id1);
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id1, true, 1, 1), ReconciliationRegisterResult::SUCCESS);
     BOOST_CHECK(tracker.IsPeerRegistered(peer_id1));
 
+    // As long as the peer is registered and the transaction is not in the set, adding it should succeed
     for (size_t i = 0; i < MAX_RECONSET_SIZE; ++i)
-        BOOST_REQUIRE(tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256())));
-    BOOST_REQUIRE(!tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256())));
+        r = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256()));
+        BOOST_REQUIRE(r.m_succeeded);
+        BOOST_REQUIRE(!r.m_collision.has_value());
+
+    // Trying to add the same item twice should fail
+    r = tracker.AddToSet(peer_id1, Wtxid::FromUint256(frc.rand256()));
+    BOOST_REQUIRE(!r.m_succeeded);
+    BOOST_REQUIRE(!r.m_collision.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
@@ -128,11 +144,11 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_CHECK(tracker.IsPeerRegistered(peer_id0));
 
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
-    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid));
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid).m_succeeded);
     BOOST_REQUIRE(tracker.TryRemovingFromSet(peer_id0, wtxid));
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 
-    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid));
+    BOOST_REQUIRE(tracker.AddToSet(peer_id0, wtxid).m_succeeded);
     tracker.ForgetPeer(peer_id0);
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 }
