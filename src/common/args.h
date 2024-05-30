@@ -245,6 +245,15 @@ protected:
     void ClearPathCache();
 
     /**
+     * Retrieves values associated with a specified argument in a given configuration section.
+     *
+     * @param section section in m_settings.ro_config to seach
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return Vector of string values for the argument in the configuration file.
+     */
+    std::vector<common::SettingsValue> GetSectionArg(const std::string& section, const std::string& strArg) const;
+
+    /**
      * Return a vector of strings of the given argument
      *
      * @param strArg Argument to get (e.g. "-foo")
