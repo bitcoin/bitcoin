@@ -6120,7 +6120,7 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
         return SnapshotCompletionResult::STATS_FAILED;
     }
 
-    // Compare the background validation chainstate's UTXO set hash against the hard-coded
+    // Compare the validated chainstate's UTXO set hash against the hard-coded
     // assumeutxo hash we expect.
     //
     // TODO: For belt-and-suspenders, we could cache the UTXO set
