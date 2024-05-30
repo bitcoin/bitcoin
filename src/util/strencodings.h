@@ -403,6 +403,18 @@ struct Hex {
 };
 } // namespace detail
 
+struct CaseInsensitiveComparator {
+    bool operator()(const std::string& s1, const std::string& s2) const
+    {
+        return std::lexicographical_compare(
+            s1.begin(), s1.end(),
+            s2.begin(), s2.end(),
+            [](char c1, char c2) {
+                return static_cast<uint8_t>(ToLower(c1)) < static_cast<uint8_t>(ToLower(c2));
+            });
+    }
+};
+
 /**
  * ""_hex is a compile-time user-defined literal returning a
  * `std::array<std::byte>`, equivalent to ParseHex(). Variants provided:
