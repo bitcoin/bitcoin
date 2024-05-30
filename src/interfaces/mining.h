@@ -40,6 +40,14 @@ public:
      * @returns a block template
      */
     virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true) = 0;
+    /**
+     * Processes new block. A valid new block is automatically relayed to peers.
+     *
+     * @param[in]   block The block we want to process.
+     * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
+     * @returns     If the block was processed, independently of block validity
+     */
+    virtual bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) = 0;
 
     //! Return the number of transaction updates in the mempool,
     //! used to decide whether to make a new block template.
