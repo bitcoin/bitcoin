@@ -76,6 +76,10 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
     // may perform quadratic operations on them. Limit the number of sub-fragments per fragment.
     if (HasLargeFrag(buffer)) return;
 
+    // The script building logic performs quadratic copies in the number of nested wrappers. Limit
+    // the number of nested wrappers per fragment.
+    if (HasTooManyWrappers(buffer)) return;
+
     const std::string mocked_descriptor{buffer.begin(), buffer.end()};
     if (const auto descriptor = MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)) {
         FlatSigningProvider signing_provider;
@@ -90,6 +94,7 @@ FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
     // See comments above for rationales.
     if (HasDeepDerivPath(buffer)) return;
     if (HasLargeFrag(buffer)) return;
+    if (HasTooManyWrappers(buffer)) return;
 
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;

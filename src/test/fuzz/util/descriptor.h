@@ -64,4 +64,13 @@ constexpr int MAX_SUBS{1'000};
  */
 bool HasLargeFrag(const FuzzBufferType& buff, const int max_subs = MAX_SUBS);
 
+//! Default maximum number of wrappers per fragment.
+constexpr int MAX_WRAPPERS{100};
+
+/**
+ * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
+ * wrappers than the given maximum.
+ */
+bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers = MAX_WRAPPERS);
+
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
