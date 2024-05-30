@@ -579,6 +579,9 @@ public:
         ChainstateManager& chainman,
         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
+    //! Return path to chainstate leveldb directory.
+    fs::path StoragePath() const;
+
     //! Return the current role of the chainstate. See `ChainstateManager`
     //! documentation for a description of the different types of chainstates.
     //!
@@ -594,8 +597,7 @@ public:
     void InitCoinsDB(
         size_t cache_size_bytes,
         bool in_memory,
-        bool should_wipe,
-        fs::path leveldb_name = "chainstate");
+        bool should_wipe);
 
     //! Initialize the in-memory coins cache (to be done after the health of the on-disk database
     //! is verified).
@@ -702,9 +704,6 @@ public:
 
     //! Destructs all objects related to accessing the UTXO set.
     void ResetCoinsViews() { m_coins_views.reset(); }
-
-    //! Does this chainstate have a UTXO set attached?
-    bool HasCoinsViews() const { return (bool)m_coins_views; }
 
     //! The cache size of the on-disk coins view.
     size_t m_coinsdb_cache_size_bytes{0};
@@ -1335,7 +1334,7 @@ public:
     //! directories are moved or deleted.
     //!
     //! @sa node/chainstate:LoadChainstate()
-    bool ValidatedSnapshotCleanup() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! @returns the chainstate that indexes should consult when ensuring that an
     //!   index is synced with a chain where we can expect block index entries to have

@@ -1885,6 +1885,15 @@ Chainstate::Chainstate(
       m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
+fs::path Chainstate::StoragePath() const
+{
+    fs::path path{m_chainman.m_options.datadir / "chainstate"};
+    if (m_from_snapshot_blockhash) {
+        path += node::SNAPSHOT_CHAINSTATE_SUFFIX;
+    }
+    return path;
+}
+
 const CBlockIndex* Chainstate::SnapshotBase() const
 {
     if (!m_from_snapshot_blockhash) return nullptr;
@@ -1918,16 +1927,11 @@ void Chainstate::SetTargetBlockHash(uint256 block_hash)
 void Chainstate::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
-    bool should_wipe,
-    fs::path leveldb_name)
+    bool should_wipe)
 {
-    if (m_from_snapshot_blockhash) {
-        leveldb_name += node::SNAPSHOT_CHAINSTATE_SUFFIX;
-    }
-
     m_coins_views = std::make_unique<CoinsViews>(
         DBParams{
-            .path = m_chainman.m_options.datadir / leveldb_name,
+            .path = StoragePath(),
             .cache_bytes = cache_size_bytes,
             .memory_only = in_memory,
             .wipe_data = should_wipe,
@@ -5757,7 +5761,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         LOCK(::cs_main);
         snapshot_chainstate->InitCoinsDB(
             static_cast<size_t>(current_coinsdb_cache_size * SNAPSHOT_CACHE_PERC),
-            in_memory, false, "chainstate");
+            in_memory, /*should_wipe=*/false);
         snapshot_chainstate->InitCoinsCache(
             static_cast<size_t>(current_coinstip_cache_size * SNAPSHOT_CACHE_PERC));
     }
@@ -6298,46 +6302,34 @@ bool IsBIP30Unspendable(const uint256& block_hash, int block_height)
            (block_height==91812 && block_hash == uint256{"00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"});
 }
 
-static fs::path GetSnapshotCoinsDBPath(Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-{
-    AssertLockHeld(::cs_main);
-    // Should never be called on a non-snapshot chainstate.
-    assert(cs.m_from_snapshot_blockhash);
-    auto storage_path_maybe = cs.CoinsDB().StoragePath();
-    // Should never be called with a non-existent storage path.
-    assert(storage_path_maybe);
-    return *storage_path_maybe;
-}
-
 util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
 {
-    fs::path snapshot_datadir = GetSnapshotCoinsDBPath(*this);
+    // Should never be called on a non-snapshot chainstate.
+    assert(m_from_snapshot_blockhash);
 
     // Coins views no longer usable.
     m_coins_views.reset();
 
-    auto invalid_path = snapshot_datadir + "_INVALID";
-    std::string dbpath = fs::PathToString(snapshot_datadir);
-    std::string target = fs::PathToString(invalid_path);
-    LogInfo("[snapshot] renaming snapshot datadir %s to %s", dbpath, target);
+    const fs::path db_path{StoragePath()};
+    const fs::path invalid_path{db_path + "_INVALID"};
+    const std::string db_path_str{fs::PathToString(db_path)};
+    const std::string invalid_path_str{fs::PathToString(invalid_path)};
+    LogInfo("[snapshot] renaming snapshot datadir %s to %s", db_path_str, invalid_path_str);
 
-    // The invalid snapshot datadir is simply moved and not deleted because we may
+    // The invalid storage directory is simply moved and not deleted because we may
     // want to do forensics later during issue investigation. The user is instructed
     // accordingly in MaybeValidateSnapshot().
     try {
-        fs::rename(snapshot_datadir, invalid_path);
+        fs::rename(db_path, invalid_path);
     } catch (const fs::filesystem_error& e) {
-        auto src_str = fs::PathToString(snapshot_datadir);
-        auto dest_str = fs::PathToString(invalid_path);
-
         LogError("While invalidating the coins db: Error renaming file '%s' -> '%s': %s",
-                 src_str, dest_str, e.what());
+                 db_path_str, invalid_path_str, e.what());
         return util::Error{strprintf(_(
             "Rename of '%s' -> '%s' failed. "
             "You should resolve this by manually moving or deleting the invalid "
             "snapshot directory %s, otherwise you will encounter the same error again "
             "on the next startup."),
-            src_str, dest_str, src_str)};
+            db_path_str, invalid_path_str, db_path_str)};
     }
     return {};
 }
@@ -6381,33 +6373,17 @@ void ChainstateManager::RecalculateBestHeader()
     }
 }
 
-bool ChainstateManager::ValidatedSnapshotCleanup()
+bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs)
 {
     AssertLockHeld(::cs_main);
-    auto get_storage_path = [](auto& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) -> std::optional<fs::path> {
-        if (!(chainstate && chainstate->HasCoinsViews())) {
-            return {};
-        }
-        return chainstate->CoinsDB().StoragePath();
-    };
-    std::optional<fs::path> ibd_chainstate_path_maybe = get_storage_path(m_ibd_chainstate);
-    std::optional<fs::path> snapshot_chainstate_path_maybe = get_storage_path(m_snapshot_chainstate);
-
     if (!this->IsSnapshotValidated()) {
         // No need to clean up.
         return false;
     }
-    // If either path doesn't exist, that means at least one of the chainstates
-    // is in-memory, in which case we can't do on-disk cleanup. You'd better be
-    // in a unittest!
-    if (!ibd_chainstate_path_maybe || !snapshot_chainstate_path_maybe) {
-        LogError("[snapshot] snapshot chainstate cleanup cannot happen with "
-                 "in-memory chainstates. You are testing, right?");
-        return false;
-    }
 
-    const auto& snapshot_chainstate_path = *snapshot_chainstate_path_maybe;
-    const auto& ibd_chainstate_path = *ibd_chainstate_path_maybe;
+    const fs::path validated_path{validated_cs.StoragePath()};
+    const fs::path assumed_valid_path{unvalidated_cs.StoragePath()};
+    const fs::path delete_path{validated_path + "_todelete"};
 
     // Since we're going to be moving around the underlying leveldb filesystem content
     // for each chainstate, make sure that the chainstates (and their constituent
@@ -6421,9 +6397,7 @@ bool ChainstateManager::ValidatedSnapshotCleanup()
     assert(this->GetAll().size() == 0);
 
     LogInfo("[snapshot] deleting background chainstate directory (now unnecessary) (%s)",
-              fs::PathToString(ibd_chainstate_path));
-
-    fs::path tmp_old{ibd_chainstate_path + "_todelete"};
+              fs::PathToString(validated_path));
 
     auto rename_failed_abort = [this](
                                    fs::path p_old,
@@ -6438,32 +6412,32 @@ bool ChainstateManager::ValidatedSnapshotCleanup()
     };
 
     try {
-        fs::rename(ibd_chainstate_path, tmp_old);
+        fs::rename(validated_path, delete_path);
     } catch (const fs::filesystem_error& e) {
-        rename_failed_abort(ibd_chainstate_path, tmp_old, e);
+        rename_failed_abort(validated_path, delete_path, e);
         throw;
     }
 
     LogInfo("[snapshot] moving snapshot chainstate (%s) to "
               "default chainstate directory (%s)",
-              fs::PathToString(snapshot_chainstate_path), fs::PathToString(ibd_chainstate_path));
+              fs::PathToString(assumed_valid_path), fs::PathToString(validated_path));
 
     try {
-        fs::rename(snapshot_chainstate_path, ibd_chainstate_path);
+        fs::rename(assumed_valid_path, validated_path);
     } catch (const fs::filesystem_error& e) {
-        rename_failed_abort(snapshot_chainstate_path, ibd_chainstate_path, e);
+        rename_failed_abort(assumed_valid_path, validated_path, e);
         throw;
     }
 
-    if (!DeleteCoinsDBFromDisk(tmp_old, /*is_snapshot=*/false)) {
+    if (!DeleteCoinsDBFromDisk(delete_path, /*is_snapshot=*/false)) {
         // No need to FatalError because once the unneeded bg chainstate data is
         // moved, it will not interfere with subsequent initialization.
         LogWarning("Deletion of %s failed. Please remove it manually, as the "
                    "directory is now unnecessary.",
-                  fs::PathToString(tmp_old));
+                   fs::PathToString(delete_path));
     } else {
         LogInfo("[snapshot] deleted background chainstate directory (%s)",
-                  fs::PathToString(ibd_chainstate_path));
+                fs::PathToString(validated_path));
     }
     return true;
 }

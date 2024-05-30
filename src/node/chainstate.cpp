@@ -202,7 +202,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         // do nothing; expected case
     } else if (snapshot_completion == SnapshotCompletionResult::SUCCESS) {
         LogInfo("[snapshot] cleaning up unneeded background chainstate, then reinitializing");
-        if (!chainman.ValidatedSnapshotCleanup()) {
+        if (!chainman.ValidatedSnapshotCleanup(validated_cs, *assumeutxo_cs)) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Background chainstate cleanup failed unexpectedly.")};
         }
 

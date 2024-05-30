@@ -53,9 +53,6 @@ public:
 
     //! Dynamically alter the underlying leveldb cache size.
     void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    //! @returns filesystem path to on-disk storage or std::nullopt if in memory.
-    std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
 };
 
 #endif // BITCOIN_TXDB_H
