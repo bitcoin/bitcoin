@@ -1966,11 +1966,12 @@ Chainstate::Chainstate(
     ChainstateManager& chainman,
     std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
+      m_validity(from_snapshot_blockhash ? ChainValidity::ASSUMED_VALID : ChainValidity::VALIDATED),
       m_blockman(blockman),
       m_chainman(chainman),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
-const CBlockIndex* Chainstate::SnapshotBase()
+const CBlockIndex* Chainstate::SnapshotBase() const
 {
     if (!m_from_snapshot_blockhash) return nullptr;
     if (!m_cached_snapshot_base) m_cached_snapshot_base = Assert(m_chainman.m_blockman.LookupBlockIndex(*m_from_snapshot_blockhash));
@@ -3506,10 +3507,10 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     // we use m_chainstate_mutex to enforce mutual exclusion so that only one caller may execute this function at a time
     LOCK(m_chainstate_mutex);
 
-    // Belt-and-suspenders check that we aren't attempting to advance the background
-    // chainstate past the snapshot base block.
-    if (WITH_LOCK(::cs_main, return m_disabled)) {
-        LogPrintf("m_disabled is set - this chainstate should not be in operation. "
+    // Belt-and-suspenders check that we aren't attempting to advance the
+    // chainstate past the target block.
+    if (WITH_LOCK(::cs_main, return m_target_utxohash)) {
+        LogPrintf("m_target_utxohash is set - this chainstate should not be in operation. "
             "Please report this as a bug. %s\n", CLIENT_BUGREPORT);
         return false;
     }
@@ -5658,7 +5659,7 @@ std::vector<Chainstate*> ChainstateManager::GetAll()
     std::vector<Chainstate*> out;
 
     for (Chainstate* cs : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
-        if (this->IsUsable(cs)) out.push_back(cs);
+        if (cs && cs->Validity() != ChainValidity::INVALID && !cs->m_target_utxohash) out.push_back(cs);
     }
 
     return out;
@@ -6106,21 +6107,20 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 // from within ConnectTip, i.e. from within ActivateBestChain, so cs_main is
 // held anyway.
 //
-// Eventually (TODO), we could somehow separate this function's runtime from
-// maintenance of the active chain, but that will either require
-//
-//  (i) setting `m_disabled` immediately and ensuring all chainstate accesses go
-//      through IsUsable() checks, or
-//
-//  (ii) giving each chainstate its own lock instead of using cs_main for everything.
+// Eventually (TODO) it would be better to call this function outside of
+// ActivateBestChain, on a separate thread that should not require cs_main to
+// hash, because the UTXO set is only hashed after the historical chainstate
+// reaches its target block and is no longer changing.
 SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
 {
     AssertLockHeld(cs_main);
     if (m_ibd_chainstate.get() == &this->ActiveChainstate() ||
-            !this->IsUsable(m_snapshot_chainstate.get()) ||
-            !this->IsUsable(m_ibd_chainstate.get()) ||
-            !m_ibd_chainstate->m_target_blockhash ||
+            !m_snapshot_chainstate ||
+            m_snapshot_chainstate->Validity() != ChainValidity::ASSUMED_VALID||
             !m_snapshot_chainstate->m_from_snapshot_blockhash ||
+            !m_ibd_chainstate ||
+            m_ibd_chainstate->Validity() != ChainValidity::VALIDATED ||
+            !m_ibd_chainstate->m_target_blockhash ||
             *m_ibd_chainstate->m_target_blockhash != *m_snapshot_chainstate->m_from_snapshot_blockhash ||
             !m_ibd_chainstate->m_chain.Tip() ||
             !m_ibd_chainstate->ReachedTarget()) {
@@ -6158,9 +6158,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
         m_ibd_chainstate->SetTargetBlock(nullptr);
 
         m_active_chainstate = m_ibd_chainstate.get();
-        m_snapshot_chainstate->m_disabled = true;
-        assert(!this->IsUsable(m_snapshot_chainstate.get()));
-        assert(this->IsUsable(m_ibd_chainstate.get()));
+        m_snapshot_chainstate->m_validity = ChainValidity::INVALID;
 
         auto rename_result = m_snapshot_chainstate->InvalidateCoinsDBOnDisk();
         if (!rename_result) {
@@ -6177,7 +6175,6 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
 
     assert(snapshot_base_height == curr_height);
     assert(snapshot_base_height == index_new.nHeight);
-    assert(this->IsUsable(m_snapshot_chainstate.get()));
     assert(this->GetAll().size() == 2);
 
     CCoinsViewDB& ibd_coins_db = m_ibd_chainstate->CoinsDB();
@@ -6233,7 +6230,8 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     LogPrintf("[snapshot] snapshot beginning at %s has been fully validated\n",
         snapshot_blockhash.ToString());
 
-    m_ibd_chainstate->m_disabled = true;
+    m_snapshot_chainstate->m_validity = ChainValidity::VALIDATED;
+    m_ibd_chainstate->m_target_utxohash = AssumeutxoHash{ibd_stats.hashSerialized};
     this->MaybeRebalanceCaches();
 
     return SnapshotCompletionResult::SUCCESS;
@@ -6255,34 +6253,30 @@ bool ChainstateManager::IsSnapshotActive() const
 void ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);
-    bool ibd_usable = this->IsUsable(m_ibd_chainstate.get());
-    bool snapshot_usable = this->IsUsable(m_snapshot_chainstate.get());
-    assert(ibd_usable || snapshot_usable);
-
-    if (ibd_usable && !snapshot_usable) {
+    Chainstate& current_chainstate{*Assert(m_active_chainstate)};
+    Chainstate* historical_chainstate{HistoricalChainstate()};
+    if (!historical_chainstate && !current_chainstate.m_from_snapshot_blockhash) {
         // Allocate everything to the IBD chainstate. This will always happen
         // when we are not using a snapshot.
-        m_ibd_chainstate->ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
-    }
-    else if (snapshot_usable && !ibd_usable) {
+        current_chainstate.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
+    } else if (!historical_chainstate) {
         // If background validation has completed and snapshot is our active chain...
         LogPrintf("[snapshot] allocating all cache to the snapshot chainstate\n");
         // Allocate everything to the snapshot chainstate.
-        m_snapshot_chainstate->ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
-    }
-    else if (ibd_usable && snapshot_usable) {
+        current_chainstate.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
+    } else {
         // If both chainstates exist, determine who needs more cache based on IBD status.
         //
         // Note: shrink caches first so that we don't inadvertently overwhelm available memory.
         if (IsInitialBlockDownload()) {
-            m_ibd_chainstate->ResizeCoinsCaches(
+            historical_chainstate->ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-            m_snapshot_chainstate->ResizeCoinsCaches(
+            current_chainstate.ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         } else {
-            m_snapshot_chainstate->ResizeCoinsCaches(
+            current_chainstate.ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-            m_ibd_chainstate->ResizeCoinsCaches(
+            historical_chainstate->ResizeCoinsCaches(
                 m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
         }
     }
@@ -6440,12 +6434,7 @@ bool ChainstateManager::DeleteSnapshotChainstate()
 
 ChainstateRole Chainstate::GetRole() const
 {
-    if (m_chainman.GetAll().size() <= 1) {
-        return ChainstateRole::NORMAL;
-    }
-    return (this != &m_chainman.ActiveChainstate()) ?
-               ChainstateRole::BACKGROUND :
-               ChainstateRole::ASSUMEDVALID;
+    return m_target_blockhash ? ChainstateRole::BACKGROUND : m_validity == ChainValidity::ASSUMED_VALID ? ChainstateRole::ASSUMEDVALID : ChainstateRole::NORMAL;
 }
 
 const CBlockIndex* ChainstateManager::GetSnapshotBaseBlock() const
@@ -6572,10 +6561,11 @@ std::pair<int, int> ChainstateManager::GetPruneRange(const Chainstate& chainstat
     }
     int prune_start{0};
 
-    if (this->GetAll().size() > 1 && m_snapshot_chainstate.get() == &chainstate) {
-        // Leave the blocks in the background IBD chain alone if we're pruning
-        // the snapshot chain.
-        prune_start = *Assert(GetSnapshotBaseHeight()) + 1;
+    if (chainstate.m_from_snapshot_blockhash && chainstate.Validity() != ChainValidity::VALIDATED) {
+        // Only prune blocks after the snapshot if this is a snapshot chain that
+        // has not been fully validated yet. The earlier blocks need to be kept
+        // to validate the snapshot
+        prune_start = Assert(chainstate.SnapshotBase())->nHeight + 1;
     }
 
     int max_prune = std::max<int>(
