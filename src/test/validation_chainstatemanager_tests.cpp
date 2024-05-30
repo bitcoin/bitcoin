@@ -42,7 +42,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     ChainstateManager& manager = *m_node.chainman;
     std::vector<Chainstate*> chainstates;
 
-    BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.CurrentChainstate().m_from_snapshot_blockhash));
 
     // Create a legacy (IBD) chainstate.
     //
@@ -63,7 +63,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     auto exp_tip = c1.m_chain.Tip();
     BOOST_CHECK_EQUAL(active_tip, exp_tip);
 
-    BOOST_CHECK(!manager.SnapshotBlockhash().has_value());
+    BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.CurrentChainstate().m_from_snapshot_blockhash));
 
     // Create a snapshot-based chainstate.
     //
@@ -82,8 +82,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     BlockValidationState _;
     BOOST_CHECK(c2.ActivateBestChain(_, nullptr));
 
-    BOOST_CHECK_EQUAL(manager.SnapshotBlockhash().value(), snapshot_blockhash);
-    BOOST_CHECK(WITH_LOCK(::cs_main, return manager.CurrentChainstate().m_from_snapshot_blockhash));
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return *manager.CurrentChainstate().m_from_snapshot_blockhash), snapshot_blockhash);
     BOOST_CHECK(WITH_LOCK(::cs_main, return manager.CurrentChainstate().m_assumeutxo == Assumeutxo::UNVALIDATED));
     BOOST_CHECK_EQUAL(&c2, &manager.ActiveChainstate());
     BOOST_CHECK(&c1 != &manager.ActiveChainstate());
@@ -212,7 +211,6 @@ struct SnapshotTestSetup : TestChain100Setup {
         // Snapshot should refuse to load at this height.
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(this));
         BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash);
-        BOOST_CHECK(!chainman.SnapshotBlockhash());
 
         // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
         // be found.
@@ -265,9 +263,6 @@ struct SnapshotTestSetup : TestChain100Setup {
 
         // Ensure our active chain is the snapshot chainstate.
         BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash->IsNull());
-        BOOST_CHECK_EQUAL(
-            *chainman.ActiveChainstate().m_from_snapshot_blockhash,
-            *chainman.SnapshotBlockhash());
 
         Chainstate& snapshot_chainstate = chainman.ActiveChainstate();
 
@@ -279,7 +274,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             // Note: WriteSnapshotBaseBlockhash() is implicitly tested above.
             BOOST_CHECK_EQUAL(
                 *node::ReadSnapshotBaseBlockhash(found),
-                *chainman.SnapshotBlockhash());
+                *Assert(chainman.CurrentChainstate().m_from_snapshot_blockhash));
         }
 
         const auto& au_data = ::Params().AssumeutxoForHeight(snapshot_height);
@@ -288,7 +283,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
 
         // To be checked against later when we try loading a subsequent snapshot.
-        uint256 loaded_snapshot_blockhash{*chainman.SnapshotBlockhash()};
+        uint256 loaded_snapshot_blockhash{*Assert(WITH_LOCK(chainman.GetMutex(), return chainman.CurrentChainstate().m_from_snapshot_blockhash))};
 
         // Make some assertions about the both chainstates. These checks ensure the
         // legacy chainstate hasn't changed and that the newly created chainstate
