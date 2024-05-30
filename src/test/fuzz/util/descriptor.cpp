@@ -4,6 +4,8 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <stack>
+
 void MockedDescriptorConverter::Init() {
     // The data to use as a private key or a seed for an xprv.
     std::array<std::byte, 32> key_data{std::byte{1}};
@@ -80,6 +82,21 @@ bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
             depth = 0;
         } else if (ch == '/') {
             if (++depth > max_depth) return true;
+        }
+    }
+    return false;
+}
+
+bool HasLargeFrag(const FuzzBufferType& buff, const int max_subs)
+{
+    std::stack<int> counts;
+    for (const auto& ch: buff) {
+        if (ch == '(') {
+            counts.push(1);
+        } else if (ch == ',' && !counts.empty()) {
+            if (++counts.top() > max_subs) return true;
+        } else if (ch == ')' && !counts.empty()) {
+            counts.pop();
         }
     }
     return false;

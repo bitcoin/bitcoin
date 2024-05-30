@@ -55,4 +55,13 @@ constexpr int MAX_DEPTH{2};
  */
 bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth = MAX_DEPTH);
 
+//! Default maximum number of sub-fragments.
+constexpr int MAX_SUBS{1'000};
+
+/**
+ * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
+ * sub-fragments than the given maximum.
+ */
+bool HasLargeFrag(const FuzzBufferType& buff, const int max_subs = MAX_SUBS);
+
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H

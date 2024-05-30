@@ -72,6 +72,10 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
     // out strings which could correspond to a descriptor containing a too large derivation path.
     if (HasDeepDerivPath(buffer)) return;
 
+    // Some fragments can take a virtually unlimited number of sub-fragments (thresh, multi_a) but
+    // may perform quadratic operations on them. Limit the number of sub-fragments per fragment.
+    if (HasLargeFrag(buffer)) return;
+
     const std::string mocked_descriptor{buffer.begin(), buffer.end()};
     if (const auto descriptor = MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)) {
         FlatSigningProvider signing_provider;
@@ -83,8 +87,9 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
 
 FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
 {
-    // See comment above for rationale.
+    // See comments above for rationales.
     if (HasDeepDerivPath(buffer)) return;
+    if (HasLargeFrag(buffer)) return;
 
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;
