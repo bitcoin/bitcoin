@@ -45,13 +45,6 @@ public:
     bool m_we_initiate;
 
     /**
-     * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     * These values are used to salt short IDs, which is necessary for transaction reconciliations.
-     */
-    uint64_t m_k0, m_k1;
-
-    /**
      * Store all wtxids which we would announce to the peer (policy checks passed, etc.)
      * in this set instead of announcing them right away. When reconciliation time comes, we will
      * compute a compressed representation of this set ("sketch") and use it to efficiently
@@ -59,9 +52,35 @@ public:
      */
     std::unordered_set<Wtxid, SaltedTxidHasher> m_local_set;
 
-    TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
-};
+    /**
+     * Reconciliation sketches are computed over short transaction IDs.
+     * This is a cache of these IDs enabling faster lookups of full wtxids,
+     * useful when peer will ask for missing transactions by short IDs
+     * at the end of a reconciliation round.
+     * We also use this to keep track of short ID collisions. In case of a
+     * collision, both transactions should be fanout.
+     */
+    std::map<uint32_t, Wtxid> m_short_id_mapping;
 
+    TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
+
+    /**
+     * Reconciliation sketches are computed over short transaction IDs.
+     * Short IDs are salted with a link-specific constant value.
+     */
+    uint32_t ComputeShortID(const uint256 wtxid) const
+    {
+        const uint64_t s = SipHashUint256(m_k0, m_k1, wtxid);
+        const uint32_t short_txid = 1 + (s & 0xFFFFFFFF);
+        return short_txid;
+    }
+
+private:
+    /**
+     * These values are used to salt short IDs, which is necessary for transaction reconciliations.
+     */
+    uint64_t m_k0, m_k1;
+};
 } // namespace
 
 /** Actual implementation for TxReconciliationTracker's data structure. */
