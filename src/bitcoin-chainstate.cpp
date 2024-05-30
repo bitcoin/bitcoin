@@ -257,7 +257,7 @@ epilogue:
     validation_signals.FlushBackgroundCallbacks();
     {
         LOCK(cs_main);
-        for (Chainstate* chainstate : chainman.GetAll()) {
+        for (auto& chainstate : chainman.m_chainstates) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
                 chainstate->ResetCoinsViews();

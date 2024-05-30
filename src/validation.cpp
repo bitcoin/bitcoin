@@ -3961,7 +3961,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
             }
             pindex->m_chain_tx_count = prev_tx_sum(*pindex);
             pindex->nSequenceId = nBlockSequenceId++;
-            for (Chainstate *c : GetAll()) {
+            for (const auto& c : m_chainstates) {
                 c->TryAddBlockIndexCandidate(pindex);
             }
             std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> range = m_blockman.m_blocks_unlinked.equal_range(pindex);
@@ -5047,7 +5047,7 @@ bool ChainstateManager::LoadBlockIndex()
                     (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                      (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
 
-                for (Chainstate* chainstate : GetAll()) {
+                for (const auto& chainstate : m_chainstates) {
                     chainstate->TryAddBlockIndexCandidate(pindex);
                 }
             }
@@ -5365,7 +5365,7 @@ void ChainstateManager::CheckBlockIndex()
         if (pindex->pprev == nullptr) {
             // Genesis block checks.
             assert(pindex->GetBlockHash() == GetConsensus().hashGenesisBlock); // Genesis block's hash must match.
-            for (auto c : GetAll()) {
+            for (const auto& c : m_chainstates) {
                 if (c->m_chain.Genesis() != nullptr) {
                     assert(pindex == c->m_chain.Genesis()); // The chain's genesis block must be this block.
                 }
@@ -5419,7 +5419,7 @@ void ChainstateManager::CheckBlockIndex()
         }
 
         // Chainstate-specific checks on setBlockIndexCandidates
-        for (auto c : GetAll()) {
+        for (const auto& c : m_chainstates) {
             if (c->m_chain.Tip() == nullptr) continue;
             // Two main factors determine whether pindex is a candidate in
             // setBlockIndexCandidates:
@@ -5458,12 +5458,12 @@ void ChainstateManager::CheckBlockIndex()
                     // is the base of the snapshot, pindex is also a potential
                     // candidate.
                     if (pindexFirstMissing == nullptr || pindex == c->m_chain.Tip() || pindex == c->SnapshotBase()) {
-                        // If this chainstate is the active chainstate, pindex
-                        // must be in setBlockIndexCandidates. Otherwise, this
-                        // chainstate is a background validation chainstate, and
-                        // pindex only needs to be added if it is an ancestor of
-                        // the snapshot that is being validated.
-                        if (c == &ActiveChainstate() || snap_base->GetAncestor(pindex->nHeight) == pindex) {
+                        // If this chainstate is not a historical chainstate
+                        // targeting a specific block, pindex must be in
+                        // setBlockIndexCandidates. Otherwise, pindex only
+                        // needs to be added if it is an ancestor of the target
+                        // block.
+                        if (!c->TargetBlock() || c->TargetBlock()->GetAncestor(pindex->nHeight) == pindex) {
                             assert(c->setBlockIndexCandidates.count(pindex));
                         }
                     }
@@ -5503,11 +5503,10 @@ void ChainstateManager::CheckBlockIndex()
             //    tip.
             // So if this block is itself better than any m_chain.Tip() and it wasn't in
             // setBlockIndexCandidates, then it must be in m_blocks_unlinked.
-            for (auto c : GetAll()) {
-                const bool is_active = c == &ActiveChainstate();
+            for (const auto& c : m_chainstates) {
                 if (!CBlockIndexWorkComparator()(pindex, c->m_chain.Tip()) && c->setBlockIndexCandidates.count(pindex) == 0) {
                     if (pindexFirstInvalid == nullptr) {
-                        if (is_active || snap_base->GetAncestor(pindex->nHeight) == pindex) {
+                        if (!c->TargetBlock() || c->TargetBlock()->GetAncestor(pindex->nHeight) == pindex) {
                             assert(foundInUnlinked);
                         }
                     }
@@ -5644,18 +5643,6 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
     }
 
     return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);
-}
-
-std::vector<Chainstate*> ChainstateManager::GetAll()
-{
-    LOCK(::cs_main);
-    std::vector<Chainstate*> out;
-
-    for (const auto& cs : m_chainstates) {
-        if (cs && cs->Validity() != ChainValidity::INVALID && !cs->m_target_utxohash) out.push_back(cs.get());
-    }
-
-    return out;
 }
 
 Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
@@ -6410,9 +6397,7 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_chainstat
     // The caller of this method will be responsible for reinitializing chainstates
     // if they want to continue operation.
     this->ResetChainstates();
-
-    // No chainstates should be considered usable.
-    assert(this->GetAll().size() == 0);
+    assert(this->m_chainstates.size() == 0);
 
     LogPrintf("[snapshot] deleting background chainstate directory (now unnecessary) (%s)\n",
               fs::PathToString(validated_path));
@@ -6501,7 +6486,17 @@ util::Result<void> ChainstateManager::ActivateBestChains()
     // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
     // the relevant pointers before the ABC call.
     AssertLockNotHeld(cs_main);
-    for (Chainstate* chainstate : GetAll()) {
+    std::vector<Chainstate*> chainstates;
+    {
+        LOCK(GetMutex());
+        chainstates.reserve(m_chainstates.size());
+        for (const auto& chainstate : m_chainstates) {
+            if (chainstate && chainstate->Validity() != ChainValidity::INVALID && !chainstate->m_target_utxohash) {
+                chainstates.push_back(chainstate.get());
+            }
+        }
+    }
+    for (Chainstate* chainstate : chainstates) {
         BlockValidationState state;
         if (!chainstate->ActivateBestChain(state, nullptr)) {
             LOCK(GetMutex());
