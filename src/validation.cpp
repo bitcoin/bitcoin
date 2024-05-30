@@ -6064,7 +6064,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
 // Currently, this function holds cs_main for its duration, which could be for
 // multiple minutes due to the ComputeUTXOStats call. This hold is necessary
-// because we need to avoid advancing the background validation chainstate
+// because we need to avoid advancing the validated chainstate
 // farther than the snapshot base block - and this function is also invoked
 // from within ConnectTip, i.e. from within ActivateBestChain, so cs_main is
 // held anyway.
@@ -6166,7 +6166,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(Chai
     }
     const auto& validated_stats = *maybe_validated_stats;
 
-    // Compare the background validation chainstate's UTXO set hash against the hard-coded
+    // Compare the validated chainstate's UTXO set hash against the hard-coded
     // assumeutxo hash we expect.
     //
     // TODO: For belt-and-suspenders, we could cache the UTXO set
