@@ -28,6 +28,31 @@ enum class ReconciliationRegisterResult
 };
 
 /**
+ * Record whether or not a wtxid was successfully added to a reconciliation set.
+ * In case of failure, check whether this was due to a shortid collision and record the colliding wtxid.
+*/
+class AddToSetResult
+{
+    public:
+        bool m_succeeded;
+        std::optional<Wtxid> m_collision;
+
+        explicit AddToSetResult(bool added, std::optional<Wtxid> conflict) : m_succeeded(added), m_collision(conflict) {};
+        static AddToSetResult Succeeded()
+        {
+            return AddToSetResult(true, std::nullopt);
+        }
+        static AddToSetResult Failed()
+        {
+            return AddToSetResult(false, std::nullopt);
+        }
+        static AddToSetResult Collision(Wtxid wtxid)
+        {
+            return AddToSetResult(false, std::make_optional(wtxid));
+        }
+};
+
+/**
  * Transaction reconciliation is a way for nodes to efficiently announce transactions.
  * This object keeps track of all txreconciliation-related communications with the peers.
  * The high-level protocol is:
@@ -90,7 +115,7 @@ public:
      * of the peer, so that it will be reconciled later, unless the set limit is reached.
      * Returns whether the transaction appears in the set.
      */
-    bool AddToSet(NodeId peer_id, const Wtxid& wtxid);
+    AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
      * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if

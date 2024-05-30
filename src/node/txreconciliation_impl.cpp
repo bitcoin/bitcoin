@@ -110,17 +110,20 @@ public:
         }
     }
 
-    bool AddToSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
         auto peer_state = GetRegisteredPeerState(peer_id);
-        if (!peer_state) return false;
+        if (!peer_state) return AddToSetResult::Failed();
+
+        // TODO: We should compute the short_id here here first and see if there's any collision
+        // if so, return AddToSetResult::Collision(wtxid)
 
         // Transactions which don't make it to the set due to the limit are announced via fanout.
         if (peer_state->m_local_set.size() >= MAX_RECONSET_SIZE) {
             LogDebug(BCLog::TXRECONCILIATION, "Reconciliation set maximum size reached for peer=%d.\n", peer_id);
-            return false;
+            return AddToSetResult::Failed();
         }
 
         // The caller currently keeps track of the per-peer transaction announcements, so it
@@ -130,7 +133,7 @@ public:
             LogDebug(BCLog::TXRECONCILIATION, "Added %s to the reconciliation set for peer=%d. Now the set contains %i transactions.\n",
                 wtxid.ToString(), peer_id, peer_state->m_local_set.size());
         }
-        return true;
+        return AddToSetResult::Succeeded();
     }
 
     bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -167,11 +170,6 @@ ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_i
     return m_impl->RegisterPeer(peer_id, is_peer_inbound, peer_recon_version, remote_salt);
 }
 
-bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
-{
-    return m_impl->TryRemovingFromSet(peer_id, wtxid);
-}
-
 bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const
 {
     return m_impl->IsPeerRegistered(peer_id);
@@ -182,8 +180,13 @@ void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
     m_impl->ForgetPeer(peer_id);
 }
 
-bool TxReconciliationTracker::AddToSet(NodeId peer_id, const Wtxid& wtxid)
+AddToSetResult TxReconciliationTracker::AddToSet(NodeId peer_id, const Wtxid& wtxid)
 {
     return m_impl->AddToSet(peer_id, wtxid);
+}
+
+bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
+{
+    return m_impl->TryRemovingFromSet(peer_id, wtxid);
 }
 } // namespace node
