@@ -5,6 +5,8 @@
 #ifndef BITCOIN_INTERFACES_MINING_H
 #define BITCOIN_INTERFACES_MINING_H
 
+#include <uint256.h>
+
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -24,6 +26,9 @@ public:
 
     //! If this chain is exclusively used for testing
     virtual bool isTestChain() = 0;
+
+    //! Returns the hash for the tip of this chain, 0 if none
+    virtual uint256 getTipHash() = 0;
 
     /**
      * Check a block is completely valid from start to finish.
