@@ -732,7 +732,9 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_set_worker_threads_num(
     int worker_threads) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Sets wipe db in the options.
+ * @brief Sets wipe db in the options. In combination with calling
+ * @ref btck_chainstate_manager_import_blocks this triggers either a full reindex,
+ * or a reindex of just the chainstate database.
  *
  * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
  * @param[in] wipe_block_tree_db         Set wipe block tree db. Should only be 1 if wipe_chainstate_db is 1 too.
@@ -786,6 +788,22 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_destroy(btck_ChainstateMa
  */
 BITCOINKERNEL_API btck_ChainstateManager* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_create(
     const btck_ChainstateManagerOptions* chainstate_manager_options) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Triggers the start of a reindex if the option was previously set for
+ * the chainstate and block manager. Can also import an array of existing block
+ * files selected by the user.
+ *
+ * @param[in] chainstate_manager        Non-null.
+ * @param[in] block_file_paths_data     Nullable, array of block files described by their full filesystem paths.
+ * @param[in] block_file_paths_lens     Nullable, array containing the lengths of each of the paths.
+ * @param[in] block_file_paths_data_len Length of the block_file_paths_data and block_file_paths_len arrays.
+ * @return                              0 if the import blocks call was completed successfully, non-zero otherwise.
+ */
+BITCOINKERNEL_API int btck_chainstate_manager_import_blocks(
+    btck_ChainstateManager* chainstate_manager,
+    const char** block_file_paths_data, size_t* block_file_paths_lens,
+    size_t block_file_paths_data_len) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
  * @brief Process and validate the passed in block with the chainstate
