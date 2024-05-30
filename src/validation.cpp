@@ -3292,7 +3292,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     // stop connecting blocks to this chainstate because this->ReachedTarget()
     // will be true and this->setBlockIndexCandidates will not have additional
     // blocks.
-    Chainstate& current_chainstate{*Assert(m_chainman.m_active_chainstate)};
+    Chainstate& current_chainstate{m_chainman.CurrentChainstate()};
     m_chainman.MaybeCompleteSnapshotValidation(*this, current_chainstate);
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
@@ -3927,7 +3927,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     // m_chain_tx_count value is not zero, assert that value is actually correct.
     auto prev_tx_sum = [](CBlockIndex& block) { return block.nTx + (block.pprev ? block.pprev->m_chain_tx_count : 0); };
     if (!Assume(pindexNew->m_chain_tx_count == 0 || pindexNew->m_chain_tx_count == prev_tx_sum(*pindexNew) ||
-                pindexNew == CurrentChainstate().SnapshotBase())) {
+                std::any_of(m_chainstates.begin(), m_chainstates.end(), [&](auto& cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->SnapshotBase() == pindexNew; }))) {
         LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
             pindexNew->nHeight, pindexNew->m_chain_tx_count, prev_tx_sum(*pindexNew), CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
         pindexNew->m_chain_tx_count = 0;
@@ -5663,8 +5663,8 @@ std::vector<Chainstate*> ChainstateManager::GetAll()
     LOCK(::cs_main);
     std::vector<Chainstate*> out;
 
-    for (Chainstate* cs : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
-        if (cs && cs->Validity() != ChainValidity::INVALID && !cs->m_target_utxohash) out.push_back(cs);
+    for (const auto& cs : m_chainstates) {
+        if (cs && cs->Validity() != ChainValidity::INVALID && !cs->m_target_utxohash) out.push_back(cs.get());
     }
 
     return out;
@@ -5673,12 +5673,9 @@ std::vector<Chainstate*> ChainstateManager::GetAll()
 Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
 {
     AssertLockHeld(::cs_main);
-    assert(!m_ibd_chainstate);
-    assert(!m_active_chainstate);
-
-    m_ibd_chainstate = std::make_unique<Chainstate>(mempool, m_blockman, *this);
-    m_active_chainstate = m_ibd_chainstate.get();
-    return *m_active_chainstate;
+    assert(m_chainstates.empty());
+    m_chainstates.emplace_back(std::make_unique<Chainstate>(mempool, m_blockman, *this));
+    return *m_chainstates.back();
 }
 
 [[nodiscard]] static bool DeleteCoinsDBFromDisk(const fs::path db_path, bool is_snapshot)
@@ -5759,7 +5756,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
             return util::Error{Untranslated("A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo.")};
         }
 
-        auto mempool{m_active_chainstate->GetMempool()};
+        auto mempool{CurrentChainstate().GetMempool()};
         if (mempool && mempool->size() > 0) {
             return util::Error{Untranslated("Can't activate a snapshot when mempool not empty")};
         }
@@ -6147,7 +6144,6 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(Chai
         // Reset chainstate target to network tip instead of snapshot block.
         validated_chainstate.SetTargetBlock(nullptr);
 
-        m_active_chainstate = &validated_chainstate;
         from_snapshot_chainstate.m_validity = ChainValidity::INVALID;
 
         auto rename_result = from_snapshot_chainstate.InvalidateCoinsDBOnDisk();
@@ -6221,14 +6217,13 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(Chai
 Chainstate& ChainstateManager::ActiveChainstate() const
 {
     LOCK(::cs_main);
-    assert(m_active_chainstate);
-    return *m_active_chainstate;
+    return CurrentChainstate();
 }
 
 void ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);
-    Chainstate& current_chainstate{*Assert(m_active_chainstate)};
+    Chainstate& current_chainstate{CurrentChainstate()};
     Chainstate* historical_chainstate{HistoricalChainstate()};
     if (!historical_chainstate && !current_chainstate.m_from_snapshot_blockhash) {
         // Allocate everything to the IBD chainstate. This will always happen
@@ -6259,9 +6254,7 @@ void ChainstateManager::MaybeRebalanceCaches()
 
 void ChainstateManager::ResetChainstates()
 {
-    m_ibd_chainstate.reset();
-    m_snapshot_chainstate.reset();
-    m_active_chainstate = nullptr;
+    m_chainstates.clear();
 }
 
 /**
@@ -6295,7 +6288,7 @@ ChainstateManager::~ChainstateManager()
 
 Chainstate* ChainstateManager::DetectSnapshotChainstate()
 {
-    assert(!m_snapshot_chainstate);
+    assert(!CurrentChainstate().m_from_snapshot_blockhash);
     std::optional<fs::path> path = node::FindSnapshotChainstateDir(m_options.datadir);
     if (!path) {
         return nullptr;
@@ -6314,23 +6307,21 @@ Chainstate* ChainstateManager::DetectSnapshotChainstate()
 
 Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainstate)
 {
-    assert(!m_snapshot_chainstate);
-    m_snapshot_chainstate = std::move(chainstate);
-
+    Chainstate& prev_chainstate{CurrentChainstate()};
+    assert(prev_chainstate.Validity() == ChainValidity::VALIDATED);
     // Set target block for historical chainstate to snapshot block.
-    assert(m_ibd_chainstate.get());
-    assert(!m_ibd_chainstate->m_target_blockhash);
-    assert(m_snapshot_chainstate->m_from_snapshot_blockhash);
-    m_ibd_chainstate->SetTargetBlockHash(*Assert(m_snapshot_chainstate->m_from_snapshot_blockhash));
+    assert(!prev_chainstate.m_target_blockhash);
+    prev_chainstate.m_target_blockhash = chainstate->m_from_snapshot_blockhash;
+    m_chainstates.push_back(std::move(chainstate));
+    Chainstate& curr_chainstate{CurrentChainstate()};
+    assert(&curr_chainstate == m_chainstates.back().get());
 
     // Transfer possession of the mempool to the chainstate.
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
-    Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
-    m_active_chainstate = m_snapshot_chainstate.get();
-    return *m_snapshot_chainstate;
+    assert(prev_chainstate.m_mempool->size() == 0);
+    assert(!curr_chainstate.m_mempool);
+    std::swap(curr_chainstate.m_mempool, prev_chainstate.m_mempool);
+    return curr_chainstate;
 }
 
 bool IsBIP30Repeat(const CBlockIndex& block_index)
@@ -6377,21 +6368,21 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
     return {};
 }
 
-bool ChainstateManager::DeleteSnapshotChainstate()
+bool ChainstateManager::DeleteChainstate(Chainstate& chainstate)
 {
     AssertLockHeld(::cs_main);
-    Assert(m_snapshot_chainstate);
-    Assert(m_ibd_chainstate);
-
-    fs::path snapshot_datadir = Assert(node::FindSnapshotChainstateDir(m_options.datadir)).value();
-    if (!DeleteCoinsDBFromDisk(snapshot_datadir, /*is_snapshot=*/ true)) {
+    assert(!chainstate.m_coins_views);
+    const fs::path db_path{chainstate.StoragePath()};
+    if (!DeleteCoinsDBFromDisk(db_path, /*is_snapshot=*/bool{chainstate.m_from_snapshot_blockhash})) {
         LogPrintf("Deletion of %s failed. Please remove it manually to continue reindexing.\n",
-                  fs::PathToString(snapshot_datadir));
+                  fs::PathToString(db_path));
         return false;
     }
-    m_active_chainstate = m_ibd_chainstate.get();
-    m_active_chainstate->m_mempool = m_snapshot_chainstate->m_mempool;
-    m_snapshot_chainstate.reset();
+    std::unique_ptr<Chainstate> prev_chainstate{RemoveChainstate(chainstate)};
+    Chainstate& curr_chainstate{CurrentChainstate()};
+    assert(prev_chainstate->m_mempool->size() == 0);
+    assert(!curr_chainstate.m_mempool);
+    std::swap(curr_chainstate.m_mempool, prev_chainstate->m_mempool);
     return true;
 }
 
