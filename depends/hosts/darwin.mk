@@ -15,9 +15,6 @@ OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-
 # Source: https://lists.gnu.org/archive/html/bug-make/2017-11/msg00017.html
 clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
 clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
-llvm_config_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-config")
-
-llvm_lib_dir=$(shell $(llvm_config_prog) --libdir)
 
 darwin_AR=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-ar")
 darwin_DSYMUTIL=$(shell $(SHELL) $(.SHELLFLAGS) "command -v dsymutil")
