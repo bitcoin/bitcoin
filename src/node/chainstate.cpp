@@ -175,7 +175,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         // Reset chainstate target to network tip instead of snapshot block.
         validated_cs.SetTargetBlock(nullptr);
         LogInfo("[snapshot] deleting snapshot chainstate due to reindexing");
-        if (!chainman.DeleteSnapshotChainstate()) {
+        if (!chainman.DeleteChainstate(*assumeutxo_cs)) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
         }
         assumeutxo_cs = nullptr;

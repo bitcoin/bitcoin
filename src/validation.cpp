@@ -3180,7 +3180,7 @@ bool Chainstate::ConnectTip(
     // stop connecting blocks to this chainstate because this->ReachedTarget()
     // will be true and this->setBlockIndexCandidates will not have additional
     // blocks.
-    Chainstate& current_cs{*Assert(m_chainman.m_active_chainstate)};
+    Chainstate& current_cs{m_chainman.CurrentChainstate()};
     m_chainman.MaybeValidateSnapshot(*this, current_cs);
 
     connectTrace.BlockConnected(pindexNew, std::move(block_to_connect));
@@ -3843,7 +3843,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     // m_chain_tx_count value is not zero, assert that value is actually correct.
     auto prev_tx_sum = [](CBlockIndex& block) { return block.nTx + (block.pprev ? block.pprev->m_chain_tx_count : 0); };
     if (!Assume(pindexNew->m_chain_tx_count == 0 || pindexNew->m_chain_tx_count == prev_tx_sum(*pindexNew) ||
-                pindexNew == CurrentChainstate().SnapshotBase())) {
+                std::ranges::any_of(m_chainstates, [&](const auto& cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->SnapshotBase() == pindexNew; }))) {
         LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
             pindexNew->nHeight, pindexNew->m_chain_tx_count, prev_tx_sum(*pindexNew), CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
         pindexNew->m_chain_tx_count = 0;
@@ -5307,8 +5307,8 @@ void ChainstateManager::CheckBlockIndex() const
         if (pindex->pprev == nullptr) {
             // Genesis block checks.
             assert(pindex->GetBlockHash() == GetConsensus().hashGenesisBlock); // Genesis block's hash must match.
-            for (const Chainstate* c : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
-                if (c && c->m_chain.Genesis() != nullptr) {
+            for (const auto& c : m_chainstates) {
+                if (c->m_chain.Genesis() != nullptr) {
                     assert(pindex == c->m_chain.Genesis()); // The chain's genesis block must be this block.
                 }
             }
@@ -5367,8 +5367,8 @@ void ChainstateManager::CheckBlockIndex() const
         assert((pindex->nStatus & BLOCK_FAILED_MASK) || pindex->nChainWork <= m_best_header->nChainWork);
 
         // Chainstate-specific checks on setBlockIndexCandidates
-        for (const Chainstate* c : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
-            if (!c || c->m_chain.Tip() == nullptr) continue;
+        for (const auto& c : m_chainstates) {
+            if (c->m_chain.Tip() == nullptr) continue;
             // Two main factors determine whether pindex is a candidate in
             // setBlockIndexCandidates:
             //
@@ -5406,12 +5406,12 @@ void ChainstateManager::CheckBlockIndex() const
                     // is the base of the snapshot, pindex is also a potential
                     // candidate.
                     if (pindexFirstMissing == nullptr || pindex == c->m_chain.Tip() || pindex == c->SnapshotBase()) {
-                        // If this chainstate is the active chainstate, pindex
-                        // must be in setBlockIndexCandidates. Otherwise, this
-                        // chainstate is a background validation chainstate, and
-                        // pindex only needs to be added if it is an ancestor of
-                        // the snapshot that is being validated.
-                        if (c == &ActiveChainstate() || snap_base->GetAncestor(pindex->nHeight) == pindex) {
+                        // If this chainstate is not a historical chainstate
+                        // targeting a specific block, pindex must be in
+                        // setBlockIndexCandidates. Otherwise, pindex only
+                        // needs to be added if it is an ancestor of the target
+                        // block.
+                        if (!c->TargetBlock() || c->TargetBlock()->GetAncestor(pindex->nHeight) == pindex) {
                             assert(c->setBlockIndexCandidates.contains(const_cast<CBlockIndex*>(pindex)));
                         }
                     }
@@ -5451,12 +5451,10 @@ void ChainstateManager::CheckBlockIndex() const
             //    tip.
             // So if this block is itself better than any m_chain.Tip() and it wasn't in
             // setBlockIndexCandidates, then it must be in m_blocks_unlinked.
-            for (const Chainstate* c : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
-                if (!c) continue;
-                const bool is_active = c == &ActiveChainstate();
+            for (const auto& c : m_chainstates) {
                 if (!CBlockIndexWorkComparator()(pindex, c->m_chain.Tip()) && !c->setBlockIndexCandidates.contains(const_cast<CBlockIndex*>(pindex))) {
                     if (pindexFirstInvalid == nullptr) {
-                        if (is_active || snap_base->GetAncestor(pindex->nHeight) == pindex) {
+                        if (!c->TargetBlock() || c->TargetBlock()->GetAncestor(pindex->nHeight) == pindex) {
                             assert(foundInUnlinked);
                         }
                     }
@@ -5610,8 +5608,8 @@ std::vector<Chainstate*> ChainstateManager::GetAll()
     LOCK(::cs_main);
     std::vector<Chainstate*> out;
 
-    for (Chainstate* cs : {m_ibd_chainstate.get(), m_snapshot_chainstate.get()}) {
-        if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->m_target_utxohash) out.push_back(cs);
+    for (const auto& cs : m_chainstates) {
+        if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->m_target_utxohash) out.push_back(cs.get());
     }
 
     return out;
@@ -5620,12 +5618,9 @@ std::vector<Chainstate*> ChainstateManager::GetAll()
 Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
 {
     AssertLockHeld(::cs_main);
-    assert(!m_ibd_chainstate);
-    assert(!m_active_chainstate);
-
-    m_ibd_chainstate = std::make_unique<Chainstate>(mempool, m_blockman, *this);
-    m_active_chainstate = m_ibd_chainstate.get();
-    return *m_active_chainstate;
+    assert(m_chainstates.empty());
+    m_chainstates.emplace_back(std::make_unique<Chainstate>(mempool, m_blockman, *this));
+    return *m_chainstates.back();
 }
 
 [[nodiscard]] static bool DeleteCoinsDBFromDisk(const fs::path db_path, bool is_snapshot)
@@ -5706,7 +5701,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
             return util::Error{Untranslated("A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo.")};
         }
 
-        auto mempool{m_active_chainstate->GetMempool()};
+        auto mempool{CurrentChainstate().GetMempool()};
         if (mempool && mempool->size() > 0) {
             return util::Error{Untranslated("Can't activate a snapshot when mempool not empty")};
         }
@@ -6091,7 +6086,6 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
         // Reset chainstate target to network tip instead of snapshot block.
         validated_cs.SetTargetBlock(nullptr);
 
-        m_active_chainstate = &validated_cs;
         unvalidated_cs.m_assumeutxo = Assumeutxo::INVALID;
 
         auto rename_result = unvalidated_cs.InvalidateCoinsDBOnDisk();
@@ -6164,14 +6158,13 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
 Chainstate& ChainstateManager::ActiveChainstate() const
 {
     LOCK(::cs_main);
-    assert(m_active_chainstate);
-    return *m_active_chainstate;
+    return CurrentChainstate();
 }
 
 void ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);
-    Chainstate& current_cs{*Assert(m_active_chainstate)};
+    Chainstate& current_cs{CurrentChainstate()};
     Chainstate* historical_cs{HistoricalChainstate()};
     if (!historical_cs && !current_cs.m_from_snapshot_blockhash) {
         // Allocate everything to the IBD chainstate. This will always happen
@@ -6202,9 +6195,7 @@ void ChainstateManager::MaybeRebalanceCaches()
 
 void ChainstateManager::ResetChainstates()
 {
-    m_ibd_chainstate.reset();
-    m_snapshot_chainstate.reset();
-    m_active_chainstate = nullptr;
+    m_chainstates.clear();
 }
 
 /**
@@ -6238,7 +6229,7 @@ ChainstateManager::~ChainstateManager()
 
 Chainstate* ChainstateManager::LoadAssumeutxoChainstate()
 {
-    assert(!m_snapshot_chainstate);
+    assert(!CurrentChainstate().m_from_snapshot_blockhash);
     std::optional<fs::path> path = node::FindAssumeutxoChainstateDir(m_options.datadir);
     if (!path) {
         return nullptr;
@@ -6257,22 +6248,21 @@ Chainstate* ChainstateManager::LoadAssumeutxoChainstate()
 
 Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainstate)
 {
-    assert(!m_snapshot_chainstate);
-    m_snapshot_chainstate = std::move(chainstate);
-
+    Chainstate& prev_chainstate{CurrentChainstate()};
+    assert(prev_chainstate.m_assumeutxo == Assumeutxo::VALIDATED);
     // Set target block for historical chainstate to snapshot block.
-    assert(m_ibd_chainstate.get());
-    assert(!m_ibd_chainstate->m_target_blockhash);
-    m_ibd_chainstate->SetTargetBlockHash(*Assert(m_snapshot_chainstate->m_from_snapshot_blockhash));
+    assert(!prev_chainstate.m_target_blockhash);
+    prev_chainstate.m_target_blockhash = chainstate->m_from_snapshot_blockhash;
+    m_chainstates.push_back(std::move(chainstate));
+    Chainstate& curr_chainstate{CurrentChainstate()};
+    assert(&curr_chainstate == m_chainstates.back().get());
 
     // Transfer possession of the mempool to the chainstate.
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
-    Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
-    m_active_chainstate = m_snapshot_chainstate.get();
-    return *m_snapshot_chainstate;
+    assert(prev_chainstate.m_mempool->size() == 0);
+    assert(!curr_chainstate.m_mempool);
+    std::swap(curr_chainstate.m_mempool, prev_chainstate.m_mempool);
+    return curr_chainstate;
 }
 
 bool IsBIP30Repeat(const CBlockIndex& block_index)
@@ -6319,21 +6309,21 @@ util::Result<void> Chainstate::InvalidateCoinsDBOnDisk()
     return {};
 }
 
-bool ChainstateManager::DeleteSnapshotChainstate()
+bool ChainstateManager::DeleteChainstate(Chainstate& chainstate)
 {
     AssertLockHeld(::cs_main);
-    Assert(m_snapshot_chainstate);
-    Assert(m_ibd_chainstate);
-
-    fs::path snapshot_datadir = Assert(node::FindAssumeutxoChainstateDir(m_options.datadir)).value();
-    if (!DeleteCoinsDBFromDisk(snapshot_datadir, /*is_snapshot=*/ true)) {
+    assert(!chainstate.m_coins_views);
+    const fs::path db_path{chainstate.StoragePath()};
+    if (!DeleteCoinsDBFromDisk(db_path, /*is_snapshot=*/bool{chainstate.m_from_snapshot_blockhash})) {
         LogError("Deletion of %s failed. Please remove it manually to continue reindexing.",
-                  fs::PathToString(snapshot_datadir));
+                  fs::PathToString(db_path));
         return false;
     }
-    m_active_chainstate = m_ibd_chainstate.get();
-    m_active_chainstate->m_mempool = m_snapshot_chainstate->m_mempool;
-    m_snapshot_chainstate.reset();
+    std::unique_ptr<Chainstate> prev_chainstate{Assert(RemoveChainstate(chainstate))};
+    Chainstate& curr_chainstate{CurrentChainstate()};
+    assert(prev_chainstate->m_mempool->size() == 0);
+    assert(!curr_chainstate.m_mempool);
+    std::swap(curr_chainstate.m_mempool, prev_chainstate->m_mempool);
     return true;
 }
 

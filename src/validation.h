@@ -931,40 +931,6 @@ enum class SnapshotCompletionResult {
 class ChainstateManager
 {
 private:
-    //! The chainstate used under normal operation (i.e. "regular" IBD) or, if
-    //! a snapshot is in use, for background validation.
-    //!
-    //! Its contents (including on-disk data) will be deleted *upon shutdown*
-    //! after background validation of the snapshot has completed. We do not
-    //! free the chainstate contents immediately after it finishes validation
-    //! to cautiously avoid a case where some other part of the system is still
-    //! using this pointer (e.g. net_processing).
-    //!
-    //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown().
-    //!
-    //! It is important for the pointer to not be deleted until shutdown,
-    //! because cs_main is not always held when the pointer is accessed, for
-    //! example when calling ActivateBestChain, so there's no way you could
-    //! prevent code from using the pointer while deleting it.
-    std::unique_ptr<Chainstate> m_ibd_chainstate GUARDED_BY(::cs_main);
-
-    //! A chainstate initialized on the basis of a UTXO snapshot. If this is
-    //! non-null, it is always our active chainstate.
-    //!
-    //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown().
-    //!
-    //! It is important for the pointer to not be deleted until shutdown,
-    //! because cs_main is not always held when the pointer is accessed, for
-    //! example when calling ActivateBestChain, so there's no way you could
-    //! prevent code from using the pointer while deleting it.
-    std::unique_ptr<Chainstate> m_snapshot_chainstate GUARDED_BY(::cs_main);
-
-    //! Points to either the ibd or snapshot chainstate; indicates our
-    //! most-work chain.
-    Chainstate* m_active_chainstate GUARDED_BY(::cs_main) {nullptr};
-
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
     /** The last header for which a headerTip notification was issued. */
@@ -1128,8 +1094,7 @@ public:
     //!   per assumeutxo chain parameters.
     //! - Wait for our headers chain to include the base block of the snapshot.
     //! - "Fast forward" the tip of the new chainstate to the base of the snapshot.
-    //! - Move the new chainstate to `m_snapshot_chainstate` and make it our
-    //!   ChainstateActive().
+    //! - Construct the new Chainstate and add it to m_chainstates.
     [[nodiscard]] util::Result<CBlockIndex*> ActivateSnapshot(
         AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
@@ -1146,14 +1111,19 @@ public:
     //! Return current chainstate targeting the most-work, network tip.
     Chainstate& CurrentChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
     {
-        return *Assert(m_active_chainstate);
+        for (auto& cs : m_chainstates) {
+            if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->m_target_blockhash) return *cs;
+        }
+        abort();
     }
 
     //! Return historical chainstate targeting a specific block, if any.
     Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
     {
-        auto* cs{m_ibd_chainstate.get()};
-        return cs && cs->m_target_blockhash && !cs->m_target_utxohash ? cs : nullptr;
+        for (auto& cs : m_chainstates) {
+            if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && cs->m_target_blockhash && !cs->m_target_utxohash) return cs.get();
+        }
+        return nullptr;
     }
 
     //! Return fully validated chainstate that should be used for indexing, to
@@ -1165,6 +1135,18 @@ public:
             if (cs && cs->m_assumeutxo == Assumeutxo::VALIDATED) return *cs;
         }
         abort();
+    }
+
+    //! Remove a chainstate.
+    std::unique_ptr<Chainstate> RemoveChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
+    {
+        auto it{std::find_if(m_chainstates.begin(), m_chainstates.end(), [&](auto& cs) { return cs.get() == &chainstate; })};
+        if (it != m_chainstates.end()) {
+            auto ret{std::move(*it)};
+            m_chainstates.erase(it);
+            return ret;
+        }
+        return nullptr;
     }
 
     //! Alternatives to CurrentChainstate() used by older code to query latest
@@ -1331,9 +1313,9 @@ public:
 
     void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Remove the snapshot-based chainstate and all on-disk artifacts.
+    //! Remove the chainstate and all on-disk artifacts.
     //! Used when reindex{-chainstate} is called during snapshot use.
-    [[nodiscard]] bool DeleteSnapshotChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] bool DeleteChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! If we have validated a snapshot chain during this runtime, copy its
     //! chainstate directory over to the main `chainstate` location, completing
@@ -1363,6 +1345,15 @@ public:
     CCheckQueue<CScriptCheck>& GetCheckQueue() { return m_script_check_queue; }
 
     ~ChainstateManager();
+
+    //! List of chainstates. Note: in general, it is not safe to delete
+    //! Chainstate objects once they are added to this list because there is no
+    //! mutex that can be locked to prevent Chainstate pointers from being used
+    //! while they are deleted. (cs_main doesn't work because it is too narrow
+    //! and is released in the middle of Chainstate::ActivateBestChain to let
+    //! notifications be processed. m_chainstate_mutex doesn't work because it
+    //! is not locked at other times when the chainstate is in use.)
+    std::vector<std::unique_ptr<Chainstate>> m_chainstates GUARDED_BY(::cs_main);
 };
 
 /** Deployment* info via ChainstateManager */
