@@ -394,6 +394,33 @@ std::vector<common::SettingsValue> ArgsManager::GetSectionArg(const std::string&
     return result;
 }
 
+template <typename Key, typename Value, typename SectionKey>
+void ArgsManager::AddConfigArg(const Key& key, const Value& value, SectionKey sectionKey)
+{
+    auto& section = m_settings.ro_config[sectionKey];
+    section[key].push_back(value);
+}
+
+void ArgsManager::UpdateConfigFromSection(const std::string& section, const std::string& strArg)
+{
+    auto arg = GetSectionArg(section, strArg);
+    for(auto& sv : arg) {
+        LOCK(cs_args);
+        AddConfigArg(strArg, sv, m_network);
+    }
+}
+
+void ArgsManager::ReadSignetChainConfigs()
+{
+    const std::string SIGNET_CHAIN_PREFIX = "signet_";
+
+    const std::string chain = GetArg("-chain", "");
+    if (chain.starts_with(SIGNET_CHAIN_PREFIX)){
+        UpdateConfigFromSection(chain, "signetchallenge");
+        UpdateConfigFromSection(chain, "seednode");
+    }
+}
+
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
 {
     std::vector<std::string> result;

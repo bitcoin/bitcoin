@@ -29,7 +29,7 @@ std::optional<ChainType> ChainTypeFromString(std::string_view chain)
         return ChainType::MAIN;
     } else if (chain == "test") {
         return ChainType::TESTNET;
-    } else if (chain == "signet") {
+    } else if (chain == "signet" || chain.starts_with("signet_") ) {
         return ChainType::SIGNET;
     } else if (chain == "regtest") {
         return ChainType::REGTEST;
