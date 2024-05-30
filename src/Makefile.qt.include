@@ -392,20 +392,6 @@ bitcoin_qt_clean: FORCE
 
 bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
 
-APK_LIB_DIR = qt/android/libs/$(ANDROID_ARCH)
-QT_BASE_VERSION = $(lastword $(shell $(MOC) --version))
-QT_BASE_PATH = $(shell find ../depends/sources/ -maxdepth 1 -type f -regex ".*qtbase.*$(QT_BASE_VERSION)\.tar.xz")
-QT_BASE_TLD = $(shell tar tf $(QT_BASE_PATH) --exclude='*/*')
-
-bitcoin_qt_apk: FORCE
-	mkdir -p $(APK_LIB_DIR)
-	cp $(dir $(lastword $(CC)))../sysroot/usr/lib/$(host_alias)/libc++_shared.so $(APK_LIB_DIR)
-	tar xf $(QT_BASE_PATH) -C qt/android/src/ $(QT_BASE_TLD)src/android/jar/src --strip-components=5
-	tar xf $(QT_BASE_PATH) -C qt/android/src/ $(QT_BASE_TLD)src/android/java/src --strip-components=5
-	cp qt/bitcoin-qt $(APK_LIB_DIR)/libbitcoin-qt_$(ANDROID_ARCH).so
-	cd qt/android && gradle wrapper --gradle-version=6.6.1
-	cd qt/android && ./gradlew build
-
 ui_%.h: %.ui
 	@test -f $(UIC) || (echo "uic $(UIC) not found, but is required for generating ui headers"; exit 1)
 	@$(MKDIR_P) $(@D)

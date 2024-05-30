@@ -12,7 +12,6 @@ $(package)_patches += qttools_src.pro
 $(package)_patches += mac-qmake.conf
 $(package)_patches += fix_qt_pkgconfig.patch
 $(package)_patches += no-xlib.patch
-$(package)_patches += fix_android_jni_static.patch
 $(package)_patches += dont_hardcode_pwd.patch
 $(package)_patches += qtbase-moc-ignore-gcc-macro.patch
 $(package)_patches += no_warnings_for_symbols.patch
@@ -186,24 +185,6 @@ $(package)_config_opts_mingw32 += -pch
 ifneq ($(LTO),)
 $(package)_config_opts_mingw32 += -ltcg
 endif
-
-$(package)_config_opts_android = -xplatform android-clang
-$(package)_config_opts_android += -android-sdk $(ANDROID_SDK)
-$(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
-$(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
-$(package)_config_opts_android += -egl
-$(package)_config_opts_android += -no-dbus
-$(package)_config_opts_android += -opengl es2
-$(package)_config_opts_android += -qt-freetype
-$(package)_config_opts_android += -no-fontconfig
-$(package)_config_opts_android += -L $(host_prefix)/lib
-$(package)_config_opts_android += -I $(host_prefix)/include
-$(package)_config_opts_android += -pch
-$(package)_config_opts_android += -no-feature-vulkan
-
-$(package)_config_opts_aarch64_android += -android-arch arm64-v8a
-$(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
-$(package)_config_opts_x86_64_android += -android-arch x86_64
 endef
 
 define $(package)_fetch_cmds
@@ -244,7 +225,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix-macos-linker.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qt_pkgconfig.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   patch -p1 -i $($(package)_patch_dir)/memory_resource.patch && \

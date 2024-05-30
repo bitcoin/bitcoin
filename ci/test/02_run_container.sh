@@ -26,7 +26,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker volume create "${CONTAINER_NAME}_ccache" || true
   docker volume create "${CONTAINER_NAME}_depends" || true
   docker volume create "${CONTAINER_NAME}_depends_sources" || true
-  docker volume create "${CONTAINER_NAME}_depends_SDKs_android" || true
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
@@ -52,7 +51,6 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "type=volume,src=${CONTAINER_NAME}_ccache,dst=$CCACHE_DIR" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends,dst=$DEPENDS_DIR/built" \
                   --mount "type=volume,src=${CONTAINER_NAME}_depends_sources,dst=$DEPENDS_DIR/sources" \
-                  --mount "type=volume,src=${CONTAINER_NAME}_depends_SDKs_android,dst=$DEPENDS_DIR/SDKs/android" \
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
