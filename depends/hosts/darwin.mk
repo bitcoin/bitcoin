@@ -6,35 +6,6 @@ LD64_VERSION=711
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
 
-ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-# FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned LLVM
-# from llvm.org
-
-darwin_native_toolchain=native_llvm
-
-clang_prog=$(build_prefix)/bin/clang
-clangxx_prog=$(clang_prog)++
-llvm_config_prog=$(build_prefix)/bin/llvm-config
-
-llvm_TOOLS=AR NM OBJDUMP RANLIB STRIP
-
-# Make-only lowercase function
-lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
-
-# For well-known tools provided by LLVM, make sure that their well-known
-# variable is set to the full path of the tool, just like how AC_PATH_{TOO,PROG}
-# would.
-$(foreach TOOL,$(llvm_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/llvm-$(call lc,$(TOOL))))
-
-# Clang expects dsymutil to be called dsymutil
-darwin_DSYMUTIL=$(build_prefix)/bin/dsymutil
-
-else
-# FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
-# system
-
-darwin_native_toolchain=
-
 # We can't just use $(shell command -v clang) because GNU Make handles builtins
 # in a special way and doesn't know that `command` is a POSIX-standard builtin
 # prior to 1af314465e5dfe3e8baa839a32a72e83c04f26ef, first released in v4.2.90.
@@ -54,7 +25,6 @@ darwin_NM=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-nm")
 darwin_OBJDUMP=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-objdump")
 darwin_RANLIB=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-ranlib")
 darwin_STRIP=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-strip")
-endif
 
 # Flag explanations:
 #
