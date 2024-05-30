@@ -41,6 +41,10 @@ public:
      */
     virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true) = 0;
 
+    //! Return the number of transaction updates in the mempool,
+    //! used to decide whether to make a new block template.
+    virtual unsigned int getTransactionsUpdated() = 0;
+
     /**
      * Check a block is completely valid from start to finish.
      * Only works on top of our current best block.
