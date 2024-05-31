@@ -1189,10 +1189,6 @@ public:
      */
     mutable VersionBitsCache m_versionbitscache;
 
-    //! @returns true if a snapshot-based chainstate is in use. Also implies
-    //!          that a background validation chainstate is also in use.
-    bool IsSnapshotActive() const;
-
     std::optional<uint256> SnapshotBlockhash() const;
 
     //! Is there a snapshot in use and has it been fully validated?
