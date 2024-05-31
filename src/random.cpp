@@ -704,6 +704,13 @@ void FastRandomContext::fillrand(Span<std::byte> output) noexcept
 
 FastRandomContext::FastRandomContext(const uint256& seed) noexcept : requires_seed(false), rng(MakeByteSpan(seed)) {}
 
+void FastRandomContext::Reseed(const uint256& seed) noexcept
+{
+    FlushCache();
+    requires_seed = false;
+    rng = {MakeByteSpan(seed)};
+}
+
 bool Random_SanityCheck()
 {
     uint64_t start = GetPerformanceCounter();
@@ -757,15 +764,6 @@ FastRandomContext::FastRandomContext(bool fDeterministic) noexcept : requires_se
     // Note that despite always initializing with ZERO_KEY, requires_seed is set to true if not
     // fDeterministic. That means the rng will be reinitialized with a secure random key upon first
     // use.
-}
-
-FastRandomContext& FastRandomContext::operator=(FastRandomContext&& from) noexcept
-{
-    requires_seed = from.requires_seed;
-    rng = from.rng;
-    from.requires_seed = true;
-    static_cast<RandomMixin<FastRandomContext>&>(*this) = std::move(from);
-    return *this;
 }
 
 void RandomInit()

@@ -212,7 +212,7 @@ public:
     prevector_tester() {
         SeedRandomForTest();
         rand_seed = InsecureRand256();
-        rand_cache = FastRandomContext(rand_seed);
+        rand_cache.Reseed(rand_seed);
     }
 };
 

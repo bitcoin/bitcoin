@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(xoroshiro128plusplus_reference_values)
     BOOST_TEST(0x6ea7c59f89bbfc75 == rng());
 
     // seed with a random number
-    rng = InsecureRandomContext(0x1a26f3fa8546b47a);
+    rng.Reseed(0x1a26f3fa8546b47a);
     BOOST_TEST(0xc8dc5e08d844ac7d == rng());
     BOOST_TEST(0x5b5f1f6d499dad1b == rng());
     BOOST_TEST(0xbeb0031f93313d6f == rng());
