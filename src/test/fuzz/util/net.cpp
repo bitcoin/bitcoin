@@ -383,7 +383,10 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
         return false;
     }
     if (occurred != nullptr) {
-        *occurred = m_fuzzed_data_provider.ConsumeBool() ? requested : 0;
+        // We simulate the requested event as occured when ConsumeBool()
+        // returns false. This avoids simulating endless waiting if the
+        // FuzzedDataProvider runs out of data.
+        *occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : requested;
     }
     return true;
 }
@@ -392,7 +395,10 @@ bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& even
 {
     for (auto& [sock, events] : events_per_sock) {
         (void)sock;
-        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? events.requested : 0;
+        // We simulate the requested event as occured when ConsumeBool()
+        // returns false. This avoids simulating endless waiting if the
+        // FuzzedDataProvider runs out of data.
+        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : events.requested;
     }
     return true;
 }
