@@ -250,6 +250,29 @@ typedef void (*btck_ValidationInterfaceBlockConnected)(void* user_data, btck_Blo
 typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry);
 
 /**
+ * Whether a validated data structure is valid, invalid, or an error was
+ * encountered during processing.
+ */
+typedef uint8_t btck_ValidationMode;
+#define btck_ValidationMode_VALID ((btck_ValidationMode)(0))
+#define btck_ValidationMode_INVALID ((btck_ValidationMode)(1))
+#define btck_ValidationMode_INTERNAL_ERROR ((btck_ValidationMode)(2))
+
+/**
+ * A granular "reason" why a block was invalid.
+ */
+typedef uint32_t btck_BlockValidationResult;
+#define btck_BlockValidationResult_UNSET ((btck_BlockValidationResult)(0))           //!< initial value. Block has not yet been rejected
+#define btck_BlockValidationResult_CONSENSUS ((btck_BlockValidationResult)(1))       //!< invalid by consensus rules (excluding any below reasons)
+#define btck_BlockValidationResult_CACHED_INVALID ((btck_BlockValidationResult)(2))  //!< this block was cached as being invalid and we didn't store the reason why
+#define btck_BlockValidationResult_INVALID_HEADER ((btck_BlockValidationResult)(3))  //!< invalid proof of work or time too old
+#define btck_BlockValidationResult_MUTATED ((btck_BlockValidationResult)(4))         //!< the block's data didn't match the data committed to by the PoW
+#define btck_BlockValidationResult_MISSING_PREV ((btck_BlockValidationResult)(5))    //!< We don't have the previous block the checked one is built on
+#define btck_BlockValidationResult_INVALID_PREV ((btck_BlockValidationResult)(6))    //!< A block this one builds on is invalid
+#define btck_BlockValidationResult_TIME_FUTURE ((btck_BlockValidationResult)(7))     //!< block timestamp was > 2 hours in the future (or our clock is bad)
+#define btck_BlockValidationResult_HEADER_LOW_WORK ((btck_BlockValidationResult)(8)) //!< the block header may be on a too-little-work chain
+
+/**
  * Holds the validation interface callbacks. The user data pointer may be used
  * to point to user-defined structures to make processing the validation
  * callbacks easier. Note that these callbacks block any further validation
@@ -964,6 +987,25 @@ BITCOINKERNEL_API const btck_Transaction* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
  * Destroy the block.
  */
 BITCOINKERNEL_API void btck_block_destroy(btck_Block* block);
+
+///@}
+
+/** @name BlockValidationState
+ * Functions for working with block validation states.
+ */
+///@{
+
+/**
+ * Returns the validation mode from an opaque block validation state pointer.
+ */
+BITCOINKERNEL_API btck_ValidationMode btck_block_validation_state_get_validation_mode(
+    const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Returns the validation result from an opaque block validation state pointer.
+ */
+BITCOINKERNEL_API btck_BlockValidationResult btck_block_validation_state_get_block_validation_result(
+    const btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 

@@ -131,7 +131,53 @@ class TestValidationInterface : public ValidationInterface
 public:
     void BlockChecked(Block block, const BlockValidationState state) override
     {
-        std::cout << "Block checked." << std::endl;
+        std::cout << "Block checked: ";
+
+        auto mode{state.GetValidationMode()};
+        switch (mode) {
+        case ValidationMode::VALID: {
+            std::cout << "Valid block" << std::endl;
+            return;
+        }
+        case ValidationMode::INVALID: {
+            std::cout << "Invalid block: ";
+            auto result{state.GetBlockValidationResult()};
+            switch (result) {
+            case BlockValidationResult::UNSET:
+                std::cout << "initial value. Block has not yet been rejected" << std::endl;
+                break;
+            case BlockValidationResult::HEADER_LOW_WORK:
+                std::cout << "the block header may be on a too-little-work chain" << std::endl;
+                break;
+            case BlockValidationResult::CONSENSUS:
+                std::cout << "invalid by consensus rules (excluding any below reasons)" << std::endl;
+                break;
+            case BlockValidationResult::CACHED_INVALID:
+                std::cout << "this block was cached as being invalid and we didn't store the reason why" << std::endl;
+                break;
+            case BlockValidationResult::INVALID_HEADER:
+                std::cout << "invalid proof of work or time too old" << std::endl;
+                break;
+            case BlockValidationResult::MUTATED:
+                std::cout << "the block's data didn't match the data committed to by the PoW" << std::endl;
+                break;
+            case BlockValidationResult::MISSING_PREV:
+                std::cout << "We don't have the previous block the checked one is built on" << std::endl;
+                break;
+            case BlockValidationResult::INVALID_PREV:
+                std::cout << "A block this one builds on is invalid" << std::endl;
+                break;
+            case BlockValidationResult::TIME_FUTURE:
+                std::cout << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
+                break;
+            }
+            return;
+        }
+        case ValidationMode::INTERNAL_ERROR: {
+            std::cout << "Internal error" << std::endl;
+            return;
+        }
+        }
     }
 
     void BlockConnected(Block block, BlockTreeEntry entry) override

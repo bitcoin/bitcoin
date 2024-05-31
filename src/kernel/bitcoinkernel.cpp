@@ -769,6 +769,40 @@ void btck_context_destroy(btck_Context* context)
     delete context;
 }
 
+btck_ValidationMode btck_block_validation_state_get_validation_mode(const btck_BlockValidationState* block_validation_state_)
+{
+    auto& block_validation_state = btck_BlockValidationState::get(block_validation_state_);
+    if (block_validation_state.IsValid()) return btck_ValidationMode_VALID;
+    if (block_validation_state.IsInvalid()) return btck_ValidationMode_INVALID;
+    return btck_ValidationMode_INTERNAL_ERROR;
+}
+
+btck_BlockValidationResult btck_block_validation_state_get_block_validation_result(const btck_BlockValidationState* block_validation_state_)
+{
+    auto& block_validation_state = btck_BlockValidationState::get(block_validation_state_);
+    switch (block_validation_state.GetResult()) {
+    case BlockValidationResult::BLOCK_RESULT_UNSET:
+        return btck_BlockValidationResult_UNSET;
+    case BlockValidationResult::BLOCK_CONSENSUS:
+        return btck_BlockValidationResult_CONSENSUS;
+    case BlockValidationResult::BLOCK_CACHED_INVALID:
+        return btck_BlockValidationResult_CACHED_INVALID;
+    case BlockValidationResult::BLOCK_INVALID_HEADER:
+        return btck_BlockValidationResult_INVALID_HEADER;
+    case BlockValidationResult::BLOCK_MUTATED:
+        return btck_BlockValidationResult_MUTATED;
+    case BlockValidationResult::BLOCK_MISSING_PREV:
+        return btck_BlockValidationResult_MISSING_PREV;
+    case BlockValidationResult::BLOCK_INVALID_PREV:
+        return btck_BlockValidationResult_INVALID_PREV;
+    case BlockValidationResult::BLOCK_TIME_FUTURE:
+        return btck_BlockValidationResult_TIME_FUTURE;
+    case BlockValidationResult::BLOCK_HEADER_LOW_WORK:
+        return btck_BlockValidationResult_HEADER_LOW_WORK;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len, const char* blocks_dir, size_t blocks_dir_len)
 {
     try {

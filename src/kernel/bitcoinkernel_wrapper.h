@@ -58,6 +58,24 @@ enum class Warning : btck_Warning {
     LARGE_WORK_INVALID_CHAIN = btck_Warning_LARGE_WORK_INVALID_CHAIN
 };
 
+enum class ValidationMode : btck_ValidationMode {
+    VALID = btck_ValidationMode_VALID,
+    INVALID = btck_ValidationMode_INVALID,
+    INTERNAL_ERROR = btck_ValidationMode_INTERNAL_ERROR
+};
+
+enum class BlockValidationResult : btck_BlockValidationResult {
+    UNSET = btck_BlockValidationResult_UNSET,
+    CONSENSUS = btck_BlockValidationResult_CONSENSUS,
+    CACHED_INVALID = btck_BlockValidationResult_CACHED_INVALID,
+    INVALID_HEADER = btck_BlockValidationResult_INVALID_HEADER,
+    MUTATED = btck_BlockValidationResult_MUTATED,
+    MISSING_PREV = btck_BlockValidationResult_MISSING_PREV,
+    INVALID_PREV = btck_BlockValidationResult_INVALID_PREV,
+    TIME_FUTURE = btck_BlockValidationResult_TIME_FUTURE,
+    HEADER_LOW_WORK = btck_BlockValidationResult_HEADER_LOW_WORK
+};
+
 enum class ScriptVerifyStatus : btck_ScriptVerifyStatus {
     OK = btck_ScriptVerifyStatus_OK,
     ERROR_INVALID_FLAGS_COMBINATION = btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION,
@@ -616,6 +634,16 @@ public:
     BlockValidationState& operator=(const BlockValidationState&) = delete;
     BlockValidationState(BlockValidationState&&) = delete;
     BlockValidationState& operator=(BlockValidationState&&) = delete;
+
+    ValidationMode GetValidationMode() const
+    {
+        return static_cast<ValidationMode>(btck_block_validation_state_get_validation_mode(m_state));
+    }
+
+    BlockValidationResult GetBlockValidationResult() const
+    {
+        return static_cast<BlockValidationResult>(btck_block_validation_state_get_block_validation_result(m_state));
+    }
 };
 
 class ValidationInterface
