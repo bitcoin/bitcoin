@@ -33,14 +33,12 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-#ifndef WIN32
 std::string ShellEscape(const std::string& arg)
 {
     std::string escaped = arg;
-    ReplaceAll(escaped, "'", "'\"'\"'");
+    ReplaceAll(escaped, "'", "'\\''");
     return "'" + escaped + "'";
 }
-#endif
 
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand)
