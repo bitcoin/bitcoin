@@ -261,8 +261,7 @@ public:
     /** Retrieve information about this transport. */
     virtual Info GetInfo() const noexcept = 0;
 
-    // 1. Receiver side functions, for decoding bytes received on the wire into transport protocol
-    // agnostic CNetMessage (message type & payload) objects.
+    // 1. Receiver side functions, for decoding bytes received on the wire
 
     /** Returns true if the current message is complete (so GetReceivedMessage can be called). */
     virtual bool ReceivedMessageComplete() const = 0;
@@ -279,10 +278,8 @@ public:
      *
      * This can only be called when ReceivedMessageComplete() is true.
      *
-     * If reject_message=true is returned the message itself is invalid, but (other than false
-     * returned by ReceivedBytes) the transport is not in an inconsistent state.
      */
-    virtual CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) = 0;
+   virtual std::vector<std::byte> GetReceivedMessage() = 0;
 
     // 2. Sending side functions, for converting messages into bytes to be sent over the wire.
 
@@ -376,7 +373,6 @@ private:
     unsigned int nHdrPos GUARDED_BY(m_recv_mutex);
     unsigned int nDataPos GUARDED_BY(m_recv_mutex);
 
-    const uint256& GetMessageHash() const EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
     int readHeader(Span<const uint8_t> msg_bytes) EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
     int readData(Span<const uint8_t> msg_bytes) EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
 
@@ -434,7 +430,9 @@ public:
         return ret >= 0;
     }
 
-    CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+    CMessageHeader GetReceivedHeader() EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+    std::vector<std::byte> GetReceivedMessage() override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+    const uint256& GetMessageHash() const EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
 
     bool SetMessageToSend(CSerializedNetMsg& msg) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
     BytesToSend GetBytesToSend(bool have_next_message) const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);
@@ -612,8 +610,6 @@ private:
     void SetReceiveState(RecvState recv_state) noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
     /** Change the send state. */
     void SetSendState(SendState send_state) noexcept EXCLUSIVE_LOCKS_REQUIRED(m_send_mutex);
-    /** Given a packet's contents, find the message type (if valid), and strip it from contents. */
-    static std::optional<std::string> GetMessageType(Span<const uint8_t>& contents) noexcept;
     /** Determine how many received bytes can be processed in one go (not allowed in V1 state). */
     size_t GetMaxBytesToProcess() noexcept EXCLUSIVE_LOCKS_REQUIRED(m_recv_mutex);
     /** Put our public key + garbage in the send buffer. */
@@ -643,7 +639,9 @@ public:
     // Receive side functions.
     bool ReceivedMessageComplete() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
     bool ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex, !m_send_mutex);
-    CNetMessage GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+    std::vector<std::byte> GetReceivedMessage() noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
+    /** Given a packet's contents, find the message type (if valid), and strip it from contents. */
+    static std::optional<std::string> GetMessageType(std::vector<std::byte>& bytes) noexcept;
 
     // Send side functions.
     bool SetMessageToSend(CSerializedNetMsg& msg) noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex);

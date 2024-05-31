@@ -664,7 +664,65 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
         if (m_transport->ReceivedMessageComplete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
             bool reject_message{false};
-            CNetMessage msg = m_transport->GetReceivedMessage(time, reject_message);
+            CNetMessage msg{DataStream{}};
+            auto contents{m_transport->GetReceivedMessage()};
+
+            switch (m_transport->GetInfo().transport_type) {
+            case TransportProtocolType::V1: {
+                V1Transport* transport = dynamic_cast<V1Transport*>(m_transport.get());
+                CMessageHeader hdr = transport->GetReceivedHeader();
+
+                // TODO: needless copy
+                std::copy(contents.begin(), contents.end(), msg.m_recv.data());
+
+                // // store message type string, time, and sizes
+                msg.m_type = hdr.GetCommand();
+                msg.m_time = time;
+                msg.m_message_size = hdr.nMessageSize;
+                msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+
+                // TODO: this has been Reset() by the time we get here
+                uint256 hash = transport->GetMessageHash();
+
+                // // We just received a message off the wire, harvest entropy from the time (and the message checksum)
+                RandAddEvent(ReadLE32(hash.begin()));
+
+                // Check checksum and header message type string
+                if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
+                    LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
+                            SanitizeString(msg.m_type), msg.m_message_size,
+                            HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
+                            HexStr(hdr.pchChecksum),
+                            GetId());
+                    reject_message = true;
+                } else if (!hdr.IsCommandValid()) {
+                    LogPrint(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
+                            SanitizeString(hdr.GetCommand()), msg.m_message_size, GetId());
+                    reject_message = true;
+                }
+                break;
+            }
+            case TransportProtocolType::V2: {
+                auto msg_type = V2Transport::GetMessageType(contents);
+                // Note that BIP324Cipher::EXPANSION also includes the length descriptor size.
+                msg.m_raw_message_size = contents.size() + BIP324Cipher::EXPANSION;
+                if (msg_type) {
+                    msg.m_type = std::move(*msg_type);
+                    msg.m_time = time;
+                    msg.m_message_size = contents.size();
+                    msg.m_recv.resize(contents.size());
+                    // TODO avoid copy?
+                    std::copy(contents.begin(), contents.end(), msg.m_recv.data());
+                } else {
+                    LogPrint(BCLog::NET, "V2 transport error: invalid message type (%u bytes contents), peer=%d\n", msg.m_raw_message_size, GetId());
+                    reject_message = true;
+                }
+                break;
+            }
+            default:
+                Assume(false);
+            }
+
             if (reject_message) {
                 // Message deserialization failed. Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
@@ -771,43 +829,29 @@ const uint256& V1Transport::GetMessageHash() const
     return data_hash;
 }
 
-CNetMessage V1Transport::GetReceivedMessage(const std::chrono::microseconds time, bool& reject_message)
+CMessageHeader V1Transport::GetReceivedHeader()
 {
     AssertLockNotHeld(m_recv_mutex);
-    // Initialize out parameter
-    reject_message = false;
+    LOCK(m_recv_mutex);
+
+    return hdr;
+}
+
+std::vector<std::byte> V1Transport::GetReceivedMessage()
+{
+    AssertLockNotHeld(m_recv_mutex);
+
     // decompose a single CNetMessage from the TransportDeserializer
     LOCK(m_recv_mutex);
-    CNetMessage msg(std::move(vRecv));
 
-    // store message type string, time, and sizes
-    msg.m_type = hdr.GetCommand();
-    msg.m_time = time;
-    msg.m_message_size = hdr.nMessageSize;
-    msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
-
-    uint256 hash = GetMessageHash();
-
-    // We just received a message off the wire, harvest entropy from the time (and the message checksum)
-    RandAddEvent(ReadLE32(hash.begin()));
-
-    // Check checksum and header message type string
-    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
-        LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
-                 SanitizeString(msg.m_type), msg.m_message_size,
-                 HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
-                 HexStr(hdr.pchChecksum),
-                 m_node_id);
-        reject_message = true;
-    } else if (!hdr.IsCommandValid()) {
-        LogPrint(BCLog::NET, "Header error: Invalid message type (%s, %u bytes), peer=%d\n",
-                 SanitizeString(hdr.GetCommand()), msg.m_message_size, m_node_id);
-        reject_message = true;
-    }
+    std::vector<std::byte> res;
+    res.reserve(vRecv.size());
+    // TODO: avoid copy, vRecv is cleared after this
+    std::copy(vRecv.begin(), vRecv.end(), res.data());
 
     // Always reset the network deserializer (prepare for the next message)
     Reset();
-    return msg;
+    return res;
 }
 
 bool V1Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
@@ -1381,8 +1425,10 @@ bool V2Transport::ReceivedBytes(Span<const uint8_t>& msg_bytes) noexcept
     return true;
 }
 
-std::optional<std::string> V2Transport::GetMessageType(Span<const uint8_t>& contents) noexcept
+std::optional<std::string> V2Transport::GetMessageType(std::vector<std::byte>& bytes) noexcept
 {
+    auto contents = Span{reinterpret_cast<std::vector<uint8_t>&>(bytes)};
+
     if (contents.size() == 0) return std::nullopt; // Empty contents
     uint8_t first_byte = contents[0];
     contents = contents.subspan(1); // Strip first byte.
@@ -1421,33 +1467,21 @@ std::optional<std::string> V2Transport::GetMessageType(Span<const uint8_t>& cont
     return ret;
 }
 
-CNetMessage V2Transport::GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) noexcept
+std::vector<std::byte> V2Transport::GetReceivedMessage() noexcept
 {
     AssertLockNotHeld(m_recv_mutex);
     LOCK(m_recv_mutex);
-    if (m_recv_state == RecvState::V1) return m_v1_fallback.GetReceivedMessage(time, reject_message);
+    if (m_recv_state == RecvState::V1) return m_v1_fallback.GetReceivedMessage();
 
     Assume(m_recv_state == RecvState::APP_READY);
-    Span<const uint8_t> contents{m_recv_decode_buffer};
-    auto msg_type = GetMessageType(contents);
-    CNetMessage msg{DataStream{}};
-    // Note that BIP324Cipher::EXPANSION also includes the length descriptor size.
-    msg.m_raw_message_size = m_recv_decode_buffer.size() + BIP324Cipher::EXPANSION;
-    if (msg_type) {
-        reject_message = false;
-        msg.m_type = std::move(*msg_type);
-        msg.m_time = time;
-        msg.m_message_size = contents.size();
-        msg.m_recv.resize(contents.size());
-        std::copy(contents.begin(), contents.end(), UCharCast(msg.m_recv.data()));
-    } else {
-        LogPrint(BCLog::NET, "V2 transport error: invalid message type (%u bytes contents), peer=%d\n", m_recv_decode_buffer.size(), m_nodeid);
-        reject_message = true;
-    }
+    std::vector<std::byte> res;
+    res.reserve(m_recv_decode_buffer.size());
+    std::transform(m_recv_decode_buffer.begin(), m_recv_decode_buffer.end(), res.begin(), [](uint8_t b) { return std::byte(b); });
+
     ClearShrink(m_recv_decode_buffer);
     SetReceiveState(RecvState::APP);
 
-    return msg;
+    return res;
 }
 
 bool V2Transport::SetMessageToSend(CSerializedNetMsg& msg) noexcept
