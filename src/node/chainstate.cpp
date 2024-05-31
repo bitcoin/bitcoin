@@ -169,15 +169,16 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     Chainstate& validated_cs{chainman.InitializeChainstate(options.mempool)};
 
     // Load a chain created from a UTXO snapshot, if any exist.
-    bool has_snapshot = chainman.DetectSnapshotChainstate();
+    Chainstate* unvalidated_cs{chainman.DetectAssumeutxoChainstate()};
 
-    if (has_snapshot && options.wipe_chainstate_db) {
+    if (unvalidated_cs && options.wipe_chainstate_db) {
         // Reset chainstate target to network tip instead of snapshot block.
         validated_cs.SetTargetBlock(nullptr);
         LogInfo("[snapshot] deleting snapshot chainstate due to reindexing");
         if (!chainman.DeleteSnapshotChainstate()) {
             return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Couldn't remove snapshot chainstate.")};
         }
+        unvalidated_cs = nullptr;
     }
 
     auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
@@ -193,7 +194,9 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // snapshot is actually validated? Because this entails unusual
     // filesystem operations to move leveldb data directories around, and that seems
     // too risky to do in the middle of normal runtime.
-    auto snapshot_completion = chainman.MaybeCompleteSnapshotValidation();
+    auto snapshot_completion{unvalidated_cs
+                             ? chainman.MaybeValidateSnapshot(validated_cs, *unvalidated_cs)
+                             : SnapshotCompletionResult::SKIPPED};
 
     if (snapshot_completion == SnapshotCompletionResult::SKIPPED) {
         // do nothing; expected case
