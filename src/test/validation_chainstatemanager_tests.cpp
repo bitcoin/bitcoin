@@ -557,7 +557,8 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.size(), num_indexes - last_assumed_valid_idx + 1);
 }
 
-//! Ensure that snapshot chainstates initialize properly when found on disk.
+//! Ensure that snapshot chainstate can be loaded when found on disk after a
+//! restart, and that new blocks can be connected to both chainstates.
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
 {
     ChainstateManager& chainman = *Assert(m_node.chainman);
@@ -591,8 +592,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     BOOST_CHECK_EQUAL(bg_chainstate.m_chain.Height(), 109);
 
     // Test that simulating a shutdown (resetting ChainstateManager) and then performing
-    // chainstate reinitializing successfully cleans up the background-validation
-    // chainstate data, and we end up with a single chainstate that is at tip.
+    // chainstate reinitializing successfully reloads both chainstates.
     ChainstateManager& chainman_restarted = this->SimulateNodeRestart();
 
     BOOST_TEST_MESSAGE("Performing Load/Verify/Activate of chainstate");
@@ -600,9 +600,18 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     // This call reinitializes the chainstates.
     this->LoadVerifyActivateChainstate();
 
+    std::vector<Chainstate*> chainstates;
     {
         LOCK(chainman_restarted.GetMutex());
-        BOOST_CHECK_EQUAL(chainman_restarted.GetAll().size(), 2);
+        chainstates = chainman_restarted.GetAll();
+        BOOST_CHECK_EQUAL(chainstates.size(), 2);
+        // Background chainstate has height of 109 not 110 here due to a quirk
+        // of the LoadVerifyActivate only calling ActivateBestChain on one
+        // chainstate. The height would be 110 after a real restart, but it's
+        // fine for this test which is focused on the snapshot chainstate.
+        BOOST_CHECK_EQUAL(chainstates[0]->m_chain.Height(), 109);
+        BOOST_CHECK_EQUAL(chainstates[1]->m_chain.Height(), 210);
+
         BOOST_CHECK(chainman_restarted.IsSnapshotActive());
         BOOST_CHECK(!chainman_restarted.IsSnapshotValidated());
 
@@ -618,12 +627,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
 
         // Background chainstate should be unaware of new blocks on the snapshot
-        // chainstate.
-        for (Chainstate* cs : chainman_restarted.GetAll()) {
-            if (cs != &chainman_restarted.ActiveChainstate()) {
-                BOOST_CHECK_EQUAL(cs->m_chain.Height(), 109);
-            }
-        }
+        // chainstate, but the block disconnected above is now reattached.
+        BOOST_CHECK_EQUAL(chainstates[0]->m_chain.Height(), 110);
+        BOOST_CHECK_EQUAL(chainstates[1]->m_chain.Height(), 220);
+        BOOST_CHECK_EQUAL(chainman_restarted.GetAll().size(), 1);
     }
 }
 
