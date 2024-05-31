@@ -24,13 +24,13 @@ BOOST_AUTO_TEST_SUITE(txvalidation_tests)
 std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTransactionRef& ptx, const CTxMemPool::setEntries& mempool_ancestors, const std::set<Txid>& direct_conflicts, int64_t vsize)
 {
     std::string dummy;
-    return SingleTRUCChecks(ptx, dummy, dummy, mempool_ancestors, direct_conflicts, vsize);
+    return SingleTRUCChecks(ptx, dummy, dummy, empty_ignore_rejects, mempool_ancestors, direct_conflicts, vsize);
 }
 
 std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize, const Package& package, const CTxMemPool::setEntries& mempool_ancestors)
 {
     std::string dummy;
-    return PackageTRUCChecks(ptx, vsize, dummy, dummy, package, mempool_ancestors);
+    return PackageTRUCChecks(ptx, vsize, dummy, dummy, empty_ignore_rejects, package, mempool_ancestors);
 }
 
 /**
