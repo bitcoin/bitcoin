@@ -845,7 +845,8 @@ public:
     }
     bool hasAssumedValidChain() override
     {
-        return chainman().IsSnapshotActive();
+        LOCK(::cs_main);
+        return bool{chainman().CurrentChainstate().m_from_snapshot_blockhash};
     }
 
     NodeContext* context() override { return &m_node; }

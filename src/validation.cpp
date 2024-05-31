@@ -6179,12 +6179,6 @@ Chainstate& ChainstateManager::ActiveChainstate() const
     return *m_active_chainstate;
 }
 
-bool ChainstateManager::IsSnapshotActive() const
-{
-    LOCK(::cs_main);
-    return m_snapshot_chainstate && m_active_chainstate == m_snapshot_chainstate.get();
-}
-
 void ChainstateManager::MaybeRebalanceCaches()
 {
     AssertLockHeld(::cs_main);
