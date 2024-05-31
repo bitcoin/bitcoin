@@ -1131,14 +1131,15 @@ public:
     [[nodiscard]] util::Result<CBlockIndex*> ActivateSnapshot(
         AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
-    //! Once the background validation chainstate has reached the height which
-    //! is the base of the UTXO snapshot in use, compare its coins to ensure
-    //! they match those expected by the snapshot.
-    //!
-    //! If the coins match (expected), then mark the validation chainstate for
-    //! deletion and continue using the snapshot chainstate as active.
-    //! Otherwise, revert to using the ibd chainstate and shutdown.
-    SnapshotCompletionResult MaybeCompleteSnapshotValidation() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! Try to validate an assumeutxo snapshot by using a validated historical
+    //! chainstate targeted at the snapshot block. When the target block is
+    //! reached, the UTXO hash is computed and saved to
+    //! `validated_cs.m_target_utxohash`, and `unvalidated_cs.m_assumeutxo` will
+    //! be updated from UNVALIDATED to either VALIDATED or INVALID depending on
+    //! whether the hash matches. The INVALID case should not happen in practice
+    //! because the software should refuse to load unrecognized snapshots, but
+    //! if it does happen, it is a fatal error.
+    SnapshotCompletionResult MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Returns nullptr if no snapshot has been loaded.
     const CBlockIndex* GetSnapshotBaseBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -1312,8 +1313,9 @@ public:
     void ReportHeadersPresync(const arith_uint256& work, int64_t height, int64_t timestamp);
 
     //! When starting up, search the datadir for a chainstate based on a UTXO
-    //! snapshot that is in the process of being validated.
-    bool DetectSnapshotChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    //! snapshot that is in the process of being validated and load it if found.
+    //! Return pointer to the Chainstate if it is loaded.
+    Chainstate* LoadAssumeutxoChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Add new chainstate.
     Chainstate& AddChainstate(std::unique_ptr<Chainstate> chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -1350,10 +1352,6 @@ public:
     //! start > end is possible, meaning no blocks can be pruned.
     std::pair<int, int> GetPruneRange(
         const Chainstate& chainstate, int last_height_can_prune) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Return the height of the base block of the snapshot in use, if one exists, else
-    //! nullopt.
-    std::optional<int> GetSnapshotBaseHeight() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get range of historical blocks to download.
     std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

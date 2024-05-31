@@ -187,7 +187,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             LOCK(::cs_main);
             BOOST_CHECK(!chainman.IsSnapshotValidated());
-            BOOST_CHECK(!node::FindSnapshotChainstateDir(chainman.m_options.datadir));
+            BOOST_CHECK(!node::FindAssumeutxoChainstateDir(chainman.m_options.datadir));
         }
 
         size_t initial_size;
@@ -240,7 +240,7 @@ struct SnapshotTestSetup : TestChain100Setup {
                 auto_infile >> coin;
         }));
 
-        BOOST_CHECK(!node::FindSnapshotChainstateDir(chainman.m_options.datadir));
+        BOOST_CHECK(!node::FindAssumeutxoChainstateDir(chainman.m_options.datadir));
 
         BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
             this, [](AutoFile& auto_infile, SnapshotMetadata& metadata) {
@@ -264,7 +264,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         }));
 
         BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(this));
-        BOOST_CHECK(fs::exists(*node::FindSnapshotChainstateDir(chainman.m_options.datadir)));
+        BOOST_CHECK(fs::exists(*node::FindAssumeutxoChainstateDir(chainman.m_options.datadir)));
 
         // Ensure our active chain is the snapshot chainstate.
         BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash->IsNull());
@@ -277,7 +277,7 @@ struct SnapshotTestSetup : TestChain100Setup {
         {
             LOCK(::cs_main);
 
-            fs::path found = *node::FindSnapshotChainstateDir(chainman.m_options.datadir);
+            fs::path found = *node::FindAssumeutxoChainstateDir(chainman.m_options.datadir);
 
             // Note: WriteSnapshotBaseBlockhash() is implicitly tested above.
             BOOST_CHECK_EQUAL(
@@ -565,7 +565,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
 
     this->SetupSnapshot();
 
-    fs::path snapshot_chainstate_dir = *node::FindSnapshotChainstateDir(chainman.m_options.datadir);
+    fs::path snapshot_chainstate_dir = *node::FindAssumeutxoChainstateDir(chainman.m_options.datadir);
     BOOST_CHECK(fs::exists(snapshot_chainstate_dir));
     BOOST_CHECK_EQUAL(snapshot_chainstate_dir, gArgs.GetDataDirNet() / "chainstate_snapshot");
 
@@ -639,13 +639,14 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
 
     ChainstateManager& chainman = *Assert(m_node.chainman);
     Chainstate& active_cs = chainman.ActiveChainstate();
+    Chainstate& validated_cs{*Assert(WITH_LOCK(cs_main, return chainman.HistoricalChainstate()))};
     auto tip_cache_before_complete = active_cs.m_coinstip_cache_size_bytes;
     auto db_cache_before_complete = active_cs.m_coinsdb_cache_size_bytes;
 
     SnapshotCompletionResult res;
     m_node.notifications->m_shutdown_on_fatal_error = false;
 
-    fs::path snapshot_chainstate_dir = *node::FindSnapshotChainstateDir(chainman.m_options.datadir);
+    fs::path snapshot_chainstate_dir = *node::FindAssumeutxoChainstateDir(chainman.m_options.datadir);
     BOOST_CHECK(fs::exists(snapshot_chainstate_dir));
     BOOST_CHECK_EQUAL(snapshot_chainstate_dir, gArgs.GetDataDirNet() / "chainstate_snapshot");
 
@@ -653,7 +654,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+    res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
 
     WITH_LOCK(::cs_main, BOOST_CHECK(chainman.IsSnapshotValidated()));
@@ -669,7 +670,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     BOOST_CHECK_EQUAL(all_chainstates[0], &active_cs);
 
     // Trying completion again should return false.
-    res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+    res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SKIPPED);
 
     // The invalid snapshot path should not have been used.
@@ -720,6 +721,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 {
     auto chainstates = this->SetupSnapshot();
     Chainstate& validation_chainstate = *std::get<0>(chainstates);
+    Chainstate& unvalidated_cs = *std::get<1>(chainstates);
     ChainstateManager& chainman = *Assert(m_node.chainman);
     SnapshotCompletionResult res;
     m_node.notifications->m_shutdown_on_fatal_error = false;
@@ -740,7 +742,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 
     {
         ASSERT_DEBUG_LOG("failed to validate the -assumeutxo snapshot state");
-        res = WITH_LOCK(::cs_main, return chainman.MaybeCompleteSnapshotValidation());
+        res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validation_chainstate, unvalidated_cs));
         BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
     }
 

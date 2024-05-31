@@ -63,7 +63,7 @@ chainstate and a sync to tip begins. A new chainstate directory is created in th
 datadir for the snapshot chainstate called `chainstate_snapshot`.
 
 When this directory is present in the datadir, the snapshot chainstate will be detected
-and loaded as active on node startup (via `DetectSnapshotChainstate()`).
+and loaded as active on node startup (via `LoadAssumeutxoChainstate()`).
 
 A special file is created within that directory, `base_blockhash`, which contains the
 serialized `uint256` of the base block of the snapshot. This is used to reinitialize
