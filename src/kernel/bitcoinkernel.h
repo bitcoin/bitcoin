@@ -268,6 +268,40 @@ typedef void (*kernel_NotifyFatalError)(void* user_data, const char* message);
 typedef void (*kernel_ValidationInterfaceBlockChecked)(void* user_data, const kernel_BlockPointer* block, const kernel_BlockValidationState* state);
 
 /**
+ * Whether a validated data structure is valid, invalid, or an error was
+ * encountered during processing.
+ */
+typedef enum {
+    kernel_VALIDATION_STATE_VALID = 0,
+    kernel_VALIDATION_STATE_INVALID,
+    kernel_VALIDATION_STATE_ERROR,
+} kernel_ValidationMode;
+
+/**
+ * A granular "reason" why a block was invalid.
+ */
+typedef enum {
+    kernel_BLOCK_RESULT_UNSET = 0, //!< initial value. Block has not yet been rejected
+    kernel_BLOCK_CONSENSUS,        //!< invalid by consensus rules (excluding any below reasons)
+    /**
+     * Invalid by a change to consensus rules more recent than SegWit.
+     * Currently unused as there are no such consensus rule changes, and any download
+     * sources realistically need to support SegWit in order to provide useful data,
+     * so differentiating between always-invalid and invalid-by-pre-SegWit-soft-fork
+     * is uninteresting.
+     */
+    kernel_BLOCK_RECENT_CONSENSUS_CHANGE,
+    kernel_BLOCK_CACHED_INVALID,  //!< this block was cached as being invalid and we didn't store the reason why
+    kernel_BLOCK_INVALID_HEADER,  //!< invalid proof of work or time too old
+    kernel_BLOCK_MUTATED,         //!< the block's data didn't match the data committed to by the PoW
+    kernel_BLOCK_MISSING_PREV,    //!< We don't have the previous block the checked one is built on
+    kernel_BLOCK_INVALID_PREV,    //!< A block this one builds on is invalid
+    kernel_BLOCK_TIME_FUTURE,     //!< block timestamp was > 2 hours in the future (or our clock is bad)
+    kernel_BLOCK_CHECKPOINT,      //!< the block failed to meet one of our checkpoints
+    kernel_BLOCK_HEADER_LOW_WORK, //!< the block header may be on a too-little-work chain
+} kernel_BlockValidationResult;
+
+/**
  * Holds the validation interface callbacks. The user data pointer may be used
  * to point to user-defined structures to make processing the validation
  * callbacks easier.
@@ -850,6 +884,20 @@ kernel_Block* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_block_create(
  * Destroy the block.
  */
 void kernel_block_destroy(kernel_Block* block);
+
+/**
+ * Returns the validation mode from an opaque block validation state pointer.
+ */
+kernel_ValidationMode kernel_get_validation_mode_from_block_validation_state(
+    const kernel_BlockValidationState* block_validation_state
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Returns the validation result from an opaque block validation state pointer.
+ */
+kernel_BlockValidationResult kernel_get_block_validation_result_from_block_validation_state(
+    const kernel_BlockValidationState* block_validation_state
+) BITCOINKERNEL_ARG_NONNULL(1);
 
 #ifdef __cplusplus
 } // extern "C"
