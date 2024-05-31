@@ -6117,12 +6117,12 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(Chai
 {
     AssertLockHeld(cs_main);
     if (from_snapshot_chainstate.Validity() != ChainValidity::ASSUMED_VALID ||
-            !from_snapshot_chainstate.m_from_snapshot_blockhash ||
-            validated_chainstate.Validity() != ChainValidity::VALIDATED ||
-            !validated_chainstate.m_target_blockhash ||
-            *validated_chainstate.m_target_blockhash != *from_snapshot_chainstate.m_from_snapshot_blockhash ||
-            !validated_chainstate.m_chain.Tip() ||
-            !validated_chainstate.ReachedTarget()) {
+        !from_snapshot_chainstate.m_from_snapshot_blockhash ||
+        validated_chainstate.Validity() != ChainValidity::VALIDATED ||
+        !validated_chainstate.m_target_blockhash ||
+        *validated_chainstate.m_target_blockhash != *from_snapshot_chainstate.m_from_snapshot_blockhash ||
+        !validated_chainstate.m_chain.Tip() ||
+        !validated_chainstate.ReachedTarget()) {
         // If validated chainstate is not targeting the snapshot block, or has
         // not reached the target block, or the snapshot is already validated,
         // there is nothing to do.
@@ -6145,8 +6145,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(Chai
             "helpful in diagnosing the issue that caused this error."),
             CLIENT_NAME, from_snapshot_chainstate.m_chain.Height(),
             validated_chainstate.m_chain.Height(),
-            validated_chainstate.m_chain.Height(), CLIENT_BUGREPORT
-        );
+            validated_chainstate.m_chain.Height(), CLIENT_BUGREPORT);
 
         LogError("[snapshot] !!! %s\n", user_error.original);
         LogError("[snapshot] deleting snapshot, reverting to validated chain, and stopping node\n");
