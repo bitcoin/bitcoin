@@ -62,6 +62,7 @@ static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_L
  *   applicable.
  */
 std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTransactionRef& ptx,
+                                          const std::string& reason_prefix, std::string& out_reason,
                                           const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize);
@@ -88,6 +89,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
  * @returns debug string if an error occurs, std::nullopt otherwise.
  * */
 std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize,
+                                           const std::string& reason_prefix, std::string& out_reason,
                                            const Package& package,
                                            const CTxMemPool::setEntries& mempool_ancestors);
 
