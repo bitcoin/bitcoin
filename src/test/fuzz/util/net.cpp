@@ -206,8 +206,7 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
             pad_to_len_bytes = false;
         }
     } else {
-        random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(
-            m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, len));
+        random_bytes = ConsumeRandomLengthByteVector(m_fuzzed_data_provider, len);
     }
     if (random_bytes.empty()) {
         const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
