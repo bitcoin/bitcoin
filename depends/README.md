@@ -43,9 +43,13 @@ The paths are automatically configured and no other options are needed.
 
 ### Install the required dependencies: Ubuntu & Debian
 
+#### Common
+
+    apt install automake bison cmake curl libtool make patch pkg-config python3 xz-utils
+
 #### For macOS cross compilation
 
-    sudo apt-get install curl bsdmainutils cmake zip
+    sudo apt-get install g++ zip
 
 Note: You must obtain the macOS SDK before proceeding with a cross-compile.
 Under the depends directory, create a subdirectory named `SDKs`.
@@ -60,7 +64,7 @@ For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-ex
 
 Common linux dependencies:
 
-    sudo apt-get install make automake cmake curl g++-multilib libtool binutils bsdmainutils pkg-config python3 patch bison
+    sudo apt-get install g++-multilib binutils
 
 For linux ARM cross compilation:
 
