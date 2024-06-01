@@ -4033,6 +4033,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     } else if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 
+    if (consensusParams.fBLSCT && consensusParams.nLastPOWHeight < nHeight && !block.IsProofOfStake())
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-consensus-algo", "late proof of work");
+
     // Check against checkpoints
     if (chainman.m_options.checkpoints_enabled) {
         // Don't accept any forks from the main chain prior to last checkpoint.
