@@ -10,6 +10,7 @@ import struct
 from test_framework.messages import ser_uint256, hash256
 from test_framework.p2p import MAGIC_BYTES
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal
 
 
@@ -43,6 +44,12 @@ class AddrmanTest(BitcoinTestFramework):
 
     def run_test(self):
         peers_dat = os.path.join(self.nodes[0].datadir, self.chain, "peers.dat")
+        init_error = lambda reason: (
+            f"Error: Invalid or corrupt peers.dat \\({reason}\\). If you believe this "
+            f"is a bug, please report it to {self.config['environment']['PACKAGE_BUGREPORT']}. "
+            f'As a workaround, you can move the file \\("{peers_dat}"\\) out of the way \\(rename, '
+            "move, or delete\\) to have a new one created on the next start."
+        )
 
         self.log.info("Check that mocked addrman is valid")
         self.stop_node(0)
@@ -54,30 +61,29 @@ class AddrmanTest(BitcoinTestFramework):
         self.log.info("Check that addrman from future cannot be read")
         self.stop_node(0)
         write_addrman(peers_dat, lowest_compatible=111)
-        with self.nodes[0].assert_debug_log([
-                f'ERROR: DeserializeDB: Deserialize or I/O error - Unsupported format of addrman database: 1. It is compatible with formats >=111, but the maximum supported by this version of {self.config["environment"]["PACKAGE_NAME"]} is 3.',
-                "Recreating peers.dat",
-        ]):
-            self.start_node(0)
-        assert_equal(self.nodes[0].getnodeaddresses(), [])
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error(
+                "Unsupported format of addrman database: 1. It is compatible with "
+                "formats >=111, but the maximum supported by this version of "
+                f"{self.config['environment']['PACKAGE_NAME']} is 3.: (.+)"
+            ),
+            match=ErrorMatch.FULL_REGEX,
+        )
 
         self.log.info("Check that corrupt addrman cannot be read")
         self.stop_node(0)
         with open(peers_dat, "wb") as f:
             f.write(serialize_addrman()[:-1])
-        with self.nodes[0].assert_debug_log([
-                "ERROR: DeserializeDB: Deserialize or I/O error - CAutoFile::read: end of file",
-                "Recreating peers.dat",
-        ]):
-            self.start_node(0)
-        assert_equal(self.nodes[0].getnodeaddresses(), [])
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error("CAutoFile::read: end of file.*"),
+            match=ErrorMatch.FULL_REGEX,
+        )
 
         self.log.info("Check that missing addrman is recreated")
         self.stop_node(0)
         os.remove(peers_dat)
         with self.nodes[0].assert_debug_log([
-                f"Missing or invalid file {peers_dat}",
-                "Recreating peers.dat",
+                f'Creating peers.dat because the file was not found ("{peers_dat}")',
         ]):
             self.start_node(0)
         assert_equal(self.nodes[0].getnodeaddresses(), [])

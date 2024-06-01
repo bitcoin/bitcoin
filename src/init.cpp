@@ -1693,19 +1693,9 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
             LogPrintf("Using /16 prefix for IP bucketing\n");
         }
 
-        auto check_addrman = std::clamp<int32_t>(args.GetArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
-        node.addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
-
-        // Load addresses from peers.dat
         uiInterface.InitMessage(_("Loading P2P addresses…").translated);
-        int64_t nStart = GetTimeMillis();
-        if (ReadPeerAddresses(args, *node.addrman)) {
-            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", node.addrman->size(), GetTimeMillis() - nStart);
-        } else {
-            // Addrman can be in an inconsistent state after failure, reset it
-            node.addrman = std::make_unique<CAddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
-            LogPrintf("Recreating peers.dat\n");
-            DumpPeerAddresses(args, *node.addrman);
+        if (const auto error{LoadAddrman(asmap, args, node.addrman)}) {
+            return InitError(*error);
         }
     }
 
