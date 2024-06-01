@@ -932,6 +932,50 @@ kernel_BlockValidationResult kernel_get_block_validation_result_from_block_valid
     const kernel_BlockValidationState* block_validation_state
 ) BITCOINKERNEL_ARG_NONNULL(1);
 
+/**
+ * @brief Get the block index entry of the current chain tip. Once returned,
+ * there is no guarantee that it remains in the active chain.
+ *
+ * @param[in] context            Non-null.
+ * @param[in] chainstate_manager Non-null.
+ * @return                       The block index of the current tip.
+ */
+kernel_BlockIndex* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_get_block_index_from_tip(
+    const kernel_Context* context,
+    kernel_ChainstateManager* chainstate_manager
+) BITCOINKERNEL_ARG_NONNULL(1) BITCOINKERNEL_ARG_NONNULL(2);
+
+/**
+ * @brief Returns the previous block index in the chain, or null if the current
+ * block index entry is the genesis block.
+ *
+ * @param[in] block_index Non-null.
+ * @return                The previous block index, or null on error or if the current block index is the genesis block.
+ */
+kernel_BlockIndex* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_get_previous_block_index(
+    kernel_BlockIndex* block_index
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Reads the block the passed in block index points to from disk and
+ * returns it.
+ *
+ * @param[in] context            Non-null.
+ * @param[in] chainstate_manager Non-null.
+ * @param[in] block_index        Non-null.
+ * @return                       The read out block, or null on error.
+ */
+kernel_Block* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_read_block_from_disk(
+    const kernel_Context* context,
+    kernel_ChainstateManager* chainstate_manager,
+    kernel_BlockIndex* block_index
+) BITCOINKERNEL_ARG_NONNULL(1) BITCOINKERNEL_ARG_NONNULL(2) BITCOINKERNEL_ARG_NONNULL(3);
+
+/**
+ * @brief Destroy the block index.
+ */
+void kernel_block_index_destroy(kernel_BlockIndex* block_index);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif // __cplusplus

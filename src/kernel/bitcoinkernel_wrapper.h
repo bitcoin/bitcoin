@@ -8,6 +8,7 @@
 #include <kernel/bitcoinkernel.h>
 
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -450,7 +451,7 @@ private:
         }
     };
 
-    const std::unique_ptr<kernel_Block, Deleter> m_block;
+    std::unique_ptr<kernel_Block, Deleter> m_block;
 
 public:
     Block(const std::span<const unsigned char> raw_block) noexcept
@@ -469,6 +470,39 @@ public:
         std::vector<unsigned char> vec{serialized_block->data, serialized_block->data + serialized_block->size};
         kernel_byte_array_destroy(serialized_block);
         return vec;
+    }
+
+    friend class ChainMan;
+};
+
+class BlockIndex
+{
+private:
+    struct Deleter {
+        void operator()(kernel_BlockIndex* ptr) const
+        {
+            kernel_block_index_destroy(ptr);
+        }
+    };
+
+    std::unique_ptr<kernel_BlockIndex, Deleter> m_block_index;
+
+public:
+    BlockIndex(kernel_BlockIndex* block_index) noexcept : m_block_index{block_index} {}
+
+    std::optional<BlockIndex> GetPreviousBlockIndex() const noexcept
+    {
+        if (!m_block_index) {
+            return std::nullopt;
+        }
+        auto index{kernel_get_previous_block_index(m_block_index.get())};
+        if (!index) return std::nullopt;
+        return index;
+    }
+
+    operator bool() const noexcept
+    {
+        return m_block_index && m_block_index.get();
     }
 
     friend class ChainMan;
@@ -512,6 +546,18 @@ public:
     bool ProcessBlock(Block& block, kernel_ProcessBlockStatus& status) const noexcept
     {
         return kernel_chainstate_manager_process_block(m_context.m_context.get(), m_chainman, block.m_block.get(), &status);
+    }
+
+    BlockIndex GetBlockIndexFromTip() const noexcept
+    {
+        return kernel_get_block_index_from_tip(m_context.m_context.get(), m_chainman);
+    }
+
+    std::optional<Block> ReadBlock(BlockIndex& block_index) const noexcept
+    {
+        auto block{kernel_read_block_from_disk(m_context.m_context.get(), m_chainman, block_index.m_block_index.get())};
+        if (!block) return std::nullopt;
+        return block;
     }
 
     ~ChainMan()

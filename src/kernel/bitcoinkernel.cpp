@@ -352,6 +352,12 @@ const CBlock* cast_const_cblock(const kernel_BlockPointer* block)
     return reinterpret_cast<const CBlock*>(block);
 }
 
+CBlockIndex* cast_block_index(kernel_BlockIndex* index)
+{
+    assert(index);
+    return reinterpret_cast<CBlockIndex*>(index);
+}
+
 } // namespace
 
 kernel_Transaction* kernel_transaction_create(const unsigned char* raw_transaction, size_t raw_transaction_len)
@@ -962,6 +968,45 @@ void kernel_block_destroy(kernel_Block* block)
     if (block) {
         delete cast_cblocksharedpointer(block);
     }
+}
+
+kernel_BlockIndex* kernel_get_block_index_from_tip(const kernel_Context* context_, kernel_ChainstateManager* chainman_)
+{
+    auto chainman{cast_chainstate_manager(chainman_)};
+    return reinterpret_cast<kernel_BlockIndex*>(WITH_LOCK(::cs_main, return chainman->ActiveChain().Tip()));
+}
+
+kernel_BlockIndex* kernel_get_previous_block_index(kernel_BlockIndex* block_index_)
+{
+    CBlockIndex* block_index{cast_block_index(block_index_)};
+
+    if (!block_index->pprev) {
+        LogInfo("Genesis block has no previous.\n");
+        return nullptr;
+    }
+
+    return reinterpret_cast<kernel_BlockIndex*>(block_index->pprev);
+}
+
+kernel_Block* kernel_read_block_from_disk(const kernel_Context* context_,
+                                          kernel_ChainstateManager* chainman_,
+                                          kernel_BlockIndex* block_index_)
+{
+    auto chainman{cast_chainstate_manager(chainman_)};
+    CBlockIndex* block_index{cast_block_index(block_index_)};
+
+    auto block{new std::shared_ptr<CBlock>(new CBlock{})};
+    if (!chainman->m_blockman.ReadBlockFromDisk(**block, *block_index)) {
+        LogError("Failed to read block from disk.\n");
+        return nullptr;
+    }
+    return reinterpret_cast<kernel_Block*>(block);
+}
+
+void kernel_block_index_destroy(kernel_BlockIndex* block_index)
+{
+    // This is just a dummy function. The user does not control block index memory.
+    return;
 }
 
 bool kernel_chainstate_manager_process_block(
