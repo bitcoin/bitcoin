@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -606,6 +607,15 @@ public:
         : View{entry}
     {
     }
+
+    std::optional<BlockTreeEntry> GetPrevious() const
+    {
+        auto entry{btck_block_tree_entry_get_previous(get())};
+        if (!entry) return std::nullopt;
+        return entry;
+    }
+
+    friend class ChainMan;
 };
 
 template <typename T>
@@ -777,6 +787,22 @@ public:
     friend class ChainMan;
 };
 
+class ChainView : public View<btck_Chain>
+{
+public:
+    explicit ChainView(const btck_Chain* ptr) : View{ptr} {}
+
+    BlockTreeEntry Tip() const
+    {
+        return btck_chain_get_tip(get());
+    }
+
+    int Height() const
+    {
+        return btck_chain_get_height(get());
+    }
+};
+
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
 {
 public:
@@ -805,6 +831,18 @@ public:
         int res = btck_chainstate_manager_process_block(get(), block.get(), &_new_block);
         if (new_block) *new_block = _new_block == 1;
         return res == 0;
+    }
+
+    ChainView GetChain() const
+    {
+        return ChainView{btck_chainstate_manager_get_active_chain(get())};
+    }
+
+    std::optional<Block> ReadBlock(const BlockTreeEntry& entry) const
+    {
+        auto block{btck_block_read(get(), entry.get())};
+        if (!block) return std::nullopt;
+        return block;
     }
 };
 
