@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <random>
 #include <ranges>
 #include <span>
@@ -129,9 +130,14 @@ public:
 class TestValidationInterface : public ValidationInterface
 {
 public:
+    std::optional<std::vector<std::byte>> m_expected_valid_block = std::nullopt;
+
     void BlockChecked(Block block, const BlockValidationState state) override
     {
-        std::cout << "Block checked: ";
+        if (m_expected_valid_block.has_value()) {
+            auto ser_block{block.ToBytes()};
+            check_equal(m_expected_valid_block.value(), ser_block);
+        }
 
         auto mode{state.GetValidationMode()};
         switch (mode) {
@@ -545,8 +551,8 @@ BOOST_AUTO_TEST_CASE(btck_context_tests)
 BOOST_AUTO_TEST_CASE(btck_block)
 {
     Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[0])};
-    Block block_1{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[1])};
-    CheckHandle(block, block_1);
+    Block block_100{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[100])};
+    CheckHandle(block, block_100);
     Block block_tx{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[205])};
     CheckRange(block_tx.Transactions(), block_tx.CountTransactions());
 }
@@ -673,9 +679,19 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
                                return tx.CountOutputs();
                            })).begin();
     BOOST_CHECK_EQUAL(output_counts, 1);
+
+    validation_interface->m_expected_valid_block.emplace(raw_block);
+    auto ser_block{block.ToBytes()};
+    check_equal(ser_block, raw_block);
     bool new_block = false;
     BOOST_CHECK(chainman->ProcessBlock(block, &new_block));
     BOOST_CHECK(new_block);
+
+    validation_interface->m_expected_valid_block = std::nullopt;
+    new_block = false;
+    Block invalid_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 1])};
+    BOOST_CHECK(!chainman->ProcessBlock(invalid_block, &new_block));
+    BOOST_CHECK(!new_block);
 
     // If we try to validate it again, it should be a duplicate
     BOOST_CHECK(chainman->ProcessBlock(block, &new_block));

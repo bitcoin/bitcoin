@@ -250,6 +250,11 @@ typedef void (*btck_ValidationInterfaceBlockConnected)(void* user_data, btck_Blo
 typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_Block* block, const btck_BlockTreeEntry* entry);
 
 /**
+ * Function signature for serializing data.
+ */
+typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
+
+/**
  * Whether a validated data structure is valid, invalid, or an error was
  * encountered during processing.
  */
@@ -388,11 +393,6 @@ typedef uint8_t btck_ChainType;
 #define btck_ChainType_TESTNET_4 ((btck_ChainType)(2))
 #define btck_ChainType_SIGNET ((btck_ChainType)(3))
 #define btck_ChainType_REGTEST ((btck_ChainType)(4))
-
-/**
- * Function signature for serializing data.
- */
-typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
 
 /** @name Transaction
  * Functions for working with transactions.
@@ -982,6 +982,21 @@ BITCOINKERNEL_API size_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_count_trans
  */
 BITCOINKERNEL_API const btck_Transaction* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_get_transaction_at(
     const btck_Block* block, size_t transaction_index) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Serializes the block through the passed in callback to bytes.
+ * This is consensus serialization that is also used for the P2P network.
+ *
+ * @param[in] block     Non-null.
+ * @param[in] writer    Non-null, callback to a write bytes function.
+ * @param[in] user_data Holds a user-defined opaque structure that will be
+ *                      passed back through the writer callback.
+ * @return              0 on success.
+ */
+BITCOINKERNEL_API int btck_block_to_bytes(
+    const btck_Block* block,
+    btck_WriteBytes writer,
+    void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
  * Destroy the block.

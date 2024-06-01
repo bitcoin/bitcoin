@@ -967,6 +967,17 @@ const btck_Transaction* btck_block_get_transaction_at(const btck_Block* block, s
     return btck_Transaction::ref(&btck_Block::get(block)->vtx[index]);
 }
 
+int btck_block_to_bytes(const btck_Block* block, btck_WriteBytes writer, void* user_data)
+{
+    try {
+        WriterStream ws{writer, user_data};
+        ws << TX_WITH_WITNESS(*btck_Block::get(block));
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
+
 void btck_block_destroy(btck_Block* block)
 {
     delete block;

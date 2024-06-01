@@ -548,6 +548,11 @@ public:
     }
 
     MAKE_RANGE_METHOD(Transactions, Block, &Block::CountTransactions, &Block::GetTransaction, *this)
+
+    std::vector<std::byte> ToBytes() const
+    {
+        return write_bytes(get(), btck_block_to_bytes);
+    }
 };
 
 inline void logging_disable()
