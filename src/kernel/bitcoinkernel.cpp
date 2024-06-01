@@ -7,6 +7,7 @@
 #include <kernel/bitcoinkernel.h>
 
 #include <chain.h>
+#include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <kernel/caches.h>
@@ -28,6 +29,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <undo.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -485,6 +487,9 @@ struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
 struct btck_ChainstateManagerOptions : Handle<btck_ChainstateManagerOptions, ChainstateManagerOptions> {};
 struct btck_ChainstateManager : Handle<btck_ChainstateManager, ChainMan> {};
 struct btck_Chain : Handle<btck_Chain, CChain> {};
+struct btck_BlockSpentOutputs : Handle<btck_BlockSpentOutputs, std::shared_ptr<CBlockUndo>> {};
+struct btck_TransactionSpentOutputs : Handle<btck_TransactionSpentOutputs, CTxUndo> {};
+struct btck_Coin : Handle<btck_Coin, Coin> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -1002,6 +1007,89 @@ btck_Block* btck_block_read(const btck_ChainstateManager* chainman, const btck_B
         return nullptr;
     }
     return btck_Block::create(block);
+}
+
+btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_ChainstateManager* chainman, const btck_BlockTreeEntry* entry)
+{
+    auto block_undo{std::make_shared<CBlockUndo>()};
+    if (btck_BlockTreeEntry::get(entry).nHeight < 1) {
+        LogDebug(BCLog::KERNEL, "The genesis block does not have any spent outputs.");
+        return btck_BlockSpentOutputs::create(block_undo);
+    }
+    if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlockUndo(*block_undo, btck_BlockTreeEntry::get(entry))) {
+        LogError("Failed to read block spent outputs data.");
+        return nullptr;
+    }
+    return btck_BlockSpentOutputs::create(block_undo);
+}
+
+btck_BlockSpentOutputs* btck_block_spent_outputs_copy(const btck_BlockSpentOutputs* block_spent_outputs)
+{
+    return btck_BlockSpentOutputs::copy(block_spent_outputs);
+}
+
+size_t btck_block_spent_outputs_count(const btck_BlockSpentOutputs* block_spent_outputs)
+{
+    return btck_BlockSpentOutputs::get(block_spent_outputs)->vtxundo.size();
+}
+
+const btck_TransactionSpentOutputs* btck_block_spent_outputs_get_transaction_spent_outputs_at(const btck_BlockSpentOutputs* block_spent_outputs, size_t transaction_index)
+{
+    assert(transaction_index < btck_BlockSpentOutputs::get(block_spent_outputs)->vtxundo.size());
+    const auto* tx_undo{&btck_BlockSpentOutputs::get(block_spent_outputs)->vtxundo.at(transaction_index)};
+    return btck_TransactionSpentOutputs::ref(tx_undo);
+}
+
+void btck_block_spent_outputs_destroy(btck_BlockSpentOutputs* block_spent_outputs)
+{
+    delete block_spent_outputs;
+}
+
+btck_TransactionSpentOutputs* btck_transaction_spent_outputs_copy(const btck_TransactionSpentOutputs* transaction_spent_outputs)
+{
+    return btck_TransactionSpentOutputs::copy(transaction_spent_outputs);
+}
+
+size_t btck_transaction_spent_outputs_count(const btck_TransactionSpentOutputs* transaction_spent_outputs)
+{
+    return btck_TransactionSpentOutputs::get(transaction_spent_outputs).vprevout.size();
+}
+
+void btck_transaction_spent_outputs_destroy(btck_TransactionSpentOutputs* transaction_spent_outputs)
+{
+    delete transaction_spent_outputs;
+}
+
+const btck_Coin* btck_transaction_spent_outputs_get_coin_at(const btck_TransactionSpentOutputs* transaction_spent_outputs, size_t coin_index)
+{
+    assert(coin_index < btck_TransactionSpentOutputs::get(transaction_spent_outputs).vprevout.size());
+    const Coin* coin{&btck_TransactionSpentOutputs::get(transaction_spent_outputs).vprevout.at(coin_index)};
+    return btck_Coin::ref(coin);
+}
+
+btck_Coin* btck_coin_copy(const btck_Coin* coin)
+{
+    return btck_Coin::copy(coin);
+}
+
+uint32_t btck_coin_confirmation_height(const btck_Coin* coin)
+{
+    return btck_Coin::get(coin).nHeight;
+}
+
+int btck_coin_is_coinbase(const btck_Coin* coin)
+{
+    return btck_Coin::get(coin).IsCoinBase() ? 1 : 0;
+}
+
+const btck_TransactionOutput* btck_coin_get_output(const btck_Coin* coin)
+{
+    return btck_TransactionOutput::ref(&btck_Coin::get(coin).out);
+}
+
+void btck_coin_destroy(btck_Coin* coin)
+{
+    delete coin;
 }
 
 int btck_chainstate_manager_process_block(

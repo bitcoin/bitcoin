@@ -790,6 +790,105 @@ public:
     }
 };
 
+template <typename Derived>
+class CoinApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    CoinApi() = default;
+
+public:
+    uint32_t GetConfirmationHeight() const { return btck_coin_confirmation_height(impl()); }
+
+    bool IsCoinbase() const { return btck_coin_is_coinbase(impl()) == 1; }
+
+    TransactionOutputView GetOutput() const
+    {
+        return TransactionOutputView{btck_coin_get_output(impl())};
+    }
+};
+
+class CoinView : public View<btck_Coin>, public CoinApi<CoinView>
+{
+public:
+    explicit CoinView(const btck_Coin* ptr) : View{ptr} {}
+};
+
+class Coin : public Handle<btck_Coin, btck_coin_copy, btck_coin_destroy>, public CoinApi<Coin>
+{
+public:
+    Coin(btck_Coin* coin) : Handle{coin} {}
+
+    Coin(const CoinView& view) : Handle{view} {}
+};
+
+template <typename Derived>
+class TransactionSpentOutputsApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    TransactionSpentOutputsApi() = default;
+
+public:
+    size_t Count() const
+    {
+        return btck_transaction_spent_outputs_count(impl());
+    }
+
+    CoinView GetCoin(size_t index) const
+    {
+        return CoinView{btck_transaction_spent_outputs_get_coin_at(impl(), index)};
+    }
+
+    MAKE_RANGE_METHOD(Coins, Derived, &TransactionSpentOutputsApi<Derived>::Count, &TransactionSpentOutputsApi<Derived>::GetCoin, *static_cast<const Derived*>(this))
+};
+
+class TransactionSpentOutputsView : public View<btck_TransactionSpentOutputs>, public TransactionSpentOutputsApi<TransactionSpentOutputsView>
+{
+public:
+    explicit TransactionSpentOutputsView(const btck_TransactionSpentOutputs* ptr) : View{ptr} {}
+};
+
+class TransactionSpentOutputs : public Handle<btck_TransactionSpentOutputs, btck_transaction_spent_outputs_copy, btck_transaction_spent_outputs_destroy>,
+                                public TransactionSpentOutputsApi<TransactionSpentOutputs>
+{
+public:
+    TransactionSpentOutputs(btck_TransactionSpentOutputs* transaction_spent_outputs) : Handle{transaction_spent_outputs} {}
+
+    TransactionSpentOutputs(const TransactionSpentOutputsView& view) : Handle{view} {}
+};
+
+class BlockSpentOutputs : public Handle<btck_BlockSpentOutputs, btck_block_spent_outputs_copy, btck_block_spent_outputs_destroy>
+{
+public:
+    BlockSpentOutputs(btck_BlockSpentOutputs* block_spent_outputs)
+        : Handle{block_spent_outputs}
+    {
+    }
+
+    size_t Count() const
+    {
+        return btck_block_spent_outputs_count(get());
+    }
+
+    TransactionSpentOutputsView GetTxSpentOutputs(size_t tx_undo_index) const
+    {
+        return TransactionSpentOutputsView{btck_block_spent_outputs_get_transaction_spent_outputs_at(get(), tx_undo_index)};
+    }
+
+    MAKE_RANGE_METHOD(TxsSpentOutputs, BlockSpentOutputs, &BlockSpentOutputs::Count, &BlockSpentOutputs::GetTxSpentOutputs, *this)
+};
+
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
 {
 public:
@@ -830,6 +929,11 @@ public:
         auto block{btck_block_read(get(), entry.get())};
         if (!block) return std::nullopt;
         return block;
+    }
+
+    BlockSpentOutputs ReadBlockSpentOutputs(const BlockTreeEntry& entry) const
+    {
+        return btck_block_spent_outputs_read(get(), entry.get());
     }
 };
 
