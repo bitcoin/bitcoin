@@ -552,6 +552,11 @@ public:
         return Range<Block, &Block::CountTransactions, &Block::GetTransaction>{*this};
     }
 
+    std::vector<std::byte> ToBytes() const
+    {
+        return write_bytes(get(), btck_block_to_bytes);
+    }
+
     friend class ChainMan;
 };
 
