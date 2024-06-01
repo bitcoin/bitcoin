@@ -122,7 +122,7 @@ struct Params {
     bool fPosNoRetargeting;
     unsigned int nModifierInterval;
     CAmount nPePoSMinStakeAmount;
-    uint32_t nLastPOWHeight;
+    int nLastPOWHeight;
     /** Whether BLSCT is activated */
     bool fBLSCT;
 
