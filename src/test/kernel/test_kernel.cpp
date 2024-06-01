@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <random>
 #include <span>
 #include <string>
@@ -116,9 +117,16 @@ class TestValidationInterface : public ValidationInterface<TestValidationInterfa
 public:
     TestValidationInterface() : ValidationInterface() {}
 
+    std::optional<std::vector<unsigned char>> m_expected_valid_block = std::nullopt;
+
     void BlockChecked(const UnownedBlock block, const BlockValidationState state) override
     {
-        std::cout << "Block checked: ";
+        {
+            auto serialized_block{block.GetBlockData()};
+            if (m_expected_valid_block.has_value()) {
+                assert(m_expected_valid_block.value() == serialized_block);
+            }
+        }
 
         auto mode{state.ValidationMode()};
         switch (mode) {
@@ -462,6 +470,8 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     auto raw_block = hex_string_to_char_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000");
     Block block{raw_block};
     assert(block);
+    validation_interface.m_expected_valid_block.emplace(raw_block);
+    assert(block.GetBlockData() == raw_block);
     auto status{kernel_ProcessBlockStatus::kernel_PROCESS_BLOCK_OK};
     assert(chainman->ProcessBlock(block, status));
     assert(status == kernel_PROCESS_BLOCK_OK);

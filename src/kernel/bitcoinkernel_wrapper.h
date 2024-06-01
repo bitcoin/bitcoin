@@ -279,6 +279,14 @@ public:
     UnownedBlock& operator=(const UnownedBlock&) = delete;
     UnownedBlock(UnownedBlock&&) = delete;
     UnownedBlock& operator=(UnownedBlock&&) = delete;
+
+    std::vector<unsigned char> GetBlockData() const noexcept
+    {
+        auto serialized_block{kernel_copy_block_pointer_data(m_block)};
+        std::vector<unsigned char> vec{serialized_block->data, serialized_block->data + serialized_block->size};
+        kernel_byte_array_destroy(serialized_block);
+        return vec;
+    }
 };
 
 class BlockValidationState
@@ -454,6 +462,14 @@ public:
     explicit operator bool() const noexcept { return bool{m_block}; }
 
     Block(kernel_Block* block) noexcept : m_block{block} {}
+
+    std::vector<unsigned char> GetBlockData() const noexcept
+    {
+        auto serialized_block{kernel_copy_block_data(m_block.get())};
+        std::vector<unsigned char> vec{serialized_block->data, serialized_block->data + serialized_block->size};
+        kernel_byte_array_destroy(serialized_block);
+        return vec;
+    }
 
     friend class ChainMan;
 };

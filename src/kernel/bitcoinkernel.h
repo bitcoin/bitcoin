@@ -426,6 +426,14 @@ typedef enum {
 } kernel_ProcessBlockStatus;
 
 /**
+ * Convenience struct for holding serialized data.
+ */
+typedef struct {
+    unsigned char* data;
+    size_t size;
+} kernel_ByteArray;
+
+/**
  * @brief Create a new transaction from the serialized data.
  *
  * @param[in] raw_transaction     Non-null.
@@ -884,6 +892,31 @@ kernel_Block* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_block_create(
  * Destroy the block.
  */
 void kernel_block_destroy(kernel_Block* block);
+
+/**
+ * @brief Copies block data into the returned byte array.
+ *
+ * @param[in] block  Non-null.
+ * @return           Allocated byte array holding the block data, or null on error.
+ */
+kernel_ByteArray* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_copy_block_data(
+    kernel_Block* block
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Copies block data into the returned byte array.
+ *
+ * @param[in] block  Non-null.
+ * @return           Allocated byte array holding the block data, or null on error.
+ */
+kernel_ByteArray* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_copy_block_pointer_data(
+    const kernel_BlockPointer* block
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * A helper function for destroying an existing byte array.
+ */
+void kernel_byte_array_destroy(kernel_ByteArray* byte_array);
 
 /**
  * Returns the validation mode from an opaque block validation state pointer.
