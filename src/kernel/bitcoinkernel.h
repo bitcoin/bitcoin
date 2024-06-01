@@ -230,6 +230,18 @@ typedef struct kernel_BlockValidationState kernel_BlockValidationState;
  */
 typedef struct kernel_ValidationInterface kernel_ValidationInterface;
 
+/**
+ * Opaque data structure for holding a block undo struct.
+ *
+ * It holds all the previous outputs consumed by all transactions in a specific
+ * block. Internally it holds a nested vector. The top level vector has an entry
+ * for each transaction in a block (in order of the actual transactions of the
+ * block and minus the coinbase transaction). Each entry is in turn a vector of
+ * all the previous outputs of a transaction (in order of their corresponding
+ * inputs).
+ */
+typedef struct kernel_BlockUndo kernel_BlockUndo;
+
 /** Current sync state passed to tip changed callbacks. */
 typedef enum {
     kernel_INIT_REINDEX,
@@ -457,6 +469,15 @@ void kernel_transaction_destroy(kernel_Transaction* transaction);
  */
 kernel_ScriptPubkey* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_script_pubkey_create(
     const unsigned char* script_pubkey, size_t script_pubkey_len
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Copies the script pubkey data into the returned byte array.
+ * @param[in] script_pubkey Non-null.
+ * @return                  The serialized script pubkey data.
+ */
+kernel_ByteArray* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_copy_script_pubkey_data(
+        const kernel_ScriptPubkey* script_pubkey
 ) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
@@ -972,9 +993,88 @@ kernel_Block* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_read_block_from_disk(
 ) BITCOINKERNEL_ARG_NONNULL(1) BITCOINKERNEL_ARG_NONNULL(2) BITCOINKERNEL_ARG_NONNULL(3);
 
 /**
+ * @brief Reads the block undo data the passed in block index points to from
+ * disk and returns it.
+ *
+ * @param[in] context            Non-null.
+ * @param[in] chainstate_manager Non-null.
+ * @param[in] block_index        Non-null.
+ * @return                       The read out block undo data, or null on error.
+ */
+kernel_BlockUndo* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_read_block_undo_from_disk(
+    const kernel_Context* context,
+    kernel_ChainstateManager* chainstate_manager,
+    kernel_BlockIndex* block_index
+) BITCOINKERNEL_ARG_NONNULL(1) BITCOINKERNEL_ARG_NONNULL(2) BITCOINKERNEL_ARG_NONNULL(3);
+
+/**
  * @brief Destroy the block index.
  */
 void kernel_block_index_destroy(kernel_BlockIndex* block_index);
+
+/**
+ * @brief Returns the number of transactions whose undo data is contained in
+ * block undo.
+ *
+ * @param[in] block_undo Non-null.
+ * @return               The number of transaction undo data in the block undo.
+ */
+uint64_t BITCOINKERNEL_WARN_UNUSED_RESULT kernel_block_undo_size(
+    kernel_BlockUndo* block_undo
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the block undo data.
+ */
+void kernel_block_undo_destroy(kernel_BlockUndo* block_undo);
+
+/**
+ * @brief Returns the number of previous transaction outputs contained in the
+ * transaction undo data.
+ *
+ * @param[in] block_undo             Non-null, the block undo data from which tx_undo was retrieved from.
+ * @param[in] transaction_undo_index The index of the transaction undo data within the block undo data.
+ * @return                           The number of previous transaction outputs in the transaction.
+ */
+uint64_t BITCOINKERNEL_WARN_UNUSED_RESULT kernel_get_transaction_undo_size(
+    kernel_BlockUndo* block_undo,
+    uint64_t transaction_undo_index
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Return a transaction output contained in the transaction undo data of
+ * a block undo data at a certain index.
+ *
+ * @param[in] block_undo             Non-null.
+ * @param[in] transaction_undo_index The index of the transaction undo data within the block undo data.
+ * @param[in] output_index           The index of the to be retrieved transaction output within the
+ *                                   transaction undo data.
+ * @return                           A transaction output pointer, or null on error.
+ */
+kernel_TransactionOutput* BITCOINKERNEL_WARN_UNUSED_RESULT kernel_get_undo_output_by_index(
+    kernel_BlockUndo* block_undo,
+    uint64_t transaction_undo_index,
+    uint64_t output_index
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Copies the script pubkey of an output in the returned script pubkey
+ * opaque object.
+ *
+ * @param[in] transaction_output Non-null.
+ * @return                       The data for the output's script pubkey.
+ */
+kernel_ScriptPubkey* kernel_copy_script_pubkey_from_output(kernel_TransactionOutput* transaction_output
+) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Gets the amount associated with this transaction output
+ *
+ * @param[in] transaction_output Non-null.
+ * @return                       The amount.
+ */
+int64_t kernel_get_transaction_output_amount(kernel_TransactionOutput* transaction_output
+) BITCOINKERNEL_ARG_NONNULL(1);
 
 #ifdef __cplusplus
 } // extern "C"

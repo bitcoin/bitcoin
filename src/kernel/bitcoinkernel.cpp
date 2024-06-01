@@ -5,6 +5,7 @@
 #include <kernel/bitcoinkernel.h>
 
 #include <chain.h>
+#include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <kernel/chainparams.h>
@@ -25,6 +26,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <undo.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -358,6 +360,12 @@ CBlockIndex* cast_block_index(kernel_BlockIndex* index)
     return reinterpret_cast<CBlockIndex*>(index);
 }
 
+CBlockUndo* cast_block_undo(kernel_BlockUndo* undo)
+{
+    assert(undo);
+    return reinterpret_cast<CBlockUndo*>(undo);
+}
+
 } // namespace
 
 kernel_Transaction* kernel_transaction_create(const unsigned char* raw_transaction, size_t raw_transaction_len)
@@ -382,6 +390,19 @@ kernel_ScriptPubkey* kernel_script_pubkey_create(const unsigned char* script_pub
 {
     auto script_pubkey = new CScript(script_pubkey_, script_pubkey_ + script_pubkey_len);
     return reinterpret_cast<kernel_ScriptPubkey*>(script_pubkey);
+}
+
+kernel_ByteArray* kernel_copy_script_pubkey_data(const kernel_ScriptPubkey* script_pubkey_)
+{
+    auto script_pubkey{cast_script_pubkey(script_pubkey_)};
+
+    auto byte_array{new kernel_ByteArray{
+        .data = new unsigned char[script_pubkey->size()],
+        .size = script_pubkey->size(),
+    }};
+
+    std::memcpy(byte_array->data, script_pubkey->data(), byte_array->size);
+    return byte_array;
 }
 
 void kernel_script_pubkey_destroy(kernel_ScriptPubkey* script_pubkey)
@@ -1003,10 +1024,83 @@ kernel_Block* kernel_read_block_from_disk(const kernel_Context* context_,
     return reinterpret_cast<kernel_Block*>(block);
 }
 
+kernel_BlockUndo* kernel_read_block_undo_from_disk(const kernel_Context* context_,
+                                                   kernel_ChainstateManager* chainman_,
+                                                   kernel_BlockIndex* block_index_)
+{
+    auto chainman{cast_chainstate_manager(chainman_)};
+    auto block_index{cast_block_index(block_index_)};
+
+    if (block_index->nHeight < 1) {
+        LogError("The genesis block does not have undo data.\n");
+        return nullptr;
+    }
+    auto block_undo{new CBlockUndo{}};
+    if (!chainman->m_blockman.UndoReadFromDisk(*block_undo, *block_index)) {
+        LogError("Failed to read undo data from disk.\n");
+        return nullptr;
+    }
+    return reinterpret_cast<kernel_BlockUndo*>(block_undo);
+}
+
 void kernel_block_index_destroy(kernel_BlockIndex* block_index)
 {
     // This is just a dummy function. The user does not control block index memory.
     return;
+}
+
+uint64_t kernel_block_undo_size(kernel_BlockUndo* block_undo_)
+{
+    auto block_undo{cast_block_undo(block_undo_)};
+    return block_undo->vtxundo.size();
+}
+
+void kernel_block_undo_destroy(kernel_BlockUndo* block_undo)
+{
+    if (block_undo) {
+        delete cast_block_undo(block_undo);
+    }
+}
+
+uint64_t kernel_get_transaction_undo_size(kernel_BlockUndo* block_undo_, uint64_t transaction_undo_index)
+{
+    auto block_undo{cast_block_undo(block_undo_)};
+    return block_undo->vtxundo[transaction_undo_index].vprevout.size();
+}
+
+kernel_TransactionOutput* kernel_get_undo_output_by_index(kernel_BlockUndo* block_undo_,
+                                                          uint64_t transaction_undo_index,
+                                                          uint64_t output_index)
+{
+    auto block_undo{cast_block_undo(block_undo_)};
+
+    if (transaction_undo_index >= block_undo->vtxundo.size()) {
+        LogInfo("transaction undo index is out of bounds.\n");
+        return nullptr;
+    }
+
+    const auto& tx_undo = block_undo->vtxundo[transaction_undo_index];
+
+    if (output_index >= tx_undo.vprevout.size()) {
+        LogInfo("previous output index is out of bounds.\n");
+        return nullptr;
+    }
+
+    CTxOut* prevout{new CTxOut{tx_undo.vprevout.at(output_index).out}};
+    return reinterpret_cast<kernel_TransactionOutput*>(prevout);
+}
+
+kernel_ScriptPubkey* kernel_copy_script_pubkey_from_output(kernel_TransactionOutput* output_)
+{
+    auto output{cast_transaction_output(output_)};
+    auto script_pubkey = new CScript{output->scriptPubKey};
+    return reinterpret_cast<kernel_ScriptPubkey*>(script_pubkey);
+}
+
+int64_t kernel_get_transaction_output_amount(kernel_TransactionOutput* output_)
+{
+    auto output{cast_transaction_output(output_)};
+    return output->nValue;
 }
 
 bool kernel_chainstate_manager_process_block(
