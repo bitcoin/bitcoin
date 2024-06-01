@@ -268,7 +268,7 @@ static void check_computeblockversion(VersionBitsCache& versionbitscache, const 
     int min_activation_height = params.vDeployments[dep].min_activation_height;
 
     // should not be any signalling for first block
-    BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
+    BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(nullptr, params), params.fBLSCT ? VERSIONBITS_TOP_BLSCT_BITS : VERSIONBITS_TOP_BITS);
 
     // always/never active deployments shouldn't need to be tested further
     if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE ||
@@ -339,7 +339,7 @@ static void check_computeblockversion(VersionBitsCache& versionbitscache, const 
     // so ComputeBlockVersion should now set the bit,
     BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
     // and should also be using the VERSIONBITS_TOP_BITS.
-    BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+    BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, params.fBLSCT ? VERSIONBITS_TOP_BLSCT_BITS : VERSIONBITS_TOP_BITS);
 
     // Check that ComputeBlockVersion will set the bit until nTimeout
     nTime += 600;
@@ -349,7 +349,7 @@ static void check_computeblockversion(VersionBitsCache& versionbitscache, const 
     while (nTime < nTimeout && blocksToMine > 0) {
         lastBlock = firstChain.Mine(nHeight+1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         BOOST_CHECK((versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
-        BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, VERSIONBITS_TOP_BITS);
+        BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & VERSIONBITS_TOP_MASK, params.fBLSCT ? VERSIONBITS_TOP_BLSCT_BITS : VERSIONBITS_TOP_BITS);
         blocksToMine--;
         nTime += 600;
         nHeight += 1;
