@@ -731,11 +731,13 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     check_equal(read_block.value().ToBytes(), raw_block);
 
     // Check that we can read the previous block
-    auto tip_2{tip.GetPrevious()};
-    auto read_block_2{chainman->ReadBlock(tip_2.value())};
+    BlockTreeEntry tip_2{*tip.GetPrevious()};
+    Block read_block_2{*chainman->ReadBlock(tip_2)};
+    BOOST_CHECK_EQUAL(chainman->ReadBlockSpentOutputs(tip_2).Count(), 0);
+    BOOST_CHECK_EQUAL(chainman->ReadBlockSpentOutputs(tip).Count(), 0);
 
     // It should be an error if we go another block back, since the genesis has no ancestor
-    BOOST_CHECK(!tip_2.value().GetPrevious());
+    BOOST_CHECK(!tip_2.GetPrevious());
 
     // If we try to validate it again, it should be a duplicate
     BOOST_CHECK(chainman->ProcessBlock(block, &new_block));
@@ -820,6 +822,39 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     auto read_block_2 = chainman->ReadBlock(tip_2).value();
     check_equal(read_block_2.ToBytes(), as_bytes(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 2]));
 
+    BlockSpentOutputs block_spent_outputs{chainman->ReadBlockSpentOutputs(tip)};
+    BlockSpentOutputs block_spent_outputs_prev{chainman->ReadBlockSpentOutputs(*tip.GetPrevious())};
+    CheckHandle(block_spent_outputs, block_spent_outputs_prev);
+    CheckRange(block_spent_outputs_prev.TxsSpentOutputs(), block_spent_outputs_prev.Count());
+    BOOST_CHECK_EQUAL(block_spent_outputs.Count(), 1);
+    TransactionSpentOutputsView transaction_spent_outputs{block_spent_outputs.GetTxSpentOutputs(block_spent_outputs.Count() - 1)};
+    TransactionSpentOutputs owned_transaction_spent_outputs{transaction_spent_outputs};
+    TransactionSpentOutputs owned_transaction_spent_outputs_prev{block_spent_outputs_prev.GetTxSpentOutputs(block_spent_outputs_prev.Count() - 1)};
+    CheckHandle(owned_transaction_spent_outputs, owned_transaction_spent_outputs_prev);
+    CheckRange(transaction_spent_outputs.Coins(), transaction_spent_outputs.Count());
+    CoinView coin{transaction_spent_outputs.GetCoin(transaction_spent_outputs.Count() - 1)};
+    BOOST_CHECK(!coin.IsCoinbase());
+    Coin owned_coin{coin};
+    Coin owned_coin_prev{owned_transaction_spent_outputs_prev.GetCoin(owned_transaction_spent_outputs_prev.Count() - 1)};
+    CheckHandle(owned_coin, owned_coin_prev);
+    TransactionOutputView output = coin.GetOutput();
+    uint32_t coin_height = coin.GetConfirmationHeight();
+    BOOST_CHECK_EQUAL(coin_height, 205);
+    BOOST_CHECK_EQUAL(output.Amount(), 100000000);
+    auto script_pubkey = output.GetScriptPubkey();
+    auto script_pubkey_bytes{script_pubkey.ToBytes()};
+    BOOST_CHECK_EQUAL(script_pubkey_bytes.size(), 22);
+    auto round_trip_script_pubkey{ScriptPubkey(script_pubkey_bytes)};
+    BOOST_CHECK_EQUAL(round_trip_script_pubkey.ToBytes().size(), 22);
+
+    for (const auto tx_spent_outputs : block_spent_outputs.TxsSpentOutputs()) {
+        for (const auto coins : tx_spent_outputs.Coins()) {
+            BOOST_CHECK_GT(coins.GetOutput().Amount(), 1);
+        }
+    }
+
     std::filesystem::remove_all(test_directory.m_directory / "blocks" / "blk00000.dat");
-    BOOST_CHECK(!chainman->ReadBlock(tip_2));
+    BOOST_CHECK(!chainman->ReadBlock(tip_2).has_value());
+    std::filesystem::remove_all(test_directory.m_directory / "blocks" / "rev00000.dat");
+    BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
 }
