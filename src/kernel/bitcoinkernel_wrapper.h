@@ -49,6 +49,17 @@ enum class ChainType : btck_ChainType {
     REGTEST = btck_ChainType_REGTEST
 };
 
+enum class SynchronizationState : btck_SynchronizationState {
+    INIT_REINDEX = btck_SynchronizationState_INIT_REINDEX,
+    INIT_DOWNLOAD = btck_SynchronizationState_INIT_DOWNLOAD,
+    POST_INIT = btck_SynchronizationState_POST_INIT
+};
+
+enum class Warning : btck_Warning {
+    UNKNOWN_NEW_RULES_ACTIVATED = btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED,
+    LARGE_WORK_INVALID_CHAIN = btck_Warning_LARGE_WORK_INVALID_CHAIN
+};
+
 enum class ScriptVerifyStatus : btck_ScriptVerifyStatus {
     OK = btck_ScriptVerifyStatus_SCRIPT_VERIFY_OK,
     ERROR_INVALID_FLAGS_COMBINATION = btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION,
@@ -527,6 +538,36 @@ public:
     }
 };
 
+class BlockTreeEntry : View<btck_BlockTreeEntry>
+{
+public:
+    BlockTreeEntry(const btck_BlockTreeEntry* entry)
+        : View{entry}
+    {
+    }
+};
+
+template <typename T>
+class KernelNotifications
+{
+public:
+    virtual ~KernelNotifications() = default;
+
+    virtual void BlockTipHandler(SynchronizationState state, BlockTreeEntry entry, double verification_progress) {}
+
+    virtual void HeaderTipHandler(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) {}
+
+    virtual void ProgressHandler(std::string_view title, int progress_percent, bool resume_possible) {}
+
+    virtual void WarningSetHandler(Warning warning, std::string_view message) {}
+
+    virtual void WarningUnsetHandler(Warning warning) {}
+
+    virtual void FlushErrorHandler(std::string_view error) {}
+
+    virtual void FatalErrorHandler(std::string_view error) {}
+};
+
 class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_copy, btck_chain_parameters_destroy>
 {
 public:
@@ -544,6 +585,27 @@ public:
     void SetChainParams(ChainParams& chain_params)
     {
         btck_context_options_set_chainparams(get(), chain_params.get());
+    }
+
+    template <typename T>
+    void SetNotifications(std::shared_ptr<T> notifications)
+    {
+        static_assert(std::is_base_of_v<KernelNotifications<T>, T>);
+        auto heap_notifications = std::make_unique<std::shared_ptr<T>>(std::move(notifications));
+        using user_type = std::shared_ptr<T>*;
+        btck_context_options_set_notifications(
+            get(),
+            btck_NotificationInterfaceCallbacks{
+                .user_data = heap_notifications.release(),
+                .user_data_destroy = +[](void* user_data) { delete static_cast<user_type>(user_data); },
+                .block_tip = +[](void* user_data, btck_SynchronizationState state, const btck_BlockTreeEntry* entry, double verification_progress) { (*static_cast<user_type>(user_data))->BlockTipHandler(static_cast<SynchronizationState>(state), BlockTreeEntry{entry}, verification_progress); },
+                .header_tip = +[](void* user_data, btck_SynchronizationState state, int64_t height, int64_t timestamp, int presync) { (*static_cast<user_type>(user_data))->HeaderTipHandler(static_cast<SynchronizationState>(state), height, timestamp, presync == 1); },
+                .progress = +[](void* user_data, const char* title, size_t title_len, int progress_percent, int resume_possible) { (*static_cast<user_type>(user_data))->ProgressHandler({title, title_len}, progress_percent, resume_possible == 1); },
+                .warning_set = +[](void* user_data, btck_Warning warning, const char* message, size_t message_len) { (*static_cast<user_type>(user_data))->WarningSetHandler(static_cast<Warning>(warning), {message, message_len}); },
+                .warning_unset = +[](void* user_data, btck_Warning warning) { (*static_cast<user_type>(user_data))->WarningUnsetHandler(static_cast<Warning>(warning)); },
+                .flush_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FlushErrorHandler({error, error_len}); },
+                .fatal_error = +[](void* user_data, const char* error, size_t error_len) { (*static_cast<user_type>(user_data))->FatalErrorHandler({error, error_len}); },
+            });
     }
 
     friend class Context;
