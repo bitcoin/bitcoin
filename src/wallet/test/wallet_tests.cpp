@@ -117,9 +117,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         reserver.reserve();
 
         {
-            CBlockLocator locator;
-            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == oldTip->GetBlockHash());
+            BestBlock best_block;
+            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(best_block));
+            BOOST_CHECK(!best_block.IsNull() && best_block.m_locator.vHave.front() == oldTip->GetBlockHash() && best_block.m_hash == oldTip->GetBlockHash());
         }
 
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/true);
@@ -130,9 +130,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         BOOST_CHECK_EQUAL(GetBalance(wallet).m_mine_immature, 100 * COIN);
 
         {
-            CBlockLocator locator;
-            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
+            BestBlock best_block;
+            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(best_block));
+            BOOST_CHECK(!best_block.IsNull() && best_block.m_locator.vHave.front() == newTip->GetBlockHash() && best_block.m_hash == newTip->GetBlockHash());
         }
     }
 
