@@ -655,8 +655,6 @@ void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
     if (m_attaching_chain || role == ChainstateRole::BACKGROUND) {
         return;
     }
-    WalletBatch batch(GetDatabase());
-    batch.WriteBestBlock(loc);
 }
 
 void CWallet::SetBestBlockInMem(int block_height, uint256 block_hash)
