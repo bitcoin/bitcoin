@@ -36,7 +36,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                CAddrMan addrman;
+                CAddrMan addrman(/* deterministic */ false, /* consistency_check_ratio */ 0);
                 CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
                 node.CloseSocketDisconnect(&connman);
             },
