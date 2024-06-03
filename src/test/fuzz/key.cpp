@@ -78,16 +78,6 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(copied_key == key);
     }
 
-    {
-        CKey negated_key = key;
-        negated_key.Negate();
-        assert(negated_key.IsValid());
-        assert(!(negated_key == key));
-
-        negated_key.Negate();
-        assert(negated_key == key);
-    }
-
     const uint256 random_uint256 = Hash(buffer);
 
     {
