@@ -677,6 +677,11 @@ void CWallet::SetBestBlock(int block_height, uint256 block_hash)
     batch.WriteBestBlock(m_best_block);
 }
 
+void CWallet::LoadBestBlock(const BestBlock& best_block)
+{
+    m_best_block = best_block;
+}
+
 void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
@@ -3295,18 +3300,14 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     // allow setting the chain if it hasn't been set already but prevent changing it
     assert(!walletInstance->m_chain || walletInstance->m_chain == &chain);
     walletInstance->m_chain = &chain;
-    BestBlock read_best_block;
-    {
-        WalletBatch batch(walletInstance->GetDatabase());
-        batch.ReadBestBlock(read_best_block);
-    }
+    CBlockLocator best_block_locator = walletInstance->GetBestBlockLocator();
 
     // Unless allowed, ensure wallet files are not reused across chains:
     if (!gArgs.GetBoolArg("-walletcrosschain", DEFAULT_WALLETCROSSCHAIN)) {
-        if (read_best_block.m_locator.vHave.size() > 0 && chain.getHeight()) {
+        if (best_block_locator.vHave.size() > 0 && chain.getHeight()) {
             // Wallet is assumed to be from another chain, if genesis block in the active
             // chain differs from the genesis block known to the wallet.
-            if (chain.getBlockHash(0) != read_best_block.m_locator.vHave.back()) {
+            if (chain.getBlockHash(0) != best_block_locator.vHave.back()) {
                 error = Untranslated("Wallet files should not be reused across chains. Restart bitcoind with -walletcrosschain to override.");
                 return false;
             }
@@ -3326,18 +3327,15 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     walletInstance->m_attaching_chain = true; //ignores chainStateFlushed notifications
     walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
 
-    // Set the in memory best block to whatever was read from disk.
-    // If the chain has already processed the genesis block, this will probably be overwritten with the current tip later.
-    if (!read_best_block.m_locator.IsNull() && !read_best_block.m_height.has_value()) {
+    // Update the best block locator if it is missing the height.
+    // If the chain has already processed the genesis block, this will be immediately overwritten with the current tip.
+    if (!walletInstance->HasBestBlockHeight()) {
         // Best block record without height info, lookup height and rewrite the record
         // Also sets for this wallet
         int found_height;
-        if (chain.findBlock(read_best_block.m_hash, FoundBlock().height(found_height))) {
-            walletInstance->SetBestBlock(found_height, read_best_block.m_hash);
+        if (chain.findBlock(walletInstance->GetBestBlockHash(), FoundBlock().height(found_height))) {
+            walletInstance->SetBestBlock(found_height, walletInstance->GetBestBlockHash());
         }
-    } else {
-        // Otherwise set the wallet's in-memory best block to the one we read
-        walletInstance->SetBestBlockInMem(*read_best_block.m_height, read_best_block.m_hash);
     }
 
     // If rescan_required = true, rescan_height remains equal to 0
