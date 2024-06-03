@@ -381,3 +381,17 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     }
     Logger logger{std::make_unique<TestLog>()};
 }
+
+BOOST_AUTO_TEST_CASE(btck_context_tests)
+{
+    { // test default context
+        Context context{};
+        Context context2{};
+        CheckHandle(context, context2);
+    }
+
+    { // test with context options
+        ContextOptions options{};
+        Context context{options};
+    }
+}

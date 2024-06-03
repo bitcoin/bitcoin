@@ -523,6 +523,22 @@ public:
     }
 };
 
+class ContextOptions : public UniqueHandle<btck_ContextOptions, btck_context_options_destroy>
+{
+public:
+    ContextOptions() : UniqueHandle{btck_context_options_create()} {}
+};
+
+class Context : public Handle<btck_Context, btck_context_copy, btck_context_destroy>
+{
+public:
+    Context(ContextOptions& opts)
+        : Handle{btck_context_create(opts.get())} {}
+
+    Context()
+        : Handle{btck_context_create(ContextOptions{}.get())} {}
+};
+
 } // namespace btck
 
 #endif // BITCOIN_KERNEL_BITCOINKERNEL_WRAPPER_H
