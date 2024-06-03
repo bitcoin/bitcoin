@@ -1005,10 +1005,13 @@ public:
         assert(m_best_block.m_height.has_value());
         return m_best_block.m_height.value();
     };
+    bool HasBestBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        return m_best_block.m_height.has_value();
+    }
     uint256 GetBestBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        assert(m_best_block.m_height.has_value());
         return m_best_block.m_hash;
     }
     CBlockLocator GetBestBlockLocator() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
@@ -1018,6 +1021,7 @@ public:
     }
     /** Set last block processed height, and write to database */
     void SetBestBlock(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadBestBlock(const BestBlock& best_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
     void ConnectScriptPubKeyManNotifiers();
