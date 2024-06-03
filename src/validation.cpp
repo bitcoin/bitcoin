@@ -5811,8 +5811,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     bool out_of_coins{false};
     try {
-        Txid txid;
-        coins_file >> txid;
+        std::byte left_over_byte;
+        coins_file >> left_over_byte;
     } catch (const std::ios_base::failure&) {
         // We expect an exception since we should be out of coins.
         out_of_coins = true;
