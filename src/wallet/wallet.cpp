@@ -2912,6 +2912,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                      !walletInstance->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
     if (fFirstRun)
     {
+        LOCK(walletInstance->cs_wallet);
+
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
@@ -2921,7 +2923,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         assert(walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
         if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
-            LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 walletInstance->SetupDescriptorScriptPubKeyMans();
                 // SetupDescriptorScriptPubKeyMans already calls SetupGeneration for us so we don't need to call SetupGeneration separately
@@ -2937,7 +2938,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
 
         if (chain) {
-            walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain->getTipLocator());
+            std::optional<int> tip_height = chain->getHeight();
+            if (tip_height) {
+                walletInstance->SetLastBlockProcessed(*tip_height, chain->getBlockHash(*tip_height));
+            }
         }
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
@@ -3220,13 +3224,21 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
 
         {
             WalletRescanReserver reserver(*walletInstance);
-            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/true).status)) {
+            if (!reserver.reserve()) {
+                error = _("Failed to acquire rescan reserver during wallet initialization");
+                return false;
+            }
+            ScanResult scan_res = walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/true);
+            if (ScanResult::SUCCESS != scan_res.status) {
                 error = _("Failed to rescan the wallet during initialization");
                 return false;
             }
+            walletInstance->m_attaching_chain = false;
+            // Set and update the best block record
+            // Set last block scanned as the last block processed as it may be different in case the case of a reorg.
+            // Also save the best block locator because rescanning only updates it intermittently.
+            walletInstance->SetLastBlockProcessed(*scan_res.last_scanned_height, scan_res.last_scanned_block);
         }
-        walletInstance->m_attaching_chain = false;
-        walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain.getTipLocator());
     }
     walletInstance->m_attaching_chain = false;
 
