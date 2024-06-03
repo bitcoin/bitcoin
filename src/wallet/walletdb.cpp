@@ -491,6 +491,16 @@ static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIV
     return DBErrors::LOAD_OK;
 }
 
+static DBErrors LoadBestBlock(CWallet* pwallet, WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+    BestBlock best_block;
+    if (batch.ReadBestBlock(best_block) && !best_block.IsNull()) {
+        pwallet->LoadBestBlock(best_block);
+    }
+    return DBErrors::LOAD_OK;
+}
+
 struct LoadResult
 {
     DBErrors m_result{DBErrors::LOAD_OK};
@@ -1188,6 +1198,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;
         }
 #endif
+
+        // Load the best block
+        if ((result = LoadBestBlock(pwallet, *this)) != DBErrors::LOAD_OK) return result;
 
         // Load legacy wallet keys
         result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, last_client), result);
