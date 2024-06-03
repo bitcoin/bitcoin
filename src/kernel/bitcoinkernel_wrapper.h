@@ -319,8 +319,8 @@ protected:
 public:
     explicit UniqueHandle(CType* ptr) : m_ptr{check(ptr)} {}
 
-    CType* get() { return m_ptr; }
-    const CType* get() const { return m_ptr; }
+    CType* get() { return m_ptr.get(); }
+    const CType* get() const { return m_ptr.get(); }
 };
 
 class Transaction;
@@ -506,7 +506,7 @@ concept Log = requires(T a, std::string_view message) {
 };
 
 template <Log T>
-class Logger : public UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
+class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
 {
 public:
     Logger(std::unique_ptr<T> log, const btck_LoggingOptions& logging_options)
@@ -517,6 +517,24 @@ public:
               logging_options)}
     {
     }
+};
+
+class ContextOptions : UniqueHandle<btck_ContextOptions, btck_context_options_destroy>
+{
+public:
+    ContextOptions() : UniqueHandle{btck_context_options_create()} {}
+
+    friend class Context;
+};
+
+class Context : public Handle<btck_Context, btck_context_copy, btck_context_destroy>
+{
+public:
+    Context(ContextOptions& opts)
+        : Handle{btck_context_create(opts.get())} {}
+
+    Context()
+        : Handle{btck_context_create(ContextOptions{}.get())} {}
 };
 
 } // namespace btck

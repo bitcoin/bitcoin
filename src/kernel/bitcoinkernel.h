@@ -57,6 +57,9 @@ extern "C" {
  * otherwise "context-free" operations. This means that the user is not
  * required to initialize their own context before using the library.
  *
+ * The user should create their own context for passing it to state-rich validation
+ * functions and holding callbacks for kernel events.
+ *
  * @section error Error handling
  *
  * Functions communicate an error through their return types, usually returning
@@ -111,6 +114,29 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
  * instances.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
+
+/**
+ * Opaque data structure for holding options for creating a new kernel context.
+ *
+ * Once a kernel context has been created from these options, they may be
+ * destroyed. The options hold the notification callbacks as well as the
+ * selected chain type until they are passed to the context. If no options are
+ * configured, the context will be instantiated with no callbacks and for
+ * mainnet. Their content and scope can be expanded over time.
+ */
+typedef struct btck_ContextOptions btck_ContextOptions;
+
+/**
+ * Opaque data structure for holding a kernel context.
+ *
+ * The kernel context is used to initialize internal state and hold the chain
+ * parameters and callbacks for handling error and validation events. Once
+ * other validation objects are instantiated from it, the context is kept in
+ * memory for the duration of their lifetimes.
+ *
+ * A constructed context can be safely used from multiple threads.
+ */
+typedef struct btck_Context btck_Context;
 
 /** Callback function types */
 
@@ -467,6 +493,53 @@ BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
  * Stop logging and destroy the logging connection.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
+
+///@}
+
+/** @name ContextOptions
+ * Functions for working with context options.
+ */
+///@{
+
+/**
+ * Creates an empty context options.
+ */
+BITCOINKERNEL_API btck_ContextOptions* BITCOINKERNEL_WARN_UNUSED_RESULT btck_context_options_create();
+
+/**
+ * Destroy the context options.
+ */
+BITCOINKERNEL_API void btck_context_options_destroy(btck_ContextOptions* context_options);
+
+///@}
+
+/** @name Context
+ * Functions for working with contexts.
+ */
+///@{
+
+/**
+ * @brief Create a new kernel context. If the options have not been previously
+ * set, their corresponding fields will be initialized to default values; the
+ * context will assume mainnet chain parameters and won't attempt to call the
+ * kernel notification callbacks.
+ *
+ * @param[in] context_options Nullable, created by @ref btck_context_options_create.
+ * @return                    The allocated kernel context, or null on error.
+ */
+BITCOINKERNEL_API btck_Context* BITCOINKERNEL_WARN_UNUSED_RESULT btck_context_create(
+    const btck_ContextOptions* context_options);
+
+/**
+ * Copy the context.
+ */
+BITCOINKERNEL_API btck_Context* BITCOINKERNEL_WARN_UNUSED_RESULT btck_context_copy(
+    const btck_Context* context) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the context.
+ */
+BITCOINKERNEL_API void btck_context_destroy(btck_Context* context);
 
 ///@}
 
