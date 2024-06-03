@@ -14,14 +14,14 @@
 #include <vector>
 
 class ArgsManager;
-class CAddrMan;
+class AddrMan;
 class CAddress;
 class CDataStream;
 struct bilingual_str;
 
-bool DumpPeerAddresses(const ArgsManager& args, const CAddrMan& addr);
+bool DumpPeerAddresses(const ArgsManager& args, const AddrMan& addr);
 /** Only used by tests. */
-void ReadFromStream(CAddrMan& addr, CDataStream& ssPeers);
+void ReadFromStream(AddrMan& addr, CDataStream& ssPeers);
 
 /** Access to the banlist database (banlist.json) */
 class CBanDB
@@ -48,7 +48,7 @@ public:
 };
 
 /** Returns an error string on failure */
-std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<CAddrMan>& addrman);
+std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const ArgsManager& args, std::unique_ptr<AddrMan>& addrman);
 
 /**
  * Dump the anchor IP address database (anchors.dat)
