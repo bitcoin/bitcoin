@@ -175,16 +175,21 @@ bool WalletBatch::EraseWatchOnly(const CScript &dest)
     return EraseIC(std::make_pair(DBKeys::WATCHS, dest));
 }
 
-bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
+bool WalletBatch::WriteBestBlock(const BestBlock& best_block)
 {
     WriteIC(DBKeys::BESTBLOCK, CBlockLocator()); // Write empty block locator so versions that require a merkle branch automatically rescan
-    return WriteIC(DBKeys::BESTBLOCK_NOMERKLE, locator);
+    return WriteIC(DBKeys::BESTBLOCK_NOMERKLE, best_block);
 }
 
-bool WalletBatch::ReadBestBlock(CBlockLocator& locator)
+bool WalletBatch::ReadBestBlock(BestBlock& best_block)
 {
-    if (m_batch->Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) return true;
-    return m_batch->Read(DBKeys::BESTBLOCK_NOMERKLE, locator);
+    CBlockLocator locator;
+    if (m_batch->Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) {
+        best_block.m_locator = locator;
+        best_block.m_hash = locator.vHave[0];
+        return true;
+    }
+    return m_batch->Read(DBKeys::BESTBLOCK_NOMERKLE, best_block);
 }
 
 bool WalletBatch::IsEncrypted()

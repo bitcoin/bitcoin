@@ -294,8 +294,35 @@ struct CRecipient
 
 struct BestBlock
 {
+    CBlockLocator m_locator;
     uint256 m_hash;
     std::optional<int> m_height;
+
+    bool IsNull() const { return m_locator.IsNull(); }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_locator;
+        // No need to write m_hash since it's the first thing in m_locator
+        if (m_height.has_value()) {
+            s << m_height.value();
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_locator;
+        if (!s.eof()) {
+            int height;
+            s >> height;
+            m_height = height;
+        }
+        if (!m_locator.IsNull()) {
+            m_hash = m_locator.vHave[0];
+        }
+    }
 };
 
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
@@ -983,6 +1010,11 @@ public:
         AssertLockHeld(cs_wallet);
         assert(m_best_block.m_height.has_value());
         return m_best_block.m_hash;
+    }
+    CBlockLocator GetBestBlockLocator() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        AssertLockHeld(cs_wallet);
+        return m_best_block.m_locator;
     }
     /** Set last block processed height, and write to database */
     void SetBestBlock(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
