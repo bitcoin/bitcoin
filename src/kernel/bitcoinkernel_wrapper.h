@@ -38,6 +38,14 @@ enum class LogLevel : btck_LogLevel {
     INFO_LEVEL = btck_LogLevel_INFO
 };
 
+enum class ChainType : btck_ChainType {
+    MAINNET = btck_ChainType_MAINNET,
+    TESTNET = btck_ChainType_TESTNET,
+    TESTNET_4 = btck_ChainType_TESTNET_4,
+    SIGNET = btck_ChainType_SIGNET,
+    REGTEST = btck_ChainType_REGTEST
+};
+
 enum class ScriptVerifyStatus : btck_ScriptVerifyStatus {
     OK = btck_ScriptVerifyStatus_OK,
     ERROR_INVALID_FLAGS_COMBINATION = btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION,
@@ -523,10 +531,22 @@ public:
     }
 };
 
+class ChainParams : public Handle<btck_ChainParameters, btck_chain_parameters_copy, btck_chain_parameters_destroy>
+{
+public:
+    ChainParams(ChainType chain_type)
+        : Handle{btck_chain_parameters_create(static_cast<btck_ChainType>(chain_type))} {}
+};
+
 class ContextOptions : public UniqueHandle<btck_ContextOptions, btck_context_options_destroy>
 {
 public:
     ContextOptions() : UniqueHandle{btck_context_options_create()} {}
+
+    void SetChainParams(ChainParams& chain_params)
+    {
+        btck_context_options_set_chainparams(get(), chain_params.get());
+    }
 };
 
 class Context : public Handle<btck_Context, btck_context_copy, btck_context_destroy>

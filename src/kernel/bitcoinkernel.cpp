@@ -18,6 +18,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
+#include <sync.h>
 #include <tinyformat.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -106,6 +107,11 @@ struct Handle {
     static const CPP& get(const C* ptr)
     {
         return *reinterpret_cast<const CPP*>(ptr);
+    }
+
+    static CPP& get(C* ptr)
+    {
+        return *reinterpret_cast<CPP*>(ptr);
     }
 
     static void operator delete(void* ptr)
@@ -219,6 +225,8 @@ struct LoggingConnection {
 };
 
 struct ContextOptions {
+    mutable Mutex m_mutex;
+    std::unique_ptr<const CChainParams> m_chainparams GUARDED_BY(m_mutex);
 };
 
 class Context
@@ -235,9 +243,19 @@ public:
     Context(const ContextOptions* options, bool& sane)
         : m_context{std::make_unique<kernel::Context>()},
           m_notifications{std::make_unique<kernel::Notifications>()},
-          m_interrupt{std::make_unique<util::SignalInterrupt>()},
-          m_chainparams{CChainParams::Main()}
+          m_interrupt{std::make_unique<util::SignalInterrupt>()}
     {
+        if (options) {
+            LOCK(options->m_mutex);
+            if (options->m_chainparams) {
+                m_chainparams = std::make_unique<const CChainParams>(*options->m_chainparams);
+            }
+        }
+
+        if (!m_chainparams) {
+            m_chainparams = CChainParams::Main();
+        }
+
         if (!kernel::SanityChecks(*m_context)) {
             sane = false;
         }
@@ -252,6 +270,7 @@ struct btck_ScriptPubkey : Handle<btck_ScriptPubkey, CScript> {};
 struct btck_LoggingConnection : Handle<btck_LoggingConnection, LoggingConnection> {};
 struct btck_ContextOptions : Handle<btck_ContextOptions, ContextOptions> {};
 struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
+struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -448,9 +467,48 @@ void btck_logging_connection_destroy(btck_LoggingConnection* connection)
     delete connection;
 }
 
+btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_type)
+{
+    switch (chain_type) {
+    case btck_ChainType_MAINNET: {
+        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::Main().release()));
+    }
+    case btck_ChainType_TESTNET: {
+        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::TestNet().release()));
+    }
+    case btck_ChainType_TESTNET_4: {
+        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::TestNet4().release()));
+    }
+    case btck_ChainType_SIGNET: {
+        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::SigNet({}).release()));
+    }
+    case btck_ChainType_REGTEST: {
+        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::RegTest({}).release()));
+    }
+    }
+    assert(false);
+}
+
+btck_ChainParameters* btck_chain_parameters_copy(const btck_ChainParameters* chain_parameters)
+{
+    return btck_ChainParameters::copy(chain_parameters);
+}
+
+void btck_chain_parameters_destroy(btck_ChainParameters* chain_parameters)
+{
+    delete chain_parameters;
+}
+
 btck_ContextOptions* btck_context_options_create()
 {
     return btck_ContextOptions::create();
+}
+
+void btck_context_options_set_chainparams(btck_ContextOptions* options, const btck_ChainParameters* chain_parameters)
+{
+    // Copy the chainparams, so the caller can free it again
+    LOCK(btck_ContextOptions::get(options).m_mutex);
+    btck_ContextOptions::get(options).m_chainparams = std::make_unique<const CChainParams>(btck_ChainParameters::get(chain_parameters));
 }
 
 void btck_context_options_destroy(btck_ContextOptions* options)
