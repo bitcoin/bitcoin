@@ -137,24 +137,29 @@ public:
         // Check that all values in `mapInfo` are equal to all values in `other.mapInfo`.
         // Keys may be different.
 
-        using AddrInfoHasher = std::function<size_t(const AddrInfo&)>;
-        using AddrInfoEq = std::function<bool(const AddrInfo&, const AddrInfo&)>;
-
-        CNetAddrHash netaddr_hasher;
-
-        AddrInfoHasher addrinfo_hasher = [&netaddr_hasher](const AddrInfo& a) {
-            return netaddr_hasher(static_cast<CNetAddr>(a)) ^ netaddr_hasher(a.source) ^
-                   a.nLastSuccess ^ a.nAttempts ^ a.nRefCount ^ a.fInTried;
+        auto addrinfo_hasher = [](const AddrInfo& a) {
+            CSipHasher hasher(0, 0);
+            auto addr_key = a.GetKey();
+            auto source_key = a.source.GetAddrBytes();
+            hasher.Write(a.nLastSuccess);
+            hasher.Write(a.nAttempts);
+            hasher.Write(a.nRefCount);
+            hasher.Write(a.fInTried);
+            hasher.Write(a.GetNetwork());
+            hasher.Write(a.source.GetNetwork());
+            hasher.Write(addr_key.size());
+            hasher.Write(source_key.size());
+            hasher.Write(addr_key.data(), addr_key.size());
+            hasher.Write(source_key.data(), source_key.size());
+            return (size_t)hasher.Finalize();
         };
 
-        AddrInfoEq addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
-            return static_cast<CNetAddr>(lhs) == static_cast<CNetAddr>(rhs) &&
-                   lhs.source == rhs.source && lhs.nLastSuccess == rhs.nLastSuccess &&
-                   lhs.nAttempts == rhs.nAttempts && lhs.nRefCount == rhs.nRefCount &&
-                   lhs.fInTried == rhs.fInTried;
+        auto addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
+            return std::tie(static_cast<const CService&>(lhs), lhs.source, lhs.nLastSuccess, lhs.nAttempts, lhs.nRefCount, lhs.fInTried) ==
+                   std::tie(static_cast<const CService&>(rhs), rhs.source, rhs.nLastSuccess, rhs.nAttempts, rhs.nRefCount, rhs.fInTried);
         };
 
-        using Addresses = std::unordered_set<AddrInfo, AddrInfoHasher, AddrInfoEq>;
+        using Addresses = std::unordered_set<AddrInfo, decltype(addrinfo_hasher), decltype(addrinfo_eq)>;
 
         const size_t num_addresses{m_impl->mapInfo.size()};
 

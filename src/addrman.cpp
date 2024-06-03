@@ -569,7 +569,7 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     AddrInfo& info = *pinfo;
 
     // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
+    if (!m_discriminate_ports && info != addr)
         return;
 
     // update info
@@ -707,7 +707,7 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTi
     AddrInfo& info = *pinfo;
 
     // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
+    if (!m_discriminate_ports && info != addr)
         return;
 
     // update info
@@ -838,7 +838,7 @@ void AddrManImpl::Connected_(const CService& addr, int64_t nTime)
     AddrInfo& info = *pinfo;
 
     // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
+    if (!m_discriminate_ports && info != addr)
         return;
 
     // update info
@@ -860,7 +860,7 @@ void AddrManImpl::SetServices_(const CService& addr, ServiceFlags nServices)
     AddrInfo& info = *pinfo;
 
     // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
+    if (!m_discriminate_ports && info != addr)
         return;
 
     // update info
@@ -878,7 +878,7 @@ AddrInfo AddrManImpl::GetAddressInfo_(const CService& addr)
     AddrInfo& info = *pinfo;
 
     // check whether we are talking about the exact same CService (including same port)
-    if (info != addr)
+    if (!m_discriminate_ports && info != addr)
         return AddrInfo();
 
     return *pinfo;
