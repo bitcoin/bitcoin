@@ -23,11 +23,12 @@
 class CBlockIndex;
 class BlockValidationState;
 class TxValidationState;
-
-namespace Consensus
-{
-    struct Params;
-}
+namespace Consensus {
+struct Params;
+} // namespace Consensus
+namespace llmq {
+class CQuorumManager;
+} // namespace llmq
 
 struct CCreditPool {
     CAmount locked{0};
@@ -82,7 +83,7 @@ public:
      * to change amount of credit pool
      * @return true if transaction can be included in this block
      */
-    bool ProcessLockUnlockTransaction(const CTransaction& tx, TxValidationState& state);
+    bool ProcessLockUnlockTransaction(const llmq::CQuorumManager& qman, const CTransaction& tx, TxValidationState& state);
 
     /**
      * this function returns total amount of credits for the next block
@@ -134,7 +135,7 @@ private:
     CCreditPool ConstructCreditPool(const CBlockIndex* block_index, CCreditPool prev, const Consensus::Params& consensusParams);
 };
 
-std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const CBlock& block, const CBlockIndex* pindexPrev,
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const llmq::CQuorumManager& qman, const CBlock& block, const CBlockIndex* pindexPrev,
                                                          const Consensus::Params& consensusParams, const CAmount blockSubsidy, BlockValidationState& state);
 
 #endif

@@ -267,12 +267,12 @@ bool CCreditPoolDiff::Unlock(const CTransaction& tx, TxValidationState& state)
     return true;
 }
 
-bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxValidationState& state)
+bool CCreditPoolDiff::ProcessLockUnlockTransaction(const llmq::CQuorumManager& qman, const CTransaction& tx, TxValidationState& state)
 {
     if (!tx.IsSpecialTxVersion()) return true;
     if (tx.nType != TRANSACTION_ASSET_LOCK && tx.nType != TRANSACTION_ASSET_UNLOCK) return true;
 
-    if (!CheckAssetLockUnlockTx(tx, pindexPrev, pool.indexes, state)) {
+    if (!CheckAssetLockUnlockTx(qman, tx, pindexPrev, pool.indexes, state)) {
         // pass the state returned by the function above
         return false;
     }
@@ -292,7 +292,7 @@ bool CCreditPoolDiff::ProcessLockUnlockTransaction(const CTransaction& tx, TxVal
     }
 }
 
-std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const CBlock& block, const CBlockIndex* pindexPrev,
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const llmq::CQuorumManager& qman, const CBlock& block, const CBlockIndex* pindexPrev,
                                                          const Consensus::Params& consensusParams, const CAmount blockSubsidy, BlockValidationState& state)
 {
     try {
@@ -302,7 +302,7 @@ std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpo
         for (size_t i = 1; i < block.vtx.size(); ++i) {
             const auto& tx = *block.vtx[i];
             TxValidationState tx_state;
-            if (!creditPoolDiff.ProcessLockUnlockTransaction(tx, tx_state)) {
+            if (!creditPoolDiff.ProcessLockUnlockTransaction(qman, tx, tx_state)) {
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Process Lock/Unlock Transaction failed at Credit Pool (tx hash %s) %s", tx.GetHash().ToString(), tx_state.GetDebugMessage()));

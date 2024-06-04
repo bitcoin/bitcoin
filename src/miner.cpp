@@ -70,7 +70,8 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       m_cpoolman(*Assert(node.cpoolman)),
       m_chain_helper(*Assert(node.chain_helper)),
       m_mnhfman(*Assert(node.mnhf_manager)),
-      quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
+      m_quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
+      m_qman(*Assert(Assert(node.llmq_ctx)->qman)),
       m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
       m_evoDb(*Assert(node.evodb))
@@ -160,9 +161,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if (fDIP0003Active_context) {
         for (const Consensus::LLMQParams& params : llmq::GetEnabledQuorumParams(pindexPrev)) {
             std::vector<CTransactionRef> vqcTx;
-            if (quorum_block_processor.GetMineableCommitmentsTx(params,
-                                                                nHeight,
-                                                                vqcTx)) {
+            if (m_quorum_block_processor.GetMineableCommitmentsTx(params,
+                                                                  nHeight,
+                                                                  vqcTx)) {
                 for (const auto& qcTx : vqcTx) {
                     pblock->vtx.emplace_back(qcTx);
                     pblocktemplate->vTxFees.emplace_back(0);
@@ -224,7 +225,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
         if (fDIP0008Active_context) {
-            if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, quorum_block_processor, cbTx.merkleRootQuorums, state)) {
+            if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, m_quorum_block_processor, cbTx.merkleRootQuorums, state)) {
                 throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
             }
             if (fV20Active_context) {
@@ -235,7 +236,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 BlockValidationState state;
-                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
+                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_qman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
                 if (creditPoolDiff == std::nullopt) {
                     throw std::runtime_error(strprintf("%s: GetCreditPoolDiffForBlock failed: %s", __func__, state.ToString()));
                 }
@@ -471,7 +472,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             // `state` is local here because used only to log info about this specific tx
             TxValidationState state;
 
-            if (!creditPoolDiff->ProcessLockUnlockTransaction(iter->GetTx(), state)) {
+            if (!creditPoolDiff->ProcessLockUnlockTransaction(m_qman, iter->GetTx(), state)) {
                 if (fUsingModified) {
                     mapModifiedTx.get<ancestor_score>().erase(modit);
                     failedTx.insert(iter);

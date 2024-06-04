@@ -33,6 +33,7 @@ namespace llmq {
 class CChainLocksHandler;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
+class CQuorumManager;
 } // namespace llmq
 
 static const bool DEFAULT_PRINTPRIORITY = false;
@@ -165,7 +166,8 @@ private:
     CCreditPoolManager& m_cpoolman;
     CChainstateHelper& m_chain_helper;
     CMNHFManager& m_mnhfman;
-    const llmq::CQuorumBlockProcessor& quorum_block_processor;
+    const llmq::CQuorumBlockProcessor& m_quorum_block_processor;
+    const llmq::CQuorumManager& m_qman;
     llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
     CEvoDB& m_evoDb;

@@ -340,9 +340,10 @@ void PrepareShutdown(NodeContext& node)
         }
         pblocktree.reset();
         node.chain_helper.reset();
-        if (node.llmq_ctx) {
-            node.llmq_ctx.reset();
+        if (node.mnhf_manager) {
+            node.mnhf_manager->DisconnectManagers();
         }
+        node.llmq_ctx.reset();
         llmq::quorumSnapshotManager.reset();
         node.mempool->DisconnectManagers();
         node.dmnman.reset();
@@ -1974,12 +1975,14 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
                 node.llmq_ctx.reset();
                 node.llmq_ctx = std::make_unique<LLMQContext>(chainman.ActiveChainstate(), *node.connman, *node.dmnman, *node.evodb, *node.mn_metaman, *node.mnhf_manager, *node.sporkman,
                                                               *node.mempool, node.mn_activeman.get(), *node.mn_sync, node.peerman, /* unit_tests = */ false, /* wipe = */ fReset || fReindexChainState);
+                // Enable CMNHFManager::{Process, Undo}Block
+                node.mnhf_manager->ConnectManagers(node.llmq_ctx->qman.get());
                 // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
                 node.llmq_ctx->Start();
 
                 node.chain_helper.reset();
                 node.chain_helper = std::make_unique<CChainstateHelper>(*node.cpoolman, *node.dmnman, *node.mnhf_manager, *node.govman, *(node.llmq_ctx->quorum_block_processor),
-                                                                        chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler));
+                                                                        chainparams.GetConsensus(), *node.mn_sync, *node.sporkman, *(node.llmq_ctx->clhandler), *(node.llmq_ctx->qman));
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

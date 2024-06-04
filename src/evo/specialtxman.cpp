@@ -18,7 +18,8 @@
 #include <llmq/commitment.h>
 #include <primitives/block.h>
 
-static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
+static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const llmq::CQuorumManager& qman, const CTransaction& tx, const CBlockIndex* pindexPrev,
+                                const CCoinsViewCache& view, const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
 {
     AssertLockHeld(cs_main);
 
@@ -48,12 +49,12 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransact
             if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");
             }
-            return CheckMNHFTx(tx, pindexPrev, state);
+            return CheckMNHFTx(qman, tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
             if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetlocks-before-v20");
             }
-            return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
+            return CheckAssetLockUnlockTx(qman, tx, pindexPrev, indexes, state);
         case TRANSACTION_ASSET_UNLOCK:
             if (Params().NetworkIDString() == CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
                 // TODO:  adjust functional tests to make it activated by MN_RR on regtest too
@@ -62,7 +63,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransact
             if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-mn_rr");
             }
-            return CheckAssetLockUnlockTx(tx, pindexPrev, indexes, state);
+            return CheckAssetLockUnlockTx(qman, tx, pindexPrev, indexes, state);
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -75,7 +76,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const CTransact
 bool CSpecialTxProcessor::CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
 {
     AssertLockHeld(cs_main);
-    return CheckSpecialTxInner(m_dmnman, tx, pindexPrev, view, std::nullopt, check_sigs, state);
+    return CheckSpecialTxInner(m_dmnman, m_qman, tx, pindexPrev, view, std::nullopt, check_sigs, state);
 }
 
 [[nodiscard]] bool CSpecialTxProcessor::ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)
@@ -154,7 +155,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             TxValidationState tx_state;
             // At this moment CheckSpecialTx() and ProcessSpecialTx() may fail by 2 possible ways:
             // consensus failures and "TX_BAD_SPECIAL"
-            if (!CheckSpecialTxInner(m_dmnman, *ptr_tx, pindex->pprev, view, creditPool.indexes, fCheckCbTxMerkleRoots, tx_state)) {
+            if (!CheckSpecialTxInner(m_dmnman, m_qman, *ptr_tx, pindex->pprev, view, creditPool.indexes, fCheckCbTxMerkleRoots, tx_state)) {
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Special Transaction check failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
@@ -275,7 +276,7 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
     try {
         if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
 
-        auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
+        auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_qman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;
 
         // If we get there we have v20 activated and credit pool amount must be included in block CbTx

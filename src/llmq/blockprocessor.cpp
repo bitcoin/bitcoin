@@ -38,9 +38,6 @@ static void PreComputeQuorumMembers(CDeterministicMNManager& dmnman, const CBloc
 
 namespace llmq
 {
-
-std::unique_ptr<CQuorumBlockProcessor> quorumBlockProcessor;
-
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT_Q_INDEXED = "q_mcihi";

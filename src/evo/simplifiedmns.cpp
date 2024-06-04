@@ -183,14 +183,14 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
     return true;
 }
 
-void CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const CBlockIndex* blockIndex)
+void CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const llmq::CQuorumManager& qman, const CBlockIndex* blockIndex)
 {
     // Group quorums (indexes corresponding to entries of newQuorums) per CBlockIndex containing the expected CL signature in CbTx.
     // We want to avoid to load CbTx now, as more than one quorum will target the same block: hence we want to load CbTxs once per block (heavy operation).
     std::multimap<const CBlockIndex*, uint16_t>  workBaseBlockIndexMap;
 
     for (const auto [idx, e] : enumerate(newQuorums)) {
-        auto quorum = llmq::quorumManager->GetQuorum(e.llmqType, e.quorumHash);
+        auto quorum = qman.GetQuorum(e.llmqType, e.quorumHash);
         // In case of rotation, all rotated quorums rely on the CL sig expected in the cycleBlock (the block of the first DKG) - 8
         // In case of non-rotation, quorums rely on the CL sig expected in the block of the DKG - 8
         const CBlockIndex* pWorkBaseBlockIndex =
@@ -317,7 +317,7 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
 }
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet,
-                               CDeterministicMNManager& dmnman, const llmq::CQuorumBlockProcessor& quorum_block_processor,
+                               CDeterministicMNManager& dmnman, const llmq::CQuorumBlockProcessor& quorum_block_processor, const llmq::CQuorumManager& qman,
                                std::string& errorRet, bool extended)
 {
     AssertLockHeld(cs_main);
@@ -362,7 +362,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     }
 
     if (DeploymentActiveAfter(blockIndex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
-        mnListDiffRet.BuildQuorumChainlockInfo(blockIndex);
+        mnListDiffRet.BuildQuorumChainlockInfo(qman, blockIndex);
     }
 
     // TODO store coinbase TX in CBlockIndex
