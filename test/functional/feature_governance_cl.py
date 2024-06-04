@@ -8,7 +8,7 @@ import json
 
 from test_framework.messages import uint256_to_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, satoshi_round
+from test_framework.util import assert_equal, force_finish_mnsync, satoshi_round
 
 class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
@@ -132,6 +132,9 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Reconnect isolated node and confirm the next ChainLock will let it sync")
         self.reconnect_isolated_node(5, 0)
+        # Force isolated node to be fully synced so that it would not request gov objects when reconnected
+        assert_equal(self.nodes[5].mnsync("status")["IsSynced"], False)
+        force_finish_mnsync(self.nodes[5])
         self.nodes[0].generate(1)
         self.bump_mocktime(156)
         self.sync_blocks()
