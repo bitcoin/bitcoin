@@ -268,6 +268,7 @@ target_link_libraries(bitcoin_node
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:libevent::libevent>
     $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
+    $<TARGET_NAME_IF_EXISTS:NATPMP::NATPMP>
 )
 
 

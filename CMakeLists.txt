@@ -106,6 +106,11 @@ cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TE
 
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
+option(WITH_NATPMP "Enable NAT-PMP." OFF)
+if(WITH_NATPMP)
+  find_package(NATPMP MODULE REQUIRED)
+endif()
+
 set(configure_warnings)
 
 include(CheckPIESupported)
@@ -278,6 +283,8 @@ if(ENABLE_WALLET)
   message("   - descriptor wallets (SQLite) ...... ${WITH_SQLITE}")
   message("   - legacy wallets (Berkeley DB) ..... ${WITH_BDB}")
 endif()
+message("  port mapping:")
+message("   - using NAT-PMP .................... ${WITH_NATPMP}")
 message("Tests:")
 message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("")
