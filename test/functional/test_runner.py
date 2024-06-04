@@ -122,6 +122,7 @@ BASE_SCRIPTS = [
     'wallet_address_types.py --legacy-wallet',
     'wallet_address_types.py --descriptors',
     'p2p_orphan_handling.py',
+    'p2p_notfound_block.py',
     'wallet_basic.py --legacy-wallet',
     'wallet_basic.py --descriptors',
     'feature_maxtipage.py',
