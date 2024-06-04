@@ -147,6 +147,34 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         }
     }
 
+    if (argsman.IsArgSet("-mempooltruc")) {
+        std::optional<bool> accept_flag, enforce_flag;
+        if (argsman.GetBoolArg("-mempooltruc", false)) {
+            enforce_flag = true;
+        }
+        for (auto& opt : util::SplitString(argsman.GetArg("-mempooltruc", ""), ",+")) {
+            if (opt == "optin" || opt == "enforce") {
+                enforce_flag = true;
+            } else if (opt == "-optin" || opt == "-enforce") {
+                enforce_flag = false;
+            } else if (opt == "accept") {
+                accept_flag = true;
+            } else if (opt == "reject" || opt == "0") {
+                accept_flag = false;
+            }
+        }
+
+        if (accept_flag && !*accept_flag) {  // reject
+            mempool_opts.truc_policy = TRUCPolicy::Reject;
+        } else if (enforce_flag && *enforce_flag) {  // enforce
+            mempool_opts.truc_policy = TRUCPolicy::Enforce;
+        } else if ((!accept_flag) && !enforce_flag) {
+            // nothing specified, leave at default
+        } else {  // accept or -enforce
+            mempool_opts.truc_policy = TRUCPolicy::Accept;
+        }
+    }
+
     mempool_opts.persist_v1_dat = argsman.GetBoolArg("-persistmempoolv1", mempool_opts.persist_v1_dat);
 
     ApplyArgsManOptions(argsman, mempool_opts.limits);
