@@ -102,7 +102,9 @@ class DisconnectBanTest(BitcoinTestFramework):
                 assert_equal(ban["ban_duration"], 120)
                 assert_equal(ban["time_remaining"], 117)
 
-        self.restart_node(1)
+        # Keep mocktime, to avoid ban expiry when restart takes longer than
+        # time_remaining
+        self.restart_node(1, extra_args=[f"-mocktime={old_time+4}"])
 
         listAfterShutdown = self.nodes[1].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
