@@ -18,13 +18,18 @@ const std::vector<CTransactionRef> empty_extra_txn;
 
 BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
-static CBlock BuildBlockTestCase() {
-    CBlock block;
+static CMutableTransaction BuildTransactionTestCase() {
     CMutableTransaction tx;
     tx.vin.resize(1);
     tx.vin[0].scriptSig.resize(10);
     tx.vout.resize(1);
     tx.vout[0].nValue = 42;
+    return tx;
+}
+
+static CBlock BuildBlockTestCase() {
+    CBlock block;
+    CMutableTransaction tx = BuildTransactionTestCase();
 
     block.vtx.resize(3);
     block.vtx[0] = MakeTransactionRef(tx);
@@ -261,11 +266,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
-    CMutableTransaction coinbase;
-    coinbase.vin.resize(1);
-    coinbase.vin[0].scriptSig.resize(10);
-    coinbase.vout.resize(1);
-    coinbase.vout[0].nValue = 42;
+    CMutableTransaction coinbase = BuildTransactionTestCase();
 
     CBlock block;
     block.vtx.resize(1);
@@ -299,6 +300,51 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         BOOST_CHECK_EQUAL(block.GetHash().ToString(), block2.GetHash().ToString());
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block2, &mutated).ToString());
         BOOST_CHECK(!mutated);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    TestMemPoolEntryHelper entry;
+    const CBlock block(BuildBlockTestCase());
+    std::vector<CTransactionRef> extra_txn;
+    extra_txn.resize(10);
+
+    CMutableTransaction mtx = BuildTransactionTestCase();
+    mtx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
+    mtx.vin[0].prevout.n = 0;
+    const CTransactionRef non_block_tx = MakeTransactionRef(std::move(mtx));
+
+    LOCK2(cs_main, pool.cs);
+    pool.addUnchecked(entry.FromTx(block.vtx[2]));
+    BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 0);
+    // Ensure the non_block_tx is actually not in the block
+    for (const auto &block_tx : block.vtx) {
+        BOOST_CHECK_NE(block_tx->GetHash(), non_block_tx->GetHash());
+    }
+    // Ensure block.vtx[1] is not in pool
+    BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()), nullptr);
+
+    {
+        const CBlockHeaderAndShortTxIDs cmpctblock{block};
+        PartiallyDownloadedBlock partial_block(&pool);
+        PartiallyDownloadedBlock partial_block_with_extra(&pool);
+
+        BOOST_CHECK(partial_block.InitData(cmpctblock, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK( partial_block.IsTxAvailable(0));
+        BOOST_CHECK(!partial_block.IsTxAvailable(1));
+        BOOST_CHECK( partial_block.IsTxAvailable(2));
+
+        // Add an unrelated tx to extra_txn:
+        extra_txn[0] = non_block_tx;
+        // and a tx from the block that's not in the mempool:
+        extra_txn[1] = block.vtx[1];
+
+        BOOST_CHECK(partial_block_with_extra.InitData(cmpctblock, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partial_block_with_extra.IsTxAvailable(0));
+        // This transaction is now available via extra_txn:
+        BOOST_CHECK(partial_block_with_extra.IsTxAvailable(1));
+        BOOST_CHECK(partial_block_with_extra.IsTxAvailable(2));
     }
 }
 
