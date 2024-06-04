@@ -212,6 +212,11 @@ def check_exported_symbols(binary) -> bool:
         ok = False
     return ok
 
+def check_RUNPATH(binary) -> bool:
+    assert binary.get(lief.ELF.DYNAMIC_TAGS.RUNPATH) is None
+    assert binary.get(lief.ELF.DYNAMIC_TAGS.RPATH) is None
+    return True
+
 def check_ELF_libraries(binary) -> bool:
     ok: bool = True
     for library in binary.libraries:
@@ -277,6 +282,7 @@ lief.EXE_FORMATS.ELF: [
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries),
     ('INTERPRETER_NAME', check_ELF_interpreter),
     ('ABI', check_ELF_ABI),
+    ('RUNPATH', check_RUNPATH),
 ],
 lief.EXE_FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
