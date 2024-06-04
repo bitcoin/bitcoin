@@ -1,9 +1,9 @@
-27.1rc1 Release Notes
+27.1 Release Notes
 =====================
 
-Bitcoin Core version 27.1rc1 is now available from:
+Bitcoin Core version 27.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-27.1/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-27.1/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -74,6 +74,8 @@ Notable changes
 - #29985 depends: Fix build of Qt for 32-bit platforms with recent glibc
 - #30097 crypto: disable asan for sha256_sse4 with clang and -O0
 - #30151 depends: Fetch miniupnpc sources from an alternative website
+- #30216 build: Fix building fuzz binary on on SunOS / illumos
+- #30217 depends: Update Boost download link
 
 ### Doc
 
