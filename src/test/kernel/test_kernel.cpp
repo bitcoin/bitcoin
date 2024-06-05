@@ -554,6 +554,26 @@ void chainman_reindex_test(TestDirectory& test_directory)
 
     std::vector<std::string> import_files;
     assert(chainman->ImportBlocks(import_files));
+
+    // Sanity check some block retrievals
+    auto genesis_index{chainman->GetBlockIndexFromGenesis()};
+    auto genesis_block_raw{chainman->ReadBlock(genesis_index).value().GetBlockData()};
+    auto first_index{chainman->GetBlockIndexByHeight(0).value()};
+    auto first_block_raw{chainman->ReadBlock(genesis_index).value().GetBlockData()};
+    assert(genesis_block_raw == first_block_raw);
+    auto first_info{first_index.GetInfo()};
+    assert(first_info->height == 0);
+
+    auto next_index{chainman->GetNextBlockIndex(first_index).value()};
+    auto next_block_string{chainman->ReadBlock(next_index).value().GetBlockData()};
+    auto tip_index{chainman->GetBlockIndexFromTip()};
+    auto tip_block_string{chainman->ReadBlock(tip_index).value().GetBlockData()};
+    auto second_index{chainman->GetBlockIndexByHeight(1).value()};
+    auto second_block_string{chainman->ReadBlock(second_index).value().GetBlockData()};
+    auto second_info{second_index.GetInfo()};
+    assert(second_info->height == 1);
+    assert(next_block_string == tip_block_string);
+    assert(next_block_string == second_block_string);
 }
 
 void chainman_reindex_chainstate_test(TestDirectory& test_directory)

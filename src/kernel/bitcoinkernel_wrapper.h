@@ -543,6 +543,13 @@ public:
     }
 };
 
+struct BlockIndexInfoDeleter {
+    void operator()(kernel_BlockIndexInfo* ptr) const
+    {
+        kernel_block_index_info_destroy(ptr);
+    }
+};
+
 class BlockIndex
 {
 private:
@@ -566,6 +573,14 @@ public:
         auto index{kernel_get_previous_block_index(m_block_index.get())};
         if (!index) return std::nullopt;
         return index;
+    }
+
+    std::unique_ptr<kernel_BlockIndexInfo, BlockIndexInfoDeleter> GetInfo() const noexcept
+    {
+        if (!m_block_index) {
+            return nullptr;
+        }
+        return std::unique_ptr<kernel_BlockIndexInfo, BlockIndexInfoDeleter>(kernel_get_block_index_info(m_block_index.get()));
     }
 
     operator bool() const noexcept
@@ -619,6 +634,25 @@ public:
     BlockIndex GetBlockIndexFromTip() const noexcept
     {
         return kernel_get_block_index_from_tip(m_context.m_context.get(), m_chainman);
+    }
+
+    BlockIndex GetBlockIndexFromGenesis() const noexcept
+    {
+        return kernel_get_block_index_from_genesis(m_context.m_context.get(), m_chainman);
+    }
+
+    std::optional<BlockIndex> GetBlockIndexByHeight(int height) const noexcept
+    {
+        auto index{kernel_get_block_index_by_height(m_context.m_context.get(), m_chainman, height)};
+        if (!index) return std::nullopt;
+        return index;
+    }
+
+    std::optional<BlockIndex> GetNextBlockIndex(BlockIndex& block_index) const noexcept
+    {
+        auto index{kernel_get_next_block_index(m_context.m_context.get(), block_index.m_block_index.get(), m_chainman)};
+        if (!index) return std::nullopt;
+        return index;
     }
 
     std::optional<Block> ReadBlock(BlockIndex& block_index) const noexcept
