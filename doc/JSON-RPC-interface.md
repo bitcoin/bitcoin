@@ -33,10 +33,10 @@ requests when multiple wallets are in use.
 
 ```sh
 # Get block count from the / endpoint when rpcuser=alice and rpcport=38332
-$ curl --user alice --data-binary '{"jsonrpc": "1.0", "id": "0", "method": "getblockcount", "params": []}' -H 'content-type: application/json;' localhost:38332/
+$ curl --user alice --data-binary '{"jsonrpc": "2.0", "id": "0", "method": "getblockcount", "params": []}' -H 'content-type: application/json;' localhost:38332/
 
 # Get balance from the /wallet/walletname endpoint when rpcuser=alice, rpcport=38332 and rpcwallet=desc-wallet
-$ curl --user alice --data-binary '{"jsonrpc": "1.0", "id": "0", "method": "getbalance", "params": []}' -H 'content-type: application/json;' localhost:38332/wallet/desc-wallet
+$ curl --user alice --data-binary '{"jsonrpc": "2.0", "id": "0", "method": "getbalance", "params": []}' -H 'content-type: application/json;' localhost:38332/wallet/desc-wallet
 
 ```
 
@@ -80,7 +80,7 @@ The server recognizes [JSON-RPC v2.0](https://www.jsonrpc.org/specification) req
 and responds accordingly. A 2.0 request is identified by the presence of
 `"jsonrpc": "2.0"` in the request body. If that key + value is not present in a request,
 the legacy JSON-RPC v1.1 protocol is followed instead, which was the only available
-protocol in previous releases.
+protocol in v27.0 and prior releases.
 
 || 1.1 | 2.0 |
 |-|-|-|
@@ -88,7 +88,7 @@ protocol in previous releases.
 | Response marker | (none) | `"jsonrpc": "2.0"` |
 | `"error"` and `"result"` fields in response | both present | only one is present |
 | HTTP codes in response | `200` unless there is any kind of RPC error (invalid parameters, method not found, etc) | Always `200` unless there is an actual HTTP server error (request parsing error, endpoint not found, etc) |
-| Notifications: requests that get no reply | (not supported) | Supported for requests that exclude the "id" field |
+| Notifications: requests that get no reply | (not supported) | Supported for requests that exclude the "id" field. Returns HTTP status `204` "No Content" |
 
 ## Security
 
