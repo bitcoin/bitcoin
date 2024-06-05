@@ -1252,6 +1252,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
 {
     const CChainParams& chainparams = Params();
     CTxMemPool::Options mempool_opts{
+        .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
         .signals = node.validation_signals.get(),
     };
