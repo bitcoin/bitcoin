@@ -209,6 +209,8 @@ struct entry_time {};
 struct ancestor_score {};
 struct index_by_wtxid {};
 
+class CBlockPolicyEstimator;
+
 /**
  * Information about a mempool transaction.
  */

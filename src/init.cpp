@@ -1545,6 +1545,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.chainman);
 
     CTxMemPool::Options mempool_opts{
+        .estimator = node.fee_estimator.get(),
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
         .signals = &validation_signals,
     };
