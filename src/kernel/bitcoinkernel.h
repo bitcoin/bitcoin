@@ -690,6 +690,16 @@ BITCOINKERNEL_API btck_Context* BITCOINKERNEL_WARN_UNUSED_RESULT btck_context_co
     const btck_Context* context) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Interrupt can be used to halt long-running validation functions like
+ * when reindexing, importing or processing blocks.
+ *
+ * @param[in] context  Non-null.
+ * @return             0 if the interrupt was successfully, non-zero otherwise.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_context_interrupt(
+    btck_Context* context) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the context.
  */
 BITCOINKERNEL_API void btck_context_destroy(btck_Context* context);

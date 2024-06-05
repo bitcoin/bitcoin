@@ -670,6 +670,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
 
     BOOST_CHECK(!std::filesystem::exists(in_memory_test_directory.m_directory / "blocks" / "index"));
     BOOST_CHECK(!std::filesystem::exists(in_memory_test_directory.m_directory / "chainstate"));
+
+    BOOST_CHECK(context.interrupt());
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)

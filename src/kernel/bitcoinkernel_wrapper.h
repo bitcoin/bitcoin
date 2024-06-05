@@ -658,6 +658,11 @@ public:
     Context()
         : Handle{btck_context_create(ContextOptions{}.get())} {}
 
+    bool interrupt()
+    {
+        return btck_context_interrupt(get()) == 0;
+    }
+
     friend class ChainstateManagerOptions;
 };
 

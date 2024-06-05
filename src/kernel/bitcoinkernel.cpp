@@ -672,6 +672,11 @@ btck_Context* btck_context_copy(const btck_Context* context)
     return btck_Context::copy(context);
 }
 
+int btck_context_interrupt(btck_Context* context)
+{
+    return (*btck_Context::get(context)->m_interrupt)() ? 0 : -1;
+}
+
 void btck_context_destroy(btck_Context* context)
 {
     delete context;
