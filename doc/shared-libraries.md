@@ -2,7 +2,6 @@ Shared Libraries
 ================
 
 ## bitcoinconsensus
-***This library is deprecated and will be removed in v28***
 
 The purpose of this library is to make the verification functionality that is critical to Bitcoin's consensus available to other applications, e.g. to language bindings.
 
