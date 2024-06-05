@@ -6,6 +6,7 @@
 #include <compressor.h>
 #include <core_io.h>
 #include <core_memusage.h>
+#include <kernel/mempool_options.h>
 #include <key_io.h>
 #include <policy/policy.h>
 #include <pubkey.h>
@@ -53,7 +54,7 @@ FUZZ_TARGET(script, .init = initialize_script)
     }
 
     TxoutType which_type;
-    bool is_standard_ret = IsStandard(script, std::nullopt, which_type);
+    bool is_standard_ret = IsStandard(script, kernel::MemPoolOptions{}, which_type);
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
