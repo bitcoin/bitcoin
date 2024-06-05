@@ -634,6 +634,39 @@ void chainman_reindex_test(TestDirectory& test_directory)
 
     std::vector<std::string> import_files;
     BOOST_CHECK(chainman->ImportBlocks(import_files));
+
+    // Sanity check some block retrievals
+    auto chain{chainman->GetChain()};
+    BOOST_CHECK_THROW(chain.GetByHeight(1000), std::runtime_error);
+    auto genesis_index{chain.Genesis()};
+    BOOST_CHECK(!genesis_index.GetPrevious());
+    auto genesis_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
+    auto first_index{chain.GetByHeight(0)};
+    auto first_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
+    check_equal(genesis_block_raw, first_block_raw);
+    auto height{first_index.GetHeight()};
+    BOOST_CHECK_EQUAL(height, 0);
+
+    auto next_index{chain.GetByHeight(first_index.GetHeight() + 1)};
+    BOOST_CHECK(chain.Contains(next_index));
+    auto next_block_data{chainman->ReadBlock(next_index).value().ToBytes()};
+    auto tip_index{chain.Tip()};
+    auto tip_block_data{chainman->ReadBlock(tip_index).value().ToBytes()};
+    auto second_index{chain.GetByHeight(1)};
+    auto second_block{chainman->ReadBlock(second_index).value()};
+    auto second_block_data{second_block.ToBytes()};
+    auto second_height{second_index.GetHeight()};
+    BOOST_CHECK_EQUAL(second_height, 1);
+    check_equal(next_block_data, tip_block_data);
+    check_equal(next_block_data, second_block_data);
+
+    auto second_hash{second_index.GetHash()};
+    auto another_second_index{chainman->GetBlockTreeEntry(second_hash)};
+    BOOST_CHECK(another_second_index);
+    auto another_second_height{another_second_index->GetHeight()};
+    auto second_block_hash{second_block.GetHash()};
+    check_equal(second_block_hash.ToBytes(), second_hash.ToBytes());
+    BOOST_CHECK_EQUAL(second_height, another_second_height);
 }
 
 void chainman_reindex_chainstate_test(TestDirectory& test_directory)
@@ -720,6 +753,21 @@ BOOST_AUTO_TEST_CASE(btck_chainman_mainnet_tests)
     chainman_mainnet_validation_test(test_directory);
     chainman_reindex_test(test_directory);
     chainman_reindex_chainstate_test(test_directory);
+}
+
+BOOST_AUTO_TEST_CASE(btck_block_hash_tests)
+{
+    std::array<std::byte, 32> test_hash;
+    std::array<std::byte, 32> test_hash_2;
+    for (int i = 0; i < 32; ++i) {
+        test_hash[i] = static_cast<std::byte>(i);
+        test_hash_2[i] = static_cast<std::byte>(i + 1);
+    }
+    BlockHash block_hash{test_hash};
+    BlockHash block_hash_2{test_hash_2};
+    BOOST_CHECK(block_hash != block_hash_2);
+    BOOST_CHECK(block_hash == block_hash);
+    CheckHandle(block_hash, block_hash_2);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
@@ -823,6 +871,31 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
             BOOST_CHECK_GT(coins.GetOutput().Amount(), 1);
         }
     }
+
+    CheckRange(chain.Entries(), chain.CountEntries());
+
+    for (const BlockTreeEntry entry : chain.Entries()) {
+        std::optional<Block> block{chainman->ReadBlock(entry)};
+        if (block) {
+            for (const TransactionView transaction : block->Transactions()) {
+                for (const TransactionOutputView output : transaction.Outputs()) {
+                    // skip data carrier outputs
+                    if ((unsigned char)output.GetScriptPubkey().ToBytes()[0] == 0x6a) {
+                        continue;
+                    }
+                    BOOST_CHECK_GT(output.Amount(), 1);
+                }
+            }
+        }
+    }
+
+    int32_t count{0};
+    for (const auto entry : chain.Entries()) {
+        BOOST_CHECK_EQUAL(entry.GetHeight(), count);
+        ++count;
+    }
+    BOOST_CHECK_EQUAL(count, chain.CountEntries());
+
 
     std::filesystem::remove_all(test_directory.m_directory / "blocks" / "blk00000.dat");
     BOOST_CHECK(!chainman->ReadBlock(tip_2).has_value());

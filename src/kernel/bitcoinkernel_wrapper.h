@@ -7,6 +7,7 @@
 
 #include <kernel/bitcoinkernel.h>
 
+#include <array>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -528,6 +529,53 @@ bool ScriptPubkeyApi<Derived>::Verify(int64_t amount,
     return result == 1;
 }
 
+template <typename Derived>
+class BlockHashApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+public:
+    bool operator==(const Derived& other) const
+    {
+        return btck_block_hash_equals(impl(), other.get()) != 0;
+    }
+
+    bool operator!=(const Derived& other) const
+    {
+        return btck_block_hash_equals(impl(), other.get()) == 0;
+    }
+
+    std::array<std::byte, 32> ToBytes() const
+    {
+        std::array<std::byte, 32> hash;
+        btck_block_hash_to_bytes(impl(), reinterpret_cast<unsigned char*>(hash.data()));
+        return hash;
+    }
+};
+
+class BlockHashView: public View<btck_BlockHash>, public BlockHashApi<BlockHashView>
+{
+public:
+    explicit BlockHashView(const btck_BlockHash* ptr) : View{ptr} {}
+};
+
+class BlockHash : public Handle<btck_BlockHash, btck_block_hash_copy, btck_block_hash_destroy>, public BlockHashApi<BlockHash>
+{
+public:
+    explicit BlockHash(const std::array<std::byte, 32>& hash)
+        : Handle{btck_block_hash_create(reinterpret_cast<const unsigned char*>(hash.data()))} {}
+
+    explicit BlockHash(btck_BlockHash* hash)
+        : Handle{hash} {}
+
+    BlockHash(const BlockHashView& view)
+        : Handle{view} {}
+};
+
 class Block : public Handle<btck_Block, btck_block_copy, btck_block_destroy>
 {
 public:
@@ -549,6 +597,11 @@ public:
     }
 
     MAKE_RANGE_METHOD(Transactions, Block, &Block::CountTransactions, &Block::GetTransaction, *this)
+
+    BlockHash GetHash() const
+    {
+        return BlockHash{btck_block_get_hash(get())};
+    }
 
     std::vector<std::byte> ToBytes() const
     {
@@ -612,6 +665,16 @@ public:
         auto entry{btck_block_tree_entry_get_previous(get())};
         if (!entry) return std::nullopt;
         return entry;
+    }
+
+    int32_t GetHeight() const
+    {
+        return btck_block_tree_entry_get_height(get());
+    }
+
+    BlockHashView GetHash() const
+    {
+        return BlockHashView{btck_block_tree_entry_get_block_hash(get())};
     }
 };
 
@@ -788,6 +851,30 @@ public:
     {
         return btck_chain_get_height(get());
     }
+
+    int CountEntries() const
+    {
+        return btck_chain_get_height(get()) + 1;
+    }
+
+    BlockTreeEntry Genesis() const
+    {
+        return btck_chain_get_genesis(get());
+    }
+
+    BlockTreeEntry GetByHeight(int height) const
+    {
+        auto index{btck_chain_get_by_height(get(), height)};
+        if (!index) throw std::runtime_error("No entry in the chain at the provided height");
+        return index;
+    }
+
+    bool Contains(BlockTreeEntry& entry) const
+    {
+        return btck_chain_contains(get(), entry.get());
+    }
+
+    MAKE_RANGE_METHOD(Entries, ChainView, &ChainView::CountEntries, &ChainView::GetByHeight, *this)
 };
 
 template <typename Derived>
@@ -922,6 +1009,13 @@ public:
     ChainView GetChain() const
     {
         return ChainView{btck_chainstate_manager_get_active_chain(get())};
+    }
+
+    std::optional<BlockTreeEntry> GetBlockTreeEntry(const BlockHash& block_hash) const
+    {
+        auto entry{btck_chainstate_manager_get_block_tree_entry_by_hash(get(), block_hash.get())};
+        if (!entry) return std::nullopt;
+        return entry;
     }
 
     std::optional<Block> ReadBlock(const BlockTreeEntry& entry) const
