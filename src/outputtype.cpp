@@ -81,11 +81,11 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     }
 }
 
-CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType type)
+CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, const CScript& script, OutputType type)
 {
     // Add script to keystore
-    keystore.AddCScript(script);
-    // Note that scripts over MAX_SCRIPT_ELEMENT_SIZE bytes are not yet supported.
+    keystore.scripts.emplace(CScriptID(script), script);
+
     switch (type) {
     case OutputType::LEGACY:
         return ScriptHash(script);
@@ -94,7 +94,7 @@ CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, 
         CTxDestination witdest = WitnessV0ScriptHash(script);
         CScript witprog = GetScriptForDestination(witdest);
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
-        keystore.AddCScript(witprog);
+        keystore.scripts.emplace(CScriptID(witprog), witprog);
         if (type == OutputType::BECH32) {
             return witdest;
         } else {

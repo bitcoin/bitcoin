@@ -287,9 +287,30 @@ RPCHelpMan addmultisigaddress()
         output_type = parsed.value();
     }
 
-    // Construct using pay-to-script-hash:
+    // Construct multisig scripts
+    FlatSigningProvider provider;
     CScript inner;
-    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, spk_man, inner);
+    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, provider, inner);
+
+    // Import scripts into the wallet
+    for (const auto& [id, script] : provider.scripts) {
+        // Due to a bug in the legacy wallet, the p2sh maximum script size limit is also imposed on 'p2sh-segwit' and 'bech32' redeem scripts.
+        // Even when redeem scripts over MAX_SCRIPT_ELEMENT_SIZE bytes are valid for segwit output types, we don't want to
+        // enable it because:
+        // 1) It introduces a compatibility-breaking change requiring downgrade protection; older wallets would be unable to interact with these "new" legacy wallets.
+        // 2) Considering the ongoing deprecation of the legacy spkm, this issue adds another good reason to transition towards descriptors.
+        if (script.size() > MAX_SCRIPT_ELEMENT_SIZE) throw JSONRPCError(RPC_WALLET_ERROR, "Unsupported multisig script size for legacy wallet. Upgrade to descriptors to overcome this limitation for p2sh-segwit or bech32 scripts");
+
+        if (!spk_man.AddCScript(script)) {
+            if (CScript inner_script; spk_man.GetCScript(CScriptID(script), inner_script)) {
+                CHECK_NONFATAL(inner_script == script); // Nothing to add, script already contained by the wallet
+                continue;
+            }
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error importing script into the wallet"));
+        }
+    }
+
+    // Store destination in the addressbook
     pwallet->SetAddressBook(dest, label, AddressPurpose::SEND);
 
     // Make the descriptor

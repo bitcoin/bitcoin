@@ -228,7 +228,7 @@ CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string&
 }
 
 // Creates a multisig address from a given list of public keys, number of signatures required, and the address type
-CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FillableSigningProvider& keystore, CScript& script_out)
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, FlatSigningProvider& keystore, CScript& script_out)
 {
     // Gather public keys
     if (required < 1) {
