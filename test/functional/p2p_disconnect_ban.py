@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node disconnect and ban behavior"""
@@ -18,7 +18,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def run_test(self):
-        self.log.info("Connect nodes both way")
+        self.log.info("Connect nodes both ways")
         # By default, the test framework sets up an addnode connection from
         # node 1 --> node0. By connecting node0 --> node 1, we're left with
         # the two nodes being connected both ways.
@@ -84,7 +84,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address'])
 
         self.log.info("setban: test banning with absolute timestamp")
-        self.nodes[1].setban("192.168.0.2", "add", old_time + 120, True)
+        self.nodes[1].setban("192.168.0.2", "add", old_time + 120, absolute=True)
 
         # Move time forward by 3 seconds so the fourth ban has expired
         self.nodes[1].setmocktime(old_time + 3)
@@ -102,7 +102,9 @@ class DisconnectBanTest(BitcoinTestFramework):
                 assert_equal(ban["ban_duration"], 120)
                 assert_equal(ban["time_remaining"], 117)
 
-        self.restart_node(1)
+        # Keep mocktime, to avoid ban expiry when restart takes longer than
+        # time_remaining
+        self.restart_node(1, extra_args=[f"-mocktime={old_time+4}"])
 
         listAfterShutdown = self.nodes[1].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
@@ -113,7 +115,7 @@ class DisconnectBanTest(BitcoinTestFramework):
 
         # Clear ban lists
         self.nodes[1].clearbanned()
-        self.log.info("Connect nodes both way")
+        self.log.info("Connect nodes both ways")
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
 
