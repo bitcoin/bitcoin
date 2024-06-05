@@ -327,6 +327,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/headerssync.cpp \
  test/fuzz/hex.cpp \
  test/fuzz/http_request.cpp \
+ test/fuzz/i2p.cpp \
  test/fuzz/integer.cpp \
  test/fuzz/key.cpp \
  test/fuzz/key_io.cpp \
