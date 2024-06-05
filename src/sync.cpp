@@ -9,7 +9,6 @@
 #include <sync.h>
 
 #include <logging.h>
-#include <logging/timer.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -23,11 +22,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-void LockContention(const char* pszName, const char* pszFile, int nLine)
-{
-    LOG_TIME_MICROS_WITH_CATEGORY(strprintf("%s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
-}
 
 #ifdef DEBUG_LOCKORDER
 //
