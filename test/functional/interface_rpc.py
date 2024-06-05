@@ -14,7 +14,6 @@ from typing import Optional
 import subprocess
 
 
-RPC_INVALID_ADDRESS_OR_KEY = -5
 RPC_INVALID_PARAMETER      = -8
 RPC_METHOD_NOT_FOUND       = -32601
 RPC_INVALID_REQUEST        = -32600
