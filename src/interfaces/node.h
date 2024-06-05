@@ -253,7 +253,7 @@ public:
     virtual UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) = 0;
 
     //! List rpc commands.
-    virtual std::vector<std::string> listRpcCommands() = 0;
+    virtual std::vector<std::pair<std::string, std::string>> listRpcCommands() = 0;
 
     //! Set RPC timer interface if unset.
     virtual void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) = 0;

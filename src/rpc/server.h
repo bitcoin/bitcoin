@@ -95,8 +95,8 @@ public:
     using Actor = std::function<bool(const JSONRPCRequest& request, UniValue& result, bool last_handler)>;
 
     //! Constructor taking Actor callback supporting multiple handlers.
-    CRPCCommand(std::string category, std::string name, Actor actor, std::vector<std::string> args, intptr_t unique_id)
-        : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
+    CRPCCommand(std::string category, std::string name, std::string subname, Actor actor, std::vector<std::string> args, intptr_t unique_id)
+        : category(std::move(category)), name(std::move(name)), subname(subname), actor(std::move(actor)), argNames(std::move(args)),
           unique_id(unique_id)
     {
     }
@@ -106,6 +106,7 @@ public:
         : CRPCCommand(
               category,
               fn().m_name,
+              "",
               [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn().HandleRequest(request); return true; },
               fn().GetArgNames(),
               intptr_t(fn))
@@ -114,9 +115,28 @@ public:
         CHECK_NONFATAL(fn().GetArgNames() == args_in);
     }
 
+    //! Simplified constructor taking plain RpcMethodFnType function pointer with sub-command.
+    CRPCCommand(std::string category, std::string name_in, std::string subname_in, RpcMethodFnType fn, std::vector<std::string> args_in)
+        : CRPCCommand(
+              category,
+              name_in,
+              subname_in,
+              [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn().HandleRequest(request); return true; },
+              fn().GetArgNames(),
+              intptr_t(fn))
+    {
+        if (subname_in.empty()) {
+            CHECK_NONFATAL(fn().m_name == name_in);
+        } else {
+            CHECK_NONFATAL(fn().m_name == name_in + " " + subname_in);
+        }
+
+        CHECK_NONFATAL(fn().GetArgNames() == args_in);
+    }
+
     //! Simplified constructor taking plain rpcfn_type function pointer.
     CRPCCommand(const char* category, const char* name, rpcfn_type fn, std::initializer_list<const char*> args)
-        : CRPCCommand(category, name,
+        : CRPCCommand(category, name, "",
                       [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn(request); return true; },
                       {args.begin(), args.end()}, intptr_t(fn))
     {
@@ -124,6 +144,7 @@ public:
 
     std::string category;
     std::string name;
+    std::string subname;
     Actor actor;
     std::vector<std::string> argNames;
     intptr_t unique_id;
@@ -135,7 +156,7 @@ public:
 class CRPCTable
 {
 private:
-    std::map<std::string, std::vector<const CRPCCommand*>> mapCommands;
+    std::map<std::pair<std::string, std::string>, std::vector<const CRPCCommand*>> mapCommands;
     std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions;
 public:
     CRPCTable();
@@ -155,7 +176,7 @@ public:
     * Returns a list of registered commands
     * @returns List of registered commands.
     */
-    std::vector<std::string> listCommands() const;
+    std::vector<std::pair<std::string, std::string>> listCommands() const;
 
     /**
      * Appends a CRPCCommand to the dispatch table.
@@ -170,7 +191,8 @@ public:
      * register different names, types, and numbers of parameters.
      */
     void appendCommand(const std::string& name, const CRPCCommand* pcmd);
-    bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
+    void appendCommand(const std::string& name, const std::string& subname, const CRPCCommand* pcmd);
+    bool removeCommand(const std::string& name, const std::string& subname, const CRPCCommand* pcmd);
 };
 
 bool IsDeprecatedRPCEnabled(const std::string& method);

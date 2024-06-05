@@ -1706,9 +1706,9 @@ static UniValue protx(const JSONRPCRequest& request)
     }
 }
 
-static void bls_generate_help(const JSONRPCRequest& request)
+static RPCHelpMan bls_generate()
 {
-    RPCHelpMan{"bls generate",
+    return RPCHelpMan{"bls generate",
         "\nReturns a BLS secret/public key pair.\n",
         {
             {"legacy", RPCArg::Type::BOOL, /* default */ "true until the v19 fork is activated, otherwise false", "Use legacy BLS scheme"},
@@ -1723,12 +1723,10 @@ static void bls_generate_help(const JSONRPCRequest& request)
         RPCExamples{
             HelpExampleCli("bls generate", "")
         },
-    }.Check(request);
-}
-
-static UniValue bls_generate(const JSONRPCRequest& request, const ChainstateManager& chainman)
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bls_generate_help(request);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
 
     CBLSSecretKey sk;
     sk.MakeNewKey();
@@ -1742,11 +1740,13 @@ static UniValue bls_generate(const JSONRPCRequest& request, const ChainstateMana
     std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
     ret.pushKV("scheme", bls_scheme_str);
     return ret;
+},
+    };
 }
 
-static void bls_fromsecret_help(const JSONRPCRequest& request)
+static RPCHelpMan bls_fromsecret()
 {
-    RPCHelpMan{"bls fromsecret",
+    return RPCHelpMan{"bls fromsecret",
         "\nParses a BLS secret key and returns the secret/public key pair.\n",
         {
             {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
@@ -1762,12 +1762,10 @@ static void bls_fromsecret_help(const JSONRPCRequest& request)
         RPCExamples{
             HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
         },
-    }.Check(request);
-}
-
-static UniValue bls_fromsecret(const JSONRPCRequest& request, const ChainstateManager& chainman)
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bls_fromsecret_help(request);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
 
     bool bls_legacy_scheme{!DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     if (!request.params[1].isNull()) {
@@ -1780,11 +1778,13 @@ static UniValue bls_fromsecret(const JSONRPCRequest& request, const ChainstateMa
     std::string bls_scheme_str = bls_legacy_scheme ? "legacy" : "basic";
     ret.pushKV("scheme", bls_scheme_str);
     return ret;
+},
+    };
 }
 
-[[ noreturn ]] static void bls_help()
+static RPCHelpMan bls_help()
 {
-    RPCHelpMan{"bls",
+    return RPCHelpMan{"bls",
         "Set of commands to execute BLS related actions.\n"
         "To get help on individual commands, use \"help bls command\".\n"
         "\nAvailable commands:\n"
@@ -1795,35 +1795,26 @@ static UniValue bls_fromsecret(const JSONRPCRequest& request, const ChainstateMa
         },
         RPCResults{},
         RPCExamples{""},
-    }.Throw();
-}
-
-static UniValue _bls(const JSONRPCRequest& request)
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const JSONRPCRequest new_request{request.strMethod == "bls" ? request.squashed() : request};
-    const std::string command{new_request.strMethod};
-
-    const ChainstateManager& chainman = EnsureAnyChainman(request.context);
-
-    if (command == "blsgenerate") {
-        return bls_generate(new_request, chainman);
-    } else if (command == "blsfromsecret") {
-        return bls_fromsecret(new_request, chainman);
-    } else {
-        bls_help();
-    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "Must be a valid command");
+},
+    };
 }
+
 void RegisterEvoRPCCommands(CRPCTable &tableRPC)
 {
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
-    { "evo",                "bls",                    &_bls,                   {}  },
+    { "evo",                "bls",                    &bls_help,               {"command"}  },
+    { "evo",                "bls", "generate",        &bls_generate,           {"legacy"}  },
+    { "evo",                "bls", "fromsecret",      &bls_fromsecret,         {"secret", "legacy"}  },
     { "evo",                "protx",                  &protx,                  {}  },
 };
 // clang-format on
     for (const auto& command : commands) {
-        tableRPC.appendCommand(command.name, &command);
+        tableRPC.appendCommand(command.name, command.subname, &command);
     }
 }
