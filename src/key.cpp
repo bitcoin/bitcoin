@@ -166,12 +166,6 @@ void CKey::MakeNewKey(bool fCompressedIn) {
     fCompressed = fCompressedIn;
 }
 
-bool CKey::Negate()
-{
-    assert(keydata);
-    return secp256k1_ec_seckey_negate(secp256k1_context_sign, keydata->data());
-}
-
 CPrivKey CKey::GetPrivKey() const {
     assert(keydata);
     CPrivKey seckey;
