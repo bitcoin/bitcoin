@@ -414,19 +414,16 @@ public:
      * argument isNull() and parses (from JSON) and returns the user-passed argument,
      * or the default value derived from the RPCArg documentation.
      *
-     * There are two overloads of this function:
-     * - Use Arg<Type>(size_t i) to get the argument (or the default value) by index.
-     * - Use Arg<Type>(const std::string& key) to get the argument (or the default value) by key.
+     * The instantiation of this helper for type R must match the corresponding RPCArg::Type.
      *
-     * The Type passed to this helper must match the corresponding RPCArg::Type.
-     *
-     * @return The value of the RPC argument (or the default value) cast to type Type.
+     * @return The value of the RPC argument (or the default value) cast to type R.
      *
      * @see MaybeArg for handling optional arguments without default values.
      */
     template <typename R>
-    auto Arg(size_t i) const
+    auto Arg(std::string_view key) const
     {
+        auto i{GetParamIndex(key)};
         // Return argument (required or with default value).
         if constexpr (std::is_integral_v<R> || std::is_floating_point_v<R>) {
             // Return numbers by value.
@@ -435,11 +432,6 @@ public:
             // Return everything else by reference.
             return ArgValue<const R&>(i);
         }
-    }
-    template<typename R>
-    auto Arg(std::string_view key) const
-    {
-        return Arg<R>(GetParamIndex(key));
     }
     /**
      * @brief Helper to get an optional request argument.
@@ -452,21 +444,18 @@ public:
      * argument isNull() and parses (from JSON) and returns the user-passed argument,
      * or a falsy value if no argument was passed.
      *
-     * There are two overloads of this function:
-     * - Use MaybeArg<Type>(size_t i) to get the optional argument by index.
-     * - Use MaybeArg<Type>(const std::string& key) to get the optional argument by key.
+     * The instantiation of this helper for type R must match the corresponding RPCArg::Type.
      *
-     * The Type passed to this helper must match the corresponding RPCArg::Type.
+     * @return For integral and floating-point types, a std::optional<R> is returned.
+     *         For other types, a R* pointer to the argument is returned. If the
+     *         argument is not provided, std::nullopt or a null pointer is returned.
      *
-     * @return For integral and floating-point types, a std::optional<Type> is returned.
-    *          For other types, a Type* pointer to the argument is returned. If the
-    *          argument is not provided, std::nullopt or a null pointer is returned.
-    *
      * @see Arg for handling arguments that are required or have a default value.
      */
     template <typename R>
-    auto MaybeArg(size_t i) const
+    auto MaybeArg(std::string_view key) const
     {
+        auto i{GetParamIndex(key)};
         // Return optional argument (without default).
         if constexpr (std::is_integral_v<R> || std::is_floating_point_v<R>) {
             // Return numbers by value, wrapped in optional.
@@ -475,11 +464,6 @@ public:
             // Return other types by pointer.
             return ArgValue<const R*>(i);
         }
-    }
-    template<typename R>
-    auto MaybeArg(std::string_view key) const
-    {
-        return MaybeArg<R>(GetParamIndex(key));
     }
     std::string ToString() const;
     /** Return the named args that need to be converted from string to another JSON type */
