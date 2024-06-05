@@ -75,13 +75,15 @@ public:
 
     CKey& operator=(const CKey& other)
     {
-        if (other.keydata) {
-            MakeKeyData();
-            *keydata = *other.keydata;
-        } else {
-            ClearKeyData();
+        if (this != &other) {
+            if (other.keydata) {
+                MakeKeyData();
+                *keydata = *other.keydata;
+            } else {
+                ClearKeyData();
+            }
+            fCompressed = other.fCompressed;
         }
-        fCompressed = other.fCompressed;
         return *this;
     }
 
