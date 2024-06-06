@@ -52,10 +52,10 @@ def signet_txs(block, challenge):
     mroot = block.get_merkle_root(hashes)
 
     sd = b""
-    sd += struct.pack("<i", block.nVersion)
+    sd += block.nVersion.to_bytes(4, "little", signed=True)
     sd += ser_uint256(block.hashPrevBlock)
     sd += ser_uint256(mroot)
-    sd += struct.pack("<I", block.nTime)
+    sd += block.nTime.to_bytes(4, "little")
 
     to_spend = CTransaction()
     to_spend.nVersion = 0
