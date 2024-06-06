@@ -983,7 +983,7 @@ m4_define([_AX_CXX_COMPILE_STDCXX_testbody_new_in_20], [[
 
 #error "This is not a C++ compiler"
 
-#elif __cplusplus < 201709L  // Temporary patch on top of upstream to allow g++-10
+#elif __cplusplus < 202002L
 
 #error "This is not a C++20 compiler"
 
