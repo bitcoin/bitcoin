@@ -555,19 +555,15 @@ private:
      * punish peers differently depending on whether the data was provided in a compact
      * block message or not. If the compact block had a valid header, but contained invalid
      * txs, the peer should not be punished. See BIP 152.
-     *
-     * @return Returns true if the peer was punished (probably disconnected)
      */
-    bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
+    void MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
                                  bool via_compact_block, const std::string& message = "")
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /**
      * Potentially disconnect and discourage a node based on the contents of a TxValidationState object
-     *
-     * @return Returns true if the peer was punished (probably disconnected)
      */
-    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state)
+    void MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Maybe disconnect a peer and discourage future connections from its address.
@@ -1889,7 +1885,7 @@ void PeerManagerImpl::Misbehaving(Peer& peer, const std::string& message)
     LogPrint(BCLog::NET, "Misbehaving: peer=%d%s\n", peer.m_id, message_prefixed);
 }
 
-bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
+void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
                                               bool via_compact_block, const std::string& message)
 {
     PeerRef peer{GetPeerRef(nodeid)};
@@ -1905,7 +1901,7 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     case BlockValidationResult::BLOCK_MUTATED:
         if (!via_compact_block) {
             if (peer) Misbehaving(*peer, message);
-            return true;
+            return;
         }
         break;
     case BlockValidationResult::BLOCK_CACHED_INVALID:
@@ -1920,7 +1916,7 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
             // Exempt HB compact block peers. Manual connections are always protected from discouragement.
             if (!via_compact_block && !node_state->m_is_inbound) {
                 if (peer) Misbehaving(*peer, message);
-                return true;
+                return;
             }
             break;
         }
@@ -1928,11 +1924,11 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     case BlockValidationResult::BLOCK_CHECKPOINT:
     case BlockValidationResult::BLOCK_INVALID_PREV:
         if (peer) Misbehaving(*peer, message);
-        return true;
+        return;
     // Conflicting (but not necessarily invalid) data or different policy:
     case BlockValidationResult::BLOCK_MISSING_PREV:
         if (peer) Misbehaving(*peer, message);
-        return true;
+        return;
     case BlockValidationResult::BLOCK_RECENT_CONSENSUS_CHANGE:
     case BlockValidationResult::BLOCK_TIME_FUTURE:
         break;
@@ -1940,10 +1936,9 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     if (message != "") {
         LogPrint(BCLog::NET, "peer=%d: %s\n", nodeid, message);
     }
-    return false;
 }
 
-bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state)
+void PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state)
 {
     PeerRef peer{GetPeerRef(nodeid)};
     switch (state.GetResult()) {
@@ -1952,7 +1947,7 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     // The node is providing invalid data:
     case TxValidationResult::TX_CONSENSUS:
         if (peer) Misbehaving(*peer, "");
-        return true;
+        return;
     // Conflicting (but not necessarily invalid) data or different policy:
     case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
     case TxValidationResult::TX_INPUTS_NOT_STANDARD:
@@ -1968,7 +1963,6 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     case TxValidationResult::TX_UNKNOWN:
         break;
     }
-    return false;
 }
 
 bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
