@@ -82,6 +82,7 @@ public:
         peerbloomfilters,       // bool
         peerblockfilters,       // bool
         mempoolreplacement,
+        mempooltruc,
         maxorphantx,
         maxmempool,
         incrementalrelayfee,
