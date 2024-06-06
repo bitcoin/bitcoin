@@ -224,6 +224,16 @@ static QString CanonicalMempoolReplacement(const OptionsModel& model)
     assert(0);
 }
 
+static QString CanonicalMempoolTRUC(const OptionsModel& model)
+{
+    switch (model.node().mempool().m_opts.truc_policy) {
+    case TRUCPolicy::Reject:  return "reject";
+    case TRUCPolicy::Accept:  return "accept";
+    case TRUCPolicy::Enforce: return "enforce";
+    }
+    assert(0);
+}
+
 OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent) :
     QAbstractListModel(parent), m_node{node}
 {
@@ -652,6 +662,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS);
     case mempoolreplacement:
         return CanonicalMempoolReplacement(*this);
+    case mempooltruc:
+        return CanonicalMempoolTRUC(*this);
     case maxorphantx:
         return qlonglong(gArgs.GetIntArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
     case maxmempool:
@@ -1052,6 +1064,21 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 node().updateRwSetting("mempoolfullrbf", "1");
             }
             gArgs.ModifyRWConfigFile("mempoolreplacement", nv.toStdString());
+        }
+        break;
+    }
+    case mempooltruc:
+    {
+        if (changed()) {
+            QString nv = value.toString();
+            if (nv == "reject") {
+                node().mempool().m_opts.truc_policy = TRUCPolicy::Reject;
+            } else if (nv == "accept") {
+                node().mempool().m_opts.truc_policy = TRUCPolicy::Accept;
+            } else if (nv == "enforce") {
+                node().mempool().m_opts.truc_policy = TRUCPolicy::Enforce;
+            }
+            node().updateRwSetting("mempooltruc", nv.toStdString());
         }
         break;
     }

@@ -237,6 +237,13 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     mempoolreplacement->addItem(QString("with a higher mining fee (no opt-out)"), QVariant("fee,-optin"));
     CreateOptionUI(verticalLayout_Mempool, mempoolreplacement, tr("Transaction &replacement: %s"));
 
+    mempooltruc = new QValueComboBox(tabMempool);
+    mempooltruc->addItem(QString("do not relay or mine at all"), QVariant("reject"));
+    mempooltruc->addItem(QString("handle the same as other transactions"), QVariant("accept"));
+    mempooltruc->addItem(QString("impose stricter limits requested (DRAFT)"), QVariant("enforce"));
+    mempooltruc->setToolTip(tr("Some transactions signal a request to limit both themselves and other related transactions to more restrictive expectations. Specifically, this would disallow more than 1 unconfirmed predecessor or spending transaction, as well as smaller size limits (see BIP 431 for details), regardless of what policy you have configured."));
+    CreateOptionUI(verticalLayout_Mempool, mempooltruc, tr("Transactions requesting more restrictive policy limits (TRUC): %s"));
+
     maxorphantx = new QSpinBox(tabMempool);
     maxorphantx->setMinimum(0);
     maxorphantx->setMaximum(std::numeric_limits<int>::max());
@@ -715,6 +722,14 @@ void OptionsDialog::setMapper()
     }
     mempoolreplacement->setCurrentIndex(current_mempoolreplacement_index);
 
+    QVariant current_mempooltruc = model->data(model->index(OptionsModel::mempooltruc, 0), Qt::EditRole);
+    int current_mempooltruc_index = mempooltruc->findData(current_mempooltruc);
+    if (current_mempooltruc_index == -1) {
+        mempooltruc->addItem(current_mempooltruc.toString(), current_mempooltruc);
+        current_mempooltruc_index = mempooltruc->count() - 1;
+    }
+    mempooltruc->setCurrentIndex(current_mempooltruc_index);
+
     mapper->addMapping(maxorphantx, OptionsModel::maxorphantx);
     mapper->addMapping(maxmempool, OptionsModel::maxmempool);
     mapper->addMapping(incrementalrelayfee, OptionsModel::incrementalrelayfee);
@@ -931,6 +946,7 @@ void OptionsDialog::on_okButton_clicked()
     }
 
     model->setData(model->index(OptionsModel::mempoolreplacement, 0), mempoolreplacement->itemData(mempoolreplacement->currentIndex()));
+    model->setData(model->index(OptionsModel::mempooltruc, 0), mempooltruc->itemData(mempooltruc->currentIndex()));
 
     if (dustdynamic_enable->isChecked()) {
         if (dustdynamic_target->isChecked()) {

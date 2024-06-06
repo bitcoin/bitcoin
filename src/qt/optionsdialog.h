@@ -109,6 +109,7 @@ private:
     QSpinBox *blockreconstructionextratxn;
 
     QValueComboBox *mempoolreplacement;
+    QValueComboBox *mempooltruc;
     QSpinBox *maxorphantx;
     BitcoinAmountField *incrementalrelayfee;
     QSpinBox *maxmempool;
