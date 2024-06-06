@@ -481,6 +481,11 @@ public:
         /** Whether CPFP carveout and RBF carveout are granted. */
         const bool m_allow_carveouts;
 
+        /** Whether we allow dust inside PreChecks, since spentness checks will be handled
+         * later in AcceptMultipleTransactions.
+         */
+        const bool m_allow_ephemeral_dust;
+
         /** Parameters for single transaction mempool validation. */
         static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
                                      bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
@@ -496,6 +501,7 @@ public:
                             /* m_package_feerates */ false,
                             /* m_client_maxfeerate */ {}, // checked by caller
                             /* m_allow_carveouts */ true,
+                            /* m_allow_ephemeral_dust */ false,
             };
         }
 
@@ -513,6 +519,7 @@ public:
                             /* m_package_feerates */ false,
                             /* m_client_maxfeerate */ {}, // checked by caller
                             /* m_allow_carveouts */ false,
+                            /* m_allow_ephemeral_dust */ false,
             };
         }
 
@@ -530,6 +537,7 @@ public:
                             /* m_package_feerates */ true,
                             /* m_client_maxfeerate */ client_maxfeerate,
                             /* m_allow_carveouts */ false,
+                            /* m_allow_ephemeral_dust */ true,
             };
         }
 
@@ -546,6 +554,7 @@ public:
                             /* m_package_feerates */ false, // only 1 transaction
                             /* m_client_maxfeerate */ package_args.m_client_maxfeerate,
                             /* m_allow_carveouts */ false,
+                            /* m_allow_ephemeral_dust */ false,
             };
         }
 
@@ -562,7 +571,8 @@ public:
                  bool package_submission,
                  bool package_feerates,
                  std::optional<CFeeRate> client_maxfeerate,
-                 bool allow_carveouts)
+                 bool allow_carveouts,
+                 bool allow_epehemeral_dust)
             : m_chainparams{chainparams},
               m_accept_time{accept_time},
               m_bypass_limits{bypass_limits},
@@ -573,7 +583,8 @@ public:
               m_package_submission{package_submission},
               m_package_feerates{package_feerates},
               m_client_maxfeerate{client_maxfeerate},
-              m_allow_carveouts{allow_carveouts}
+              m_allow_carveouts{allow_carveouts},
+              m_allow_ephemeral_dust{allow_epehemeral_dust}
         {
             // If we are using package feerates, we must be doing package submission.
             // It also means carveouts and sibling eviction are not permitted.
@@ -581,6 +592,7 @@ public:
                 Assume(m_package_submission);
                 Assume(!m_allow_carveouts);
                 Assume(!m_allow_sibling_eviction);
+                Assume(m_allow_ephemeral_dust);
             }
             if (m_allow_sibling_eviction) Assume(m_allow_replacement);
         }
@@ -783,9 +795,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    std::string reason;
-    if (m_pool.m_opts.require_standard && !IsStandardTx(tx, m_pool.m_opts.max_datacarrier_bytes, m_pool.m_opts.permit_bare_multisig, m_pool.m_opts.dust_relay_feerate, reason)) {
-        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
+    std::string std_reason;
+    if (m_pool.m_opts.require_standard &&
+        !IsStandardTx(tx, m_pool.m_opts.max_datacarrier_bytes, m_pool.m_opts.permit_bare_multisig, /*dust_relay_fee=*/CFeeRate(0), std_reason)) {
+        // Dust checks completed later
+        Assume(std_reason != "dust");
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, std_reason);
     }
 
     // Transactions smaller than 65 non-witness bytes are not relayed to mitigate CVE-2017-12842.
@@ -925,6 +940,23 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                                     fSpendsCoinbase, nSigOpsCost, lock_points.value()));
     ws.m_vsize = entry->GetTxSize();
 
+    // Finalize dust checks at individual tx level
+    if (m_pool.m_opts.require_standard) {
+
+        // Dust was detected, but tx not valid format for ephemeral dust
+        if (!CheckValidEphemeralTx(tx, m_pool.m_opts.dust_relay_feerate, ws.m_base_fees, state)) {
+            return false; // state filled in by CheckValidEphemeralTx
+        }
+
+        // If there is an otherwise valid ephemeral dust, return TX_RECONSIDERABLE to allow retries in a package
+        if (!args.m_allow_ephemeral_dust &&
+            !bypass_limits &&
+            !IsStandardTx(tx, m_pool.m_opts.max_datacarrier_bytes, m_pool.m_opts.permit_bare_multisig, m_pool.m_opts.dust_relay_feerate, std_reason)) {
+            Assume(std_reason == "dust");
+            return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, std_reason);
+        }
+    }
+
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
                 strprintf("%d", nSigOpsCost));
@@ -1050,6 +1082,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             // have a non-v3 and non-BIP125 descendant is due to a reorg.
         } else {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "v3-rule-violation", err->first);
+        }
+    }
+
+    // Ensure any parents in-mempool that have dust have it spent by this transaction
+    if (!bypass_limits && m_pool.m_opts.require_standard) {
+        if (auto err_string{CheckEphemeralSpends(ws.m_ptx, ws.m_ancestors, m_pool.m_opts.dust_relay_feerate)}) {
+            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "ephemeral-anchor-unspent", *err_string);
         }
     }
 
@@ -1448,6 +1487,19 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
         if (auto err{PackageV3Checks(ws.m_ptx, ws.m_vsize, txns, ws.m_ancestors)}) {
             package_state.Invalid(PackageValidationResult::PCKG_POLICY, "v3-violation", err.value());
             return PackageMempoolAcceptResult(package_state, {});
+        }
+    }
+
+    // Run package-based dust spentness checks
+    if (m_pool.m_opts.require_standard) {
+        if (const auto ephemeral_violation{CheckEphemeralSpends(txns, m_pool.m_opts.dust_relay_feerate)}) {
+            const auto parent_wtxid = ephemeral_violation.value();
+            TxValidationState child_state;
+            child_state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "missing-ephemeral-spends",
+                          strprintf("V3 tx %s has unspent ephemeral anchor", parent_wtxid.ToString()));
+            package_state.Invalid(PackageValidationResult::PCKG_TX, "unspent-dust");
+            results.emplace(parent_wtxid, MempoolAcceptResult::Failure(child_state));
+            return PackageMempoolAcceptResult(package_state, std::move(results));
         }
     }
 
