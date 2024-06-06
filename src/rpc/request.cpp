@@ -45,6 +45,7 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     request.pushKV("method", strMethod);
     request.pushKV("params", params);
     request.pushKV("id", id);
+    request.pushKV("jsonrpc", "2.0");
     return request;
 }
 

@@ -298,7 +298,7 @@ public:
         }
         addresses.pushKV("total", total);
         result.pushKV("addresses_known", std::move(addresses));
-        return JSONRPCReplyObj(std::move(result), NullUniValue, /*id=*/1, JSONRPCVersion::V1_LEGACY);
+        return JSONRPCReplyObj(std::move(result), NullUniValue, /*id=*/1, JSONRPCVersion::V2);
     }
 };
 
@@ -367,7 +367,7 @@ public:
         }
         result.pushKV("relayfee", batch[ID_NETWORKINFO]["result"]["relayfee"]);
         result.pushKV("warnings", batch[ID_NETWORKINFO]["result"]["warnings"]);
-        return JSONRPCReplyObj(std::move(result), NullUniValue,  /*id=*/1, JSONRPCVersion::V1_LEGACY);
+        return JSONRPCReplyObj(std::move(result), NullUniValue,  /*id=*/1, JSONRPCVersion::V2);
     }
 };
 
@@ -622,7 +622,7 @@ public:
             }
         }
 
-        return JSONRPCReplyObj(UniValue{result}, NullUniValue, /*id=*/1, JSONRPCVersion::V1_LEGACY);
+        return JSONRPCReplyObj(UniValue{result}, NullUniValue, /*id=*/1, JSONRPCVersion::V2);
     }
 
     const std::string m_help_doc{
@@ -709,7 +709,7 @@ public:
         UniValue result(UniValue::VOBJ);
         result.pushKV("address", address_str);
         result.pushKV("blocks", reply.get_obj()["result"]);
-        return JSONRPCReplyObj(std::move(result), NullUniValue, /*id=*/1, JSONRPCVersion::V1_LEGACY);
+        return JSONRPCReplyObj(std::move(result), NullUniValue, /*id=*/1, JSONRPCVersion::V2);
     }
 protected:
     std::string address_str;

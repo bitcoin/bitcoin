@@ -17,6 +17,7 @@ enum class JSONRPCVersion {
     V2
 };
 
+/** JSON-RPC 2.0 request, only used in bitcoin-cli **/
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
 UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue> id, JSONRPCVersion jsonrpc_version);
 UniValue JSONRPCError(int code, const std::string& message);
