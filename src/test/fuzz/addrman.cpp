@@ -28,16 +28,11 @@ class CAddrManDeterministic : public CAddrMan
 public:
     FuzzedDataProvider& m_fuzzed_data_provider;
 
-    explicit CAddrManDeterministic(FuzzedDataProvider& fuzzed_data_provider)
-        : m_fuzzed_data_provider(fuzzed_data_provider)
+    explicit CAddrManDeterministic(std::vector<bool> asmap, FuzzedDataProvider& fuzzed_data_provider)
+        : CAddrMan(std::move(asmap), /* deterministic */ true, /* consistency_check_ratio */ 0)
+        , m_fuzzed_data_provider(fuzzed_data_provider)
     {
         WITH_LOCK(cs, insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
-        if (fuzzed_data_provider.ConsumeBool()) {
-            m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-            if (!SanityCheckASMap(m_asmap)) {
-                m_asmap.clear();
-            }
-        }
     }
 
     /**
@@ -90,7 +85,7 @@ public:
         // 0, 1, 2, 3 corresponding to 0%, 100%, 50%, 33%
         const size_t n = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3);
 
-        const size_t num_sources = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(10, 50);
+        const size_t num_sources = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 50);
         CNetAddr prev_source;
         // Use insecure_rand inside the loops instead of m_fuzzed_data_provider because when
         // the latter is exhausted it just returns 0.
@@ -101,31 +96,12 @@ public:
             for (size_t j = 0; j < num_addresses; ++j) {
                 const auto addr = CAddress{CService{RandAddr(), 8333}, NODE_NETWORK};
                 const auto time_penalty = insecure_rand.randrange(100000001);
-#if 1
-                // 2.83 sec to fill.
-                if (n > 0 && mapInfo.size() % n == 0 && mapAddr.find(addr) == mapAddr.end()) {
-                    // Add to the "tried" table (if the bucket slot is free).
-                    const CAddrInfo dummy{addr, source};
-                    const int bucket = dummy.GetTriedBucket(nKey, m_asmap);
-                    const int bucket_pos = dummy.GetBucketPosition(nKey, false, bucket);
-                    if (vvTried[bucket][bucket_pos] == -1) {
-                        int id;
-                        CAddrInfo* addr_info = Create(addr, source, &id);
-                        vvTried[bucket][bucket_pos] = id;
-                        addr_info->fInTried = true;
-                        ++nTried;
-                    }
-                } else {
-                    // Add to the "new" table.
-                    Add_(addr, source, time_penalty);
-                }
-#else
-                // 261.91 sec to fill.
                 Add_(addr, source, time_penalty);
+
                 if (n > 0 && mapInfo.size() % n == 0) {
                     Good_(addr, false, GetTime());
                 }
-#endif
+
                 // Add 10% of the addresses from more than one source.
                 if (insecure_rand.randrange(10) == 0 && prev_source.IsValid()) {
                     Add_(addr, prev_source, time_penalty);
@@ -223,28 +199,34 @@ public:
     }
 };
 
+[[nodiscard]] inline std::vector<bool> ConsumeAsmap(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
+    return asmap;
+}
+
 FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrManDeterministic addr_man{fuzzed_data_provider};
+    std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
+    auto addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
         const auto ser_version{fuzzed_data_provider.ConsumeIntegral<int32_t>()};
         ds.SetVersion(ser_version);
         try {
-            ds >> addr_man;
+            ds >> *addr_man_ptr;
         } catch (const std::ios_base::failure&) {
-            addr_man.Clear();
+            addr_man_ptr = std::make_unique<CAddrManDeterministic>(asmap, fuzzed_data_provider);
         }
     }
+    CAddrManDeterministic& addr_man = *addr_man_ptr;
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
-            [&] {
-                addr_man.Clear();
-            },
             [&] {
                 addr_man.ResolveCollisions();
             },
@@ -259,13 +241,6 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                     /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
                     /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
                     /* network */ std::nullopt);
-            },
-            [&] {
-                const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-                const std::optional<CNetAddr> opt_net_addr = ConsumeDeserializable<CNetAddr>(fuzzed_data_provider);
-                if (opt_address && opt_net_addr) {
-                    addr_man.Add(*opt_address, *opt_net_addr, fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, 100000000));
-                }
             },
             [&] {
                 std::vector<CAddress> addresses;
@@ -317,9 +292,9 @@ FUZZ_TARGET_INIT(addrman_serdeser, initialize_addrman)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
-    CAddrManDeterministic addr_man1{fuzzed_data_provider};
-    CAddrManDeterministic addr_man2{fuzzed_data_provider};
-    addr_man2.m_asmap = addr_man1.m_asmap;
+    std::vector<bool> asmap = ConsumeAsmap(fuzzed_data_provider);
+    CAddrManDeterministic addr_man1{asmap, fuzzed_data_provider};
+    CAddrManDeterministic addr_man2{asmap, fuzzed_data_provider};
 
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
 

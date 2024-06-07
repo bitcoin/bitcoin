@@ -14,6 +14,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/asmap.h>
 
 #include <cstdint>
 #include <optional>
@@ -36,17 +37,13 @@ FUZZ_TARGET_INIT(net, initialize_net)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                CAddrMan addrman;
+                CAddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
                 CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
                 node.CloseSocketDisconnect(&connman);
             },
             [&] {
-                const std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-                if (!SanityCheckASMap(asmap)) {
-                    return;
-                }
                 CNodeStats stats;
-                node.copyStats(stats, asmap);
+                node.CopyStats(stats);
             },
             [&] {
                 const CNode* add_ref_node = node.AddRef();

@@ -180,7 +180,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    m_node.addrman = std::make_unique<CAddrMan>();
+    m_node.addrman = std::make_unique<CAddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     m_node.chain = interfaces::MakeChain(m_node);
     // while g_wallet_init_interface is init here at very early stage
     // we can't get rid of unique_ptr from wallet/contex.h
