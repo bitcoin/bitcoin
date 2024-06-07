@@ -241,7 +241,6 @@ jobs:
         run: |
           Set-Location "$env:VCPKG_INSTALLATION_ROOT"
           Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
-          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_PLATFORM_TOOLSET_VERSION $env:VCToolsVersion)"
           .\vcpkg.exe --vcpkg-root "$env:VCPKG_INSTALLATION_ROOT" integrate install
           git rev-parse HEAD | Out-File -FilePath "$env:GITHUB_WORKSPACE\vcpkg_commit"
           Get-Content -Path "$env:GITHUB_WORKSPACE\vcpkg_commit"
