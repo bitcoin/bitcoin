@@ -27,6 +27,7 @@ class PeerManager;
 namespace interfaces {
 class Chain;
 class ChainClient;
+class Mining;
 class Init;
 class WalletLoader;
 } // namespace interfaces
@@ -74,6 +75,7 @@ struct NodeContext {
     std::vector<std::unique_ptr<interfaces::ChainClient>> chain_clients;
     //! Reference to chain client that should used to load or create wallets
     //! opened by the gui.
+    std::unique_ptr<interfaces::Mining> mining;
     interfaces::WalletLoader* wallet_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
