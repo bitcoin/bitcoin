@@ -50,7 +50,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     if (options.wipe_block_tree_db) {
         pblocktree->WriteReindexing(true);
-        chainman.m_blockman.m_reindexing = true;
+        chainman.m_blockman.m_blockfiles_indexed = false;
         //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
         if (options.prune) {
             chainman.m_blockman.CleanupBlockRevFiles();
@@ -61,7 +61,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
-    // Note that it also sets m_reindexing based on the disk flag!
+    // Note that it also sets m_blockfiles_indexed based on the disk flag!
     if (!chainman.LoadBlockIndex()) {
         if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
         return {ChainstateLoadStatus::FAILURE, _("Error loading block database")};
@@ -84,7 +84,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     // If we're not mid-reindex (based on disk + args), add a genesis block on disk
     // (otherwise we use the one already on disk).
     // This is called again in ImportBlocks after the reindex completes.
-    if (!chainman.m_blockman.m_reindexing && !chainman.ActiveChainstate().LoadGenesisBlock()) {
+    if (chainman.m_blockman.m_blockfiles_indexed && !chainman.ActiveChainstate().LoadGenesisBlock()) {
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
 
