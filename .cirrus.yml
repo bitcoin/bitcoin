@@ -43,7 +43,6 @@ env:  # Global defaults
 # The following specific types should exist, with the following requirements:
 # - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
 # - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
-# - noble: For a machine running the Linux kernel shipped with exaclty Ubuntu Noble 24.04. The machine is recommended to have 4 CPUs and 16 GB of memory.
 # - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
@@ -158,19 +157,6 @@ task:
   timeout_in: 300m  # Use longer timeout for the *rare* case where a full build (llvm + msan + depends + ...) needs to be done.
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
-
-task:
-  name: 'ASan + LSan + UBSan + integer, no depends, USDT'
-  enable_bpfcc_script:
-    # In the image build step, no external environment variables are available,
-    # so any settings will need to be written to the settings env file:
-    - sed -i "s|\${CIRRUS_CI}|true|g" ./ci/test/00_setup_env_native_asan.sh
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: noble  # Must use this specific worker (needed for USDT functional tests)
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
   name: 'fuzzer,address,undefined,integer, no depends'
