@@ -49,6 +49,12 @@ private:
      */
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
 
+    /**
+     * Maintains a queue of reconciliations we should initiate. To achieve higher bandwidth conservation and avoid overflows,
+     * we should reconcile in the same order, because then it’s easier to estimate set difference size.
+     */
+    std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
+
     TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
         AssertLockHeld(m_txreconciliation_mutex);
@@ -100,6 +106,10 @@ public:
 
         const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
         peer_state->second.emplace<TxReconciliationState>(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
+
+        if (!is_peer_inbound) {
+            m_queue.push_back(peer_id);
+        }
         return std::nullopt;
     }
 
@@ -117,6 +127,13 @@ public:
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
+
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (peer_state && peer_state->m_we_initiate) {
+            Assert(m_queue.size() > 0);
+            m_queue.erase(std::remove(m_queue.begin(), m_queue.end(), peer_id), m_queue.end());
+        }
+
         if (m_states.erase(peer_id)) {
             LogDebug(BCLog::TXRECONCILIATION, "Forget txreconciliation state of peer=%d.\n", peer_id);
             return true;
