@@ -667,6 +667,9 @@ static RPCHelpMan getblocktemplate()
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
     LOCK(cs_main);
+    std::optional<uint256> maybe_tip{miner.getTipHash()};
+    CHECK_NONFATAL(maybe_tip);
+    uint256 tip{maybe_tip.value()};
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -706,7 +709,7 @@ static RPCHelpMan getblocktemplate()
             }
 
             // testBlockValidity only supports blocks built on the current Tip
-            if (block.hashPrevBlock != miner.getTipHash()) {
+            if (block.hashPrevBlock != tip) {
                 return "inconclusive-not-best-prevblk";
             }
             BlockValidationState state;
@@ -757,7 +760,7 @@ static RPCHelpMan getblocktemplate()
         else
         {
             // NOTE: Spec does not specify behaviour for non-string longpollid, but this makes testing easier
-            hashWatchedChain = miner.getTipHash();
+            hashWatchedChain = tip;
             nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
         }
 
@@ -781,6 +784,10 @@ static RPCHelpMan getblocktemplate()
         }
         ENTER_CRITICAL_SECTION(cs_main);
 
+        std::optional<uint256> maybe_tip{miner.getTipHash()};
+        CHECK_NONFATAL(maybe_tip);
+        tip = maybe_tip.value();
+
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
         // TODO: Maybe recheck connections/IBD and (if something wrong) send an expires-immediately template to stop miners?
@@ -802,7 +809,7 @@ static RPCHelpMan getblocktemplate()
     static CBlockIndex* pindexPrev;
     static int64_t time_start;
     static std::unique_ptr<CBlockTemplate> pblocktemplate;
-    if (!pindexPrev || pindexPrev->GetBlockHash() != miner.getTipHash() ||
+    if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
         (miner.getTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
@@ -810,7 +817,7 @@ static RPCHelpMan getblocktemplate()
 
         // Store the pindexBest used before createNewBlock, to avoid races
         nTransactionsUpdatedLast = miner.getTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = chainman.m_blockman.LookupBlockIndex(miner.getTipHash());
+        CBlockIndex* pindexPrevNew = chainman.m_blockman.LookupBlockIndex(tip);
         time_start = GetTime();
 
         // Create new block
@@ -943,7 +950,7 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
-    result.pushKV("longpollid", miner.getTipHash().GetHex() + ToString(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
     result.pushKV("mutable", std::move(aMutable));

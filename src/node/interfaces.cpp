@@ -847,11 +847,11 @@ public:
         return chainman().GetParams().IsTestChain();
     }
 
-    uint256 getTipHash() override
+    std::optional<uint256> getTipHash() override
     {
         LOCK(::cs_main);
         CBlockIndex* tip{chainman().ActiveChain().Tip()};
-        if (!tip) return uint256{0};
+        if (!tip) return {};
         return tip->GetBlockHash();
     }
 
