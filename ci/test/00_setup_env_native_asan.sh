@@ -7,8 +7,10 @@
 export LC_ALL=C.UTF-8
 
 export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
-# Only install BCC tracing packages in Cirrus CI.
-if [[ "${CIRRUS_CI}" == "true" ]]; then
+
+# Only install BCC tracing packages in CI. Container has to match the host for BCC to work.
+if [[ "${INSTALL_BCC_TRACING_TOOLS}" == "true" ]]; then
+  # Required for USDT functional tests to run
   BPFCC_PACKAGE="bpfcc-tools linux-headers-$(uname --kernel-release)"
   export CI_CONTAINER_CAP="--privileged -v /sys/kernel:/sys/kernel:rw"
 else
