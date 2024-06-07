@@ -14,6 +14,11 @@
 #include <map>
 #include <set>
 
+/** Expiration time for orphan transactions */
+static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
+/** Minimum time between orphan transactions expire time checks */
+static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
+
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
  * Since we cannot distinguish orphans from bad transactions with
  * non-existent inputs, we heavily limit the number of orphans
