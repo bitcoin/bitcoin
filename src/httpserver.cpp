@@ -126,13 +126,12 @@ public:
 
 struct HTTPPathHandler
 {
-    HTTPPathHandler(std::string _prefix, bool _exactMatch, bool external, HTTPRequestHandler _handler):
-        prefix(_prefix), exactMatch(_exactMatch), m_external(external), handler(_handler)
+    HTTPPathHandler(std::string _prefix, bool _exactMatch, HTTPRequestHandler _handler):
+        prefix(_prefix), exactMatch(_exactMatch), handler(_handler)
     {
     }
     std::string prefix;
     bool exactMatch;
-    bool m_external;
     HTTPRequestHandler handler;
 };
 
@@ -262,14 +261,31 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             break;
         }
     }
+    const bool is_external_request = [&hreq]() -> bool {
+        const std::string external_username = gArgs.GetArg("-rpcexternaluser", "");
+        if (external_username.empty()) return false;
+
+        const std::string strAuth = hreq->GetHeader("authorization").second;
+        if (strAuth.substr(0, 6) != "Basic ")
+            return false;
+
+        std::string strUserPass64 = TrimString(strAuth.substr(6));
+        bool invalid;
+        std::string strUserPass = DecodeBase64(strUserPass64, &invalid);
+        if (invalid) return false;
+
+        if (strUserPass.find(':') == std::string::npos) return false;
+
+        return strUserPass.substr(0, strUserPass.find(':')) == external_username;
+    }();
 
     // Dispatch to worker thread
     if (i != iend) {
-        auto item{std::make_unique<HTTPWorkItem>(std::move(hreq), path, i->handler)}; /// this handler!
+        auto item{std::make_unique<HTTPWorkItem>(std::move(hreq), path, i->handler)};
         assert(g_work_queue);
 
         // We have queue created only if RPC arg 'rpcexternaluser' is specified
-        if (i->m_external && g_work_queue_external) {
+        if (is_external_request && g_work_queue_external) {
             if (g_work_queue_external->Enqueue(item.get())) {
                 item.release();
             } else {
@@ -673,10 +689,10 @@ HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod() const
     }
 }
 
-void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, bool external, const HTTPRequestHandler &handler)
+void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
-    LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d external %d)\n", prefix, exactMatch, external);
-    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, external, handler));
+    LogPrint(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
+    pathHandlers.push_back(HTTPPathHandler(prefix, exactMatch, handler));
 }
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)

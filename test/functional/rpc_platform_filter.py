@@ -43,18 +43,12 @@ class HTTPBasicsTest(BitcoinTestFramework):
         url = urllib.parse.urlparse(self.nodes[0].url)
 
         def test_command(method, params, auth, expected_status, should_not_match=False):
-            test_command_helper(method, params, '/', auth, expected_status, should_not_match)
-
-        def test_external_command(method, params, auth, expected_status, should_not_match=False):
-            test_command_helper(method, params, '/external', auth, expected_status, should_not_match)
-
-        def test_command_helper(method, params, path, auth, expected_status, should_not_match):
             conn = http.client.HTTPConnection(url.hostname, url.port)
             conn.connect()
             body = {"method": method}
             if len(params):
                 body["params"] = params
-            conn.request('POST', path, json.dumps(body), {"Authorization": "Basic " + str_to_b64str(auth)})
+            conn.request('POST', '/', json.dumps(body), {"Authorization": "Basic " + str_to_b64str(auth)})
             resp = conn.getresponse()
             if should_not_match:
                 assert resp.status != expected_status
@@ -120,15 +114,15 @@ class HTTPBasicsTest(BitcoinTestFramework):
         test_command("debug", ["1"], rpcuser_authpair_operator, 200)
 
 
-        self.log.info("Restart node with /external handler...")
-        test_external_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
-        test_external_command("getblockchaininfo", [], rpcuser_authpair_platform, 403)
-
+        self.log.info("Restart node with -rpcexternaluser...")
         self.restart_node(0, extra_args=["-rpcexternaluser=platform-user"])
-        test_command("getbestblockhash", [], rpcuser_authpair_platform, 403)
-        test_external_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
-        test_external_command("getblockchaininfo", [], rpcuser_authpair_platform, 403)
-        test_external_command("getbestblockhash", [], rpcuser_authpair_operator, 200)
+
+        external_log_str = "HTTP: Calling handler for external user"
+        expected_log_str = "ThreadRPCServer method="
+        with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_str, external_log_str]):
+            test_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
+        with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_str], unexpected_msgs = [external_log_str]):
+            test_command("getbestblockhash", [], rpcuser_authpair_operator, 200)
 
 
 

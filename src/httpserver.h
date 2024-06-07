@@ -41,7 +41,7 @@ typedef std::function<bool(HTTPRequest* req, const std::string &)> HTTPRequestHa
  * If multiple handlers match a prefix, the first-registered one will
  * be invoked.
  */
-void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, bool external, const HTTPRequestHandler &handler);
+void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler);
 /** Unregister handler for prefix */
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch);
 
