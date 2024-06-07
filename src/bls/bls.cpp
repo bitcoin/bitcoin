@@ -63,7 +63,7 @@ void CBLSSecretKey::MakeNewKey()
 {
     unsigned char buf[SerSize];
     while (true) {
-        GetStrongRandBytes(buf, sizeof(buf));
+        GetStrongRandBytes({buf, sizeof(buf)});
         try {
             impl = bls::PrivateKey::FromBytes(bls::Bytes(reinterpret_cast<const uint8_t*>(buf), SerSize));
             break;
