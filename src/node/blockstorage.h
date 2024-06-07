@@ -267,8 +267,7 @@ public:
     explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts)
         : m_prune_mode{opts.prune_target > 0},
           m_opts{std::move(opts)},
-          m_interrupt{interrupt},
-          m_reindexing{m_opts.reindex} {};
+          m_interrupt{interrupt} {}
 
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
@@ -278,7 +277,7 @@ public:
      * is requested and false when reindexing completes. Its value is persisted
      * in the BlockTreeDB across restarts.
      */
-    std::atomic_bool m_reindexing;
+    std::atomic_bool m_reindexing{false};
 
     BlockMap m_block_index GUARDED_BY(cs_main);
 
