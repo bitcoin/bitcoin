@@ -226,7 +226,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         // Create transaction to add to the mempool
         const CTransactionRef tx = [&] {
             CMutableTransaction tx_mut;
-            tx_mut.nVersion = fuzzed_data_provider.ConsumeBool() ? 3 : CTransaction::CURRENT_VERSION;
+            tx_mut.nVersion = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
             tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
             const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size());
             const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, outpoints_rbf.size() * 2);

@@ -131,7 +131,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
 // Changing the default transaction version requires a two step process: first
 // adapting relay policy by bumping TX_MAX_STANDARD_VERSION, and then later
 // allowing the new transaction version in the wallet/RPC.
-static constexpr decltype(CTransaction::nVersion) TX_MAX_STANDARD_VERSION{2};
+static constexpr decltype(CTransaction::nVersion) TX_MAX_STANDARD_VERSION{3};
 
 /**
 * Check for standard transaction types

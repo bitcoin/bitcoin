@@ -286,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
     script_multisig << OP_2 << OP_CHECKMULTISIG;
     {
         CMutableTransaction mtx_many_sigops = CMutableTransaction{};
-        mtx_many_sigops.nVersion = 3;
+        mtx_many_sigops.nVersion = TRUC_VERSION;
         for (const auto& outpoint : multisig_outpoints) {
             mtx_many_sigops.vin.emplace_back(outpoint);
             mtx_many_sigops.vin.back().scriptWitness.stack.emplace_back(script_multisig.begin(), script_multisig.end());
