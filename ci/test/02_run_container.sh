@@ -29,6 +29,8 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker volume create "${CONTAINER_NAME}_depends_SDKs_android" || true
   docker volume create "${CONTAINER_NAME}_previous_releases" || true
 
+  docker network create --ipv6 --subnet 1111:1111::/112 ci-ip6net || true
+
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
     echo "Restart docker before run to stop and clear all containers started with --rm"
     podman container rm --force --all  # Similar to "systemctl restart docker"
@@ -56,6 +58,7 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
                   --mount "type=volume,src=${CONTAINER_NAME}_previous_releases,dst=$PREVIOUS_RELEASES_DIR" \
                   --env-file /tmp/env-$USER-$CONTAINER_NAME \
                   --name "$CONTAINER_NAME" \
+                  --network ci-ip6net \
                   "$CONTAINER_NAME")
   export CI_CONTAINER_ID
   export CI_EXEC_CMD_PREFIX="docker exec ${CI_CONTAINER_ID}"
