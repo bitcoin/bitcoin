@@ -117,6 +117,9 @@ public:
     /** Relay transaction to all peers. */
     virtual void RelayTransaction(const Txid& txid, const Wtxid& wtxid) = 0;
 
+    /** Get the amount of inbounds (first) and outbounds fanout peers (second). */
+    virtual std::pair<size_t, size_t> GetFanoutPeersCount() = 0;
+
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
 
