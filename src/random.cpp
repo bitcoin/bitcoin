@@ -661,9 +661,8 @@ void FastRandomContext::RandomSeed()
 
 uint256 FastRandomContext::rand256() noexcept
 {
-    if (requires_seed) RandomSeed();
     uint256 ret;
-    rng.Keystream(MakeWritableByteSpan(ret));
+    fillrand(MakeWritableByteSpan(ret));
     return ret;
 }
 
