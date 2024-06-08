@@ -652,14 +652,14 @@ uint256 GetRandHash() noexcept
     return hash;
 }
 
-void FastRandomContext::RandomSeed()
+void FastRandomContext::RandomSeed() noexcept
 {
     uint256 seed = GetRandHash();
     rng.SetKey(MakeByteSpan(seed));
     requires_seed = false;
 }
 
-void FastRandomContext::fillrand(Span<std::byte> output)
+void FastRandomContext::fillrand(Span<std::byte> output) noexcept
 {
     if (requires_seed) RandomSeed();
     rng.Keystream(output);

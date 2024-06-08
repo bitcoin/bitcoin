@@ -150,9 +150,9 @@ private:
     uint64_t bitbuf;
     int bitbuf_size;
 
-    void RandomSeed();
+    void RandomSeed() noexcept;
 
-    void FillBitBuffer()
+    void FillBitBuffer() noexcept
     {
         bitbuf = rand64();
         bitbuf_size = 64;
@@ -213,7 +213,7 @@ public:
 
     /** Generate random bytes. */
     template <typename B = unsigned char>
-    std::vector<B> randbytes(size_t len)
+    std::vector<B> randbytes(size_t len) noexcept
     {
         std::vector<B> ret(len);
         fillrand(MakeWritableByteSpan(ret));
@@ -221,7 +221,7 @@ public:
     }
 
     /** Fill a byte Span with random bytes. */
-    void fillrand(Span<std::byte> output);
+    void fillrand(Span<std::byte> output) noexcept;
 
     /** Generate a random 32-bit integer. */
     uint32_t rand32() noexcept { return randbits(32); }
@@ -239,7 +239,7 @@ public:
 
     /** Return the time point advanced by a uniform random duration. */
     template <typename Tp>
-    Tp rand_uniform_delay(const Tp& time, typename Tp::duration range)
+    Tp rand_uniform_delay(const Tp& time, typename Tp::duration range) noexcept
     {
         return time + rand_uniform_duration<Tp>(range);
     }
@@ -256,8 +256,8 @@ public:
 
     // Compatibility with the UniformRandomBitGenerator concept
     typedef uint64_t result_type;
-    static constexpr uint64_t min() { return 0; }
-    static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
+    static constexpr uint64_t min() noexcept { return 0; }
+    static constexpr uint64_t max() noexcept { return std::numeric_limits<uint64_t>::max(); }
     inline uint64_t operator()() noexcept { return rand64(); }
 };
 
