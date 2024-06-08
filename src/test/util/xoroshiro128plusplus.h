@@ -37,7 +37,7 @@ public:
         : m_s0(SplitMix64(seedval)), m_s1(SplitMix64(seedval)) {}
 
     // no copy - that is dangerous, we don't want accidentally copy the RNG and then have two streams
-    // with exactly the same results. If you need a copy, call copy().
+    // with exactly the same results.
     XoRoShiRo128PlusPlus(const XoRoShiRo128PlusPlus&) = delete;
     XoRoShiRo128PlusPlus& operator=(const XoRoShiRo128PlusPlus&) = delete;
 
