@@ -659,23 +659,6 @@ void FastRandomContext::RandomSeed()
     requires_seed = false;
 }
 
-uint256 FastRandomContext::rand256() noexcept
-{
-    uint256 ret;
-    fillrand(MakeWritableByteSpan(ret));
-    return ret;
-}
-
-template <typename B>
-std::vector<B> FastRandomContext::randbytes(size_t len)
-{
-    std::vector<B> ret(len);
-    fillrand(MakeWritableByteSpan(ret));
-    return ret;
-}
-template std::vector<unsigned char> FastRandomContext::randbytes(size_t);
-template std::vector<std::byte> FastRandomContext::randbytes(size_t);
-
 void FastRandomContext::fillrand(Span<std::byte> output)
 {
     if (requires_seed) RandomSeed();

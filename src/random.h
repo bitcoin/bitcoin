@@ -213,7 +213,12 @@ public:
 
     /** Generate random bytes. */
     template <typename B = unsigned char>
-    std::vector<B> randbytes(size_t len);
+    std::vector<B> randbytes(size_t len)
+    {
+        std::vector<B> ret(len);
+        fillrand(MakeWritableByteSpan(ret));
+        return ret;
+    }
 
     /** Fill a byte Span with random bytes. */
     void fillrand(Span<std::byte> output);
@@ -222,7 +227,12 @@ public:
     uint32_t rand32() noexcept { return randbits(32); }
 
     /** generate a random uint256. */
-    uint256 rand256() noexcept;
+    uint256 rand256() noexcept
+    {
+        uint256 ret;
+        fillrand(MakeWritableByteSpan(ret));
+        return ret;
+    }
 
     /** Generate a random boolean. */
     bool randbool() noexcept { return randbits(1); }
