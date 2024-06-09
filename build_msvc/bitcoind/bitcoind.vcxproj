@@ -47,7 +47,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import АС на="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Label="ReplaceInFile" Project="..\msbuild\tasks\replaceinfile.targets" />
   <PropertyGroup>
     <ConfigIniIn>..\..\test\config.ini.in</ConfigIniIn>
