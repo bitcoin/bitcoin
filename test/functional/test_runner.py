@@ -273,6 +273,7 @@ BASE_SCRIPTS = [
     'wallet_listdescriptors.py --descriptors',
     'p2p_leak.py',
     'p2p_compactblocks.py',
+    'p2p_compactblocks_blocksonly.py',
     'p2p_connect_to_devnet.py',
     'feature_sporks.py',
     'rpc_getblockstats.py',
