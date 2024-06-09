@@ -3532,6 +3532,34 @@ void PeerManagerImpl::ProcessMessage(
         return;
     }
 
+    if (msg_type == NetMsgType::SENDHEADERS) {
+        LOCK(cs_main);
+        State(pfrom.GetId())->fPreferHeaders = true;
+        return;
+    }
+
+    if (msg_type == NetMsgType::SENDHEADERS2) {
+        LOCK(cs_main);
+        State(pfrom.GetId())->fPreferHeadersCompressed = true;
+        return;
+    }
+
+    if (msg_type == NetMsgType::SENDCMPCT) {
+        bool fAnnounceUsingCMPCTBLOCK = false;
+        uint64_t nCMPCTBLOCKVersion = 1;
+        vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
+        if (nCMPCTBLOCKVersion == 1) {
+            LOCK(cs_main);
+            State(pfrom.GetId())->fProvidesHeaderAndIDs = true;
+            State(pfrom.GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
+            State(pfrom.GetId())->fSupportsDesiredCmpctVersion = true;
+            // save whether peer selects us as BIP152 high-bandwidth peer
+            // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
+            pfrom.m_bip152_highbandwidth_from = fAnnounceUsingCMPCTBLOCK;
+        }
+        return;
+    }
+
     // BIP155 defines feature negotiation of addrv2 and sendaddrv2, which must happen
     // between VERSION and VERACK.
     if (msg_type == NetMsgType::SENDADDRV2) {
@@ -3669,35 +3697,6 @@ void PeerManagerImpl::ProcessMessage(
         }
         return;
     }
-
-    if (msg_type == NetMsgType::SENDHEADERS) {
-        LOCK(cs_main);
-        State(pfrom.GetId())->fPreferHeaders = true;
-        return;
-    }
-
-    if (msg_type == NetMsgType::SENDHEADERS2) {
-        LOCK(cs_main);
-        State(pfrom.GetId())->fPreferHeadersCompressed = true;
-        return;
-    }
-
-    if (msg_type == NetMsgType::SENDCMPCT) {
-        bool fAnnounceUsingCMPCTBLOCK = false;
-        uint64_t nCMPCTBLOCKVersion = 1;
-        vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
-        if (nCMPCTBLOCKVersion == 1) {
-            LOCK(cs_main);
-            State(pfrom.GetId())->fProvidesHeaderAndIDs = true;
-            State(pfrom.GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
-            State(pfrom.GetId())->fSupportsDesiredCmpctVersion = true;
-            // save whether peer selects us as BIP152 high-bandwidth peer
-            // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
-            pfrom.m_bip152_highbandwidth_from = fAnnounceUsingCMPCTBLOCK;
-        }
-        return;
-    }
-
 
     if (msg_type == NetMsgType::SENDDSQUEUE)
     {
