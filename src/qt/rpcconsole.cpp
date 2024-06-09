@@ -527,7 +527,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_SETTING);
     updateDetailWidget();
 
-    setFontSize(settings.value(fontSizeSettingsKey, QFontInfo(QFontDatabase::systemFont(QFontDatabase::FixedFont)).pointSize()).toInt());
+    setFontSize(settings.value(fontSizeSettingsKey, QFontInfo(GUIUtil::fixedPitchFont()).pointSize()).toInt());
 
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnInfo, pageButtons->buttons().size());
@@ -892,7 +892,7 @@ void RPCConsole::clear(bool keep_prompt)
     ui->lineEdit->setFocus();
 
     // Set default style sheet
-    ui->messagesWidget->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    ui->messagesWidget->setFont(GUIUtil::fixedPitchFont());
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
