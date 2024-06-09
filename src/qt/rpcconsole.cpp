@@ -514,6 +514,11 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
         tr("Outbound Address Fetch: short-lived, for soliciting addresses")};
     const QString list{"<ul><li>" + Join(CONNECTION_TYPE_DOC, QString("</li><li>")) + "</li></ul>"};
     ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg(list));
+    const QString hb_list{"<ul><li>\""
+        + tr("To") + "\" – " + tr("we selected the peer for high bandwidth relay") + "</li><li>\""
+        + tr("From") + "\" – " + tr("the peer selected us for high bandwidth relay") + "</li><li>\""
+        + tr("No") + "\" – " + tr("no high bandwidth relay selected") + "</li></ul>"};
+    ui->peerHighBandwidthLabel->setToolTip(ui->peerHighBandwidthLabel->toolTip().arg(hb_list));
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(PACKAGE_NAME));
@@ -1279,6 +1284,11 @@ void RPCConsole::updateDetailWidget()
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(time_now - std::chrono::seconds{stats->nodeStats.nTimeConnected}));
     ui->peerLastBlock->setText(TimeDurationField(time_now, std::chrono::seconds{stats->nodeStats.nLastBlockTime}));
     ui->peerLastTx->setText(TimeDurationField(time_now, std::chrono::seconds{stats->nodeStats.nLastTXTime}));
+    QString bip152_hb_settings;
+    if (stats->nodeStats.m_bip152_highbandwidth_to) bip152_hb_settings += "To";
+    if (stats->nodeStats.m_bip152_highbandwidth_from) bip152_hb_settings += (bip152_hb_settings == "" ? "From" : "/From");
+    if (bip152_hb_settings == "") bip152_hb_settings = "No";
+    ui->peerHighBandwidth->setText(bip152_hb_settings);
     ui->peerLastSend->setText(TimeDurationField(time_now, stats->nodeStats.m_last_send));
     ui->peerLastRecv->setText(TimeDurationField(time_now, stats->nodeStats.m_last_recv));
     ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
