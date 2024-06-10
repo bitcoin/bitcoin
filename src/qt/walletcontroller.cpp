@@ -343,7 +343,7 @@ void OpenWalletActivity::finish()
 
 void OpenWalletActivity::open(const std::string& path)
 {
-    QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+    QString name = GUIUtil::WalletDisplayName(path);
 
     showProgressDialog(
         //: Title of window indicating the progress of opening of a wallet.

@@ -398,7 +398,7 @@ void BitcoinGUI::createActions()
             m_open_wallet_menu->clear();
             for (const auto& [path, info] : m_wallet_controller->listWalletDir()) {
                 const auto& [loaded, _] = info;
-                QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+                QString name = GUIUtil::WalletDisplayName(path);
                 // An single ampersand in the menu item's text sets a shortcut for this item.
                 // Single & are shown when && is in the string. So replace & with &&.
                 name.replace(QChar('&'), QString("&&"));

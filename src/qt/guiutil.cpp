@@ -1008,4 +1008,13 @@ void ShowModalDialogAsynchronously(QDialog* dialog)
     dialog->show();
 }
 
+QString WalletDisplayName(const QString& name)
+{
+    return name.isEmpty() ? "[" + QObject::tr("default wallet") + "]" : name;
+}
+
+QString WalletDisplayName(const std::string& name)
+{
+    return WalletDisplayName(QString::fromStdString(name));
+}
 } // namespace GUIUtil
