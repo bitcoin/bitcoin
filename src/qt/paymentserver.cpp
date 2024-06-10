@@ -233,14 +233,17 @@ void PaymentServer::handleURIOrFile(const QString& s)
             SendCoinsRecipient recipient;
             if (GUIUtil::parseBitcoinURI(s, &recipient))
             {
-                if (!IsValidDestinationString(recipient.address.toStdString())) {
+                std::string error_msg;
+                const CTxDestination dest = DecodeDestination(recipient.address.toStdString(), error_msg);
+
+                if (!IsValidDestination(dest)) {
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
                             tr("Cannot process payment request as BIP70 is no longer supported.")+
                             tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
                             CClientUIInterface::ICON_WARNING);
                     } else {
-                        Q_EMIT message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
+                        Q_EMIT message(tr("URI handling"), QString::fromStdString(error_msg),
                             CClientUIInterface::MSG_ERROR);
                     }
                 }

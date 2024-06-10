@@ -52,6 +52,9 @@ private:
     Ui::ReceiveCoinsDialog *ui;
     WalletModel *model;
     QMenu *contextMenu;
+    QAction* copyLabelAction;
+    QAction* copyMessageAction;
+    QAction* copyAmountAction;
 
     QModelIndex selectedRow();
     void copyColumnToClipboard(int column);

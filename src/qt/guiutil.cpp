@@ -260,6 +260,14 @@ QString dateTimeStr(qint64 nTime)
     return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
 }
 
+QFont fixedPitchFont(bool use_embedded_font)
+{
+    if (use_embedded_font) {
+        return {"Roboto Mono"};
+    }
+    return QFontDatabase::systemFont(QFontDatabase::FixedFont);
+}
+
 // Just some dummy data to generate a convincing random-looking (but consistent) address
 static const uint8_t dummydata[] = {0xeb,0x15,0x23,0x1d,0xfc,0xeb,0x60,0x92,0x58,0x86,0xb6,0x7d,0x06,0x52,0x99,0x92,0x59,0x15,0xae,0xb1,0x72,0xc0,0x66,0x47};
 
@@ -1661,15 +1669,19 @@ QString NetworkToQString(Network net)
     assert(false);
 }
 
-QString ConnectionTypeToQString(ConnectionType conn_type)
+QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction)
 {
+    QString prefix;
+    if (prepend_direction) {
+        prefix = (conn_type == ConnectionType::INBOUND) ? QObject::tr("Inbound") : QObject::tr("Outbound") + " ";
+    }
     switch (conn_type) {
-    case ConnectionType::INBOUND: return QObject::tr("Inbound");
-    case ConnectionType::OUTBOUND_FULL_RELAY: return QObject::tr("Outbound Full Relay");
-    case ConnectionType::BLOCK_RELAY: return QObject::tr("Outbound Block Relay");
-    case ConnectionType::MANUAL: return QObject::tr("Outbound Manual");
-    case ConnectionType::FEELER: return QObject::tr("Outbound Feeler");
-    case ConnectionType::ADDR_FETCH: return QObject::tr("Outbound Address Fetch");
+    case ConnectionType::INBOUND: return prefix;
+    case ConnectionType::OUTBOUND_FULL_RELAY: return prefix + QObject::tr("Full Relay");
+    case ConnectionType::BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
+    case ConnectionType::MANUAL: return prefix + QObject::tr("Manual");
+    case ConnectionType::FEELER: return prefix + QObject::tr("Feeler");
+    case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
