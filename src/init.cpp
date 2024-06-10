@@ -644,7 +644,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-datacarrier", strprintf("Relay and mine data carrier transactions (default: %u)", DEFAULT_ACCEPT_DATACARRIER), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarrierfullcount", strprintf("Apply datacarriersize limit to all known datacarrier methods (default: %u)", DEFAULT_DATACARRIER_FULLCOUNT), ArgsManager::ALLOW_ANY | (DEFAULT_DATACARRIER_FULLCOUNT ? uint32_t{ArgsManager::DEBUG_ONLY} : 0), OptionsCategory::NODE_RELAY);
     argsman.AddArg("-datacarriersize",
-                   strprintf("Maximum size of data in data carrier transactions we relay and mine (default: %u)",
+                   strprintf("Maximum size of data in data carrier transactions we relay and mine, in bytes (default: %u)",
                              MAX_OP_RETURN_RELAY),
                    ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempoolfullrbf", strprintf("Accept transaction replace-by-fee without requiring replaceability signaling (default: %u)", (DEFAULT_MEMPOOL_RBF_POLICY == RBFPolicy::Always)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
