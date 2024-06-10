@@ -46,12 +46,16 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wall
                     // Found a directory which contains wallet.dat sqlite file, add it as a wallet with SQLITE format.
                     paths.emplace_back(path, "sqlite");
                 }
-            } else if (it.depth() == 0 && it->symlink_status().type() == fs::file_type::regular && IsBDBFile(it->path()) && it->path().extension() != ".bak") {
+            } else if (it.depth() == 0 && it->symlink_status().type() == fs::file_type::regular && it->path().extension() != ".bak") {
                 if (it->path().filename() == "wallet.dat") {
                     // Found top-level wallet.dat btree file, add top level directory ""
                     // as a wallet.
-                    paths.emplace_back(fs::path(), "bdb");
-                } else {
+                    if (IsBDBFile(it->path())) {
+                        paths.emplace_back(fs::path(), "bdb");
+                    } else if (IsSQLiteFile(it->path())) {
+                        paths.emplace_back(fs::path(), "sqlite");
+                    }
+                } else if (IsBDBFile(it->path())) {
                     // Found top-level btree file not called wallet.dat. Current bitcoin
                     // software will never create these files but will allow them to be
                     // opened in a shared database environment for backwards compatibility.
