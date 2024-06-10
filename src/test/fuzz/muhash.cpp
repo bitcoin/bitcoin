@@ -43,7 +43,19 @@ FUZZ_TARGET(muhash)
         },
         [&] {
             // Test that dividing a MuHash by itself brings it back to it's initial state
+
+            // See note about clang + self-assignment in test/uint256_tests.cpp
+            #if defined(__clang__)
+            #    pragma clang diagnostic push
+            #    pragma clang diagnostic ignored "-Wself-assign-overloaded"
+            #endif
+
             muhash /= muhash;
+
+            #if defined(__clang__)
+            #    pragma clang diagnostic pop
+            #endif
+
             muhash.Finalize(out);
             out2 = uint256S(initial_state_hash);
         },
