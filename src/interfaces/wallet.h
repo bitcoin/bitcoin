@@ -342,6 +342,9 @@ public:
     //! Migrate a wallet
     virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) = 0;
 
+    //! Returns true if wallet stores encryption keys
+    virtual bool isEncrypted(const std::string& wallet_name) = 0;
+
     //! Return available wallets in wallet directory.
     virtual std::vector<std::pair<std::string, std::string>> listWalletDir() = 0;
 
