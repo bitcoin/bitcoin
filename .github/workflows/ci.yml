@@ -153,12 +153,10 @@ jobs:
 
       - name: Get tool information
         run: |
-          msbuild -version | Out-File -FilePath "$env:GITHUB_WORKSPACE\msbuild_version"
-          Get-Content -Path "$env:GITHUB_WORKSPACE\msbuild_version"
-          $env:VCToolsVersion | Out-File -FilePath "$env:GITHUB_WORKSPACE\toolset_version"
-          Write-Host "VCToolsVersion $(Get-Content -Path "$env:GITHUB_WORKSPACE\toolset_version")"
-          $env:CI_QT_URL | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_url"
-          $env:CI_QT_CONF | Out-File -FilePath "$env:GITHUB_WORKSPACE\qt_conf"
+          msbuild -version | Tee-Object -FilePath "msbuild_version"
+          $env:VCToolsVersion | Tee-Object -FilePath "toolset_version"
+          $env:CI_QT_URL | Out-File -FilePath "qt_url"
+          $env:CI_QT_CONF | Out-File -FilePath "qt_conf"
           py -3 --version
           Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
 
@@ -241,10 +239,8 @@ jobs:
         run: |
           Set-Location "$env:VCPKG_INSTALLATION_ROOT"
           Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
-          Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_PLATFORM_TOOLSET_VERSION $env:VCToolsVersion)"
           .\vcpkg.exe --vcpkg-root "$env:VCPKG_INSTALLATION_ROOT" integrate install
-          git rev-parse HEAD | Out-File -FilePath "$env:GITHUB_WORKSPACE\vcpkg_commit"
-          Get-Content -Path "$env:GITHUB_WORKSPACE\vcpkg_commit"
+          git rev-parse HEAD | Tee-Object -FilePath "$env:GITHUB_WORKSPACE\vcpkg_commit"
 
       - name: vcpkg tools cache
         uses: actions/cache@v4
