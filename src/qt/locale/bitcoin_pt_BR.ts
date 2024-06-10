@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Criar um novo endereço.</translation>
+        <translation type="unfinished">Criar um novo endereço</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -95,11 +95,11 @@ Só é possível assinar com endereços do tipo 'legado'.</translation>
     </message>
     <message>
         <source>Sending addresses - %1</source>
-        <translation type="unfinished">Enviando endereços - %1</translation>
+        <translation type="unfinished">Endereços de envio - %1</translation>
     </message>
     <message>
         <source>Receiving addresses - %1</source>
-        <translation type="unfinished">Recebendo endereços - %1</translation>
+        <translation type="unfinished">Endereços de recebimento - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -2245,7 +2245,7 @@ O processo de migração criará um backup da carteira antes da migração. Este
     </message>
     <message>
         <source>Mapped AS</source>
-        <translation type="unfinished">Mapeado como</translation>
+        <translation type="unfinished">S.A. de mapeamento</translation>
     </message>
     <message>
         <source>Whether we relay addresses to this peer.</source>

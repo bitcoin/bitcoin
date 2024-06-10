@@ -3,15 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">پتہ یا لیبل کی تصیح کیلیئے داہنا کلک</translation>
+        <translation type="unfinished">ایڈریس یا لیبل میں ترمیم کرنے کے لیے رائیٹ کلک کریں</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">نیا پتہ تخلیق کریں</translation>
-    </message>
-    <message>
-        <source>&amp;New</source>
-        <translation type="unfinished">اور نیا</translation>
+        <translation type="unfinished">نیا ایڈریس بنائیں</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>

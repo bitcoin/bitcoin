@@ -3,7 +3,8 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">右クリックでアドレスまたはラベルを編集</translation>
+        <translation type="unfinished"> The selected strings may have existing translations that will be replaced with the source.
+Existing translations will be added in the string's history. Are you sure you want to proceed?</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -62,12 +63,6 @@
         <translation type="unfinished">これらは、あなたが知っている送信先の Bitcoin アドレスです。コインを送る前に必ず、金額と受取用アドレスを確認してください。</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">これらは支払いを受け取るための、あなたの Bitcoin アドレスです。新しいアドレスを作成するには受取タブ内の「新しい受取用アドレスを作成」ボタンを使用します。
-署名は、タイプが「レガシー」のアドレスのみ可能です。</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">アドレスをコピー(&amp;C)</translation>
     </message>
@@ -81,7 +76,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">アドレス帳をエクスポート</translation>
+        <translation type="unfinished">アドレス帳データをエクスポートする</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -412,6 +407,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">
             <numerusform>%n 年</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>%1 kB</source>
+        <translation type="unfinished">%1kB</translation>
     </message>
     </context>
 <context>
@@ -3187,6 +3186,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Transaction fee</source>
         <translation type="unfinished">取引手数料</translation>
+    </message>
+    <message>
+        <source>%1 kvB</source>
+        <comment>PSBT transaction creation</comment>
+        <extracomment>When reviewing a newly created PSBT (via Send flow), the transaction fee is shown, with "virtual size" of the transaction displayed for context</extracomment>
+        <translation type="unfinished">%1kvB</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>

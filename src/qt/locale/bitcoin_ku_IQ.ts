@@ -2,20 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">کرتەی-ڕاست بکە بۆ دەسکاری کردنی ناونیشان یان پێناسە</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation type="unfinished">ناوونیشانێکی نوێ دروست بکە</translation>
     </message>
     <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;نوێ</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">کۆپیکردنی ناونیشانی هەڵبژێردراوی ئێستا بۆ کلیپ بۆردی سیستەم</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -28,18 +20,6 @@
     <message>
         <source>Delete the currently selected address from the list</source>
         <translation type="unfinished">سڕینەوەی ناونیشانی هەڵبژێردراوی ئێستا لە لیستەکە</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation type="unfinished">ناونیشانێک بنووسە یان پێناسەیەک داخڵ بکە بۆ گەڕان</translation>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">ناردنی داتا لە خشتەبەندی ئێستا بۆ فایلێک</translation>
-    </message>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">&amp;هەناردن</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -110,10 +90,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
-    <message>
-        <source>Passphrase Dialog</source>
-        <translation type="unfinished">دیالۆگی دەستەواژەی تێپەڕبوون</translation>
-    </message>
     <message>
         <source>Enter passphrase</source>
         <translation type="unfinished">دەستەواژەی تێپەڕبوون بنووسە</translation>
@@ -260,10 +236,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Warning</source>
         <translation type="unfinished">ئاگاداری</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation type="unfinished">زانیاری</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -482,10 +454,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>&amp;Information</source>
-        <translation type="unfinished">&amp;زانیاری</translation>
-    </message>
-    <message>
         <source>General</source>
         <translation type="unfinished">گشتی</translation>
     </message>
@@ -496,10 +464,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Name</source>
         <translation type="unfinished">ناو</translation>
-    </message>
-    <message>
-        <source>Sent</source>
-        <translation type="unfinished">نێدرا</translation>
     </message>
     <message>
         <source>Version</source>
@@ -794,18 +758,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
-    <name>WalletFrame</name>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">هەڵە</translation>
-    </message>
-    </context>
-<context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">&amp;هەناردن</translation>
-    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">ناردنی داتا لە خشتەبەندی ئێستا بۆ فایلێک</translation>

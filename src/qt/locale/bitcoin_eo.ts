@@ -258,36 +258,36 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n sekundo</numerusform>
+            <numerusform>%n sekundoj</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n minuto</numerusform>
+            <numerusform>%n minutoj</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n horo</numerusform>
+            <numerusform>%n horoj</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n tago</numerusform>
+            <numerusform>%n tagoj</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n semajno</numerusform>
+            <numerusform>%n semajnoj</numerusform>
         </translation>
     </message>
     <message>
@@ -297,8 +297,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n jaro</numerusform>
+            <numerusform>%n jaroj</numerusform>
         </translation>
     </message>
     </context>
@@ -834,8 +834,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n gigabajto de libera loko disponeble</numerusform>
+            <numerusform>%n gigabajtoj de libera loko disponebla.</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -2142,6 +2142,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Signing transaction failed</source>
         <translation type="unfinished">Subskriba transakcio fiaskis</translation>
+    </message>
+    <message>
+        <source>Specified data directory "%s" does not exist.</source>
+        <translation type="unfinished">la elektita dosierujo por datumoj "%s" ne ekzistas.</translation>
     </message>
     <message>
         <source>This is experimental software.</source>

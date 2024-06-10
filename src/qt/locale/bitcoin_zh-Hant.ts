@@ -303,6 +303,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">進來</translation>
     </message>
     <message>
+        <source>Full Relay</source>
+        <extracomment>Peer connection type that relays all network information.</extracomment>
+        <translation type="unfinished">完全轉述
+</translation>
+    </message>
+    <message>
         <source>Block Relay</source>
         <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
         <translation type="unfinished">区块转发</translation>
@@ -311,6 +317,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Manual</source>
         <extracomment>Peer connection type established manually through one of several methods.</extracomment>
         <translation type="unfinished">手册</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">觸角
+</translation>
     </message>
     <message>
         <source>%1 h</source>
@@ -1529,6 +1541,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">外部签名器脚本路径(&amp;E)</translation>
     </message>
     <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">自動開啟路由器上的比特幣用戶端連接埠。 只有當您的路由器支援 NAT-PMP 並且已啟用時，此功能才有效。 外部連接埠可以是隨機的。</translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation type="unfinished">使用 NA&amp;T-PMP 映射端口</translation>
+    </message>
+    <message>
         <source>Accept connections from outside.</source>
         <translation type="unfinished">接受外來連線</translation>
     </message>
@@ -1555,6 +1575,14 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">窗口(&amp;W)</translation>
+    </message>
+    <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">在系統托盤中顯示圖示。</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished">顯示托盤圖示</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1741,6 +1769,14 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Close</source>
         <translation type="unfinished">關閉</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation type="unfinished">無法載入交易：%1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation type="unfinished">無法簽名交易：%1</translation>
     </message>
     <message>
         <source>Cannot sign inputs while wallet is locked.</source>
@@ -3524,6 +3560,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">对 %s 的配置设置只对 %s 网络生效，如果它位于配置的 [%s] 章节的话</translation>
     </message>
     <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished">找不到asmap 檔案 %s</translation>
+    </message>
+    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation type="unfinished">你想现在就重建区块数据库吗？</translation>
     </message>
@@ -3658,6 +3698,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Insufficient dbcache for block verification</source>
         <translation type="unfinished">dbcache不足以用于区块验证</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation type="unfinished">金额不足</translation>
     </message>
     <message>
         <source>Invalid -i2psam address or hostname: '%s'</source>
