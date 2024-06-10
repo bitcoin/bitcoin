@@ -9,6 +9,9 @@ namespace node {
 struct NodeContext;
 } // namespace node
 
+class BlockValidationState;
+class CBlock;
+
 namespace interfaces {
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
@@ -21,6 +24,18 @@ public:
 
     //! If this chain is exclusively used for testing
     virtual bool isTestChain() = 0;
+
+    /**
+     * Check a block is completely valid from start to finish.
+     * Only works on top of our current best block.
+     * Does not check proof-of-work.
+     *
+     * @param[out] state details of why a block failed to validate
+     * @param[in] block the block to validate
+     * @param[in] check_merkle_root call CheckMerkleRoot()
+     * @returns false if any of the checks fail
+     */
+    virtual bool testBlockValidity(BlockValidationState& state, const CBlock& block, bool check_merkle_root = true) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.

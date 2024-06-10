@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <common/args.h>
+#include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <external_signer.h>
 #include <index/blockfilterindex.h>
@@ -842,6 +843,12 @@ public:
     bool isTestChain() override
     {
         return chainman().GetParams().IsTestChain();
+    }
+
+    bool testBlockValidity(BlockValidationState& state, const CBlock& block, bool check_merkle_root) override
+    {
+        LOCK(::cs_main);
+        return TestBlockValidity(state, chainman().GetParams(), chainman().ActiveChainstate(), block, chainman().ActiveChain().Tip(), /*fCheckPOW=*/false, check_merkle_root);
     }
 
     NodeContext* context() override { return &m_node; }
