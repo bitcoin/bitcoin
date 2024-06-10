@@ -8,11 +8,13 @@
 #include <uint256.h>
 
 namespace node {
+struct CBlockTemplate;
 struct NodeContext;
 } // namespace node
 
 class BlockValidationState;
 class CBlock;
+class CScript;
 
 namespace interfaces {
 
@@ -29,6 +31,15 @@ public:
 
     //! Returns the hash for the tip of this chain, 0 if none
     virtual uint256 getTipHash() = 0;
+
+   /**
+     * Construct a new block template
+     *
+     * @param[in] script_pub_key the coinbase output
+     * @param[in] use_mempool set false to omit mempool transactions
+     * @returns a block template
+     */
+    virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true) = 0;
 
     /**
      * Check a block is completely valid from start to finish.
