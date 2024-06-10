@@ -1,4 +1,4 @@
 Build
 -----
 
-GCC 11.1 or later, or Clang 15+ or later, are now required to compile Dash Core.
+GCC 11.1 or later, or Clang 16.0 or later, are now required to compile Dash Core.
