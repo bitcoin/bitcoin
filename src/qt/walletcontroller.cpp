@@ -171,6 +171,15 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     return wallet_model;
 }
 
+WalletModel* WalletController::getWallet(const std::string& name)
+{
+    auto it = std::find_if(m_wallets.begin(), m_wallets.end(),
+                            [&name](WalletModel* model) {
+                                return name == model->wallet().getWalletName();
+                            });
+    return it == m_wallets.end() ? nullptr : *it;
+}
+
 void WalletController::removeAndDeleteWallet(WalletModel* wallet_model)
 {
     // Unregister wallet model.
@@ -436,34 +445,37 @@ void RestoreWalletActivity::finish()
     Q_EMIT finished();
 }
 
-void MigrateWalletActivity::migrate(WalletModel* wallet_model)
+void MigrateWalletActivity::migrate(const std::string& name)
 {
     // Warn the user about migration
     QMessageBox box(m_parent_widget);
     box.setWindowTitle(tr("Migrate wallet"));
-    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(wallet_model->getDisplayName())));
+    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(name))));
     box.setInformativeText(tr("Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.\n"
                 "If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.\n"
                 "If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.\n\n"
                 "The migration process will create a backup of the wallet before migrating. This backup file will be named "
                 "<wallet name>-<timestamp>.legacy.bak and can be found in the directory for this wallet. In the event of "
-                "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
-    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
-    box.setDefaultButton(QMessageBox::Yes);
-    if (box.exec() != QMessageBox::Yes) return;
+                "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality.\n\n"
+                "If your wallet is encrypted, please provide the passphrase now as by choosing \"Yes, encrypted\"."));
+    QPushButton* yes_enc_button = box.addButton(tr("Yes, encrypted"), QMessageBox::YesRole);
+    QPushButton* yes_button = box.addButton(QMessageBox::Yes);
+    QPushButton* cancel_button = box.addButton(QMessageBox::Cancel);
+    box.setDefaultButton(yes_button);
+    box.exec();
+    if (!box.clickedButton() || box.clickedButton() == (QAbstractButton*)cancel_button) return;
 
-    // Get the passphrase if it is encrypted regardless of it is locked or unlocked. We need the passphrase itself.
     SecureString passphrase;
-    WalletModel::EncryptionStatus enc_status = wallet_model->getEncryptionStatus();
-    if (enc_status == WalletModel::EncryptionStatus::Locked || enc_status == WalletModel::EncryptionStatus::Unlocked) {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, m_parent_widget, &passphrase);
-        dlg.setModel(wallet_model);
-        dlg.exec();
+    if (box.clickedButton() == (QAbstractButton*)yes_enc_button) {
+        // Get the passphrase for the wallet
+        AskPassphraseDialog dlg(AskPassphraseDialog::UnlockMigration, m_parent_widget, &passphrase);
+        if (dlg.exec() == QDialog::Rejected) return;
     }
 
     // GUI needs to remove the wallet so that it can actually be unloaded by migration
-    const std::string name = wallet_model->wallet().getWalletName();
-    m_wallet_controller->removeAndDeleteWallet(wallet_model);
+    if (WalletModel* wallet = m_wallet_controller->getWallet(name)) {
+        m_wallet_controller->removeAndDeleteWallet(wallet);
+    };
 
     showProgressDialog(tr("Migrate Wallet"), tr("Migrating Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(name)));
 
@@ -471,12 +483,12 @@ void MigrateWalletActivity::migrate(WalletModel* wallet_model)
         auto res{node().walletLoader().migrateWallet(name, passphrase)};
 
         if (res) {
-            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(res->wallet->getWalletName()));
+            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->wallet->getWalletName())));
             if (res->watchonly_wallet_name) {
-                m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->watchonly_wallet_name.value()));
+                m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->watchonly_wallet_name.value())));
             }
             if (res->solvables_wallet_name) {
-                m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->solvables_wallet_name.value()));
+                m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->solvables_wallet_name.value())));
             }
             m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(res->wallet));
         } else {
