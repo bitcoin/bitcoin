@@ -61,7 +61,7 @@ namespace miniscript {
  *   - Is always "OP_SWAP [B]" or "OP_TOALTSTACK [B] OP_FROMALTSTACK".
  *   - For example sc:pk_k(key) = OP_SWAP <key> OP_CHECKSIG
  *
- * There a type properties that help reasoning about correctness:
+ * There are type properties that help reasoning about correctness:
  * - "z" Zero-arg:
  *   - Is known to always consume exactly 0 stack elements.
  *   - For example after(n) = <n> OP_CHECKLOCKTIMEVERIFY
@@ -84,7 +84,7 @@ namespace miniscript {
  * - "e" Expression:
  *   - This implies property 'd', but the dissatisfaction is nonmalleable.
  *   - This generally requires 'e' for all subexpressions which are invoked for that
- *     dissatifsaction, and property 'f' for the unexecuted subexpressions in that case.
+ *     dissatisfaction, and property 'f' for the unexecuted subexpressions in that case.
  *   - Conflicts with type 'V'.
  * - "f" Forced:
  *   - Dissatisfactions (if any) for this expression always involve at least one signature.
