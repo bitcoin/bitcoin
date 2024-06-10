@@ -398,7 +398,7 @@ void BitcoinGUI::createActions()
             m_open_wallet_menu->clear();
             for (const auto& [path, info] : m_wallet_controller->listWalletDir()) {
                 const auto& [loaded, _] = info;
-                QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+                QString name = GUIUtil::WalletDisplayName(path);
                 // Menu items remove single &. Single & are shown when && is in
                 // the string, but only the first occurrence. So replace only
                 // the first & with &&.
