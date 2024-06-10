@@ -75,6 +75,7 @@ using interfaces::MakeSignalHandler;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::WalletLoader;
+using node::BlockAssembler;
 using util::Join;
 
 namespace node {
@@ -862,8 +863,11 @@ public:
 
     std::unique_ptr<CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool) override
     {
+        BlockAssembler::Options options;
+        ApplyArgsManOptions(gArgs, options);
+
         LOCK(::cs_main);
-        return BlockAssembler{chainman().ActiveChainstate(), use_mempool ? context()->mempool.get() : nullptr}.CreateNewBlock(script_pub_key);
+        return BlockAssembler{chainman().ActiveChainstate(), use_mempool ? context()->mempool.get() : nullptr, options}.CreateNewBlock(script_pub_key);
     }
 
     NodeContext* context() override { return &m_node; }
