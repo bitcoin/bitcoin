@@ -270,7 +270,7 @@ public:
     explicit NetWatchValidationInterface(NetWatchLogModel& model_in) : model(model_in) {}
     void ValidationInterfaceUnregistering() override;
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload, const std::shared_ptr<const CBlock>& block) override;
+    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence) override;
 };
 
@@ -279,11 +279,9 @@ void NetWatchValidationInterface::ValidationInterfaceUnregistering()
     model.OrphanedValidationInterface();
 }
 
-void NetWatchValidationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload, const std::shared_ptr<const CBlock>& block)
+void NetWatchValidationInterface::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
-    if (pindexNew != pindexFork) {
-        model.LogBlock(pindexNew, block);
-    }
+    model.LogBlock(pindex, block);
 }
 
 void NetWatchValidationInterface::TransactionAddedToMempool(const NewMempoolTransactionInfo& txinfo, uint64_t mempool_sequence)
@@ -295,7 +293,6 @@ NetWatchLogModel::NetWatchLogModel(QWidget *parent) :
     QAbstractTableModel(parent),
     m_widget(parent)
 {
-    CValidationInterface::any_use_tip_block_cache = true;
 }
 
 NetWatchLogModel::~NetWatchLogModel()
