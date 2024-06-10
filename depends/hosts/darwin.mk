@@ -2,7 +2,7 @@ OSX_MIN_VERSION=11.0
 OSX_SDK_VERSION=14.0
 XCODE_VERSION=15.0
 XCODE_BUILD_ID=15A240d
-LD64_VERSION=711
+LLD_VERSION=711
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
 
@@ -70,8 +70,8 @@ darwin_CXXFLAGS=-pipe -std=$(CXX_STANDARD) -mmacosx-version-min=$(OSX_MIN_VERSIO
 darwin_LDFLAGS=-Wl,-platform_version,macos,$(OSX_MIN_VERSION),$(OSX_SDK_VERSION)
 
 ifneq ($(build_os),darwin)
-darwin_CFLAGS += -mlinker-version=$(LD64_VERSION)
-darwin_CXXFLAGS += -mlinker-version=$(LD64_VERSION)
+darwin_CFLAGS += -mlinker-version=$(LLD_VERSION)
+darwin_CXXFLAGS += -mlinker-version=$(LLD_VERSION)
 darwin_LDFLAGS += -Wl,-no_adhoc_codesign -fuse-ld=lld
 endif
 
