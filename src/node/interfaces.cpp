@@ -506,7 +506,7 @@ public:
         req.URI = uri;
         return ::tableRPC.execute(req);
     }
-    std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
+    std::vector<std::pair<std::string, std::string>> listRpcCommands() override { return ::tableRPC.listCommands(); }
     void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) override { RPCSetTimerInterfaceIfUnset(iface); }
     void rpcUnsetTimerInterface(RPCTimerInterface* iface) override { RPCUnsetTimerInterface(iface); }
     bool getUnspentOutput(const COutPoint& output, Coin& coin) override
@@ -710,14 +710,14 @@ public:
                 throw;
             }
         };
-        ::tableRPC.appendCommand(m_command.name, &m_command);
+        ::tableRPC.appendCommand(m_command.name, m_command.subname, &m_command);
     }
 
     void disconnect() override final
     {
         if (m_wrapped_command) {
             m_wrapped_command = nullptr;
-            ::tableRPC.removeCommand(m_command.name, &m_command);
+            ::tableRPC.removeCommand(m_command.name, m_command.subname, &m_command);
         }
     }
 

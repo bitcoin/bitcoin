@@ -752,11 +752,15 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
         //Setup autocomplete and attach it
         QStringList wordList;
-        std::vector<std::string> commandList = m_node.listRpcCommands();
+        std::vector<std::pair<std::string, std::string>> commandList = m_node.listRpcCommands();
         for (size_t i = 0; i < commandList.size(); ++i)
         {
-            wordList << commandList[i].c_str();
-            wordList << ("help " + commandList[i]).c_str();
+            std::string command = commandList[i].first;
+            if (!commandList[i].second.empty()) {
+                command = command + " " + commandList[i].second;
+            }
+            wordList << command.c_str();
+            wordList << ("help " + command).c_str();
         }
 
         wordList << "help-console";
