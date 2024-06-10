@@ -267,18 +267,18 @@ public:
     explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts)
         : m_prune_mode{opts.prune_target > 0},
           m_opts{std::move(opts)},
-          m_interrupt{interrupt},
-          m_reindexing{m_opts.reindex} {};
+          m_interrupt{interrupt} {}
 
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 
     /**
-     * Tracks if a reindex is currently in progress. Set to true when a reindex
-     * is requested and false when reindexing completes. Its value is persisted
-     * in the BlockTreeDB across restarts.
+     * Whether all blockfiles have been added to the block tree database.
+     * Normally true, but set to false when a reindex is requested and the
+     * database is wiped. The value is persisted in the database across restarts
+     * and will be false until reindexing completes.
      */
-    std::atomic_bool m_reindexing;
+    std::atomic_bool m_blockfiles_indexed{true};
 
     BlockMap m_block_index GUARDED_BY(cs_main);
 
@@ -359,7 +359,7 @@ public:
     [[nodiscard]] uint64_t GetPruneTarget() const { return m_opts.prune_target; }
     static constexpr auto PRUNE_TARGET_MANUAL{std::numeric_limits<uint64_t>::max()};
 
-    [[nodiscard]] bool LoadingBlocks() const { return m_importing || m_reindexing; }
+    [[nodiscard]] bool LoadingBlocks() const { return m_importing || !m_blockfiles_indexed; }
 
     /** Calculate the amount of disk space the block & undo files currently use */
     uint64_t CalculateCurrentUsage();

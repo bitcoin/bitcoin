@@ -33,8 +33,6 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Op
 
     if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
 
-    if (auto value{args.GetBoolArg("-reindex")}) opts.reindex = *value;
-
     return {};
 }
 } // namespace node
