@@ -12,7 +12,9 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
+
 PING_INTERVAL = 2 * 60
+TIMEOUT_INTERVAL = 20 * 60
 
 
 class msg_pong_corrupt(msg_pong):
@@ -20,17 +22,9 @@ class msg_pong_corrupt(msg_pong):
         return b""
 
 
-class NodePongAdd1(P2PInterface):
-    def on_ping(self, message):
-        self.send_message(msg_pong(message.nonce + 1))
-
-
 class NodeNoPong(P2PInterface):
     def on_ping(self, message):
         pass
-
-
-TIMEOUT_INTERVAL = 20 * 60
 
 
 class PingPongTest(BitcoinTestFramework):

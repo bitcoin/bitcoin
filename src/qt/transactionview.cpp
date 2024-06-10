@@ -453,9 +453,6 @@ void TransactionView::abandonTx()
 
     // Abandon the wallet transaction over the walletModel
     model->wallet().abandonTransaction(hash);
-
-    // Update the table
-    model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
 }
 
 void TransactionView::resendTx()
