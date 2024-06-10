@@ -396,15 +396,15 @@ void BitcoinGUI::createActions()
         connect(openAction, &QAction::triggered, this, &BitcoinGUI::openClicked);
         connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
-            for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
-                const std::string& path = i.first;
+            for (const auto& [path, info] : m_wallet_controller->listWalletDir()) {
+                const auto& [loaded, _] = info;
                 QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
                 // An single ampersand in the menu item's text sets a shortcut for this item.
                 // Single & are shown when && is in the string. So replace & with &&.
                 name.replace(QChar('&'), QString("&&"));
                 QAction* action = m_open_wallet_menu->addAction(name);
 
-                if (i.second) {
+                if (loaded) {
                     // This wallet is already loaded
                     action->setEnabled(false);
                     continue;

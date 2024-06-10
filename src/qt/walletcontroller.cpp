@@ -65,16 +65,16 @@ WalletController::~WalletController()
     delete m_activity_worker;
 }
 
-std::map<std::string, bool> WalletController::listWalletDir() const
+std::map<std::string, std::pair<bool, std::string>> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
-    std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.walletLoader().listWalletDir()) {
-        wallets[name] = false;
+    std::map<std::string, std::pair<bool, std::string>> wallets;
+    for (const auto& [name, format] : m_node.walletLoader().listWalletDir()) {
+        wallets[name] = std::make_pair(false, format);
     }
     for (WalletModel* wallet_model : m_wallets) {
         auto it = wallets.find(wallet_model->wallet().getWalletName());
-        if (it != wallets.end()) it->second = true;
+        if (it != wallets.end()) it->second.first = true;
     }
     return wallets;
 }

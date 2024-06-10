@@ -61,7 +61,7 @@ public:
 
     //! Returns all wallet names in the wallet dir mapped to whether the wallet
     //! is loaded.
-    std::map<std::string, bool> listWalletDir() const;
+    std::map<std::string, std::pair<bool, std::string>> listWalletDir() const;
 
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
     void closeAllWallets(QWidget* parent = nullptr);
