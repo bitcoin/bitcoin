@@ -237,7 +237,7 @@ struct PSBTInput
 
         if (final_script_sig.empty() && final_script_witness.IsNull()) {
             // Write any partial signatures
-            for (auto sig_pair : partial_sigs) {
+            for (const auto& sig_pair : partial_sigs) {
                 SerializeToVector(s, CompactSizeWriter(PSBT_IN_PARTIAL_SIG), Span{sig_pair.second.first});
                 s << sig_pair.second.second;
             }
