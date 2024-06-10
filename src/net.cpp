@@ -257,9 +257,27 @@ std::optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
     return std::nullopt;
 }
 
-// learn a new local address
-bool AddLocal(const CService& addr, int nScore)
+/**
+ * If an IPv6 address belongs to the address range used by the CJDNS network and
+ * the CJDNS network is reachable (-cjdnsreachable config is set), then change
+ * the type from NET_IPV6 to NET_CJDNS.
+ * @param[in] service Address to potentially convert.
+ * @return a copy of `service` either unmodified or changed to CJDNS.
+ */
+CService MaybeFlipIPv6toCJDNS(const CService& service)
 {
+    CService ret{service};
+    if (ret.m_net == NET_IPV6 && ret.m_addr[0] == 0xfc && IsReachable(NET_CJDNS)) {
+        ret.m_net = NET_CJDNS;
+    }
+    return ret;
+}
+
+// learn a new local address
+bool AddLocal(const CService& addr_, int nScore)
+{
+    CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+
     if (!addr.IsRoutable() && Params().RequireRoutableExternalIP())
         return false;
 
@@ -456,7 +474,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     if (pszDest) {
         std::vector<CService> resolved;
         if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
-            addrConnect = CAddress(resolved[GetRand(resolved.size())], NODE_NONE);
+            const CService rnd{resolved[GetRand(resolved.size())]};
+            addrConnect = CAddress{MaybeFlipIPv6toCJDNS(rnd), NODE_NONE};
             if (!addrConnect.IsValid()) {
                 LogPrint(BCLog::NET, "Resolver returned invalid address %s for %s\n", addrConnect.ToString(), pszDest);
                 return nullptr;
@@ -475,7 +494,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     // Connect
     bool connected = false;
     std::unique_ptr<Sock> sock;
-    proxyType proxy;
+    Proxy proxy;
     CAddress addr_bind;
     assert(!addr_bind.IsValid());
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
@@ -1008,17 +1027,17 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
     // To favorise the diversity of our peer connections, reserve up to half of these protected
-    // spots for Tor/onion, localhost and I2P peers, even if they're not longest uptime overall.
-    // This helps protect these higher-latency peers that tend to be otherwise
+    // spots for Tor/onion, localhost, I2P, and CJDNS peers, even if they're not longest uptime
+    // overall. This helps protect these higher-latency peers that tend to be otherwise
     // disadvantaged under our eviction criteria.
     const size_t initial_size = eviction_candidates.size();
     const size_t total_protect_size{initial_size / 2};
 
-    // Disadvantaged networks to protect: I2P, localhost, Tor/onion. In case of equal counts, earlier
-    // array members have first opportunity to recover unused slots from the previous iteration.
+    // Disadvantaged networks to protect. In the case of equal counts, earlier array members
+    // have the first opportunity to recover unused slots from the previous iteration.
     struct Net { bool is_local; Network id; size_t count; };
-    std::array<Net, 3> networks{
-        {{false, NET_I2P, 0}, {/* localhost */ true, NET_MAX, 0}, {false, NET_ONION, 0}}};
+    std::array<Net, 4> networks{
+        {{false, NET_CJDNS, 0}, {false, NET_I2P, 0}, {/*localhost=*/true, NET_MAX, 0}, {false, NET_ONION, 0}}};
 
     // Count and store the number of eviction candidates per network.
     for (Net& n : networks) {
@@ -1211,9 +1230,11 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSy
 
     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
         LogPrintf("Warning: Unknown socket family\n");
+    } else {
+        addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
     }
 
-    const CAddress addr_bind = GetBindAddress(hSocket);
+    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(hSocket)), NODE_NONE};
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
@@ -3303,7 +3324,10 @@ NodeId CConnman::GetNewNodeId()
 }
 
 
-bool CConnman::Bind(const CService &addr, unsigned int flags, NetPermissionFlags permissions) {
+bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlags permissions)
+{
+    const CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+
     if (!(flags & BF_EXPLICIT) && !IsReachable(addr)) {
         return false;
     }
@@ -3368,7 +3392,7 @@ bool CConnman::Start(CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_met
         return false;
     }
 
-    proxyType i2p_sam;
+    Proxy i2p_sam;
     if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
         m_i2p_sam_session = std::make_unique<i2p::sam::Session>(GetDataDir() / "i2p_private_key",
                                                                 i2p_sam.proxy, &interruptNet);
