@@ -656,11 +656,11 @@ public:
     {
         return fs::PathToString(GetWalletDir());
     }
-    std::vector<std::string> listWalletDir() override
+    std::vector<std::pair<std::string, std::string>> listWalletDir() override
     {
-        std::vector<std::string> paths;
-        for (auto& path : ListDatabases(GetWalletDir())) {
-            paths.push_back(fs::PathToString(path));
+        std::vector<std::pair<std::string, std::string>> paths;
+        for (auto& [path, format] : ListDatabases(GetWalletDir())) {
+            paths.emplace_back(fs::PathToString(path), format);
         }
         return paths;
     }

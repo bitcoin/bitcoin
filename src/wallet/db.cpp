@@ -19,9 +19,9 @@ namespace wallet {
 bool operator<(BytePrefix a, Span<const std::byte> b) { return a.prefix < b.subspan(0, std::min(a.prefix.size(), b.size())); }
 bool operator<(Span<const std::byte> a, BytePrefix b) { return a.subspan(0, std::min(a.size(), b.prefix.size())) < b.prefix; }
 
-std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
+std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wallet_dir)
 {
-    std::vector<fs::path> paths;
+    std::vector<std::pair<fs::path, std::string>> paths;
     std::error_code ec;
 
     for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
@@ -38,21 +38,25 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
         try {
             const fs::path path{it->path().lexically_relative(wallet_dir)};
 
-            if (it->status().type() == fs::file_type::directory &&
-                (IsBDBFile(BDBDataFile(it->path())) || IsSQLiteFile(SQLiteDataFile(it->path())))) {
-                // Found a directory which contains wallet.dat btree file, add it as a wallet.
-                paths.emplace_back(path);
+            if (it->status().type() == fs::file_type::directory) {
+                if (IsBDBFile(BDBDataFile(it->path()))) {
+                    // Found a directory which contains wallet.dat btree file, add it as a wallet with BERKELEY format.
+                    paths.emplace_back(path, "bdb");
+                } else if (IsSQLiteFile(SQLiteDataFile(it->path()))) {
+                    // Found a directory which contains wallet.dat sqlite file, add it as a wallet with SQLITE format.
+                    paths.emplace_back(path, "sqlite");
+                }
             } else if (it.depth() == 0 && it->symlink_status().type() == fs::file_type::regular && IsBDBFile(it->path())) {
                 if (it->path().filename() == "wallet.dat") {
                     // Found top-level wallet.dat btree file, add top level directory ""
                     // as a wallet.
-                    paths.emplace_back();
+                    paths.emplace_back(fs::path(), "bdb");
                 } else {
                     // Found top-level btree file not called wallet.dat. Current bitcoin
                     // software will never create these files but will allow them to be
                     // opened in a shared database environment for backwards compatibility.
                     // Add it to the list of available wallets.
-                    paths.emplace_back(path);
+                    paths.emplace_back(path, "bdb");
                 }
             }
         } catch (const std::exception& e) {

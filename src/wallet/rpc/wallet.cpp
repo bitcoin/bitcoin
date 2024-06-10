@@ -169,7 +169,7 @@ static RPCHelpMan listwalletdir()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue wallets(UniValue::VARR);
-    for (const auto& path : ListDatabases(GetWalletDir())) {
+    for (const auto& [path, _] : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
         wallet.pushKV("name", path.utf8string());
         wallets.push_back(std::move(wallet));
