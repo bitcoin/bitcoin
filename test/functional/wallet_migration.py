@@ -539,6 +539,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["format"], "sqlite")
 
         walletdir_list = wallet.listwalletdir()
+        assert {"name": info["walletname"]} in walletdir_list["wallets"]
 
         # Check backup existence and its non-empty wallet filename
         backup_filename = f"default_wallet_{curr_time}.legacy.bak"
