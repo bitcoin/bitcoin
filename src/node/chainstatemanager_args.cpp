@@ -24,7 +24,10 @@
 namespace node {
 util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
-    if (auto value{args.GetBoolArg("-checkblockindex")}) opts.check_block_index = *value;
+    if (auto value{args.GetIntArg("-checkblockindex")}) {
+        // Interpret bare -checkblockindex argument as 1 instead of 0.
+        opts.check_block_index = args.GetArg("-checkblockindex")->empty() ? 1 : *value;
+    }
 
     if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
 
