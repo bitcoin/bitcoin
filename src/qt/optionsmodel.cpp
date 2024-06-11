@@ -30,6 +30,9 @@
 #include <interfaces/wallet.h>
 #endif
 
+#include <string>
+#include <unordered_set>
+
 #include <QDebug>
 #include <QLatin1Char>
 #include <QSettings>
@@ -54,6 +57,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::MapPortNatpmp: return "natpmp";
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
+    case OptionsModel::addresstype: return "addresstype";
     case OptionsModel::PruneSizeMiB: return "prune";
     case OptionsModel::PruneTristate: return "prune";
     case OptionsModel::ProxyIP: return "proxy";
@@ -63,6 +67,9 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::ProxyPortTor: return "onion";
     case OptionsModel::ProxyUseTor: return "onion";
     case OptionsModel::Language: return "lang";
+    case OptionsModel::maxuploadtarget: return "maxuploadtarget";
+    case OptionsModel::peerbloomfilters: return "peerbloomfilters";
+    case OptionsModel::peerblockfilters: return "peerblockfilters";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -263,12 +270,14 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
+    std::unordered_set<std::string> checked_settings;
     for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
                             MapPortNatpmp, Listen, Server, PruneTristate, ProxyUse, ProxyUseTor, Language}) {
         // isSettingIgnored will have a false positive here during first-run prune changes
         if (option == PruneTristate && m_prune_forced_by_gui) continue;
 
         std::string setting = SettingName(option);
+        checked_settings.insert(setting);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
             getOption(option);
@@ -279,6 +288,18 @@ bool OptionsModel::Init(bilingual_str& error)
             error.translated = tr("Could not read setting \"%1\", %2.").arg(QString::fromStdString(setting), e.what()).toStdString();
             return false;
         }
+    }
+
+    if (m_prune_forced_by_gui) checked_settings.insert("prune");
+    for (OptionID option = OptionID(0); option < OptionIDRowCount; option = OptionID(option + 1)) {
+        std::string setting;
+        try {
+            setting = SettingName(option);
+        } catch (const std::logic_error&) {
+            continue;  // Ignore GUI-only settings
+        }
+        if (!checked_settings.insert(setting).second) continue;
+        if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
     }
 
     // If setting doesn't exist create it with defaults.
