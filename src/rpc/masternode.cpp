@@ -19,7 +19,6 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/strencodings.h>
-#include <spork.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
