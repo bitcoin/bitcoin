@@ -105,7 +105,7 @@ class MiniWallet:
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = key_to_p2pk_script(pub_key.get_bytes())
         elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            internal_key = None if tag_name is None else hash256(tag_name.encode())
+            internal_key = None if tag_name is None else compute_xonly_pubkey(hash256(tag_name.encode()))[0]
             self._address, self._taproot_info = create_deterministic_address_bcrt1_p2tr_op_true(internal_key)
             self._scriptPubKey = address_to_scriptpubkey(self._address)
 
