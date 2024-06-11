@@ -524,6 +524,10 @@ private:
     /** Whether this node is running in blocks only mode */
     const bool m_ignore_incoming_txs;
 
+    /** Whether we've completed initial sync yet, for determining when to turn
+      * on extra block-relay-only peers. */
+    bool m_initial_sync_finished{false};
+
     /** Protects m_peer_map. This mutex must not be locked while holding a lock
      *  on any of the mutexes inside a Peer object. */
     mutable Mutex m_peer_mutex;

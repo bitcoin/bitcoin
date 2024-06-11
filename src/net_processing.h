@@ -116,11 +116,6 @@ public:
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
 
     virtual bool IsBanned(NodeId pnode) = 0;
-
-    /** Whether we've completed initial sync yet, for determining when to turn
-      * on extra block-relay-only peers. */
-    bool m_initial_sync_finished{false};
-
 };
 
 #endif // BITCOIN_NET_PROCESSING_H
