@@ -294,6 +294,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/bech32.cpp \
  test/fuzz/bip324.cpp \
  test/fuzz/bitdeque.cpp \
+ test/fuzz/bitset.cpp \
  test/fuzz/block.cpp \
  test/fuzz/block_header.cpp \
  test/fuzz/blockfilter.cpp \
