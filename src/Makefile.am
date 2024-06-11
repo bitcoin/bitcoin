@@ -243,7 +243,6 @@ BITCOIN_CORE_H = \
   node/warnings.h \
   noui.h \
   outputtype.h \
-  policy/v3_policy.h \
   policy/feerate.h \
   policy/fees.h \
   policy/fees_args.h \
@@ -251,6 +250,7 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   policy/settings.h \
+  policy/truc_policy.h \
   pow.h \
   protocol.h \
   psbt.h \
@@ -447,12 +447,12 @@ libbitcoin_node_a_SOURCES = \
   node/validation_cache_args.cpp \
   node/warnings.cpp \
   noui.cpp \
-  policy/v3_policy.cpp \
   policy/fees.cpp \
   policy/fees_args.cpp \
   policy/packages.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
+  policy/truc_policy.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -707,9 +707,9 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   net_permissions.cpp \
   outputtype.cpp \
-  policy/v3_policy.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
+  policy/truc_policy.cpp \
   protocol.cpp \
   psbt.cpp \
   rpc/external_signer.cpp \
@@ -955,12 +955,12 @@ libbitcoinkernel_la_SOURCES = \
   node/blockstorage.cpp \
   node/chainstate.cpp \
   node/utxo_snapshot.cpp \
-  policy/v3_policy.cpp \
   policy/feerate.cpp \
   policy/packages.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
+  policy/truc_policy.cpp \
   pow.cpp \
   primitives/block.cpp \
   primitives/transaction.cpp \

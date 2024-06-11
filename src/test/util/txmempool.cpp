@@ -8,7 +8,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <policy/rbf.h>
-#include <policy/v3_policy.h>
+#include <policy/truc_policy.h>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/time.h>

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/v3_policy.h>
+#include <policy/truc_policy.h>
 
 #include <coins.h>
 #include <consensus/amount.h>

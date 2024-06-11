@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_V3_POLICY_H
-#define BITCOIN_POLICY_V3_POLICY_H
+#ifndef BITCOIN_POLICY_TRUC_POLICY_H
+#define BITCOIN_POLICY_TRUC_POLICY_H
 
 #include <consensus/amount.h>
 #include <policy/packages.h>
@@ -90,4 +90,4 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                                            const Package& package,
                                            const CTxMemPool::setEntries& mempool_ancestors);
 
-#endif // BITCOIN_POLICY_V3_POLICY_H
+#endif // BITCOIN_POLICY_TRUC_POLICY_H
