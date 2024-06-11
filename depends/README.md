@@ -49,11 +49,11 @@ The paths are automatically configured and no other options are needed.
 
 #### For macOS cross compilation
 
-    sudo apt-get install g++ zip
+    apt install clang lld llvm g++ zip
 
-Note: You must obtain the macOS SDK before proceeding with a cross-compile.
-Under the depends directory, create a subdirectory named `SDKs`.
-Then, place the extracted SDK under this new directory.
+Clang 18 or later is required. You must also obtain the macOS SDK before
+proceeding with a cross-compile. Under the depends directory, create a
+subdirectory named `SDKs`. Then, place the extracted SDK under this new directory.
 For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
 
 #### For Win64 cross compilation
@@ -119,9 +119,6 @@ The following can be set when running make: `make FOO=bar`
 - `DEBUG`: Disable some optimizations and enable more runtime checking
 - `HOST_ID_SALT`: Optional salt to use when generating host package ids
 - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
-- `FORCE_USE_SYSTEM_CLANG`: (EXPERTS ONLY) When cross-compiling for macOS, use Clang found in the
-  system's `$PATH` rather than the default prebuilt release of Clang
-  from llvm.org. Clang 8 or later is required
 - `LOG`: Use file-based logging for individual packages. During a package build its log file
   resides in the `depends` directory, and the log file is printed out automatically in case
   of build error. After successful build log files are moved along with package archives

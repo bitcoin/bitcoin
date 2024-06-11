@@ -24,13 +24,3 @@ multiprocess_packages = libmultiprocess capnp
 multiprocess_native_packages = native_libmultiprocess native_capnp
 
 usdt_linux_packages=systemtap
-
-darwin_native_packages =
-
-ifneq ($(build_os),darwin)
-
-ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-darwin_native_packages+= native_llvm
-endif
-
-endif
