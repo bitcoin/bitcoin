@@ -66,6 +66,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::MapPortNatpmp: return "natpmp";
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
+    case OptionsModel::walletrbf: return "walletrbf";
     case OptionsModel::addresstype: return "addresstype";
     case OptionsModel::PruneSizeMiB: return "prune";
     case OptionsModel::PruneTristate: return "prune";
@@ -79,8 +80,36 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::maxuploadtarget: return "maxuploadtarget";
     case OptionsModel::peerbloomfilters: return "peerbloomfilters";
     case OptionsModel::peerblockfilters: return "peerblockfilters";
+    case OptionsModel::mempoolreplacement: return "mempoolreplacement";
+    case OptionsModel::mempooltruc: return "mempooltruc";
+    case OptionsModel::maxorphantx: return "maxorphantx";
+    case OptionsModel::maxmempool: return "maxmempool";
+    case OptionsModel::incrementalrelayfee: return "incrementalrelayfee";
+    case OptionsModel::mempoolexpiry: return "mempoolexpiry";
+    case OptionsModel::rejectunknownscripts: return "rejectunknownscripts";
+    case OptionsModel::rejectparasites: return "rejectparasites";
+    case OptionsModel::rejecttokens: return "rejecttokens";
+    case OptionsModel::rejectspkreuse: return "rejectspkreuse";
+    case OptionsModel::minrelaytxfee: return "minrelaytxfee";
+    case OptionsModel::bytespersigop: return "bytespersigop";
+    case OptionsModel::bytespersigopstrict: return "bytespersigopstrict";
+    case OptionsModel::limitancestorcount: return "limitancestorcount";
+    case OptionsModel::limitancestorsize: return "limitancestorsize";
+    case OptionsModel::limitdescendantcount: return "limitdescendantcount";
+    case OptionsModel::limitdescendantsize: return "limitdescendantsize";
+    case OptionsModel::rejectbarepubkey: return "rejectbarepubkey";
+    case OptionsModel::rejectbaremultisig: return "rejectbaremultisig";
+    case OptionsModel::maxscriptsize: return "maxscriptsize";
     case OptionsModel::datacarriercost: return "datacarriercost";
+    case OptionsModel::datacarriersize: return "datacarriersize";
+    case OptionsModel::rejectnonstddatacarrier: return "rejectnonstddatacarrier";
+    case OptionsModel::dustrelayfee: return "dustrelayfee";
     case OptionsModel::dustdynamic: return "dustdynamic";
+    case OptionsModel::blockmintxfee: return "blockmintxfee";
+    case OptionsModel::blockmaxsize: return "blockmaxsize";
+    case OptionsModel::blockprioritysize: return "blockprioritysize";
+    case OptionsModel::blockmaxweight: return "blockmaxweight";
+    case OptionsModel::blockreconstructionextratxn: return "blockreconstructionextratxn";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
