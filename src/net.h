@@ -284,6 +284,8 @@ public:
     std::string cleanSubVer;
     bool fInbound;
     bool m_manual_connection;
+    bool m_bip152_highbandwidth_to;
+    bool m_bip152_highbandwidth_from;
     int m_starting_height;
     uint64_t nSendBytes;
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -582,6 +584,11 @@ public:
     }
 
 public:
+    // We selected peer as (compact blocks) high-bandwidth peer (BIP152)
+    std::atomic<bool> m_bip152_highbandwidth_to{false};
+    // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
+    std::atomic<bool> m_bip152_highbandwidth_from{false};
+
     /** Whether we should relay transactions to this peer (their version
      *  message did not include fRelay=false and this is not a block-relay-only
      *  connection). This only changes from false to true. It will never change
