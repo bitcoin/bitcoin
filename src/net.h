@@ -63,8 +63,8 @@ static const bool DEFAULT_WHITELISTFORCERELAY = false;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
-/** Time to wait since nTimeConnected before disconnecting a probe node. **/
-static const int PROBE_WAIT_INTERVAL = 5;
+/** Time to wait since m_connected before disconnecting a probe node. */
+static const auto PROBE_WAIT_INTERVAL{5s};
 /** Minimum time between warnings printed to log. */
 static const int WARNING_INTERVAL = 10 * 60;
 /** Run the feeler connection loop once every 2 minutes. **/
@@ -82,7 +82,7 @@ static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
 /** Eviction protection time for incoming connections  */
-static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
+static const auto INBOUND_EVICTION_PROTECTION_TIME{1s};
 /** Maximum number of block-relay-only outgoing connections */
 static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
@@ -276,9 +276,9 @@ public:
     ServiceFlags nServices;
     std::chrono::seconds m_last_send;
     std::chrono::seconds m_last_recv;
-    int64_t nLastTXTime;
-    int64_t nLastBlockTime;
-    int64_t nTimeConnected;
+    std::chrono::seconds m_last_tx_time;
+    std::chrono::seconds m_last_block_time;
+    std::chrono::seconds m_connected;
     int64_t nTimeOffset;
     std::string m_addr_name;
     int nVersion;
@@ -472,8 +472,8 @@ public:
 
     std::atomic<std::chrono::seconds> m_last_send{0s};
     std::atomic<std::chrono::seconds> m_last_recv{0s};
-    //! Unix epoch time at peer connection, in seconds.
-    const int64_t nTimeConnected;
+    //! Unix epoch time at peer connection
+    const std::chrono::seconds m_connected;
     std::atomic<int64_t> nTimeOffset{0};
     std::atomic<int64_t> nLastWarningTime{0};
     std::atomic<int64_t> nTimeFirstMessageReceived{0};
@@ -513,7 +513,7 @@ public:
     std::atomic<bool> m_masternode_connection{false};
     /**
      * If 'true' this node will be disconnected after MNAUTH (outbound only) or
-     * after PROBE_WAIT_INTERVAL seconds since nTimeConnected
+     * after PROBE_WAIT_INTERVAL seconds since m_connected
      */
     std::atomic<bool> m_masternode_probe_connection{false};
     // If 'true', we identified it as an intra-quorum relay connection
@@ -615,13 +615,13 @@ public:
      * preliminary validity checks and was saved to disk, even if we don't
      * connect the block or it eventually fails connection. Used as an inbound
      * peer eviction criterium in CConnman::AttemptToEvictConnection. */
-    std::atomic<int64_t> nLastBlockTime{0};
+    std::atomic<std::chrono::seconds> m_last_block_time{0s};
 
     /** UNIX epoch time of the last transaction received from this peer that we
      * had not yet seen (e.g. not already received from another peer) and that
      * was accepted into our mempool. Used as an inbound peer eviction criterium
      * in CConnman::AttemptToEvictConnection. */
-    std::atomic<int64_t> nLastTXTime{0};
+    std::atomic<std::chrono::seconds> m_last_tx_time{0s};
 
     /** Last measured round-trip time. Used only for RPC/GUI stats/debugging.*/
     std::atomic<std::chrono::microseconds> m_last_ping_time{0us};
@@ -1628,10 +1628,10 @@ extern std::function<void(const CAddress& addr,
 struct NodeEvictionCandidate
 {
     NodeId id;
-    int64_t nTimeConnected;
+    std::chrono::seconds m_connected;
     std::chrono::microseconds m_min_ping_time;
-    int64_t nLastBlockTime;
-    int64_t nLastTXTime;
+    std::chrono::seconds m_last_block_time;
+    std::chrono::seconds m_last_tx_time;
     bool fRelevantServices;
     bool m_relay_txs;
     bool fBloomFilter;

@@ -21,10 +21,10 @@ FUZZ_TARGET(node_eviction)
     while (fuzzed_data_provider.ConsumeBool()) {
         eviction_candidates.push_back({
             /* id */ fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            /* nTimeConnected */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /* m_connected */ std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
             /* m_min_ping_time */ std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /* nLastBlockTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            /* nLastTXTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /* m_last_block_time */ std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
+            /* m_last_tx_time */ std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
             /* fRelevantServices */ fuzzed_data_provider.ConsumeBool(),
             /* m_relay_txs */ fuzzed_data_provider.ConsumeBool(),
             /* fBloomFilter */ fuzzed_data_provider.ConsumeBool(),

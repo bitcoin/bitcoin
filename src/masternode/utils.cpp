@@ -49,7 +49,7 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, CDeterministicMNManager&
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
         if (pnode->m_masternode_probe_connection) {
             // we're not disconnecting masternode probes for at least PROBE_WAIT_INTERVAL seconds
-            if (GetTimeSeconds() - pnode->nTimeConnected < PROBE_WAIT_INTERVAL) return;
+            if (GetTime<std::chrono::seconds>() - pnode->m_connected < PROBE_WAIT_INTERVAL) return;
         } else {
             // we're only disconnecting m_masternode_connection connections
             if (!pnode->m_masternode_connection) return;
@@ -67,7 +67,7 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, CDeterministicMNManager&
                 if (pnode->IsInboundConn()) {
                     return;
                 }
-            } else if (GetTimeSeconds() - pnode->nTimeConnected < 5) {
+            } else if (GetTime<std::chrono::seconds>() - pnode->m_connected < 5s) {
                 // non-verified, give it some time to verify itself
                 return;
             } else if (pnode->qwatch) {

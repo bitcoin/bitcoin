@@ -704,9 +704,9 @@ void CNode::CopyStats(CNodeStats& stats)
     stats.m_network = ConnectedThroughNetwork();
     X(m_last_send);
     X(m_last_recv);
-    X(nLastTXTime);
-    X(nLastBlockTime);
-    X(nTimeConnected);
+    X(m_last_tx_time);
+    X(m_last_block_time);
+    X(m_connected);
     X(nTimeOffset);
     X(m_addr_name);
     X(nVersion);
@@ -972,7 +972,7 @@ static bool ReverseCompareNodeMinPingTime(const NodeEvictionCandidate& a, const 
 
 static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
 {
-    return a.nTimeConnected > b.nTimeConnected;
+    return a.m_connected > b.m_connected;
 }
 
 static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
@@ -982,27 +982,27 @@ static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvict
 static bool CompareNodeBlockTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
     // There is a fall-through here because it is common for a node to have many peers which have not yet relayed a block.
-    if (a.nLastBlockTime != b.nLastBlockTime) return a.nLastBlockTime < b.nLastBlockTime;
+    if (a.m_last_block_time != b.m_last_block_time) return a.m_last_block_time < b.m_last_block_time;
     if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
-    return a.nTimeConnected > b.nTimeConnected;
+    return a.m_connected > b.m_connected;
 }
 
 static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
     // There is a fall-through here because it is common for a node to have more than a few peers that have not yet relayed txn.
-    if (a.nLastTXTime != b.nLastTXTime) return a.nLastTXTime < b.nLastTXTime;
+    if (a.m_last_tx_time != b.m_last_tx_time) return a.m_last_tx_time < b.m_last_tx_time;
     if (a.m_relay_txs != b.m_relay_txs) return b.m_relay_txs;
     if (a.fBloomFilter != b.fBloomFilter) return a.fBloomFilter;
-    return a.nTimeConnected > b.nTimeConnected;
+    return a.m_connected > b.m_connected;
 }
 
 // Pick out the potential block-relay only peers, and sort them by last block time.
 static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
     if (a.m_relay_txs != b.m_relay_txs) return a.m_relay_txs;
-    if (a.nLastBlockTime != b.nLastBlockTime) return a.nLastBlockTime < b.nLastBlockTime;
+    if (a.m_last_block_time != b.m_last_block_time) return a.m_last_block_time < b.m_last_block_time;
     if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
-    return a.nTimeConnected > b.nTimeConnected;
+    return a.m_connected > b.m_connected;
 }
 
 /**
@@ -1021,7 +1021,7 @@ struct CompareNodeNetworkTime {
     {
         if (m_is_local && a.m_is_local != b.m_is_local) return b.m_is_local;
         if ((a.m_network == m_network) != (b.m_network == m_network)) return b.m_network == m_network;
-        return a.nTimeConnected > b.nTimeConnected;
+        return a.m_connected > b.m_connected;
     };
 };
 
@@ -1148,12 +1148,12 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // (vEvictionCandidates is already sorted by reverse connect time)
     uint64_t naMostConnections;
     unsigned int nMostConnections = 0;
-    int64_t nMostConnectionsTime = 0;
+    std::chrono::seconds nMostConnectionsTime{0};
     std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapNetGroupNodes;
     for (const NodeEvictionCandidate &node : vEvictionCandidates) {
         std::vector<NodeEvictionCandidate> &group = mapNetGroupNodes[node.nKeyedNetGroup];
         group.push_back(node);
-        const int64_t grouptime = group[0].nTimeConnected;
+        const auto grouptime{group[0].m_connected};
 
         if (group.size() > nMostConnections || (group.size() == nMostConnections && grouptime > nMostConnectionsTime)) {
             nMostConnections = group.size();
@@ -1196,7 +1196,7 @@ bool CConnman::AttemptToEvictConnection()
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
                 // follow when the incoming connection is from another masternode. When a message other than MNAUTH
                 // is received after VERSION/VERACK, the protection is lifted immediately.
-                bool isProtected = GetTimeSeconds() - node->nTimeConnected < INBOUND_EVICTION_PROTECTION_TIME;
+                bool isProtected = GetTime<std::chrono::seconds>() - node->m_connected < INBOUND_EVICTION_PROTECTION_TIME;
                 if (node->nTimeFirstMessageReceived != 0 && !node->fFirstMessageIsMNAUTH) {
                     isProtected = false;
                 }
@@ -1210,8 +1210,8 @@ bool CConnman::AttemptToEvictConnection()
                 }
             }
 
-            NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->m_min_ping_time,
-                                               node->nLastBlockTime, node->nLastTXTime,
+            NodeEvictionCandidate candidate = {node->GetId(), node->m_connected, node->m_min_ping_time,
+                                               node->m_last_block_time, node->m_last_tx_time,
                                                HasAllDesirableServiceFlags(node->nServices),
                                                node->m_relays_txs.load(), node->m_bloom_filter_loaded.load(),
                                                node->nKeyedNetGroup, node->m_prefer_evict, node->addr.IsLocal(),
@@ -1644,7 +1644,7 @@ void CConnman::CalculateNumConnectionsChangedStats()
 
 bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::chrono::seconds now) const
 {
-    return std::chrono::seconds{node.nTimeConnected} + m_peer_connect_timeout < now;
+    return node.m_connected + m_peer_connect_timeout < now;
 }
 
 bool CConnman::InactivityCheck(const CNode& node) const
@@ -4092,7 +4092,7 @@ unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
 CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> sock, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
     : m_sock{sock},
-      nTimeConnected{GetTimeSeconds()},
+      m_connected{GetTime<std::chrono::seconds>()},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn},
