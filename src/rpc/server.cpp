@@ -153,8 +153,8 @@ void CRPCTable::InitPlatformRestrictions()
         {"getblockhash", {}},
         {"getblockcount", {}},
         {"getbestchainlock", {}},
-        {"quorum", {"sign", static_cast<uint8_t>(Params().GetConsensus().llmqTypePlatform)}},
-        {"quorum", {"verify"}},
+        {"quorum sign", {static_cast<uint8_t>(Params().GetConsensus().llmqTypePlatform)}},
+        {"quorum verify", {}},
         {"submitchainlock", {}},
         {"verifyislock", {}},
     };
@@ -535,7 +535,9 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
     // Before executing the RPC Command, filter commands from platform rpc user
     if (node.mn_activeman && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
         // replace this with structured binding in c++20
-        const auto& it = mapPlatformRestrictions.equal_range(request.strMethod);
+        std::string command_name = command.name;
+        if (!command.subname.empty()) command_name += " " + command.subname;
+        const auto& it = mapPlatformRestrictions.equal_range(command_name);
         const auto& allowed_begin = it.first;
         const auto& allowed_end = it.second;
         /**
@@ -545,8 +547,8 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
          *
          * if request.strMethod == "quorum":
          * [
-         *      "quorum", ["sign", platformLlmqType],
-         *      "quorum", ["verify"]
+         *      "quorum sign", [platformLlmqType],
+         *      "quorum verify", []
          * ]
          * if request.strMethod == "verifyislock"
          * [
