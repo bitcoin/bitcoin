@@ -519,14 +519,14 @@ private:
     std::atomic<int> m_best_height{-1};
 
     /** Next time to check for stale tip */
-    std::chrono::seconds m_stale_tip_check_time{0s};
+    std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
 
     /** Whether this node is running in blocks only mode */
     const bool m_ignore_incoming_txs;
 
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
-    bool m_initial_sync_finished{false};
+    bool m_initial_sync_finished GUARDED_BY(cs_main){false};
 
     /** Protects m_peer_map. This mutex must not be locked while holding a lock
      *  on any of the mutexes inside a Peer object. */
