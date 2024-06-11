@@ -22,7 +22,7 @@ from test_framework.wallet import (
 )
 
 MAX_REPLACEMENT_CANDIDATES = 100
-V3_MAX_VSIZE = 10000
+TRUC_MAX_VSIZE = 10000
 
 def cleanup(extra_args=None):
     def decorator(func):
@@ -55,14 +55,14 @@ class MempoolTRUC(BitcoinTestFramework):
     def test_truc_max_vsize(self):
         node = self.nodes[0]
         self.log.info("Test TRUC-specific maximum transaction vsize")
-        tx_v3_heavy = self.wallet.create_self_transfer(target_weight=(V3_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=3)
-        assert_greater_than_or_equal(tx_v3_heavy["tx"].get_vsize(), V3_MAX_VSIZE)
+        tx_v3_heavy = self.wallet.create_self_transfer(target_weight=(TRUC_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=3)
+        assert_greater_than_or_equal(tx_v3_heavy["tx"].get_vsize(), TRUC_MAX_VSIZE)
         expected_error_heavy = f"TRUC-violation, v3 tx {tx_v3_heavy['txid']} (wtxid={tx_v3_heavy['wtxid']}) is too big"
         assert_raises_rpc_error(-26, expected_error_heavy, node.sendrawtransaction, tx_v3_heavy["hex"])
         self.check_mempool([])
 
         # Ensure we are hitting the TRUC-specific limit and not something else
-        tx_v2_heavy = self.wallet.send_self_transfer(from_node=node, target_weight=(V3_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=2)
+        tx_v2_heavy = self.wallet.send_self_transfer(from_node=node, target_weight=(TRUC_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=2)
         self.check_mempool([tx_v2_heavy["txid"]])
 
     @cleanup(extra_args=["-datacarriersize=1000"])
@@ -231,7 +231,7 @@ class MempoolTRUC(BitcoinTestFramework):
         )
 
         # Parent and child are within v3 limits, but parent's 10kvB descendant limit is exceeded
-        assert_greater_than_or_equal(V3_MAX_VSIZE, tx_v3_parent_large1["tx"].get_vsize())
+        assert_greater_than_or_equal(TRUC_MAX_VSIZE, tx_v3_parent_large1["tx"].get_vsize())
         assert_greater_than_or_equal(1000, tx_v3_child_large1["tx"].get_vsize())
         assert_greater_than(tx_v3_parent_large1["tx"].get_vsize() + tx_v3_child_large1["tx"].get_vsize(), 10000)
 
@@ -254,7 +254,7 @@ class MempoolTRUC(BitcoinTestFramework):
         )
 
         # Parent and child are within TRUC limits
-        assert_greater_than_or_equal(V3_MAX_VSIZE, tx_v3_parent_large2["tx"].get_vsize())
+        assert_greater_than_or_equal(TRUC_MAX_VSIZE, tx_v3_parent_large2["tx"].get_vsize())
         assert_greater_than_or_equal(1000, tx_v3_child_large2["tx"].get_vsize())
         assert_greater_than(tx_v3_parent_large2["tx"].get_vsize() + tx_v3_child_large2["tx"].get_vsize(), 10000)
 

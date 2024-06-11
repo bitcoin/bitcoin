@@ -14,7 +14,7 @@
 #include <numeric>
 #include <vector>
 
-/** Helper for PackageV3Checks: Returns a vector containing the indices of transactions (within
+/** Helper for PackageTRUCChecks: Returns a vector containing the indices of transactions (within
  * package) that are direct parents of ptx. */
 std::vector<size_t> FindInPackageParents(const Package& package, const CTransactionRef& ptx)
 {
@@ -37,7 +37,7 @@ std::vector<size_t> FindInPackageParents(const Package& package, const CTransact
     return in_package_parents;
 }
 
-/** Helper for PackageV3Checks, storing info for a mempool or package parent. */
+/** Helper for PackageTRUCChecks, storing info for a mempool or package parent. */
 struct ParentInfo {
     /** Txid used to identify this parent by prevout */
     const Txid& m_txid;
@@ -55,25 +55,25 @@ struct ParentInfo {
     {}
 };
 
-std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t vsize,
+std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
                                            const CTxMemPool::setEntries& mempool_ancestors)
 {
     // This function is specialized for these limits, and must be reimplemented if they ever change.
-    static_assert(V3_ANCESTOR_LIMIT == 2);
-    static_assert(V3_DESCENDANT_LIMIT == 2);
+    static_assert(TRUC_ANCESTOR_LIMIT == 2);
+    static_assert(TRUC_DESCENDANT_LIMIT == 2);
 
     const auto in_package_parents{FindInPackageParents(package, ptx)};
 
     // Now we have all ancestors, so we can start checking TRUC rules.
     if (ptx->version == TRUC_VERSION) {
-        // SingleV3Checks should have checked this already.
-        if (!Assume(vsize <= V3_MAX_VSIZE)) {
+        // SingleTRUCChecks should have checked this already.
+        if (!Assume(vsize <= TRUC_MAX_VSIZE)) {
             return strprintf("v3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
-                             ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_MAX_VSIZE);
+                             ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, TRUC_MAX_VSIZE);
         }
 
-        if (mempool_ancestors.size() + in_package_parents.size() + 1 > V3_ANCESTOR_LIMIT) {
+        if (mempool_ancestors.size() + in_package_parents.size() + 1 > TRUC_ANCESTOR_LIMIT) {
             return strprintf("tx %s (wtxid=%s) would have too many ancestors",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
         }
@@ -81,10 +81,10 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
         const bool has_parent{mempool_ancestors.size() + in_package_parents.size() > 0};
         if (has_parent) {
             // A TRUC child cannot be too large.
-            if (vsize > V3_CHILD_MAX_VSIZE) {
+            if (vsize > TRUC_CHILD_MAX_VSIZE) {
                 return strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
                                  ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
-                                 vsize, V3_CHILD_MAX_VSIZE);
+                                 vsize, TRUC_CHILD_MAX_VSIZE);
             }
 
             // Exactly 1 parent exists, either in mempool or package. Find it.
@@ -118,7 +118,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
 
                 for (auto& input : package_tx->vin) {
                     // Fail if we find another tx with the same parent. We don't check whether the
-                    // sibling is to-be-replaced (done in SingleV3Checks) because these transactions
+                    // sibling is to-be-replaced (done in SingleTRUCChecks) because these transactions
                     // are within the same package.
                     if (input.prevout.hash == parent_info.m_txid) {
                         return strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
@@ -161,7 +161,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
     return std::nullopt;
 }
 
-std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTransactionRef& ptx,
+std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CTransactionRef& ptx,
                                           const CTxMemPool::setEntries& mempool_ancestors,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
@@ -182,20 +182,20 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
     }
 
     // This function is specialized for these limits, and must be reimplemented if they ever change.
-    static_assert(V3_ANCESTOR_LIMIT == 2);
-    static_assert(V3_DESCENDANT_LIMIT == 2);
+    static_assert(TRUC_ANCESTOR_LIMIT == 2);
+    static_assert(TRUC_DESCENDANT_LIMIT == 2);
 
     // The rest of the rules only apply to transactions with version=3.
     if (ptx->version != TRUC_VERSION) return std::nullopt;
 
-    if (vsize > V3_MAX_VSIZE) {
+    if (vsize > TRUC_MAX_VSIZE) {
         return std::make_pair(strprintf("v3 tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
-                         ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_MAX_VSIZE),
+                         ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, TRUC_MAX_VSIZE),
             nullptr);
     }
 
-    // Check that V3_ANCESTOR_LIMIT would not be violated.
-    if (mempool_ancestors.size() + 1 > V3_ANCESTOR_LIMIT) {
+    // Check that TRUC_ANCESTOR_LIMIT would not be violated.
+    if (mempool_ancestors.size() + 1 > TRUC_ANCESTOR_LIMIT) {
         return std::make_pair(strprintf("tx %s (wtxid=%s) would have too many ancestors",
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString()),
             nullptr);
@@ -204,9 +204,9 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
     // Remaining checks only pertain to transactions with unconfirmed ancestors.
     if (mempool_ancestors.size() > 0) {
         // If this transaction spends TRUC parents, it cannot be too large.
-        if (vsize > V3_CHILD_MAX_VSIZE) {
+        if (vsize > TRUC_CHILD_MAX_VSIZE) {
             return std::make_pair(strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
-                             ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_CHILD_MAX_VSIZE),
+                             ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, TRUC_CHILD_MAX_VSIZE),
                 nullptr);
         }
 
@@ -222,7 +222,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
         const bool child_will_be_replaced = !children.empty() &&
             std::any_of(children.cbegin(), children.cend(),
                 [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
-        if (parent_entry->GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
+        if (parent_entry->GetCountWithDescendants() + 1 > TRUC_DESCENDANT_LIMIT && !child_will_be_replaced) {
             // Allow sibling eviction for TRUC transaction: if another child already exists, even if
             // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on TRUC rules
             // only permitting 1 descendant, as otherwise we would need to have logic for deciding

@@ -48,12 +48,12 @@ std::optional<std::string>  CheckPackageMempoolAcceptResult(const Package& txns,
                                                             const CTxMemPool* mempool);
 
 /** For every transaction in tx_pool, check TRUC invariants:
- * - a TRUC tx's ancestor count must be within V3_ANCESTOR_LIMIT
- * - a TRUC tx's descendant count must be within V3_DESCENDANT_LIMIT
- * - if a TRUC tx has ancestors, its sigop-adjusted vsize must be within V3_CHILD_MAX_VSIZE
+ * - a TRUC tx's ancestor count must be within TRUC_ANCESTOR_LIMIT
+ * - a TRUC tx's descendant count must be within TRUC_DESCENDANT_LIMIT
+ * - if a TRUC tx has ancestors, its sigop-adjusted vsize must be within TRUC_CHILD_MAX_VSIZE
  * - any non-TRUC tx must only have non-TRUC parents
  * - any TRUC tx must only have TRUC parents
  *   */
-void CheckMempoolV3Invariants(const CTxMemPool& tx_pool);
+void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool);
 
 #endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H

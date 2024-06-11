@@ -320,7 +320,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
             Assert(result_package.m_tx_results.size() == txs.size() || result_package.m_tx_results.empty());
         }
 
-        CheckMempoolV3Invariants(tx_pool);
+        CheckMempoolTRUCInvariants(tx_pool);
     }
 
     node.validation_signals->UnregisterSharedValidationInterface(outpoints_updater);

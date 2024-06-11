@@ -141,24 +141,24 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
     return std::nullopt;
 }
 
-void CheckMempoolV3Invariants(const CTxMemPool& tx_pool)
+void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool)
 {
     LOCK(tx_pool.cs);
     for (const auto& tx_info : tx_pool.infoAll()) {
         const auto& entry = *Assert(tx_pool.GetEntry(tx_info.tx->GetHash()));
         if (tx_info.tx->version == TRUC_VERSION) {
             // Check that special maximum virtual size is respected
-            Assert(entry.GetTxSize() <= V3_MAX_VSIZE);
+            Assert(entry.GetTxSize() <= TRUC_MAX_VSIZE);
 
             // Check that special TRUC ancestor/descendant limits and rules are always respected
-            Assert(entry.GetCountWithDescendants() <= V3_DESCENDANT_LIMIT);
-            Assert(entry.GetCountWithAncestors() <= V3_ANCESTOR_LIMIT);
-            Assert(entry.GetSizeWithDescendants() <= V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE);
-            Assert(entry.GetSizeWithAncestors() <= V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE);
+            Assert(entry.GetCountWithDescendants() <= TRUC_DESCENDANT_LIMIT);
+            Assert(entry.GetCountWithAncestors() <= TRUC_ANCESTOR_LIMIT);
+            Assert(entry.GetSizeWithDescendants() <= TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE);
+            Assert(entry.GetSizeWithAncestors() <= TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE);
 
             // If this transaction has at least 1 ancestor, it's a "child" and has restricted weight.
             if (entry.GetCountWithAncestors() > 1) {
-                Assert(entry.GetTxSize() <= V3_CHILD_MAX_VSIZE);
+                Assert(entry.GetTxSize() <= TRUC_CHILD_MAX_VSIZE);
                 // All TRUC transactions must only have TRUC unconfirmed parents.
                 const auto& parents = entry.GetMemPoolParentsConst();
                 Assert(parents.begin()->get().GetSharedTx()->version == TRUC_VERSION);
