@@ -904,15 +904,15 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vin.clear();
     t.vin.resize(2438); // size per input (empty scriptSig): 41 bytes
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(19, 0); // output size: 30 bytes
-    // tx header:                12 bytes =>     48 vbytes
-    // 2438 inputs: 2438*41 = 99958 bytes => 399832 vbytes
-    //    1 output:              30 bytes =>    120 vbytes
-    //                      ===============================
-    //                                total: 400000 vbytes
+    // tx header:                12 bytes =>     48 weight units
+    // 2438 inputs: 2438*41 = 99958 bytes => 399832 weight units
+    //    1 output:              30 bytes =>    120 weight units
+    //                      ======================================
+    //                                total: 400000 weight units
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400000);
     CheckIsStandard(t);
 
-    // increase output size by one byte, so we end up with 400004 vbytes
+    // increase output size by one byte, so we end up with 400004 weight units
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(20, 0); // output size: 31 bytes
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
     CheckIsNotStandard(t, "tx-size");
