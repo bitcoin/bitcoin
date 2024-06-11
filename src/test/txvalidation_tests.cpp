@@ -91,7 +91,7 @@ static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, int3
 
 BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
 {
-    // Test V3 policy helper functions
+    // Test TRUC policy helper functions
     CTxMemPool& pool = *Assert(m_node.mempool);
     LOCK2(cs_main, pool.cs);
     TestMemPoolEntryHelper entry;
@@ -105,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
     // Default values.
     CTxMemPool::Limits m_limits{};
 
-    // Cannot spend from an unconfirmed v3 transaction unless this tx is also v3.
+    // Cannot spend from an unconfirmed TRUC transaction unless this tx is also TRUC.
     {
         // mempool_tx_v3
         //      ^
@@ -140,7 +140,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(*PackageV3Checks(tx_v2_from_v2_and_v3, GetVirtualTransactionSize(*tx_v2_from_v2_and_v3), package_v3_v2_v2, empty_ancestors), expected_error_str_2);
     }
 
-    // V3 cannot spend from an unconfirmed non-v3 transaction.
+    // TRUC cannot spend from an unconfirmed non-TRUC transaction.
     {
         // mempool_tx_v2
         //      ^
@@ -202,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK(PackageV3Checks(tx_v2_from_v2, GetVirtualTransactionSize(*tx_v2_from_v2), package_v2_v2, empty_ancestors) == std::nullopt);
     }
 
-    // Tx spending v3 cannot have too many mempool ancestors
+    // Tx spending TRUC cannot have too many mempool ancestors
     // Configuration where the tx has multiple direct parents.
     {
         Package package_multi_parents;
@@ -255,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK(PackageV3Checks(tx_v3_multi_gen, GetVirtualTransactionSize(*tx_v3_multi_gen), package_multi_gen, empty_ancestors) == std::nullopt);
     }
 
-    // Tx spending v3 cannot be too large in virtual size.
+    // Tx spending TRUC cannot be too large in virtual size.
     auto many_inputs{random_outpoints(100)};
     many_inputs.emplace_back(mempool_tx_v3->GetHash(), 0);
     {
@@ -273,7 +273,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                           expected_error_str);
     }
 
-    // Tx spending v3 cannot have too many sigops.
+    // Tx spending TRUC cannot have too many sigops.
     // This child has 10 P2WSH multisig inputs.
     auto multisig_outpoints{random_outpoints(10)};
     multisig_outpoints.emplace_back(mempool_tx_v3->GetHash(), 0);
@@ -317,7 +317,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                           expected_error_str);
     }
 
-    // Parent + child with v3 in the mempool. Child is allowed as long as it is under V3_CHILD_MAX_VSIZE.
+    // Parent + child with TRUC in the mempool. Child is allowed as long as it is under V3_CHILD_MAX_VSIZE.
     auto tx_mempool_v3_child = make_tx({COutPoint{mempool_tx_v3->GetHash(), 0}}, /*version=*/3);
     {
         BOOST_CHECK(GetTransactionWeight(*tx_mempool_v3_child) <= V3_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR);
@@ -329,7 +329,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK(PackageV3Checks(tx_mempool_v3_child, GetVirtualTransactionSize(*tx_mempool_v3_child), package_v3_1p1c, empty_ancestors) == std::nullopt);
     }
 
-    // A v3 transaction cannot have more than 1 descendant. Sibling is returned when exactly 1 exists.
+    // A TRUC transaction cannot have more than 1 descendant. Sibling is returned when exactly 1 exists.
     {
         auto tx_v3_child2 = make_tx({COutPoint{mempool_tx_v3->GetHash(), 1}}, /*version=*/3);
 

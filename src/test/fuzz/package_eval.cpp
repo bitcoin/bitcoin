@@ -225,7 +225,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     tx_mut.vin.emplace_back();
                 }
 
-                // Make a p2pk output to make sigops adjusted vsize to violate v3, potentially, which is never spent
+                // Make a p2pk output to make sigops adjusted vsize to violate TRUC rules, potentially, which is never spent
                 if (last_tx && amount_in > 1000 && fuzzed_data_provider.ConsumeBool()) {
                     tx_mut.vout.emplace_back(1000, CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG);
                     // Don't add any other outputs.

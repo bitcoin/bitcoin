@@ -43,7 +43,7 @@ struct ParentInfo {
     const Txid& m_txid;
     /** Wtxid used for debug string */
     const Wtxid& m_wtxid;
-    /** version used to check inheritance of v3 and non-v3 */
+    /** version used to check inheritance of TRUC and non-TRUC */
     decltype(CTransaction::version) m_version;
     /** If parent is in mempool, whether it has any descendants in mempool. */
     bool m_has_mempool_descendant;
@@ -65,7 +65,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
 
     const auto in_package_parents{FindInPackageParents(package, ptx)};
 
-    // Now we have all ancestors, so we can start checking v3 rules.
+    // Now we have all ancestors, so we can start checking TRUC rules.
     if (ptx->version == TRUC_VERSION) {
         // SingleV3Checks should have checked this already.
         if (!Assume(vsize <= V3_MAX_VSIZE)) {
@@ -80,7 +80,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
 
         const bool has_parent{mempool_ancestors.size() + in_package_parents.size() > 0};
         if (has_parent) {
-            // A v3 child cannot be too large.
+            // A TRUC child cannot be too large.
             if (vsize > V3_CHILD_MAX_VSIZE) {
                 return strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
                                  ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
@@ -140,7 +140,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
             }
         }
     } else {
-        // Non-v3 transactions cannot have v3 parents.
+        // Non-TRUC transactions cannot have TRUC parents.
         for (auto it : mempool_ancestors) {
             if (it->GetTx().version == TRUC_VERSION) {
                 return strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
@@ -166,7 +166,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
 {
-    // Check v3 and non-v3 inheritance.
+    // Check TRUC and non-TRUC inheritance.
     for (const auto& entry : mempool_ancestors) {
         if (ptx->version != TRUC_VERSION && entry->GetTx().version == TRUC_VERSION) {
             return std::make_pair(strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
@@ -203,7 +203,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
 
     // Remaining checks only pertain to transactions with unconfirmed ancestors.
     if (mempool_ancestors.size() > 0) {
-        // If this transaction spends V3 parents, it cannot be too large.
+        // If this transaction spends TRUC parents, it cannot be too large.
         if (vsize > V3_CHILD_MAX_VSIZE) {
             return std::make_pair(strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_CHILD_MAX_VSIZE),
@@ -217,14 +217,14 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
         // possible through a reorg.
         const auto& children = parent_entry->GetMemPoolChildrenConst();
         // Don't double-count a transaction that is going to be replaced. This logic assumes that
-        // any descendant of the V3 transaction is a direct child, which makes sense because a V3
-        // transaction can only have 1 descendant.
+        // any descendant of the TRUC transaction is a direct child, which makes sense because a
+        // TRUC transaction can only have 1 descendant.
         const bool child_will_be_replaced = !children.empty() &&
             std::any_of(children.cbegin(), children.cend(),
                 [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
         if (parent_entry->GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
-            // Allow sibling eviction for v3 transaction: if another child already exists, even if
-            // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on v3 rules
+            // Allow sibling eviction for TRUC transaction: if another child already exists, even if
+            // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on TRUC rules
             // only permitting 1 descendant, as otherwise we would need to have logic for deciding
             // which descendant to evict. Skip if this isn't true, e.g. if the transaction has
             // multiple children or the sibling also has descendants due to a reorg.
