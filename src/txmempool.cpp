@@ -16,6 +16,7 @@
 #include <policy/settings.h>
 #include <random.h>
 #include <reverse_iterator.h>
+#include <tinyformat.h>
 #include <util/check.h>
 #include <util/feefrac.h>
 #include <util/moneystr.h>
@@ -26,6 +27,7 @@
 #include <util/translation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <optional>
@@ -395,8 +397,19 @@ void CTxMemPoolEntry::UpdateAncestorState(int32_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
-CTxMemPool::CTxMemPool(const Options& opts)
-    : m_opts{opts}
+//! Clamp option values and populate the error if options are not valid.
+static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& error)
+{
+    opts.check_ratio = std::clamp<int>(opts.check_ratio, 0, 1'000'000);
+    int64_t descendant_limit_bytes = opts.limits.descendant_size_vbytes * 40;
+    if (opts.max_size_bytes < 0 || opts.max_size_bytes < descendant_limit_bytes) {
+        error = strprintf(_("-maxmempool must be at least %d MB"), std::ceil(descendant_limit_bytes / 1'000'000.0));
+    }
+    return std::move(opts);
+}
+
+CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
+    : m_opts{Flatten(std::move(opts), error)}
 {
 }
 

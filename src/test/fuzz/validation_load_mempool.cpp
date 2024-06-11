@@ -13,7 +13,9 @@
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <cstdint>
@@ -40,7 +42,9 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
 
-    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+    bilingual_str error;
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
+    Assert(error.empty());
 
     auto& chainstate{static_cast<DummyChainState&>(g_setup->m_node.chainman->ActiveChainstate())};
     chainstate.SetMempool(&pool);
