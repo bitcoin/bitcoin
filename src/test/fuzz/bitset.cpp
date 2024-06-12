@@ -12,8 +12,8 @@
 
 namespace {
 
-/** Pop the first byte from a Span<const uint8_t>, and return it. */
-uint8_t ReadByte(Span<const uint8_t>& buffer)
+/** Pop the first byte from a byte-span, and return it. */
+uint8_t ReadByte(FuzzBufferType& buffer)
 {
     if (buffer.empty()) return 0;
     uint8_t ret = buffer.front();
@@ -23,7 +23,7 @@ uint8_t ReadByte(Span<const uint8_t>& buffer)
 
 /** Perform a simulation fuzz test on BitSet type S. */
 template<typename S>
-void TestType(Span<const uint8_t> buffer)
+void TestType(FuzzBufferType buffer)
 {
     /** This fuzz test's design is based on the assumption that the actual bits stored in the
      *  bitsets and their simulations do not matter for the purpose of detecting edge cases, thus
