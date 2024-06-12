@@ -76,7 +76,7 @@ static RPCHelpMan quorum_list()
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
 
     for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
-        const auto& llmq_params_opt = Params().GetLLMQ(type);
+        const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         UniValue v(UniValue::VARR);
 
@@ -142,7 +142,7 @@ static RPCHelpMan quorum_list_extended()
     CBlockIndex* pblockindex = nHeight != -1 ? WITH_LOCK(cs_main, return chainman.ActiveChain()[nHeight]) : WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
 
     for (const auto& type : llmq::GetEnabledQuorumTypes(pblockindex)) {
-        const auto& llmq_params_opt = Params().GetLLMQ(type);
+        const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         const auto& llmq_params = llmq_params_opt.value();
         UniValue v(UniValue::VARR);
@@ -241,12 +241,12 @@ static RPCHelpMan quorum_info()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
     if (!Params().GetLLMQ(llmqType).has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 quorumHash(ParseHashV(request.params[1], "quorumHash"));
+    const uint256 quorumHash(ParseHashV(request.params[1], "quorumHash"));
     bool includeSkShare = false;
     if (!request.params[2].isNull()) {
         includeSkShare = ParseBoolV(request.params[2], "includeSkShare");
@@ -300,7 +300,7 @@ static RPCHelpMan quorum_dkgstatus()
     UniValue minableCommitments(UniValue::VARR);
     UniValue quorumArrConnections(UniValue::VARR);
     for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
-        const auto& llmq_params_opt = Params().GetLLMQ(type);
+        const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         const auto& llmq_params = llmq_params_opt.value();
         bool rotation_enabled = llmq::IsQuorumRotationEnabled(llmq_params, pindexTip);
@@ -400,7 +400,7 @@ static RPCHelpMan quorum_memberof()
 
     UniValue result(UniValue::VARR);
     for (const auto& type : llmq::GetEnabledQuorumTypes(pindexTip)) {
-        const auto& llmq_params_opt = Params().GetLLMQ(type);
+        const auto llmq_params_opt = Params().GetLLMQ(type);
         CHECK_NONFATAL(llmq_params_opt.has_value());
         size_t count = llmq_params_opt->signingActiveQuorumCount;
         if (scanQuorumsCount != -1) {
@@ -441,15 +441,14 @@ static RPCHelpMan quorum_sign()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
+    const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id(ParseHashV(request.params[1], "id"));
-    uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
+    const uint256 id(ParseHashV(request.params[1], "id"));
+    const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
 
     uint256 quorumHash;
     if (!request.params[3].isNull() && !request.params[3].get_str().empty()) {
@@ -518,15 +517,15 @@ static RPCHelpMan quorum_verify()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
 
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id(ParseHashV(request.params[1], "id"));
-    uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
+    const uint256 id(ParseHashV(request.params[1], "id"));
+    const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
 
     const bool use_bls_legacy = bls::bls_legacy_scheme.load();
     CBLSSignature sig;
@@ -574,15 +573,13 @@ static RPCHelpMan quorum_hasrecsig()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
-    if (!llmq_params_opt.has_value()) {
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
+    if (!Params().GetLLMQ(llmqType).has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id(ParseHashV(request.params[1], "id"));
-    uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
+    const uint256 id(ParseHashV(request.params[1], "id"));
+    const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
 
     return llmq_ctx.sigman->HasRecoveredSig(llmqType, id, msgHash);
 },
@@ -605,15 +602,13 @@ static RPCHelpMan quorum_getrecsig()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
-    if (!llmq_params_opt.has_value()) {
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
+    if (!Params().GetLLMQ(llmqType).has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id(ParseHashV(request.params[1], "id"));
-    uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
+    const uint256 id(ParseHashV(request.params[1], "id"));
+    const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
 
     llmq::CRecoveredSig recSig;
     if (!llmq_ctx.sigman->GetRecoveredSigForId(llmqType, id, recSig)) {
@@ -643,15 +638,13 @@ static RPCHelpMan quorum_isconflicting()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
-    if (!llmq_params_opt.has_value()) {
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
+    if (!Params().GetLLMQ(llmqType).has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id(ParseHashV(request.params[1], "id"));
-    uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
+    const uint256 id(ParseHashV(request.params[1], "id"));
+    const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
 
     return llmq_ctx.sigman->IsConflicting(llmqType, id, msgHash);
 },
@@ -673,17 +666,17 @@ static RPCHelpMan quorum_selectquorum()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[0], "llmqType");
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
+    const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 id(ParseHashV(request.params[1], "id"));
+    const uint256 id(ParseHashV(request.params[1], "id"));
 
     UniValue ret(UniValue::VOBJ);
 
-    auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
+    const auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
@@ -973,8 +966,8 @@ static RPCHelpMan verifyislock()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint256 id(ParseHashV(request.params[0], "id"));
-    uint256 txid(ParseHashV(request.params[1], "txid"));
+    const uint256 id(ParseHashV(request.params[0], "id"));
+    const uint256 txid(ParseHashV(request.params[1], "txid"));
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
@@ -983,7 +976,7 @@ static RPCHelpMan verifyislock()
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    CBlockIndex* pindexMined{nullptr};
+    const CBlockIndex* pindexMined{nullptr};
     {
         LOCK(cs_main);
         uint256 hash_block;
@@ -1027,9 +1020,9 @@ static RPCHelpMan verifyislock()
 
     auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
     // First check against the current active set, if it fails check against the last active set
-    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());
-    int signOffset{llmq_params_opt->dkgInterval};
+    const int signOffset{llmq_params_opt->dkgInterval};
     return llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
            llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
 },
