@@ -2,8 +2,10 @@
 
 ## Supported Versions
 
-See our website for versions of Bitcoin Core that are currently supported with
-security updates: https://bitcoincore.org/en/lifecycle/#schedule
+Please refer to the Bitcoin Core end-of-life policy to find all versions that
+are currently supported with security updates.  Only the last point release of
+each supported major release version will have the latest security fixes:
+https://bitcoincore.org/en/lifecycle/#schedule
 
 ## Reporting a Vulnerability
 

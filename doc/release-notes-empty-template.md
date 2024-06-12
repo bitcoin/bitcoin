@@ -20,6 +20,12 @@ To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
+Please refer to the Bitcoin Core end-of-life policy to find all versions that
+are currently supported with security updates.  Only the last point release of
+each supported major release version will have the latest security fixes:
+
+  <https://bitcoincore.org/en/lifecycle/#schedule>
+
 How to Upgrade
 ==============
 
