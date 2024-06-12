@@ -381,6 +381,10 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Cruthaigh sparán nua</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Íoslaghdaigh</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">Sparán:</translation>
     </message>
@@ -1311,6 +1315,10 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <translation type="unfinished">Úsáid seachfhreastalaí SOCKS5 ar leith chun sroicheadh piaraí trí sheirbhísí Tor oinniún:</translation>
     </message>
     <message>
+        <source>embedded "%1"</source>
+        <translation type="unfinished">leabaithe "%1"</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;Togha</translation>
     </message>
@@ -1599,6 +1607,11 @@ Ní féidir síniú ach le seoltaí 'oidhreachta'.</translation>
         <source>User Agent</source>
         <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation type="unfinished">Gníomhaire Úsáideora</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">Aois</translation>
     </message>
     <message>
         <source>Direction</source>

@@ -38,6 +38,10 @@
         <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">&amp;Borrar</translation>
+    </message>
+    <message>
         <source>Choose the address to send coins to</source>
         <translation type="unfinished">Elija la dirección para enviar las monedas</translation>
     </message>

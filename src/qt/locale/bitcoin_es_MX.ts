@@ -2,6 +2,30 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished">Haga clic derecho para editar la direccion </translation>
+    </message>
+    <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">crea una nueva direccion </translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation type="unfinished">&amp;Nuevo </translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation type="unfinished">Copie la dirección actualmente seleccionada al portapapeles del sistema</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation type="unfinished">copiar</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation type="unfinished">Cerrar</translation>
+    </message>
+    <message>
         <source>Sending addresses - %1</source>
         <translation type="unfinished">Enviando direcciones- %1</translation>
     </message>
