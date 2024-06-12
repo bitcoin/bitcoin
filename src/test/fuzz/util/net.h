@@ -43,7 +43,7 @@ class FuzzedSock : public Sock
      * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
      * `Recv()` call we must return the same data, thus we remember it here.
      */
-    mutable std::optional<std::vector<uint8_t>> m_peek_data;
+    mutable std::vector<uint8_t> m_peek_data;
 
     /**
      * Whether to pretend that the socket is select(2)-able. This is randomly set in the

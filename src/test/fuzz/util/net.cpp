@@ -191,11 +191,11 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
     }
     std::vector<uint8_t> random_bytes;
     bool pad_to_len_bytes{m_fuzzed_data_provider.ConsumeBool()};
-    if (m_peek_data.has_value()) {
+    if (!m_peek_data.empty()) {
         // `MSG_PEEK` was used in the preceding `Recv()` call, return `m_peek_data`.
-        random_bytes = m_peek_data.value();
+        random_bytes = m_peek_data;
         if ((flags & MSG_PEEK) == 0) {
-            m_peek_data.reset();
+            m_peek_data.clear();
         }
         pad_to_len_bytes = false;
     } else if ((flags & MSG_PEEK) != 0) {
