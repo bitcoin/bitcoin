@@ -29,7 +29,7 @@ public:
     virtual ~Sketch() {}
     virtual size_t Syndromes() const = 0;
 
-    virtual void Init(int syndromes) = 0;
+    virtual void Init(size_t syndromes) = 0;
     virtual void Add(uint64_t element) = 0;
     virtual void Serialize(unsigned char*) const = 0;
     virtual void Deserialize(const unsigned char*) = 0;
