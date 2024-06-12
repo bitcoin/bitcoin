@@ -4,10 +4,12 @@
 
 #include <algorithm>
 #include <common/args.h>
+#include <common/messages.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <node/types.h>
 #include <numeric>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -15,7 +17,6 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <util/check.h>
-#include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/trace.h>
@@ -29,7 +30,10 @@
 
 #include <cmath>
 
+using common::StringForFeeReason;
+using common::TransactionErrorString;
 using interfaces::FoundBlock;
+using node::TransactionError;
 
 namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};

@@ -17,6 +17,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::SplitString;
+
 static UniValue JSON(std::string_view json)
 {
     UniValue value;

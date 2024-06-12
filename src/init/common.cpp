@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+using util::SplitString;
+
 namespace init {
 void AddLoggingArgs(ArgsManager& argsman)
 {

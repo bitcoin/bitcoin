@@ -27,6 +27,8 @@
 #include <mutex>
 #include <unordered_map>
 
+using util::SplitString;
+
 static GlobalMutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(g_rpc_warmup_mutex) = true;

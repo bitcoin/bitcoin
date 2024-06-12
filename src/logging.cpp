@@ -13,6 +13,10 @@
 #include <map>
 #include <optional>
 
+using util::Join;
+using util::RemovePrefix;
+using util::ToString;
+
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
 

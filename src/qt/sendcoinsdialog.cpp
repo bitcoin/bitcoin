@@ -20,6 +20,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
+#include <node/types.h>
 #include <policy/fees.h>
 #include <txmempool.h>
 #include <validation.h>
@@ -37,6 +38,7 @@
 #include <QSettings>
 #include <QTextDocument>
 
+using common::PSBTError;
 using wallet::CCoinControl;
 using wallet::DEFAULT_PAY_TX_FEE;
 
@@ -442,26 +444,26 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
 }
 
 bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, CMutableTransaction& mtx, bool& complete) {
-    TransactionError err;
+    std::optional<PSBTError> err;
     try {
         err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/true, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
         return false;
     }
-    if (err == TransactionError::EXTERNAL_SIGNER_NOT_FOUND) {
+    if (err == PSBTError::EXTERNAL_SIGNER_NOT_FOUND) {
         //: "External signer" means using devices such as hardware wallets.
         const QString msg = tr("External signer not found");
         QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
-    if (err == TransactionError::EXTERNAL_SIGNER_FAILED) {
+    if (err == PSBTError::EXTERNAL_SIGNER_FAILED) {
         //: "External signer" means using devices such as hardware wallets.
         const QString msg = tr("External signer failure");
         QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
-    if (err != TransactionError::OK) {
+    if (err) {
         tfm::format(std::cerr, "Failed to sign PSBT");
         processSendCoinsReturn(WalletModel::TransactionCreationFailed);
         return false;
@@ -501,9 +503,9 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         // Fill without signing
-        TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
+        const auto err{model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
         assert(!complete);
-        assert(err == TransactionError::OK);
+        assert(!err);
 
         // Copy PSBT to clipboard and offer to save
         presentPSBT(psbtx);
@@ -517,9 +519,9 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             bool complete = false;
             // Always fill without signing first. This prevents an external signer
             // from being called prematurely and is not expensive.
-            TransactionError err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
+            const auto err{model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
             assert(!complete);
-            assert(err == TransactionError::OK);
+            assert(!err);
             send_failure = !signWithExternalSigner(psbtx, mtx, complete);
             // Don't broadcast when user rejects it on the device or there's a failure:
             broadcast = complete && !send_failure;

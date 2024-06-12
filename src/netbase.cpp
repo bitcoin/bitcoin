@@ -27,6 +27,8 @@
 #include <sys/un.h>
 #endif
 
+using util::ContainsNoNUL;
+
 // Settings
 static GlobalMutex g_proxyinfo_mutex;
 static Proxy proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);

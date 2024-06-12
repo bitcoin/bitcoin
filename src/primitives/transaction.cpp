@@ -6,12 +6,12 @@
 #include <primitives/transaction.h>
 
 #include <consensus/amount.h>
+#include <crypto/hex_base.h>
 #include <hash.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <tinyformat.h>
 #include <uint256.h>
-#include <util/strencodings.h>
 #include <util/transaction_identifier.h>
 
 #include <algorithm>

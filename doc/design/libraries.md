@@ -5,6 +5,7 @@
 | *libbitcoin_cli*         | RPC client functionality used by *bitcoin-cli* executable |
 | *libbitcoin_common*      | Home for common functionality shared by different executables and libraries. Similar to *libbitcoin_util*, but higher-level (see [Dependencies](#dependencies)). |
 | *libbitcoin_consensus*   | Stable, backwards-compatible consensus functionality used by *libbitcoin_node* and *libbitcoin_wallet*. |
+| *libbitcoin_crypto*      | Hardware-optimized functions for data encryption, hashing, message authentication, and key derivation. |
 | *libbitcoin_kernel*      | Consensus engine and support library used for validation by *libbitcoin_node*. |
 | *libbitcoinqt*           | GUI functionality used by *bitcoin-qt* and *bitcoin-gui* executables. |
 | *libbitcoin_ipc*         | IPC functionality used by *bitcoin-node*, *bitcoin-wallet*, *bitcoin-gui* executables to communicate when [`--enable-multiprocess`](multiprocess.md) is used. |
@@ -53,13 +54,18 @@ bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet_tool;
 libbitcoin_cli-->libbitcoin_util;
 libbitcoin_cli-->libbitcoin_common;
 
+libbitcoin_consensus-->libbitcoin_crypto;
+
 libbitcoin_common-->libbitcoin_consensus;
+libbitcoin_common-->libbitcoin_crypto;
 libbitcoin_common-->libbitcoin_util;
 
 libbitcoin_kernel-->libbitcoin_consensus;
+libbitcoin_kernel-->libbitcoin_crypto;
 libbitcoin_kernel-->libbitcoin_util;
 
 libbitcoin_node-->libbitcoin_consensus;
+libbitcoin_node-->libbitcoin_crypto;
 libbitcoin_node-->libbitcoin_kernel;
 libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libbitcoin_util;
@@ -67,7 +73,10 @@ libbitcoin_node-->libbitcoin_util;
 libbitcoinqt-->libbitcoin_common;
 libbitcoinqt-->libbitcoin_util;
 
+libbitcoin_util-->libbitcoin_crypto;
+
 libbitcoin_wallet-->libbitcoin_common;
+libbitcoin_wallet-->libbitcoin_crypto;
 libbitcoin_wallet-->libbitcoin_util;
 
 libbitcoin_wallet_tool-->libbitcoin_wallet;
@@ -78,22 +87,23 @@ class bitcoin-qt,bitcoind,bitcoin-cli,bitcoin-wallet bold
 ```
 </td></tr><tr><td>
 
-**Dependency graph**. Arrows show linker symbol dependencies. *Consensus* lib depends on nothing. *Util* lib is depended on by everything. *Kernel* lib depends only on consensus and util.
+**Dependency graph**. Arrows show linker symbol dependencies. *Crypto* lib depends on nothing. *Util* lib is depended on by everything. *Kernel* lib depends only on consensus, crypto, and util.
 
 </td></tr></table>
 
 - The graph shows what _linker symbols_ (functions and variables) from each library other libraries can call and reference directly, but it is not a call graph. For example, there is no arrow connecting *libbitcoin_wallet* and *libbitcoin_node* libraries, because these libraries are intended to be modular and not depend on each other's internal implementation details. But wallet code is still able to call node code indirectly through the `interfaces::Chain` abstract class in [`interfaces/chain.h`](../../src/interfaces/chain.h) and node code calls wallet code through the `interfaces::ChainClient` and `interfaces::Chain::Notifications` abstract classes in the same file. In general, defining abstract classes in [`src/interfaces/`](../../src/interfaces/) can be a convenient way of avoiding unwanted direct dependencies or circular dependencies between libraries.
 
-- *libbitcoin_consensus* should be a standalone dependency that any library can depend on, and it should not depend on any other libraries itself.
+- *libbitcoin_crypto* should be a standalone dependency that any library can depend on, and it should not depend on any other libraries itself.
 
-- *libbitcoin_util* should also be a standalone dependency that any library can depend on, and it should not depend on other internal libraries.
+- *libbitcoin_consensus* should only depend on *libbitcoin_crypto*, and all other libraries besides *libbitcoin_crypto* should be allowed to depend on it.
 
-- *libbitcoin_common* should serve a similar function as *libbitcoin_util* and be a place for miscellaneous code used by various daemon, GUI, and CLI applications and libraries to live. It should not depend on anything other than *libbitcoin_util* and *libbitcoin_consensus*. The boundary between _util_ and _common_ is a little fuzzy but historically _util_ has been used for more generic, lower-level things like parsing hex, and _common_ has been used for bitcoin-specific, higher-level things like parsing base58. The difference between util and common is mostly important because *libbitcoin_kernel* is not supposed to depend on *libbitcoin_common*, only *libbitcoin_util*. In general, if it is ever unclear whether it is better to add code to *util* or *common*, it is probably better to add it to *common* unless it is very generically useful or useful particularly to include in the kernel.
+- *libbitcoin_util* should be a standalone dependency that any library can depend on, and it should not depend on other libraries except *libbitcoin_crypto*. It provides basic utilities that fill in gaps in the C++ standard library and provide lightweight abstractions over platform-specific features. Since the util library is distributed with the kernel and is usable by kernel applications, it shouldn't contain functions that external code shouldn't call, like higher level code targetted at the node or wallet. (*libbitcoin_common* is a better place for higher level code, or code that is meant to be used by internal applications only.)
 
+- *libbitcoin_common* is a home for miscellaneous shared code used by different Bitcoin Core applications. It should not depend on anything other than *libbitcoin_util*, *libbitcoin_consensus*, and *libbitcoin_crypto*.
 
-- *libbitcoin_kernel* should only depend on *libbitcoin_util* and *libbitcoin_consensus*.
+- *libbitcoin_kernel* should only depend on *libbitcoin_util*, *libbitcoin_consensus*, and *libbitcoin_crypto*.
 
-- The only thing that should depend on *libbitcoin_kernel* internally should be *libbitcoin_node*. GUI and wallet libraries *libbitcoinqt* and *libbitcoin_wallet* in particular should not depend on *libbitcoin_kernel* and the unneeded functionality it would pull in, like block validation. To the extent that GUI and wallet code need scripting and signing functionality, they should be get able it from *libbitcoin_consensus*, *libbitcoin_common*, and *libbitcoin_util*, instead of *libbitcoin_kernel*.
+- The only thing that should depend on *libbitcoin_kernel* internally should be *libbitcoin_node*. GUI and wallet libraries *libbitcoinqt* and *libbitcoin_wallet* in particular should not depend on *libbitcoin_kernel* and the unneeded functionality it would pull in, like block validation. To the extent that GUI and wallet code need scripting and signing functionality, they should be get able it from *libbitcoin_consensus*, *libbitcoin_common*, *libbitcoin_crypto*, and *libbitcoin_util*, instead of *libbitcoin_kernel*.
 
 - GUI, node, and wallet code internal implementations should all be independent of each other, and the *libbitcoinqt*, *libbitcoin_node*, *libbitcoin_wallet* libraries should never reference each other's symbols. They should only call each other through [`src/interfaces/`](../../src/interfaces/) abstract interfaces.
 

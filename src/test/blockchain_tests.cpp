@@ -11,6 +11,8 @@
 
 #include <cstdlib>
 
+using util::ToString;
+
 /* Equality between doubles is imprecise. Comparison should be done
  * with a small threshold of tolerance, rather than exact equality.
  */

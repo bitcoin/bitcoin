@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/signmessage.h>
 #include <key.h>
 #include <key_io.h>
 #include <rpc/protocol.h>
@@ -10,7 +11,6 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <univalue.h>
-#include <util/message.h>
 
 #include <string>
 

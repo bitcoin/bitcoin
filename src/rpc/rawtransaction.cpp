@@ -16,6 +16,7 @@
 #include <node/context.h>
 #include <node/psbt.h>
 #include <node/transaction.h>
+#include <node/types.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -1489,9 +1490,8 @@ static RPCHelpMan combinepsbt()
     }
 
     PartiallySignedTransaction merged_psbt;
-    const TransactionError error = CombinePSBTs(merged_psbt, psbtxs);
-    if (error != TransactionError::OK) {
-        throw JSONRPCTransactionError(error);
+    if (!CombinePSBTs(merged_psbt, psbtxs)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "PSBTs not compatible (different transactions)");
     }
 
     DataStream ssTx{};

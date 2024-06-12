@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <util/spanparsing.h>
+#include <span.h>
 
 #include <array>
 #include <cstdint>
@@ -16,16 +16,54 @@
 #include <string_view> // IWYU pragma: export
 #include <vector>
 
+namespace util {
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute);
+
+/** Split a string on any char found in separators, returning a vector.
+ *
+ * If sep does not occur in sp, a singleton with the entirety of sp is returned.
+ *
+ * Note that this function does not care about braces, so splitting
+ * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
+ */
+template <typename T = Span<const char>>
+std::vector<T> Split(const Span<const char>& sp, std::string_view separators)
+{
+    std::vector<T> ret;
+    auto it = sp.begin();
+    auto start = it;
+    while (it != sp.end()) {
+        if (separators.find(*it) != std::string::npos) {
+            ret.emplace_back(start, it);
+            start = it + 1;
+        }
+        ++it;
+    }
+    ret.emplace_back(start, it);
+    return ret;
+}
+
+/** Split a string on every instance of sep, returning a vector.
+ *
+ * If sep does not occur in sp, a singleton with the entirety of sp is returned.
+ *
+ * Note that this function does not care about braces, so splitting
+ * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
+ */
+template <typename T = Span<const char>>
+std::vector<T> Split(const Span<const char>& sp, char sep)
+{
+    return Split<T>(sp, std::string_view{&sep, 1});
+}
 
 [[nodiscard]] inline std::vector<std::string> SplitString(std::string_view str, char sep)
 {
-    return spanparsing::Split<std::string>(str, sep);
+    return Split<std::string>(str, sep);
 }
 
 [[nodiscard]] inline std::vector<std::string> SplitString(std::string_view str, std::string_view separators)
 {
-    return spanparsing::Split<std::string>(str, separators);
+    return Split<std::string>(str, separators);
 }
 
 [[nodiscard]] inline std::string_view TrimStringView(std::string_view str, std::string_view pattern = " \f\n\r\t\v")
@@ -125,5 +163,6 @@ template <typename T1, size_t PREFIX_LEN>
     return obj.size() >= PREFIX_LEN &&
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
+} // namespace util
 
 #endif // BITCOIN_UTIL_STRING_H

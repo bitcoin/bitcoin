@@ -23,6 +23,7 @@
 
 using node::BlockAssembler;
 using node::NodeContext;
+using util::ToString;
 
 namespace {
 

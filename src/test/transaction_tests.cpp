@@ -38,6 +38,9 @@
 
 #include <univalue.h>
 
+using util::SplitString;
+using util::ToString;
+
 typedef std::vector<unsigned char> valtype;
 
 static CFeeRate g_dust{DUST_RELAY_TX_FEE};

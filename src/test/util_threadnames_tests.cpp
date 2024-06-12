@@ -13,6 +13,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::ToString;
+
 BOOST_AUTO_TEST_SUITE(util_threadnames_tests)
 
 const std::string TEST_THREAD_NAME_BASE = "test_thread.";

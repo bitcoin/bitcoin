@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
+#include <common/signmessage.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
+#include <script/parsing.h>
 #include <sync.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -12,11 +14,9 @@
 #include <util/bitdeque.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/readwritefile.h>
-#include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -45,6 +45,15 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std::literals;
+using util::Join;
+using util::RemovePrefix;
+using util::RemovePrefixView;
+using util::ReplaceAll;
+using util::Split;
+using util::SplitString;
+using util::TrimString;
+using util::TrimStringView;
+
 static const std::string STRING_WITH_EMBEDDED_NULL_CHAR{"1"s "\0" "1"s};
 
 /* defined in logging.cpp */
@@ -1292,9 +1301,9 @@ static std::string SpanToStr(const Span<const char>& span)
     return std::string(span.begin(), span.end());
 }
 
-BOOST_AUTO_TEST_CASE(test_spanparsing)
+BOOST_AUTO_TEST_CASE(test_script_parsing)
 {
-    using namespace spanparsing;
+    using namespace script;
     std::string input;
     Span<const char> sp;
     bool success;
