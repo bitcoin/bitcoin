@@ -510,14 +510,22 @@ def main():
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
-        exclude_tests = [test.split('.py')[0] for test in args.exclude.split(',')]
+        def print_warning_missing_test(test_name):
+            print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], test_name))
+        exclude_tests = [test.strip() for test in args.exclude.split(",")]
         for exclude_test in exclude_tests:
-            # Remove <test_name>.py and <test_name>.py --arg from the test list
-            exclude_list = [test for test in test_list if test.split('.py')[0] == exclude_test]
-            for exclude_item in exclude_list:
-                test_list.remove(exclude_item)
-            if not exclude_list:
-                print("{}WARNING!{} Test '{}' not found in current test list.".format(BOLD[1], BOLD[0], exclude_test))
+            if exclude_test.endswith('.py'):
+                # Remove <test_name>.py and <test_name>.py --arg from the test list
+                exclude_list = [test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]]
+                if not exclude_list:
+                    print_warning_missing_test(exclude_test)
+                for exclude_item in exclude_list:
+                    test_list.remove(exclude_item)
+            else:
+                try:
+                    test_list.remove(exclude_test)
+                except ValueError:
+                    print_warning_missing_test(exclude_test)
 
     if args.filter:
         test_list = list(filter(re.compile(args.filter).search, test_list))
