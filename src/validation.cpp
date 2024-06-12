@@ -479,9 +479,6 @@ public:
          */
         const std::optional<CFeeRate> m_client_maxfeerate;
 
-        /** Whether CPFP carveout and RBF carveout are granted. */
-        const bool m_allow_carveouts;
-
         /** Parameters for single transaction mempool validation. */
         static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
                                      bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
@@ -496,7 +493,6 @@ public:
                             /* m_package_submission */ false,
                             /* m_package_feerates */ false,
                             /* m_client_maxfeerate */ {}, // checked by caller
-                            /* m_allow_carveouts */ true,
             };
         }
 
@@ -513,7 +509,6 @@ public:
                             /* m_package_submission */ false, // not submitting to mempool
                             /* m_package_feerates */ false,
                             /* m_client_maxfeerate */ {}, // checked by caller
-                            /* m_allow_carveouts */ false,
             };
         }
 
@@ -530,7 +525,6 @@ public:
                             /* m_package_submission */ true,
                             /* m_package_feerates */ true,
                             /* m_client_maxfeerate */ client_maxfeerate,
-                            /* m_allow_carveouts */ false,
             };
         }
 
@@ -546,7 +540,6 @@ public:
                             /* m_package_submission */ true, // trim at the end of AcceptPackage()
                             /* m_package_feerates */ false, // only 1 transaction
                             /* m_client_maxfeerate */ package_args.m_client_maxfeerate,
-                            /* m_allow_carveouts */ false,
             };
         }
 
@@ -562,8 +555,7 @@ public:
                  bool allow_sibling_eviction,
                  bool package_submission,
                  bool package_feerates,
-                 std::optional<CFeeRate> client_maxfeerate,
-                 bool allow_carveouts)
+                 std::optional<CFeeRate> client_maxfeerate)
             : m_chainparams{chainparams},
               m_accept_time{accept_time},
               m_bypass_limits{bypass_limits},
@@ -573,14 +565,12 @@ public:
               m_allow_sibling_eviction{allow_sibling_eviction},
               m_package_submission{package_submission},
               m_package_feerates{package_feerates},
-              m_client_maxfeerate{client_maxfeerate},
-              m_allow_carveouts{allow_carveouts}
+              m_client_maxfeerate{client_maxfeerate}
         {
             // If we are using package feerates, we must be doing package submission.
-            // It also means carveouts and sibling eviction are not permitted.
+            // It also means sibling eviction is not permitted.
             if (m_package_feerates) {
                 Assume(m_package_submission);
-                Assume(!m_allow_carveouts);
                 Assume(!m_allow_sibling_eviction);
             }
             if (m_allow_sibling_eviction) Assume(m_allow_replacement);
@@ -614,9 +604,9 @@ public:
 
     /**
      * Submission of a subpackage.
-     * If subpackage size == 1, calls AcceptSingleTransaction() with adjusted ATMPArgs to avoid
-     * package policy restrictions like no CPFP carve out (PackageMempoolChecks)
-     * and creates a PackageMempoolAcceptResult wrapping the result.
+     * If subpackage size == 1, calls AcceptSingleTransaction() with adjusted ATMPArgs to
+     * enable sibling eviction and creates a PackageMempoolAcceptResult
+     * wrapping the result.
      *
      * If subpackage size > 1, calls AcceptMultipleTransactions() with the provided ATMPArgs.
      *
@@ -971,47 +961,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     ws.m_iters_conflicting = m_pool.GetIterSet(ws.m_conflicts);
 
-    // Note that these modifications are only applicable to single transaction scenarios;
-    // carve-outs are disabled for multi-transaction evaluations.
-    CTxMemPool::Limits maybe_rbf_limits = m_pool.m_opts.limits;
-
     // Calculate in-mempool ancestors, up to a limit.
-    if (ws.m_conflicts.size() == 1 && args.m_allow_carveouts) {
-        // In general, when we receive an RBF transaction with mempool conflicts, we want to know whether we
-        // would meet the chain limits after the conflicts have been removed. However, there isn't a practical
-        // way to do this short of calculating the ancestor and descendant sets with an overlay cache of
-        // changed mempool entries. Due to both implementation and runtime complexity concerns, this isn't
-        // very realistic, thus we only ensure a limited set of transactions are RBF'able despite mempool
-        // conflicts here. Importantly, we need to ensure that some transactions which were accepted using
-        // the below carve-out are able to be RBF'ed, without impacting the security the carve-out provides
-        // for off-chain contract systems (see link in the comment below).
-        //
-        // Specifically, the subset of RBF transactions which we allow despite chain limits are those which
-        // conflict directly with exactly one other transaction (but may evict children of said transaction),
-        // and which are not adding any new mempool dependencies. Note that the "no new mempool dependencies"
-        // check is accomplished later, so we don't bother doing anything about it here, but if our
-        // policy changes, we may need to move that check to here instead of removing it wholesale.
-        //
-        // Such transactions are clearly not merging any existing packages, so we are only concerned with
-        // ensuring that (a) no package is growing past the package size (not count) limits and (b) we are
-        // not allowing something to effectively use the (below) carve-out spot when it shouldn't be allowed
-        // to.
-        //
-        // To check these we first check if we meet the RBF criteria, above, and increment the descendant
-        // limits by the direct conflict and its descendants (as these are recalculated in
-        // CalculateMempoolAncestors by assuming the new transaction being added is a new descendant, with no
-        // removals, of each parent's existing dependent set). The ancestor count limits are unmodified (as
-        // the ancestor limits should be the same for both our new transaction and any conflicts).
-        // We don't bother incrementing m_limit_descendants by the full removal count as that limit never comes
-        // into force here (as we're only adding a single transaction).
-        assert(ws.m_iters_conflicting.size() == 1);
-        CTxMemPool::txiter conflict = *ws.m_iters_conflicting.begin();
-
-        maybe_rbf_limits.descendant_count += 1;
-        maybe_rbf_limits.descendant_size_vbytes += conflict->GetSizeWithDescendants();
-    }
-
-    if (auto ancestors{m_subpackage.m_changeset->CalculateMemPoolAncestors(ws.m_tx_handle, maybe_rbf_limits)}) {
+    if (auto ancestors{m_subpackage.m_changeset->CalculateMemPoolAncestors(ws.m_tx_handle, m_pool.m_opts.limits)}) {
         ws.m_ancestors = std::move(*ancestors);
     } else {
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", util::ErrorString(ancestors).original);
