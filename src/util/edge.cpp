@@ -62,7 +62,7 @@ EdgeTriggeredEvents::~EdgeTriggeredEvents()
     }
 }
 
-bool EdgeTriggeredEvents::RegisterEntity(int entity, std::string entity_name) const
+bool EdgeTriggeredEvents::RegisterEntity(int entity, const std::string& entity_name) const
 {
     assert(m_valid);
 
@@ -97,7 +97,7 @@ bool EdgeTriggeredEvents::RegisterEntity(int entity, std::string entity_name) co
     return true;
 }
 
-bool EdgeTriggeredEvents::UnregisterEntity(int entity, std::string entity_name) const
+bool EdgeTriggeredEvents::UnregisterEntity(int entity, const std::string& entity_name) const
 {
     assert(m_valid);
 
