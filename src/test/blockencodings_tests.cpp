@@ -27,23 +27,23 @@ static CMutableTransaction BuildTransactionTestCase() {
     return tx;
 }
 
-static CBlock BuildBlockTestCase() {
+static CBlock BuildBlockTestCase(FastRandomContext& ctx) {
     CBlock block;
     CMutableTransaction tx = BuildTransactionTestCase();
 
     block.vtx.resize(3);
     block.vtx[0] = MakeTransactionRef(tx);
     block.nVersion = 42;
-    block.hashPrevBlock = InsecureRand256();
+    block.hashPrevBlock = ctx.rand256();
     block.nBits = 0x207fffff;
 
-    tx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
+    tx.vin[0].prevout.hash = Txid::FromUint256(ctx.rand256());
     tx.vin[0].prevout.n = 0;
     block.vtx[1] = MakeTransactionRef(tx);
 
     tx.vin.resize(10);
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        tx.vin[i].prevout.hash = Txid::FromUint256(InsecureRand256());
+        tx.vin[i].prevout.hash = Txid::FromUint256(ctx.rand256());
         tx.vin[i].prevout.n = 0;
     }
     block.vtx[2] = MakeTransactionRef(tx);
@@ -63,7 +63,8 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    CBlock block(BuildBlockTestCase());
+    auto rand_ctx(FastRandomContext(uint256{42}));
+    CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[2]));
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
     // Do a simple ShortTxIDs RT
     {
-        CBlockHeaderAndShortTxIDs shortIDs{block};
+        CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64()};
 
         DataStream stream{};
         stream << shortIDs;
@@ -128,8 +129,8 @@ public:
         stream << orig;
         stream >> *this;
     }
-    explicit TestHeaderAndShortIDs(const CBlock& block) :
-        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block}) {}
+    explicit TestHeaderAndShortIDs(const CBlock& block, FastRandomContext& ctx) :
+        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block, ctx.rand64()}) {}
 
     uint64_t GetShortID(const Wtxid& txhash) const {
         DataStream stream{};
@@ -146,7 +147,8 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    CBlock block(BuildBlockTestCase());
+    auto rand_ctx(FastRandomContext(uint256{42}));
+    CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[2]));
@@ -156,7 +158,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 
     // Test with pre-forwarding tx 1, but not coinbase
     {
-        TestHeaderAndShortIDs shortIDs(block);
+        TestHeaderAndShortIDs shortIDs(block, rand_ctx);
         shortIDs.prefilledtxn.resize(1);
         shortIDs.prefilledtxn[0] = {1, block.vtx[1]};
         shortIDs.shorttxids.resize(2);
@@ -216,7 +218,8 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    CBlock block(BuildBlockTestCase());
+    auto rand_ctx(FastRandomContext(uint256{42}));
+    CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[1]));
@@ -226,7 +229,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 
     // Test with pre-forwarding coinbase + tx 2 with tx 1 in mempool
     {
-        TestHeaderAndShortIDs shortIDs(block);
+        TestHeaderAndShortIDs shortIDs(block, rand_ctx);
         shortIDs.prefilledtxn.resize(2);
         shortIDs.prefilledtxn[0] = {0, block.vtx[0]};
         shortIDs.prefilledtxn[1] = {1, block.vtx[2]}; // id == 1 as it is 1 after index 1
@@ -269,10 +272,11 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     CMutableTransaction coinbase = BuildTransactionTestCase();
 
     CBlock block;
+    auto rand_ctx(FastRandomContext(uint256{42}));
     block.vtx.resize(1);
     block.vtx[0] = MakeTransactionRef(std::move(coinbase));
     block.nVersion = 42;
-    block.hashPrevBlock = InsecureRand256();
+    block.hashPrevBlock = rand_ctx.rand256();
     block.nBits = 0x207fffff;
 
     bool mutated;
@@ -282,7 +286,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
     // Test simple header round-trip with only coinbase
     {
-        CBlockHeaderAndShortTxIDs shortIDs{block};
+        CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64()};
 
         DataStream stream{};
         stream << shortIDs;
@@ -306,14 +310,16 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    const CBlock block(BuildBlockTestCase());
-    std::vector<CTransactionRef> extra_txn;
-    extra_txn.resize(10);
+    auto rand_ctx(FastRandomContext(uint256{42}));
 
     CMutableTransaction mtx = BuildTransactionTestCase();
-    mtx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
+    mtx.vin[0].prevout.hash = Txid::FromUint256(rand_ctx.rand256());
     mtx.vin[0].prevout.n = 0;
     const CTransactionRef non_block_tx = MakeTransactionRef(std::move(mtx));
+
+    CBlock block(BuildBlockTestCase(rand_ctx));
+    std::vector<CTransactionRef> extra_txn;
+    extra_txn.resize(10);
 
     LOCK2(cs_main, pool.cs);
     pool.addUnchecked(entry.FromTx(block.vtx[2]));
@@ -326,7 +332,7 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     BOOST_CHECK_EQUAL(pool.get(block.vtx[1]->GetHash()), nullptr);
 
     {
-        const CBlockHeaderAndShortTxIDs cmpctblock{block};
+        const CBlockHeaderAndShortTxIDs cmpctblock{block, rand_ctx.rand64()};
         PartiallyDownloadedBlock partial_block(&pool);
         PartiallyDownloadedBlock partial_block_with_extra(&pool);
 
