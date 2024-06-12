@@ -648,7 +648,17 @@ public:
 
     bool IsBlockRelayOnly() const;
 
-    CNode(NodeId id, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> sock, const CAddress &addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress &addrBindIn, const std::string &addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session = nullptr);
+    CNode(NodeId id,
+          ServiceFlags nLocalServicesIn,
+          std::shared_ptr<Sock> sock,
+          const CAddress &addrIn,
+          uint64_t nKeyedNetGroupIn,
+          uint64_t nLocalHostNonceIn,
+          const CAddress &addrBindIn,
+          const std::string &addrNameIn,
+          ConnectionType conn_type_in,
+          bool inbound_onion,
+          std::unique_ptr<i2p::sam::Session>&& i2p_sam_session = nullptr);
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
 

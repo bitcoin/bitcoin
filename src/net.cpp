@@ -4126,7 +4126,17 @@ ServiceFlags CConnman::GetLocalServices() const
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 
-CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, std::shared_ptr<Sock> sock, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const CAddress& addrBindIn, const std::string& addrNameIn, ConnectionType conn_type_in, bool inbound_onion, std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
+CNode::CNode(NodeId idIn,
+             ServiceFlags nLocalServicesIn,
+             std::shared_ptr<Sock> sock,
+             const CAddress& addrIn,
+             uint64_t nKeyedNetGroupIn,
+             uint64_t nLocalHostNonceIn,
+             const CAddress& addrBindIn,
+             const std::string& addrNameIn,
+             ConnectionType conn_type_in,
+             bool inbound_onion,
+             std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
     : m_deserializer{std::make_unique<V1TransportDeserializer>(V1TransportDeserializer(Params(), idIn, SER_NETWORK, INIT_PROTO_VERSION))},
       m_serializer{std::make_unique<V1TransportSerializer>(V1TransportSerializer())},
       m_sock{sock},
