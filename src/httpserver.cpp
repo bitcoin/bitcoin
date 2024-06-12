@@ -154,6 +154,8 @@ static struct evhttp* eventHTTP = nullptr;
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
+//! List of 'external' RPC users
+static std::vector<std::string> g_external_usernames;
 //! Handlers for (sub)paths
 static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -270,8 +272,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         }
     }
     const bool is_external_request = [&hreq]() -> bool {
-        const std::string external_username = gArgs.GetArg("-rpcexternaluser", "");
-        if (external_username.empty()) return false;
+        if (g_external_usernames.empty()) return false;
 
         const std::string strAuth = hreq->GetHeader("authorization").second;
         if (strAuth.substr(0, 6) != "Basic ")
@@ -283,8 +284,8 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         if (invalid) return false;
 
         if (strUserPass.find(':') == std::string::npos) return false;
-
-        return strUserPass.substr(0, strUserPass.find(':')) == external_username;
+        const std::string username{strUserPass.substr(0, strUserPass.find(':'))};
+        return find(g_external_usernames.begin(), g_external_usernames.end(), username) != g_external_usernames.end();
     }();
 
     // Dispatch to worker thread
@@ -432,12 +433,11 @@ bool InitHTTPServer()
     LogPrint(BCLog::HTTP, "Initialized HTTP server\n");
     int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     int workQueueDepthExternal = 0;
-    if (!gArgs.GetArg("-rpcexternaluser", "").empty()) {
-        LogPrintf("HTTP: creating external work queue of depth %d\n", workQueueDepthExternal);
+    if (const std::string rpc_externaluser{gArgs.GetArg("-rpcexternaluser", "")}; !rpc_externaluser.empty()) {
         workQueueDepthExternal = std::max((long)gArgs.GetArg("-rpcexternalworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
+        g_external_usernames = SplitString(rpc_externaluser, ',');
     }
     LogPrintf("HTTP: creating work queue of depth %d external_depth %d\n", workQueueDepth, workQueueDepthExternal);
-
     g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth, workQueueDepthExternal);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
