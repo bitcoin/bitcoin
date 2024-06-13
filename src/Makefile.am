@@ -480,7 +480,6 @@ libbitcoin_server_a_SOURCES = \
   masternode/payments.cpp \
   masternode/sync.cpp \
   masternode/utils.cpp \
-  messagesigner.cpp \
   miner.cpp \
   net.cpp \
   netfulfilledman.cpp \
@@ -690,6 +689,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
+  messagesigner.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \

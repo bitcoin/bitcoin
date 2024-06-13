@@ -1107,6 +1107,11 @@ public:
     /** Sign the tx given the input coins and sighash. */
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
+    /** Sign the payload of special transaction.
+      * Because wallet is not aware about special transactions entity,
+      * but it should work for any its type, we pass there directly a hash of payload.
+      */
+    bool SignSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std::vector<unsigned char>& vchSig) const;
 
     /**
      * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
