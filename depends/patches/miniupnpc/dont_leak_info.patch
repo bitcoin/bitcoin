@@ -24,9 +24,9 @@ index e76a5e5..0cc36fe 100644
 @@ -444,7 +444,7 @@ miniwget3(const char * host,
                   "GET %s HTTP/%s\r\n"
  			     "Host: %s:%d\r\n"
- 				 "Connection: Close\r\n"
+ 				 "Connection: close\r\n"
 -				 "User-Agent: " OS_STRING " " UPNP_VERSION_STRING " MiniUPnPc/" MINIUPNPC_VERSION_STRING "\r\n"
 +				 "User-Agent: " UPNP_VERSION_STRING "\r\n"
- 
  				 "\r\n",
  			   path, httpversion, host, port);
+ 	if ((unsigned int)len >= sizeof(buf))
