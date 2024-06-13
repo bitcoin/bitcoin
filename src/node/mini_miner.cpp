@@ -189,11 +189,7 @@ struct AncestorFeerateComparator
             const int64_t ancestor_size{e.GetSizeWithAncestors()};
             const CAmount tx_fee{e.GetModifiedFee()};
             const int64_t tx_size{e.GetTxSize()};
-            // Comparing ancestor feerate with individual feerate:
-            //     ancestor_fee / ancestor_size <= tx_fee / tx_size
-            // Avoid division and possible loss of precision by
-            // multiplying both sides by the sizes:
-            return ancestor_fee * tx_size < tx_fee * ancestor_size ?
+            return CFeeRate(ancestor_fee, ancestor_size) <= CFeeRate(tx_fee, tx_size) ?
                        CFeeRate(ancestor_fee, ancestor_size) :
                        CFeeRate(tx_fee, tx_size);
         };
