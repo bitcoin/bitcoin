@@ -306,18 +306,6 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 }
 
 template<typename SpecialTxPayload>
-static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
-{
-    UpdateSpecialTxInputsHash(tx, payload);
-    payload.vchSig.clear();
-
-    std::string m = payload.MakeSignString();
-    if (!CMessageSigner::SignMessage(m, payload.vchSig, key)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
-    }
-}
-
-template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
 {
     UpdateSpecialTxInputsHash(tx, payload);
