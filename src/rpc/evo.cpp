@@ -1697,6 +1697,7 @@ static UniValue protx(const JSONRPCRequest& request)
     } else if (command == "protxinfo") {
         return protx_info(new_request, dmnman, mn_metaman, chainman);
     } else if (command == "protxdiff") {
+        CHECK_NONFATAL(node.llmq_ctx);
         return protx_diff(new_request, dmnman, chainman, *node.llmq_ctx);
     } else if (command == "protxlistdiff") {
         return protx_listdiff(new_request, dmnman, chainman);

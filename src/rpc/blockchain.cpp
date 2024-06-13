@@ -1605,6 +1605,7 @@ static RPCHelpMan verifychain()
     const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.evodb);
 
     ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
@@ -2962,7 +2963,8 @@ static RPCHelpMan dumptxoutset()
     FILE* file{fsbridge::fopen(temppath, "wb")};
     CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), afile);
+    const ChainstateManager& chainman = EnsureChainman(node);
+    UniValue result = CreateUTXOSnapshot(node, chainman.ActiveChainstate(), afile);
     fs::rename(temppath, path);
 
     result.pushKV("path", path.string());

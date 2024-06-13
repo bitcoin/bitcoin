@@ -490,6 +490,8 @@ static RPCHelpMan getassetunlockstatuses()
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No blocks in chain");
     }
 
+    CHECK_NONFATAL(node.cpoolman);
+
     std::optional<CCreditPool> poolCL{std::nullopt};
     std::optional<CCreditPool> poolOnTip{std::nullopt};
     std::optional<int> nSpecificCoreHeight{std::nullopt};

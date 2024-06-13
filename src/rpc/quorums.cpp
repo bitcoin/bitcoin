@@ -279,6 +279,9 @@ static RPCHelpMan quorum_dkgstatus()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.connman);
+    CHECK_NONFATAL(node.dmnman);
+    CHECK_NONFATAL(node.sporkman);
 
     int detailLevel = 0;
     if (!request.params[0].isNull()) {
@@ -381,6 +384,7 @@ static RPCHelpMan quorum_memberof()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.connman);
 
     uint256 protxHash(ParseHashV(request.params[0], "proTxHash"));
     int scanQuorumsCount = -1;
@@ -747,6 +751,7 @@ static RPCHelpMan quorum_getdata()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.connman);
 
     NodeId nodeId = ParseInt64V(request.params[0], "nodeId");
     Consensus::LLMQType llmqType = static_cast<Consensus::LLMQType>(ParseInt32V(request.params[1], "llmqType"));
@@ -791,6 +796,7 @@ static RPCHelpMan quorum_rotationinfo()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.dmnman);
 
     llmq::CGetQuorumRotationInfo cmd;
     llmq::CQuorumRotationInfo quorumRotationInfoRet;

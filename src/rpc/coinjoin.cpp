@@ -69,6 +69,7 @@ static RPCHelpMan coinjoin()
         }
 
         CTxMemPool& mempool = EnsureMemPool(node);
+        CHECK_NONFATAL(node.connman);
         bool result = cj_clientman->DoAutomaticDenominating(*node.connman, mempool);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + cj_clientman->GetStatuses().original + ", will retry"));
     }

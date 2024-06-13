@@ -47,6 +47,8 @@ static RPCHelpMan masternode_connect()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.connman);
+
     node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
     if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
@@ -133,6 +135,7 @@ static RPCHelpMan masternode_winner()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
     return GetNextMasternodeForPayment(*node.dmnman, 10);
 },
     };
@@ -152,6 +155,7 @@ static RPCHelpMan masternode_current()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
     return GetNextMasternodeForPayment(*node.dmnman, 1);
 },
     };
@@ -204,6 +208,7 @@ static RPCHelpMan masternode_status()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
     if (!node.mn_activeman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This node does not run an active masternode.");
     }
@@ -302,6 +307,7 @@ static RPCHelpMan masternode_winners()
     int nStartHeight = std::max(nChainTipHeight - nCount, 1);
 
     CHECK_NONFATAL(node.dmnman);
+    CHECK_NONFATAL(node.govman);
 
     const auto tip_mn_list = node.dmnman->GetListAtChainTip();
     for (int h = nStartHeight; h <= nChainTipHeight; h++) {
@@ -384,6 +390,8 @@ static RPCHelpMan masternode_payments()
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector<UniValue> vecPayments;
 
+    CHECK_NONFATAL(node.chain_helper);
+    CHECK_NONFATAL(node.dmnman);
     while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr) {
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
@@ -406,8 +414,6 @@ static RPCHelpMan masternode_payments()
             }
             nBlockFees += nValueIn - tx->GetValueOut();
         }
-
-        CHECK_NONFATAL(node.chain_helper);
 
         std::vector<CTxOut> voutMasternodePayments, voutDummy;
         CMutableTransaction dummyTx;
@@ -548,6 +554,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
+    CHECK_NONFATAL(node.dmnman);
 
     UniValue obj(UniValue::VOBJ);
 
