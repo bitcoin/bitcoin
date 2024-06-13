@@ -38,6 +38,13 @@ struct ConnmanTestMsg : public CConnman {
         m_nodes.clear();
     }
 
+    void Handshake(CNode& node,
+                   bool successfully_connected,
+                   ServiceFlags remote_services,
+                   NetPermissionFlags permission_flags,
+                   int32_t version,
+                   bool relay_txs);
+
     void ProcessMessagesOnce(CNode& node) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
 
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
@@ -176,5 +183,7 @@ private:
     const std::string m_contents;
     mutable size_t m_consumed;
 };
+
+std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context);
 
 #endif // BITCOIN_TEST_UTIL_NET_H
