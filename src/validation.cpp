@@ -5967,8 +5967,8 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
             PACKAGE_NAME, snapshot_tip_height, snapshot_base_height, snapshot_base_height, PACKAGE_BUGREPORT
         );
 
-        LogPrintf("[snapshot] !!! %s\n", user_error.original);
-        LogPrintf("[snapshot] deleting snapshot, reverting to validated chain, and stopping node\n");
+        LogError("[snapshot] !!! %s\n", user_error.original);
+        LogError("[snapshot] deleting snapshot, reverting to validated chain, and stopping node\n");
 
         m_active_chainstate = m_ibd_chainstate.get();
         m_snapshot_chainstate->m_disabled = true;
@@ -6320,7 +6320,7 @@ bool ChainstateManager::ValidatedSnapshotCleanup()
                                    fs::path p_old,
                                    fs::path p_new,
                                    const fs::filesystem_error& err) {
-        LogPrintf("Error renaming path (%s) -> (%s): %s\n",
+        LogError("[snapshot] Error renaming path (%s) -> (%s): %s\n",
                   fs::PathToString(p_old), fs::PathToString(p_new), err.what());
         GetNotifications().fatalError(strprintf(_(
             "Rename of '%s' -> '%s' failed. "
