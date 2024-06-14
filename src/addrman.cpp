@@ -99,12 +99,11 @@ double AddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
-AddrManImpl::AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio, bool discriminate_ports)
+AddrManImpl::AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio)
     : insecure_rand{deterministic}
     , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
     , m_consistency_check_ratio{consistency_check_ratio}
     , m_asmap{std::move(asmap)}
-    , m_discriminate_ports{discriminate_ports}
 {
     for (auto& bucket : vvNew) {
         for (auto& entry : bucket) {
@@ -400,12 +399,7 @@ void AddrManImpl::Unserialize(Stream& s_)
 
 AddrInfo* AddrManImpl::Find(const CService& addr, int* pnId)
 {
-    CService addr2 = addr;
-    if (!m_discriminate_ports) {
-        addr2.SetPort(0);
-    }
-
-    const auto it = mapAddr.find(addr2);
+    const auto it = mapAddr.find(addr);
     if (it == mapAddr.end())
         return nullptr;
     if (pnId)
@@ -418,15 +412,11 @@ AddrInfo* AddrManImpl::Find(const CService& addr, int* pnId)
 
 AddrInfo* AddrManImpl::Create(const CAddress& addr, const CNetAddr& addrSource, int* pnId)
 {
-    CService addr2 = addr;
-    if (!m_discriminate_ports) {
-        addr2.SetPort(0);
-    }
     AssertLockHeld(cs);
 
     int nId = nIdCount++;
     mapInfo[nId] = AddrInfo(addr, addrSource);
-    mapAddr[addr2] = nId;
+    mapAddr[addr] = nId;
     mapInfo[nId].nRandomPos = vRandom.size();
     vRandom.push_back(nId);
     if (pnId)
@@ -467,14 +457,9 @@ void AddrManImpl::Delete(int nId)
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
 
-    CService addr = info;
-    if (!m_discriminate_ports) {
-        addr.SetPort(0);
-    }
-
     SwapRandom(info.nRandomPos, vRandom.size() - 1);
     vRandom.pop_back();
-    mapAddr.erase(addr);
+    mapAddr.erase(info);
     mapInfo.erase(nId);
     nNew--;
 }
@@ -645,10 +630,6 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (!m_discriminate_ports && info != addr)
-        return;
-
     // update info
     info.nLastSuccess = nTime;
     info.nLastTry = nTime;
@@ -715,10 +696,6 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, int64_t nTi
         return;
 
     AddrInfo& info = *pinfo;
-
-    // check whether we are talking about the exact same CService (including same port)
-    if (!m_discriminate_ports && info != addr)
-        return;
 
     // update info
     info.nLastTry = nTime;
@@ -847,10 +824,6 @@ void AddrManImpl::Connected_(const CService& addr, int64_t nTime)
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (!m_discriminate_ports && info != addr)
-        return;
-
     // update info
     int64_t nUpdateInterval = 20 * 60;
     if (nTime - info.nTime > nUpdateInterval)
@@ -869,10 +842,6 @@ void AddrManImpl::SetServices_(const CService& addr, ServiceFlags nServices)
 
     AddrInfo& info = *pinfo;
 
-    // check whether we are talking about the exact same CService (including same port)
-    if (!m_discriminate_ports && info != addr)
-        return;
-
     // update info
     info.nServices = nServices;
 }
@@ -883,12 +852,6 @@ AddrInfo AddrManImpl::GetAddressInfo_(const CService& addr)
 
     // if not found, bail out
     if (!pinfo)
-        return AddrInfo();
-
-    AddrInfo& info = *pinfo;
-
-    // check whether we are talking about the exact same CService (including same port)
-    if (!m_discriminate_ports && info != addr)
         return AddrInfo();
 
     return *pinfo;
@@ -1187,8 +1150,8 @@ const std::vector<bool>& AddrManImpl::GetAsmap() const
     return m_asmap;
 }
 
-AddrMan::AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio, bool discriminate_ports)
-    : m_impl(std::make_unique<AddrManImpl>(std::move(asmap), deterministic, consistency_check_ratio, discriminate_ports)) {}
+AddrMan::AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
+    : m_impl(std::make_unique<AddrManImpl>(std::move(asmap), deterministic, consistency_check_ratio)) {}
 
 AddrMan::~AddrMan() = default;
 

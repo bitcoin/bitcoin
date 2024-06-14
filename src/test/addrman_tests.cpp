@@ -26,7 +26,7 @@ public:
     virtual void Serialize(CDataStream& s) const = 0;
 
     AddrManSerializationMock()
-        : AddrMan(/* asmap */ std::vector<bool>(), /* deterministic */ true, /* consistency_check_ratio */ 100, /* discriminate_ports */ true)
+        : AddrMan(/* asmap */ std::vector<bool>(), /* deterministic */ true, /* consistency_check_ratio */ 100)
     {}
 };
 
@@ -82,9 +82,8 @@ private:
 
 public:
     explicit AddrManTest(bool makeDeterministic = true,
-                         std::vector<bool> asmap = std::vector<bool>(),
-                         bool discriminatePorts = true)
-        : AddrMan(asmap, makeDeterministic, /* consistency_check_ratio */ 100, discriminatePorts)
+                         std::vector<bool> asmap = std::vector<bool>())
+        : AddrMan(asmap, makeDeterministic, /* consistency_check_ratio */ 100)
     {
         deterministic = makeDeterministic;
     }
@@ -236,34 +235,6 @@ BOOST_AUTO_TEST_CASE(addrman_ports)
     BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
 }
 
-BOOST_AUTO_TEST_CASE(addrman_ports_nondiscriminate)
-{
-    AddrManTest addrman(/* deterministic */ true, /* asmap */ std::vector<bool>(), /* discriminate */ false);
-
-    CNetAddr source = ResolveIP("252.2.2.2");
-
-    BOOST_CHECK_EQUAL(addrman.size(), 0U);
-
-    // Test 7; Addr with same IP but diff port does not replace existing addr.
-    CService addr1 = ResolveService("250.1.1.1", 8333);
-    BOOST_CHECK(addrman.Add({CAddress(addr1, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
-
-    CService addr1_port = ResolveService("250.1.1.1", 8334);
-    BOOST_CHECK(!addrman.Add({CAddress(addr1_port, NODE_NONE)}, source));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
-    auto addr_ret2 = addrman.Select().first;
-    BOOST_CHECK_EQUAL(addr_ret2.ToString(), "250.1.1.1:8333");
-
-    // Test: Add same IP but diff port to tried table, it doesn't get added.
-    //  Perhaps this is not ideal behavior but it is the current behavior.
-    addrman.Good(CAddress(addr1_port, NODE_NONE));
-    BOOST_CHECK_EQUAL(addrman.size(), 1U);
-    bool newOnly = true;
-    auto addr_ret3 = addrman.Select(newOnly).first;
-    BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
-}
-
 BOOST_AUTO_TEST_CASE(addrman_select)
 {
     AddrManTest addrman;
@@ -408,39 +379,6 @@ BOOST_AUTO_TEST_CASE(addrman_find)
     AddrInfo* info2 = addrman.Find(addr2);
     BOOST_REQUIRE(info2);
     BOOST_CHECK_EQUAL(info2->ToString(), "250.1.2.1:9999");
-
-    // Test: Find returns another IP matching what we searched on.
-    AddrInfo* info3 = addrman.Find(addr3);
-    BOOST_REQUIRE(info3);
-    BOOST_CHECK_EQUAL(info3->ToString(), "251.255.2.1:8333");
-}
-
-BOOST_AUTO_TEST_CASE(addrman_find_nondiscriminate)
-{
-    AddrManTest addrman(/* deterministic */ true, /* asmap */ std::vector<bool>(), /* discriminate */ false);
-
-    BOOST_CHECK_EQUAL(addrman.size(), 0U);
-
-    CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
-    CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
-    CAddress addr3 = CAddress(ResolveService("251.255.2.1", 8333), NODE_NONE);
-
-    CNetAddr source1 = ResolveIP("250.1.2.1");
-    CNetAddr source2 = ResolveIP("250.1.2.2");
-
-    BOOST_CHECK(addrman.Add({addr1}, source1));
-    BOOST_CHECK(!addrman.Add({addr2}, source2));
-    BOOST_CHECK(addrman.Add({addr3}, source1));
-
-    // Test: ensure Find returns an IP matching what we searched on.
-    AddrInfo* info1 = addrman.Find(addr1);
-    BOOST_REQUIRE(info1);
-    BOOST_CHECK_EQUAL(info1->ToString(), "250.1.2.1:8333");
-
-    // Test 18; Find does not discriminate by port number.
-    AddrInfo* info2 = addrman.Find(addr2);
-    BOOST_REQUIRE(info2);
-    BOOST_CHECK_EQUAL(info2->ToString(), info1->ToString());
 
     // Test: Find returns another IP matching what we searched on.
     AddrInfo* info3 = addrman.Find(addr3);

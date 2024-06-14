@@ -99,7 +99,7 @@ public:
 class AddrManImpl
 {
 public:
-    AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio, bool discriminate_ports);
+    AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrManImpl();
 
@@ -226,9 +226,6 @@ private:
     // If a new asmap was provided, the existing records
     // would be re-bucketed accordingly.
     const std::vector<bool> m_asmap;
-
-    //! Discriminate entries based on port.
-    bool m_discriminate_ports GUARDED_BY(cs);
 
     //! Find an entry.
     AddrInfo* Find(const CService& addr, int* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
