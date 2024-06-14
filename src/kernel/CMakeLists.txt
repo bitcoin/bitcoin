@@ -144,3 +144,16 @@ install(TARGETS bitcoinkernel
 
 install(FILES bitcoinkernel.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT Kernel)
 
+add_executable(kernel-bitcoin-chainstate
+    bitcoin-chainstate.cpp
+)
+
+target_link_libraries(kernel-bitcoin-chainstate
+  PRIVATE
+    core_interface
+    bitcoinkernel
+)
+
+set_target_properties(kernel-bitcoin-chainstate PROPERTIES
+  SKIP_BUILD_RPATH OFF
+)
