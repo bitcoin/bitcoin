@@ -44,8 +44,8 @@ private:
     bool UnregisterPipe(int wakeup_pipe);
 
 private:
-    bool RegisterEntity(int entity, std::string entity_name) const;
-    bool UnregisterEntity(int entity, std::string entity_name) const;
+    bool RegisterEntity(int entity, const std::string& entity_name) const;
+    bool UnregisterEntity(int entity, const std::string& entity_name) const;
 
 private:
     /* Flag set if pipe has been registered with instance */

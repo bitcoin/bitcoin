@@ -37,5 +37,11 @@ src/test/dynamic_activation*.cpp
 src/test/evo*.cpp
 src/test/governance*.cpp
 src/unordered_lru_cache.h
+src/util/edge.*
+src/util/enumerate.h
+src/util/irange.h
+src/util/ranges.h
+src/util/ranges_set.*
+src/util/wpipe.*
 src/wallet/bip39*
 src/wallet/hdchain.*
