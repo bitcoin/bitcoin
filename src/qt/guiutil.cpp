@@ -493,6 +493,12 @@ bool hasEntryData(const QAbstractItemView *view, int column, int role)
     return !selection.at(0).data(role).toString().isEmpty();
 }
 
+void LoadFont(const QString& file_name)
+{
+    const int id = QFontDatabase::addApplicationFont(file_name);
+    assert(id != -1);
+}
+
 QString getDefaultDataDirectory()
 {
     return PathToQString(GetDefaultDataDir());
@@ -1673,14 +1679,26 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
 {
     QString prefix;
     if (prepend_direction) {
-        prefix = (conn_type == ConnectionType::INBOUND) ? QObject::tr("Inbound") : QObject::tr("Outbound") + " ";
+        prefix = (conn_type == ConnectionType::INBOUND) ?
+                     /*: An inbound connection from a peer. An inbound connection
+                         is a connection initiated by a peer. */
+                     QObject::tr("Inbound") :
+                     /*: An outbound connection to a peer. An outbound connection
+                         is a connection initiated by us. */
+                     QObject::tr("Outbound") + " ";
     }
     switch (conn_type) {
     case ConnectionType::INBOUND: return prefix;
+    //: Peer connection type that relays all network information.
     case ConnectionType::OUTBOUND_FULL_RELAY: return prefix + QObject::tr("Full Relay");
+    /*: Peer connection type that relays network information about
+        blocks and not transactions or addresses. */
     case ConnectionType::BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
+    //: Peer connection type established manually through one of several methods.
     case ConnectionType::MANUAL: return prefix + QObject::tr("Manual");
+    //: Short-lived peer connection type that tests the aliveness of known addresses.
     case ConnectionType::FEELER: return prefix + QObject::tr("Feeler");
+    //: Short-lived peer connection type that solicits known addresses from a peer.
     case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
