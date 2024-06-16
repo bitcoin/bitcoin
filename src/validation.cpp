@@ -4712,6 +4712,8 @@ VerifyDBResult CVerifyDB::VerifyDB(
         }
     }
 
+    LogPrintf("Verification progress: 100%%\n");
+
     LogPrintf("Verification: No coin database inconsistencies in last %i blocks (%i transactions)\n", block_count, nGoodTransactions);
 
     if (skipped_l3_checks) {
