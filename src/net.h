@@ -471,7 +471,7 @@ public:
     /** Offset inside the first vSendMsg already sent */
     size_t nSendOffset GUARDED_BY(cs_vSend){0};
     uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
-    std::list<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
+    std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
     std::atomic<size_t> nSendMsgSize{0};
     Mutex cs_vSend;
     Mutex m_sock_mutex;
