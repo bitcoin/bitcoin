@@ -56,7 +56,7 @@ The following rules are enforced for all packages:
 
    - *Rationale*: Basic support for package RBF can be used by wallets
      by making chains of no longer than two, then directly conflicting
-     those chains when needed. Combined with V3 transactions this can
+     those chains when needed. Combined with TRUC transactions this can
      result in more robust fee bumping. More general package RBF may be
      enabled in the future.
 
