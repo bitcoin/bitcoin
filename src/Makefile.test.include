@@ -157,6 +157,7 @@ BITCOIN_TESTS =\
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
   test/translation_tests.cpp \
+  test/txdownload_tests.cpp \
   test/txindex_tests.cpp \
   test/txpackage_tests.cpp \
   test/txreconciliation_tests.cpp \
@@ -391,6 +392,8 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/timeoffsets.cpp \
  test/fuzz/torcontrol.cpp \
  test/fuzz/transaction.cpp \
+ test/fuzz/txdownloadman.cpp \
+ test/fuzz/tx_download.cpp \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
  test/fuzz/tx_pool.cpp \
