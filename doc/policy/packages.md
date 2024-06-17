@@ -38,11 +38,11 @@ The following rules are enforced for all packages:
 
 * Only limited package replacements are currently considered. (#28984)
 
-   - All direct conflicts must signal replacement (or have `-mempoolfullrbf=1` set).
+   - All direct conflicts must signal replacement (or the node must have `-mempoolfullrbf=1` set).
 
    - Packages are 1-parent-1-child, with no in-mempool ancestors of the package.
 
-   - All conflicting clusters(connected components of mempool transactions) must be clusters of up to size 2.
+   - All conflicting clusters (connected components of mempool transactions) must be clusters of up to size 2.
 
    - No more than MAX_REPLACEMENT_CANDIDATES transactions can be replaced, analogous to
      regular [replacement rule](./mempool-replacements.md) 5).
