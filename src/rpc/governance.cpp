@@ -16,6 +16,7 @@
 #include <node/context.h>
 #include <net.h>
 #include <rpc/blockchain.h>
+#include <rpc/net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <governance/common.h>
@@ -398,13 +399,13 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
 
-    CHECK_NONFATAL(node.peerman);
+    PeerManager& peerman = EnsurePeerman(node);
     if (fMissingConfirmations) {
         CHECK_NONFATAL(node.mn_sync);
         node.govman->AddPostponedObject(govobj);
-        govobj.Relay(*node.peerman, *node.mn_sync);
+        govobj.Relay(peerman, *node.mn_sync);
     } else {
-        node.govman->AddGovernanceObject(govobj, *node.peerman);
+        node.govman->AddGovernanceObject(govobj, peerman);
     }
 
     return govobj.GetHash().ToString();
@@ -456,9 +457,9 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
         }
 
         CGovernanceException exception;
-        CHECK_NONFATAL(node.connman);
-        CHECK_NONFATAL(node.peerman);
-        if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
+        CConnman& connman = EnsureConnman(node);
+        PeerManager& peerman = EnsurePeerman(node);
+        if (node.govman->ProcessVoteAndRelay(vote, exception, connman, peerman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -1045,11 +1046,11 @@ static UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 
-    CHECK_NONFATAL(node.connman);
-    CHECK_NONFATAL(node.peerman);
+    CConnman& connman = EnsureConnman(node);
+    PeerManager& peerman = EnsurePeerman(node);
 
     CGovernanceException exception;
-    if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
+    if (node.govman->ProcessVoteAndRelay(vote, exception, connman, peerman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());

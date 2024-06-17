@@ -15,6 +15,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <rpc/blockchain.h>
+#include <rpc/net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <univalue.h>
@@ -47,10 +48,10 @@ static RPCHelpMan masternode_connect()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    CHECK_NONFATAL(node.connman);
+    CConnman& connman = EnsureConnman(node);
 
-    node.connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    connman.OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+    if (!connman.IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
     return "successfully connected";
