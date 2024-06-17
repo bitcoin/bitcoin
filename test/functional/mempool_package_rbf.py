@@ -168,11 +168,20 @@ class PackageRBFTest(BitcoinTestFramework):
         self.assert_mempool_contents(expected=package_txns1)
 
         self.log.info("Check replacement pays for incremental bandwidth")
-        package_hex3, package_txns3 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE)
-        pkg_results3 = node.submitpackage(package_hex3)
-        assert_equal(f"package RBF failed: insufficient anti-DoS fees, rejecting replacement {package_txns3[1].rehash()}, not enough additional fees to relay; 0.00 < 0.00000{sum([tx.get_vsize() for tx in package_txns3])}", pkg_results3["package_msg"])
-
+        _, placeholder_txns3 = self.create_simple_package(coin)
+        package_3_size = sum([tx.get_vsize() for tx in placeholder_txns3])
+        incremental_sats_required = Decimal(package_3_size) / COIN
+        incremental_sats_short = incremental_sats_required - Decimal("0.00000001")
+        # Recreate the package with slightly higher fee once we know the size of the new package, but still short of required fee
+        failure_package_hex3, failure_package_txns3 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE + incremental_sats_short)
+        assert_equal(package_3_size, sum([tx.get_vsize() for tx in failure_package_txns3]))
+        pkg_results3 = node.submitpackage(failure_package_hex3)
+        assert_equal(f"package RBF failed: insufficient anti-DoS fees, rejecting replacement {failure_package_txns3[1].rehash()}, not enough additional fees to relay; {incremental_sats_short} < {incremental_sats_required}", pkg_results3["package_msg"])
         self.assert_mempool_contents(expected=package_txns1)
+
+        success_package_hex3, success_package_txns3 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE + incremental_sats_required)
+        node.submitpackage(success_package_hex3)
+        self.assert_mempool_contents(expected=success_package_txns3)
         self.generate(node, 1)
 
         self.log.info("Check Package RBF must have strict cpfp structure")
@@ -180,11 +189,14 @@ class PackageRBFTest(BitcoinTestFramework):
         package_hex4, package_txns4 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE)
         node.submitpackage(package_hex4)
         self.assert_mempool_contents(expected=package_txns4)
-        package_hex5, package_txns5 = self.create_simple_package(coin, parent_fee=DEFAULT_CHILD_FEE, child_fee=DEFAULT_CHILD_FEE - Decimal("0.00000001"))
+        package_hex5, package_txns5 = self.create_simple_package(coin, parent_fee=DEFAULT_CHILD_FEE, child_fee=DEFAULT_CHILD_FEE)
         pkg_results5 = node.submitpackage(package_hex5)
         assert 'package RBF failed: package feerate is less than parent feerate' in pkg_results5["package_msg"]
-
         self.assert_mempool_contents(expected=package_txns4)
+
+        package_hex5_1, package_txns5_1 = self.create_simple_package(coin, parent_fee=DEFAULT_CHILD_FEE, child_fee=DEFAULT_CHILD_FEE + Decimal("0.00000001"))
+        node.submitpackage(package_hex5_1)
+        self.assert_mempool_contents(expected=package_txns5_1)
         self.generate(node, 1)
 
     def test_package_rbf_max_conflicts(self):
