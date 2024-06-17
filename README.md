@@ -28,7 +28,7 @@ Development generally takes place as part of [Bitcoin Core](https://github.com/b
 Knots for each release.
 
 Even if your pull request to Core is closed, or if your feature is not
-suitable for Core (eg, because it builds on a features not supported in Core;
+suitable for Core (eg, because it builds on a feature not supported in Core;
 relies on centralised services; etc), it may still be eligible for inclusion
 in Bitcoin Knots. In this case, a pull request may be opened on the
 [Knots GitHub](https://github.com/bitcoinknots/bitcoin) for review and consideration.
