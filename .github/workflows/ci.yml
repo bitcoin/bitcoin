@@ -18,7 +18,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DANGER_RUN_CI_ON_HOST: 1
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
   MAKEJOBS: '-j10'
 
@@ -81,6 +80,7 @@ jobs:
     timeout-minutes: 120
 
     env:
+      DANGER_RUN_CI_ON_HOST: 1
       FILE_ENV: './ci/test/00_setup_env_mac_native.sh'
       BASE_ROOT_DIR: ${{ github.workspace }}
 
@@ -304,3 +304,43 @@ jobs:
           BITCOINFUZZ: "${{ github.workspace}}\\src\\fuzz.exe"
         shell: cmd
         run: py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_seed_corpus
+
+  asan-lsan-ubsan-integer-no-depends-usdt:
+    name: 'ASan + LSan + UBSan + integer, no depends, USDT'
+    runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+    # No need to run on the read-only mirror, unless it is a PR.
+    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    timeout-minutes: 120
+    env:
+      FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
+      INSTALL_BCC_TRACING_TOOLS: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore Ccache cache
+        id: ccache-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
+
+      - name: Enable bpfcc script
+        # In the image build step, no external environment variables are available,
+        # so any settings will need to be written to the settings env file:
+        run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
