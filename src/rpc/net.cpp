@@ -16,6 +16,7 @@
 #include <netbase.h>
 #include <node/context.h>
 #include <node/protocol_version.h>
+#include <node/warnings.h>
 #include <policy/settings.h>
 #include <protocol.h>
 #include <rpc/blockchain.h>
@@ -715,7 +716,7 @@ static RPCHelpMan getnetworkinfo()
         }
     }
     obj.pushKV("localaddresses", std::move(localAddresses));
-    obj.pushKV("warnings", GetNodeWarnings(IsDeprecatedRPCEnabled("warnings")));
+    obj.pushKV("warnings", node::GetWarningsForRpc(*CHECK_NONFATAL(node.warnings), IsDeprecatedRPCEnabled("warnings")));
     return obj;
 },
     };

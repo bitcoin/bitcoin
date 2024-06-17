@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
 {
     const auto params {CreateChainParams(ArgsManager{}, ChainType::MAIN)};
-    KernelNotifications notifications{*Assert(m_node.shutdown), m_node.exit_status};
+    KernelNotifications notifications{*Assert(m_node.shutdown), m_node.exit_status, *Assert(m_node.warnings)};
     const BlockManager::Options blockman_opts{
         .chainparams = *params,
         .blocks_dir = m_args.GetBlocksDirPath(),
@@ -134,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
 
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
 {
-    KernelNotifications notifications{*Assert(m_node.shutdown), m_node.exit_status};
+    KernelNotifications notifications{*Assert(m_node.shutdown), m_node.exit_status, *Assert(m_node.warnings)};
     node::BlockManager::Options blockman_opts{
         .chainparams = Params(),
         .blocks_dir = m_args.GetBlocksDirPath(),

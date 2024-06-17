@@ -11,8 +11,16 @@
 #include <cstddef>
 #include <deque>
 
+namespace node {
+class Warnings;
+} // namespace node
+
 class TimeOffsets
 {
+public:
+    TimeOffsets(node::Warnings& warnings) : m_warnings{warnings} {}
+
+private:
     //! Maximum number of timeoffsets stored.
     static constexpr size_t MAX_SIZE{50};
     //! Minimum difference between system and network time for a warning to be raised.
@@ -22,6 +30,8 @@ class TimeOffsets
     /** The observed time differences between our local clock and those of our outbound peers. A
      * positive offset means our peer's clock is ahead of our local clock. */
     std::deque<std::chrono::seconds> m_offsets GUARDED_BY(m_mutex){};
+
+    node::Warnings& m_warnings;
 
 public:
     /** Add a new time offset sample. */

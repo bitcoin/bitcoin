@@ -31,6 +31,7 @@
 #include <node/miner.h>
 #include <node/peerman_args.h>
 #include <node/validation_cache_args.h>
+#include <node/warnings.h>
 #include <noui.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
@@ -182,6 +183,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     InitLogging(*m_node.args);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
+    m_node.warnings = std::make_unique<node::Warnings>();
     m_node.kernel = std::make_unique<kernel::Context>();
     m_node.ecc_context = std::make_unique<ECC_Context>();
     SetupEnvironment();
@@ -230,10 +232,11 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, const std::vecto
     bilingual_str error{};
     m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
     Assert(error.empty());
+    m_node.warnings = std::make_unique<node::Warnings>();
 
     m_cache_sizes = CalculateCacheSizes(m_args);
 
-    m_node.notifications = std::make_unique<KernelNotifications>(*Assert(m_node.shutdown), m_node.exit_status);
+    m_node.notifications = std::make_unique<KernelNotifications>(*Assert(m_node.shutdown), m_node.exit_status, *Assert(m_node.warnings));
 
     const ChainstateManager::Options chainman_opts{
         .chainparams = chainparams,
@@ -322,7 +325,8 @@ TestingSetup::TestingSetup(
     peerman_opts.deterministic_rng = true;
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
-                                       *m_node.mempool, peerman_opts);
+                                       *m_node.mempool, *m_node.warnings,
+                                       peerman_opts);
 
     {
         CConnman::Options options;

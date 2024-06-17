@@ -196,6 +196,7 @@ BITCOIN_CORE_H = \
   kernel/messagestartchars.h \
   kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
+  kernel/warning.h \
   key.h \
   key_io.h \
   logging.h \
@@ -239,6 +240,7 @@ BITCOIN_CORE_H = \
   node/types.h \
   node/utxo_snapshot.h \
   node/validation_cache_args.h \
+  node/warnings.h \
   noui.h \
   outputtype.h \
   policy/v3_policy.h \
@@ -367,7 +369,6 @@ BITCOIN_CORE_H = \
   wallet/wallettool.h \
   wallet/walletutil.h \
   walletinitinterface.h \
-  warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
@@ -444,6 +445,7 @@ libbitcoin_node_a_SOURCES = \
   node/txreconciliation.cpp \
   node/utxo_snapshot.cpp \
   node/validation_cache_args.cpp \
+  node/warnings.cpp \
   noui.cpp \
   policy/v3_policy.cpp \
   policy/fees.cpp \
@@ -721,7 +723,6 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/solver.cpp \
-  warnings.cpp \
   $(BITCOIN_CORE_H)
 #
 
@@ -996,8 +997,7 @@ libbitcoinkernel_la_SOURCES = \
   util/tokenpipe.cpp \
   validation.cpp \
   validationinterface.cpp \
-  versionbits.cpp \
-  warnings.cpp
+  versionbits.cpp
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
