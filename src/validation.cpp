@@ -1201,7 +1201,7 @@ bool MemPoolAccept::PackageMempoolChecks(const std::vector<CTransactionRef>& txn
     const CFeeRate package_feerate(m_subpackage.m_total_modified_fees, m_subpackage.m_total_vsize);
     if (package_feerate <= parent_feerate) {
         return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
-                                     "package RBF failed: package feerate is less than parent feerate",
+                                     "package RBF failed: package feerate is less than or equal to parent feerate",
                                      strprintf("package feerate %s <= parent feerate is %s", package_feerate.ToString(), parent_feerate.ToString()));
     }
 
