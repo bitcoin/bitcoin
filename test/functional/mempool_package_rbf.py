@@ -191,7 +191,7 @@ class PackageRBFTest(BitcoinTestFramework):
         self.assert_mempool_contents(expected=package_txns4)
         package_hex5, package_txns5 = self.create_simple_package(coin, parent_fee=DEFAULT_CHILD_FEE, child_fee=DEFAULT_CHILD_FEE)
         pkg_results5 = node.submitpackage(package_hex5)
-        assert 'package RBF failed: package feerate is less than parent feerate' in pkg_results5["package_msg"]
+        assert 'package RBF failed: package feerate is less than or equal to parent feerate' in pkg_results5["package_msg"]
         self.assert_mempool_contents(expected=package_txns4)
 
         package_hex5_1, package_txns5_1 = self.create_simple_package(coin, parent_fee=DEFAULT_CHILD_FEE, child_fee=DEFAULT_CHILD_FEE + Decimal("0.00000001"))
