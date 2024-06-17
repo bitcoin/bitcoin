@@ -71,14 +71,14 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
 
         // Each subpackage is allowed MAX_REPLACEMENT_CANDIDATES replacements (only checking individually here)
         if (atmp_result.m_replaced_transactions.size() > MAX_REPLACEMENT_CANDIDATES) {
-            return strprintf("tx %s result replaced too many transactions",
+            return strprintf("tx %s would replace too many transactions",
                                 wtxid.ToString());
         }
 
         // Replacements can't happen for subpackages larger than 2
         if (!atmp_result.m_replaced_transactions.empty() &&
             atmp_result.m_wtxids_fee_calculations.has_value() && atmp_result.m_wtxids_fee_calculations.value().size() > 2) {
-             return strprintf("tx %s was part of a too-large package RBF subpackage",
+             return strprintf("RBF subpackage with tx %s was too large",
                                 wtxid.ToString());
         }
 
