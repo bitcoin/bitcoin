@@ -6,6 +6,7 @@
 
 #include <kernel/bitcoinkernel.h>
 
+#include <chain.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <kernel/caches.h>
@@ -18,6 +19,7 @@
 #include <logging.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -25,6 +27,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -43,8 +46,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-class CBlockIndex;
 
 // Define G_TRANSLATION_FUN symbol in libbitcoinkernel library so users of the
 // library aren't required to export this symbol
@@ -133,6 +134,7 @@ struct Handle {
 } // namespace
 
 struct btck_BlockTreeEntry: Handle<btck_BlockTreeEntry, CBlockIndex> {};
+struct btck_Block : Handle<btck_Block, std::shared_ptr<const CBlock>> {};
 
 namespace {
 
@@ -756,4 +758,54 @@ void btck_chainstate_manager_destroy(btck_ChainstateManager* chainman)
     }
 
     delete chainman;
+}
+
+btck_Block* btck_block_create(const void* raw_block, size_t raw_block_length)
+{
+    auto block{std::make_shared<CBlock>()};
+
+    DataStream stream{std::span{reinterpret_cast<const std::byte*>(raw_block), raw_block_length}};
+
+    try {
+        stream >> TX_WITH_WITNESS(*block);
+    } catch (...) {
+        LogDebug(BCLog::KERNEL, "Block decode failed.");
+        return nullptr;
+    }
+
+    return btck_Block::create(block);
+}
+
+btck_Block* btck_block_copy(const btck_Block* block)
+{
+    return btck_Block::copy(block);
+}
+
+size_t btck_block_count_transactions(const btck_Block* block)
+{
+    return btck_Block::get(block)->vtx.size();
+}
+
+const btck_Transaction* btck_block_get_transaction_at(const btck_Block* block, size_t index)
+{
+    assert(index < btck_Block::get(block)->vtx.size());
+    return btck_Transaction::ref(&btck_Block::get(block)->vtx[index]);
+}
+
+void btck_block_destroy(btck_Block* block)
+{
+    delete block;
+}
+
+int btck_chainstate_manager_process_block(
+    btck_ChainstateManager* chainman,
+    const btck_Block* block,
+    int* _new_block)
+{
+    bool new_block;
+    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    if (_new_block) {
+        *_new_block = new_block ? 1 : 0;
+    }
+    return result ? 0 : -1;
 }
