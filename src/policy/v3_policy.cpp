@@ -91,7 +91,6 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
             const auto parent_info = [&] {
                 if (mempool_ancestors.size() > 0) {
                     auto& mempool_parent = *mempool_ancestors.begin();
-                    Assume(mempool_parent->GetCountWithDescendants() == 1);
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
                                       mempool_parent->GetTx().GetWitnessHash(),
                                       mempool_parent->GetTx().version,
@@ -135,10 +134,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                 }
             }
 
-            // It shouldn't be possible to have any mempool siblings at this point. SingleV3Checks
-            // catches mempool siblings and sibling eviction is not extended to packages. Also, if the package consists of connected transactions,
-            // any tx having a mempool ancestor would mean the package exceeds ancestor limits.
-            if (!Assume(!parent_info.m_has_mempool_descendant)) {
+            if (parent_info.m_has_mempool_descendant) {
                 return strprintf("tx %s (wtxid=%s) would exceed descendant count limit",
                                 parent_info.m_txid.ToString(), parent_info.m_wtxid.ToString());
             }

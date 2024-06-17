@@ -314,7 +314,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
             // just use result_package.m_state here. This makes the expect_valid check meaningless, but
             // we can still verify that the contents of m_tx_results are consistent with m_state.
             const bool expect_valid{result_package.m_state.IsValid()};
-            Assert(!CheckPackageMempoolAcceptResult(txs, result_package, expect_valid, nullptr));
+            Assert(!CheckPackageMempoolAcceptResult(txs, result_package, expect_valid, &tx_pool));
         } else {
             // This is empty if it fails early checks, or "full" if transactions are looked at deeper
             Assert(result_package.m_tx_results.size() == txs.size() || result_package.m_tx_results.empty());
