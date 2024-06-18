@@ -57,7 +57,7 @@ class AddrMan
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
-    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio, bool discriminate_ports = false);
+    explicit AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio);
 
     ~AddrMan();
 

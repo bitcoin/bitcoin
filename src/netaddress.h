@@ -544,7 +544,6 @@ public:
     CService(const CNetAddr& ip, uint16_t port);
     CService(const struct in_addr& ipv4Addr, uint16_t port);
     explicit CService(const struct sockaddr_in& addr);
-    void SetPort(uint16_t portIn);
     uint16_t GetPort() const;
     bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
     bool SetSockAddr(const struct sockaddr* paddr);
