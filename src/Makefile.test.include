@@ -155,6 +155,7 @@ BITCOIN_TESTS =\
   test/sv2_connman_tests.cpp \
   test/sv2_messages_tests.cpp \
   test/sv2_noise_tests.cpp \
+  test/sv2_template_provider_tests.cpp \
   test/sv2_transport_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \

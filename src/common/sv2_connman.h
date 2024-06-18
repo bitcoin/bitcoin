@@ -152,8 +152,8 @@ private:
     void DisconnectFlagged() EXCLUSIVE_LOCKS_REQUIRED(m_clients_mutex);
 
     /**
-     * The main thread for the template provider, contains an event loop handling
-     * all tasks for the template provider.
+     * The main thread for the connection manager, contains an event loop handling
+     * all tasks for it.
      */
     void ThreadSv2Handler();
 
