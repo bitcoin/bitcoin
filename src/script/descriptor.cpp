@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <key_io.h>
 #include <pubkey.h>
+#include <script/interpreter.h>
 #include <script/miniscript.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -1933,20 +1934,25 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         // Read and process leaf version
         auto arg2 = Expr(expr);
         std::string leaf_version_str(arg2.begin(), arg2.end());
-        auto leaf_version = TryParseHex<uint8_t>(leaf_version_str);
-        if (!leaf_version.has_value()) {
+        auto leaf_version_hex_vec = TryParseHex<uint8_t>(leaf_version_str);
+        if (!leaf_version_hex_vec.has_value()) {
             error = "Leaf Version is not hex";
             return nullptr;
         }
-        if (leaf_version->size() > 1) {
+        if (leaf_version_hex_vec->size() > 1) {
             error = "Leaf Version is too large";
             return nullptr;
         }
-        if (leaf_version->size() == 0) {
+        if (leaf_version_hex_vec->size() == 0) {
             error = "Expected Leaf Version but not provided";
             return nullptr;
         }
-        return std::make_unique<RawLeafDescriptor>(leaf_script, (int)((*leaf_version)[0]));
+        int leaf_version = (int)((*leaf_version_hex_vec)[0]);
+        if ((leaf_version & ~TAPROOT_LEAF_MASK) == 1) {
+            error = "Leaf Version is invalid";
+            return nullptr;
+        }
+        return std::make_unique<RawLeafDescriptor>(leaf_script, leaf_version);
     } else if (Func("rawleaf", expr)) {
         error = "Can only have rawleaf() inside tr()";
         return nullptr;
