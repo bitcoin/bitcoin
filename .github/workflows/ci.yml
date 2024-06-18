@@ -303,7 +303,6 @@ jobs:
     timeout-minutes: 120
     env:
       FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
-      INSTALL_BCC_TRACING_TOOLS: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
