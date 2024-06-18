@@ -30,6 +30,9 @@ public:
     //! If this chain is exclusively used for testing
     virtual bool isTestChain() = 0;
 
+    //! Returns whether IBD is still in progress.
+    virtual bool isInitialBlockDownload() = 0;
+
     //! Returns the hash for the tip of this chain
     virtual std::optional<uint256> getTipHash() = 0;
 
