@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -1128,6 +1129,45 @@ bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& walle
     assert(false);
 }
 
+std::optional<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, V0SilentPaymentDestination> silent_payment_destinations,
+    const std::set<std::shared_ptr<COutput>>& selected_coins,
+    bilingual_str& error)
+{
+    std::vector<CKey> plain_keys;
+    std::vector<KeyPair> taproot_keys;
+    std::vector<COutPoint> tx_outpoints;
+    tx_outpoints.reserve(selected_coins.size());
+    // in most cases, we will use all of the inputs for shared secret derivation,
+    // in rare cases, we will overallocate the vector, but this should be fine
+    plain_keys.reserve(selected_coins.size());
+    taproot_keys.reserve(selected_coins.size());
+    for (const auto& input : selected_coins) {
+        tx_outpoints.push_back(input->outpoint);
+        if (!IsInputForSharedSecretDerivation(input->txout.scriptPubKey, wallet)) continue;
+        const auto& spk_managers = wallet.GetScriptPubKeyMans(input->txout.scriptPubKey);
+        if (spk_managers.size() != 1) {
+            error = _("Only one ScriptPubKeyManager was expected for the input.");
+            return {};
+        }
+        const auto* spk_manager = *spk_managers.begin();
+        const auto& key = spk_manager->GetPrivKeyForSilentPayment(input->txout.scriptPubKey);
+        if (std::holds_alternative<KeyPair>(key)) {
+            taproot_keys.push_back(std::get<KeyPair>(key));
+        } else if (std::holds_alternative<CKey>(key)) {
+            plain_keys.push_back(std::get<CKey>(key));
+        }
+    }
+    if (plain_keys.empty() && taproot_keys.empty()) {
+        error = _("No silent payment eligible inputs were found.");
+        return {};
+    }
+    assert(tx_outpoints.size() > 0);
+    const auto& smallest_outpoint = std::min_element(tx_outpoints.begin(), tx_outpoints.end(), bip352::BIP352Comparator());
+    return bip352::GenerateSilentPaymentTaprootDestinations(silent_payment_destinations, plain_keys, taproot_keys, *smallest_outpoint);
+}
+
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
@@ -1291,9 +1331,30 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
            result.GetWaste(),
            result.GetSelectedValue());
 
+    std::vector<CRecipient> mutableVecSend = vecSend;
+    if (coin_control.m_silent_payment) {
+        // Get the silent payment destinations, generate the scriptPubKeys,
+        // and update vecSend with the generated scriptPubKeys
+        std::map<size_t, V0SilentPaymentDestination> sp_dests;
+        for (size_t i = 0; i < mutableVecSend.size(); ++i) {
+            if (const auto* sp = std::get_if<V0SilentPaymentDestination>(&mutableVecSend.at(i).dest)) {
+                // Keep track of the index in vecSend
+                sp_dests[i] = *sp;
+            }
+        }
+        const auto& silent_payment_tr_spks = CreateSilentPaymentOutputs(wallet, sp_dests, result.GetInputSet(), error);
+        if (!silent_payment_tr_spks.has_value()) {
+            return util::Error{error};
+        }
+        for (const auto& [out_idx, tr_dest] : *silent_payment_tr_spks) {
+            assert(out_idx < mutableVecSend.size());
+            mutableVecSend[out_idx].dest = tr_dest;
+        }
+
+    }
     // vouts to the payees
     txNew.vout.reserve(vecSend.size() + 1); // + 1 because of possible later insert
-    for (const auto& recipient : vecSend)
+    for (const auto& recipient : mutableVecSend)
     {
         txNew.vout.emplace_back(recipient.nAmount, GetScriptForDestination(recipient.dest));
     }
@@ -1400,7 +1461,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CAmount to_reduce = fee_needed - current_fee;
         unsigned int i = 0;
         bool fFirst = true;
-        for (const auto& recipient : vecSend)
+        for (const auto& recipient : mutableVecSend)
         {
             if (change_pos && i == *change_pos) {
                 ++i;
