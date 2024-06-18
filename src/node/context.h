@@ -25,6 +25,7 @@ class ChainstateManager;
 class ECC_Context;
 class NetGroupManager;
 class PeerManager;
+class Sv2TemplateProvider;
 namespace interfaces {
 class Chain;
 class ChainClient;
