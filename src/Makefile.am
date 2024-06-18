@@ -689,7 +689,6 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/validation.h \
   hash.cpp \
   hash.h \
-  messagesigner.cpp \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -770,6 +769,7 @@ libbitcoin_util_a_SOURCES = \
   fs.cpp \
   interfaces/handler.cpp \
   logging.cpp \
+  messagesigner.cpp \
   random.cpp \
   randomenv.cpp \
   rpc/request.cpp \
