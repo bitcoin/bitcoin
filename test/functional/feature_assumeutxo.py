@@ -203,7 +203,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(node.getblockcount(), FINAL_HEIGHT)
         with node.assert_debug_log(expected_msgs=["[snapshot] activation failed - work does not exceed active chainstate"]):
             assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", node.loadtxoutset, dump_output_path)
-        self.restart_node(0, extra_args=self.extra_args[0])
 
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
