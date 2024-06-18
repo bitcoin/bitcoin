@@ -315,6 +315,7 @@ BITCOIN_CORE_H = \
   util/hasher.h \
   util/insert.h \
   util/macros.h \
+  util/mining.h \
   util/moneystr.h \
   util/overflow.h \
   util/overloaded.h \
