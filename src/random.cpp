@@ -775,5 +775,14 @@ void RandomInit()
 
 double MakeExponentiallyDistributed(uint64_t uniform) noexcept
 {
-    return -std::log1p((uniform >> 16) * -0.0000000000000035527136788 /* -1/2^48 */);
+    // To convert uniform into an exponentially-distributed double, we use two steps:
+    // - Convert uniform into a uniformly-distributed double in range [0, 1), use the expression
+    //   ((uniform >> 11) * 0x1.0p-53), as described in https://prng.di.unimi.it/ under
+    //   "Generating uniform doubles in the unit interval". Call this value x.
+    // - Given an x in uniformly distributed in [0, 1), we find an exponentially distributed value
+    //   by applying the quantile function to it. For the exponential distribution with mean 1 this
+    //   is F(x) = -log(1 - x).
+    //
+    // Combining the two, and using log1p(x) = log(1 + x), we obtain the following:
+    return -std::log1p((uniform >> 11) * -0x1.0p-53);
 }
