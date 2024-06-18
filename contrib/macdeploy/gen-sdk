@@ -8,21 +8,6 @@ import gzip
 import os
 import contextlib
 
-# monkey-patch Python 3.8 and older to fix wrong TAR header handling
-# see https://github.com/bitcoin/bitcoin/pull/24534
-# and https://github.com/python/cpython/pull/18080 for more info
-if sys.version_info < (3, 9):
-    _old_create_header = tarfile.TarInfo._create_header
-    def _create_header(info, format, encoding, errors):
-        buf = _old_create_header(info, format, encoding, errors)
-        # replace devmajor/devminor with binary zeroes
-        buf = buf[:329] + bytes(16) + buf[345:]
-        # recompute checksum
-        chksum = tarfile.calc_chksums(buf)[0]
-        buf = buf[:-364] + bytes("%06o\0" % chksum, "ascii") + buf[-357:]
-        return buf
-    tarfile.TarInfo._create_header = staticmethod(_create_header)
-
 @contextlib.contextmanager
 def cd(path):
     """Context manager that restores PWD even if an exception was raised."""
