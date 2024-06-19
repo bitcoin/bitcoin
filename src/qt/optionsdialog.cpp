@@ -26,6 +26,7 @@
 #include <outputtype.h>
 #include <primitives/transaction.h> // for WITNESS_SCALE_FACTOR
 #include <txmempool.h> // for maxmempoolMinimum
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <chrono>
 #include <utility>
@@ -95,7 +96,22 @@ void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o,
 
     layout->addLayout(horizontalLayout);
 
+    o->setProperty("L", QVariant::fromValue((QLayout*)horizontalLayout));
+
     FixTabOrder(o);
+}
+
+static void setSiblingsEnabled(QWidget * const o, const bool state)
+{
+    auto layout = o->property("L").value<QLayout*>();
+    Assert(layout);
+    // NOTE: QLayout::children does not do what we need here
+    for (int i = layout->count(); i-- > 0; ) {
+        QLayoutItem * const layoutitem = layout->itemAt(i);
+        QWidget * const childwidget = layoutitem->widget();
+        if (!childwidget) continue;
+        childwidget->setEnabled(state);
+    }
 }
 
 int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
@@ -417,15 +433,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 
     connect(dustdynamic_enable, &QAbstractButton::toggled, [this](const bool state){
         dustdynamic_multiplier->setEnabled(state);
-        dustdynamic_target->setEnabled(state);
-        dustdynamic_mempool->setEnabled(state);
+        setSiblingsEnabled(dustdynamic_target_blocks, state);
+        setSiblingsEnabled(dustdynamic_mempool_kvB, state);
         if (state) {
             if (!dustdynamic_mempool->isChecked()) dustdynamic_target->setChecked(true);
             dustdynamic_target_blocks->setEnabled(dustdynamic_target->isChecked());
             dustdynamic_mempool_kvB->setEnabled(dustdynamic_mempool->isChecked());
-        } else {
-            dustdynamic_target_blocks->setEnabled(false);
-            dustdynamic_mempool_kvB->setEnabled(false);
         }
     });
     dustdynamic_enable->toggled(dustdynamic_enable->isChecked());
