@@ -264,8 +264,13 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     mempoolexpiry->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Mempool, mempoolexpiry, tr("Do not keep transactions in memory more than %s hours"));
 
-    QGroupBox * const groupBox_Spamfiltering = new QGroupBox(tabMempool);
-    groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
+    verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    /* Filters tab */
+
+    QWidget * const tabFilters = new QWidget();
+    auto& groupBox_Spamfiltering = tabFilters;
+    ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), tabFilters, tr("Spam &filtering"));
     QVBoxLayout * const verticalLayout_Spamfiltering = new QVBoxLayout(groupBox_Spamfiltering);
 
     rejectunknownscripts = new QCheckBox(groupBox_Spamfiltering);
@@ -432,9 +437,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     });
 
 
-    verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
-
-    verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    verticalLayout_Spamfiltering->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     /* Mining tab */
 
