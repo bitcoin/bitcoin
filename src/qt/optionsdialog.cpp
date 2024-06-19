@@ -431,7 +431,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     dustdynamic_mempool_kvB->setValue(3024000);
     CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_mempool_kvB, tr("the lowest fee of the best known %s kvB of unconfirmed transactions."), hlayout);
 
-    connect(dustdynamic_enable, &QAbstractButton::toggled, [this](const bool state){
+    const auto dustdynamic_enable_toggled = [this](const bool state){
         dustdynamic_multiplier->setEnabled(state);
         setSiblingsEnabled(dustdynamic_target_blocks, state);
         setSiblingsEnabled(dustdynamic_mempool_kvB, state);
@@ -440,13 +440,26 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
             dustdynamic_target_blocks->setEnabled(dustdynamic_target->isChecked());
             dustdynamic_mempool_kvB->setEnabled(dustdynamic_mempool->isChecked());
         }
-    });
-    dustdynamic_enable->toggled(dustdynamic_enable->isChecked());
+    };
+    connect(dustdynamic_enable, &QAbstractButton::toggled, dustdynamic_enable_toggled);
+    dustdynamic_enable_toggled(dustdynamic_enable->isChecked());
     connect(dustdynamic_target, &QAbstractButton::toggled, [this](const bool state){
         dustdynamic_target_blocks->setEnabled(state);
     });
     connect(dustdynamic_mempool, &QAbstractButton::toggled, [this](const bool state){
         dustdynamic_mempool_kvB->setEnabled(state);
+    });
+
+
+    connect(rejectunknownscripts, &QAbstractButton::toggled, [this, dustdynamic_enable_toggled](const bool state){
+        rejectbarepubkey->setEnabled(state);
+        rejectbaremultisig->setEnabled(state);
+        rejectparasites->setEnabled(state);
+        rejecttokens->setEnabled(state);
+        setSiblingsEnabled(dustrelayfee, state);
+        setSiblingsEnabled(maxscriptsize, state);
+        setSiblingsEnabled(dustdynamic_multiplier, state);
+        dustdynamic_enable_toggled(state && dustdynamic_enable->isChecked());
     });
 
 
