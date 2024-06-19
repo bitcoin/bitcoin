@@ -237,6 +237,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     mempoolreplacement->addItem(QString("with a higher mining fee (no opt-out)"), QVariant("fee,-optin"));
     CreateOptionUI(verticalLayout_Mempool, mempoolreplacement, tr("Transaction &replacement: %s"));
 
+    rejectspkreuse = new QCheckBox(tabMempool);
+    rejectspkreuse->setText(tr("Disallow most address reuse"));
+    rejectspkreuse->setToolTip(tr("With this option enabled, your memory pool will only allow each unique payment destination to be used once, effectively deprioritising address reuse. Address reuse is not technically supported, and harms the privacy of all Bitcoin users. It also has limited real-world utility, and has been known to be common with spam."));
+    verticalLayout_Mempool->addWidget(rejectspkreuse);
+    FixTabOrder(rejectspkreuse);
+
     mempooltruc = new QValueComboBox(tabMempool);
     mempooltruc->addItem(QString("do not relay or mine at all"), QVariant("reject"));
     mempooltruc->addItem(QString("handle the same as other transactions"), QVariant("accept"));
@@ -290,12 +296,6 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     rejecttokens->setToolTip(tr("With this option enabled, transactions involving non-bitcoin tokens/assets will not be relayed or mined by your node. Due to not having value, and some technical design flaws, token mints and transfers are often spammy and can bog down the network."));
     verticalLayout_Spamfiltering->addWidget(rejecttokens);
     FixTabOrder(rejecttokens);
-
-    rejectspkreuse = new QCheckBox(groupBox_Spamfiltering);
-    rejectspkreuse->setText(tr("Disallow most address reuse"));
-    rejectspkreuse->setToolTip(tr("With this option enabled, your memory pool will only allow each unique payment destination to be used once, effectively deprioritising address reuse. Address reuse is not technically supported, and harms the privacy of all Bitcoin users. It also has limited real-world utility, and has been known to be common with spam."));
-    verticalLayout_Spamfiltering->addWidget(rejectspkreuse);
-    FixTabOrder(rejectspkreuse);
 
     minrelaytxfee = new BitcoinAmountField(groupBox_Spamfiltering);
     CreateOptionUI(verticalLayout_Spamfiltering, minrelaytxfee, tr("Ignore transactions offering miners less than %s per kvB in transaction fees."));
