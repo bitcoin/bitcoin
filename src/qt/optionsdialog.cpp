@@ -237,6 +237,10 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     mempoolreplacement->addItem(QString("with a higher mining fee (no opt-out)"), QVariant("fee,-optin"));
     CreateOptionUI(verticalLayout_Mempool, mempoolreplacement, tr("Transaction &replacement: %s"));
 
+    incrementalrelayfee = new BitcoinAmountField(tabMempool);
+    connect(incrementalrelayfee, SIGNAL(valueChanged()), this, SLOT(incrementalrelayfee_changed()));
+    CreateOptionUI(verticalLayout_Mempool, incrementalrelayfee, tr("Require transaction fees to be at least %s per kvB higher than transactions they are replacing."));
+
     rejectspkreuse = new QCheckBox(tabMempool);
     rejectspkreuse->setText(tr("Disallow most address reuse"));
     rejectspkreuse->setToolTip(tr("With this option enabled, your memory pool will only allow each unique payment destination to be used once, effectively deprioritising address reuse. Address reuse is not technically supported, and harms the privacy of all Bitcoin users. It also has limited real-world utility, and has been known to be common with spam."));
@@ -260,10 +264,6 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     maxmempool->setMinimum(nMempoolSizeMinMB);
     maxmempool->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Mempool, maxmempool, tr("Keep the transaction memory pool below %s MB"));
-
-    incrementalrelayfee = new BitcoinAmountField(tabMempool);
-    connect(incrementalrelayfee, SIGNAL(valueChanged()), this, SLOT(incrementalrelayfee_changed()));
-    CreateOptionUI(verticalLayout_Mempool, incrementalrelayfee, tr("Require transaction fees to be at least %s per kvB higher than transactions they are replacing."));
 
     mempoolexpiry = new QSpinBox(tabMempool);
     mempoolexpiry->setMinimum(1);
