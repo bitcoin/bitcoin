@@ -923,38 +923,6 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 }
 
-static UniValue protx_register_evo(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
-{
-    bool isExternalRegister = request.strMethod == "protxregister_evo";
-    bool isFundRegister = request.strMethod == "protxregister_fund_evo";
-    bool isPrepareRegister = request.strMethod == "protxregister_prepare_evo";
-    if (request.strMethod.find("_hpmn") != std::string::npos) {
-        if (!IsDeprecatedRPCEnabled("hpmn")) {
-            throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
-        }
-        isExternalRegister = request.strMethod == "protxregister_hpmn";
-        isFundRegister = request.strMethod == "protxregister_fund_hpmn";
-        isPrepareRegister = request.strMethod == "protxregister_prepare_hpmn";
-    }
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
-}
-
-static UniValue protx_register(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
-{
-    bool isExternalRegister = request.strMethod == "protxregister";
-    bool isFundRegister = request.strMethod == "protxregister_fund";
-    bool isPrepareRegister = request.strMethod == "protxregister_prepare";
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
-}
-
-static UniValue protx_register_legacy(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman)
-{
-    bool isExternalRegister = request.strMethod == "protxregister_legacy";
-    bool isFundRegister = request.strMethod == "protxregister_fund_legacy";
-    bool isPrepareRegister = request.strMethod == "protxregister_prepare_legacy";
-    return protx_register_common_wrapper(request, chain_helper, chainman, true, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
-}
-
 static RPCHelpMan protx_register_submit()
 {
     return RPCHelpMan{"protx register_submit",
