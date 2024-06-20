@@ -30,6 +30,10 @@ Interesting starting states could be loading a snapshot when the current chain t
 from shutil import rmtree
 
 from dataclasses import dataclass
+from test_framework.blocktools import (
+        create_block,
+        create_coinbase
+)
 from test_framework.messages import tx_from_hex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -205,6 +209,27 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", node.loadtxoutset, dump_output_path)
         self.restart_node(0, extra_args=self.extra_args[0])
 
+    def test_snapshot_not_on_most_work_chain(self, dump_output_path):
+        self.log.info("Test bitcoind should fail when the node knows the headers of another chain with more work.")
+        node0 = self.nodes[0]
+        node1 = self.nodes[1]
+        # create two blocks that form a longer chain
+        parent = node0.getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
+        block_time = node0.getblock(node0.getbestblockhash())['time'] + 1
+        fork1 = create_block(int(parent, 16), create_coinbase(SNAPSHOT_BASE_HEIGHT - 1), block_time)
+        fork1.solve()
+        fork2 = create_block(fork1.sha256, create_coinbase(SNAPSHOT_BASE_HEIGHT), block_time + 1)
+        fork2.solve()
+        node1.submitheader(fork1.serialize().hex())
+        node1.submitheader(fork2.serialize().hex())
+        msg = "A forked headers-chain with more work than the chain with the base block header exists. Please proceed to sync without AssumeUtxo."
+        assert_raises_rpc_error(-32603, msg, node1.loadtxoutset, dump_output_path)
+        # Cleanup: submit two more headers of the snapshot chain, so that loading the snapshot in future subtests succeeds
+        main1 = node0.getblock(node0.getblockhash(SNAPSHOT_BASE_HEIGHT + 1), 0)
+        main2 = node0.getblock(node0.getblockhash(SNAPSHOT_BASE_HEIGHT + 2), 0)
+        node1.submitheader(main1)
+        node1.submitheader(main2)
+
     def run_test(self):
         """
         Bring up two (disconnected) nodes, mine some new blocks on the first,
@@ -291,6 +316,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_invalid_snapshot_scenarios(dump_output['path'])
         self.test_invalid_chainstate_scenarios()
         self.test_invalid_file_path()
+        self.test_snapshot_not_on_most_work_chain(dump_output['path'])
 
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])

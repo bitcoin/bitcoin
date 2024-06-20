@@ -5676,6 +5676,9 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
             return util::Error{strprintf(_("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."),
                           base_blockhash.ToString())};
         }
+        if (!m_best_header || m_best_header->GetAncestor(base_blockheight) != snapshot_start_block) {
+            return util::Error{_("A forked headers-chain with more work than the chain with the base block header exists. Please proceed to sync without AssumeUtxo.")};
+        }
 
         if (Assert(m_active_chainstate->GetMempool())->size() > 0) {
             return util::Error{_("Can't activate a snapshot when mempool not empty.")};
