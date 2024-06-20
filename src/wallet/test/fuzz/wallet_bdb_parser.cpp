@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,6 +63,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
 #endif
         if (error.original.starts_with("AutoFile::ignore: end of file") ||
             error.original.starts_with("AutoFile::read: end of file") ||
+            error.original.starts_with("AutoFile::seek: ") ||
             error.original == "Not a BDB file" ||
             error.original == "Unexpected page type, should be 9 (BTree Metadata)" ||
             error.original == "Unexpected database flags, should only be 0x20 (subdatabases)" ||
