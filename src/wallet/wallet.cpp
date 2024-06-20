@@ -1366,13 +1366,13 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
 
 }
 
-void CWallet::RecursiveUpdateTxState(const uint256& tx_hash, const TryUpdatingStateFn& try_updating_state) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+void CWallet::RecursiveUpdateTxState(const uint256& tx_hash, const TryUpdatingStateFn& try_updating_state) {
     // Do not flush the wallet here for performance reasons
     WalletBatch batch(GetDatabase(), false);
     RecursiveUpdateTxState(&batch, tx_hash, try_updating_state);
 }
 
-void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const uint256& tx_hash, const TryUpdatingStateFn& try_updating_state) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const uint256& tx_hash, const TryUpdatingStateFn& try_updating_state) {
     std::set<uint256> todo;
     std::set<uint256> done;
 

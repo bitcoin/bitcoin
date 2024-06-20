@@ -179,7 +179,7 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
     }
 }
 
-void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
     UniValue lastprocessedblock{UniValue::VOBJ};
