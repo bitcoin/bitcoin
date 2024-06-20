@@ -208,6 +208,7 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   net/connection_types.h \
+  net/net_message.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -733,6 +734,7 @@ libbitcoin_net_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libbitcoin_net_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_net_a_SOURCES = \
   net/connection_types.cpp \
+  net/net_message.cpp \
   $(BITCOIN_CORE_H)
 #
 
