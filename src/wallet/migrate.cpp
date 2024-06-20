@@ -551,7 +551,7 @@ void BerkeleyRODatabase::Open()
     // }
 
     // Check the last page number
-    uint32_t expected_last_page = (size / page_size) - 1;
+    uint32_t expected_last_page{uint32_t((size / page_size) - 1)};
     if (outer_meta.last_page != expected_last_page) {
         throw std::runtime_error("Last page number could not fit in file");
     }
