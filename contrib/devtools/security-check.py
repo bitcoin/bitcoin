@@ -248,31 +248,16 @@ CHECKS = {
 if __name__ == '__main__':
     retval: int = 0
     for filename in sys.argv[1:]:
-        try:
-            binary = lief.parse(filename)
-            etype = binary.format
-            arch = binary.abstract.header.architecture
-            binary.concrete
+        binary = lief.parse(filename)
+        etype = binary.format
+        arch = binary.abstract.header.architecture
+        binary.concrete
 
-            if etype == lief.EXE_FORMATS.UNKNOWN:
-                print(f'{filename}: unknown executable format')
-                retval = 1
-                continue
-
-            if arch == lief.ARCHITECTURES.NONE:
-                print(f'{filename}: unknown architecture')
-                retval = 1
-                continue
-
-            failed: list[str] = []
-            for (name, func) in CHECKS[etype][arch]:
-                if not func(binary):
-                    failed.append(name)
-            if failed:
-                print(f'{filename}: failed {" ".join(failed)}')
-                retval = 1
-        except IOError:
-            print(f'{filename}: cannot open')
+        failed: list[str] = []
+        for (name, func) in CHECKS[etype][arch]:
+            if not func(binary):
+                failed.append(name)
+        if failed:
+            print(f'{filename}: failed {" ".join(failed)}')
             retval = 1
     sys.exit(retval)
-
