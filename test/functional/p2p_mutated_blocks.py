@@ -104,11 +104,10 @@ class MutatedBlocksTest(BitcoinTestFramework):
         block_missing_prev.hashPrevBlock = 123
         block_missing_prev.solve()
 
-        # Attacker gets a DoS score of 10, not immediately disconnected, so we do it 10 times to get to 100
-        for _ in range(10):
-            assert_equal(len(self.nodes[0].getpeerinfo()), 2)
-            with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
-                attacker.send_message(msg_block(block_missing_prev))
+        # Check that non-connecting block causes disconnect
+        assert_equal(len(self.nodes[0].getpeerinfo()), 2)
+        with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
+            attacker.send_message(msg_block(block_missing_prev))
         attacker.wait_for_disconnect(timeout=5)
 
 
