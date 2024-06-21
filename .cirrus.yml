@@ -8,27 +8,44 @@ env:  # Global defaults
   CCACHE_DIR: "/tmp/ccache_dir"
   CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
+# A self-hosted machine(s) can be used via Cirrus CI. It can be configured with
+# multiple users to run tasks in parallel. No sudo permission is required.
+#
 # https://cirrus-ci.org/guide/persistent-workers/
 #
-# It is possible to select a specific persistent worker by label. Refer to the
+# Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
+#
+# The following specific types should exist, with the following requirements:
+# - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
+# - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
+# - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
+#
+# CI jobs for the latter configuration can be run on x86_64 hardware
+# by installing qemu-user-static, which works out of the box with
+# podman or docker. Background: https://stackoverflow.com/a/72890225/313633
+#
+# The above machine types are matched to each task by their label. Refer to the
 # Cirrus CI docs for more details.
 #
-# Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
-# Specifically,
+# On machines that are persisted between CI jobs, RESTART_CI_DOCKER_BEFORE_RUN=1
+# ensures that previous containers and artifacts are cleared before each run.
+# This requires installing Podman instead of Docker.
+#
+# Futhermore:
 # - apt-get is required due to PACKAGE_MANAGER_INSTALL
-# - podman-docker-4.1+ is required due to the use of `podman` when
-#   RESTART_CI_DOCKER_BEFORE_RUN is set and 4.1+ due to the bugfix in 4.1
+# - podman-docker-4.1+ is required due to the bugfix in 4.1
 #   (https://github.com/bitcoin/bitcoin/pull/21652#issuecomment-1657098200)
-# - The ./ci/ depedencies (with cirrus-cli) should be installed:
+# - The ./ci/ dependencies (with cirrus-cli) should be installed. One-liner example
+#   for a single user setup with sudo permission:
 #
 #   ```
 #   apt update && apt install git screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
 #   ```
 #
-# - There are no strict requirements on the hardware, because having less CPUs
-#   runs the same CI script (maybe slower). To avoid rare and intermittent OOM
-#   due to short memory usage spikes, it is recommended to add (and persist)
-#   swap:
+# - There are no strict requirements on the hardware. Having fewer CPU threads
+#   than recommended merely causes the CI script to run slower.
+#   To avoid rare and intermittent OOM due to short memory usage spikes,
+#   it is recommended to add (and persist) swap:
 #
 #   ```
 #   fallocate -l 16G /swapfile_ci && chmod 600 /swapfile_ci && mkswap /swapfile_ci && swapon /swapfile_ci && ( echo '/swapfile_ci none swap sw 0 0' | tee -a /etc/fstab )
@@ -39,11 +56,6 @@ env:  # Global defaults
 #   ```
 #   RESTART_CI_DOCKER_BEFORE_RUN=1 screen cirrus worker run --labels type=todo_fill_in_type --token todo_fill_in_token
 #   ```
-#
-# The following specific types should exist, with the following requirements:
-# - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
-# - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
-# - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
