@@ -1062,9 +1062,9 @@ static UniValue voteraw(const JSONRPCRequest& request)
     }
 }
 
-static UniValue getgovernanceinfo(const JSONRPCRequest& request)
+static RPCHelpMan getgovernanceinfo()
 {
-    RPCHelpMan{"getgovernanceinfo",
+    return RPCHelpMan{"getgovernanceinfo",
         "Returns an object containing governance parameters.\n",
         {},
         RPCResult{
@@ -1083,8 +1083,8 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
             HelpExampleCli("getgovernanceinfo", "")
     + HelpExampleRpc("getgovernanceinfo", "")
         },
-    }.Check(request);
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
 
@@ -1108,6 +1108,8 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     obj.pushKV("governancebudget", ValueFromAmount(CSuperblock::GetPaymentsLimit(chainman.ActiveChain(), nNextSuperblock)));
 
     return obj;
+},
+    };
 }
 
 static UniValue getsuperblockbudget(const JSONRPCRequest& request)
