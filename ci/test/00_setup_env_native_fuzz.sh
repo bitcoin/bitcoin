@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_fuzz
-export PACKAGES="clang llvm python3 libevent-dev bsdmainutils libboost-filesystem-dev libboost-test-dev"
+export PACKAGES="clang llvm python3 libevent-dev bsdmainutils libboost-dev libboost-filesystem-dev libboost-test-dev"
 export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 export CPPFLAGS="-DDEBUG_LOCKORDER -DARENA_DEBUG"
 export CXXFLAGS="-Werror -Wno-unused-command-line-argument -Wno-unused-value -Wno-deprecated-builtins"
@@ -16,4 +16,4 @@ export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined --enable-suppress-external-warnings CC=clang-16 CXX=clang++-16 --with-boost-process"
+export BITCOIN_CONFIG="--enable-zmq --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined,integer --enable-suppress-external-warnings CC=clang-16 CXX=clang++-16 --with-boost-process"

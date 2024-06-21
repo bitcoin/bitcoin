@@ -36,7 +36,7 @@ bool IsFeatureSupported(int wallet_version, int feature_version)
 
 WalletFeature GetClosestWalletFeature(int version)
 {
-    const std::array<WalletFeature, 5> wallet_features{{FEATURE_LATEST, FEATURE_HD, FEATURE_COMPRPUBKEY, FEATURE_WALLETCRYPT, FEATURE_BASE}};
+    static constexpr std::array wallet_features{FEATURE_LATEST, FEATURE_HD, FEATURE_COMPRPUBKEY, FEATURE_WALLETCRYPT, FEATURE_BASE};
     for (const WalletFeature& wf : wallet_features) {
         if (version >= wf) return wf;
     }

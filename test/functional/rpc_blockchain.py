@@ -25,6 +25,7 @@ import http.client
 import os
 import subprocess
 
+from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
@@ -81,11 +82,10 @@ class BlockchainTest(BitcoinTestFramework):
 
     def mine_chain(self):
         self.log.info(f"Generate {HEIGHT} blocks after the genesis block in 156 sec")
-        address = self.nodes[0].get_deterministic_priv_key().address
         for t in range(TIME_GENESIS_BLOCK, TIME_RANGE_END, TIME_RANGE_STEP):
             # 156 sec steps from genesis block time
             set_node_times(self.nodes, t)
-            self.nodes[0].generatetoaddress(1, address)
+            self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2SH_OP_TRUE)
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
 
     def _test_getblockchaininfo(self):
@@ -258,7 +258,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['transactions'], HEIGHT)
         assert_equal(res['height'], HEIGHT)
         assert_equal(res['txouts'], HEIGHT)
-        assert_equal(res['bogosize'], 15000),
+        assert_equal(res['bogosize'], 14600),
         size = res['disk_size']
         assert size > 6400
         assert size < 64000
@@ -365,12 +365,12 @@ class BlockchainTest(BitcoinTestFramework):
 
     def _test_stopatheight(self):
         assert_equal(self.nodes[0].getblockcount(), HEIGHT)
-        self.nodes[0].generatetoaddress(6, self.nodes[0].get_deterministic_priv_key().address)
+        self.nodes[0].generatetoaddress(6, ADDRESS_BCRT1_P2SH_OP_TRUE)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 6)
         self.log.debug('Node should not stop at this height')
         assert_raises(subprocess.TimeoutExpired, lambda: self.nodes[0].process.wait(timeout=3))
         try:
-            self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
+            self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_P2SH_OP_TRUE)
         except (ConnectionError, http.client.BadStatusLine):
             pass  # The node already shut down before response
         self.log.debug('Node should stop at this height...')
@@ -420,8 +420,7 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         miniwallet = MiniWallet(node)
-        miniwallet.generate(5)
-        node.generate(100)
+        miniwallet.scan_blocks(num=5)
 
         fee_per_byte = Decimal('0.00000010')
         fee_per_kb = 1000 * fee_per_byte

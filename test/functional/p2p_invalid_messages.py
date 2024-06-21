@@ -17,6 +17,7 @@ from test_framework.messages import (
     msg_headers,
     msg_inv,
     MSG_TX,
+    msg_version,
 )
 from test_framework.p2p import (
     P2PDataStore, P2PInterface
@@ -50,6 +51,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_buffer()
+        self.test_duplicate_version_msg()
         self.test_magic_bytes()
         self.test_checksum()
         self.test_size()
@@ -76,6 +78,13 @@ class InvalidMessagesTest(BitcoinTestFramework):
         assert_equal(middle, before + cut_pos)
         conn.send_raw_message(msg[cut_pos:])
         conn.sync_with_ping(timeout=1)
+        self.nodes[0].disconnect_p2ps()
+
+    def test_duplicate_version_msg(self):
+        self.log.info("Test duplicate version message is ignored")
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        with self.nodes[0].assert_debug_log(['redundant version message from peer']):
+            conn.send_and_ping(msg_version())
         self.nodes[0].disconnect_p2ps()
 
     def test_magic_bytes(self):

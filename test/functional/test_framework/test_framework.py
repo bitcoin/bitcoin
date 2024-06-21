@@ -23,6 +23,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from typing import List
+from .address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from .authproxy import JSONRPCException
 from test_framework.blocktools import TIME_GENESIS_BLOCK
 from . import coverage
@@ -905,18 +906,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Set a time in the past, so that blocks don't end up in the future
             cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
 
-            # Create a 199-block-long chain; each of the 4 first nodes
+            # Create a 199-block-long chain; each of the 3 first nodes
             # gets 25 mature blocks and 25 immature.
-            # The 4th node gets only 24 immature blocks so that the very last
+            # The 4th address gets 25 mature and only 24 immature blocks so that the very last
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
             self.set_genesis_mocktime()
+            gen_addresses = [k.address for k in TestNode.PRIV_KEYS] + [ADDRESS_BCRT1_P2SH_OP_TRUE]
             for i in range(8):
                 self.bump_mocktime((25 if i != 7 else 24) * 156)
                 cache_node.generatetoaddress(
                     nblocks=25 if i != 7 else 24,
-                    address=TestNode.PRIV_KEYS[i % 4].address,
+                    address=gen_addresses[i % 4],
                 )
 
             assert_equal(cache_node.getblockchaininfo()["blocks"], 199)

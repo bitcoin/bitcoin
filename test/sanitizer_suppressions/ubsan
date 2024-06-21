@@ -89,6 +89,7 @@ implicit-signed-integer-truncation:streams.h
 implicit-signed-integer-truncation:test/arith_uint256_tests.cpp
 implicit-signed-integer-truncation:test/skiplist_tests.cpp
 implicit-signed-integer-truncation:torcontrol.cpp
+implicit-unsigned-integer-truncation:*/include/c++/
 implicit-unsigned-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:leveldb/
 implicit-unsigned-integer-truncation:test/fuzz/crypto_diff_fuzz_chacha20.cpp
