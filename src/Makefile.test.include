@@ -153,6 +153,7 @@ BITCOIN_TESTS =\
   test/span_tests.cpp \
   test/streams_tests.cpp \
   test/sv2_noise_tests.cpp \
+  test/sv2_transport_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
   test/timeoffsets_tests.cpp \
