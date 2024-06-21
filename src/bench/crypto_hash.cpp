@@ -190,9 +190,19 @@ static void SHA512(benchmark::Bench& bench)
 static void SipHash_32b(benchmark::Bench& bench)
 {
     uint256 x;
-    uint64_t k1 = 0;
+    uint64_t k0 = 0, k1 = 0;
     bench.run([&] {
-        *((uint64_t*)x.begin()) = SipHashUint256(0, ++k1, x);
+        SipHashUint256(++k0, ++k1, x);
+    });
+}
+
+static void SipHash_32b_Extra(benchmark::Bench& bench)
+{
+    uint256 x;
+    uint64_t k0 = 0, k1 = 0;
+    uint32_t extra = 42;
+    bench.run([&] {
+        SipHashUint256Extra(++k0, ++k1, x, ++extra);
     });
 }
 
@@ -270,6 +280,7 @@ BENCHMARK(SHA256_32b_SSE4, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_AVX2, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_SHANI, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SipHash_32b_Extra, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_STANDARD, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_SSE4, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_AVX2, benchmark::PriorityLevel::HIGH);
