@@ -344,13 +344,20 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainsta
 }
 
 // forward declaration
+namespace {
+enum class ProTxRegisterAction
+{
+    External,
+    Fund,
+    Prepare,
+};
+} // anonumous namespace
+
 static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                                               CChainstateHelper& chain_helper,
                                               const ChainstateManager& chainman,
                                               const bool specific_legacy_bls_scheme,
-                                              const bool isExternalRegister,
-                                              const bool isFundRegister,
-                                              const bool isPrepareRegister,
+                                              ProTxRegisterAction action,
                                               const MnType mnType);
 
 static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, const MnType mnType);
@@ -397,10 +404,7 @@ static RPCHelpMan protx_register_fund_wrapper(const bool legacy)
     CHECK_NONFATAL(node.chain_helper);
     CChainstateHelper& chain_helper = *node.chain_helper;
 
-    const bool isExternalRegister = false;
-    const bool isFundRegister = true;
-    const bool isPrepareRegister = false;
-    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, ProTxRegisterAction::Fund, MnType::Regular);
 },
     };
 }
@@ -453,11 +457,7 @@ static RPCHelpMan protx_register_wrapper(bool legacy)
     CHECK_NONFATAL(node.chain_helper);
     CChainstateHelper& chain_helper = *node.chain_helper;
 
-    const bool isExternalRegister = true;
-    const bool isFundRegister = false;
-    const bool isPrepareRegister = false;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, ProTxRegisterAction::External, MnType::Regular);
 },
     };
 }
@@ -511,10 +511,7 @@ static RPCHelpMan protx_register_prepare_wrapper(const bool legacy)
     CHECK_NONFATAL(node.chain_helper);
     CChainstateHelper& chain_helper = *node.chain_helper;
 
-    const bool isExternalRegister = false;
-    const bool isFundRegister = false;
-    const bool isPrepareRegister = true;
-    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Regular);
+    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, ProTxRegisterAction::Prepare, MnType::Regular);
 },
     };
 }
@@ -574,10 +571,7 @@ static RPCHelpMan protx_register_fund_evo_wrapper(bool use_hpmn_suffix)
     CHECK_NONFATAL(node.chain_helper);
     CChainstateHelper& chain_helper = *node.chain_helper;
 
-    const bool isExternalRegister = false;
-    const bool isFundRegister = true;
-    const bool isPrepareRegister = false;
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
+    return protx_register_common_wrapper(request, chain_helper, chainman, false, ProTxRegisterAction::Fund, MnType::Evo);
 },
     };
 }
@@ -636,11 +630,7 @@ static RPCHelpMan protx_register_evo_wrapper(bool use_hpmn_suffix)
     CHECK_NONFATAL(node.chain_helper);
     CChainstateHelper& chain_helper = *node.chain_helper;
 
-    const bool isExternalRegister = true;
-    const bool isFundRegister = false;
-    const bool isPrepareRegister = false;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
+    return protx_register_common_wrapper(request, chain_helper, chainman, false, ProTxRegisterAction::External, MnType::Evo);
 },
     };
 }
@@ -696,10 +686,7 @@ static RPCHelpMan protx_register_prepare_evo_wrapper(bool use_hpmn_suffix)
     CHECK_NONFATAL(node.chain_helper);
     CChainstateHelper& chain_helper = *node.chain_helper;
 
-    const bool isExternalRegister = false;
-    const bool isFundRegister = false;
-    const bool isPrepareRegister = true;
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, isExternalRegister, isFundRegister, isPrepareRegister, MnType::Evo);
+    return protx_register_common_wrapper(request, chain_helper, chainman, false, ProTxRegisterAction::Prepare, MnType::Evo);
 },
     };
 }
@@ -718,9 +705,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                                               CChainstateHelper& chain_helper,
                                               const ChainstateManager& chainman,
                                               const bool specific_legacy_bls_scheme,
-                                              const bool isExternalRegister,
-                                              const bool isFundRegister,
-                                              const bool isPrepareRegister,
+                                              const ProTxRegisterAction action,
                                               const MnType mnType)
 {
     const bool isEvoRequested = mnType == MnType::Evo;
@@ -728,7 +713,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    if (isExternalRegister || isFundRegister) {
+    if (action == ProTxRegisterAction::External || action == ProTxRegisterAction::Fund) {
         EnsureWalletIsUnlocked(wallet.get());
     }
 
@@ -748,7 +733,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     CProRegTx ptx;
     ptx.nType = mnType;
 
-    if (isFundRegister) {
+    if (action == ProTxRegisterAction::Fund) {
         CTxDestination collateralDest = DecodeDestination(request.params[paramIdx].get_str());
         if (!IsValidDestination(collateralDest)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collaterall address: %s", request.params[paramIdx].get_str()));
@@ -826,7 +811,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
 
-    if (!isFundRegister) {
+    if (action != ProTxRegisterAction::Fund) {
         // make sure fee calculation works
         ptx.vchSig.resize(65);
     }
@@ -839,11 +824,11 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
     }
 
     bool fSubmit{true};
-    if ((isExternalRegister || isFundRegister) && !request.params[paramIdx + 7].isNull()) {
+    if ((action == ProTxRegisterAction::External || action == ProTxRegisterAction::Fund) && !request.params[paramIdx + 7].isNull()) {
         fSubmit = ParseBoolV(request.params[paramIdx + 7], "submit");
     }
 
-    if (isFundRegister) {
+    if (action == ProTxRegisterAction::Fund) {
         FundSpecialTx(wallet.get(), tx, ptx, fundDest);
         UpdateSpecialTxInputsHash(tx, ptx);
         CAmount fundCollateral = GetMnType(mnType).collat_amount;
@@ -883,7 +868,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
             }
 
-            if (isPrepareRegister) {
+            if (action == ProTxRegisterAction::Prepare) {
                 // external signing with collateral key
                 ptx.vchSig.clear();
                 SetTxPayload(tx, ptx);
