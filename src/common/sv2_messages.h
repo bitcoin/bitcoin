@@ -5,9 +5,12 @@
 #ifndef BITCOIN_COMMON_SV2_MESSAGES_H
 #define BITCOIN_COMMON_SV2_MESSAGES_H
 
+#include <net.h> // for CSerializedNetMsg and CNetMessage
 #include <span.h>
 #include <streams.h>
 #include <string>
+#include <util/check.h>
+
 namespace node {
 /**
  * A type used as the message length field in stratum v2 messages.
@@ -124,6 +127,40 @@ public:
 
     explicit Sv2NetMsg(const Sv2MsgType msg_type, const std::vector<uint8_t>&& msg) : m_msg_type{msg_type}, m_msg{msg} {};
 
+    // Unwrap CSerializedNetMsg
+    Sv2NetMsg(CSerializedNetMsg&& net_msg)
+    {
+        Assume(net_msg.m_type == "");
+        DataStream ss(MakeByteSpan(net_msg.data));
+        Unserialize(ss);
+    };
+
+    // Unwrap CNetMsg
+    Sv2NetMsg(CNetMessage net_msg)
+    {
+        Unserialize(net_msg.m_recv);
+    };
+
+    operator CSerializedNetMsg()
+    {
+        CSerializedNetMsg net_msg;
+        net_msg.m_type = "";
+        DataStream ser;
+        Serialize(ser);
+        net_msg.data.resize(ser.size());
+        std::transform(ser.begin(), ser.end(), net_msg.data.begin(),
+                           [](std::byte b) { return static_cast<uint8_t>(b); });
+        return net_msg;
+    }
+
+    operator CNetMessage()
+    {
+        DataStream msg;
+        Serialize(msg);
+        CNetMessage ret{std::move(msg)};
+        return ret;
+    }
+
     /**
      * Serializes the message M and sets an Sv2 network header.
      * @throws std::ios_base or std::out_of_range errors.
@@ -154,6 +191,7 @@ public:
         uint8_t msg_type;
         s >> msg_type;
         m_msg_type = static_cast<Sv2MsgType>(msg_type);
+        m_msg.resize(s.size());
         s.read(MakeWritableByteSpan(m_msg));
     }
 
