@@ -354,8 +354,6 @@ enum class ProTxRegisterAction
 } // anonumous namespace
 
 static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
-                                              CChainstateHelper& chain_helper,
-                                              const ChainstateManager& chainman,
                                               const bool specific_legacy_bls_scheme,
                                               ProTxRegisterAction action,
                                               const MnType mnType);
@@ -398,13 +396,7 @@ static RPCHelpMan protx_register_fund_wrapper(const bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, ProTxRegisterAction::Fund, MnType::Regular);
+    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::Fund, MnType::Regular);
 },
     };
 }
@@ -451,13 +443,7 @@ static RPCHelpMan protx_register_wrapper(bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, ProTxRegisterAction::External, MnType::Regular);
+    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::External, MnType::Regular);
 },
     };
 }
@@ -505,13 +491,7 @@ static RPCHelpMan protx_register_prepare_wrapper(const bool legacy)
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, legacy, ProTxRegisterAction::Prepare, MnType::Regular);
+    return protx_register_common_wrapper(request, legacy, ProTxRegisterAction::Prepare, MnType::Regular);
 },
     };
 }
@@ -565,13 +545,7 @@ static RPCHelpMan protx_register_fund_evo_wrapper(bool use_hpmn_suffix)
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
     }
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, ProTxRegisterAction::Fund, MnType::Evo);
+    return protx_register_common_wrapper(request, false, ProTxRegisterAction::Fund, MnType::Evo);
 },
     };
 }
@@ -624,13 +598,7 @@ static RPCHelpMan protx_register_evo_wrapper(bool use_hpmn_suffix)
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
     }
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, ProTxRegisterAction::External, MnType::Evo);
+    return protx_register_common_wrapper(request, false, ProTxRegisterAction::External, MnType::Evo);
 },
     };
 }
@@ -680,13 +648,7 @@ static RPCHelpMan protx_register_prepare_evo_wrapper(bool use_hpmn_suffix)
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
     }
 
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-
-    CHECK_NONFATAL(node.chain_helper);
-    CChainstateHelper& chain_helper = *node.chain_helper;
-
-    return protx_register_common_wrapper(request, chain_helper, chainman, false, ProTxRegisterAction::Prepare, MnType::Evo);
+    return protx_register_common_wrapper(request, false, ProTxRegisterAction::Prepare, MnType::Evo);
 },
     };
 }
@@ -702,12 +664,16 @@ static RPCHelpMan protx_register_prepare_hpmn()
 }
 
 static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
-                                              CChainstateHelper& chain_helper,
-                                              const ChainstateManager& chainman,
                                               const bool specific_legacy_bls_scheme,
                                               const ProTxRegisterAction action,
                                               const MnType mnType)
 {
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
+
+    CHECK_NONFATAL(node.chain_helper);
+    CChainstateHelper& chain_helper = *node.chain_helper;
+
     const bool isEvoRequested = mnType == MnType::Evo;
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
