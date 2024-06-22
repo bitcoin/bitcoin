@@ -715,6 +715,24 @@ int btck_chainstate_manager_options_set_wipe_dbs(btck_ChainstateManagerOptions* 
     return 0;
 }
 
+void btck_chainstate_manager_options_update_block_tree_db_in_memory(
+    btck_ChainstateManagerOptions* chainman_opts,
+    int block_tree_db_in_memory)
+{
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.block_tree_db_params.memory_only = block_tree_db_in_memory == 1;
+}
+
+void btck_chainstate_manager_options_update_chainstate_db_in_memory(
+    btck_ChainstateManagerOptions* chainman_opts,
+    int chainstate_db_in_memory)
+{
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_chainstate_load_options.coins_db_in_memory = chainstate_db_in_memory == 1;
+}
+
 btck_ChainstateManager* btck_chainstate_manager_create(
     const btck_ChainstateManagerOptions* chainman_opts)
 {
