@@ -55,6 +55,7 @@ static RPCHelpMan gobject_count()
     };
 }
 
+// DEBUG : TEST DESERIALIZATION OF GOVERNANCE META DATA
 static RPCHelpMan gobject_deserialize()
 {
     return RPCHelpMan{"gobject deserialize",
@@ -79,6 +80,7 @@ static RPCHelpMan gobject_deserialize()
     };
 }
 
+// VALIDATE A GOVERNANCE OBJECT PRIOR TO SUBMISSION
 static RPCHelpMan gobject_check()
 {
     return RPCHelpMan{"gobject check",
@@ -120,6 +122,7 @@ static RPCHelpMan gobject_check()
 }
 
 #ifdef ENABLE_WALLET
+// PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
 static RPCHelpMan gobject_prepare()
 {
     return RPCHelpMan{"gobject prepare",
@@ -276,6 +279,12 @@ static RPCHelpMan gobject_list_prepared()
 }
 #endif // ENABLE_WALLET
 
+// AFTER COLLATERAL TRANSACTION HAS MATURED USER CAN SUBMIT GOVERNANCE OBJECT TO PROPAGATE NETWORK
+/*
+    ------ Example Governance Item ------
+
+    gobject submit 6e622bb41bad1fb18e7f23ae96770aeb33129e18bd9efe790522488e580a0a03 0 1 1464292854 "beer-reimbursement" 5b5b22636f6e7472616374222c207b2270726f6a6563745f6e616d65223a20225c22626565722d7265696d62757273656d656e745c22222c20227061796d656e745f61646472657373223a20225c225879324c4b4a4a64655178657948726e34744744514238626a6876464564615576375c22222c2022656e645f64617465223a202231343936333030343030222c20226465736372697074696f6e5f75726c223a20225c227777772e646173687768616c652e6f72672f702f626565722d7265696d62757273656d656e745c22222c2022636f6e74726163745f75726c223a20225c22626565722d7265696d62757273656d656e742e636f6d2f3030312e7064665c22222c20227061796d656e745f616d6f756e74223a20223233342e323334323232222c2022676f7665726e616e63655f6f626a6563745f6964223a2037342c202273746172745f64617465223a202231343833323534303030227d5d5d1
+*/
 static RPCHelpMan gobject_submit()
 {
     return RPCHelpMan{"gobject submit",
@@ -646,6 +655,7 @@ static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNLi
     return objResult;
 }
 
+// USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
 static RPCHelpMan gobject_list()
 {
     return RPCHelpMan{"gobject list",
@@ -717,6 +727,7 @@ static RPCHelpMan gobject_diff()
     };
 }
 
+// GET SPECIFIC GOVERNANCE ENTRY
 static RPCHelpMan gobject_get()
 {
     return RPCHelpMan{"gobject get",
@@ -810,6 +821,7 @@ static RPCHelpMan gobject_get()
     };
 }
 
+// GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
 static RPCHelpMan gobject_getcurrentvotes()
 {
     return RPCHelpMan{"gobject getcurrentvotes",
@@ -894,59 +906,6 @@ static RPCHelpMan gobject()
 },
     };
 }
-
-/*
-static UniValue gobject(const JSONRPCRequest& request)
-{
-    const JSONRPCRequest new_request{request.strMethod == "gobject" ? request.squashed() : request};
-    const std::string command{new_request.strMethod};
-
-    if (command == "gobjectcount") {
-        return gobject_count(new_request);
-    } else if (command == "gobjectdeserialize") {
-        // DEBUG : TEST DESERIALIZATION OF GOVERNANCE META DATA
-        return gobject_deserialize(new_request);
-    } else if (command == "gobjectcheck") {
-        // VALIDATE A GOVERNANCE OBJECT PRIOR TO SUBMISSION
-        return gobject_check(new_request);
-#ifdef ENABLE_WALLET
-    } else if (command == "gobjectprepare") {
-        // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
-        return gobject_prepare(new_request);
-    } else if (command == "gobjectlist-prepared") {
-        return gobject_list_prepared(new_request);
-#endif // ENABLE_WALLET
-    } else if (command == "gobjectsubmit") {
-        // AFTER COLLATERAL TRANSACTION HAS MATURED USER CAN SUBMIT GOVERNANCE OBJECT TO PROPAGATE NETWORK
-        /*
-            ------ Example Governance Item ------
-
-            gobject submit 6e622bb41bad1fb18e7f23ae96770aeb33129e18bd9efe790522488e580a0a03 0 1 1464292854 "beer-reimbursement" 5b5b22636f6e7472616374222c207b2270726f6a6563745f6e616d65223a20225c22626565722d7265696d62757273656d656e745c22222c20227061796d656e745f61646472657373223a20225c225879324c4b4a4a64655178657948726e34744744514238626a6876464564615576375c22222c2022656e645f64617465223a202231343936333030343030222c20226465736372697074696f6e5f75726c223a20225c227777772e646173687768616c652e6f72672f702f626565722d7265696d62757273656d656e745c22222c2022636f6e74726163745f75726c223a20225c22626565722d7265696d62757273656d656e742e636f6d2f3030312e7064665c22222c20227061796d656e745f616d6f756e74223a20223233342e323334323232222c2022676f7665726e616e63655f6f626a6563745f6964223a2037342c202273746172745f64617465223a202231343833323534303030227d5d5d1
-        */
-/*
-        return gobject_submit(new_request);
-#ifdef ENABLE_WALLET
-    } else if (command == "gobjectvote-many") {
-        return gobject_vote_many(new_request);
-    } else if (command == "gobjectvote-alias") {
-        return gobject_vote_alias(new_request);
-#endif
-    } else if (command == "gobjectlist") {
-        // USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
-        return gobject_list(new_request);
-    } else if (command == "gobjectdiff") {
-        return gobject_diff(new_request);
-    } else if (command == "gobjectget") {
-        // GET SPECIFIC GOVERNANCE ENTRY
-        return gobject_get(new_request);
-    } else if (command == "gobjectgetcurrentvotes") {
-        // GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
-        return gobject_getcurrentvotes(new_request);
-    } else {
-        gobject_help();
-    }
-}
-*/
 
 static UniValue voteraw(const JSONRPCRequest& request)
 {
