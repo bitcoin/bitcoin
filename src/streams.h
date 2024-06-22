@@ -386,13 +386,7 @@ public:
  *
  * Will automatically close the file when it goes out of scope if not null.
  * If you're returning the file pointer, return file.release().
- * If you need to close the file early, use autofile.fclose() instead of fclose(underlying_FILE).
- *
- * @note If the file has been written to, then the caller must close it
- * explicitly with the `fclose()` method, check if it returns an error and treat
- * such an error as if the `write()` method failed. The OS's `fclose(3)` may
- * fail to flush to disk data that has been previously written, rendering the
- * file corrupt.
+ * If you need to close the file early, use file.fclose() instead of fclose(file).
  */
 class AutoFile
 {
@@ -427,7 +421,7 @@ public:
 
     bool feof() const { return std::feof(m_file); }
 
-    [[nodiscard]] int fclose()
+    int fclose()
     {
         if (auto rel{release()}) return std::fclose(rel);
         return 0;

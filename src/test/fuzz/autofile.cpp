@@ -47,7 +47,7 @@ FUZZ_TARGET(autofile)
                 }
             },
             [&] {
-                (void)auto_file.fclose();
+                auto_file.fclose();
             },
             [&] {
                 ReadFromStream(fuzzed_data_provider, auto_file);
