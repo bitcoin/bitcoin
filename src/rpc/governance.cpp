@@ -656,10 +656,14 @@ static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNLi
 }
 
 // USERS CAN QUERY THE SYSTEM FOR A LIST OF VARIOUS GOVERNANCE ITEMS
-static RPCHelpMan gobject_list()
+static RPCHelpMan gobject_list_helper(const bool make_a_diff)
 {
-    return RPCHelpMan{"gobject list",
-        "List governance objects (can be filtered by signal and/or object type)\n",
+    const std::string command{make_a_diff ? "gobject diff" : "gobject list"};
+    const std::string description{make_a_diff ? "List differences since last diff or list\n"
+            : "List governance objects (can be filtered by signal and/or object type)\n"};
+
+    return RPCHelpMan{command,
+        description,
         {
             {"signal", RPCArg::Type::STR, /* default */ "valid", "cached signal, possible values: [valid|funding|delete|endorsed|all]"},
             {"type", RPCArg::Type::STR, /* default */ "all", "object type, possible values: [proposals|triggers|all]"},
@@ -687,44 +691,20 @@ static RPCHelpMan gobject_list()
     CHECK_NONFATAL(node.dmnman);
     CHECK_NONFATAL(node.govman);
 
-    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), chainman, strCachedSignal, strType, 0);
+    const int64_t last_time = make_a_diff ? node.govman->GetLastDiffTime() : 0;
+    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), chainman, strCachedSignal, strType, last_time);
 },
     };
 }
 
+static RPCHelpMan gobject_list()
+{
+    return gobject_list_helper(false);
+}
+
 static RPCHelpMan gobject_diff()
 {
-    return RPCHelpMan{"gobject diff",
-        "List differences since last diff or list\n",
-        {
-            {"signal", RPCArg::Type::STR, /* default */ "valid", "cached signal, possible values: [valid|funding|delete|endorsed|all]"},
-            {"type", RPCArg::Type::STR, /* default */ "all", "object type, possible values: [proposals|triggers|all]"},
-        },
-        RPCResults{},
-        RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::string strCachedSignal = "valid";
-    if (!request.params[0].isNull()) {
-        strCachedSignal = request.params[0].get_str();
-    }
-    if (strCachedSignal != "valid" && strCachedSignal != "funding" && strCachedSignal != "delete" && strCachedSignal != "endorsed" && strCachedSignal != "all")
-        return "Invalid signal, should be 'valid', 'funding', 'delete', 'endorsed' or 'all'";
-
-    std::string strType = "all";
-    if (!request.params[1].isNull()) {
-        strType = request.params[1].get_str();
-    }
-    if (strType != "proposals" && strType != "triggers" && strType != "all")
-        return "Invalid type, should be 'proposals', 'triggers' or 'all'";
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const ChainstateManager& chainman = EnsureChainman(node);
-    CHECK_NONFATAL(node.dmnman && node.govman);
-
-    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), chainman, strCachedSignal, strType, node.govman->GetLastDiffTime());
-},
-    };
+    return gobject_list_helper(true);
 }
 
 // GET SPECIFIC GOVERNANCE ENTRY
