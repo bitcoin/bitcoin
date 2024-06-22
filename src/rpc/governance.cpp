@@ -1026,9 +1026,9 @@ static RPCHelpMan getgovernanceinfo()
     };
 }
 
-static UniValue getsuperblockbudget(const JSONRPCRequest& request)
+static RPCHelpMan getsuperblockbudget()
 {
-    RPCHelpMan{"getsuperblockbudget",
+    return RPCHelpMan{"getsuperblockbudget",
         "\nReturns the absolute maximum sum of superblock payments allowed.\n",
         {
             {"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block index"},
@@ -1040,8 +1040,8 @@ static UniValue getsuperblockbudget(const JSONRPCRequest& request)
             HelpExampleCli("getsuperblockbudget", "1000")
     + HelpExampleRpc("getsuperblockbudget", "1000")
         },
-    }.Check(request);
-
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     int nBlockHeight = request.params[0].get_int();
     if (nBlockHeight < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
@@ -1049,7 +1049,10 @@ static UniValue getsuperblockbudget(const JSONRPCRequest& request)
 
     const ChainstateManager& chainman = EnsureAnyChainman(request.context);
     return ValueFromAmount(CSuperblock::GetPaymentsLimit(chainman.ActiveChain(), nBlockHeight));
+},
+    };
 }
+
 void RegisterGovernanceRPCCommands(CRPCTable &t)
 {
 // clang-format off
