@@ -887,9 +887,9 @@ static RPCHelpMan gobject()
     };
 }
 
-static UniValue voteraw(const JSONRPCRequest& request)
+static RPCHelpMan voteraw()
 {
-    RPCHelpMan{"voteraw",
+    return RPCHelpMan{"voteraw",
         "Compile and relay a governance vote with provided external signature instead of signing vote internally\n",
         {
             {"mn-collateral-tx-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, ""},
@@ -901,9 +901,9 @@ static UniValue voteraw(const JSONRPCRequest& request)
             {"vote-sig", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, ""},
         },
         RPCResults{},
-        RPCExamples{""}
-    }.Check(request);
-
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     uint256 hashMnCollateralTx(ParseHashV(request.params[0], "mn collateral tx hash"));
     int nMnCollateralTxIndex = request.params[1].get_int();
     COutPoint outpoint = COutPoint(hashMnCollateralTx, nMnCollateralTxIndex);
@@ -972,6 +972,8 @@ static UniValue voteraw(const JSONRPCRequest& request)
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
     }
+},
+    };
 }
 
 static RPCHelpMan getgovernanceinfo()
