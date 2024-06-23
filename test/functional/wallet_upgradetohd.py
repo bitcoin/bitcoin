@@ -58,10 +58,10 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
             outs = node.decoderawtransaction(node.gettransaction(txid)['hex'])['vout']
             for out in outs:
                 if out['value'] == 1:
-                    keypath = node.getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
+                    keypath = node.getaddressinfo(out['scriptPubKey']['address'])['hdkeypath']
                     assert_equal(keypath, "m/44'/1'/0'/0/%d" % i)
                 else:
-                    keypath = node.getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
+                    keypath = node.getaddressinfo(out['scriptPubKey']['address'])['hdkeypath']
                     assert_equal(keypath, "m/44'/1'/0'/1/%d" % i)
 
         self.bump_mocktime(1)

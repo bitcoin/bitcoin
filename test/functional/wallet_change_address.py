@@ -30,7 +30,7 @@ class WalletChangeAddressTest(BitcoinTestFramework):
     def assert_change_index(self, node, tx, index):
         change_index = None
         for vout in tx["vout"]:
-            info = node.getaddressinfo(vout["scriptPubKey"]["addresses"][0])
+            info = node.getaddressinfo(vout["scriptPubKey"]["address"])
             if (info["ismine"] and info["ischange"]):
                 change_index = int(re.findall(r'\d+', info["hdkeypath"])[-1])
                 break
