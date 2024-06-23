@@ -775,8 +775,8 @@ static RPCHelpMan getblockfrompeer()
         "\nWe must have the header for this block, e.g. using submitheader.\n"
         "\nReturns {} if a block-request was successfully scheduled\n",
         {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-            {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The node ID (see getpeerinfo for node IDs)"},
+            {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
+            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
         },
         RPCResult{RPCResult::Type::OBJ, "", "",
         {
@@ -791,18 +791,11 @@ static RPCHelpMan getblockfrompeer()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     PeerManager& peerman = EnsurePeerman(node);
-    CConnman& connman = EnsureConnman(node);
 
-    uint256 hash(ParseHashV(request.params[0], "hash"));
+    const uint256& block_hash{ParseHashV(request.params[0], "block_hash")};
+    const NodeId peer_id{request.params[1].get_int64()};
 
-    const NodeId nodeid = static_cast<NodeId>(request.params[1].get_int64());
-
-    // Check that the peer with nodeid exists
-    if (!connman.ForNode(nodeid, [](CNode* node) {return true;})) {
-        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Peer nodeid %d does not exist", nodeid));
-    }
-
-    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(hash););
+    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
 
     if (!index) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
@@ -812,8 +805,8 @@ static RPCHelpMan getblockfrompeer()
 
     if (index->nStatus & BLOCK_HAVE_DATA) {
         result.pushKV("warnings", "Block already downloaded");
-    } else if (!peerman.FetchBlock(nodeid, hash, *index)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Failed to fetch block from peer");
+    } else if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
+        throw JSONRPCError(RPC_MISC_ERROR, err.value());
     }
     return result;
 },
@@ -3053,7 +3046,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestchainlock",       &getbestchainlock,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
-    { "blockchain",         "getblockfrompeer",       &getblockfrompeer,       {"blockhash", "nodeid"}},
+    { "blockchain",         "getblockfrompeer",       &getblockfrompeer,       {"block_hash", "peer_id"}},
     { "blockchain",         "getblockhashes",         &getblockhashes,         {"high","low"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
