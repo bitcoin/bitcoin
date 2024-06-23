@@ -226,7 +226,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             // coinbase transaction (i == 0) doesn't have undo data
             const CTxUndo* txundo = (have_undo && i) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
             UniValue objTx(UniValue::VOBJ);
-            TxToUniv(*tx, uint256(), objTx, true, nullptr, txundo);
+            TxToUniv(*tx, uint256(), objTx, true, txundo);
             bool fLocked = isman.IsLocked(tx->GetHash());
             objTx.pushKV("instantlock", fLocked || result["chainlock"].get_bool());
             objTx.pushKV("instantlock_internal", fLocked);

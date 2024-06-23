@@ -47,6 +47,6 @@ std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void ScriptToUniv(const CScript& script, UniValue& out, bool include_address);
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, const CSpentIndexTxInfo* ptxSpentInfo = nullptr, const CTxUndo* txundo = nullptr);
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, const CTxUndo* txundo = nullptr, const CSpentIndexTxInfo* ptxSpentInfo = nullptr);
 
 #endif // BITCOIN_CORE_IO_H

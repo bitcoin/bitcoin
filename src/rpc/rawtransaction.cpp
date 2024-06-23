@@ -84,7 +84,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
         }
     }
 
-    TxToUniv(tx, uint256(), entry, true, &txSpentInfo);
+    TxToUniv(tx, uint256(), entry, true, /* txundo = */ nullptr, &txSpentInfo);
 
     bool chainLock = false;
     if (!hashBlock.IsNull()) {

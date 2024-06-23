@@ -192,7 +192,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("addresses", a);
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, const CSpentIndexTxInfo* ptxSpentInfo, const CTxUndo* txundo)
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, const CTxUndo* txundo, const CSpentIndexTxInfo* ptxSpentInfo)
 {
     uint256 txid = tx.GetHash();
     entry.pushKV("txid", txid.GetHex());
