@@ -3332,9 +3332,10 @@ static RPCHelpMan listunspent()
         coinControl.m_avoid_address_reuse = false;
         coinControl.m_min_depth = nMinDepth;
         coinControl.m_max_depth = nMaxDepth;
+        coinControl.m_include_unsafe_inputs = include_unsafe;
 
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        pwallet->AvailableCoins(vecOutputs, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);

@@ -2576,7 +2576,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 
     CAmount balance = 0;
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl);
+    AvailableCoins(vCoins, coinControl);
     for (const COutput& out : vCoins) {
         if (out.fSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
@@ -2585,7 +2585,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount) const
+void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -2598,6 +2598,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
     bool allow_used_addresses = !IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
+    const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
 
     std::set<uint256> trusted_parents;
     for (auto pcoin : GetSpendableTXs()) {
@@ -2618,7 +2619,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
         bool safeTx = IsTrusted(*pcoin, trusted_parents);
 
-        if (fOnlySafe && !safeTx) {
+        if (only_safe && !safeTx) {
             continue;
         }
 
@@ -3166,7 +3167,7 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(vCoins, true, &coin_control);
+    AvailableCoins(vCoins, &coin_control);
     WalletCJLogPrint((*this), "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
 
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
@@ -3366,7 +3367,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(vCoins, true, &coin_control);
+    AvailableCoins(vCoins, &coin_control);
     // larger denoms first
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
@@ -3405,8 +3406,9 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
+    coin_control.m_include_unsafe_inputs = !fOnlyConfirmed;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
-    AvailableCoins(vCoins, fOnlyConfirmed, &coin_control);
+    AvailableCoins(vCoins, &coin_control);
 
     return !vCoins.empty();
 }
@@ -3480,7 +3482,7 @@ bool CWallet::CreateTransactionInternal(
         {
             CAmount nAmountAvailable{0};
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, !coin_control.m_include_unsafe_inputs, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
+            AvailableCoins(vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.use_bnb = false; // never use BnB
 

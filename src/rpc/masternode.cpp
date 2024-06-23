@@ -187,7 +187,7 @@ static RPCHelpMan masternode_outputs()
     coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
     {
         LOCK(wallet->cs_wallet);
-        wallet->AvailableCoins(vPossibleCoins, true, &coin_control);
+        wallet->AvailableCoins(vPossibleCoins, &coin_control);
     }
     UniValue outputsArr(UniValue::VARR);
     for (const auto& out : vPossibleCoins) {
