@@ -245,7 +245,7 @@ bool ParseHashStr(const std::string& strHex, uint256& result)
 
 util::Result<int> SighashFromStr(const std::string& sighash)
 {
-    static std::map<std::string, int> map_sighash_values = {
+    static const std::map<std::string, int> map_sighash_values = {
         {std::string("DEFAULT"), int(SIGHASH_DEFAULT)},
         {std::string("ALL"), int(SIGHASH_ALL)},
         {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
