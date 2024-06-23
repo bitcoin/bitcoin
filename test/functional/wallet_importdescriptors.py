@@ -433,6 +433,42 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(tx_signed_2['complete'], True)
         self.nodes[1].sendrawtransaction(tx_signed_2['hex'])
 
+
+        self.log.info("Under P2SH, multisig are standard with up to 15 "
+                      "compressed keys")
+        self.nodes[1].createwallet(wallet_name='multi_priv_big_legacy',
+                                   blank=True, descriptors=True)
+        multi_priv_big = self.nodes[1].get_wallet_rpc('multi_priv_big_legacy')
+        xkey = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/*"
+        xkey_int = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/1/*"
+        res = multi_priv_big.importdescriptors([
+        {
+            "desc": descsum_create(f"sh(multi(15,{(xkey + ',') * 14}{xkey}))"),
+            "active": True,
+            "range": 1000,
+            "next_index": 0,
+            "timestamp": "now"
+        },
+        {
+            "desc": descsum_create(f"sh(multi(15,{(xkey_int + ',') * 14}{xkey_int}))"),
+            "active": True,
+            "internal": True,
+            "range": 1000,
+            "next_index": 0,
+            "timestamp": "now"
+        }])
+        assert_equal(res[0]['success'], True)
+        assert_equal(res[1]['success'], True)
+
+        addr = multi_priv_big.getnewaddress("")
+        w0.sendtoaddress(addr, 10)
+        self.nodes[0].generate(6)
+        self.sync_all()
+        # It is standard and would relay.
+        txid = multi_priv_big.sendtoaddress(w0.getnewaddress(), 10, "", "",
+                                            True)
+
+
         self.log.info("Combo descriptors cannot be active")
         self.test_importdesc({"desc": descsum_create("combo(tpubDCJtdt5dgJpdhW4MtaVYDhG4T4tF6jcLR1PxL43q9pq1mxvXgMS9Mzw1HnXG15vxUGQJMMSqCQHMTy3F1eW5VkgVroWzchsPD5BUojrcWs8/*)"),
                               "active": True,
