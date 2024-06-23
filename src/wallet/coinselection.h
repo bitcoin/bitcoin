@@ -65,8 +65,7 @@ struct CoinEligibilityFilter
     /** Minimum number of confirmations for outputs that we sent to ourselves.
      * We may use unconfirmed UTXOs sent from ourselves, e.g. change outputs. */
     const int conf_mine;
-    /** Minimum number of confirmations for outputs received from a different
-     * wallet. We never spend unconfirmed foreign outputs as we cannot rely on these funds yet. */
+    /** Minimum number of confirmations for outputs received from a different wallet. */
     const int conf_theirs;
     /** Maximum number of unconfirmed ancestors aggregated across all UTXOs in an OutputGroup. */
     const uint64_t max_ancestors;
