@@ -41,20 +41,19 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
 }
 
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
-    CCoinsMap::iterator it = cacheCoins.find(outpoint);
-    if (it != cacheCoins.end())
-        return it;
-    Coin tmp;
-    if (!base->GetCoin(outpoint, tmp))
-        return cacheCoins.end();
-    CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
-    if (ret->second.coin.IsSpent()) {
-        // The parent only has an empty entry for this outpoint; we can consider our
-        // version as fresh.
-        ret->second.flags = CCoinsCacheEntry::FRESH;
+    const auto [it, inserted] = cacheCoins.try_emplace(outpoint);
+    if (inserted) {
+        if (!base->GetCoin(outpoint, it->second.coin)) {
+            cacheCoins.erase(it);
+            return cacheCoins.end();
+        }
+        if (it->second.coin.IsSpent()) {
+            // The parent only has an empty entry for this outpoint; we can consider our version as fresh.
+            it->second.flags = CCoinsCacheEntry::FRESH;
+        }
+        cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
     }
-    cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
-    return ret;
+    return it;
 }
 
 bool CCoinsViewCache::GetCoin(const COutPoint &outpoint, Coin &coin) const {
