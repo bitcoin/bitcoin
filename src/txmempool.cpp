@@ -537,20 +537,16 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // can save time by not iterating over those entries.
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
-    if (!setDescendants.insert(entryit).second) {
-        return;
-    }
-
-    std::vector<txiter> stage{entryit};
-    while (!stage.empty()) {
-        txiter it = stage.back();
-        stage.pop_back();
-
-        const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
-        for (const CTxMemPoolEntry& child : children) {
-            txiter childiter = mapTx.iterator_to(child);
-            if (setDescendants.insert(childiter).second) {
-                stage.emplace_back(childiter);
+    if (setDescendants.insert(entryit).second) {
+        std::vector<txiter> stage{entryit};
+        while (!stage.empty()) {
+            const auto& children = stage.back()->GetMemPoolChildrenConst();
+            stage.pop_back();
+            for (const auto& child : children) {
+                const auto childiter = mapTx.iterator_to(child);
+                if (setDescendants.insert(childiter).second) {
+                    stage.emplace_back(childiter);
+                }
             }
         }
     }
