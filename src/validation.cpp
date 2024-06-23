@@ -3409,16 +3409,15 @@ static bool NotifyHeaderTip(ChainstateManager& chainman) LOCKS_EXCLUDED(cs_main)
 {
     bool fNotify = false;
     bool fInitialBlockDownload = false;
-    static CBlockIndex* pindexHeaderOld = nullptr;
     CBlockIndex* pindexHeader = nullptr;
     {
         LOCK(cs_main);
         pindexHeader = chainman.m_best_header;
 
-        if (pindexHeader != pindexHeaderOld) {
+        if (pindexHeader != chainman.m_last_notified_header) {
             fNotify = true;
             fInitialBlockDownload = chainman.IsInitialBlockDownload();
-            pindexHeaderOld = pindexHeader;
+            chainman.m_last_notified_header = pindexHeader;
         }
     }
     // Send block tip changed notifications without cs_main
