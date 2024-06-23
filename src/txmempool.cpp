@@ -544,13 +544,12 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
     std::vector<txiter> stage{entryit};
     while (!stage.empty()) {
         txiter it = stage.back();
-        setDescendants.insert(it);
         stage.pop_back();
 
         const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
         for (const CTxMemPoolEntry& child : children) {
             txiter childiter = mapTx.iterator_to(child);
-            if (!setDescendants.count(childiter)) {
+            if (setDescendants.insert(childiter).second) {
                 stage.emplace_back(childiter);
             }
         }
