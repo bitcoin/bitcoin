@@ -537,10 +537,13 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // can save time by not iterating over those entries.
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
-    setEntries stage;
-    if (setDescendants.count(entryit) == 0) {
-        stage.insert(entryit);
+    if (!setDescendants.insert(entryit).second) {
+        return;
     }
+
+    setEntries stage;
+    stage.insert(entryit);
+
     // Traverse down the children of entry, only adding children that are not
     // accounted for in setDescendants already (because those children have either
     // already been walked, or will be walked in this iteration).
