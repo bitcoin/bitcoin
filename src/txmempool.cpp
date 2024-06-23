@@ -541,22 +541,17 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
         return;
     }
 
-    setEntries stage;
-    stage.insert(entryit);
-
-    // Traverse down the children of entry, only adding children that are not
-    // accounted for in setDescendants already (because those children have either
-    // already been walked, or will be walked in this iteration).
+    std::vector<txiter> stage{entryit};
     while (!stage.empty()) {
-        txiter it = *stage.begin();
+        txiter it = stage.back();
         setDescendants.insert(it);
-        stage.erase(it);
+        stage.pop_back();
 
         const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
         for (const CTxMemPoolEntry& child : children) {
             txiter childiter = mapTx.iterator_to(child);
             if (!setDescendants.count(childiter)) {
-                stage.insert(childiter);
+                stage.emplace_back(childiter);
             }
         }
     }
