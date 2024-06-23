@@ -1750,9 +1750,8 @@ static UniValue ProcessDescriptorImport(CWallet * const pwallet, const UniValue&
         // Check if the wallet already contains the descriptor
         auto existing_spk_manager = pwallet->GetDescriptorScriptPubKeyMan(w_desc);
         if (existing_spk_manager) {
-            LOCK(existing_spk_manager->cs_desc_man);
-            if (range_start > existing_spk_manager->GetWalletDescriptor().range_start) {
-                throw JSONRPCError(RPC_INVALID_PARAMS, strprintf("range_start can only decrease; current range = [%d,%d]", existing_spk_manager->GetWalletDescriptor().range_start, existing_spk_manager->GetWalletDescriptor().range_end));
+            if (!existing_spk_manager->CanUpdateToWalletDescriptor(w_desc, error)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, error);
             }
         }
 
@@ -1769,16 +1768,16 @@ static UniValue ProcessDescriptorImport(CWallet * const pwallet, const UniValue&
             } else {
                 pwallet->AddActiveScriptPubKeyMan(spk_manager->GetID(), internal);
             }
+        } else {
+            if (w_desc.descriptor->GetOutputType()) {
+                pwallet->DeactivateScriptPubKeyMan(spk_manager->GetID(), internal);
+            }
         }
 
         result.pushKV("success", UniValue(true));
     } catch (const UniValue& e) {
         result.pushKV("success", UniValue(false));
         result.pushKV("error", e);
-    } catch (...) {
-        result.pushKV("success", UniValue(false));
-
-        result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, "Missing required fields"));
     }
     if (warnings.size()) result.pushKV("warnings", warnings);
     return result;
