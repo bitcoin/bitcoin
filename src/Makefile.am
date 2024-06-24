@@ -693,6 +693,7 @@ libbitcoin_common_a_SOURCES = \
   common/messages.cpp \
   common/run_command.cpp \
   common/sv2_connman.cpp \
+  common/sv2_messages.cpp \
   common/sv2_noise.cpp \
   common/settings.cpp \
   common/signmessage.cpp \

@@ -97,4 +97,139 @@ BOOST_AUTO_TEST_CASE(Sv2SetupConnectionError_test)
     BOOST_CHECK_EQUAL(HexStr(ss), expected);
 }
 
+
+BOOST_AUTO_TEST_CASE(Sv2NewTemplate_test)
+{
+    // 0100000000000000 - template_id
+    // 00 - future_template
+    // 00000030 - version
+    // 02000000 - coinbase tx version
+    // 04 - coinbase_prefix len
+    // 03012100 - coinbase prefix
+    // ffffffff - coinbase tx input sequence
+    // 0000000000000000 - coinbase tx value remaining
+    // 00000000 - coinbase tx outputs count
+    // 0000 - coinbase t outputs
+    // 01 - merkle path length
+    // 1a6240823de4c8d6aaf826851bdf2b0e8d5acf7c31e8578cff4c394b5a32bd4e - merkle path
+    std::string expected{"01000000000000000000000030020000000403012100ffffffff000000000000000000000000000000000000011a6240823de4c8d6aaf826851bdf2b0e8d5acf7c31e8578cff4c394b5a32bd4e"};
+
+    node::Sv2NewTemplateMsg new_template;
+    new_template.m_template_id = 1;
+    new_template.m_future_template = false;
+    new_template.m_version = 805306368;
+    new_template.m_coinbase_tx_version = 2;
+
+    std::vector<uint8_t> coinbase_prefix{0x03, 0x01, 0x21, 0x00};
+    CScript prefix(coinbase_prefix.begin(), coinbase_prefix.end());
+    new_template.m_coinbase_prefix = prefix;
+
+    new_template.m_coinbase_tx_input_sequence = 4294967295;
+    new_template.m_coinbase_tx_value_remaining = 0;
+    new_template.m_coinbase_tx_outputs_count = 0;
+
+    std::vector<CTxOut> coinbase_tx_ouputs;
+    new_template.m_coinbase_tx_outputs = coinbase_tx_ouputs;
+
+    new_template.m_coinbase_tx_locktime = 0;
+
+    std::vector<uint256> merkle_path;
+    CMutableTransaction mtx_tx;
+    CTransaction tx{mtx_tx};
+    merkle_path.push_back(tx.GetHash());
+    new_template.m_merkle_path = merkle_path;
+
+    DataStream ss{};
+    ss << new_template;
+
+    BOOST_CHECK_EQUAL(HexStr(ss), expected);
+}
+
+BOOST_AUTO_TEST_CASE(Sv2NetHeader_NewTemplate_test)
+{
+    // 0000 - extension type
+    // 71 - msg type (NewTemplate)
+    // 000000 - msg length
+    std::string expected{"000071000000"};
+    node::Sv2NetHeader sv2_header{node::Sv2MsgType::NEW_TEMPLATE, 0};
+
+    DataStream ss{};
+    ss << sv2_header;
+
+    BOOST_CHECK_EQUAL(HexStr(ss), expected);
+}
+
+
+BOOST_AUTO_TEST_CASE(Sv2SetNewPrevHash_test)
+{
+    // 0200000000000000 - template_id
+    // e59a2ef8d4826b89fe637f3b 5322c0f167fd2d3dc88ec568a7c2c8ffd8eb8873 - prev hash
+    // 973c0e63 - header timestamp
+    // ffff7f03 - nbits
+    // ffff7f0000000000000000000000000000000000000000000000000000000000 - target
+    std::string expected{"0200000000000000e59a2ef8d4826b89fe637f3b5322c0f167fd2d3dc88ec568a7c2c8ffd8eb8873973c0e63ffff7f03ffff7f0000000000000000000000000000000000000000000000000000000000"};
+
+    std::vector<uint8_t> prev_hash_input{
+        0xe5, 0x9a, 0x2e, 0xf8, 0xd4, 0x82, 0x6b, 0x89, 0xfe, 0x63, 0x7f, 0x3b,
+        0x53, 0x22, 0xc0, 0xf1, 0x67, 0xfd, 0x2d, 0x3d, 0xc8, 0x8e, 0xc5, 0x68,
+        0xa7, 0xc2, 0xc8, 0xff, 0xd8, 0xeb, 0x88, 0x73};
+    uint256 prev_hash = uint256(prev_hash_input);
+
+    CBlockHeader header;
+    header.hashPrevBlock = prev_hash;
+    header.nTime = 1661877399;
+    header.nBits = 58720255;
+
+    node::Sv2SetNewPrevHashMsg new_prev_hash{header, 2};
+
+    DataStream ss{};
+    ss << new_prev_hash;
+
+    BOOST_CHECK_EQUAL(HexStr(ss), expected);
+}
+
+BOOST_AUTO_TEST_CASE(Sv2NetHeader_SetNewPrevHash_test)
+{
+    // 0000 - extension type
+    // 72 - msg type (SetNewPrevHash)
+    // 000000 - msg length
+    std::string expected{"000072000000"};
+    node::Sv2NetHeader sv2_header{node::Sv2MsgType::SET_NEW_PREV_HASH, 0};
+
+    DataStream ss{};
+    ss << sv2_header;
+
+    BOOST_CHECK_EQUAL(HexStr(ss), expected);
+}
+
+BOOST_AUTO_TEST_CASE(Sv2SubmitSolution_test)
+{
+    uint8_t input[]{
+        0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   // template_id
+        0x02, 0x00, 0x00, 0x00,                           // version
+        0x97, 0x3c, 0x0e, 0x63,                           // header_timestamp
+        0xff, 0xff, 0x7f, 0x03,                           // header_nonce
+        0x5d, 0x00,                                       // 2 byte length of coinbase_tx
+        0x2, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, // coinbase_tx
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xff, 0xff,
+        0xff, 0x22, 0x1, 0x18, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+        0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xff, 0xff,
+        0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x16,
+        0x0, 0x14, 0x53, 0x12, 0x60, 0xaa, 0x2a, 0x19, 0x9e,
+        0x22, 0x8c, 0x53, 0x7d, 0xfa, 0x42, 0xc8, 0x2b, 0xea,
+        0x2c, 0x7c, 0x1f, 0x4d, 0x0, 0x0, 0x0, 0x0};
+    DataStream ss(input);
+
+    node::Sv2SubmitSolutionMsg submit_solution;
+    ss >> submit_solution;
+
+    // BOOST_CHECK_EQUAL(submit_solution.m_template_id, 2);
+    // BOOST_CHECK_EQUAL(submit_solution.m_version, 2);
+    // BOOST_CHECK_EQUAL(submit_solution.m_header_timestamp, 1661877399);
+    // BOOST_CHECK_EQUAL(submit_solution.m_header_nonce, 58720255);
+}
 BOOST_AUTO_TEST_SUITE_END()
