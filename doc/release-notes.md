@@ -61,6 +61,7 @@ Notable changes
 - #29747: depends: fix mingw-w64 Qt DEBUG=1 build
 - #29985: depends: Fix build of Qt for 32-bit platforms with recent glibc
 - #30151: depends: Fetch miniupnpc sources from an alternative website
+- #30283: upnp: fix build with miniupnpc 2.2.8
 
 ### Misc
 
@@ -76,6 +77,7 @@ Thanks to everyone who directly contributed to this release:
 
 - Antoine Poinsot
 - Ava Chow
+- Cory Fields
 - dergoegge
 - fanquake
 - glozow
