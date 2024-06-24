@@ -1413,6 +1413,13 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
         }
     }
 
+    // make sure we spent all of it with 0 fee, reset to 0 rounds otherwise
+    if (wtx->GetDebit(ISMINE_SPENDABLE) != wtx->GetCredit(ISMINE_SPENDABLE)) {
+        *nRoundsRef = 0;
+        WalletCJLogPrint((*this), "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
+        return *nRoundsRef;
+    }
+
     int nShortest = -10; // an initial value, should be no way to get this by calculations
     bool fDenomFound = false;
     // only denoms here so let's look up
