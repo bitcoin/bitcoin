@@ -314,6 +314,8 @@ public:
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
     uint256 GetID() const override { return uint256::ONE; }
+    // TODO: Remove IsMine when deleting LegacyScriptPubKeyMan
+    isminetype IsMine(const CScript& script) const override;
 
     // FillableSigningProvider overrides
     bool HaveKey(const CKeyID &address) const override;
@@ -435,7 +437,6 @@ public:
     LegacyScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size) : LegacyDataSPKM(storage), m_keypool_size(keypool_size) {}
 
     util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
-    isminetype IsMine(const CScript& script) const override;
 
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 

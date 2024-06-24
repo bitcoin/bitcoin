@@ -98,7 +98,7 @@ bool HaveKeys(const std::vector<valtype>& pubkeys, const LegacyDataSPKM& keystor
 //!                            scripts or simply treat any script that has been
 //!                            stored in the keystore as spendable
 // NOLINTNEXTLINE(misc-no-recursion)
-IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
+IsMineResult IsMineInner(const LegacyDataSPKM& keystore, const CScript& scriptPubKey, IsMineSigVersion sigversion, bool recurse_scripthash=true)
 {
     IsMineResult ret = IsMineResult::NO;
 
@@ -213,7 +213,7 @@ IsMineResult IsMineInner(const LegacyScriptPubKeyMan& keystore, const CScript& s
 
 } // namespace
 
-isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
+isminetype LegacyDataSPKM::IsMine(const CScript& script) const
 {
     switch (IsMineInner(*this, script, IsMineSigVersion::TOP)) {
     case IsMineResult::INVALID:
