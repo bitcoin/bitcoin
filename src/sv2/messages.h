@@ -35,6 +35,12 @@ enum class Sv2MsgType : uint8_t {
     SETUP_CONNECTION = 0x00,
     SETUP_CONNECTION_SUCCESS = 0x01,
     SETUP_CONNECTION_ERROR = 0x02,
+    NEW_TEMPLATE = 0x71,
+    SET_NEW_PREV_HASH = 0x72,
+    REQUEST_TRANSACTION_DATA = 0x73,
+    REQUEST_TRANSACTION_DATA_SUCCESS = 0x74,
+    REQUEST_TRANSACTION_DATA_ERROR = 0x75,
+    SUBMIT_SOLUTION = 0x76,
     COINBASE_OUTPUT_DATA_SIZE = 0x70,
 };
 
@@ -42,6 +48,12 @@ static const std::map<Sv2MsgType, std::string> SV2_MSG_NAMES{
     {Sv2MsgType::SETUP_CONNECTION, "SetupConnection"},
     {Sv2MsgType::SETUP_CONNECTION_SUCCESS, "SetupConnectionSuccess"},
     {Sv2MsgType::SETUP_CONNECTION_ERROR, "SetupConnectionError"},
+    {Sv2MsgType::NEW_TEMPLATE, "NewTemplate"},
+    {Sv2MsgType::SET_NEW_PREV_HASH, "SetNewPrevHash"},
+    {Sv2MsgType::REQUEST_TRANSACTION_DATA, "RequestTransactionData"},
+    {Sv2MsgType::REQUEST_TRANSACTION_DATA_SUCCESS, "RequestTransactionData.Success"},
+    {Sv2MsgType::REQUEST_TRANSACTION_DATA_ERROR, "RequestTransactionData.Error"},
+    {Sv2MsgType::SUBMIT_SOLUTION, "SubmitSolution"},
     {Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE, "CoinbaseOutputDataSize"},
 };
 
@@ -210,6 +222,346 @@ struct Sv2SetupConnectionErrorMsg
     {
         s << m_flags
           << m_error_code;
+    }
+};
+
+/**
+ * The work template for downstream devices. Can be used for future work or immediate work.
+ * The NewTemplate will be matched to a cached block using the template id.
+ */
+struct Sv2NewTemplateMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::NEW_TEMPLATE;
+
+    /**
+     * Server’s identification of the template. Strictly increasing, the current UNIX
+     * time may be used in place of an ID.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * True if the template is intended for future SetNewPrevHash message sent on the channel.
+     * If False, the job relates to the last sent SetNewPrevHash message on the channel
+     * and the miner should start to work on the job immediately.
+     */
+    bool m_future_template;
+
+    /**
+     * Valid header version field that reflects the current network consensus.
+     * The general purpose bits (as specified in BIP320) can be freely manipulated
+     * by the downstream node. The downstream node MUST NOT rely on the upstream
+     * node to set the BIP320 bits to any particular value.
+     */
+    uint32_t m_version;
+
+    /**
+     * The coinbase transaction nVersion field.
+     */
+    uint32_t m_coinbase_tx_version;
+
+    /**
+     * Up to 8 bytes (not including the length byte) which are to be placed at
+     * the beginning of the coinbase field in the coinbase transaction.
+     */
+    CScript m_coinbase_prefix;
+
+    /**
+     * The coinbase transaction input’s nSequence field.
+     */
+    uint32_t m_coinbase_tx_input_sequence;
+
+    /**
+     * The value, in satoshis, available for spending in coinbase outputs added
+     * by the client. Includes both transaction fees and block subsidy.
+     */
+    uint64_t m_coinbase_tx_value_remaining;
+
+    /**
+     * The number of transaction outputs included in coinbase_tx_outputs.
+     */
+    uint32_t m_coinbase_tx_outputs_count;
+
+    /**
+     * Bitcoin transaction outputs to be included as the last outputs in the coinbase transaction.
+     */
+    std::vector<CTxOut> m_coinbase_tx_outputs;
+
+    /**
+     * The locktime field in the coinbase transaction.
+     */
+    uint32_t m_coinbase_tx_locktime;
+
+    /**
+     * Merkle path hashes ordered from deepest.
+     */
+    std::vector<uint256> m_merkle_path;
+
+    Sv2NewTemplateMsg() = default;
+    explicit Sv2NewTemplateMsg(const CBlockHeader& header, const CTransactionRef coinbase_tx, std::vector<uint256> coinbase_merkle_path, int witness_commitment_index, uint64_t template_id, bool future_template);
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_template_id
+          << m_future_template
+          << m_version
+          << m_coinbase_tx_version
+          << m_coinbase_prefix
+          << m_coinbase_tx_input_sequence
+          << m_coinbase_tx_value_remaining
+          << m_coinbase_tx_outputs_count;
+
+        // If there are more than 0 coinbase tx outputs, then we need to serialize them
+        // as [B0_64K](https://github.com/stratum-mining/sv2-spec/blob/main/03-Protocol-Overview.md#31-data-types-mapping)
+        if (m_coinbase_tx_outputs_count > 0) {
+            std::vector<uint8_t> outputs_bytes;
+            VectorWriter{outputs_bytes, 0, m_coinbase_tx_outputs.at(0)};
+
+            s << static_cast<uint16_t>(outputs_bytes.size());
+            s.write(MakeByteSpan(outputs_bytes));
+        } else {
+            // We will still need to send 2 bytes indicating an empty coinbase-tx_outputs array as a B0_64K.
+            s << static_cast<uint16_t>(0);
+        }
+
+        s << m_coinbase_tx_locktime
+          << m_merkle_path;
+    }
+};
+
+/**
+ * When the template provider creates a new valid best block, the template provider
+ * MUST immediately send the SetNewPrevHash message. This message can also be used
+ * for a future template, indicating the client can begin work on a previously
+ * received and cached NewTemplate which contains the same template id.
+ */
+struct Sv2SetNewPrevHashMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::SET_NEW_PREV_HASH;
+
+    /**
+     * The id referenced in a previous NewTemplate message.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * Previous block’s hash, as it must appear in the next block’s header.
+     */
+    uint256 m_prev_hash;
+
+    /**
+     * The nTime field in the block header at which the client should start (usually current time).
+     * This is NOT the minimum valid nTime value.
+     */
+    uint32_t m_header_timestamp;
+
+    /**
+     * Block header field.
+     */
+    uint32_t m_nBits;
+
+    /**
+     * The maximum double-SHA256 hash value which would represent a valid block.
+     * Note that this may be lower than the target implied by nBits in several cases,
+     * including weak-block based block propagation.
+     */
+    uint256 m_target;
+
+    Sv2SetNewPrevHashMsg() = default;
+    explicit Sv2SetNewPrevHashMsg(const CBlockHeader& header, uint64_t template_id);
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_template_id
+          << m_prev_hash
+          << m_header_timestamp
+          << m_nBits
+          << m_target;
+    }
+};
+
+/**
+ * The client (usually a Job Negotiator) sends a RequestTransactionData message
+ * to the Template Provider asking for the full set of transaction data (excluding
+ * the coinbase) in the block and any additional data relevant for validation
+ * associated with the template_id.
+ */
+struct Sv2RequestTransactionDataMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::REQUEST_TRANSACTION_DATA;
+
+    /**
+     * The template_id corresponding to a NewTemplate message.
+     */
+    uint64_t m_template_id;
+
+    Sv2RequestTransactionDataMsg() = default;
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_template_id;
+    }
+};
+
+/**
+ * A message for a successful request for transaction data. It contains the full
+ * serialized transaction data from a NewTemplate according to the id.
+ */
+struct Sv2RequestTransactionDataSuccessMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::REQUEST_TRANSACTION_DATA_SUCCESS;
+
+    /**
+     * The template_id corresponding to a NewTemplate message.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * Extra data which the Pool may require to validate the work
+     */
+    std::vector<uint8_t> m_excess_data;
+
+    /**
+     * List of full transactions requested by client found in the
+     * corresponding template.
+     */
+    std::vector<CTransactionRef> m_transactions_list;
+
+    Sv2RequestTransactionDataSuccessMsg() = default;
+
+    explicit Sv2RequestTransactionDataSuccessMsg(uint64_t template_id, std::vector<uint8_t>&& excess_data, std::vector<CTransactionRef>&& transactions_list) : m_template_id{template_id}, m_excess_data{excess_data}, m_transactions_list{transactions_list} {};
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_template_id;
+
+        // excess data is expected to be serialized as a B0_64K type.
+        if (m_excess_data.empty()) {
+            s << static_cast<uint16_t>(0);
+        } else {
+            s << static_cast<uint16_t>(m_excess_data.size());
+            s.write(MakeByteSpan(m_excess_data));
+        }
+
+        // transactions list is expected to be serialized as a SEQ0_64K[B0_16M].
+        s << static_cast<uint16_t>(m_transactions_list.size());
+        for (const auto& tx : m_transactions_list) {
+            DataStream ss_tx{};
+            ss_tx << TX_WITH_WITNESS(*tx);
+            auto tx_size = static_cast<uint32_t>(ss_tx.size());
+
+            u24_t tx_byte_len;
+            tx_byte_len[2] = (tx_size >> 16) & 0xff;
+            tx_byte_len[1] = (tx_size >> 8) & 0xff;
+            tx_byte_len[0] = tx_size & 0xff;
+
+            s << tx_byte_len;
+            s.write(MakeByteSpan(ss_tx));
+        }
+    };
+};
+
+/**
+ * The error message for the client if the template provider is unable to send
+ * the full serialized transaction data.
+ */
+struct Sv2RequestTransactionDataErrorMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::REQUEST_TRANSACTION_DATA_ERROR;
+
+    /**
+     * The template_id corresponding to a NewTemplate/RequestTransactionData message.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * Human-readable error code on why no transaction data has been provided.
+     */
+    std::string m_error_code;
+
+    explicit Sv2RequestTransactionDataErrorMsg(uint64_t template_id, std::string&& error_code) : m_template_id{template_id}, m_error_code{error_code} {};
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_template_id
+          << m_error_code;
+    }
+};
+
+/**
+ * The client sends a SubmitSolution after finding a coinbase transaction/nonce
+ * pair which double-SHA256 hashes at or below SetNewPrevHash::target. The template provider
+ * finds the cached block according to the template id and reconstructs the block with the
+ * values from SubmitSolution. The template provider must then propagate the block to the
+ * Bitcoin Network.
+ */
+struct Sv2SubmitSolutionMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::SUBMIT_SOLUTION;
+
+    /**
+     * The id referenced in a NewTemplate.
+     */
+    uint64_t m_template_id;
+
+    /**
+     * The version field in the block header. Bits not defined by BIP320 as additional
+     * nonce MUST be the same as they appear in the NewWork message, other bits may
+     * be set to any value.
+     */
+    uint32_t m_version;
+
+    /**
+     * The nTime field in the block header. This MUST be greater than or equal to
+     * the header_timestamp field in the latest SetNewPrevHash message and lower
+     * than or equal to that value plus the number of seconds since the receipt
+     * of that message.
+     */
+    uint32_t m_header_timestamp;
+
+    /**
+     * The nonce field in the header.
+     */
+    uint32_t m_header_nonce;
+
+    /**
+     * The full serialized coinbase transaction, meeting all the requirements of the NewWork message, above.
+     */
+    CMutableTransaction m_coinbase_tx;
+
+    Sv2SubmitSolutionMsg() = default;
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_template_id >> m_version >> m_header_timestamp >> m_header_nonce;
+
+        // Ignore the 2 byte length as the rest of the stream is assumed to be
+        // the m_coinbase_tx.
+        s.ignore(2);
+        s >> TX_WITH_WITNESS(m_coinbase_tx);
     }
 };
 
