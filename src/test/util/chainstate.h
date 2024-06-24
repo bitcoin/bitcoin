@@ -83,7 +83,7 @@ CreateAndActivateUTXOSnapshot(
             chain.CoinsTip().SetBestBlock(gen_hash);
             chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
-            node.chainman->MaybeRebalanceCaches();
+            Assert(node.chainman->MaybeRebalanceCaches());
 
             // Reset the HAVE_DATA flags below the snapshot height, simulating
             // never-having-downloaded them in the first place.
@@ -105,7 +105,8 @@ CreateAndActivateUTXOSnapshot(
             }
         }
         BlockValidationState state;
-        if (!node.chainman->ActiveChainstate().ActivateBestChain(state)) {
+        auto activate_result{node.chainman->ActiveChainstate().ActivateBestChain(state)};
+        if (!activate_result) {
             throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
         }
         Assert(
@@ -124,7 +125,7 @@ CreateAndActivateUTXOSnapshot(
         new_active.m_chain.SetTip(*(tip->pprev));
     }
 
-    bool res = node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate);
+    bool res{node.chainman->ActivateSnapshot(auto_infile, metadata, in_memory_chainstate)};
 
     // Restore the old tip.
     new_active.m_chain.SetTip(*tip);

@@ -19,6 +19,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
+
 BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 
 //! Test resizing coins-related Chainstate caches during runtime.
@@ -44,18 +47,18 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));
 
-        c1.ResizeCoinsCaches(
+        BOOST_CHECK(c1.ResizeCoinsCaches(
             1 << 24,  // upsizing the coinsview cache
             1 << 22  // downsizing the coinsdb cache
-        );
+        ));
 
         // View should still have the coin cached, since we haven't destructed the cache on upsize.
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));
 
-        c1.ResizeCoinsCaches(
+        BOOST_CHECK(c1.ResizeCoinsCaches(
             1 << 22,  // downsizing the coinsview cache
             1 << 23  // upsizing the coinsdb cache
-        );
+        ));
 
         // The view cache should be empty since we had to destruct to downsize.
         BOOST_CHECK(!c1.CoinsTip().HaveCoinInCache(outpoint));
@@ -124,13 +127,15 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         LOCK(::cs_main);
         bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
         BOOST_CHECK(checked);
+        FlushResult<void, AbortFailure> accept_result;
         bool accepted = chainman.AcceptBlock(
-            pblockone, state, &pindex, true, nullptr, &newblock, true);
+            pblockone, accept_result, state, &pindex, true, nullptr, &newblock, true);
         BOOST_CHECK(accepted);
+        BOOST_CHECK(accept_result);
     }
 
     // UpdateTip is called here
-    bool block_added = background_cs.ActivateBestChain(state, pblockone);
+    auto block_added{background_cs.ActivateBestChain(state, pblockone)};
 
     // Ensure tip is as expected
     BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHash());

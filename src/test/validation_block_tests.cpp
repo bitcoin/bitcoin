@@ -19,6 +19,8 @@
 
 #include <thread>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::BlockAssembler;
 
 namespace validation_block_tests {
@@ -156,9 +158,11 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         BuildChain(Params().GenesisBlock().GetHash(), 100, 15, 10, 500, blocks);
     }
 
+    FlushResult<void, AbortFailure> process_result;
     bool ignored;
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), true, true, &ignored));
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), true, true, &ignored, process_result));
+    BOOST_CHECK(process_result);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -181,14 +185,18 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
-                Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
+                FlushResult<void, AbortFailure> process_result;
+                (void)Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored, process_result);
+                Assert(process_result);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored);
+                    FlushResult<void, AbortFailure> process_result;
+                    bool processed = Assert(m_node.chainman)->ProcessNewBlock(block, true, true, &ignored, process_result);
                     assert(processed);
+                    Assert(process_result);
                 }
             }
         });
@@ -226,7 +234,9 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
     auto ProcessBlock = [&](std::shared_ptr<const CBlock> block) -> bool {
-        return Assert(m_node.chainman)->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&ignored);
+        FlushResult<void, AbortFailure> process_result;
+        return Assert(m_node.chainman)->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&ignored, process_result);
+        BOOST_CHECK(process_result);
     };
 
     // Process all mined blocks
@@ -277,8 +287,9 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         {
             LOCK(cs_main);
             for (const auto& tx : txs) {
-                const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(tx);
+                auto [result, process_result]{m_node.chainman->ProcessTransaction(tx)};
                 BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
+                BOOST_CHECK(process_result);
             }
         }
 

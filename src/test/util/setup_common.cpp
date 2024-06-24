@@ -67,7 +67,9 @@
 #include <functional>
 #include <stdexcept>
 
+using kernel::AbortFailure;
 using kernel::BlockTreeDB;
+using kernel::FlushResult;
 using kernel::ValidationCacheSizes;
 using node::ApplyArgsManOptions;
 using node::BlockAssembler;
@@ -287,14 +289,15 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
     options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");
-    auto [status, error] = LoadChainstate(chainman, m_cache_sizes, options);
-    assert(status == node::ChainstateLoadStatus::SUCCESS);
+    auto load_result{LoadChainstate(chainman, m_cache_sizes, options)};
+    Assert(load_result);
 
-    std::tie(status, error) = VerifyLoadedChainstate(chainman, options);
-    assert(status == node::ChainstateLoadStatus::SUCCESS);
+    auto verify_result{VerifyLoadedChainstate(chainman, options)};
+    Assert(verify_result);
 
     BlockValidationState state;
-    if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
+    auto activate_result{chainman.ActiveChainstate().ActivateBestChain(state)};
+    if (!activate_result) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 }
@@ -398,7 +401,9 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 
     CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    FlushResult<void, AbortFailure> process_result;
+    (void)Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr, process_result);
+    Assert(process_result);
 
     return block;
 }
@@ -479,8 +484,9 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(const std::
     // If submit=true, add transaction to the mempool.
     if (submit) {
         LOCK(cs_main);
-        const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn));
+        auto [result, process_result]{m_node.chainman->ProcessTransaction(MakeTransactionRef(mempool_txn))};
         assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
+        Assert(process_result);
     }
     return mempool_txn;
 }
