@@ -101,7 +101,7 @@ bool MNHFTx::Verify(const llmq::CQuorumManager& qman, const uint256& quorumHash,
     return true;
 }
 
-bool CheckMNHFTx(const llmq::CQuorumManager& qman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
+bool CheckMNHFTx(const ChainstateManager& chainman, const llmq::CQuorumManager& qman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {
     if (!tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_MNHF_SIGNAL) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-type");
@@ -116,7 +116,7 @@ bool CheckMNHFTx(const llmq::CQuorumManager& qman, const CTransaction& tx, const
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
     }
 
-    const CBlockIndex* pindexQuorum = WITH_LOCK(::cs_main, return g_chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash));
+    const CBlockIndex* pindexQuorum = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash));
     if (!pindexQuorum) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-quorum-hash");
     }
@@ -160,7 +160,7 @@ std::optional<uint8_t> extractEHFSignal(const CTransaction& tx)
     return opt_mnhfTx->signal.versionBit;
 }
 
-static bool extractSignals(const llmq::CQuorumManager& qman, const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& new_signals, BlockValidationState& state)
+static bool extractSignals(const ChainstateManager& chainman, const llmq::CQuorumManager& qman, const CBlock& block, const CBlockIndex* const pindex, std::vector<uint8_t>& new_signals, BlockValidationState& state)
 {
     // we skip the coinbase
     for (size_t i = 1; i < block.vtx.size(); ++i) {
@@ -172,7 +172,7 @@ static bool extractSignals(const llmq::CQuorumManager& qman, const CBlock& block
         }
 
         TxValidationState tx_state;
-        if (!CheckMNHFTx(qman, tx, pindex, tx_state)) {
+        if (!CheckMNHFTx(chainman, qman, tx, pindex, tx_state)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(), tx_state.GetDebugMessage());
         }
 
@@ -192,11 +192,11 @@ static bool extractSignals(const llmq::CQuorumManager& qman, const CBlock& block
 
 std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state)
 {
-    assert(m_qman);
+    assert(m_chainman && m_qman);
 
     try {
         std::vector<uint8_t> new_signals;
-        if (!extractSignals(*m_qman, block, pindex, new_signals, state)) {
+        if (!extractSignals(*m_chainman, *m_qman, block, pindex, new_signals, state)) {
             // state is set inside extractSignals
             return std::nullopt;
         }
@@ -246,11 +246,11 @@ std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& bl
 
 bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pindex)
 {
-    assert(m_qman);
+    assert(m_chainman && m_qman);
 
     std::vector<uint8_t> excluded_signals;
     BlockValidationState state;
-    if (!extractSignals(*m_qman, block, pindex, excluded_signals, state)) {
+    if (!extractSignals(*m_chainman, *m_qman, block, pindex, excluded_signals, state)) {
         LogPrintf("CMNHFManager::%s: failed to extract signals\n", __func__);
         return false;
     }
@@ -354,10 +354,11 @@ void CMNHFManager::AddSignal(const CBlockIndex* const pindex, int bit)
     AddToCache(signals, pindex);
 }
 
-void CMNHFManager::ConnectManagers(gsl::not_null<llmq::CQuorumManager*> qman)
+void CMNHFManager::ConnectManagers(gsl::not_null<ChainstateManager*> chainman, gsl::not_null<llmq::CQuorumManager*> qman)
 {
     // Do not allow double-initialization
-    assert(m_qman == nullptr);
+    assert(m_chainman == nullptr && m_qman == nullptr);
+    m_chainman = chainman;
     m_qman = qman;
 }
 

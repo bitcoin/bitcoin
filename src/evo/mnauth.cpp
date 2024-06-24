@@ -61,7 +61,8 @@ void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternode
 }
 
 PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                                   const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv)
+                                   const CChain& active_chain, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list,
+                                   std::string_view msg_type, CDataStream& vRecv)
 {
     assert(mn_metaman.IsValid());
 
@@ -105,7 +106,7 @@ PeerMsgRet CMNAuth::ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMe
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    const CBlockIndex* tip = ::ChainActive().Tip();
+    const CBlockIndex* tip = active_chain.Tip();
     const bool is_basic_scheme_active{DeploymentActiveAfter(tip, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     ConstCBLSPublicKeyVersionWrapper pubKey(dmn->pdmnState->pubKeyOperator.Get(), !is_basic_scheme_active);
     // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)

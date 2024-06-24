@@ -1527,7 +1527,9 @@ static UniValue protx_diff(const JSONRPCRequest& request, CDeterministicMNManage
     CSimplifiedMNListDiff mnListDiff;
     std::string strError;
 
-    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, dmnman, *llmq_ctx.quorum_block_processor, *llmq_ctx.qman, strError, extended)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, *llmq_ctx.quorum_block_processor, *llmq_ctx.qman, baseBlockHash,
+                                   blockHash, mnListDiff, strError, extended))
+    {
         throw std::runtime_error(strError);
     }
 

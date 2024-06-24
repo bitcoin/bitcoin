@@ -818,7 +818,7 @@ static RPCHelpMan quorum_rotationinfo()
 
     LOCK(cs_main);
 
-    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *node.dmnman, chainman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, strError)) {
+    if (!BuildQuorumRotationInfo(*node.dmnman, chainman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, cmd, quorumRotationInfoRet, strError)) {
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 
