@@ -294,11 +294,13 @@ private:
 // which are not 100% at the chain tip.
 static constexpr int SIGN_HEIGHT_OFFSET{8};
 
-CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
+CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CChain& active_chain, const CQuorumManager& qman,
+                                   const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
 
 // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
-bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, int signOffset = SIGN_HEIGHT_OFFSET);
-
+bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain, const CQuorumManager& qman,
+                        int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig,
+                        int signOffset = SIGN_HEIGHT_OFFSET);
 } // namespace llmq
 
 template<typename T> struct SaltedHasherImpl;

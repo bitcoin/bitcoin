@@ -444,6 +444,7 @@ static RPCHelpMan quorum_sign()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
@@ -469,7 +470,7 @@ static RPCHelpMan quorum_sign()
         llmq::CQuorumCPtr pQuorum;
 
         if (quorumHash.IsNull()) {
-            pQuorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
+            pQuorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), chainman.ActiveChain(), *llmq_ctx.qman, id);
         } else {
             pQuorum = llmq_ctx.qman->GetQuorum(llmqType, quorumHash);
         }
@@ -520,6 +521,7 @@ static RPCHelpMan quorum_verify()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
@@ -545,8 +547,8 @@ static RPCHelpMan quorum_verify()
         }
         // First check against the current active set, if it fails check against the last active set
         int signOffset{llmq_params_opt->dkgInterval};
-        return llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, 0) ||
-               llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, msgHash, sig, signOffset);
+        return llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, msgHash, sig, 0) ||
+               llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, msgHash, sig, signOffset);
     }
 
     uint256 quorumHash(ParseHashV(request.params[4], "quorumHash"));
@@ -669,6 +671,7 @@ static RPCHelpMan quorum_selectquorum()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
@@ -681,7 +684,7 @@ static RPCHelpMan quorum_selectquorum()
 
     UniValue ret(UniValue::VOBJ);
 
-    const auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), *llmq_ctx.qman, id);
+    const auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), chainman.ActiveChain(), *llmq_ctx.qman, id);
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
@@ -796,6 +799,7 @@ static RPCHelpMan quorum_rotationinfo()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     CHECK_NONFATAL(node.dmnman);
 
@@ -814,7 +818,7 @@ static RPCHelpMan quorum_rotationinfo()
 
     LOCK(cs_main);
 
-    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *node.dmnman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, strError)) {
+    if (!BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *node.dmnman, chainman, *llmq_ctx.qman, *llmq_ctx.quorum_block_processor, strError)) {
         throw JSONRPCError(RPC_INVALID_REQUEST, strError);
     }
 
@@ -1030,8 +1034,8 @@ static RPCHelpMan verifyislock()
     const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());
     const int signOffset{llmq_params_opt->dkgInterval};
-    return llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
-           llmq::VerifyRecoveredSig(llmqType, *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
+    return llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
+           llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
 },
     };
 }

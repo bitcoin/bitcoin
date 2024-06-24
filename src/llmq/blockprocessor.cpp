@@ -257,7 +257,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
     }
 
-    if (!IsMiningPhase(llmq_params, nHeight)) {
+    if (!IsMiningPhase(llmq_params, m_chainstate.m_chain, nHeight)) {
         // should not happen as it's already handled in ProcessBlock
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
     }
@@ -385,12 +385,12 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, gsl::no
     return true;
 }
 
-bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParams, int nHeight)
+bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParams, const CChain& active_chain, int nHeight)
 {
     AssertLockHeld(cs_main);
 
     // Note: This function can be called for new blocks
-    assert(nHeight <= ::ChainActive().Height() + 1);
+    assert(nHeight <= active_chain.Height() + 1);
 
     int quorumCycleStartHeight = nHeight - (nHeight % llmqParams.dkgInterval);
     int quorumCycleMiningStartHeight = quorumCycleStartHeight + llmqParams.dkgMiningWindowStart;
@@ -409,7 +409,7 @@ size_t CQuorumBlockProcessor::GetNumCommitmentsRequired(const Consensus::LLMQPar
 {
     AssertLockHeld(cs_main);
 
-    if (!IsMiningPhase(llmqParams, nHeight)) return 0;
+    if (!IsMiningPhase(llmqParams, m_chainstate.m_chain, nHeight)) return 0;
 
     // Note: This function can be called for new blocks
     assert(nHeight <= m_chainstate.m_chain.Height() + 1);

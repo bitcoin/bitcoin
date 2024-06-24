@@ -4842,7 +4842,7 @@ void PeerManagerImpl::ProcessMessage(
 
         llmq::CQuorumRotationInfo quorumRotationInfoRet;
         std::string strError;
-        if (BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *m_dmnman, *m_llmq_ctx->qman, *m_llmq_ctx->quorum_block_processor, strError)) {
+        if (BuildQuorumRotationInfo(cmd, quorumRotationInfoRet, *m_dmnman, m_chainman, *m_llmq_ctx->qman, *m_llmq_ctx->quorum_block_processor, strError)) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QUORUMROTATIONINFO, quorumRotationInfoRet));
         } else {
             strError = strprintf("getquorumrotationinfo failed for size(baseBlockHashes)=%d, blockRequestHash=%s. error=%s", cmd.baseBlockHashes.size(), cmd.blockRequestHash.ToString(), strError);

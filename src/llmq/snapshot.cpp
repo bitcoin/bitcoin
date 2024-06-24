@@ -86,14 +86,14 @@ UniValue CQuorumRotationInfo::ToJson() const
 }
 
 bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& response,
-                             CDeterministicMNManager& dmnman, const CQuorumManager& qman,
+                             CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CQuorumManager& qman,
                              const CQuorumBlockProcessor& quorum_block_processor, std::string& errorRet)
 {
     AssertLockHeld(cs_main);
 
     std::vector<const CBlockIndex*> baseBlockIndexes;
     if (request.baseBlockHashes.size() == 0) {
-        const CBlockIndex* blockIndex = ::ChainActive().Genesis();
+        const CBlockIndex* blockIndex = chainman.ActiveChain().Genesis();
         if (!blockIndex) {
             errorRet = strprintf("genesis block not found");
             return false;
@@ -101,12 +101,12 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         baseBlockIndexes.push_back(blockIndex);
     } else {
         for (const auto& blockHash : request.baseBlockHashes) {
-            const CBlockIndex* blockIndex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
+            const CBlockIndex* blockIndex = chainman.m_blockman.LookupBlockIndex(blockHash);
             if (!blockIndex) {
                 errorRet = strprintf("block %s not found", blockHash.ToString());
                 return false;
             }
-            if (!::ChainActive().Contains(blockIndex)) {
+            if (!chainman.ActiveChain().Contains(blockIndex)) {
                 errorRet = strprintf("block %s is not in the active chain", blockHash.ToString());
                 return false;
             }
@@ -117,7 +117,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         });
     }
 
-    const CBlockIndex* tipBlockIndex = ::ChainActive().Tip();
+    const CBlockIndex* tipBlockIndex = chainman.ActiveChain().Tip();
     if (!tipBlockIndex) {
         errorRet = strprintf("tip block not found");
         return false;
@@ -127,7 +127,7 @@ bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotat
         return false;
     }
 
-    const CBlockIndex* blockIndex = g_chainman.m_blockman.LookupBlockIndex(request.blockRequestHash);
+    const CBlockIndex* blockIndex = chainman.m_blockman.LookupBlockIndex(request.blockRequestHash);
     if (!blockIndex) {
         errorRet = strprintf("block not found");
         return false;

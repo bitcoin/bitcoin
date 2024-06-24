@@ -166,7 +166,7 @@ bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
     return true;
 }
 
-bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
+bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state)
 {
     const auto opt_qcTx = GetTxPayload<CFinalCommitmentTxPayload>(tx);
     if (!opt_qcTx) {
@@ -200,7 +200,7 @@ bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const CTransaction& tx
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-height");
     }
 
-    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return g_chainman.m_blockman.LookupBlockIndex(qcTx.commitment.quorumHash));
+    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(qcTx.commitment.quorumHash));
     if (pQuorumBaseBlockIndex == nullptr) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-qc-quorum-hash");
     }

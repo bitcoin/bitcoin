@@ -920,7 +920,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
             nSignHeight = blockIndex->nHeight + dkgInterval - 1;
         }
 
-        auto quorum = llmq::SelectQuorumForSigning(llmq_params, qman, id, nSignHeight, signOffset);
+        auto quorum = llmq::SelectQuorumForSigning(llmq_params, m_chainstate.m_chain, qman, id, nSignHeight, signOffset);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
             return {};
