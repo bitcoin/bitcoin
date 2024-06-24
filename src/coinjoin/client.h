@@ -161,7 +161,7 @@ private:
     void CompletedTransaction(PoolMessage nMessageID);
 
     /// As a client, check and sign the final transaction
-    bool SignFinalTransaction(const CTxMemPool& mempool, const CTransaction& finalTransactionNew, CNode& peer, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
+    bool SignFinalTransaction(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, const CTransaction& finalTransactionNew) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
     void RelayIn(const CCoinJoinEntry& entry, CConnman& connman) const;
 
@@ -171,7 +171,7 @@ public:
     explicit CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletManager& walletman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
                                     const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode);
 
-    void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
+    void ProcessMessage(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv);
 
     void UnlockCoins();
 
@@ -268,7 +268,7 @@ public:
         m_wallet(wallet), m_walletman(walletman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mn_sync(mn_sync), m_queueman(queueman),
         m_is_masternode{is_masternode} {}
 
-    void ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
+    void ProcessMessage(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
     bool StartMixing();
     void StopMixing();

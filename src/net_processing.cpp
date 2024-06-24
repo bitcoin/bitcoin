@@ -4897,7 +4897,7 @@ void PeerManagerImpl::ProcessMessage(
 #ifdef ENABLE_WALLET
         ProcessPeerMsgRet(m_cj_ctx->queueman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         for (auto& pair : m_cj_ctx->walletman->raw()) {
-            pair.second->ProcessMessage(pfrom, m_connman, m_mempool, msg_type, vRecv);
+            pair.second->ProcessMessage(pfrom, m_chainman.ActiveChainstate(), m_connman, m_mempool, msg_type, vRecv);
         }
 #endif // ENABLE_WALLET
         ProcessPeerMsgRet(m_cj_ctx->server->ProcessMessage(pfrom, msg_type, vRecv), pfrom);

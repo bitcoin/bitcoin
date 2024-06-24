@@ -131,7 +131,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
     return {};
 }
 
-void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientManager::ProcessMessage(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (m_is_masternode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -150,7 +150,7 @@ void CCoinJoinClientManager::ProcessMessage(CNode& peer, CConnman& connman, cons
         AssertLockNotHeld(cs_deqsessions);
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
-            session.ProcessMessage(peer, connman, mempool, msg_type, vRecv);
+            session.ProcessMessage(peer, active_chainstate, connman, mempool, msg_type, vRecv);
         }
     }
 }
@@ -167,7 +167,7 @@ CCoinJoinClientSession::CCoinJoinClientSession(CWallet& wallet, CoinJoinWalletMa
     m_is_masternode{is_masternode}
 {}
 
-void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
+void CCoinJoinClientSession::ProcessMessage(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, std::string_view msg_type, CDataStream& vRecv)
 {
     if (m_is_masternode) return;
     if (!CCoinJoinClientOptions::IsEnabled()) return;
@@ -202,7 +202,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, CConnman& connman, cons
         WalletCJLogPrint(m_wallet, "DSFINALTX -- txNew %s", txNew.ToString()); /* Continued */
 
         // check to see if input is spent already? (and probably not confirmed)
-        SignFinalTransaction(mempool, txNew, peer, connman);
+        SignFinalTransaction(peer, active_chainstate, connman, mempool, txNew);
 
     } else if (msg_type == NetMsgType::DSCOMPLETE) {
         if (!mixingMasternode) return;
@@ -548,7 +548,7 @@ void CCoinJoinClientSession::ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
-bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, const CTransaction& finalTransactionNew, CNode& peer, CConnman& connman)
+bool CCoinJoinClientSession::SignFinalTransaction(CNode& peer, CChainState& active_chainstate, CConnman& connman, const CTxMemPool& mempool, const CTransaction& finalTransactionNew)
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return false;
 
@@ -577,7 +577,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTxMemPool& mempool, con
 
     // Make sure all inputs/outputs are valid
     PoolMessage nMessageID{MSG_NOERR};
-    if (!IsValidInOuts(mempool, finalMutableTransaction.vin, finalMutableTransaction.vout, nMessageID, nullptr)) {
+    if (!IsValidInOuts(active_chainstate, mempool, finalMutableTransaction.vin, finalMutableTransaction.vout, nMessageID, nullptr)) {
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- ERROR! IsValidInOuts() failed: %s\n", __func__, CoinJoin::GetMessageByID(nMessageID).translated);
         UnlockCoins();
         keyHolderStorage.ReturnAll();

@@ -608,7 +608,7 @@ bool CCoinJoinServer::AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessag
     }
 
     bool fConsumeCollateral{false};
-    if (!IsValidInOuts(mempool, vin, entry.vecTxOut, nMessageIDRet, &fConsumeCollateral)) {
+    if (!IsValidInOuts(m_chainstate, mempool, vin, entry.vecTxOut, nMessageIDRet, &fConsumeCollateral)) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR! IsValidInOuts() failed: %s\n", __func__, CoinJoin::GetMessageByID(nMessageIDRet).translated);
         if (fConsumeCollateral) {
             ConsumeCollateral(entry.txCollateral);

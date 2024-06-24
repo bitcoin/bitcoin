@@ -217,7 +217,7 @@ std::string CCoinJoinBaseSession::GetStateString() const
     }
 }
 
-bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const
+bool CCoinJoinBaseSession::IsValidInOuts(CChainState& active_chainstate, const CTxMemPool& mempool, const std::vector<CTxIn>& vin, const std::vector<CTxOut>& vout, PoolMessage& nMessageIDRet, bool* fConsumeCollateralRet) const
 {
     std::set<CScript> setScripPubKeys;
     nMessageIDRet = MSG_NOERR;
@@ -264,7 +264,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const CTxMemPool& mempool, const std::v
         nFees -= txout.nValue;
     }
 
-    CCoinsViewMemPool viewMemPool(WITH_LOCK(cs_main, return &::ChainstateActive().CoinsTip()), mempool);
+    CCoinsViewMemPool viewMemPool(WITH_LOCK(cs_main, return &active_chainstate.CoinsTip()), mempool);
 
     for (const auto& txin : vin) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::%s -- txin=%s\n", __func__, txin.ToString());
