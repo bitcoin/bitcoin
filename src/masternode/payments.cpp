@@ -181,7 +181,7 @@ CAmount PlatformShare(const CAmount reward)
 *   - Other blocks are 10% lower in outgoing value, so in total, no extra coins are created
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
-bool CMNPaymentsProcessor::IsBlockValueValid(const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet)
+bool CMNPaymentsProcessor::IsBlockValueValid(const CBlock& block, const int nBlockHeight, const CAmount blockReward, std::string& strErrorRet, const bool check_superblock)
 {
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
@@ -242,6 +242,8 @@ bool CMNPaymentsProcessor::IsBlockValueValid(const CBlock& block, const int nBlo
         return isBlockRewardValueMet;
     }
 
+    if (!check_superblock) return true;
+
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
 
     if (!CSuperblockManager::IsSuperblockTriggered(m_govman, tip_mn_list, nBlockHeight)) {
@@ -267,7 +269,7 @@ bool CMNPaymentsProcessor::IsBlockValueValid(const CBlock& block, const int nBlo
     return true;
 }
 
-bool CMNPaymentsProcessor::IsBlockPayeeValid(const CTransaction& txNew, const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward)
+bool CMNPaymentsProcessor::IsBlockPayeeValid(const CTransaction& txNew, const CBlockIndex* pindexPrev, const CAmount blockSubsidy, const CAmount feeReward, const bool check_superblock)
 {
     const int nBlockHeight = pindexPrev  == nullptr ? 0 : pindexPrev->nHeight + 1;
 
@@ -298,6 +300,7 @@ bool CMNPaymentsProcessor::IsBlockPayeeValid(const CTransaction& txNew, const CB
     // superblocks started
 
     if (AreSuperblocksEnabled(m_sporkman)) {
+        if (!check_superblock) return true;
         const auto tip_mn_list = m_dmnman.GetListAtChainTip();
         if (CSuperblockManager::IsSuperblockTriggered(m_govman, tip_mn_list, nBlockHeight)) {
             if (CSuperblockManager::IsValid(m_govman, tip_mn_list, txNew, nBlockHeight, blockSubsidy + feeReward)) {
