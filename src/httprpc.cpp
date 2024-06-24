@@ -146,7 +146,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req)
+static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req, bool external = false)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
