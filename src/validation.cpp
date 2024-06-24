@@ -2573,8 +2573,8 @@ bool CChainState::FlushStateToDisk(
     std::set<int> setFilesToPrune;
     bool full_flush_completed = false;
 
-    const size_t coins_count = ::ChainstateActive().CoinsTip().GetCacheSize();
-    const size_t coins_mem_usage = ::ChainstateActive().CoinsTip().DynamicMemoryUsage();
+    const size_t coins_count = CoinsTip().GetCacheSize();
+    const size_t coins_mem_usage = CoinsTip().DynamicMemoryUsage();
 
     try {
     {
@@ -3448,8 +3448,8 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, CBlockIndex* pind
         // it up here, this should be an essentially unobservable error.
         // Loop back over all block index entries and add any missing entries
         // to setBlockIndexCandidates.
-        BlockMap::iterator it = g_chainman.BlockIndex().begin();
-        while (it != g_chainman.BlockIndex().end()) {
+        BlockMap::iterator it = m_blockman.m_block_index.begin();
+        while (it != m_blockman.m_block_index.end()) {
             if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && !(it->second->nStatus & BLOCK_CONFLICT_CHAINLOCK) && it->second->HaveTxsDownloaded() && !setBlockIndexCandidates.value_comp()(it->second, m_chain.Tip())) {
                 setBlockIndexCandidates.insert(it->second);
             }
@@ -3479,7 +3479,7 @@ void CChainState::EnforceBlock(BlockValidationState& state, const CBlockIndex *p
 
     while (pindex_walk && !m_chain.Contains(pindex_walk)) {
         // Mark all blocks that have the same prevBlockHash but are not equal to blockHash as conflicting
-        auto itp = g_chainman.PrevBlockIndex().equal_range(pindex_walk->pprev->GetBlockHash());
+        auto itp = m_blockman.m_prev_block_index.equal_range(pindex_walk->pprev->GetBlockHash());
         for (auto jt = itp.first; jt != itp.second; ++jt) {
             if (jt->second == pindex_walk) {
                 continue;
@@ -3552,8 +3552,8 @@ bool CChainState::MarkConflictingBlock(BlockValidationState& state, CBlockIndex 
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.
-    BlockMap::iterator it = g_chainman.BlockIndex().begin();
-    while (it != g_chainman.BlockIndex().end()) {
+    BlockMap::iterator it = m_blockman.m_block_index.begin();
+    while (it != m_blockman.m_block_index.end()) {
         if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && !(it->second->nStatus & BLOCK_CONFLICT_CHAINLOCK) && it->second->HaveTxsDownloaded() && !setBlockIndexCandidates.value_comp()(it->second, m_chain.Tip())) {
             setBlockIndexCandidates.insert(it->second);
         }
@@ -4265,8 +4265,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return AbortNode(state, std::string("System error: ") + e.what());
     }
 
-    if (::ChainstateActive().CanFlushToDisk()) {
-        ::ChainstateActive().FlushStateToDisk(state, FlushStateMode::NONE);
+    if (CanFlushToDisk()) {
+        FlushStateToDisk(state, FlushStateMode::NONE);
     }
 
     CheckBlockIndex();
