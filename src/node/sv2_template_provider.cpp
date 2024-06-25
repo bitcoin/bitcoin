@@ -27,10 +27,10 @@ Sv2TemplateProvider::Sv2TemplateProvider(interfaces::Mining& mining) : m_mining{
     std::array<unsigned char, 34> version_pubkey_bytes;
     version_pubkey_bytes[0] = 1;
     version_pubkey_bytes[1] = 0;
-    XOnlyPubKey authority_pub_key = XOnlyPubKey(authority_key.GetPubKey());
-    std::copy(authority_pub_key.begin(), authority_pub_key.end(), version_pubkey_bytes.begin() + 2);
+    m_authority_pubkey = XOnlyPubKey(authority_key.GetPubKey());
+    std::copy(m_authority_pubkey.begin(), m_authority_pubkey.end(), version_pubkey_bytes.begin() + 2);
     LogInfo("Template Provider authority key: %s\n", EncodeBase58Check(version_pubkey_bytes));
-    LogTrace(BCLog::SV2, "Authority key: %s\n", HexStr(authority_pub_key));
+    LogTrace(BCLog::SV2, "Authority key: %s\n", HexStr(m_authority_pubkey));
 
     // Generate and sign certificate
     auto now{GetTime<std::chrono::seconds>()};
