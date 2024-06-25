@@ -194,7 +194,7 @@ chain state at the time of the call.
 Wallet RPCs will return the latest chain state consistent with prior non-wallet
 RPCs. The effects of all blocks (and transactions in blocks) at the time of the
 call is reflected in the state of all wallet transactions. For example, if a
-block contains transactions that conflicted with mempool transactions, the
+block contains transactions that conflict with mempool transactions, the
 wallet would reflect the removal of these mempool transactions in the state.
 
 However, the wallet may not be up-to-date with the current state of the mempool
