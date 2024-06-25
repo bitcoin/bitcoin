@@ -7,6 +7,7 @@
 #include <index/txindex.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <rpc/net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <validation.h>
@@ -279,6 +280,9 @@ static RPCHelpMan quorum_dkgstatus()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    const CConnman& connman = EnsureConnman(node);
+    CHECK_NONFATAL(node.dmnman);
+    CHECK_NONFATAL(node.sporkman);
 
     int detailLevel = 0;
     if (!request.params[0].isNull()) {
@@ -322,7 +326,7 @@ static RPCHelpMan quorum_dkgstatus()
                     auto allConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman, *node.sporkman, pQuorumBaseBlockIndex, proTxHash, false);
                     auto outboundConnections = llmq::utils::GetQuorumConnections(llmq_params, *node.dmnman, *node.sporkman, pQuorumBaseBlockIndex, proTxHash, true);
                     std::map<uint256, CAddress> foundConnections;
-                    node.connman->ForEachNode([&](const CNode* pnode) {
+                    connman.ForEachNode([&](const CNode* pnode) {
                         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
                         if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
                             foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
@@ -381,6 +385,7 @@ static RPCHelpMan quorum_memberof()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.dmnman);
 
     uint256 protxHash(ParseHashV(request.params[0], "proTxHash"));
     int scanQuorumsCount = -1;
@@ -747,6 +752,7 @@ static RPCHelpMan quorum_getdata()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CConnman& connman = EnsureConnman(node);
 
     NodeId nodeId = ParseInt64V(request.params[0], "nodeId");
     Consensus::LLMQType llmqType = static_cast<Consensus::LLMQType>(ParseInt32V(request.params[1], "llmqType"));
@@ -768,7 +774,7 @@ static RPCHelpMan quorum_getdata()
 
     const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
 
-    return node.connman->ForNode(nodeId, [&](CNode* pNode) {
+    return connman.ForNode(nodeId, [&](CNode* pNode) {
         return llmq_ctx.qman->RequestQuorumData(pNode, llmqType, pQuorumBaseBlockIndex, nDataMask, proTxHash);
     });
 },
@@ -791,6 +797,7 @@ static RPCHelpMan quorum_rotationinfo()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+    CHECK_NONFATAL(node.dmnman);
 
     llmq::CGetQuorumRotationInfo cmd;
     llmq::CQuorumRotationInfo quorumRotationInfoRet;

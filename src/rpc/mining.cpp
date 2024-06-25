@@ -393,6 +393,8 @@ static RPCHelpMan generateblock()
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
 
     {
+        CHECK_NONFATAL(node.evodb);
+
         LOCK(cs_main);
 
         BlockValidationState state;
@@ -704,6 +706,7 @@ static RPCHelpMan getblocktemplate()
             }
 
             LLMQContext& llmq_ctx = EnsureLLMQContext(node);
+            CHECK_NONFATAL(node.evodb);
 
             CBlockIndex* const pindexPrev = active_chain.Tip();
             // TestBlockValidity only supports blocks built on the current Tip
@@ -733,6 +736,7 @@ static RPCHelpMan getblocktemplate()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     const CConnman& connman = EnsureConnman(node);
+    CHECK_NONFATAL(node.sporkman);
     if (connman.GetNodeCount(ConnectionDirection::Both) == 0)
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
 

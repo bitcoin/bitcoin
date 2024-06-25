@@ -108,6 +108,7 @@ static RPCHelpMan mnsync()
     std::string strMode = request.params[0].get_str();
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.mn_sync);
     auto& mn_sync = *node.mn_sync;
 
     if(strMode == "status") {
@@ -170,6 +171,7 @@ static RPCHelpMan spork()
     // basic mode, show info
     std:: string strCommand = request.params[0].get_str();
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.sporkman);
     if (strCommand == "show") {
         UniValue ret(UniValue::VOBJ);
         for (const auto& sporkDef : sporkDefs) {
@@ -215,6 +217,7 @@ static RPCHelpMan sporkupdate()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     PeerManager& peerman = EnsurePeerman(node);
+    CHECK_NONFATAL(node.sporkman);
 
     // SPORK VALUE
     int64_t nValue = request.params[1].get_int64();

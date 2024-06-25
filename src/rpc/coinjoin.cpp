@@ -7,6 +7,7 @@
 #include <coinjoin/context.h>
 #include <coinjoin/server.h>
 #include <rpc/blockchain.h>
+#include <rpc/net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
@@ -69,7 +70,8 @@ static RPCHelpMan coinjoin()
         }
 
         CTxMemPool& mempool = EnsureMemPool(node);
-        bool result = cj_clientman->DoAutomaticDenominating(*node.connman, mempool);
+        CConnman& connman = EnsureConnman(node);
+        bool result = cj_clientman->DoAutomaticDenominating(connman, mempool);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + cj_clientman->GetStatuses().original + ", will retry"));
     }
 

@@ -16,6 +16,7 @@
 #include <node/context.h>
 #include <net.h>
 #include <rpc/blockchain.h>
+#include <rpc/net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <governance/common.h>
@@ -53,6 +54,7 @@ static UniValue gobject_count(const JSONRPCRequest& request)
         gobject_count_help(request);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.govman);
     return strMode == "json" ? node.govman->ToJson() : node.govman->ToString();
 }
 
@@ -309,6 +311,8 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     gobject_submit_help(request);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
+    CHECK_NONFATAL(node.govman);
 
     if(!node.mn_sync->IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
@@ -395,11 +399,13 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
 
+    PeerManager& peerman = EnsurePeerman(node);
     if (fMissingConfirmations) {
+        CHECK_NONFATAL(node.mn_sync);
         node.govman->AddPostponedObject(govobj);
-        govobj.Relay(*node.peerman, *node.mn_sync);
+        govobj.Relay(peerman, *node.mn_sync);
     } else {
-        node.govman->AddGovernanceObject(govobj, *node.peerman);
+        node.govman->AddGovernanceObject(govobj, peerman);
     }
 
     return govobj.GetHash().ToString();
@@ -410,6 +416,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
                              vote_outcome_enum_t eVoteOutcome)
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.govman);
     {
         LOCK(node.govman->cs);
         const CGovernanceObject *pGovObj = node.govman->FindConstGovernanceObject(hash);
@@ -450,7 +457,9 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const std::ma
         }
 
         CGovernanceException exception;
-        if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
+        CConnman& connman = EnsureConnman(node);
+        PeerManager& peerman = EnsurePeerman(node);
+        if (node.govman->ProcessVoteAndRelay(vote, exception, connman, peerman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -493,6 +502,7 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
 
     uint256 hash(ParseHashV(request.params[0], "Object hash"));
     std::string strVoteSignal = request.params[1].get_str();
@@ -554,6 +564,7 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.dmnman);
 
     uint256 hash(ParseHashV(request.params[0], "Object hash"));
     std::string strVoteSignal = request.params[1].get_str();
@@ -690,6 +701,7 @@ static UniValue gobject_list(const JSONRPCRequest& request)
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     CHECK_NONFATAL(node.dmnman);
+    CHECK_NONFATAL(node.govman);
 
     return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), strCachedSignal, strType, 0);
 }
@@ -857,6 +869,7 @@ static UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 
     // FIND OBJECT USER IS LOOKING FOR
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.govman);
 
     LOCK(node.govman->cs);
     const CGovernanceObject* pGovObj = node.govman->FindConstGovernanceObject(hash);
@@ -995,6 +1008,7 @@ static UniValue voteraw(const JSONRPCRequest& request)
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CHECK_NONFATAL(node.govman);
     GovernanceObject govObjType = WITH_LOCK(node.govman->cs, return [&](){
         AssertLockHeld(node.govman->cs);
         const CGovernanceObject *pGovObj = node.govman->FindConstGovernanceObject(hashGovObj);
@@ -1032,8 +1046,11 @@ static UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to verify vote.");
     }
 
+    CConnman& connman = EnsureConnman(node);
+    PeerManager& peerman = EnsurePeerman(node);
+
     CGovernanceException exception;
-    if (node.govman->ProcessVoteAndRelay(vote, exception, *node.connman, *node.peerman)) {
+    if (node.govman->ProcessVoteAndRelay(vote, exception, connman, peerman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
@@ -1068,6 +1085,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    CHECK_NONFATAL(node.dmnman);
 
     const auto* pindex = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip());
     int nBlockHeight = pindex->nHeight;
