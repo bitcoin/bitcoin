@@ -199,6 +199,26 @@ namespace BCLog {
         static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
+
+
+        // Be conservative when using functions that
+        // unconditionally log to debug.log! It should not be the case that an inbound
+        // peer can fill up a user's disk with debug.log entries.
+
+        template <typename... Args>
+        void LogPrintf_(const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
+        {
+            if (Enabled()) {
+                std::string log_msg;
+                try {
+                    log_msg = tfm::format(fmt, args...);
+                } catch (tinyformat::format_error& fmterr) {
+                    /* Original format string will have newline so don't add one here */
+                log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
+                }
+                LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
+            }
+        }
     };
 
 } // namespace BCLog
@@ -206,60 +226,41 @@ namespace BCLog {
 BCLog::Logger& LogInstance();
 
 /** Return true if log accepts specified category, at the specified level. */
-static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
+static inline bool LogAcceptCategory(BCLog::Logger& instance, BCLog::LogFlags category, BCLog::Level level)
 {
-    return LogInstance().WillLogCategoryLevel(category, level);
+    return instance.WillLogCategoryLevel(category, level);
 }
 
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 
-// Be conservative when using functions that
-// unconditionally log to debug.log! It should not be the case that an inbound
-// peer can fill up a user's disk with debug.log entries.
-
-template <typename... Args>
-static inline void LogPrintf_(const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            /* Original format string will have newline so don't add one here */
-            log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
-        }
-        LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
-    }
-}
-
-#define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
+#define LogPrintLevel_(instance, category, level, ...) instance.LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
 
 // Log unconditionally.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
+#define LogInfo(instance, ...) LogPrintLevel_(instance, BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
+#define LogWarning(instance, ...) LogPrintLevel_(instance, BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
+#define LogError(instance, ...) LogPrintLevel_(instance, BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
 // Deprecated unconditional logging.
-#define LogPrintf(...) LogInfo(__VA_ARGS__)
-#define LogPrintfCategory(category, ...) LogPrintLevel_(category, BCLog::Level::Info, __VA_ARGS__)
+#define LogPrintf(instance, ...) LogInfo(instance, __VA_ARGS__)
+#define LogPrintfCategory(instance, category, ...) LogPrintLevel_(instance, category, BCLog::Level::Info, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
 
 // Log conditionally, prefixing the output with the passed category name and severity level.
-#define LogPrintLevel(category, level, ...)               \
+#define LogPrintLevel(instance, category, level, ...)               \
     do {                                                  \
-        if (LogAcceptCategory((category), (level))) {     \
-            LogPrintLevel_(category, level, __VA_ARGS__); \
+        if (LogAcceptCategory(instance, (category), (level))) {     \
+            LogPrintLevel_(instance, category, level, __VA_ARGS__); \
         }                                                 \
     } while (0)
 
 // Log conditionally, prefixing the output with the passed category name.
-#define LogDebug(category, ...) LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
-#define LogTrace(category, ...) LogPrintLevel(category, BCLog::Level::Trace, __VA_ARGS__)
+#define LogDebug(instance, category, ...) LogPrintLevel(instance, category, BCLog::Level::Debug, __VA_ARGS__)
+#define LogTrace(instance, category, ...) LogPrintLevel(instance, category, BCLog::Level::Trace, __VA_ARGS__)
 
 // Deprecated conditional logging
-#define LogPrint(category, ...)  LogDebug(category, __VA_ARGS__)
+#define LogPrint(instance, category, ...)  LogDebug(instance, category, __VA_ARGS__)
 
 #endif // BITCOIN_LOGGING_H
