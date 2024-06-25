@@ -45,6 +45,7 @@ public:
      * @returns a block template
      */
     virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true) = 0;
+
     /**
      * Processes new block. A valid new block is automatically relayed to peers.
      *
@@ -63,12 +64,12 @@ public:
      * Only works on top of our current best block.
      * Does not check proof-of-work.
      *
-     * @param[out] state details of why a block failed to validate
      * @param[in] block the block to validate
      * @param[in] check_merkle_root call CheckMerkleRoot()
+     * @param[out] state details of why a block failed to validate
      * @returns false if any of the checks fail
      */
-    virtual bool testBlockValidity(BlockValidationState& state, const CBlock& block, bool check_merkle_root = true) = 0;
+    virtual bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.

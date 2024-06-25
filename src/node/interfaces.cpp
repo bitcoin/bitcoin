@@ -870,7 +870,7 @@ public:
         return context()->mempool->GetTransactionsUpdated();
     }
 
-    bool testBlockValidity(BlockValidationState& state, const CBlock& block, bool check_merkle_root) override
+    bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) override
     {
         LOCK(::cs_main);
         return TestBlockValidity(state, chainman().GetParams(), chainman().ActiveChainstate(), block, chainman().ActiveChain().Tip(), /*fCheckPOW=*/false, check_merkle_root);

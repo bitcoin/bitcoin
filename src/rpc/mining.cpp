@@ -390,7 +390,7 @@ static RPCHelpMan generateblock()
         LOCK(cs_main);
 
         BlockValidationState state;
-        if (!miner.testBlockValidity(state, block, /*check_merkle_root=*/false)) {
+        if (!miner.testBlockValidity(block, /*check_merkle_root=*/false, state)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("testBlockValidity failed: %s", state.ToString()));
         }
     }
@@ -713,7 +713,7 @@ static RPCHelpMan getblocktemplate()
                 return "inconclusive-not-best-prevblk";
             }
             BlockValidationState state;
-            miner.testBlockValidity(state, block);
+            miner.testBlockValidity(block, /*check_merkle_root=*/true, state);
             return BIP22ValidationResult(state);
         }
 
