@@ -480,7 +480,6 @@ libbitcoin_server_a_SOURCES = \
   masternode/payments.cpp \
   masternode/sync.cpp \
   masternode/utils.cpp \
-  messagesigner.cpp \
   miner.cpp \
   net.cpp \
   netfulfilledman.cpp \
@@ -770,6 +769,7 @@ libbitcoin_util_a_SOURCES = \
   fs.cpp \
   interfaces/handler.cpp \
   logging.cpp \
+  messagesigner.cpp \
   random.cpp \
   randomenv.cpp \
   rpc/request.cpp \

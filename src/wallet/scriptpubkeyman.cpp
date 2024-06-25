@@ -5,6 +5,7 @@
 #include <key_io.h>
 #include <chainparams.h>
 #include <logging.h>
+#include <messagesigner.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <shutdown.h>
@@ -724,6 +725,16 @@ SigningResult LegacyScriptPubKeyMan::SignMessage(const std::string& message, con
         return SigningResult::OK;
     }
     return SigningResult::SIGNING_FAILED;
+}
+
+bool LegacyScriptPubKeyMan::SignSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std::vector<unsigned char>& vchSig) const
+{
+    CKey key;
+    if (!GetKey(keyid, key)) {
+        return false;
+    }
+
+    return CHashSigner::SignHash(hash, key, vchSig);
 }
 
 TransactionError LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
@@ -2194,6 +2205,21 @@ SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message,
         return SigningResult::SIGNING_FAILED;
     }
     return SigningResult::OK;
+}
+
+bool DescriptorScriptPubKeyMan::SignSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std::vector<unsigned char>& vchSig) const
+{
+    std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(PKHash(keyid)), true);
+    if (!keys) {
+        return false;
+    }
+
+    CKey key;
+    if (!keys->GetKey(keyid, key)) {
+        return false;
+    }
+
+    return CHashSigner::SignHash(hash, key, vchSig);
 }
 
 TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs, int* n_signed) const
