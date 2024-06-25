@@ -10,8 +10,8 @@ env:
   MAKEFLAGS: -j4
   BUILD: check
   ### secp256k1 config
-  ECMULTWINDOW: auto
-  ECMULTGENKB: auto
+  ECMULTWINDOW: 15
+  ECMULTGENKB: 22
   ASM: no
   WIDEMUL: auto
   WITH_VALGRIND: yes
