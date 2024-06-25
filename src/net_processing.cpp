@@ -1899,7 +1899,6 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_mn_activeman(mn_activeman),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
-    assert(std::addressof(g_chainman) == std::addressof(m_chainman));
     // Stale tip checking and peer eviction are on two different timers, but we
     // don't want them to get out of sync due to drift in the scheduler, so we
     // combine them in one function and schedule at the quicker (peer-eviction)

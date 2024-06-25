@@ -55,7 +55,7 @@ static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
     return utxos;
 }
 
-static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, CAmount& changeRet)
+static std::vector<COutPoint> SelectUTXOs(const CChain& active_chain, SimpleUTXOMap& utoxs, CAmount amount, CAmount& changeRet)
 {
     changeRet = 0;
 
@@ -64,7 +64,7 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, 
     while (!utoxs.empty()) {
         bool found = false;
         for (auto it = utoxs.begin(); it != utoxs.end(); ++it) {
-            if (::ChainActive().Height() - it->second.first < 101) {
+            if (active_chain.Height() - it->second.first < 101) {
                 continue;
             }
 
@@ -84,10 +84,10 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, 
     return selectedUtxos;
 }
 
-static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount)
+static void FundTransaction(const CChain& active_chain, CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount)
 {
     CAmount change;
-    auto inputs = SelectUTXOs(utoxs, amount, change);
+    auto inputs = SelectUTXOs(active_chain, utoxs, amount, change);
     for (const auto& input : inputs) {
         tx.vin.emplace_back(input);
     }
@@ -110,7 +110,7 @@ static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, 
     }
 }
 
-static CMutableTransaction CreateProRegTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
+static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxMemPool& mempool, SimpleUTXOMap& utxos, int port, const CScript& scriptPayout, const CKey& coinbaseKey, CKey& ownerKeyRet, CBLSSecretKey& operatorKeyRet)
 {
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
@@ -127,7 +127,7 @@ static CMutableTransaction CreateProRegTx(const CTxMemPool& mempool, SimpleUTXOM
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
-    FundTransaction(tx, utxos, scriptPayout, dmn_types::Regular.collat_amount);
+    FundTransaction(active_chain, tx, utxos, scriptPayout, dmn_types::Regular.collat_amount);
     proTx.inputsHash = CalcTxInputsHash(CTransaction(tx));
     SetTxPayload(tx, proTx);
     SignTransaction(mempool, tx, coinbaseKey);
@@ -157,7 +157,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     CKey ownerKey;
     CBLSSecretKey operatorKey;
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
-    auto tx = CreateProRegTx(*m_node.mempool, utxos, 1, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
+    auto tx = CreateProRegTx(m_node.chainman->ActiveChain(), *m_node.mempool, utxos, 1, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
 
     CreateAndProcessBlock({tx}, coinbaseKey);
 

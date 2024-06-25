@@ -210,7 +210,7 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
     }
 
     if (mn_activeman != nullptr) {
-        mn_activeman->Init(::ChainActive().Tip());
+        mn_activeman->Init(chainman.ActiveTip());
     }
 
     g_wallet_init_interface.AutoLockMasternodeCollaterals();

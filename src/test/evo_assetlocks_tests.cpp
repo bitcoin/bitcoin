@@ -14,7 +14,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <util/ranges_set.h>
-#include <validation.h> // for ::ChainActive()
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -316,7 +316,7 @@ BOOST_FIXTURE_TEST_CASE(evo_assetunlock, TestChain100Setup)
     auto& blockman = Assert(m_node.chainman)->m_blockman;
     auto& qman = *Assert(m_node.llmq_ctx)->qman;
 
-    const CBlockIndex *block_index = ::ChainActive().Tip();
+    const CBlockIndex *block_index = m_node.chainman->ActiveChain().Tip();
     BOOST_CHECK(!CheckAssetUnlockTx(blockman, qman, CTransaction(tx), block_index, std::nullopt, tx_state));
     BOOST_CHECK(tx_state.GetRejectReason() == "bad-assetunlock-quorum-hash");
 
