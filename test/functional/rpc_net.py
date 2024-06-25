@@ -249,11 +249,18 @@ class NetTest(BitcoinTestFramework):
         added_nodes = self.nodes[0].getaddednodeinfo()
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
+        # check that filtering by node works
+        self.nodes[0].addnode(node="11.22.33.44", command='add')
+        first_added_node = self.nodes[0].getaddednodeinfo(node=ip_port)
+        assert_equal(added_nodes, first_added_node)
+        assert_equal(len(self.nodes[0].getaddednodeinfo()), 2)
         # check that node cannot be added again
         assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
         # check that node can be removed
         self.nodes[0].addnode(node=ip_port, command='remove')
-        assert_equal(self.nodes[0].getaddednodeinfo(), [])
+        added_nodes = self.nodes[0].getaddednodeinfo()
+        assert_equal(len(added_nodes), 1)
+        assert_equal(added_nodes[0]['addednode'], "11.22.33.44")
         # check that an invalid command returns an error
         assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         # check that trying to remove the node again returns an error
