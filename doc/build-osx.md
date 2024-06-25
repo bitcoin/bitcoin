@@ -31,7 +31,7 @@ Click on `Install` to continue the installation process.
 
 Homebrew is a package manager for macOS that allows one to install packages from the command line easily.
 While several package managers are available for macOS, this guide will focus on Homebrew as it is the most popular.
-Since the examples in this guide which walk through the installation of a package will use Homebrew, it is recommended that you install it to follow along.
+Since the examples in this guide that walk through the installation of a package will use Homebrew, it is recommended that you install it to follow along.
 Otherwise, you can adapt the commands to your package manager of choice.
 
 To install the Homebrew package manager, see: https://brew.sh
