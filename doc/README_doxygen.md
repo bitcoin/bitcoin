@@ -6,7 +6,7 @@ This is the developer documentation of the reference client for an experimental 
 which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried out collectively by the network.
 
-The software is a community-driven open source project, released under the MIT license.
+The software is a community-driven open-source project, released under the MIT license.
 
 See https://github.com/bitcoin/bitcoin and https://bitcoincore.org/ for further information about the project.
 
