@@ -16,6 +16,19 @@ inline static void SipRound(uint64_t (&v)[4])
     v[2] = std::rotl(v[2], 32);
 }
 
+inline static void SipRound2(uint64_t (&v)[4])
+{
+    SipRound(v);
+    SipRound(v);
+}
+
+inline static void ProcessBlock(uint64_t (&v)[4], uint64_t d)
+{
+    v[3] ^= d;
+    SipRound2(v);
+    v[0] ^= d;
+}
+
 CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
 {
     v[0] = 0x736f6d6570736575ULL ^ k0;
@@ -29,12 +42,7 @@ CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
 CSipHasher& CSipHasher::Write(uint64_t data)
 {
     assert(count % 8 == 0);
-
-    v[3] ^= data;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= data;
-
+    ProcessBlock(v, data);
     count += 8;
     return *this;
 }
@@ -48,10 +56,7 @@ CSipHasher& CSipHasher::Write(Span<const unsigned char> data)
         t |= uint64_t{data.front()} << (8 * (c % 8));
         c++;
         if ((c & 7) == 0) {
-            v[3] ^= t;
-            SipRound(v);
-            SipRound(v);
-            v[0] ^= t;
+            ProcessBlock(v, t);
             t = 0;
         }
         data = data.subspan(1);
@@ -69,15 +74,10 @@ uint64_t CSipHasher::Finalize() const
 
     uint64_t t = tmp | (((uint64_t) count) << 56);
 
-    v_final[3] ^= t;
-    SipRound(v_final);
-    SipRound(v_final);
-    v_final[0] ^= t;
+    ProcessBlock(v_final, t);
     v_final[2] ^= 0xFF;
-    SipRound(v_final);
-    SipRound(v_final);
-    SipRound(v_final);
-    SipRound(v_final);
+    SipRound2(v_final);
+    SipRound2(v_final);
     return v_final[0] ^ v_final[1] ^ v_final[2] ^ v_final[3];
 }
 
@@ -90,34 +90,18 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     };
 
     uint64_t d = val.GetUint64(0);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
     d = val.GetUint64(1);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
     d = val.GetUint64(2);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
     d = val.GetUint64(3);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
-    v[3] ^= (uint64_t{4}) << 59;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= (uint64_t{4}) << 59;
+    ProcessBlock(v, d);
+    d = uint64_t{4} << 59;
+    ProcessBlock(v, d);
     v[2] ^= 0xFF;
-    SipRound(v);
-    SipRound(v);
-    SipRound(v);
-    SipRound(v);
+    SipRound2(v);
+    SipRound2(v);
     return v[0] ^ v[1] ^ v[2] ^ v[3];
 }
 
@@ -130,34 +114,17 @@ uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint3
     };
 
     uint64_t d = val.GetUint64(0);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
     d = val.GetUint64(1);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
     d = val.GetUint64(2);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
     d = val.GetUint64(3);
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
-    d = ((uint64_t{36}) << 56) | extra;
-    v[3] ^= d;
-    SipRound(v);
-    SipRound(v);
-    v[0] ^= d;
+    ProcessBlock(v, d);
+    d = (uint64_t{36} << 56) | extra;
+    ProcessBlock(v, d);
     v[2] ^= 0xFF;
-    SipRound(v);
-    SipRound(v);
-    SipRound(v);
-    SipRound(v);
+    SipRound2(v);
+    SipRound2(v);
     return v[0] ^ v[1] ^ v[2] ^ v[3];
 }
