@@ -29,7 +29,7 @@ test/lint/commit-script-check.sh "$COMMIT_RANGE"
 RUST_BACKTRACE=1 "${LINT_RUNNER_PATH}/test_runner"
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "bitcoin/bitcoin" ] && [ "$CIRRUS_PR" = "" ] ; then
-    # Sanity check only the last few commits to get notified of missing sigs,
+    # Sanity check only the last few commits to getting notified of missing sigs,
     # missing keys, or expired keys. Usually there is only one new merge commit
     # per push on the master branch and a few commits on release branches, so
     # sanity checking only a few (10) commits seems sufficient and cheap.
