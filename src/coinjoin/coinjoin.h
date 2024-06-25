@@ -354,7 +354,7 @@ namespace CoinJoin
     constexpr CAmount GetMaxPoolAmount() { return COINJOIN_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 
     /// If the collateral is valid given by a client
-    bool IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral);
+    bool IsCollateralValid(CChainState& active_chainstate, CTxMemPool& mempool, const CTransaction& txCollateral);
 
 }
 

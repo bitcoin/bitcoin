@@ -595,7 +595,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         std::string strOutpoint = dmn.collateralOutpoint.ToStringShort();
         Coin coin;
         std::string collateralAddressStr = "UNKNOWN";
-        if (GetUTXOCoin(dmn.collateralOutpoint, coin)) {
+        if (GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin)) {
             CTxDestination collateralDest;
             if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 collateralAddressStr = EncodeDestination(collateralDest);

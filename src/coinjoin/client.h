@@ -73,10 +73,10 @@ public:
     using wallet_name_cjman_map = std::map<const std::string, std::unique_ptr<CCoinJoinClientManager>>;
 
 public:
-    CoinJoinWalletManager(CConnman& connman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
+    CoinJoinWalletManager(CChainState& chainstate, CConnman& connman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
                           const CMasternodeSync& mn_sync, const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode)
-        : m_connman(connman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mempool(mempool), m_mn_sync(mn_sync), m_queueman(queueman),
-          m_is_masternode{is_masternode}
+        : m_chainstate(chainstate), m_connman(connman), m_dmnman(dmnman), m_mn_metaman(mn_metaman), m_mempool(mempool), m_mn_sync(mn_sync),
+          m_queueman(queueman), m_is_masternode{is_masternode}
     {}
 
     ~CoinJoinWalletManager() {
@@ -96,6 +96,7 @@ public:
     const wallet_name_cjman_map& raw() const { return m_wallet_manager_map; }
 
 private:
+    CChainState& m_chainstate;
     CConnman& m_connman;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
@@ -181,7 +182,7 @@ public:
     bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman& connman, CTxMemPool& mempool, bool fDryRun = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
+    bool DoAutomaticDenominating(CChainState& active_chainstate, CConnman& connman, CTxMemPool& mempool, bool fDryRun = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin);
 
     /// As a client, submit part of a future mixing transaction to a Masternode to start the process
     bool SubmitDenominate(CConnman& connman);
@@ -280,7 +281,7 @@ public:
     bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
     /// Passively run mixing in the background according to the configuration in settings
-    bool DoAutomaticDenominating(CConnman& connman, CTxMemPool& mempool, bool fDryRun = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
+    bool DoAutomaticDenominating(CChainState& active_chainstate, CConnman& connman, CTxMemPool& mempool, bool fDryRun = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
     bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
     bool MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
@@ -296,7 +297,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
-    void DoMaintenance(CConnman& connman, CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
+    void DoMaintenance(CChainState& active_chainstate, CConnman& connman, CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 
     void GetJsonInfo(UniValue& obj) const EXCLUSIVE_LOCKS_REQUIRED(!cs_deqsessions);
 };

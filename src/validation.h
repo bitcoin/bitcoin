@@ -294,9 +294,9 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
                                              const Package& txns, bool test_accept)
                                              EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
-int GetUTXOHeight(const COutPoint& outpoint);
-int GetUTXOConfirmations(const COutPoint& outpoint);
+bool GetUTXOCoin(CChainState& active_chainstate, const COutPoint& outpoint, Coin& coin);
+int GetUTXOHeight(CChainState& active_chainstate, const COutPoint& outpoint);
+int GetUTXOConfirmations(CChainState& active_chainstate, const COutPoint& outpoint);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);

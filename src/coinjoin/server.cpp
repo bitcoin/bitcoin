@@ -574,7 +574,7 @@ bool CCoinJoinServer::AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessag
         return false;
     }
 
-    if (!CoinJoin::IsCollateralValid(mempool, *entry.txCollateral)) {
+    if (!CoinJoin::IsCollateralValid(m_chainstate, mempool, *entry.txCollateral)) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: collateral not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;
@@ -685,7 +685,7 @@ bool CCoinJoinServer::IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& n
     }
 
     // check collateral
-    if (!fUnitTest && !CoinJoin::IsCollateralValid(mempool, CTransaction(dsa.txCollateral))) {
+    if (!fUnitTest && !CoinJoin::IsCollateralValid(m_chainstate, mempool, CTransaction(dsa.txCollateral))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- collateral not valid!\n", __func__);
         nMessageIDRet = ERR_INVALID_COLLATERAL;
         return false;

@@ -322,7 +322,7 @@ bool ATMPIfSaneFee(CChainState& active_chainstate, CTxMemPool& pool, const CTran
 }
 
 // check to make sure the collateral provided by the client is valid
-bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txCollateral)
+bool CoinJoin::IsCollateralValid(CChainState& active_chainstate, CTxMemPool& mempool, const CTransaction& txCollateral)
 {
     if (txCollateral.vout.empty()) return false;
     if (txCollateral.nLockTime != 0) return false;
@@ -348,7 +348,7 @@ bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txColl
                 return false;
             }
             nValueIn += mempoolTx->vout[txin.prevout.n].nValue;
-        } else if (GetUTXOCoin(txin.prevout, coin)) {
+        } else if (GetUTXOCoin(active_chainstate, txin.prevout, coin)) {
             nValueIn += coin.out.nValue;
         } else {
             LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString()); /* Continued */
@@ -366,7 +366,7 @@ bool CoinJoin::IsCollateralValid(CTxMemPool& mempool, const CTransaction& txColl
 
     {
         LOCK(cs_main);
-        if (!ATMPIfSaneFee(::ChainstateActive(), mempool, MakeTransactionRef(txCollateral), /*test_accept=*/true)) {
+        if (!ATMPIfSaneFee(active_chainstate, mempool, MakeTransactionRef(txCollateral), /*test_accept=*/true)) {
             LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }

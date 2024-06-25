@@ -204,7 +204,7 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
         auto mnList = dmnman.GetListAtChainTip();
         mnList.ForEachMN(false, [&](auto& dmn) {
             Coin coin;
-            GetUTXOCoin(dmn.collateralOutpoint, coin);
+            GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }
