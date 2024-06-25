@@ -250,6 +250,9 @@ public:
         });
     }
 
+    /* Block templates that connected clients may be working on */
+    BlockTemplateCache& GetBlockTemplates() EXCLUSIVE_LOCKS_REQUIRED(m_tp_mutex) { return m_block_template_cache; }
+
 private:
     void Init(const Sv2TemplateProviderOptions& options);
 
