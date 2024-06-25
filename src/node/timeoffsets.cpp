@@ -27,7 +27,7 @@ void TimeOffsets::Add(std::chrono::seconds offset)
         m_offsets.pop_front();
     }
     m_offsets.push_back(offset);
-    LogDebug(BCLog::NET, "Added time offset %+ds, total samples %d\n",
+    LogDebug(LogInstance(), BCLog::NET, "Added time offset %+ds, total samples %d\n",
              Ticks<std::chrono::seconds>(offset), m_offsets.size());
 }
 
@@ -60,7 +60,7 @@ bool TimeOffsets::WarnIfOutOfSync() const
         "take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` "
         "RPC methods to get more info."
     ), Ticks<std::chrono::minutes>(WARN_THRESHOLD))};
-    LogWarning("%s\n", msg.original);
+    LogWarning(LogInstance(), "%s\n", msg.original);
     m_warnings.Set(node::Warning::CLOCK_OUT_OF_SYNC, msg);
     return true;
 }

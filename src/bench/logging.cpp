@@ -29,55 +29,55 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
 static void LogPrintLevelWithThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=1", "-debug=net"}, [] {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
+        LogPrintLevel(LogInstance(), BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
 }
 
 static void LogPrintLevelWithoutThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
+        LogPrintLevel(LogInstance(), BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
 }
 
 static void LogPrintWithCategory(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogPrint(BCLog::NET, "%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogPrint(LogInstance(), BCLog::NET, "%s\n", "test"); });
 }
 
 static void LogPrintWithoutCategory(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogPrint(BCLog::NET, "%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogPrint(LogInstance(), BCLog::NET, "%s\n", "test"); });
 }
 
 static void LogPrintfCategoryWithThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=1", "-debug=net"}, [] {
-        LogPrintfCategory(BCLog::NET, "%s\n", "test");
+        LogPrintfCategory(LogInstance(), BCLog::NET, "%s\n", "test");
     });
 }
 
 static void LogPrintfCategoryWithoutThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] {
-        LogPrintfCategory(BCLog::NET, "%s\n", "test");
+        LogPrintfCategory(LogInstance(), BCLog::NET, "%s\n", "test");
     });
 }
 
 static void LogPrintfWithThreadNames(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=1"}, [] { LogPrintf("%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=1"}, [] { LogPrintf(LogInstance(), "%s\n", "test"); });
 }
 
 static void LogPrintfWithoutThreadNames(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0"}, [] { LogPrintf("%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0"}, [] { LogPrintf(LogInstance(), "%s\n", "test"); });
 }
 
 static void LogWithoutWriteToFile(benchmark::Bench& bench)
 {
     // Disable writing the log to a file, as used for unit tests and fuzzing in `MakeNoLogFileContext`.
     Logging(bench, {"-nodebuglogfile", "-debug=1"}, [] {
-        LogPrintf("%s\n", "test");
-        LogPrint(BCLog::NET, "%s\n", "test");
+        LogPrintf(LogInstance(), "%s\n", "test");
+        LogPrint(LogInstance(), BCLog::NET, "%s\n", "test");
     });
 }
 

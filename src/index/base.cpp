@@ -148,7 +148,7 @@ void BaseIndex::Sync()
         std::chrono::steady_clock::time_point last_locator_write_time{0s};
         while (true) {
             if (m_interrupt) {
-                LogPrintf("%s: m_interrupt set; exiting ThreadSync\n", GetName());
+                LogPrintf(LogInstance(), "%s: m_interrupt set; exiting ThreadSync\n", GetName());
 
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. If it fails, the error will be already be
@@ -202,7 +202,7 @@ void BaseIndex::Sync()
 
             auto current_time{std::chrono::steady_clock::now()};
             if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
-                LogPrintf("Syncing %s with block chain from height %d\n",
+                LogPrintf(LogInstance(), "Syncing %s with block chain from height %d\n",
                           GetName(), pindex->nHeight);
                 last_log_time = current_time;
             }
@@ -217,9 +217,9 @@ void BaseIndex::Sync()
     }
 
     if (pindex) {
-        LogPrintf("%s is enabled at height %d\n", GetName(), pindex->nHeight);
+        LogPrintf(LogInstance(), "%s is enabled at height %d\n", GetName(), pindex->nHeight);
     } else {
-        LogPrintf("%s is enabled\n", GetName());
+        LogPrintf(LogInstance(), "%s is enabled\n", GetName());
     }
 }
 
@@ -237,7 +237,7 @@ bool BaseIndex::Commit()
         }
     }
     if (!ok) {
-        LogError("%s: Failed to commit latest %s state\n", __func__, GetName());
+        LogError(LogInstance(), "%s: Failed to commit latest %s state\n", __func__, GetName());
         return false;
     }
     return true;
@@ -298,7 +298,7 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
         // in the ValidationInterface queue backlog even after the sync thread has caught up to the
         // new chain tip. In this unlikely event, log a warning and let the queue clear.
         if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
-            LogPrintf("%s: WARNING: Block %s does not connect to an ancestor of "
+            LogPrintf(LogInstance(), "%s: WARNING: Block %s does not connect to an ancestor of "
                       "known best chain (tip=%s); not updating index\n",
                       __func__, pindex->GetBlockHash().ToString(),
                       best_block_index->GetBlockHash().ToString());
@@ -356,7 +356,7 @@ void BaseIndex::ChainStateFlushed(ChainstateRole role, const CBlockLocator& loca
     // event, log a warning and let the queue clear.
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
-        LogPrintf("%s: WARNING: Locator contains block (hash=%s) not on known best "
+        LogPrintf(LogInstance(), "%s: WARNING: Locator contains block (hash=%s) not on known best "
                   "chain (tip=%s); not writing index locator\n",
                   __func__, locator_tip_hash.ToString(),
                   best_block_index->GetBlockHash().ToString());
@@ -388,7 +388,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
         }
     }
 
-    LogPrintf("%s: %s is catching up on block notifications\n", __func__, GetName());
+    LogPrintf(LogInstance(), "%s: %s is catching up on block notifications\n", __func__, GetName());
     m_chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
     return true;
 }

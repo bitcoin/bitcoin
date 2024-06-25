@@ -28,19 +28,19 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
         strCaption = "Error: ";
-        if (!fSecure) LogError("%s\n", message.original);
+        if (!fSecure) LogError(LogInstance(), "%s\n", message.original);
         break;
     case CClientUIInterface::MSG_WARNING:
         strCaption = "Warning: ";
-        if (!fSecure) LogWarning("%s\n", message.original);
+        if (!fSecure) LogWarning(LogInstance(), "%s\n", message.original);
         break;
     case CClientUIInterface::MSG_INFORMATION:
         strCaption = "Information: ";
-        if (!fSecure) LogInfo("%s\n", message.original);
+        if (!fSecure) LogInfo(LogInstance(), "%s\n", message.original);
         break;
     default:
         strCaption = caption + ": "; // Use supplied caption (can be empty)
-        if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
+        if (!fSecure) LogInfo(LogInstance(), "%s%s\n", strCaption, message.original);
     }
 
     tfm::format(std::cerr, "%s%s\n", strCaption, message.original);
@@ -54,7 +54,7 @@ bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message
 
 void noui_InitMessage(const std::string& message)
 {
-    LogPrintf("init message: %s\n", message);
+    LogPrintf(LogInstance(), "init message: %s\n", message);
 }
 
 void noui_connect()
@@ -66,19 +66,19 @@ void noui_connect()
 
 bool noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, const std::string& caption, unsigned int style)
 {
-    LogPrintf("%s: %s\n", caption, message.original);
+    LogPrintf(LogInstance(), "%s: %s\n", caption, message.original);
     return false;
 }
 
 bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
 {
-    LogPrintf("%s: %s\n", caption, message);
+    LogPrintf(LogInstance(), "%s: %s\n", caption, message);
     return false;
 }
 
 void noui_InitMessageRedirect(const std::string& message)
 {
-    LogPrintf("init message: %s\n", message);
+    LogPrintf(LogInstance(), "init message: %s\n", message);
 }
 
 void noui_test_redirect()

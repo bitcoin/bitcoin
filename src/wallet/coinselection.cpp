@@ -718,14 +718,14 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
             result.AddInput(*lowest_larger);
         }
 
-        if (LogAcceptCategory(BCLog::SELECTCOINS, BCLog::Level::Debug)) {
+        if (LogAcceptCategory(LogInstance(), BCLog::SELECTCOINS, BCLog::Level::Debug)) {
             std::string log_message{"Coin selection best subset: "};
             for (unsigned int i = 0; i < applicable_groups.size(); i++) {
                 if (vfBest[i]) {
                     log_message += strprintf("%s ", FormatMoney(applicable_groups[i].m_value));
                 }
             }
-            LogPrint(BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
+            LogPrint(LogInstance(), BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
         }
     }
 
