@@ -45,6 +45,22 @@ fi
 AC_MSG_RESULT($has_valgrind)
 ])
 
+AC_DEFUN([SECP_MSAN_CHECK], [
+AC_MSG_CHECKING(whether MemorySanitizer is enabled)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+  #if defined(__has_feature)
+  #  if __has_feature(memory_sanitizer)
+       /* MemorySanitizer is enabled. */
+  #  elif
+  #    error "MemorySanitizer is disabled."
+  #  endif
+  #else
+  #  error "__has_feature is not defined."
+  #endif
+  ]])], [msan_enabled=yes], [msan_enabled=no])
+AC_MSG_RESULT([$msan_enabled])
+])
+
 dnl SECP_TRY_APPEND_CFLAGS(flags, VAR)
 dnl Append flags to VAR if CC accepts them.
 AC_DEFUN([SECP_TRY_APPEND_CFLAGS], [
