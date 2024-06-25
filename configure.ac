@@ -1947,9 +1947,9 @@ esac
 
 echo
 echo "Options used to compile and link:"
-echo "  boost process = $with_boost_process"
-echo "  multiprocess  = $build_multiprocess"
-echo "  with libs     = $build_bitcoin_libs"
+echo "  boost process       = $with_boost_process"
+echo "  multiprocess        = $build_multiprocess"
+echo "  with libs           = $build_bitcoin_libs"
 echo "  with wallet         = $enable_wallet"
 echo "  with gui / qt       = $bitcoin_enable_qt"
 if test "x$enable_wallet" != "xno"; then
