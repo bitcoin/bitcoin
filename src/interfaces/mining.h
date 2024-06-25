@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INTERFACES_MINING_H
 #define BITCOIN_INTERFACES_MINING_H
 
+#include <memory>
 #include <optional>
 #include <uint256.h>
 
