@@ -637,7 +637,7 @@ public:
 
     void addAddressIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
     bool getAddressIndex(const std::vector<std::pair<uint160, AddressType>>& addresses,
-                         std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta>>& results) const;
+                         std::vector<CMempoolAddressDeltaEntry>& results) const;
     bool removeAddressIndex(const uint256 txhash);
 
     void addSpentIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);

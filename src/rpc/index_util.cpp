@@ -10,7 +10,7 @@
 #include <validation.h>
 
 bool GetAddressIndex(const uint160& addressHash, const AddressType type,
-                     std::vector<std::pair<CAddressIndexKey, CAmount>>& addressIndex,
+                     std::vector<CAddressIndexEntry>& addressIndex,
                      const int32_t start, const int32_t end)
 {
     if (!fAddressIndex)
@@ -23,7 +23,7 @@ bool GetAddressIndex(const uint160& addressHash, const AddressType type,
 }
 
 bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
-                            std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& unspentOutputs)
+                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs)
 {
     if (!fAddressIndex)
         return error("Address index not enabled");

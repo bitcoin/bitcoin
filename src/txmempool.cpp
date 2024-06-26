@@ -471,7 +471,7 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry& entry, const CCoinsViewC
 }
 
 bool CTxMemPool::getAddressIndex(const std::vector<std::pair<uint160, AddressType>>& addresses,
-                                 std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta>>& results) const
+                                 std::vector<CMempoolAddressDeltaEntry>& results) const
 {
     LOCK(cs);
     for (const auto& address : addresses) {

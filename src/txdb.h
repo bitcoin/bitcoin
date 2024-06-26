@@ -86,16 +86,16 @@ public:
     void ReadReindexing(bool &fReindexing);
 
     bool ReadSpentIndex(const CSpentIndexKey key, CSpentIndexValue& value);
-    bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue>>& vect);
+    bool UpdateSpentIndex(const std::vector<CSpentIndexEntry>& vect);
 
     bool ReadAddressUnspentIndex(const uint160& addressHash, const AddressType type,
-                                 std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& vect);
-    bool UpdateAddressUnspentIndex(const std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& vect);
+                                 std::vector<CAddressUnspentIndexEntry>& vect);
+    bool UpdateAddressUnspentIndex(const std::vector<CAddressUnspentIndexEntry>& vect);
 
-    bool WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount>>& vect);
-    bool EraseAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount>>& vect);
+    bool WriteAddressIndex(const std::vector<CAddressIndexEntry>& vect);
+    bool EraseAddressIndex(const std::vector<CAddressIndexEntry>& vect);
     bool ReadAddressIndex(const uint160& addressHash, const AddressType type,
-                          std::vector<std::pair<CAddressIndexKey, CAmount>>& addressIndex,
+                          std::vector<CAddressIndexEntry>& addressIndex,
                           const int32_t start = 0, const int32_t end = 0);
 
     bool WriteTimestampIndex(const CTimestampIndexKey& timestampIndex);

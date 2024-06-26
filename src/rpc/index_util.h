@@ -10,23 +10,20 @@
 #include <vector>
 
 #include <amount.h>
+#include <addressindex.h>
+#include <spentindex.h>
 
 class CTxMemPool;
 class uint160;
 class uint256;
-struct CAddressIndexKey;
-struct CAddressUnspentKey;
-struct CAddressUnspentValue;
-struct CSpentIndexKey;
-struct CSpentIndexValue;
 
 enum class AddressType : uint8_t;
 
 bool GetAddressIndex(const uint160& addressHash, const AddressType type,
-                     std::vector<std::pair<CAddressIndexKey, CAmount>>& addressIndex,
+                     std::vector<CAddressIndexEntry>& addressIndex,
                      const int32_t start = 0, const int32_t end = 0);
 bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
-                            std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& unspentOutputs);
+                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs);
 bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value);
 bool GetTimestampIndex(const uint32_t high, const uint32_t low, std::vector<uint256>& hashes);
 

@@ -1685,9 +1685,9 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         return DISCONNECT_FAILED;
     }
 
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
-    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    std::vector<CAddressIndexEntry> addressIndex;
+    std::vector<CAddressUnspentIndexEntry> addressUnspentIndex;
+    std::vector<CSpentIndexEntry> spentIndex;
 
     std::optional<MNListUpdates> mnlist_updates_opt{std::nullopt};
     if (!m_chain_helper->special_tx->UndoSpecialTxsInBlock(block, pindex, mnlist_updates_opt)) {
@@ -2152,9 +2152,9 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int nInputs = 0;
     unsigned int nSigOps = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
-    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    std::vector<CAddressIndexEntry> addressIndex;
+    std::vector<CAddressUnspentIndexEntry> addressUnspentIndex;
+    std::vector<CSpentIndexEntry> spentIndex;
 
     bool fDIP0001Active_context = pindex->nHeight >= Params().GetConsensus().DIP0001Height;
 
@@ -4782,9 +4782,9 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
             pindex->GetBlockHash().ToString(), state.ToString());
     }
 
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
-    std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    std::vector<CAddressIndexEntry> addressIndex;
+    std::vector<CAddressUnspentIndexEntry> addressUnspentIndex;
+    std::vector<CSpentIndexEntry> spentIndex;
 
     for (size_t i = 0; i < block.vtx.size(); i++) {
         const CTransactionRef& tx = block.vtx[i];

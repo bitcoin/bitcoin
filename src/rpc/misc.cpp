@@ -701,13 +701,11 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
     return true;
 }
 
-static bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a,
-                std::pair<CAddressUnspentKey, CAddressUnspentValue> b) {
+static bool heightSort(CAddressUnspentIndexEntry a, CAddressUnspentIndexEntry b) {
     return a.second.m_block_height < b.second.m_block_height;
 }
 
-static bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
-                   std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> b) {
+static bool timestampSort(CMempoolAddressDeltaEntry a, CMempoolAddressDeltaEntry b) {
     return a.second.m_time < b.second.m_time;
 }
 
@@ -749,7 +747,7 @@ static RPCHelpMan getaddressmempool()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
-    std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > indexes;
+    std::vector<CMempoolAddressDeltaEntry> indexes;
 
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     if (!mempool.getAddressIndex(addresses, indexes)) {
@@ -821,7 +819,7 @@ static RPCHelpMan getaddressutxos()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
-    std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
+    std::vector<CAddressUnspentIndexEntry> unspentOutputs;
 
     for (const auto& address : addresses) {
         if (!GetAddressUnspentIndex(address.first, address.second, unspentOutputs)) {
@@ -906,7 +904,7 @@ static RPCHelpMan getaddressdeltas()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    std::vector<CAddressIndexEntry> addressIndex;
 
     for (const auto& address : addresses) {
         if (start > 0 && end > 0) {
@@ -975,7 +973,7 @@ static RPCHelpMan getaddressbalance()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    std::vector<CAddressIndexEntry> addressIndex;
 
     for (const auto& address : addresses) {
         if (!GetAddressIndex(address.first, address.second, addressIndex)) {
@@ -1054,7 +1052,7 @@ static RPCHelpMan getaddresstxids()
         }
     }
 
-    std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
+    std::vector<CAddressIndexEntry> addressIndex;
 
     for (const auto& address : addresses) {
         if (start > 0 && end > 0) {
