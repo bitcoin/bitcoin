@@ -203,12 +203,13 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     LOCK(wallet->cs_wallet);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman);
 
     {
         LOCK(cs_main);
         std::string strError = "";
-        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), strError, false))
+        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), chainman, strError, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
     }
 
@@ -311,6 +312,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     gobject_submit_help(request);
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman);
     CHECK_NONFATAL(node.govman);
 
@@ -384,7 +386,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
         CHECK_NONFATAL(node.dmnman);
 
         std::string strError;
-        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), strError, fMissingConfirmations, true) && !fMissingConfirmations) {
+        if (!govobj.IsValidLocally(node.dmnman->GetListAtChainTip(), chainman, strError, fMissingConfirmations, true) && !fMissingConfirmations) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
         }
@@ -607,8 +609,8 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
 }
 #endif
 
-static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const std::string& strCachedSignal,
-                            const std::string& strType, int nStartTime)
+static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman,
+                            const std::string& strCachedSignal, const std::string& strType, int nStartTime)
 {
     UniValue objResult(UniValue::VOBJ);
 
@@ -655,7 +657,7 @@ static UniValue ListObjects(CGovernanceManager& govman, const CDeterministicMNLi
 
         // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
         std::string strError = "";
-        bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(tip_mn_list, strError, false));
+        bObj.pushKV("fBlockchainValidity",  govObj.IsValidLocally(tip_mn_list, chainman, strError, false));
         bObj.pushKV("IsValidReason",  strError.c_str());
         bObj.pushKV("fCachedValid",  govObj.IsSetCachedValid());
         bObj.pushKV("fCachedFunding",  govObj.IsSetCachedFunding());
@@ -700,10 +702,11 @@ static UniValue gobject_list(const JSONRPCRequest& request)
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman);
     CHECK_NONFATAL(node.govman);
 
-    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), strCachedSignal, strType, 0);
+    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), chainman, strCachedSignal, strType, 0);
 }
 
 static void gobject_diff_help(const JSONRPCRequest& request)
@@ -738,9 +741,10 @@ static UniValue gobject_diff(const JSONRPCRequest& request)
         return "Invalid type, should be 'proposals', 'triggers' or 'all'";
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman && node.govman);
 
-    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), strCachedSignal, strType, node.govman->GetLastDiffTime());
+    return ListObjects(*node.govman, node.dmnman->GetListAtChainTip(), chainman, strCachedSignal, strType, node.govman->GetLastDiffTime());
 }
 
 static void gobject_get_help(const JSONRPCRequest& request)
@@ -768,6 +772,7 @@ static UniValue gobject_get(const JSONRPCRequest& request)
 
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman && node.govman);
 
     LOCK2(cs_main, node.govman->cs);
@@ -829,7 +834,7 @@ static UniValue gobject_get(const JSONRPCRequest& request)
 
     // --
     std::string strError = "";
-    objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(tip_mn_list, strError, false));
+    objResult.pushKV("fLocalValidity",  pGovObj->IsValidLocally(tip_mn_list, chainman, strError, false));
     objResult.pushKV("IsValidReason",  strError.c_str());
     objResult.pushKV("fCachedValid",  pGovObj->IsSetCachedValid());
     objResult.pushKV("fCachedFunding",  pGovObj->IsSetCachedFunding());
@@ -1100,7 +1105,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);
     obj.pushKV("fundingthreshold", int(node.dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10));
-    obj.pushKV("governancebudget", ValueFromAmount(CSuperblock::GetPaymentsLimit(nNextSuperblock)));
+    obj.pushKV("governancebudget", ValueFromAmount(CSuperblock::GetPaymentsLimit(chainman.ActiveChain(), nNextSuperblock)));
 
     return obj;
 }
@@ -1126,7 +1131,8 @@ static UniValue getsuperblockbudget(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
     }
 
-    return ValueFromAmount(CSuperblock::GetPaymentsLimit(nBlockHeight));
+    const ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    return ValueFromAmount(CSuperblock::GetPaymentsLimit(chainman.ActiveChain(), nBlockHeight));
 }
 void RegisterGovernanceRPCCommands(CRPCTable &t)
 {

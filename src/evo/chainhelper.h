@@ -9,6 +9,7 @@
 
 class CCreditPoolManager;
 class CDeterministicMNManager;
+class ChainstateManager;
 class CMNHFManager;
 class CMNPaymentsProcessor;
 class CMasternodeSync;
@@ -27,7 +28,7 @@ class CChainstateHelper
 {
 public:
     explicit CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman, CGovernanceManager& govman,
-                               llmq::CQuorumBlockProcessor& qblockman, const Consensus::Params& consensus_params,
+                               llmq::CQuorumBlockProcessor& qblockman, const ChainstateManager& chainman, const Consensus::Params& consensus_params,
                                const CMasternodeSync& mn_sync, const CSporkManager& sporkman, const llmq::CChainLocksHandler& clhandler,
                                const llmq::CQuorumManager& qman);
     ~CChainstateHelper();

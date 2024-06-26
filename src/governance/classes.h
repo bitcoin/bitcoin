@@ -10,12 +10,12 @@
 #include <script/standard.h>
 #include <uint256.h>
 
+class CChain;
+class CGovernanceManager;
+class CSuperblock;
+class CSuperblockManager;
 class CTxOut;
 class CTransaction;
-
-class CSuperblock;
-class CGovernanceManager;
-class CSuperblockManager;
 
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
@@ -38,7 +38,7 @@ public:
     static bool GetSuperblockPayments(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
     static void ExecuteBestSuperblock(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, int nBlockHeight);
 
-    static bool IsValid(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    static bool IsValid(CGovernanceManager& govman, const CChain& active_chain, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
 };
 
 /**
@@ -105,7 +105,7 @@ public:
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
-    static CAmount GetPaymentsLimit(int nBlockHeight);
+    static CAmount GetPaymentsLimit(const CChain& active_chain, int nBlockHeight);
 
     SeenObjectStatus GetStatus() const { return nStatus; }
     void SetStatus(SeenObjectStatus nStatusIn) { nStatus = nStatusIn; }
@@ -126,7 +126,7 @@ public:
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 
-    bool IsValid(CGovernanceManager& govman, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
+    bool IsValid(CGovernanceManager& govman, const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
     bool IsExpired(const CGovernanceManager& govman) const;
 
     std::vector<uint256> GetProposalHashes() const;
