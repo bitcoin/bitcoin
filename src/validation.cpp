@@ -1970,13 +1970,15 @@ void StopScriptCheckWorkerThreads()
     scriptcheckqueue.StopWorkerThreads();
 }
 
-bool GetBlockHash(uint256& hashRet, int nBlockHeight)
+bool GetBlockHash(const CChain& active_chain, uint256& hashRet, int nBlockHeight)
 {
     LOCK(cs_main);
-    if(::ChainActive().Tip() == nullptr) return false;
-    if(nBlockHeight < -1 || nBlockHeight > ::ChainActive().Height()) return false;
-    if(nBlockHeight == -1) nBlockHeight = ::ChainActive().Height();
-    hashRet = ::ChainActive()[nBlockHeight]->GetBlockHash();
+
+    if (active_chain.Tip() == nullptr) return false;
+    if (nBlockHeight < -1 || nBlockHeight > active_chain.Height()) return false;
+    if (nBlockHeight == -1) nBlockHeight = active_chain.Height();
+    hashRet = active_chain[nBlockHeight]->GetBlockHash();
+
     return true;
 }
 

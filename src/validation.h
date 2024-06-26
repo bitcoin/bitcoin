@@ -1143,10 +1143,10 @@ extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
 
 /**
- * Return true if hash can be found in ::ChainActive() at nBlockHeight height.
- * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
+ * Return true if hash can be found in active_chain at nBlockHeight height.
+ * Fills hashRet with found hash, if no nBlockHeight is specified - active_chain.Height() is used.
  */
-bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
+bool GetBlockHash(const CChain& active_chain, uint256& hashRet, int nBlockHeight = -1);
 
 /** Get block file info entry for one block file */
 CBlockFileInfo* GetBlockFileInfo(size_t n);

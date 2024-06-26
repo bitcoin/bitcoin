@@ -222,7 +222,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     }
     const auto& llmq_params = llmq_params_opt.value();
 
-    uint256 quorumHash = GetQuorumBlockHash(llmq_params, nHeight, qc.quorumIndex);
+    uint256 quorumHash = GetQuorumBlockHash(llmq_params, m_chainstate.m_chain, nHeight, qc.quorumIndex);
 
     LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s fJustCheck[%d] processing commitment from block.\n", __func__,
              nHeight, ToUnderlying(qc.llmqType), qc.quorumIndex, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString(), fJustCheck);
@@ -420,7 +420,7 @@ size_t CQuorumBlockProcessor::GetNumCommitmentsRequired(const Consensus::LLMQPar
     size_t ret{0};
 
     for (const auto quorumIndex : irange::range(quorums_num)) {
-        uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);
+        uint256 quorumHash = GetQuorumBlockHash(llmqParams, m_chainstate.m_chain, nHeight, quorumIndex);
         if (!quorumHash.IsNull() && !HasMinedCommitment(llmqParams.type, quorumHash)) ++ret;
     }
 
@@ -428,14 +428,14 @@ size_t CQuorumBlockProcessor::GetNumCommitmentsRequired(const Consensus::LLMQPar
 }
 
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)
-uint256 CQuorumBlockProcessor::GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, int nHeight, int quorumIndex)
+uint256 CQuorumBlockProcessor::GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, const CChain& active_chain, int nHeight, int quorumIndex)
 {
     AssertLockHeld(cs_main);
 
     int quorumStartHeight = nHeight - (nHeight % llmqParams.dkgInterval) + quorumIndex;
 
     uint256 quorumBlockHash;
-    if (!GetBlockHash(quorumBlockHash, quorumStartHeight)) {
+    if (!GetBlockHash(active_chain, quorumBlockHash, quorumStartHeight)) {
         LogPrint(BCLog::LLMQ, "[GetQuorumBlockHash] llmqType[%d] h[%d] qi[%d] quorumStartHeight[%d] quorumHash[EMPTY]\n", ToUnderlying(llmqParams.type), nHeight, quorumIndex, quorumStartHeight);
         return {};
     }
@@ -705,7 +705,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
     for (const auto quorumIndex : irange::range(quorums_num)) {
         CFinalCommitment cf;
 
-        uint256 quorumHash = GetQuorumBlockHash(llmqParams, nHeight, quorumIndex);
+        uint256 quorumHash = GetQuorumBlockHash(llmqParams, m_chainstate.m_chain, nHeight, quorumIndex);
         if (quorumHash.IsNull()) {
             break;
         }
