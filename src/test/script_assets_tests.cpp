@@ -11,6 +11,7 @@
 #include <span.h>
 #include <streams.h>
 #include <test/util/json.h>
+#include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
@@ -27,7 +28,7 @@
 
 script_verify_flags ParseScriptFlags(std::string strFlags);
 
-BOOST_AUTO_TEST_SUITE(script_assets_tests)
+BOOST_FIXTURE_TEST_SUITE(script_assets_tests, BasicTestingSetup)
 
 template <typename T>
 CScript ToScript(const T& byte_container)
@@ -150,7 +151,7 @@ BOOST_AUTO_TEST_CASE(script_assets_test)
 {
     // See src/test/fuzz/script_assets_test_minimizer.cpp for information on how to generate
     // the script_assets_test.json file used by this test.
-    SignatureCache signature_cache{DEFAULT_SIGNATURE_CACHE_BYTES};
+    SignatureCache signature_cache{m_logger, DEFAULT_SIGNATURE_CACHE_BYTES};
 
     const char* dir = std::getenv("DIR_UNIT_TEST_DATA");
     BOOST_WARN_MESSAGE(dir != nullptr, "Variable DIR_UNIT_TEST_DATA unset, skipping script_assets_test");

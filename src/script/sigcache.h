@@ -15,7 +15,6 @@
 // See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
 #include <util/byte_units.h> // IWYU pragma: keep
 #include <util/hasher.h>
-
 #include <cstddef>
 #include <shared_mutex>
 #include <span>
@@ -24,6 +23,9 @@
 class CPubKey;
 class CTransaction;
 class XOnlyPubKey;
+namespace util::log {
+class Logger;
+} // namespace util::log
 
 // DoS prevention: limit cache size to 32MiB (over 1000000 entries on 64-bit
 // systems). Due to how we count cache size, actual memory usage is slightly
@@ -49,7 +51,7 @@ private:
     std::shared_mutex cs_sigcache;
 
 public:
-    SignatureCache(size_t max_size_bytes);
+    SignatureCache(util::log::Logger& logger, size_t max_size_bytes);
 
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
