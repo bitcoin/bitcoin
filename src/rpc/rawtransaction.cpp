@@ -1564,6 +1564,7 @@ static RPCHelpMan combinepsbt()
                             {"psbt", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A base64 string of a PSBT"},
                         },
                         },
+                    {"stripderivs", RPCArg::Type::BOOL, RPCArg::Default{false}, "Strip BIP 32 derivation paths for out inputs and outputs if they are present"},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "", "The base64-encoded partially signed transaction"
@@ -1573,6 +1574,8 @@ static RPCHelpMan combinepsbt()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    bool strip_derivation_paths = request.params[1].isNull() ? false : request.params[1].get_bool();
+
     // Unserialize the transactions
     std::vector<PartiallySignedTransaction> psbtxs;
     UniValue txs = request.params[0].get_array();
@@ -1584,6 +1587,9 @@ static RPCHelpMan combinepsbt()
         std::string error;
         if (!DecodeBase64PSBT(psbtx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
+        }
+        if (strip_derivation_paths) {
+            psbtx.StripDerivationPaths();
         }
         psbtxs.push_back(psbtx);
     }
