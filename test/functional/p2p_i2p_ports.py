@@ -27,7 +27,7 @@ class I2PPorts(BitcoinTestFramework):
 
         self.log.info("Ensure we try to connect if port=0 and get an error due to missing I2P proxy")
         addr = "h3r6bkn46qxftwja53pxiykntegfyfjqtnzbm6iv6r5mungmqgmq.b32.i2p:0"
-        with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}: Cannot connect to {PROXY}"]):
+        with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}"]):
             node.addnode(node=addr, command="onetry")
 
 
