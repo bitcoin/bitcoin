@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(sign)
     }
     // All of the above should be OK, and the txTos have valid signatures
     // Check to make sure signature verification fails if we use the wrong ScriptSig:
-    SignatureCache signature_cache{DEFAULT_SIGNATURE_CACHE_BYTES};
+    SignatureCache signature_cache{m_logger, DEFAULT_SIGNATURE_CACHE_BYTES};
     for (int i = 0; i < 8; i++) {
         PrecomputedTransactionData txdata(txTo[i]);
         for (int j = 0; j < 8; j++)
