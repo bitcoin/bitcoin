@@ -950,7 +950,6 @@ libbitcoinkernel_la_SOURCES = \
   kernel/context.cpp \
   kernel/cs_main.cpp \
   kernel/disconnected_transactions.cpp \
-  kernel/mempool_persist.cpp \
   kernel/mempool_removal_reason.cpp \
   logging.cpp \
   node/blockstorage.cpp \
