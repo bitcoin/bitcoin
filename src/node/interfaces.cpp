@@ -881,7 +881,6 @@ public:
         BlockAssembler::Options options;
         ApplyArgsManOptions(gArgs, options);
 
-        LOCK(::cs_main);
         return BlockAssembler{chainman().ActiveChainstate(), use_mempool ? context()->mempool.get() : nullptr, options}.CreateNewBlock(script_pub_key);
     }
 
