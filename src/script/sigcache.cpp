@@ -17,6 +17,8 @@
 #include <shared_mutex>
 #include <vector>
 
+#define LOG_REQUIRE_CONTEXT true
+
 SignatureCache::SignatureCache(util::log::Logger& logger, const size_t max_size_bytes)
 {
     uint256 nonce = GetRandHash();
@@ -32,7 +34,8 @@ SignatureCache::SignatureCache(util::log::Logger& logger, const size_t max_size_
     m_salted_hasher_schnorr.Write(PADDING_SCHNORR, 32);
 
     const auto [num_elems, approx_size_bytes] = setValid.setup_bytes(max_size_bytes);
-    LogInfo("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements",
+    const util::log::Context log{BCLog::VALIDATION, &logger};
+    LogInfo(log, "Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements",
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
 }
 
