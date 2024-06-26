@@ -157,14 +157,6 @@ private:
     };
 
     /**
-     * Log a message in the `BCLog::I2P` category.
-     * @param[in] fmt printf(3)-like format string.
-     * @param[in] args printf(3)-like arguments that correspond to `fmt`.
-     */
-    template <typename... Args>
-    void Log(const std::string& fmt, const Args&... args) const;
-
-    /**
      * Send request and get a reply from the SAM proxy.
      * @param[in] sock A socket that is connected to the SAM proxy.
      * @param[in] request Raw request to send, a newline terminator is appended to it.
