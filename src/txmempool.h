@@ -14,6 +14,7 @@
 #include <kernel/mempool_limits.h>         // IWYU pragma: export
 #include <kernel/mempool_options.h>        // IWYU pragma: export
 #include <kernel/mempool_removal_reason.h> // IWYU pragma: export
+#include <logging.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
@@ -437,6 +438,7 @@ public:
     using Options = kernel::MemPoolOptions;
 
     const Options m_opts;
+    const BCLog::Source m_log;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
