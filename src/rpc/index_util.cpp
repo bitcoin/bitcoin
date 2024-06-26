@@ -33,7 +33,7 @@ bool GetAddressUnspentIndex(uint160 addressHash, AddressType type,
     return true;
 }
 
-bool GetSpentIndex(CTxMemPool& mempool, CSpentIndexKey& key, CSpentIndexValue& value)
+bool GetSpentIndex(const CTxMemPool& mempool, CSpentIndexKey& key, CSpentIndexValue& value)
 {
     if (!fSpentIndex)
         return false;
