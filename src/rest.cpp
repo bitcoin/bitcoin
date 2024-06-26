@@ -248,9 +248,8 @@ static bool rest_headers(const std::any& context,
             ssHeader << pindex->GetBlockHeader();
         }
 
-        std::string binaryHeader = ssHeader.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, binaryHeader);
+        req->WriteReply(HTTP_OK, ssHeader);
         return true;
     }
 
@@ -321,9 +320,8 @@ static bool rest_block(const std::any& context,
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        const std::string binaryBlock{block_data.begin(), block_data.end()};
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, binaryBlock);
+        req->WriteReply(HTTP_OK, std::as_bytes(std::span{block_data}));
         return true;
     }
 
@@ -451,9 +449,8 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
             ssHeader << header;
         }
 
-        std::string binaryHeader = ssHeader.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, binaryHeader);
+        req->WriteReply(HTTP_OK, ssHeader);
         return true;
     }
     case RESTResponseFormat::HEX: {
@@ -548,9 +545,8 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
         DataStream ssResp{};
         ssResp << filter;
 
-        std::string binaryResp = ssResp.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, binaryResp);
+        req->WriteReply(HTTP_OK, ssResp);
         return true;
     }
     case RESTResponseFormat::HEX: {
@@ -729,9 +725,8 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
         DataStream ssTx;
         ssTx << TX_WITH_WITNESS(tx);
 
-        std::string binaryTx = ssTx.str();
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, binaryTx);
+        req->WriteReply(HTTP_OK, ssTx);
         return true;
     }
 
@@ -900,10 +895,9 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
         // use exact same output as mentioned in Bip64
         DataStream ssGetUTXOResponse{};
         ssGetUTXOResponse << active_height << active_hash << bitmap << outs;
-        std::string ssGetUTXOResponseString = ssGetUTXOResponse.str();
 
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, ssGetUTXOResponseString);
+        req->WriteReply(HTTP_OK, ssGetUTXOResponse);
         return true;
     }
 
@@ -981,7 +975,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
         DataStream ss_blockhash{};
         ss_blockhash << pblockindex->GetBlockHash();
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, ss_blockhash.str());
+        req->WriteReply(HTTP_OK, ss_blockhash);
         return true;
     }
     case RESTResponseFormat::HEX: {
