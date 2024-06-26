@@ -265,6 +265,9 @@ template <bool take_category>
 static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
 
 template <bool take_category>
+static Context GetContext(Logger& logger) { return Context{logger}; }
+
+template <bool take_category>
 static Context GetContext(LogFlags category)
 {
     //! Trigger a compile error if a caller tries to pass a category constant as
