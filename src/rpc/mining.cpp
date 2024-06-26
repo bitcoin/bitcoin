@@ -667,9 +667,7 @@ static RPCHelpMan getblocktemplate()
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
     LOCK(cs_main);
-    std::optional<uint256> maybe_tip{miner.getTipHash()};
-    CHECK_NONFATAL(maybe_tip);
-    uint256 tip{maybe_tip.value()};
+    uint256 tip{CHECK_NONFATAL(miner.getTipHash()).value()};
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
