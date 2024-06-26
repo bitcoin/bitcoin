@@ -7,8 +7,8 @@
 #include <index/txindex.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
-#include <rpc/net.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <validation.h>
 

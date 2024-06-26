@@ -6,7 +6,6 @@
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
 #include <amount.h>
-#include <context.h>
 #include <core_io.h>
 #include <streams.h>
 #include <sync.h>
@@ -18,12 +17,9 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
-class CBlockPolicyEstimator;
 class CChainState;
 class CTxMemPool;
-class ChainstateManager;
 class UniValue;
-struct LLMQContext;
 struct NodeContext;
 namespace llmq {
 class CChainLocksHandler;
@@ -60,16 +56,6 @@ void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], s
 
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, const CTxUndo* txundo = nullptr, const CSpentIndexTxInfo* ptxSpentInfo = nullptr);
-
-NodeContext& EnsureAnyNodeContext(const CoreContext& context);
-CTxMemPool& EnsureMemPool(const NodeContext& node);
-CTxMemPool& EnsureAnyMemPool(const CoreContext& context);
-ChainstateManager& EnsureChainman(const NodeContext& node);
-ChainstateManager& EnsureAnyChainman(const CoreContext& context);
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const CoreContext& context);
-LLMQContext& EnsureLLMQContext(const NodeContext& node);
-LLMQContext& EnsureAnyLLMQContext(const CoreContext& context);
 
 /**
  * Helper to create UTXO snapshots given a chainstate and a file handle.

@@ -15,8 +15,8 @@
 #include <net.h>
 #include <netbase.h>
 #include <rpc/blockchain.h>
-#include <rpc/net.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/strencodings.h>

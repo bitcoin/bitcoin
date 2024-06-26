@@ -22,6 +22,8 @@
 #include <llmq/context.h>
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
+#include <net.h>
+#include <net_processing.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
@@ -29,6 +31,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <streams.h>
@@ -72,67 +75,6 @@ static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, CChainState& active_chainstate, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
-
-NodeContext& EnsureAnyNodeContext(const CoreContext& context)
-{
-    auto* const node_context = GetContext<NodeContext>(context);
-    if (!node_context) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
-    }
-    return *node_context;
-}
-
-CTxMemPool& EnsureMemPool(const NodeContext& node)
-{
-    if (!node.mempool) {
-        throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
-    }
-    return *node.mempool;
-}
-
-CTxMemPool& EnsureAnyMemPool(const CoreContext& context)
-{
-    return EnsureMemPool(EnsureAnyNodeContext(context));
-}
-
-ChainstateManager& EnsureChainman(const NodeContext& node)
-{
-    if (!node.chainman) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
-    }
-    return *node.chainman;
-}
-
-ChainstateManager& EnsureAnyChainman(const CoreContext& context)
-{
-    return EnsureChainman(EnsureAnyNodeContext(context));
-}
-
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
-{
-    if (!node.fee_estimator) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
-    }
-    return *node.fee_estimator;
-}
-
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const CoreContext& context)
-{
-    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
-}
-
-LLMQContext& EnsureLLMQContext(const NodeContext& node)
-{
-    if (!node.llmq_ctx) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node LLMQ context not found");
-    }
-    return *node.llmq_ctx;
-}
-
-LLMQContext& EnsureAnyLLMQContext(const CoreContext& context)
-{
-    return EnsureLLMQContext(EnsureAnyNodeContext(context));
-}
 
 /* Calculate the difficulty for a given block index.
  */
@@ -821,6 +763,58 @@ static RPCHelpMan getmempoolentry()
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     entryToJSON(mempool, info, e, llmq_ctx.isman);
     return info;
+},
+    };
+}
+
+static RPCHelpMan getblockfrompeer()
+{
+    return RPCHelpMan{"getblockfrompeer",
+                "\nAttempt to fetch block from a given peer.\n"
+                "\nWe must have the header for this block, e.g. using submitheader.\n"
+                "\nReturns {} if a block-request was successfully scheduled\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The node ID (see getpeerinfo for node IDs)"},
+                },
+                RPCResult{RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "warnings", "any warnings"}
+                }},
+                RPCExamples{
+                    HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
+                + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    PeerManager& peerman = EnsurePeerman(node);
+    CConnman& connman = EnsureConnman(node);
+
+    uint256 hash(ParseHashV(request.params[0], "hash"));
+
+    const NodeId nodeid = static_cast<NodeId>(request.params[1].get_int64());
+
+    // Check that the peer with nodeid exists
+    if (!connman.ForNode(nodeid, [](CNode* node) {return true;})) {
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("Peer nodeid %d does not exist", nodeid));
+    }
+
+    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(hash););
+
+    if (!index) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
+    }
+
+    UniValue result = UniValue::VOBJ;
+
+    if (index->nStatus & BLOCK_HAVE_DATA) {
+        result.pushKV("warnings", "Block already downloaded");
+    } else if (!peerman.FetchBlock(nodeid, hash, *index)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to fetch block from peer");
+    }
+    return result;
 },
     };
 }
@@ -3058,6 +3052,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestchainlock",       &getbestchainlock,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getblockfrompeer",       &getblockfrompeer,       {"blockhash", "nodeid"}},
     { "blockchain",         "getblockhashes",         &getblockhashes,         {"high","low"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
