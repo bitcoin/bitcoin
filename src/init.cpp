@@ -338,7 +338,6 @@ void PrepareShutdown(NodeContext& node)
                 chainstate->ResetCoinsViews();
             }
         }
-        pblocktree.reset();
         node.chain_helper.reset();
         if (node.mnhf_manager) {
             node.mnhf_manager->DisconnectManagers();
@@ -1951,6 +1950,7 @@ bool AppInitMain(const CoreContext& context, NodeContext& node, interfaces::Bloc
 
                 UnloadBlockIndex(node.mempool.get(), chainman);
 
+                auto& pblocktree{chainman.m_blockman.m_block_tree_db};
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
