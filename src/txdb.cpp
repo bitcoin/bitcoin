@@ -46,10 +46,11 @@ struct CoinEntry {
 
 } // namespace
 
-CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
+CCoinsViewDB::CCoinsViewDB(BCLog::Logger& logger, DBParams db_params, CoinsViewOptions options) :
+    m_log{BCLog::COINDB, logger},
     m_db_params{std::move(db_params)},
     m_options{std::move(options)},
-    m_db{std::make_unique<CDBWrapper>(m_db_params)} { }
+    m_db{std::make_unique<CDBWrapper>(logger, m_db_params)} { }
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {
@@ -61,7 +62,7 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
         m_db.reset();
         m_db_params.cache_bytes = new_cache_size;
         m_db_params.wipe_data = false;
-        m_db = std::make_unique<CDBWrapper>(m_db_params);
+        m_db = std::make_unique<CDBWrapper>(m_log.logger, m_db_params);
     }
 }
 

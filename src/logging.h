@@ -216,6 +216,7 @@ namespace BCLog {
         Logger& logger;
 
         Source(LogFlags category = LogFlags::ALL, Logger& logger = LogInstance()) : category{category}, logger{logger} {}
+        Source(Logger& logger) : category{LogFlags::ALL}, logger{logger} {}
 
         template <typename... Args>
         std::string Format(const char* fmt, const Args&... args) const

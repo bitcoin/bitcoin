@@ -57,6 +57,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Context
+    BCLog::Logger logger;
     kernel::Context kernel_context{};
     // We can't use a goto here, but we can use an assert since none of the
     // things instantiated so far requires running the epilogue to be torn down
@@ -67,8 +68,8 @@ int main(int argc, char* argv[])
     // which will try the script cache first and fall back to actually
     // performing the check with the signature cache.
     kernel::ValidationCacheSizes validation_cache_sizes{};
-    Assert(InitSignatureCache(validation_cache_sizes.signature_cache_bytes));
-    Assert(InitScriptExecutionCache(validation_cache_sizes.script_execution_cache_bytes));
+    Assert(InitSignatureCache(logger, validation_cache_sizes.signature_cache_bytes));
+    Assert(InitScriptExecutionCache(logger, validation_cache_sizes.script_execution_cache_bytes));
 
     ValidationSignals validation_signals{std::make_unique<util::ImmediateTaskRunner>()};
 
@@ -122,7 +123,7 @@ int main(int argc, char* argv[])
         .notifications = chainman_opts.notifications,
     };
     util::SignalInterrupt interrupt;
-    ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
+    ChainstateManager chainman{logger, interrupt, chainman_opts, blockman_opts};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;
