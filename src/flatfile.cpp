@@ -44,13 +44,13 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");
     if (!file) {
-        LogError("Unable to open file %s", fs::PathToString(path));
+        LogError(m_log, "Unable to open file %s", fs::PathToString(path));
         return nullptr;
     }
     if (pos.nPos && fseek(file, pos.nPos, SEEK_SET)) {
-        LogError("Unable to seek to position %u of %s", pos.nPos, fs::PathToString(path));
+        LogError(m_log, "Unable to seek to position %u of %s", pos.nPos, fs::PathToString(path));
         if (fclose(file) != 0) {
-            LogError("Unable to close file %s", fs::PathToString(path));
+            LogError(m_log, "Unable to close file %s", fs::PathToString(path));
         }
         return nullptr;
     }
@@ -71,10 +71,10 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
         if (CheckDiskSpace(m_dir, inc_size)) {
             FILE *file = Open(pos);
             if (file) {
-                LogDebug(BCLog::VALIDATION, "Pre-allocating up to position 0x%x in %s%05u.dat\n", new_size, m_prefix, pos.nFile);
+                LogDebug(m_log, "Pre-allocating up to position 0x%x in %s%05u.dat\n", new_size, m_prefix, pos.nFile);
                 AllocateFileRange(file, pos.nPos, inc_size);
                 if (fclose(file) != 0) {
-                    LogError("Cannot close file %s%05u.dat after extending it with %u bytes", m_prefix, pos.nFile, new_size);
+                    LogError(m_log, "Cannot close file %s%05u.dat after extending it with %u bytes", m_prefix, pos.nFile, new_size);
                     return 0;
                 }
                 return inc_size;
@@ -90,27 +90,27 @@ bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize) const
 {
     FILE* file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
     if (!file) {
-        LogError("%s: failed to open file %d\n", __func__, pos.nFile);
+        LogError(m_log, "%s: failed to open file %d\n", __func__, pos.nFile);
         return false;
     }
     if (finalize && !TruncateFile(file, pos.nPos)) {
-        LogError("%s: failed to truncate file %d\n", __func__, pos.nFile);
+        LogError(m_log, "%s: failed to truncate file %d\n", __func__, pos.nFile);
         if (fclose(file) != 0) {
-            LogError("Failed to close file %d", pos.nFile);
+            LogError(m_log, "Failed to close file %d", pos.nFile);
         }
         return false;
     }
     if (!FileCommit(file)) {
-        LogError("%s: failed to commit file %d\n", __func__, pos.nFile);
+        LogError(m_log, "%s: failed to commit file %d\n", __func__, pos.nFile);
         if (fclose(file) != 0) {
-            LogError("Failed to close file %d", pos.nFile);
+            LogError(m_log, "Failed to close file %d", pos.nFile);
         }
         return false;
     }
     DirectoryCommit(m_dir);
 
     if (fclose(file) != 0) {
-        LogError("Failed to close file %d after flush", pos.nFile);
+        LogError(m_log, "Failed to close file %d after flush", pos.nFile);
         return false;
     }
     return true;

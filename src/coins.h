@@ -770,7 +770,7 @@ public:
     void Flush(bool reallocate_cache = true) override
     {
         if (!Assume(AllInputsConsumed())) {
-            LogWarning("Block %s input prevout prefetch queue was not fully consumed; inputs were accessed out of order, so prefetching degraded to serial lookups for this block.", GetBestBlock().ToString());
+            LogWarning(m_log, "Block %s input prevout prefetch queue was not fully consumed; inputs were accessed out of order, so prefetching degraded to serial lookups for this block.", GetBestBlock().ToString());
         }
         StopFetching();
         CCoinsViewCache::Flush(reallocate_cache);
