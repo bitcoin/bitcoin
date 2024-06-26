@@ -44,7 +44,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     bilingual_str error;
-    CTxMemPool pool{CTxMemPool::Options{}, error};
+    CTxMemPool pool{CTxMemPool::Options{.logger = &g_setup->m_logger}, error};
     Assert(error.empty());
     std::vector<COutPoint> outpoints;
     std::deque<COutPoint> available_coins = g_available_coins;
