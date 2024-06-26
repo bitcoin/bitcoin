@@ -427,7 +427,7 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
 }
 
 template <typename ReturnType, typename Func>
-static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::function<void()>>& err_callbacks)
+static ReturnType ExecuteBackedWrapper(const util::log::Context& log, Func func, const std::vector<std::function<void()>>& err_callbacks)
 {
     try {
         return func();
@@ -446,15 +446,15 @@ static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::functio
 
 std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<std::optional<Coin>>(m_log, [&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
 }
 
 bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<bool>(m_log, [&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
 }
 
 std::optional<Coin> CCoinsViewErrorCatcher::PeekCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::PeekCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<std::optional<Coin>>(m_log, [&]() { return CCoinsViewBacked::PeekCoin(outpoint); }, m_err_callbacks);
 }
