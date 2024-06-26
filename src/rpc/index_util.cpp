@@ -14,10 +14,10 @@ bool GetAddressIndex(const uint160& addressHash, const AddressType type,
                      const int32_t start, const int32_t end)
 {
     if (!fAddressIndex)
-        return error("address index not enabled");
+        return error("Address index not enabled");
 
     if (!pblocktree->ReadAddressIndex(addressHash, type, addressIndex, start, end))
-        return error("unable to get txids for address");
+        return error("Unable to get txids for address");
 
     return true;
 }
@@ -26,10 +26,10 @@ bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
                             std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& unspentOutputs)
 {
     if (!fAddressIndex)
-        return error("address index not enabled");
+        return error("Address index not enabled");
 
     if (!pblocktree->ReadAddressUnspentIndex(addressHash, type, unspentOutputs))
-        return error("unable to get txids for address");
+        return error("Unable to get txids for address");
 
     return true;
 }
@@ -37,13 +37,13 @@ bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
 bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value)
 {
     if (!fSpentIndex)
-        return false;
+        return error("Spent index not enabled");
 
     if (mempool.getSpentIndex(key, value))
         return true;
 
     if (!pblocktree->ReadSpentIndex(key, value))
-        return false;
+        return error("Unable to get spend information");
 
     return true;
 }
