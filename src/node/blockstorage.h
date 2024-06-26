@@ -21,6 +21,7 @@
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 
 #include <algorithm>
@@ -193,6 +194,10 @@ class BlockManager
     friend Chainstate;
     friend ChainstateManager;
 
+public:
+    const util::log::Context m_log;
+    const util::SignalInterrupt& m_interrupt;
+
 private:
     const CChainParams& GetParams() const { return m_opts.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_opts.chainparams.GetConsensus(); }
@@ -316,9 +321,8 @@ public:
     using Options = kernel::BlockManagerOpts;
     using ReadRawBlockResult = util::Expected<std::vector<std::byte>, ReadRawError>;
 
-    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
+    explicit BlockManager(util::log::Logger& logger, const util::SignalInterrupt& interrupt, Options opts);
 
-    const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
 
     /**

@@ -1164,7 +1164,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     return pos;
 }
 
-static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
+static auto InitBlocksdirXorKey(const util::log::Context& log, const BlockManager::Options& opts)
 {
     // Bytes are serialized without length indicator, so this is also the exact
     // size of the XOR-key file.
@@ -1221,15 +1221,16 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     return Obfuscation{obfuscation};
 }
 
-BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
-    : m_prune_mode{opts.prune_target > 0},
-      m_obfuscation{InitBlocksdirXorKey(opts)},
+BlockManager::BlockManager(util::log::Logger& logger, const util::SignalInterrupt& interrupt, Options opts)
+    : m_log{BCLog::BLOCKSTORAGE, &logger},
+      m_interrupt{interrupt},
+      m_prune_mode{opts.prune_target > 0},
+      m_obfuscation{InitBlocksdirXorKey(m_log, opts)},
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
-      m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
-      m_interrupt{interrupt}
+      m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}}
 {
-    m_block_tree_db = std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params);
+    m_block_tree_db = std::make_unique<BlockTreeDB>(logger, m_opts.block_tree_db_params);
 
     if (m_opts.block_tree_db_params.wipe_data) {
         m_block_tree_db->WriteReindexing(true);
