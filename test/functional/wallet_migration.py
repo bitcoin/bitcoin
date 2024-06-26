@@ -471,6 +471,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect", wallet.migratewallet, None, "badpass")
         assert_raises_rpc_error(-4, "The passphrase contains a null character", wallet.migratewallet, None, "pass\0with\0null")
 
+        # Check the wallet is still active post-migration failure.
+        # If not, it will throw an exception and abort the test.
+        wallet.walletpassphrase("pass", 99999)
+        wallet.getnewaddress()
+
+        # Verify we can properly migrate the encrypted wallet
         self.migrate_wallet(wallet, passphrase="pass")
 
         info = wallet.getwalletinfo()
