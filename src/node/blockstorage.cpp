@@ -912,7 +912,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
         // a reindex. A flush error might also leave some of the data files
         // untrimmed.
         if (!FlushBlockFile(last_blockfile, /*fFinalize=*/true, finalize_undo)) {
-            LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning,
+            LogWarning(m_log,
                           "Failed to flush previous block file %05i (finalize=1, finalize_undo=%i) before opening new block file %05i\n",
                           last_blockfile, finalize_undo, nFile);
         }
@@ -1034,7 +1034,7 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
             // fact it is. Note though, that a failed flush might leave the data
             // file untrimmed.
             if (!FlushUndoFile(_pos.nFile, true)) {
-                LogPrintLevel(BCLog::BLOCKSTORAGE, BCLog::Level::Warning, "Failed to flush undo file %05i\n", _pos.nFile);
+                LogWarning(m_log, "Failed to flush undo file %05i\n", _pos.nFile);
             }
         } else if (_pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
             cursor.undo_height = block.nHeight;
