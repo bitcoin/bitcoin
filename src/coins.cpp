@@ -403,7 +403,7 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
                 // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
                 // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
                 // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
-                LogWarning("Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
+                LogWarning(m_log, "Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
                 m_inputs.clear();
                 StopFetching(); // Assert nothing changed if we failed to start tasks.
             }
@@ -435,7 +435,7 @@ static ReturnType ExecuteBackedWrapper(const util::log::Context& log, Func func,
         for (const auto& f : err_callbacks) {
             f();
         }
-        LogError("Error reading from database: %s\n", e.what());
+        LogError(log, "Error reading from database: %s\n", e.what());
         // Starting the shutdown sequence and returning false to the caller would be
         // interpreted as 'entry not found' (as opposed to unable to read data), and
         // could lead to invalid interpretation. Just exit immediately, as we can't
