@@ -17,7 +17,7 @@
 #include <shared_mutex>
 #include <vector>
 
-SignatureCache::SignatureCache(const size_t max_size_bytes)
+SignatureCache::SignatureCache(BCLog::Logger& logger, const size_t max_size_bytes)
 {
     uint256 nonce = GetRandHash();
     // We want the nonce to be 64 bytes long to force the hasher to process

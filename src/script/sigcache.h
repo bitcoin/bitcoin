@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
+#include <logging.h>
 #include <script/interpreter.h>
 #include <span.h>
 #include <uint256.h>
@@ -46,7 +47,7 @@ private:
     std::shared_mutex cs_sigcache;
 
 public:
-    SignatureCache(size_t max_size_bytes);
+    SignatureCache(BCLog::Logger& logger, size_t max_size_bytes);
 
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
