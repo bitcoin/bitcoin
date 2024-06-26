@@ -171,7 +171,7 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
                 CHECK(secp256k1_fe_equal(&tmpf, &group[(i * j) % EXHAUSTIVE_TEST_ORDER].x));
 
                 /* Test secp256k1_ecmult_const_xonly with all curve X coordinates, with random xd. */
-                random_fe_non_zero(&xd);
+                testutil_random_fe_non_zero(&xd);
                 secp256k1_fe_mul(&xn, &xd, &group[i].x);
                 ret = secp256k1_ecmult_const_xonly(&tmpf, &xn, &xd, &ng, 0);
                 CHECK(ret);
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
     printf("test count = %i\n", count);
 
     /* find random seed */
-    secp256k1_testrand_init(argc > 2 ? argv[2] : NULL);
+    testrand_init(argc > 2 ? argv[2] : NULL);
 
     /* set up split processing */
     if (argc > 4) {
@@ -395,7 +395,7 @@ int main(int argc, char** argv) {
     while (count--) {
         /* Build context */
         ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
-        secp256k1_testrand256(rand32);
+        testrand256(rand32);
         CHECK(secp256k1_context_randomize(ctx, rand32));
 
         /* Generate the entire group */
@@ -408,7 +408,7 @@ int main(int argc, char** argv) {
                 /* Set a different random z-value for each Jacobian point, except z=1
                    is used in the last iteration. */
                 secp256k1_fe z;
-                random_fe(&z);
+                testutil_random_fe(&z);
                 secp256k1_gej_rescale(&groupj[i], &z);
             }
 
@@ -459,7 +459,7 @@ int main(int argc, char** argv) {
         secp256k1_context_destroy(ctx);
     }
 
-    secp256k1_testrand_finish();
+    testrand_finish();
 
     printf("no problems found\n");
     return 0;
