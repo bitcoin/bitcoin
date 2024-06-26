@@ -42,7 +42,7 @@ bool DestroyDB(const std::string& path_str)
 
 /** Handle database error by throwing dbwrapper_error exception.
  */
-static void HandleError(const leveldb::Status& status)
+static void HandleError(const BCLog::Context& log, const leveldb::Status& status)
 {
     if (status.ok())
         return;
@@ -53,11 +53,14 @@ static void HandleError(const leveldb::Status& status)
 }
 
 class CBitcoinLevelDBLogger : public leveldb::Logger {
+private:
+    const BCLog::Context& m_log;
 public:
+    CBitcoinLevelDBLogger(const BCLog::Context& log) : m_log{log} {}
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
     void Logv(const char * format, va_list ap) override {
-            if (!LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug)) {
+            if (!LogEnabled(m_log, BCLog::Level::Debug)) {
                 return;
             }
             char buffer[500];
@@ -110,7 +113,7 @@ public:
     }
 };
 
-static void SetMaxOpenFiles(leveldb::Options *options) {
+static void SetMaxOpenFiles(const BCLog::Context& log, leveldb::Options *options) {
     // On most platforms the default setting of max_open_files (which is 1000)
     // is optimal. On Windows using a large file count is OK because the handles
     // do not interfere with select() loops. On 64-bit Unix hosts this value is
@@ -135,21 +138,21 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
              options->max_open_files, default_open_files);
 }
 
-static leveldb::Options GetOptions(size_t nCacheSize)
+static leveldb::Options GetOptions(const BCLog::Context& log, size_t nCacheSize)
 {
     leveldb::Options options;
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
-    options.info_log = new CBitcoinLevelDBLogger();
+    options.info_log = new CBitcoinLevelDBLogger(log);
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
         // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
         // on corruption in later versions.
         options.paranoid_checks = true;
     }
     options.max_file_size = std::max(options.max_file_size, DBWRAPPER_MAX_FILE_SIZE);
-    SetMaxOpenFiles(&options);
+    SetMaxOpenFiles(log, &options);
     return options;
 }
 
@@ -213,15 +216,15 @@ struct LevelDBContext {
     leveldb::DB* pdb;
 };
 
-CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+CDBWrapper::CDBWrapper(BCLog::Logger& logger, const DBParams& params)
+    : m_log{logger, BCLog::LEVELDB}, m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
     DBContext().iteroptions.verify_checksums = true;
     DBContext().iteroptions.fill_cache = false;
     DBContext().syncoptions.sync = true;
-    DBContext().options = GetOptions(params.cache_bytes);
+    DBContext().options = GetOptions(m_log, params.cache_bytes);
     DBContext().options.create_if_missing = true;
     if (params.memory_only) {
         DBContext().penv = leveldb::NewMemEnv(leveldb::Env::Default());
@@ -230,7 +233,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
         if (params.wipe_data) {
             LogInfo("Wiping LevelDB in %s", fs::PathToString(params.path));
             leveldb::Status result = leveldb::DestroyDB(fs::PathToString(params.path), DBContext().options);
-            HandleError(result);
+            HandleError(m_log, result);
         }
         TryCreateDirectories(params.path);
         LogInfo("Opening LevelDB in %s", fs::PathToString(params.path));
@@ -240,7 +243,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     // on Windows it converts from UTF-8 to UTF-16 before calling ::CreateFileW
     // (see env_posix.cc and env_windows.cc).
     leveldb::Status status = leveldb::DB::Open(DBContext().options, fs::PathToString(params.path), &DBContext().pdb);
-    HandleError(status);
+    HandleError(m_log, status);
     LogInfo("Opened LevelDB successfully");
 
     if (params.options.force_compact) {
@@ -282,7 +285,7 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
         mem_before = DynamicMemoryUsage() / 1024.0 / 1024;
     }
     leveldb::Status status = DBContext().pdb->Write(fSync ? DBContext().syncoptions : DBContext().writeoptions, &batch.m_impl_batch->batch);
-    HandleError(status);
+    HandleError(m_log, status);
     if (log_memory) {
         double mem_after = DynamicMemoryUsage() / 1024.0 / 1024;
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
@@ -310,7 +313,7 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
         if (status.IsNotFound())
             return std::nullopt;
         LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        HandleError(m_log, status);
     }
     return strValue;
 }
@@ -325,7 +328,7 @@ bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
         if (status.IsNotFound())
             return false;
         LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        HandleError(m_log, status);
     }
     return true;
 }

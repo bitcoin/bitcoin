@@ -990,7 +990,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
     std::unique_ptr<ChainstateManager> chainman;
     try {
         LOCK(opts.m_mutex);
-        chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
+        chainman = std::make_unique<ChainstateManager>(LogInstance(), *opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager: %s", e.what());
         return nullptr;

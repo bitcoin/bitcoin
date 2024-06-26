@@ -1205,15 +1205,16 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     return Obfuscation{obfuscation};
 }
 
-BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
+BlockManager::BlockManager(BCLog::Logger& logger, const util::SignalInterrupt& interrupt, Options opts)
     : m_prune_mode{opts.prune_target > 0},
       m_obfuscation{InitBlocksdirXorKey(opts)},
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
+      m_log{logger, BCLog::BLOCKSTORAGE},
       m_interrupt{interrupt}
 {
-    m_block_tree_db = std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params);
+    m_block_tree_db = std::make_unique<BlockTreeDB>(logger, m_opts.block_tree_db_params);
 
     if (m_opts.block_tree_db_params.wipe_data) {
         m_block_tree_db->WriteReindexing(true);

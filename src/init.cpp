@@ -1337,7 +1337,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     // The coinsdb is opened at a later point on LoadChainstate.
     Assert(!node.chainman); // Was reset above
     try {
-        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
+        node.chainman = std::make_unique<ChainstateManager>(LogInstance(), *Assert(node.shutdown_signal), chainman_opts, blockman_opts);
     } catch (dbwrapper_error& e) {
         LogError("%s", e.what());
         return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};

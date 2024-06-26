@@ -180,6 +180,7 @@ namespace {
  * @returns A vector of input heights or nullopt, in case of an error.
  */
 std::optional<std::vector<int>> CalculatePrevHeights(
+    BCLog::Logger& logger,
     const CBlockIndex& tip,
     const CCoinsView& coins,
     const CTransaction& tx)
@@ -201,13 +202,14 @@ std::optional<std::vector<int>> CalculatePrevHeights(
 } // namespace
 
 std::optional<LockPoints> CalculateLockPointsAtTip(
+    BCLog::Logger& logger,
     CBlockIndex* tip,
     const CCoinsView& coins_view,
     const CTransaction& tx)
 {
     assert(tip);
 
-    auto prev_heights{CalculatePrevHeights(*tip, coins_view, tx)};
+    auto prev_heights{CalculatePrevHeights(logger, *tip, coins_view, tx)};
     if (!prev_heights.has_value()) return std::nullopt;
 
     CBlockIndex next_tip;
@@ -358,7 +360,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
             }
         } else {
             const CCoinsViewMemPool view_mempool{&CoinsTip(), *m_mempool};
-            const std::optional<LockPoints> new_lock_points{CalculateLockPointsAtTip(m_chain.Tip(), view_mempool, tx)};
+            const std::optional<LockPoints> new_lock_points{CalculateLockPointsAtTip(m_log.logger, m_chain.Tip(), view_mempool, tx)};
             if (new_lock_points.has_value() && CheckSequenceLocksAtTip(m_chain.Tip(), *new_lock_points)) {
                 // Now update the mempool entry lockpoints as well.
                 it->UpdateLockPoints(*new_lock_points);
@@ -885,7 +887,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // be mined yet.
     // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
     // backend was removed, it no longer pulls coins from the mempool.
-    const std::optional<LockPoints> lock_points{CalculateLockPointsAtTip(m_active_chainstate.m_chain.Tip(), m_view, tx)};
+    const std::optional<LockPoints> lock_points{CalculateLockPointsAtTip(LogInstance(), m_active_chainstate.m_chain.Tip(), m_view, tx)};
     if (!lock_points.has_value() || !CheckSequenceLocksAtTip(m_active_chainstate.m_chain.Tip(), *lock_points)) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
@@ -1848,8 +1850,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
-CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
-    : m_dbview{std::move(db_params), std::move(options)},
+CoinsViews::CoinsViews(BCLog::Logger& logger, DBParams db_params, CoinsViewOptions options)
+    : m_dbview{logger, std::move(db_params), std::move(options)},
       m_catcherview(&m_dbview) {}
 
 void CoinsViews::InitCache()
@@ -1864,6 +1866,7 @@ Chainstate::Chainstate(
     ChainstateManager& chainman,
     std::optional<uint256> from_snapshot_blockhash)
     : m_mempool(mempool),
+      m_log{chainman.m_log},
       m_blockman(blockman),
       m_chainman(chainman),
       m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
@@ -1914,6 +1917,7 @@ void Chainstate::InitCoinsDB(
     bool should_wipe)
 {
     m_coins_views = std::make_unique<CoinsViews>(
+        m_log.logger,
         DBParams{
             .path = StoragePath(),
             .cache_bytes = cache_size_bytes,
@@ -2047,8 +2051,8 @@ std::optional<std::pair<ScriptError, std::string>> CScriptCheck::operator()() {
     }
 }
 
-ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, const size_t signature_cache_bytes)
-    : m_signature_cache{signature_cache_bytes}
+ValidationCache::ValidationCache(BCLog::Logger& logger, const size_t script_execution_cache_bytes, const size_t signature_cache_bytes)
+    : m_signature_cache{logger, signature_cache_bytes}
 {
     // Setup the salted hasher
     uint256 nonce = GetRandHash();
@@ -2898,7 +2902,7 @@ static void UpdateTipLog(
     LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
                    prefix, func_name,
                    tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
-                   log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
+                   std::log(tip->nChainWork.getdouble()) / std::log(2.0), tip->m_chain_tx_count,
                    FormatISO8601DateTime(tip->GetBlockTime()),
                    chainman.GuessVerificationProgress(tip),
                    coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
@@ -6178,12 +6182,13 @@ static ChainstateManager::Options&& Flatten(ChainstateManager::Options&& opts)
     return std::move(opts);
 }
 
-ChainstateManager::ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options)
+ChainstateManager::ChainstateManager(BCLog::Logger& logger, const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options)
     : m_script_check_queue{/*batch_size=*/128, std::clamp(options.worker_threads_num, 0, MAX_SCRIPTCHECK_THREADS)},
+      m_log{logger, BCLog::VALIDATION},
       m_interrupt{interrupt},
       m_options{Flatten(std::move(options))},
-      m_blockman{interrupt, std::move(blockman_options)},
-      m_validation_cache{m_options.script_execution_cache_bytes, m_options.signature_cache_bytes}
+      m_blockman{logger, interrupt, std::move(blockman_options)},
+      m_validation_cache{logger, m_options.script_execution_cache_bytes, m_options.signature_cache_bytes}
 {
 }
 
