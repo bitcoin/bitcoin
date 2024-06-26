@@ -106,7 +106,7 @@ static void ExitFailure(std::string_view str_err)
 }
 
 BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
-    : m_args{}
+    : m_logger{LogInstance()}, m_args{}
 {
     if constexpr (!G_FUZZING) {
         SeedRandomForTest(SeedRand::FIXED_SEED);
@@ -258,7 +258,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
                 .wipe_data = m_args.GetBoolArg("-reindex", false),
             },
         };
-        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
+        m_node.chainman = std::make_unique<ChainstateManager>(m_logger, *Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
     };
     m_make_chainman();
 }
