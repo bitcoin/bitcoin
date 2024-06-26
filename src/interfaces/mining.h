@@ -67,7 +67,7 @@ public:
      * @param[in] block the block to validate
      * @param[in] check_merkle_root call CheckMerkleRoot()
      * @param[out] state details of why a block failed to validate
-     * @returns false if any of the checks fail
+     * @returns false if it does not build on the current tip, or any of the checks fail
      */
     virtual bool testBlockValidity(const CBlock& block, bool check_merkle_root, BlockValidationState& state) = 0;
 

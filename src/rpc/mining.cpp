@@ -371,8 +371,6 @@ static RPCHelpMan generateblock()
 
     ChainstateManager& chainman = EnsureChainman(node);
     {
-        LOCK(cs_main);
-
         std::unique_ptr<CBlockTemplate> blocktemplate{miner.createNewBlock(coinbase_script, /*use_mempool=*/false)};
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
@@ -387,8 +385,6 @@ static RPCHelpMan generateblock()
     RegenerateCommitments(block, chainman);
 
     {
-        LOCK(cs_main);
-
         BlockValidationState state;
         if (!miner.testBlockValidity(block, /*check_merkle_root=*/false, state)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("testBlockValidity failed: %s", state.ToString()));
