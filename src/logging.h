@@ -395,7 +395,7 @@ requires (Context::log_context)
 static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
 
 template <bool take_category>
-static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
+static Context GetContext(Logger& logger) { return Context{logger}; }
 
 template <bool take_category>
 static Context GetContext(LogFlags category)
