@@ -740,20 +740,21 @@ static RPCHelpMan getaddressmempool()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 
-    std::vector<std::pair<uint160, AddressType> > addresses;
-
+    std::vector<std::pair<uint160, AddressType>> addresses;
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
+    std::vector<CMempoolAddressDeltaKey> input_addresses;
     std::vector<CMempoolAddressDeltaEntry> indexes;
-
-    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-    if (!mempool.getAddressIndex(addresses, indexes)) {
+    for (const auto& [hash, type] : addresses) {
+        input_addresses.push_back({type, hash});
+    }
+    if (!GetMempoolAddressDeltaIndex(mempool, input_addresses, indexes)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
     }
-
     std::sort(indexes.begin(), indexes.end(), timestampSort);
 
     UniValue result(UniValue::VARR);

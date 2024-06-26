@@ -470,13 +470,14 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry& entry, const CCoinsViewC
     mapAddressInserted.insert(std::make_pair(txhash, inserted));
 }
 
-bool CTxMemPool::getAddressIndex(const std::vector<std::pair<uint160, AddressType>>& addresses,
+bool CTxMemPool::getAddressIndex(const std::vector<CMempoolAddressDeltaKey>& addresses,
                                  std::vector<CMempoolAddressDeltaEntry>& results) const
 {
     LOCK(cs);
     for (const auto& address : addresses) {
-        addressDeltaMap::const_iterator ait = mapAddress.lower_bound(CMempoolAddressDeltaKey(address.second, address.first));
-        while (ait != mapAddress.end() && (*ait).first.m_address_bytes == address.first && (*ait).first.m_address_type == address.second) {
+        addressDeltaMap::const_iterator ait = mapAddress.lower_bound(address);
+        while (ait != mapAddress.end() && (*ait).first.m_address_bytes == address.m_address_bytes
+               && (*ait).first.m_address_type == address.m_address_type) {
             results.push_back(*ait);
             ait++;
         }

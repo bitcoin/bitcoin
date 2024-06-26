@@ -34,6 +34,19 @@ bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
     return true;
 }
 
+bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
+                                 const std::vector<CMempoolAddressDeltaKey>& addressDeltaIndex,
+                                 std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries)
+{
+    if (!fAddressIndex)
+        return error("Address index not enabled");
+
+    if (!mempool.getAddressIndex(addressDeltaIndex, addressDeltaEntries))
+        return error("Unable to get address delta information");
+
+    return true;
+}
+
 bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value)
 {
     if (!fSpentIndex)

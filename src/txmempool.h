@@ -636,7 +636,7 @@ public:
     void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     void addAddressIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
-    bool getAddressIndex(const std::vector<std::pair<uint160, AddressType>>& addresses,
+    bool getAddressIndex(const std::vector<CMempoolAddressDeltaKey>& addresses,
                          std::vector<CMempoolAddressDeltaEntry>& results) const;
     bool removeAddressIndex(const uint256 txhash);
 
