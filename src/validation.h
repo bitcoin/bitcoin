@@ -22,7 +22,6 @@
 #include <txdb.h>
 #include <txmempool.h> // For CTxMemPool::cs
 #include <serialize.h>
-#include <spentindex.h>
 #include <util/check.h>
 #include <util/hasher.h>
 
@@ -379,13 +378,6 @@ public:
     ScriptError GetScriptError() const { return error; }
 };
 
-bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes);
-bool GetSpentIndex(CTxMemPool& mempool, CSpentIndexKey &key, CSpentIndexValue &value);
-bool GetAddressIndex(uint160 addressHash, AddressType type,
-                     std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
-                     int start = 0, int end = 0);
-bool GetAddressUnspent(uint160 addressHash, AddressType type,
-                       std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();
 

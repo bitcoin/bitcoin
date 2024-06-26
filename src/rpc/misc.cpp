@@ -19,6 +19,7 @@
 #include <net.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <rpc/index_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -823,7 +824,7 @@ static RPCHelpMan getaddressutxos()
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 
     for (const auto& address : addresses) {
-        if (!GetAddressUnspent(address.first, address.second, unspentOutputs)) {
+        if (!GetAddressUnspentIndex(address.first, address.second, unspentOutputs)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
         }
     }
