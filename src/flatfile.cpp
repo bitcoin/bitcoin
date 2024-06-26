@@ -12,8 +12,9 @@
 
 #include <stdexcept>
 
-FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
-    m_dir(std::move(dir)),
+FlatFileSeq::FlatFileSeq(util::log::Logger& logger, fs::path dir, const char* prefix, size_t chunk_size)
+    : m_log{BCLog::VALIDATION, &logger},
+      m_dir(std::move(dir)),
     m_prefix(prefix),
     m_chunk_size(chunk_size)
 {

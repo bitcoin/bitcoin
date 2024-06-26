@@ -510,8 +510,9 @@ struct UserDataDeleter {
 using UserData = std::unique_ptr<void, UserDataDeleter>;
 
 //! Holds state for kernel logging subscribers: the registered callbacks and their minimum levels.
-//! Shared by all btck_LoggingConnection instances.
-class KernelLogger
+//! Shared by all btck_LoggingConnection instances. Kernel objects that take a util::log::Logger are
+//! passed this instance.
+class KernelLogger : public util::log::Logger
 {
     //! A registered btck_LogCallback. Owns user_data.
     struct Callback {
@@ -1333,7 +1334,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
     std::unique_ptr<ChainstateManager> chainman;
     try {
         LOCK(opts.m_mutex);
-        chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
+        chainman = std::make_unique<ChainstateManager>(GetKernelLogger(), *opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager: %s", e.what());
         return nullptr;

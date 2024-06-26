@@ -739,6 +739,7 @@ private:
         return base->PeekCoin(outpoint);
     }
 
+    const util::log::Context m_log;
     /// May have zero workers when input fetching is disabled.
     util::NotNullSharedPtr<ThreadPool> m_thread_pool;
     std::vector<std::future<void>> m_futures{};
@@ -754,9 +755,9 @@ protected:
     }
 
 public:
-    explicit CoinsViewOverlay(CCoinsView* in_base, util::NotNullSharedPtr<ThreadPool> thread_pool,
+    explicit CoinsViewOverlay(util::log::Logger& logger, CCoinsView* in_base, util::NotNullSharedPtr<ThreadPool> thread_pool,
                               bool deterministic = false) noexcept
-        : CCoinsViewCache{in_base, deterministic}, m_thread_pool{std::move(thread_pool)}
+        : CCoinsViewCache{in_base, deterministic}, m_log{BCLog::COINDB, &logger}, m_thread_pool{std::move(thread_pool)}
     {
     }
 
@@ -806,7 +807,7 @@ const Coin& AccessByTxid(const CCoinsViewCache& cache, const Txid& txid);
 class CCoinsViewErrorCatcher final : public CCoinsViewBacked
 {
 public:
-    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
+    explicit CCoinsViewErrorCatcher(util::log::Logger& logger, CCoinsView* view) : CCoinsViewBacked(view), m_log{BCLog::COINDB, &logger} {}
 
     void AddReadErrCallback(std::function<void()> f) {
         m_err_callbacks.emplace_back(std::move(f));
@@ -817,6 +818,7 @@ public:
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
 
 private:
+    const util::log::Context m_log;
     /** A list of callbacks to execute upon leveldb read error. */
     std::vector<std::function<void()>> m_err_callbacks;
 

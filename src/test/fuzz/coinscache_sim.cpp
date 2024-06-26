@@ -206,6 +206,7 @@ struct OverlayFetchScope
 
 // Reuse a single global thread pool across fuzz iterations. Creating and destroying a pool every
 // iteration leaks memory, since iterations can run faster than the OS can tear down the threads.
+const BasicTestingSetup* g_setup;
 util::NotNull g_thread_pool{std::make_shared<ThreadPool>("cache_fuzz")};
 
 void StartPoolIfNeeded()
@@ -215,7 +216,7 @@ void StartPoolIfNeeded()
 
 } // namespace
 
-FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<>()}; })
+FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<>()}; g_setup = setup.get(); })
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     StartPoolIfNeeded();
@@ -416,7 +417,7 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
                         caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
                         fetch_scopes.emplace_back();
                     } else {
-                        caches.emplace_back(new CoinsViewOverlay(&*caches.back(), g_thread_pool, /*deterministic=*/true));
+                        caches.emplace_back(new CoinsViewOverlay(g_setup->m_logger, &*caches.back(), g_thread_pool, /*deterministic=*/true));
                         fetch_scopes.emplace_back(make_fetch_scope());
                     }
                     // Apply to simulation data.
