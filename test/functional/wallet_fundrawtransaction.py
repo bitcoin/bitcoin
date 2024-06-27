@@ -1332,7 +1332,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         input_weights = []
         for i in range(1471):
             input_weights.append({"txid": txid, "vout": i, "weight": 273})
-        assert_raises_rpc_error(-4, "Transaction too large", wallet.fundrawtransaction, hexstring=rawtx, input_weights=input_weights)
+        assert_raises_rpc_error(-4, "Transaction too large", wallet.fundrawtransaction, hexstring=rawtx, input_weights=input_weights, add_inputs=False)
 
         # 2) Let the wallet fund the transaction
         assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
