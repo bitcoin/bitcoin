@@ -142,6 +142,8 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
     LogInfo("foo8: %s\n", "bar8");
     LogWarning("foo9: %s\n", "bar9");
     LogError("foo10: %s\n", "bar10");
+    LogCritical("foo11: %s\n", "bar11");
+    LogFatal("foo12: %s\n", "bar12");
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
@@ -152,6 +154,8 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
         "foo8: bar8",
         "[warning] foo9: bar9",
         "[error] foo10: bar10",
+        "[critical] foo11: bar11",
+        "[fatal] foo12: bar12",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }

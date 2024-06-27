@@ -77,6 +77,8 @@ namespace BCLog {
         Info,      // Default
         Warning,
         Error,
+        Critical,
+        Fatal,
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
 
@@ -239,6 +241,8 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 #define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
 #define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
 #define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
+#define LogCritical(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Critical, __VA_ARGS__)
+#define LogFatal(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Fatal, __VA_ARGS__)
 
 // Deprecated unconditional logging.
 #define LogPrintf(...) LogInfo(__VA_ARGS__)
