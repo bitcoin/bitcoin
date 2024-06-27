@@ -64,7 +64,7 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator);
+        m_best_block_index = m_chainstate->FindForkInGlobalIndex(locator);
     }
 
     // Note: this will latch to true immediately if the user starts up with an empty
