@@ -4,7 +4,8 @@
 
 #include <chainparams.h>
 #include <hash.h>
-#include <net.h>
+#include <net/v1_transport.h>
+#include <net/v2_transport.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>

@@ -210,7 +210,10 @@ BITCOIN_CORE_H = \
   net/connection_types.h \
   net/constants.h \
   net/net_message.h \
+  net/transport.h \
   net/util.h \
+  net/v1_transport.h \
+  net/v2_transport.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -737,6 +740,8 @@ libbitcoin_net_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_net_a_SOURCES = \
   net/connection_types.cpp \
   net/net_message.cpp \
+  net/v1_transport.cpp \
+  net/v2_transport.cpp \
   $(BITCOIN_CORE_H)
 #
 
