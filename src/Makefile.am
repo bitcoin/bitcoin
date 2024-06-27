@@ -208,6 +208,7 @@ BITCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   net/connection_types.h \
+  net/constants.h \
   net/net_message.h \
   net/util.h \
   net.h \
