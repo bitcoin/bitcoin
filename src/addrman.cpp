@@ -391,7 +391,7 @@ void AddrManImpl::Unserialize(Stream& s_)
 
     const int check_code{ForceCheckAddrman()};
     if (check_code != 0) {
-        throw std::ios_base::failure(strprintf(
+        throw DbInconsistentError(strprintf(
             "Corrupt data. Consistency check failed with code %s",
             check_code));
     }
@@ -1168,8 +1168,7 @@ void AddrMan::Unserialize(Stream& s_)
 }
 
 // explicit instantiation
-template void AddrMan::Serialize(CHashWriter& s) const;
-template void AddrMan::Serialize(CAutoFile& s) const;
+template void AddrMan::Serialize(HashedSourceWriter<CAutoFile>& s) const;
 template void AddrMan::Serialize(CDataStream& s) const;
 template void AddrMan::Unserialize(CAutoFile& s);
 template void AddrMan::Unserialize(CHashVerifier<CAutoFile>& s);

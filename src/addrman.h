@@ -23,6 +23,16 @@ class AddrManImpl;
 /** Default for -checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
 
+class DbInconsistentError : public std::exception
+{
+    using std::exception::exception;
+    const std::string error;
+
+public:
+    explicit DbInconsistentError(const std::string _error) : error{_error} {}
+    const char* what() const noexcept override { return error.c_str(); }
+};
+
 /** Stochastic address manager
  *
  * Design goals:
