@@ -22,12 +22,12 @@ struct CSpentIndexValue;
 
 enum class AddressType : uint8_t;
 
-bool GetAddressIndex(uint160 addressHash, AddressType type,
+bool GetAddressIndex(const uint160& addressHash, const AddressType type,
                      std::vector<std::pair<CAddressIndexKey, CAmount>>& addressIndex,
-                     int32_t start = 0, int32_t end = 0);
-bool GetAddressUnspentIndex(uint160 addressHash, AddressType type,
+                     const int32_t start = 0, const int32_t end = 0);
+bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
                             std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& unspentOutputs);
-bool GetSpentIndex(const CTxMemPool& mempool, CSpentIndexKey& key, CSpentIndexValue& value);
+bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value);
 bool GetTimestampIndex(const uint32_t high, const uint32_t low, std::vector<uint256>& hashes);
 
 #endif // BITCOIN_RPC_CLIENT_H

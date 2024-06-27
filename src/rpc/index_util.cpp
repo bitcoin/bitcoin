@@ -9,8 +9,9 @@
 #include <uint256.h>
 #include <validation.h>
 
-bool GetAddressIndex(uint160 addressHash, AddressType type,
-                     std::vector<std::pair<CAddressIndexKey, CAmount>>& addressIndex, int32_t start, int32_t end)
+bool GetAddressIndex(const uint160& addressHash, const AddressType type,
+                     std::vector<std::pair<CAddressIndexKey, CAmount>>& addressIndex,
+                     const int32_t start, const int32_t end)
 {
     if (!fAddressIndex)
         return error("address index not enabled");
@@ -21,7 +22,7 @@ bool GetAddressIndex(uint160 addressHash, AddressType type,
     return true;
 }
 
-bool GetAddressUnspentIndex(uint160 addressHash, AddressType type,
+bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
                             std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>& unspentOutputs)
 {
     if (!fAddressIndex)
@@ -33,7 +34,7 @@ bool GetAddressUnspentIndex(uint160 addressHash, AddressType type,
     return true;
 }
 
-bool GetSpentIndex(const CTxMemPool& mempool, CSpentIndexKey& key, CSpentIndexValue& value)
+bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value)
 {
     if (!fSpentIndex)
         return false;
