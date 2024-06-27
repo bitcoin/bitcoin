@@ -99,9 +99,9 @@ static RPCHelpMan masternode_count()
     };
 }
 
-static UniValue GetNextMasternodeForPayment(CDeterministicMNManager& dmnman, int heightShift)
+static UniValue GetNextMasternodeForPayment(const CChain& active_chain, CDeterministicMNManager& dmnman, int heightShift)
 {
-    const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+    const CBlockIndex *tip = WITH_LOCK(::cs_main, return active_chain.Tip());
     auto mnList = dmnman.GetListForBlock(tip);
     auto payees = mnList.GetProjectedMNPayees(tip, heightShift);
     if (payees.empty())
@@ -136,8 +136,9 @@ static RPCHelpMan masternode_winner()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman);
-    return GetNextMasternodeForPayment(*node.dmnman, 10);
+    return GetNextMasternodeForPayment(chainman.ActiveChain(), *node.dmnman, 10);
 },
     };
 }
@@ -156,8 +157,9 @@ static RPCHelpMan masternode_current()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ChainstateManager& chainman = EnsureChainman(node);
     CHECK_NONFATAL(node.dmnman);
-    return GetNextMasternodeForPayment(*node.dmnman, 1);
+    return GetNextMasternodeForPayment(chainman.ActiveChain(), *node.dmnman, 1);
 },
     };
 }
@@ -595,7 +597,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         std::string strOutpoint = dmn.collateralOutpoint.ToStringShort();
         Coin coin;
         std::string collateralAddressStr = "UNKNOWN";
-        if (GetUTXOCoin(dmn.collateralOutpoint, coin)) {
+        if (GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin)) {
             CTxDestination collateralDest;
             if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 collateralAddressStr = EncodeDestination(collateralDest);

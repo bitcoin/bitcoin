@@ -63,18 +63,19 @@ BlockAssembler::Options::Options() {
 }
 
 BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
-      chainparams(params),
-      m_mempool(mempool),
-      m_chainstate(chainstate),
-      m_dmnman(*Assert(node.dmnman)),
+      m_blockman(Assert(node.chainman)->m_blockman),
       m_cpoolman(*Assert(node.cpoolman)),
       m_chain_helper(*Assert(node.chain_helper)),
+      m_chainstate(chainstate),
+      m_dmnman(*Assert(node.dmnman)),
+      m_evoDb(*Assert(node.evodb)),
       m_mnhfman(*Assert(node.mnhf_manager)),
-      m_quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
-      m_qman(*Assert(Assert(node.llmq_ctx)->qman)),
       m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
-      m_evoDb(*Assert(node.evodb))
+      chainparams(params),
+      m_mempool(mempool),
+      m_quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
+      m_qman(*Assert(Assert(node.llmq_ctx)->qman))
 {
     blockMinFeeRate = options.blockMinFeeRate;
     nBlockMaxSize = options.nBlockMaxSize;
@@ -131,7 +132,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
     LOCK2(cs_main, m_mempool.cs);
-    assert(std::addressof(*::ChainActive().Tip()) == std::addressof(*m_chainstate.m_chain.Tip()));
     CBlockIndex* pindexPrev = m_chainstate.m_chain.Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
@@ -221,7 +221,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         cbTx.nHeight = nHeight;
 
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, m_dmnman, state, ::ChainstateActive().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, m_dmnman, state, m_chainstate.CoinsTip())) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
         if (fDIP0008Active_context) {
@@ -236,7 +236,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 BlockValidationState state;
-                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_qman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
+                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_blockman, m_qman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
                 if (creditPoolDiff == std::nullopt) {
                     throw std::runtime_error(strprintf("%s: GetCreditPoolDiffForBlock failed: %s", __func__, state.ToString()));
                 }
@@ -264,7 +264,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    assert(std::addressof(::ChainstateActive()) == std::addressof(m_chainstate));
     if (!TestBlockValidity(state, m_clhandler, m_evoDb, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
@@ -472,7 +471,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             // `state` is local here because used only to log info about this specific tx
             TxValidationState state;
 
-            if (!creditPoolDiff->ProcessLockUnlockTransaction(m_qman, iter->GetTx(), state)) {
+            if (!creditPoolDiff->ProcessLockUnlockTransaction(m_blockman, m_qman, iter->GetTx(), state)) {
                 if (fUsingModified) {
                     mapModifiedTx.get<ancestor_score>().erase(modit);
                     failedTx.insert(iter);

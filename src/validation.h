@@ -294,9 +294,9 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
                                              const Package& txns, bool test_accept)
                                              EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
-int GetUTXOHeight(const COutPoint& outpoint);
-int GetUTXOConfirmations(const COutPoint& outpoint);
+bool GetUTXOCoin(CChainState& active_chainstate, const COutPoint& outpoint, Coin& coin);
+int GetUTXOHeight(CChainState& active_chainstate, const COutPoint& outpoint);
+int GetUTXOConfirmations(CChainState& active_chainstate, const COutPoint& outpoint);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
@@ -989,10 +989,6 @@ private:
         CAutoFile& coins_file,
         const SnapshotMetadata& metadata);
 
-    // For access to m_active_chainstate.
-    friend CChainState& ChainstateActive();
-    friend CChain& ChainActive();
-
 public:
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
@@ -1127,26 +1123,23 @@ public:
     //! Check to see if caches are out of balance and if so, call
     //! ResizeCoinsCaches() as needed.
     void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    ~ChainstateManager() {
+        LOCK(::cs_main);
+        UnloadBlockIndex(/* mempool */ nullptr, *this);
+        Reset();
+    }
 };
-
-/** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
-extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
-
-/** Please prefer the identical ChainstateManager::ActiveChainstate */
-CChainState& ChainstateActive();
-
-/** Please prefer the identical ChainstateManager::ActiveChain */
-CChain& ChainActive();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
 
 /**
- * Return true if hash can be found in ::ChainActive() at nBlockHeight height.
- * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
+ * Return true if hash can be found in active_chain at nBlockHeight height.
+ * Fills hashRet with found hash, if no nBlockHeight is specified - active_chain.Height() is used.
  */
-bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
+bool GetBlockHash(const CChain& active_chain, uint256& hashRet, int nBlockHeight = -1);
 
 /** Get block file info entry for one block file */
 CBlockFileInfo* GetBlockFileInfo(size_t n);

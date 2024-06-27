@@ -11,6 +11,7 @@
 
 class CActiveMasternodeManager;
 class CBlockIndex;
+class CChain;
 class CConnman;
 class CDataStream;
 class CDeterministicMN;
@@ -59,7 +60,8 @@ public:
      *      attempting to call this function regardless of sync state
      */
     static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                                     const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv);
+                                     const CChain& active_chain, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list,
+                                     std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 

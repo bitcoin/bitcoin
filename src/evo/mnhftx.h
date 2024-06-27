@@ -22,6 +22,7 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 class CEvoDB;
+class ChainstateManager;
 class TxValidationState;
 namespace llmq {
 class CQuorumManager;
@@ -100,6 +101,7 @@ class CMNHFManager : public AbstractEHFManager
 {
 private:
     CEvoDB& m_evoDb;
+    ChainstateManager* m_chainman{nullptr};
     llmq::CQuorumManager* m_qman{nullptr};
 
     static constexpr size_t MNHFCacheSize = 1000;
@@ -147,14 +149,14 @@ public:
      * Separated from constructor to allow LLMQContext to use CMNHFManager in read-only capacity.
      * Required to mutate state.
      */
-    void ConnectManagers(gsl::not_null<llmq::CQuorumManager*> qman);
+    void ConnectManagers(gsl::not_null<ChainstateManager*> chainman, gsl::not_null<llmq::CQuorumManager*> qman);
 
     /**
      * Reset llmq::CQuorumManager pointer.
      *
      * @pre Must be called before LLMQContext (containing llmq::CQuorumManager) is destroyed.
      */
-    void DisconnectManagers() { m_qman = nullptr; };
+    void DisconnectManagers() { m_chainman = nullptr; m_qman = nullptr; };
 
 private:
     void AddToCache(const Signals& signals, const CBlockIndex* const pindex);
@@ -175,6 +177,6 @@ private:
 };
 
 std::optional<uint8_t> extractEHFSignal(const CTransaction& tx);
-bool CheckMNHFTx(const llmq::CQuorumManager& qman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
+bool CheckMNHFTx(const ChainstateManager& chainman, const llmq::CQuorumManager& qman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
 #endif // BITCOIN_EVO_MNHFTX_H

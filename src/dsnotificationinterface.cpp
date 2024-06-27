@@ -28,6 +28,7 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
                                                    CMasternodeSync& mn_sync,
                                                    CGovernanceManager& govman,
                                                    PeerManager& peerman,
+                                                   const ChainstateManager& chainman,
                                                    const CActiveMasternodeManager* const mn_activeman,
                                                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                    const std::unique_ptr<LLMQContext>& llmq_ctx,
@@ -36,6 +37,7 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
     m_mn_sync(mn_sync),
     m_govman(govman),
     m_peerman(peerman),
+    m_chainman(chainman),
     m_mn_activeman(mn_activeman),
     m_dmnman(dmnman),
     m_llmq_ctx(llmq_ctx),
@@ -43,8 +45,8 @@ CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
-    SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
-    UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
+    SynchronousUpdatedBlockTip(m_chainman.ActiveChain().Tip(), nullptr, m_chainman.ActiveChainstate().IsInitialBlockDownload());
+    UpdatedBlockTip(m_chainman.ActiveChain().Tip(), nullptr, m_chainman.ActiveChainstate().IsInitialBlockDownload());
 }
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)

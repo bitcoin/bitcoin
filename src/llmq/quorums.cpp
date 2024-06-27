@@ -1107,7 +1107,8 @@ void CQuorumManager::StartCleanupOldQuorumDataThread(const CBlockIndex* pIndex) 
     });
 }
 
-CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CQuorumManager& quorum_manager, const uint256& selectionHash, int signHeight, int signOffset)
+CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, const CChain& active_chain, const CQuorumManager& qman,
+                                   const uint256& selectionHash, int signHeight, int signOffset)
 {
     size_t poolSize = llmq_params.signingActiveQuorumCount;
 
@@ -1115,17 +1116,17 @@ CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, con
     {
         LOCK(cs_main);
         if (signHeight == -1) {
-            signHeight = ::ChainActive().Height();
+            signHeight = active_chain.Height();
         }
         int startBlockHeight = signHeight - signOffset;
-        if (startBlockHeight > ::ChainActive().Height() || startBlockHeight < 0) {
+        if (startBlockHeight > active_chain.Height() || startBlockHeight < 0) {
             return {};
         }
-        pindexStart = ::ChainActive()[startBlockHeight];
+        pindexStart = active_chain[startBlockHeight];
     }
 
     if (IsQuorumRotationEnabled(llmq_params, pindexStart)) {
-        auto quorums = quorum_manager.ScanQuorums(llmq_params.type, pindexStart, poolSize);
+        auto quorums = qman.ScanQuorums(llmq_params.type, pindexStart, poolSize);
         if (quorums.empty()) {
             return nullptr;
         }
@@ -1149,7 +1150,7 @@ CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, con
         }
         return *itQuorum;
     } else {
-        auto quorums = quorum_manager.ScanQuorums(llmq_params.type, pindexStart, poolSize);
+        auto quorums = qman.ScanQuorums(llmq_params.type, pindexStart, poolSize);
         if (quorums.empty()) {
             return nullptr;
         }
@@ -1168,11 +1169,13 @@ CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, con
     }
 }
 
-bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CQuorumManager& quorum_manager, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
+bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain, const CQuorumManager& qman,
+                        int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig,
+                        const int signOffset)
 {
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
-    auto quorum = SelectQuorumForSigning(llmq_params_opt.value(), quorum_manager, id, signedAtHeight, signOffset);
+    auto quorum = SelectQuorumForSigning(llmq_params_opt.value(), active_chain, qman, id, signedAtHeight, signOffset);
     if (!quorum) {
         return false;
     }

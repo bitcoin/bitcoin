@@ -534,9 +534,9 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
 //////////////////
 
-CSigningManager::CSigningManager(CConnman& _connman, const CActiveMasternodeManager* const mn_activeman, const CQuorumManager& _qman,
-                                 const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe) :
-    db(fMemory, fWipe), connman(_connman), m_mn_activeman(mn_activeman), qman(_qman), m_peerman(peerman)
+CSigningManager::CSigningManager(CConnman& _connman, const CActiveMasternodeManager* const mn_activeman, const CChainState& chainstate,
+                                 const CQuorumManager& _qman, const std::unique_ptr<PeerManager>& peerman, bool fMemory, bool fWipe) :
+    db(fMemory, fWipe), connman(_connman), m_mn_activeman(mn_activeman), m_chainstate(chainstate), qman(_qman), m_peerman(peerman)
 {
 }
 
@@ -890,7 +890,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
             // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
             const auto &llmq_params_opt = Params().GetLLMQ(llmqType);
             assert(llmq_params_opt.has_value());
-            return SelectQuorumForSigning(llmq_params_opt.value(), qman, id);
+            return SelectQuorumForSigning(llmq_params_opt.value(), m_chainstate.m_chain, qman, id);
         } else {
             return qman.GetQuorum(llmqType, quorumHash);
         }

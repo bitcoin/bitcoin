@@ -19,6 +19,7 @@ class CDeterministicMNList;
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class ChainstateManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
 class CNode;
@@ -227,14 +228,14 @@ public:
 
     // CORE OBJECT FUNCTIONS
 
-    bool IsValidLocally(const CDeterministicMNList& tip_mn_list, std::string& strError, bool fCheckCollateral) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsValidLocally(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman, std::string& strError, bool fCheckCollateral) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    bool IsValidLocally(const CDeterministicMNList& tip_mn_list, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsValidLocally(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /// Check the collateral transaction for the budget proposal/finalized budget
-    bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsCollateralValid(const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    void UpdateLocalValidity(const CDeterministicMNList& tip_mn_list);
+    void UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman);
 
     void UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list);
 

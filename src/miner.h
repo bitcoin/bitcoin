@@ -16,13 +16,14 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
+class BlockManager;
 class CBlockIndex;
 class CChainParams;
+class CChainstateHelper;
 class CConnman;
 class CCreditPoolManager;
 class CDeterministicMNManager;
 class CEvoDB;
-class CChainstateHelper;
 class CMNHFManager;
 class CScript;
 struct LLMQContext;
@@ -159,18 +160,20 @@ private:
     // Chain context for the block
     int nHeight;
     int64_t nLockTimeCutoff;
-    const CChainParams& chainparams;
-    const CTxMemPool& m_mempool;
-    CChainState& m_chainstate;
-    CDeterministicMNManager& m_dmnman;
+
+    BlockManager& m_blockman;
     CCreditPoolManager& m_cpoolman;
     CChainstateHelper& m_chain_helper;
+    CChainState& m_chainstate;
+    CDeterministicMNManager& m_dmnman;
+    CEvoDB& m_evoDb;
     CMNHFManager& m_mnhfman;
-    const llmq::CQuorumBlockProcessor& m_quorum_block_processor;
-    const llmq::CQuorumManager& m_qman;
     llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
-    CEvoDB& m_evoDb;
+    const CChainParams& chainparams;
+    const CTxMemPool& m_mempool;
+    const llmq::CQuorumBlockProcessor& m_quorum_block_processor;
+    const llmq::CQuorumManager& m_qman;
 
 public:
     struct Options {

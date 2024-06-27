@@ -22,13 +22,13 @@
 /**
  *  Common code for Asset Lock and Asset Unlock
  */
-bool CheckAssetLockUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
+bool CheckAssetLockUnlockTx(const BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     switch (tx.nType) {
     case TRANSACTION_ASSET_LOCK:
         return CheckAssetLockTx(tx, state);
     case TRANSACTION_ASSET_UNLOCK:
-        return CheckAssetUnlockTx(qman, tx, pindexPrev, indexes, state);
+        return CheckAssetUnlockTx(blockman, qman, tx, pindexPrev, indexes, state);
     default:
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-not-asset-locks-at-all");
     }
@@ -141,7 +141,7 @@ bool CAssetUnlockPayload::VerifySig(const llmq::CQuorumManager& qman, const uint
     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-not-verified");
 }
 
-bool CheckAssetUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
+bool CheckAssetUnlockTx(const BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state)
 {
     // Some checks depends from blockchain status also, such as `known indexes` and `withdrawal limits`
     // They are omitted here and done by CCreditPool
@@ -171,7 +171,7 @@ bool CheckAssetUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-duplicated-index");
     }
 
-    if (LOCK(cs_main); g_chainman.m_blockman.LookupBlockIndex(assetUnlockTx.getQuorumHash()) == nullptr) {
+    if (LOCK(cs_main); blockman.LookupBlockIndex(assetUnlockTx.getQuorumHash()) == nullptr) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-assetunlock-quorum-hash");
     }
 

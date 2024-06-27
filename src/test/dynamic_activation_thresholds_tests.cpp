@@ -55,9 +55,9 @@ struct TestChainDATSetup : public TestChainSetup
         }
         LOCK(cs_main);
         if (expected_lockin) {
-            BOOST_CHECK_EQUAL(g_versionbitscache.State(::ChainActive().Tip(), consensus_params, deployment_id), ThresholdState::LOCKED_IN);
+            BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::LOCKED_IN);
         } else {
-            BOOST_CHECK_EQUAL(g_versionbitscache.State(::ChainActive().Tip(), consensus_params, deployment_id), ThresholdState::STARTED);
+            BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::STARTED);
         }
     }
 
@@ -68,8 +68,8 @@ struct TestChainDATSetup : public TestChainSetup
 
         {
             LOCK(cs_main);
-            BOOST_CHECK_EQUAL(::ChainActive().Height(), window - 2);
-            BOOST_CHECK_EQUAL(g_versionbitscache.State(::ChainActive().Tip(), consensus_params, deployment_id), ThresholdState::DEFINED);
+            BOOST_CHECK_EQUAL(m_node.chainman->ActiveChain().Height(), window - 2);
+            BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::DEFINED);
         }
 
         CreateAndProcessBlock({}, coinbaseKey);
@@ -77,13 +77,13 @@ struct TestChainDATSetup : public TestChainSetup
         {
             LOCK(cs_main);
             // Advance from DEFINED to STARTED at height = window - 1
-            BOOST_CHECK_EQUAL(::ChainActive().Height(), window - 1);
-            BOOST_CHECK_EQUAL(g_versionbitscache.State(::ChainActive().Tip(), consensus_params, deployment_id), ThresholdState::STARTED);
-            BOOST_CHECK_EQUAL(g_versionbitscache.Statistics(::ChainActive().Tip(), consensus_params, deployment_id).threshold, threshold(0));
+            BOOST_CHECK_EQUAL(m_node.chainman->ActiveChain().Height(), window - 1);
+            BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::STARTED);
+            BOOST_CHECK_EQUAL(g_versionbitscache.Statistics(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id).threshold, threshold(0));
             // Next block should be signaling by default
-            const auto pblocktemplate = BlockAssembler(::ChainstateActive(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
+            const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
             const uint32_t bitmask = ((uint32_t)1) << consensus_params.vDeployments[deployment_id].bit;
-            BOOST_CHECK_EQUAL(::ChainActive().Tip()->nVersion & bitmask, 0);
+            BOOST_CHECK_EQUAL(m_node.chainman->ActiveChain().Tip()->nVersion & bitmask, 0);
             BOOST_CHECK_EQUAL(pblocktemplate->block.nVersion & bitmask, bitmask);
         }
 
@@ -94,18 +94,18 @@ struct TestChainDATSetup : public TestChainSetup
             {
                 // Still STARTED but with a (potentially) new threshold
                 LOCK(cs_main);
-                BOOST_CHECK_EQUAL(::ChainActive().Height(), window * (i + 2) - 1);
-                BOOST_CHECK_EQUAL(g_versionbitscache.State(::ChainActive().Tip(), consensus_params, deployment_id), ThresholdState::STARTED);
-                const auto vbts = g_versionbitscache.Statistics(::ChainActive().Tip(), consensus_params, deployment_id);
+                BOOST_CHECK_EQUAL(m_node.chainman->ActiveChain().Height(), window * (i + 2) - 1);
+                BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::STARTED);
+                const auto vbts = g_versionbitscache.Statistics(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id);
                 BOOST_CHECK_EQUAL(vbts.threshold, threshold(i + 1));
                 BOOST_CHECK(vbts.threshold <= th_start);
                 BOOST_CHECK(vbts.threshold >= th_end);
             }
         }
         if (LOCK(cs_main); check_activation_at_min) {
-            BOOST_CHECK_EQUAL(g_versionbitscache.Statistics(::ChainActive().Tip(), consensus_params, deployment_id).threshold, th_end);
+            BOOST_CHECK_EQUAL(g_versionbitscache.Statistics(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id).threshold, th_end);
         } else {
-            BOOST_CHECK(g_versionbitscache.Statistics(::ChainActive().Tip(), consensus_params, deployment_id).threshold > th_end);
+            BOOST_CHECK(g_versionbitscache.Statistics(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id).threshold > th_end);
         }
 
         // activate
@@ -115,7 +115,7 @@ struct TestChainDATSetup : public TestChainSetup
         }
         {
             LOCK(cs_main);
-            BOOST_CHECK_EQUAL(g_versionbitscache.State(::ChainActive().Tip(), consensus_params, deployment_id), ThresholdState::ACTIVE);
+            BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::ACTIVE);
         }
 
     }

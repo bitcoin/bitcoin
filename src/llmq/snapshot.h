@@ -207,9 +207,9 @@ public:
     [[nodiscard]] UniValue ToJson() const;
 };
 
-bool BuildQuorumRotationInfo(const CGetQuorumRotationInfo& request, CQuorumRotationInfo& response,
-                             CDeterministicMNManager& dmnman, const CQuorumManager& qman,
-                             const CQuorumBlockProcessor& quorumBlockProcessor, std::string& errorRet);
+bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CQuorumManager& qman,
+                             const CQuorumBlockProcessor& qblockman, const CGetQuorumRotationInfo& request,
+                             CQuorumRotationInfo& response, std::string& errorRet);
 uint256 GetLastBaseBlockHash(Span<const CBlockIndex*> baseBlockIndexes, const CBlockIndex* blockIndex);
 
 class CQuorumSnapshotManager

@@ -261,6 +261,7 @@ private:
 
     CMasternodeMetaMan& m_mn_metaman;
     CNetFulfilledRequestManager& m_netfulfilledman;
+    const ChainstateManager& m_chainman;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
     const std::unique_ptr<CMasternodeSync>& m_mn_sync;
 
@@ -276,7 +277,7 @@ private:
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
 
 public:
-    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
+    explicit CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman, const ChainstateManager& chainman,
                                 const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                 const std::unique_ptr<CMasternodeSync>& mn_sync);
     ~CGovernanceManager();

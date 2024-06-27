@@ -14,6 +14,7 @@
 
 #include <optional>
 
+class BlockManager;
 class CBlockIndex;
 class CRangesSet;
 class TxValidationState;
@@ -172,8 +173,8 @@ public:
 };
 
 bool CheckAssetLockTx(const CTransaction& tx, TxValidationState& state);
-bool CheckAssetUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state);
-bool CheckAssetLockUnlockTx(const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state);
+bool CheckAssetUnlockTx(const BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state);
+bool CheckAssetLockUnlockTx(const BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, const std::optional<CRangesSet>& indexes, TxValidationState& state);
 bool GetAssetUnlockFee(const CTransaction& tx, CAmount& txfee, TxValidationState& state);
 
 #endif // BITCOIN_EVO_ASSETLOCKTX_H

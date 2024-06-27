@@ -20,6 +20,7 @@
 #include <optional>
 #include <unordered_set>
 
+class BlockManager;
 class CBlockIndex;
 class BlockValidationState;
 class TxValidationState;
@@ -83,7 +84,7 @@ public:
      * to change amount of credit pool
      * @return true if transaction can be included in this block
      */
-    bool ProcessLockUnlockTransaction(const llmq::CQuorumManager& qman, const CTransaction& tx, TxValidationState& state);
+    bool ProcessLockUnlockTransaction(const BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, TxValidationState& state);
 
     /**
      * this function returns total amount of credits for the next block
@@ -135,7 +136,8 @@ private:
     CCreditPool ConstructCreditPool(const CBlockIndex* block_index, CCreditPool prev, const Consensus::Params& consensusParams);
 };
 
-std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const llmq::CQuorumManager& qman, const CBlock& block, const CBlockIndex* pindexPrev,
-                                                         const Consensus::Params& consensusParams, const CAmount blockSubsidy, BlockValidationState& state);
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const BlockManager& blockman, const llmq::CQuorumManager& qman,
+                                                         const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams,
+                                                         const CAmount blockSubsidy, BlockValidationState& state);
 
 #endif

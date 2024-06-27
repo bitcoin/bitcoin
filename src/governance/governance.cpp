@@ -45,11 +45,12 @@ GovernanceStore::GovernanceStore() :
 }
 
 CGovernanceManager::CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfilledRequestManager& netfulfilledman,
-                                       const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                       const ChainstateManager& chainman, const std::unique_ptr<CDeterministicMNManager>& dmnman,
                                        const std::unique_ptr<CMasternodeSync>& mn_sync) :
     m_db{std::make_unique<db_type>("governance.dat", "magicGovernanceCache")},
     m_mn_metaman{mn_metaman},
     m_netfulfilledman{netfulfilledman},
+    m_chainman{chainman},
     m_dmnman{dmnman},
     m_mn_sync{mn_sync},
     nTimeLastDiff(0),
@@ -194,7 +195,7 @@ PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, Pe
         // CHECK OBJECT AGAINST LOCAL BLOCKCHAIN
 
         bool fMissingConfirmations = false;
-        bool fIsValid = govobj.IsValidLocally(tip_mn_list, strError, fMissingConfirmations, true);
+        bool fIsValid = govobj.IsValidLocally(tip_mn_list, m_chainman, strError, fMissingConfirmations, true);
 
         if (fRateCheckBypassed && fIsValid && !MasternodeRateCheck(govobj, true)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
@@ -303,7 +304,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, PeerMana
 
     // MAKE SURE THIS OBJECT IS OK
 
-    if (!govobj.IsValidLocally(tip_mn_list, strError, true)) {
+    if (!govobj.IsValidLocally(tip_mn_list, m_chainman, strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
         return;
     }
@@ -387,7 +388,7 @@ void CGovernanceManager::CheckAndRemove()
         // IF CACHE IS NOT DIRTY, WHY DO THIS?
         if (pObj->IsSetDirtyCache()) {
             // UPDATE LOCAL VALIDITY AGAINST CRYPTO DATA
-            pObj->UpdateLocalValidity(tip_mn_list);
+            pObj->UpdateLocalValidity(tip_mn_list, m_chainman);
 
             // UPDATE SENTINEL SIGNALING VARIABLES
             pObj->UpdateSentinelVariables(tip_mn_list);
@@ -612,7 +613,7 @@ std::optional<const CSuperblock> CGovernanceManager::CreateSuperblockCandidate(i
 
     CSuperblock::GetNearestSuperblocksHeights(nHeight, nLastSuperblock, nNextSuperblock);
     auto SBEpochTime = static_cast<int64_t>(GetTime<std::chrono::seconds>().count() + (nNextSuperblock - nHeight) * 2.62 * 60);
-    auto governanceBudget = CSuperblock::GetPaymentsLimit(nNextSuperblock);
+    auto governanceBudget = CSuperblock::GetPaymentsLimit(m_chainman.ActiveChain(), nNextSuperblock);
 
     CAmount budgetAllocated{};
     for (const auto& proposal : approvedProposals) {
@@ -690,7 +691,7 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
     }
 
     // Nobody submitted a trigger we'd like to see, so let's do it but only if we are the payee
-    const CBlockIndex *tip = WITH_LOCK(::cs_main, return ::ChainActive().Tip());
+    const CBlockIndex *tip = WITH_LOCK(::cs_main, return m_chainman.ActiveChain().Tip());
     const auto mnList = Assert(m_dmnman)->GetListForBlock(tip);
     const auto mn_payees = mnList.GetProjectedMNPayees(tip);
 
@@ -706,7 +707,7 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
     gov_sb.SetMasternodeOutpoint(mn_activeman.GetOutPoint());
     gov_sb.Sign(mn_activeman);
 
-    if (std::string strError; !gov_sb.IsValidLocally(m_dmnman->GetListAtChainTip(), strError, true)) {
+    if (std::string strError; !gov_sb.IsValidLocally(m_dmnman->GetListAtChainTip(), m_chainman, strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Created trigger is invalid:%s\n", __func__, strError);
         return std::nullopt;
     }
@@ -1140,8 +1141,8 @@ void CGovernanceManager::CheckPostponedObjects(PeerManager& peerman)
 
         std::string strError;
         bool fMissingConfirmations;
-        if (govobj.IsCollateralValid(strError, fMissingConfirmations)) {
-            if (govobj.IsValidLocally(Assert(m_dmnman)->GetListAtChainTip(), strError, false)) {
+        if (govobj.IsCollateralValid(m_chainman, strError, fMissingConfirmations)) {
+            if (govobj.IsValidLocally(Assert(m_dmnman)->GetListAtChainTip(), m_chainman, strError, false)) {
                 AddGovernanceObject(govobj, peerman);
             } else {
                 LogPrint(BCLog::GOBJECT, "CGovernanceManager::CheckPostponedObjects -- %s invalid\n", nHash.ToString());

@@ -18,6 +18,7 @@
 
 class CBlockIndex;
 class CDeterministicMNManager;
+class ChainstateManager;
 class TxValidationState;
 
 namespace llmq
@@ -172,7 +173,7 @@ public:
     }
 };
 
-bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
+bool CheckLLMQCommitment(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state);
 
 uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
 

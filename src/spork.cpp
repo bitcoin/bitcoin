@@ -149,8 +149,7 @@ PeerMsgRet CSporkManager::ProcessSpork(const CNode& peer, PeerManager& peerman, 
     {
         LOCK(cs_main);
         EraseObjectRequest(peer.GetId(), CInv(MSG_SPORK, hash));
-        if (!::ChainActive().Tip()) return {};
-        strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, ::ChainActive().Height(), peer.GetId());
+        strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, peer.GetId());
     }
 
     if (spork.nTimeSigned > GetAdjustedTime() + 2 * 60 * 60) {

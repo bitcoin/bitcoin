@@ -397,22 +397,22 @@ UniValue CGovernanceObject::ToJson() const
     return m_obj.ToJson();
 }
 
-void CGovernanceObject::UpdateLocalValidity(const CDeterministicMNList& tip_mn_list)
+void CGovernanceObject::UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman)
 {
     AssertLockHeld(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
-    fCachedLocalValidity = IsValidLocally(tip_mn_list, strLocalValidityError, false);
+    fCachedLocalValidity = IsValidLocally(tip_mn_list, chainman, strLocalValidityError, false);
 }
 
 
-bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, std::string& strError, bool fCheckCollateral) const
+bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman, std::string& strError, bool fCheckCollateral) const
 {
     bool fMissingConfirmations = false;
 
-    return IsValidLocally(tip_mn_list, strError, fMissingConfirmations, fCheckCollateral);
+    return IsValidLocally(tip_mn_list, chainman, strError, fMissingConfirmations, fCheckCollateral);
 }
 
-bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
+bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
 {
     AssertLockHeld(cs_main);
 
@@ -433,7 +433,7 @@ bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, 
             strError = strprintf("Invalid proposal data, error messages: %s", validator.GetErrorMessages());
             return false;
         }
-        if (fCheckCollateral && !IsCollateralValid(strError, fMissingConfirmations)) {
+        if (fCheckCollateral && !IsCollateralValid(chainman, strError, fMissingConfirmations)) {
             strError = "Invalid proposal collateral";
             return false;
         }
@@ -483,7 +483,7 @@ CAmount CGovernanceObject::GetMinCollateralFee() const
     }
 }
 
-bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const
+bool CGovernanceObject::IsCollateralValid(const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations) const
 {
     AssertLockHeld(cs_main);
 
@@ -547,9 +547,9 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     AssertLockHeld(cs_main);
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
-        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(nBlockHash);
-        if (pindex && ::ChainActive().Contains(pindex)) {
-            nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
+        const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(nBlockHash);
+        if (pindex && chainman.ActiveChain().Contains(pindex)) {
+            nConfirmationsIn += chainman.ActiveChain().Height() - pindex->nHeight + 1;
         }
     }
 

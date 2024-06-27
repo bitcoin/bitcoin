@@ -40,6 +40,7 @@ static RPCHelpMan coinjoin()
     if (!wallet) return NullUniValue;
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+
     if (node.mn_activeman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
     }
@@ -69,9 +70,10 @@ static RPCHelpMan coinjoin()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
+        ChainstateManager& chainman = EnsureChainman(node);
         CTxMemPool& mempool = EnsureMemPool(node);
         CConnman& connman = EnsureConnman(node);
-        bool result = cj_clientman->DoAutomaticDenominating(connman, mempool);
+        bool result = cj_clientman->DoAutomaticDenominating(chainman.ActiveChainstate(), connman, mempool);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + cj_clientman->GetStatuses().original + ", will retry"));
     }
 

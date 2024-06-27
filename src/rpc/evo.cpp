@@ -744,7 +744,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
             FundSpecialTx(wallet.get(), tx, ptx, fundDest);
             UpdateSpecialTxInputsHash(tx, ptx);
             Coin coin;
-            if (!GetUTXOCoin(ptx.collateralOutpoint, coin)) {
+            if (!GetUTXOCoin(chainman.ActiveChainstate(), ptx.collateralOutpoint, coin)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral not found: %s", ptx.collateralOutpoint.ToStringShort()));
             }
             CTxDestination txDest;
@@ -1272,7 +1272,7 @@ static UniValue BuildDMNListEntry(const CWallet* const pwallet, const CDetermini
     UniValue o = dmn.ToJson();
 
     CTransactionRef collateralTx{nullptr};
-    int confirmations = GetUTXOConfirmations(dmn.collateralOutpoint);
+    int confirmations = GetUTXOConfirmations(chainman.ActiveChainstate(), dmn.collateralOutpoint);
 
     if (pindex != nullptr) {
         if (confirmations > -1) {
@@ -1293,7 +1293,7 @@ static UniValue BuildDMNListEntry(const CWallet* const pwallet, const CDetermini
     bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn.pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
-    if (Coin coin; GetUTXOCoin(dmn.collateralOutpoint, coin)) {
+    if (Coin coin; GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin)) {
         ownsCollateral = CheckWalletOwnsScript(pwallet, coin.out.scriptPubKey);
     } else if (collateralTx != nullptr) {
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn.collateralOutpoint.n].scriptPubKey);
@@ -1513,7 +1513,9 @@ static UniValue protx_diff(const JSONRPCRequest& request, CDeterministicMNManage
     CSimplifiedMNListDiff mnListDiff;
     std::string strError;
 
-    if (!BuildSimplifiedMNListDiff(baseBlockHash, blockHash, mnListDiff, dmnman, *llmq_ctx.quorum_block_processor, *llmq_ctx.qman, strError, extended)) {
+    if (!BuildSimplifiedMNListDiff(dmnman, chainman, *llmq_ctx.quorum_block_processor, *llmq_ctx.qman, baseBlockHash,
+                                   blockHash, mnListDiff, strError, extended))
+    {
         throw std::runtime_error(strError);
     }
 

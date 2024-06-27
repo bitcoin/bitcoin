@@ -362,14 +362,14 @@ bool CSuperblockManager::GetSuperblockPayments(CGovernanceManager& govman, const
     return true;
 }
 
-bool CSuperblockManager::IsValid(CGovernanceManager& govman, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+bool CSuperblockManager::IsValid(CGovernanceManager& govman, const CChain& active_chain, const CDeterministicMNList& tip_mn_list, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     // GET BEST SUPERBLOCK, SHOULD MATCH
     LOCK(govman.cs);
 
     CSuperblock_sptr pSuperblock;
     if (CSuperblockManager::GetBestSuperblock(govman, tip_mn_list, pSuperblock, nBlockHeight)) {
-        return pSuperblock->IsValid(govman, txNew, nBlockHeight, blockReward);
+        return pSuperblock->IsValid(govman, active_chain, txNew, nBlockHeight, blockReward);
     }
 
     return false;
@@ -482,7 +482,7 @@ void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuper
     }
 }
 
-CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
+CAmount CSuperblock::GetPaymentsLimit(const CChain& active_chain, int nBlockHeight)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
@@ -490,7 +490,7 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
         return 0;
     }
 
-    const CBlockIndex* pindex = ::ChainActive().Tip();
+    const CBlockIndex* pindex = active_chain.Tip();
     if (pindex->nHeight > nBlockHeight) pindex = pindex->GetAncestor(nBlockHeight);
 
     const auto v20_state = g_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_V20);
@@ -612,7 +612,7 @@ CAmount CSuperblock::GetPaymentsTotalAmount()
 *   - Does this transaction match the superblock?
 */
 
-bool CSuperblock::IsValid(CGovernanceManager& govman, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
+bool CSuperblock::IsValid(CGovernanceManager& govman, const CChain& active_chain, const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     // TODO : LOCK(cs);
     // No reason for a lock here now since this method only accesses data
@@ -646,7 +646,7 @@ bool CSuperblock::IsValid(CGovernanceManager& govman, const CTransaction& txNew,
 
     // payments should not exceed limit
     CAmount nPaymentsTotalAmount = GetPaymentsTotalAmount();
-    CAmount nPaymentsLimit = GetPaymentsLimit(nBlockHeight);
+    CAmount nPaymentsLimit = GetPaymentsLimit(active_chain, nBlockHeight);
     if (nPaymentsTotalAmount > nPaymentsLimit) {
         LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, payments limit exceeded: payments %lld, limit %lld\n", nPaymentsTotalAmount, nPaymentsLimit);
         return false;

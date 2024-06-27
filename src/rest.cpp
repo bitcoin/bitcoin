@@ -124,7 +124,7 @@ static ChainstateManager* GetChainman(const CoreContext& context, HTTPRequest* r
                           __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT));
         return nullptr;
     }
-    return node_context->chainman;
+    return node_context->chainman.get();
 }
 
 static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)

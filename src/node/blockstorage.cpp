@@ -204,13 +204,13 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
         auto mnList = dmnman.GetListAtChainTip();
         mnList.ForEachMN(false, [&](auto& dmn) {
             Coin coin;
-            GetUTXOCoin(dmn.collateralOutpoint, coin);
+            GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
         });
         LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }
 
     if (mn_activeman != nullptr) {
-        mn_activeman->Init(::ChainActive().Tip());
+        mn_activeman->Init(chainman.ActiveTip());
     }
 
     g_wallet_init_interface.AutoLockMasternodeCollaterals();
