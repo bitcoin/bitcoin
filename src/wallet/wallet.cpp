@@ -2319,11 +2319,11 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
 
     const std::string& encoded_dest = EncodeDestination(address);
     if (new_purpose && !batch.WritePurpose(encoded_dest, PurposeToString(*new_purpose))) {
-        LogInfo(m_log, "Error: fail to write address book 'purpose' entry");
+        LogError(m_log, "Error: fail to write address book 'purpose' entry");
         return false;
     }
     if (!batch.WriteName(encoded_dest, strName)) {
-        LogInfo(m_log, "Error: fail to write address book 'name' entry");
+        LogError(m_log, "Error: fail to write address book 'name' entry");
         return false;
     }
 
@@ -2361,19 +2361,19 @@ bool CWallet::DelAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
         }
         // Delete data rows associated with this address
         if (!batch.EraseAddressData(address)) {
-            LogInfo(m_log, "Error: cannot erase address book entry data");
+            LogError(m_log, "Error: cannot erase address book entry data");
             return false;
         }
 
         // Delete purpose entry
         if (!batch.ErasePurpose(dest)) {
-            LogInfo(m_log, "Error: cannot erase address book entry purpose");
+            LogError(m_log, "Error: cannot erase address book entry purpose");
             return false;
         }
 
         // Delete name entry
         if (!batch.EraseName(dest)) {
-            LogInfo(m_log, "Error: cannot erase address book entry name");
+            LogError(m_log, "Error: cannot erase address book entry name");
             return false;
         }
 
