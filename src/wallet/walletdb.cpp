@@ -441,7 +441,7 @@ static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIV
     uint64_t flags;
     if (batch.Read(DBKeys::FLAGS, flags)) {
         if (!pwallet->LoadWalletFlags(flags)) {
-            LogInfo(log, "Error reading wallet database: Unknown non-tolerable wallet flags found\n");
+            LogError(log, "Error reading wallet database: Unknown non-tolerable wallet flags found\n");
             return DBErrors::TOO_NEW;
         }
         // All wallets must be descriptor wallets unless opened with a bdb_ro db
@@ -470,7 +470,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
     Assume(!prefix.empty());
     std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
     if (!cursor) {
-        LogInfo(log, "Error getting database cursor for '%s' records\n", key);
+        LogError(log, "Error getting database cursor for '%s' records\n", key);
         result.m_result = DBErrors::CORRUPT;
         return result;
     }
@@ -480,7 +480,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
         if (status == DatabaseCursor::Status::DONE) {
             break;
         } else if (status == DatabaseCursor::Status::FAIL) {
-            LogInfo(log, "Error reading next '%s' record for wallet database\n", key);
+            LogError(log, "Error reading next '%s' record for wallet database\n", key);
             result.m_result = DBErrors::CORRUPT;
             return result;
         }
@@ -490,7 +490,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
         std::string error;
         DBErrors record_res = load_func(pwallet, ssKey, ssValue, error);
         if (record_res != DBErrors::LOAD_OK) {
-            LogInfo(log, "%s\n", error);
+            LogError(log, "%s\n", error);
         }
         result.m_result = std::max(result.m_result, record_res);
         ++result.m_records;
@@ -542,7 +542,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     // Make sure descriptor wallets don't have any legacy records
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         if (HasLegacyRecords(*pwallet, batch)) {
-            LogInfo(log, "Error: Unexpected legacy entry found in descriptor wallet %s. The wallet might have been tampered with or created with malicious intent.\n", pwallet->GetName());
+            LogError(log, "Error: Unexpected legacy entry found in descriptor wallet %s. The wallet might have been tampered with or created with malicious intent.\n", pwallet->GetName());
             return DBErrors::UNEXPECTED_LEGACY_ENTRY;
         }
 
@@ -945,7 +945,7 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
         value >> purpose_str;
         std::optional<AddressPurpose> purpose{PurposeFromString(purpose_str)};
         if (!purpose) {
-            LogInfo(log, "Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
+            LogWarning(log, "Warning: nonstandard purpose string '%s' for address '%s'\n", purpose_str, strAddress);
         }
         pwallet->m_address_book[DecodeDestination(strAddress)].purpose = purpose;
         return DBErrors::LOAD_OK;
@@ -1119,7 +1119,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
 #ifndef ENABLE_EXTERNAL_SIGNER
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-            LogInfo(log, "Error: External signer wallet being loaded without external signer support compiled\n");
+            LogError(log, "Error: External signer wallet being loaded without external signer support compiled\n");
             return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;
         }
 #endif
