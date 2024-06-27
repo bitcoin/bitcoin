@@ -125,7 +125,6 @@ BITCOIN_CORE_H = \
   banman.h \
   base58.h \
   bech32.h \
-  bip324.h \
   blockencodings.h \
   blockfilter.h \
   chain.h \
@@ -207,6 +206,7 @@ BITCOIN_CORE_H = \
   mapport.h \
   memusage.h \
   merkleblock.h \
+  net/bip324.h \
   net/connection_types.h \
   net/constants.h \
   net/net_message.h \
@@ -398,7 +398,6 @@ libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
-  bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
@@ -738,6 +737,7 @@ libbitcoin_common_a_SOURCES = \
 libbitcoin_net_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
 libbitcoin_net_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_net_a_SOURCES = \
+  net/bip324.cpp \
   net/connection_types.cpp \
   net/net_message.cpp \
   net/v1_transport.cpp \

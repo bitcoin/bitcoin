@@ -5,7 +5,7 @@
 #ifndef BITCOIN_NET_V2_TRANSPORT_H
 #define BITCOIN_NET_V2_TRANSPORT_H
 
-#include <bip324.h>
+#include <net/bip324.h>
 #include <net/transport.h>
 #include <net/v1_transport.h>
 #include <net/util.h>
