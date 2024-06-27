@@ -209,6 +209,7 @@ BITCOIN_CORE_H = \
   merkleblock.h \
   net/connection_types.h \
   net/net_message.h \
+  net/util.h \
   net.h \
   net_permissions.h \
   net_processing.h \

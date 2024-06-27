@@ -8,7 +8,7 @@
 #include <arith_uint256.h>
 #include <chain.h>
 #include <consensus/params.h>
-#include <net.h> // For NodeId
+#include <net/util.h> // For NodeId
 #include <primitives/block.h>
 #include <uint256.h>
 #include <util/bitdeque.h>

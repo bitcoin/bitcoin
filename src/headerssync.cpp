@@ -5,6 +5,7 @@
 #include <headerssync.h>
 #include <logging.h>
 #include <pow.h>
+#include <random.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <util/vector.h>

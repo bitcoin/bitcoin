@@ -7,10 +7,12 @@
 
 #include <common/settings.h>
 #include <consensus/amount.h>          // For CAmount
-#include <net.h>                       // For NodeId
+#include <key.h>                       // For ECC_Context
+#include <net/util.h>                  // For NodeId
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network
 #include <netbase.h>                   // For ConnectionDirection
+#include <primitives/transaction.h>    // For CTransactionRef
 #include <support/allocators/secure.h> // For SecureString
 #include <util/translation.h>
 

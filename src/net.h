@@ -21,6 +21,7 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <net/connection_types.h>
+#include <net/util.h>
 #include <node/protocol_version.h>
 #include <policy/feerate.h>
 #include <protocol.h>
@@ -94,8 +95,6 @@ static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr bool DEFAULT_V2_TRANSPORT{true};
-
-typedef int64_t NodeId;
 
 struct AddedNodeParams {
     std::string m_added_node;
