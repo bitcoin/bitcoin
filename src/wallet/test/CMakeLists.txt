@@ -9,6 +9,7 @@ target_sources(test_bitcoin
     init_test_fixture.cpp
     wallet_test_fixture.cpp
     coinselector_tests.cpp
+    coinselection_tests.cpp
     feebumper_tests.cpp
     group_outputs_tests.cpp
     init_tests.cpp
