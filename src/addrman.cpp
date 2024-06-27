@@ -391,7 +391,7 @@ void AddrManImpl::Unserialize(Stream& s_)
 
     const int check_code{ForceCheckAddrman()};
     if (check_code != 0) {
-        throw std::ios_base::failure(strprintf(
+        throw DbInconsistentError(strprintf(
             "Corrupt data. Consistency check failed with code %s",
             check_code));
     }

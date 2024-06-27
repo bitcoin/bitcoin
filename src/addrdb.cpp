@@ -196,6 +196,15 @@ std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const A
         addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
         LogPrintf("Creating peers.dat because the file was not found (%s)\n", path_addr);
         DumpPeerAddresses(args, *addrman);
+    } catch (const DbInconsistentError& e) {
+        // Addrman has shown a tendency to corrupt itself even with graceful shutdowns on known-good
+        // hardware. As the user would have to delete and recreate a new database regardless to cope
+        // with frequent corruption, we are restoring old behaviour that does the same, silently.
+        //
+        // TODO: Evaluate cause and fix, revert this change at some point.
+        addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
+        LogPrintf("Creating peers.dat because of invalid or corrupt file (%s)\n", e.what());
+        DumpPeerAddresses(args, *addrman);
     } catch (const std::exception& e) {
         addrman = nullptr;
         return strprintf(_("Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start."),
