@@ -598,7 +598,7 @@ RPCHelpMan importwallet()
             LogInfo(log, "Importing %s...\n", EncodeDestination(PKHash(keyid)));
 
             if (!pwallet->ImportPrivKeys({{keyid, key}}, time)) {
-                LogInfo(log, "Error importing key for %s\n", EncodeDestination(PKHash(keyid)));
+                LogError(log, "Error importing key for %s\n", EncodeDestination(PKHash(keyid)));
                 fGood = false;
                 continue;
             }
@@ -613,7 +613,7 @@ RPCHelpMan importwallet()
             int64_t time = script_pair.second;
 
             if (!pwallet->ImportScripts({script}, time)) {
-                LogInfo(log, "Error importing script %s\n", HexStr(script));
+                LogError(log, "Error importing script %s\n", HexStr(script));
                 fGood = false;
                 continue;
             }
