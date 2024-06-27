@@ -371,8 +371,6 @@ static RPCHelpMan generateblock()
 
     ChainstateManager& chainman = EnsureChainman(node);
     {
-        LOCK(cs_main);
-
         std::unique_ptr<CBlockTemplate> blocktemplate{miner.createNewBlock(coinbase_script, /*use_mempool=*/false)};
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
@@ -387,10 +385,8 @@ static RPCHelpMan generateblock()
     RegenerateCommitments(block, chainman);
 
     {
-        LOCK(cs_main);
-
         BlockValidationState state;
-        if (!miner.testBlockValidity(state, block, /*check_merkle_root=*/false)) {
+        if (!miner.testBlockValidity(block, /*check_merkle_root=*/false, state)) {
             throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("testBlockValidity failed: %s", state.ToString()));
         }
     }
@@ -667,9 +663,7 @@ static RPCHelpMan getblocktemplate()
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
     LOCK(cs_main);
-    std::optional<uint256> maybe_tip{miner.getTipHash()};
-    CHECK_NONFATAL(maybe_tip);
-    uint256 tip{maybe_tip.value()};
+    uint256 tip{CHECK_NONFATAL(miner.getTipHash()).value()};
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -713,7 +707,7 @@ static RPCHelpMan getblocktemplate()
                 return "inconclusive-not-best-prevblk";
             }
             BlockValidationState state;
-            miner.testBlockValidity(state, block);
+            miner.testBlockValidity(block, /*check_merkle_root=*/true, state);
             return BIP22ValidationResult(state);
         }
 
