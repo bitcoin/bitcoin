@@ -24,7 +24,7 @@
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/mempool_removal_reason.h>
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <logging.h>
 #include <node/types.h>

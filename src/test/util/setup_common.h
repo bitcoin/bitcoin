@@ -7,7 +7,7 @@
 
 #include <common/args.h> // IWYU pragma: export
 #include <kernel/context.h>
-#include <key.h>
+#include <util/key.h>
 #include <node/caches.h>
 #include <node/context.h> // IWYU pragma: export
 #include <primitives/transaction.h>

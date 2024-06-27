@@ -4,8 +4,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef BITCOIN_UTIL_KEY_H
+#define BITCOIN_UTIL_KEY_H
 
 #include <pubkey.h>
 #include <serialize.h>
@@ -250,4 +250,4 @@ public:
     ~ECC_Context();
 };
 
-#endif // BITCOIN_KEY_H
+#endif // BITCOIN_UTIL_KEY_H

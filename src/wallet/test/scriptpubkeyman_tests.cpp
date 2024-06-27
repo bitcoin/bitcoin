@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <key.h>
+#include <util/key.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
 #include <wallet/scriptpubkeyman.h>

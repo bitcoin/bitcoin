@@ -11,7 +11,7 @@
 
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
-#include <key.h>
+#include <util/key.h>
 #include <kernel/messagestartchars.h>
 #include <span.h>
 

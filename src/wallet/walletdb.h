@@ -9,7 +9,7 @@
 #include <script/sign.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
-#include <key.h>
+#include <util/key.h>
 
 #include <stdint.h>
 #include <string>

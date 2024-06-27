@@ -11,7 +11,7 @@
 #include <common/system.h>
 #include <compat/compat.h>
 #include <interfaces/init.h>
-#include <key.h>
+#include <util/key.h>
 #include <logging.h>
 #include <pubkey.h>
 #include <tinyformat.h>

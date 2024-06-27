@@ -7,7 +7,7 @@
 
 #include <common/settings.h>
 #include <consensus/amount.h>          // For CAmount
-#include <key.h>                       // For ECC_Context
+#include <util/key.h>                       // For ECC_Context
 #include <net/util.h>                  // For NodeId
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network

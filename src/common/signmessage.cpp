@@ -5,7 +5,7 @@
 
 #include <common/signmessage.h>
 #include <hash.h>
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <uint256.h>

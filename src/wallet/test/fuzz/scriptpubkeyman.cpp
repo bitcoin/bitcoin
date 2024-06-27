@@ -5,7 +5,7 @@
 #include <addresstype.h>
 #include <chainparams.h>
 #include <coins.h>
-#include <key.h>
+#include <util/key.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
 #include <script/descriptor.h>

@@ -4,7 +4,7 @@
 
 #include <net/v2_transport.h>
 
-#include <key.h>
+#include <util/key.h>
 #include <logging.h>
 #include <memusage.h>
 #include <net/constants.h>

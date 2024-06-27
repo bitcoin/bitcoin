@@ -199,7 +199,6 @@ BITCOIN_CORE_H = \
   kernel/notifications_interface.h \
   kernel/validation_cache_sizes.h \
   kernel/warning.h \
-  key.h \
   key_io.h \
   logging.h \
   logging/timer.h \
@@ -322,6 +321,7 @@ BITCOIN_CORE_H = \
   util/hash_type.h \
   util/hasher.h \
   util/insert.h \
+  util/key.h \
   util/macros.h \
   util/moneystr.h \
   util/overflow.h \
@@ -706,7 +706,6 @@ libbitcoin_common_a_SOURCES = \
   external_signer.cpp \
   init/common.cpp \
   kernel/chainparams.cpp \
-  key.cpp \
   key_io.cpp \
   merkleblock.cpp \
   net_types.cpp \
@@ -767,6 +766,7 @@ libbitcoin_util_a_SOURCES = \
   util/fs.cpp \
   util/fs_helpers.cpp \
   util/hasher.cpp \
+  util/key.cpp \
   util/sock.cpp \
   util/syserror.cpp \
   util/moneystr.cpp \

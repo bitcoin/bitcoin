@@ -6,7 +6,7 @@
 #include <script/sign.h>
 
 #include <consensus/amount.h>
-#include <key.h>
+#include <util/key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>

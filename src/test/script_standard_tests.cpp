@@ -4,7 +4,7 @@
 
 #include <test/data/bip341_wallet_vectors.json.h>
 
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <script/script.h>
 #include <script/signingprovider.h>

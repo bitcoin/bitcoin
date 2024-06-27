@@ -5,7 +5,7 @@
 #include <wallet/test/util.h>
 
 #include <chain.h>
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>

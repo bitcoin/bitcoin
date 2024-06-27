@@ -16,7 +16,7 @@
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
 #include <i2p.h>
-#include <key.h>
+#include <util/key.h>
 #include <logging.h>
 #include <net/v1_transport.h>
 #include <net/v2_transport.h>

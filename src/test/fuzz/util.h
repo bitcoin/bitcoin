@@ -11,7 +11,7 @@
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
-#include <key.h>
+#include <util/key.h>
 #include <merkleblock.h>
 #include <primitives/transaction.h>
 #include <script/script.h>

@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 
-#include <key.h>
+#include <util/key.h>
 #include <pubkey.h>
 #include <random.h>
 #include <span.h>

@@ -5,7 +5,7 @@
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 #include <bench/bench.h>
 #include <interfaces/chain.h>
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>

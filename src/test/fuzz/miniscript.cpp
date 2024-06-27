@@ -4,7 +4,7 @@
 
 #include <core_io.h>
 #include <hash.h>
-#include <key.h>
+#include <util/key.h>
 #include <script/miniscript.h>
 #include <script/script.h>
 #include <script/signingprovider.h>

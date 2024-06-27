@@ -16,7 +16,7 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
 #include <wallet/test/util.h>

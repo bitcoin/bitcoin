@@ -12,7 +12,7 @@
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <key.h>
+#include <util/key.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <script/script.h>

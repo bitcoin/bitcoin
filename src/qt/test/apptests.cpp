@@ -5,7 +5,7 @@
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
-#include <key.h>
+#include <util/key.h>
 #include <logging.h>
 #include <qt/bitcoin.h>
 #include <qt/bitcoingui.h>

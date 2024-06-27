@@ -12,7 +12,7 @@
 #include <common/args.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
-#include <key.h>
+#include <util/key.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <netbase.h>

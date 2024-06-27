@@ -7,7 +7,7 @@
 
 #include <common/system.h>
 #include <core_io.h>
-#include <key.h>
+#include <util/key.h>
 #include <rpc/util.h>
 #include <script/script.h>
 #include <script/script_error.h>

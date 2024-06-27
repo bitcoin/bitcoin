@@ -6,7 +6,7 @@
 #include <coins.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
-#include <key.h>
+#include <util/key.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>

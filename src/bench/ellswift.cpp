@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 
-#include <key.h>
+#include <util/key.h>
 #include <random.h>
 
 static void EllSwiftCreate(benchmark::Bench& bench)

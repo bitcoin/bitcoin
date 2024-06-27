@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <key.h>
+#include <util/key.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
 

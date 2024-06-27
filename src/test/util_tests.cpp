@@ -5,7 +5,7 @@
 #include <clientversion.h>
 #include <common/signmessage.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <hash.h> // For Hash()
-#include <key.h>  // For CKey
+#include <util/key.h>  // For CKey
 #include <script/parsing.h>
 #include <sync.h>
 #include <test/util/random.h>

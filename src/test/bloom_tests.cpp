@@ -6,7 +6,7 @@
 
 #include <clientversion.h>
 #include <common/system.h>
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <merkleblock.h>
 #include <primitives/block.h>

@@ -8,7 +8,7 @@
 
 #include <addresstype.h>
 #include <chainparams.h>
-#include <key.h>
+#include <util/key.h>
 #include <pubkey.h>
 
 #include <string>

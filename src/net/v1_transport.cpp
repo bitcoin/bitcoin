@@ -5,7 +5,7 @@
 #include <net/v1_transport.h>
 
 #include <kernel/messagestartchars.h>
-#include <key.h>
+#include <util/key.h>
 #include <logging.h>
 #include <net/constants.h>
 #include <util/check.h>

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <key.h>
+#include <util/key.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <script/script.h>

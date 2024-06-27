@@ -4,7 +4,7 @@
 
 #include <net/bip324.h>
 #include <chainparams.h>
-#include <key.h>
+#include <util/key.h>
 #include <pubkey.h>
 #include <span.h>
 #include <test/util/random.h>
