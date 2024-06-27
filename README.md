@@ -28,20 +28,20 @@ The `master` branch is regularly built (see `doc/build-*.md` for instructions) a
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
 regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
+The [GUI](https://github.com/bitcoin-core/gui) repository is used exclusively for the
 development of the GUI. Its master branch is identical in all monotree
 repositories. Release branches and tags do not exist, so please do not fork
 that repository unless it is for development reasons.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+and useful hints for developers can be found in the [developer notes](doc/developer-notes.md).
 
 Testing
 -------
 
 Testing and code review is the bottleneck for development; we get more pull
 requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
+other people's pull requests. Remember that this is a security-critical project where any mistake could cost people
 lots of money.
 
 ### Automated Testing
@@ -53,7 +53,7 @@ and extending unit tests can be found in [/src/test/README.md](/src/test/README.
 
 There are also [regression and integration tests](/test), written
 in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
+These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`.
 
 The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
 and that unit/sanity tests are run automatically.
@@ -74,5 +74,5 @@ Changes to translations as well as new translations can be submitted to
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
 
-**Important**: We do not accept translation changes as GitHub pull requests because the next
+**Important**: We do not accept translation changes as GitHub pu ll requests because the next
 pull from Transifex would automatically overwrite them again.
