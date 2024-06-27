@@ -11,12 +11,15 @@ from test_framework.util import (
 )
 
 import http.client
+import os
+import platform
 import urllib.parse
 import subprocess
 from random import SystemRandom
 import string
 import configparser
 import sys
+from typing import Optional
 
 
 def call_with_auth(node, user, password):
@@ -84,6 +87,40 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.log.info('Wrong...')
         assert_equal(401, call_with_auth(node, user + 'wrong', password + 'wrong').status)
 
+    def test_rpccookieperms(self):
+        p = {"owner": 0o600, "group": 0o640, "all": 0o644}
+
+        if platform.system() == 'Windows':
+            self.log.info(f"Skip cookie file permissions checks as OS detected as: {platform.system()=}")
+            return
+
+        self.log.info('Check cookie file permissions can be set using -rpccookieperms')
+
+        cookie_file_path = self.nodes[1].chain_path / '.cookie'
+        PERM_BITS_UMASK = 0o777
+
+        def test_perm(perm: Optional[str]):
+            if not perm:
+                perm = 'owner'
+                self.restart_node(1)
+            else:
+                self.restart_node(1, extra_args=[f"-rpccookieperms={perm}"])
+
+            file_stat = os.stat(cookie_file_path)
+            actual_perms = file_stat.st_mode & PERM_BITS_UMASK
+            expected_perms = p[perm]
+            assert_equal(expected_perms, actual_perms)
+
+        # Remove any leftover rpc{user|password} config options from previous tests
+        self.nodes[1].replace_in_config([("rpcuser", "#rpcuser"), ("rpcpassword", "#rpcpassword")])
+
+        self.log.info('Check default cookie permission')
+        test_perm(None)
+
+        self.log.info('Check custom cookie permissions')
+        for perm in ["owner", "group", "all"]:
+            test_perm(perm)
+
     def run_test(self):
         self.conf_setup()
         self.log.info('Check correctness of the rpcauth config option')
@@ -114,6 +151,8 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.log.info('Check that failure to write cookie file will abort the node gracefully')
         (self.nodes[0].chain_path / ".cookie.tmp").mkdir()
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
+
+        self.test_rpccookieperms()
 
 
 if __name__ == '__main__':
