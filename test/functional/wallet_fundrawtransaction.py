@@ -1322,15 +1322,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         outputs = []
         for _ in range(1472):
             outputs.append({wallet.getnewaddress(address_type="legacy"): 0.1})
-        txid = self.nodes[0].send(outputs=outputs)["txid"]
+        txid = self.nodes[0].send(outputs=outputs, change_position=0)["txid"]
         self.generate(self.nodes[0], 1)
 
         # 272 WU per input (273 when high-s); picking 1471 inputs will exceed the max standard tx weight.
         rawtx = wallet.createrawtransaction([], [{wallet.getnewaddress(): 0.1 * 1471}])
 
-        # 1) Try to fund transaction only using the preset inputs
+        # 1) Try to fund transaction only using the preset inputs (pick all 1472 inputs to cover the fee)
         input_weights = []
-        for i in range(1471):
+        for i in range(1, 1473):  # skip first output as it is the parent tx change output
             input_weights.append({"txid": txid, "vout": i, "weight": 273})
         assert_raises_rpc_error(-4, "Transaction too large", wallet.fundrawtransaction, hexstring=rawtx, input_weights=input_weights)
 
