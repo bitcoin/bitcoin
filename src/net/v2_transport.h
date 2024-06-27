@@ -143,6 +143,8 @@ private:
     const bool m_initiating;
     /** NodeId (for debug logging). */
     const NodeId m_nodeid;
+    /** Network magic bytes for detecting a v1 connection */
+    const MessageStartChars m_magic_bytes;
     /** Encapsulate a V1Transport to fall back to. */
     V1Transport m_v1_fallback;
 
@@ -203,10 +205,10 @@ public:
      * @param[in] nodeid      the node's NodeId (only for debug log output).
      * @param[in] initiating  whether we are the initiator side.
      */
-    V2Transport(NodeId nodeid, bool initiating) noexcept;
+    V2Transport(NodeId nodeid, MessageStartChars magic_bytes, bool initiating) noexcept;
 
     /** Construct a V2 transport with specified keys and garbage (test use only). */
-    V2Transport(NodeId nodeid, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept;
+    V2Transport(NodeId nodeid, MessageStartChars magic_bytes, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept;
 
     // Receive side functions.
     bool ReceivedMessageComplete() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);

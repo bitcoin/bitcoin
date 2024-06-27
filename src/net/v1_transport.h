@@ -5,7 +5,6 @@
 #ifndef BITCOIN_NET_V1_TRANSPORT_H
 #define BITCOIN_NET_V1_TRANSPORT_H
 
-#include <chainparams.h>
 #include <hash.h>
 #include <kernel/messagestartchars.h>
 #include <net/transport.h>
@@ -17,8 +16,8 @@
 class V1Transport final : public Transport
 {
 private:
-    const MessageStartChars m_magic_bytes;
     const NodeId m_node_id; // Only for logging
+    const MessageStartChars m_magic_bytes;
     mutable Mutex m_recv_mutex; //!< Lock for receive state
     mutable CHash256 hasher GUARDED_BY(m_recv_mutex);
     mutable uint256 data_hash GUARDED_BY(m_recv_mutex);
@@ -64,7 +63,7 @@ private:
     size_t m_bytes_sent GUARDED_BY(m_send_mutex) {0};
 
 public:
-    explicit V1Transport(const NodeId node_id) noexcept;
+    explicit V1Transport(const NodeId node_id, MessageStartChars magic_bytes) noexcept;
 
     bool ReceivedMessageComplete() const override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {

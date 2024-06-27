@@ -12,8 +12,9 @@
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
 #include <key.h>
-#include <pubkey.h>
+#include <kernel/messagestartchars.h>
 #include <span.h>
+
 
 /** The BIP324 packet cipher, encapsulating its key derivation, stream cipher, and AEAD. */
 class BIP324Cipher
@@ -59,7 +60,7 @@ public:
      * self_decrypt is only for testing, and swaps encryption/decryption keys, so that encryption
      * and decryption can be tested without knowing the other side's private key.
      */
-    void Initialize(const EllSwiftPubKey& their_pubkey, bool initiator, bool self_decrypt = false) noexcept;
+    void Initialize(const EllSwiftPubKey& their_pubkey, bool initiator, MessageStartChars magic_bytes, bool self_decrypt = false) noexcept;
 
     /** Determine whether this cipher is fully initialized. */
     explicit operator bool() const noexcept { return m_send_l_cipher.has_value(); }

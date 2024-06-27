@@ -58,7 +58,7 @@ void TestBIP324PacketVector(
     BIP324Cipher cipher(key, ellswift_ours);
     BOOST_CHECK(!cipher);
     BOOST_CHECK(cipher.GetOurPubKey() == ellswift_ours);
-    cipher.Initialize(ellswift_theirs, in_initiating);
+    cipher.Initialize(ellswift_theirs, in_initiating, Params().MessageStart());
     BOOST_CHECK(cipher);
 
     // Compare session variables.
@@ -105,7 +105,7 @@ void TestBIP324PacketVector(
         BIP324Cipher dec_cipher(key, ellswift_ours);
         BOOST_CHECK(!dec_cipher);
         BOOST_CHECK(dec_cipher.GetOurPubKey() == ellswift_ours);
-        dec_cipher.Initialize(ellswift_theirs, (error == 1) ^ in_initiating, /*self_decrypt=*/true);
+        dec_cipher.Initialize(ellswift_theirs, (error == 1) ^ in_initiating, Params().MessageStart(), /*self_decrypt=*/true);
         BOOST_CHECK(dec_cipher);
 
         // Compare session variables.

@@ -2817,9 +2817,9 @@ ServiceFlags CConnman::GetLocalServices() const
 static std::unique_ptr<Transport> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
 {
     if (use_v2transport) {
-        return std::make_unique<V2Transport>(id, /*initiating=*/!inbound);
+        return std::make_unique<V2Transport>(id, /*magic_bytes=*/Params().MessageStart(), /*initiating=*/!inbound);
     } else {
-        return std::make_unique<V1Transport>(id);
+        return std::make_unique<V1Transport>(id, /*magic_bytes=*/Params().MessageStart());
     }
 }
 

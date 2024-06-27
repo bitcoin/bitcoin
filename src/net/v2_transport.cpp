@@ -4,7 +4,6 @@
 
 #include <net/v2_transport.h>
 
-#include <chainparams.h>
 #include <key.h>
 #include <logging.h>
 #include <memusage.h>
@@ -103,9 +102,9 @@ void V2Transport::StartSendingHandshake() noexcept
     // We cannot wipe m_send_garbage as it will still be used as AAD later in the handshake.
 }
 
-V2Transport::V2Transport(NodeId nodeid, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept
+V2Transport::V2Transport(NodeId nodeid, MessageStartChars magic_bytes, bool initiating, const CKey& key, Span<const std::byte> ent32, std::vector<uint8_t> garbage) noexcept
     : m_cipher{key, ent32}, m_initiating{initiating}, m_nodeid{nodeid},
-      m_v1_fallback{nodeid},
+      m_magic_bytes{magic_bytes}, m_v1_fallback{nodeid, magic_bytes},
       m_recv_state{initiating ? RecvState::KEY : RecvState::KEY_MAYBE_V1},
       m_send_garbage{std::move(garbage)},
       m_send_state{initiating ? SendState::AWAITING_KEY : SendState::MAYBE_V1}
@@ -118,8 +117,8 @@ V2Transport::V2Transport(NodeId nodeid, bool initiating, const CKey& key, Span<c
     }
 }
 
-V2Transport::V2Transport(NodeId nodeid, bool initiating) noexcept
-    : V2Transport{nodeid, initiating, GenerateRandomKey(),
+V2Transport::V2Transport(NodeId nodeid, MessageStartChars magic_bytes, bool initiating) noexcept
+    : V2Transport{nodeid, magic_bytes, initiating, GenerateRandomKey(),
                   MakeByteSpan(GetRandHash()), GenerateRandomGarbage()} {}
 
 void V2Transport::SetReceiveState(RecvState recv_state) noexcept
@@ -192,7 +191,7 @@ void V2Transport::ProcessReceivedMaybeV1Bytes() noexcept
     // of a v2 public key. BIP324 specifies that a mismatch with this 16-byte string should trigger
     // sending of the key.
     std::array<uint8_t, V1_PREFIX_LEN> v1_prefix = {0, 0, 0, 0, 'v', 'e', 'r', 's', 'i', 'o', 'n', 0, 0, 0, 0, 0};
-    std::copy(std::begin(Params().MessageStart()), std::end(Params().MessageStart()), v1_prefix.begin());
+    std::copy(m_magic_bytes.begin(), m_magic_bytes.end(), v1_prefix.begin());
     Assume(m_recv_buffer.size() <= v1_prefix.size());
     if (!std::equal(m_recv_buffer.begin(), m_recv_buffer.end(), v1_prefix.begin())) {
         // Mismatch with v1 prefix, so we can assume a v2 connection.
@@ -250,7 +249,7 @@ bool V2Transport::ProcessReceivedKeyBytes() noexcept
         // Initialize the ciphers.
         EllSwiftPubKey ellswift(MakeByteSpan(m_recv_buffer));
         LOCK(m_send_mutex);
-        m_cipher.Initialize(ellswift, m_initiating);
+        m_cipher.Initialize(ellswift, m_initiating, m_magic_bytes);
 
         // Switch receiver state to GARB_GARBTERM.
         SetReceiveState(RecvState::GARB_GARBTERM);

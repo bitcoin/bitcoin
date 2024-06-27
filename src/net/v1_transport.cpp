@@ -4,7 +4,6 @@
 
 #include <net/v1_transport.h>
 
-#include <chainparams.h>
 #include <kernel/messagestartchars.h>
 #include <key.h>
 #include <logging.h>
@@ -12,8 +11,8 @@
 #include <util/check.h>
 #include <util/vector.h>
 
-V1Transport::V1Transport(const NodeId node_id) noexcept
-    : m_magic_bytes{Params().MessageStart()}, m_node_id{node_id}
+V1Transport::V1Transport(const NodeId node_id, MessageStartChars magic_bytes) noexcept
+    : m_node_id{node_id}, m_magic_bytes{magic_bytes}
 {
     LOCK(m_recv_mutex);
     Reset();

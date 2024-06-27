@@ -36,8 +36,8 @@ void initialize_p2p_transport_serialization()
 FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serialization)
 {
     // Construct transports for both sides, with dummy NodeIds.
-    V1Transport recv_transport{NodeId{0}};
-    V1Transport send_transport{NodeId{1}};
+    V1Transport recv_transport{NodeId{0}, Params().MessageStart()};
+    V1Transport send_transport{NodeId{1}, Params().MessageStart()};
 
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
@@ -335,7 +335,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
 
 std::unique_ptr<Transport> MakeV1Transport(NodeId nodeid) noexcept
 {
-    return std::make_unique<V1Transport>(nodeid);
+    return std::make_unique<V1Transport>(nodeid, Params().MessageStart());
 }
 
 template<typename RNG>
@@ -370,7 +370,7 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
              .Write(garb.data(), garb.size())
              .Finalize(UCharCast(ent.data()));
 
-    return std::make_unique<V2Transport>(nodeid, initiator, key, ent, std::move(garb));
+    return std::make_unique<V2Transport>(nodeid, Params().MessageStart(), initiator, key, ent, std::move(garb));
 }
 
 } // namespace

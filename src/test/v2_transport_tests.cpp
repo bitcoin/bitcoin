@@ -56,7 +56,7 @@ class V2TransportTester
 public:
     /** Construct a tester object. test_initiator: whether the tested transport is initiator. */
     explicit V2TransportTester(bool test_initiator)
-        : m_transport{0, test_initiator},
+        : m_transport{0, Params().MessageStart(), test_initiator},
           m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
           m_test_initiator(test_initiator) {}
 
@@ -187,7 +187,7 @@ public:
         // When processing a key, enough bytes need to have been received already.
         BOOST_REQUIRE(m_received.size() >= EllSwiftPubKey::size());
         // Initialize the cipher using it (acting as the opposite side of the tested transport).
-        m_cipher.Initialize(MakeByteSpan(m_received).first(EllSwiftPubKey::size()), !m_test_initiator);
+        m_cipher.Initialize(MakeByteSpan(m_received).first(EllSwiftPubKey::size()), !m_test_initiator, Params().MessageStart());
         // Strip the processed bytes off the front of the receive buffer.
         m_received.erase(m_received.begin(), m_received.begin() + EllSwiftPubKey::size());
     }
