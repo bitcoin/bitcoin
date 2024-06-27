@@ -9,7 +9,6 @@
 #include <consensus/amount.h>
 #include <serialize.h>
 
-
 #include <cstdint>
 #include <string>
 #include <type_traits>
