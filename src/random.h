@@ -426,20 +426,6 @@ void Shuffle(I first, I last, R&& rng)
     }
 }
 
-/** Generate a uniform random integer of type T in the range [0..nMax)
- *  Precondition: nMax > 0, T is an integral type, no larger than uint64_t
- */
-template<typename T>
-T GetRand(T nMax) noexcept {
-    return T(FastRandomContext().randrange(nMax));
-}
-
-/** Generate a uniform random integer of type T in its entire non-negative range. */
-template<typename T>
-T GetRand() noexcept {
-    return T(FastRandomContext().rand<T>());
-}
-
 /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
 template <typename D>
 D GetRandomDuration(typename std::common_type<D>::type max) noexcept
@@ -448,7 +434,7 @@ D GetRandomDuration(typename std::common_type<D>::type max) noexcept
 // type than the function argument. So std::common_type is used to force the
 // call site to specify the type of the return value.
 {
-    return D{GetRand(max.count())};
+    return D{FastRandomContext().randrange(max.count())};
 };
 constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
 constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
