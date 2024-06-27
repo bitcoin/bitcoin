@@ -3953,13 +3953,13 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     AssertLockHeld(cs_wallet);
 
     if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        LogInfo(m_log, "Cannot add WalletDescriptor to a non-descriptor wallet\n");
+        LogError(m_log, "Cannot add WalletDescriptor to a non-descriptor wallet\n");
         return nullptr;
     }
 
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
-        LogInfo(m_log, "Update existing descriptor: %s\n", desc.descriptor->ToString());
+        LogError(m_log, "Update existing descriptor: %s\n", desc.descriptor->ToString());
         spk_man->UpdateWalletDescriptor(desc);
     } else {
         auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
@@ -3978,7 +3978,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
 
     // Top up key pool, the manager will generate new scriptPubKeys internally
     if (!spk_man->TopUp()) {
-        LogInfo(m_log, "Could not top up scriptPubKeys\n");
+        LogError(m_log, "Could not top up scriptPubKeys\n");
         return nullptr;
     }
 
@@ -3987,7 +3987,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     if (!desc.descriptor->IsRange()) {
         auto script_pub_keys = spk_man->GetScriptPubKeys();
         if (script_pub_keys.empty()) {
-            LogInfo(m_log, "Could not generate scriptPubKeys (cache is empty)\n");
+            LogError(m_log, "Could not generate scriptPubKeys (cache is empty)\n");
             return nullptr;
         }
 
