@@ -208,57 +208,12 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     add_coin(3 * CENT, 3, utxo_pool);
     add_coin(4 * CENT, 4, utxo_pool);
 
-    // Select 1 Cent
-    add_coin(1 * CENT, 1, expected_result);
-    const auto result1 = SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 0.5 * CENT);
-    BOOST_CHECK(result1);
-    BOOST_CHECK(EquivalentResult(expected_result, *result1));
-    BOOST_CHECK_EQUAL(result1->GetSelectedValue(), 1 * CENT);
-    expected_result.Clear();
-
-    // Select 2 Cent
-    add_coin(2 * CENT, 2, expected_result);
-    const auto result2 = SelectCoinsBnB(GroupCoins(utxo_pool), 2 * CENT, 0.5 * CENT);
-    BOOST_CHECK(result2);
-    BOOST_CHECK(EquivalentResult(expected_result, *result2));
-    BOOST_CHECK_EQUAL(result2->GetSelectedValue(), 2 * CENT);
-    expected_result.Clear();
-
-    // Select 5 Cent
-    add_coin(3 * CENT, 3, expected_result);
-    add_coin(2 * CENT, 2, expected_result);
-    const auto result3 = SelectCoinsBnB(GroupCoins(utxo_pool), 5 * CENT, 0.5 * CENT);
-    BOOST_CHECK(result3);
-    BOOST_CHECK(EquivalentResult(expected_result, *result3));
-    BOOST_CHECK_EQUAL(result3->GetSelectedValue(), 5 * CENT);
-    expected_result.Clear();
-
     // Select 11 Cent, not possible
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 11 * CENT, 0.5 * CENT));
     expected_result.Clear();
 
-    // Cost of change is greater than the difference between target value and utxo sum
-    add_coin(1 * CENT, 1, expected_result);
-    const auto result4 = SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0.5 * CENT);
-    BOOST_CHECK(result4);
-    BOOST_CHECK_EQUAL(result4->GetSelectedValue(), 1 * CENT);
-    BOOST_CHECK(EquivalentResult(expected_result, *result4));
-    expected_result.Clear();
-
     // Cost of change is less than the difference between target value and utxo sum
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 0.9 * CENT, 0));
-    expected_result.Clear();
-
-    // Select 10 Cent
-    add_coin(5 * CENT, 5, utxo_pool);
-    add_coin(4 * CENT, 4, expected_result);
-    add_coin(3 * CENT, 3, expected_result);
-    add_coin(2 * CENT, 2, expected_result);
-    add_coin(1 * CENT, 1, expected_result);
-    const auto result5 = SelectCoinsBnB(GroupCoins(utxo_pool), 10 * CENT, 0.5 * CENT);
-    BOOST_CHECK(result5);
-    BOOST_CHECK(EquivalentResult(expected_result, *result5));
-    BOOST_CHECK_EQUAL(result5->GetSelectedValue(), 10 * CENT);
     expected_result.Clear();
 
     // Select 0.25 Cent, not possible

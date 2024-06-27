@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <policy/policy.h>
 #include <wallet/coinselection.h>
 #include <wallet/test/wallet_test_fixture.h>
 
@@ -78,6 +79,48 @@ static bool HaveEquivalentValues(const SelectionResult& a, const SelectionResult
 
     auto ret = std::mismatch(a_amts.begin(), a_amts.end(), b_amts.begin());
     return ret.first == a_amts.end() && ret.second == b_amts.end();
+}
+
+static std::string InputsToString(const SelectionResult& selection)
+{
+    std::string res = "[ ";
+    for (const auto& input : selection.GetInputSet()) {
+        res += util::ToString(input->txout.nValue);
+        res += " ";
+    }
+    return res + "]";
+}
+
+static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<CAmount>& expected_input_amounts, const CoinSelectionParams& cs_params = default_cs_params)
+{
+    SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
+    CAmount expected_amount = 0;
+    for (CAmount input_amount : expected_input_amounts) {
+        OutputGroup group = MakeCoin(input_amount, true, cs_params);
+        expected_amount += group.m_value;
+        expected_result.AddInput(group);
+    }
+
+    const auto result = SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/default_cs_params.m_cost_of_change, /*max_selection_weight=*/MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK_MESSAGE(result, "Falsy result in BnB-Success: " + test_title);
+    BOOST_CHECK_MESSAGE(HaveEquivalentValues(expected_result, *result), strprintf("Result mismatch in BnB-Success: %s. Expected %s, but got %s", test_title, InputsToString(expected_result), InputsToString(*result)));
+    BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf("Selected amount mismatch in BnB-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
+}
+
+BOOST_AUTO_TEST_CASE(bnb_test)
+{
+    std::vector<OutputGroup> utxo_pool;
+    AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT});
+
+    // Simple success cases
+    TestBnBSuccess("Select smallest UTXO", utxo_pool, /*selection_target=*/1 * CENT, /*expected_input_amounts=*/{1 * CENT});
+    TestBnBSuccess("Select middle UTXO", utxo_pool, /*selection_target=*/3 * CENT, /*expected_input_amounts=*/{3 * CENT});
+    TestBnBSuccess("Select biggest UTXO", utxo_pool, /*selection_target=*/5 * CENT, /*expected_input_amounts=*/{5 * CENT});
+    TestBnBSuccess("Select two UTXOs", utxo_pool, /*selection_target=*/4 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT});
+    TestBnBSuccess("Select all UTXOs", utxo_pool, /*selection_target=*/9 * CENT, /*expected_input_amounts=*/{1 * CENT, 3 * CENT, 5 * CENT});
+
+    // BnB finds changeless solution while overshooting by up to cost_of_change
+    TestBnBSuccess("Select upper bound", utxo_pool, /*selection_target=*/4 * CENT - default_cs_params.m_cost_of_change, /*expected_input_amounts=*/{1 * CENT, 3 * CENT});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
