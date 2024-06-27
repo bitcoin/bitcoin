@@ -135,9 +135,13 @@ def check_smart_estimates(node, fees_seen):
     delta = 1.0e-6  # account for rounding error
     last_feerate = float(max(fees_seen))
     all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
+    mempoolMinFee = node.getmempoolinfo()['mempoolminfee']
+    minRelaytxFee = node.getmempoolinfo()['minrelaytxfee']
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
         feerate = float(e["feerate"])
         assert_greater_than(feerate, 0)
+        assert_greater_than_or_equal(feerate, float(mempoolMinFee))
+        assert_greater_than_or_equal(feerate, float(minRelaytxFee))
 
         if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
             raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
@@ -280,6 +284,13 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
+
+        # check that the effective feerate is greater than or equal to the mempoolminfee even for high mempoolminfee
+        self.log.info("Test fee rate estimation after restarting node with high MempoolMinFee")
+        high_val = 3*self.nodes[1].estimatesmartfee(1)['feerate']
+        self.restart_node(1, extra_args=[f'-minrelaytxfee={high_val}'])
+        check_estimates(self.nodes[1], self.fees_per_kb)
+        self.stop_node(1, expected_stderr="Warning: -minrelaytxfee is set very high! The wallet will avoid paying less than the minimum relay fee.")
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])

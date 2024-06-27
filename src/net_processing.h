@@ -66,6 +66,15 @@ public:
                                              const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
 
+    /**
+     * Attempt to manually fetch block from a given peer. We must already have the header.
+     *
+     * @param[in]  peer_id      The peer id
+     * @param[in]  block_index  The blockindex
+     * @returns std::nullopt if a request was successfully made, otherwise an error message
+     */
+    virtual std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) = 0;
+
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 

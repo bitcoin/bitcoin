@@ -16,8 +16,8 @@
 #include <node/context.h>
 #include <net.h>
 #include <rpc/blockchain.h>
-#include <rpc/net.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <governance/common.h>
 #include <util/strencodings.h>

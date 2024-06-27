@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>

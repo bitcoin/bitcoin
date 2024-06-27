@@ -22,6 +22,8 @@
 #include <llmq/context.h>
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
+#include <net.h>
+#include <net_processing.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
@@ -29,6 +31,7 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <streams.h>
@@ -72,67 +75,6 @@ static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, CChainState& active_chainstate, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry);
-
-NodeContext& EnsureAnyNodeContext(const CoreContext& context)
-{
-    auto* const node_context = GetContext<NodeContext>(context);
-    if (!node_context) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
-    }
-    return *node_context;
-}
-
-CTxMemPool& EnsureMemPool(const NodeContext& node)
-{
-    if (!node.mempool) {
-        throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
-    }
-    return *node.mempool;
-}
-
-CTxMemPool& EnsureAnyMemPool(const CoreContext& context)
-{
-    return EnsureMemPool(EnsureAnyNodeContext(context));
-}
-
-ChainstateManager& EnsureChainman(const NodeContext& node)
-{
-    if (!node.chainman) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
-    }
-    return *node.chainman;
-}
-
-ChainstateManager& EnsureAnyChainman(const CoreContext& context)
-{
-    return EnsureChainman(EnsureAnyNodeContext(context));
-}
-
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
-{
-    if (!node.fee_estimator) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
-    }
-    return *node.fee_estimator;
-}
-
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const CoreContext& context)
-{
-    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
-}
-
-LLMQContext& EnsureLLMQContext(const NodeContext& node)
-{
-    if (!node.llmq_ctx) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node LLMQ context not found");
-    }
-    return *node.llmq_ctx;
-}
-
-LLMQContext& EnsureAnyLLMQContext(const CoreContext& context)
-{
-    return EnsureLLMQContext(EnsureAnyNodeContext(context));
-}
 
 /* Calculate the difficulty for a given block index.
  */
@@ -226,7 +168,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             // coinbase transaction (i == 0) doesn't have undo data
             const CTxUndo* txundo = (have_undo && i) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
             UniValue objTx(UniValue::VOBJ);
-            TxToUniv(*tx, uint256(), objTx, true, nullptr, txundo);
+            TxToUniv(*tx, uint256(), objTx, true, txundo);
             bool fLocked = isman.IsLocked(tx->GetHash());
             objTx.pushKV("instantlock", fLocked || result["chainlock"].get_bool());
             objTx.pushKV("instantlock_internal", fLocked);
@@ -821,6 +763,52 @@ static RPCHelpMan getmempoolentry()
     LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     entryToJSON(mempool, info, e, llmq_ctx.isman);
     return info;
+},
+    };
+}
+
+static RPCHelpMan getblockfrompeer()
+{
+    return RPCHelpMan{
+        "getblockfrompeer",
+        "\nAttempt to fetch block from a given peer.\n"
+        "\nWe must have the header for this block, e.g. using submitheader.\n"
+        "\nReturns {} if a block-request was successfully scheduled\n",
+        {
+            {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
+            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "warnings", /*optional=*/true, "any warnings"},
+        }},
+        RPCExamples{
+            HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
+            + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    PeerManager& peerman = EnsurePeerman(node);
+
+    const uint256& block_hash{ParseHashV(request.params[0], "block_hash")};
+    const NodeId peer_id{request.params[1].get_int64()};
+
+    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
+
+    if (!index) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
+    }
+
+    UniValue result = UniValue::VOBJ;
+
+    if (index->nStatus & BLOCK_HAVE_DATA) {
+        result.pushKV("warnings", "Block already downloaded");
+    } else if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
+        throw JSONRPCError(RPC_MISC_ERROR, err.value());
+    }
+    return result;
 },
     };
 }
@@ -1513,11 +1501,12 @@ static RPCHelpMan gettxout()
                 {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                     {
-                        {RPCResult::Type::STR_HEX, "asm", ""},
+                        {RPCResult::Type::STR, "asm", ""},
                         {RPCResult::Type::STR_HEX, "hex", ""},
-                        {RPCResult::Type::NUM, "reqSigs", "Number of required signatures"},
+                        {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
                         {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
-                        {RPCResult::Type::ARR, "addresses", "Array of Dash addresses",
+                        {RPCResult::Type::STR, "address", /* optional */ true, "Dash address (only if a well-defined address exists)"},
+                        {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of Dash addresses",
                             {{RPCResult::Type::STR, "address", "Dash address"}}},
                     }},
                 {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
@@ -1649,8 +1638,8 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std:
     case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
     case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
     }
-    if (ThresholdState::STARTED == thresholdState)
-    {
+    const bool has_signal = (ThresholdState::STARTED == thresholdState || ThresholdState::LOCKED_IN == thresholdState);
+    if (has_signal) {
         bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
@@ -1661,18 +1650,19 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std:
     }
     int64_t since_height = g_versionbitscache.StateSinceHeight(active_chain_tip, consensusParams, id);
     bip9.pushKV("since", since_height);
-    if (ThresholdState::STARTED == thresholdState)
-    {
+    if (has_signal) {
         UniValue statsUV(UniValue::VOBJ);
         BIP9Stats statsStruct = g_versionbitscache.Statistics(active_chain_tip, consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
-        statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
-        statsUV.pushKV("possible", statsStruct.possible);
+        if (ThresholdState::LOCKED_IN != thresholdState) {
+            statsUV.pushKV("threshold", statsStruct.threshold);
+            statsUV.pushKV("possible", statsStruct.possible);
+        }
         bip9.pushKV("statistics", statsUV);
     }
-    else if (ThresholdState::LOCKED_IN == thresholdState) {
+    if (ThresholdState::LOCKED_IN == thresholdState) {
         bip9.pushKV("activation_height", since_height + static_cast<int>(consensusParams.vDeployments[id].nWindowSize));
     }
     bip9.pushKV("min_activation_height", consensusParams.vDeployments[id].min_activation_height);
@@ -1718,7 +1708,7 @@ RPCHelpMan getblockchaininfo()
                     {RPCResult::Type::OBJ, "bip9", "status of bip9 softforks (only for \"bip9\" type)",
                     {
                         {RPCResult::Type::STR, "status", "one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\""},
-                        {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
+                        {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" and \"locked_in\" status)"},
                         {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
                         {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
                         {RPCResult::Type::BOOL, "ehf", "returns true for EHF activated forks"},
@@ -1726,13 +1716,13 @@ RPCHelpMan getblockchaininfo()
                         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                         {RPCResult::Type::NUM, "activation_height", "expected activation height for this softfork (only for \"locked_in\" status)"},
                         {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
-                        {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork",
+                        {RPCResult::Type::OBJ, "statistics", "numeric statistics about signalling for a softfork (only for \"started\" and \"locked_in\" status)",
                         {
-                            {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
-                            {RPCResult::Type::NUM, "threshold", "the number of blocks with the version bit set required to activate the feature"},
+                            {RPCResult::Type::NUM, "period", "the length in blocks of the signalling period"},
+                            {RPCResult::Type::NUM, "threshold", "the number of blocks with the version bit set required to activate the feature (only for \"started\" status)"},
                             {RPCResult::Type::NUM, "elapsed", "the number of blocks elapsed since the beginning of the current period"},
                             {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
-                            {RPCResult::Type::BOOL, "possible", "returns false if there are not enough blocks left in this period to pass activation threshold"},
+                            {RPCResult::Type::BOOL, "possible", "returns false if there are not enough blocks left in this period to pass activation threshold (only for \"started\" status)"},
                         }},
                     }},
                     {RPCResult::Type::NUM, "height", "height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)"},
@@ -2262,6 +2252,16 @@ void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], s
     for (int64_t i = next_percentile_index; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) {
         result[i] = scores.back().first;
     }
+}
+
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
+{
+    ScriptPubKeyToUniv(scriptPubKey, out, fIncludeHex, IsDeprecatedRPCEnabled("addresses"));
+}
+
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, const CTxUndo* txundo, const CSpentIndexTxInfo* ptxSpentInfo)
+{
+    TxToUniv(tx, hashBlock, IsDeprecatedRPCEnabled("addresses"), entry, include_hex, txundo, ptxSpentInfo);
 }
 
 template<typename T>
@@ -3046,6 +3046,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestchainlock",       &getbestchainlock,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getblockfrompeer",       &getblockfrompeer,       {"block_hash", "peer_id"}},
     { "blockchain",         "getblockhashes",         &getblockhashes,         {"high","low"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },

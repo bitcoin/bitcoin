@@ -62,14 +62,14 @@ class DashGovernanceTest (DashTestFramework):
         coinbase_outputs = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]["vout"]
         payments_found = 0
         for txout in coinbase_outputs:
-            if txout["value"] == self.p0_amount and txout["scriptPubKey"]["addresses"][0] == self.p0_payout_address:
+            if txout["value"] == self.p0_amount and txout["scriptPubKey"]["address"] == self.p0_payout_address:
                 payments_found += 1
-            if txout["value"] == self.p1_amount and txout["scriptPubKey"]["addresses"][0] == self.p1_payout_address:
+            if txout["value"] == self.p1_amount and txout["scriptPubKey"]["address"] == self.p1_payout_address:
                 if self.p1_hash > self.p2_hash:
                     payments_found += 1
                 else:
                     assert False
-            if txout["value"] == self.p2_amount and txout["scriptPubKey"]["addresses"][0] == self.p2_payout_address:
+            if txout["value"] == self.p2_amount and txout["scriptPubKey"]["address"] == self.p2_payout_address:
                 if self.p2_hash > self.p1_hash:
                     payments_found += 1
                 else:

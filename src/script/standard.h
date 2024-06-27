@@ -134,6 +134,8 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * and nRequiredRet with the n required to spend. For other destinations,
  * addressRet is populated with a single value and nRequiredRet is set to 1.
  * Returns true if successful.
+ *
+ * TODO: from v21 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
  */
 bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 

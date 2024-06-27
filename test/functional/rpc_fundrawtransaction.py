@@ -97,6 +97,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_address_reuse()
         self.test_option_subtract_fee_from_outputs()
         self.test_subtract_fee_with_presets()
+        self.test_include_unsafe()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -163,7 +164,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         totalOut = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
-            address = out['scriptPubKey']['addresses'][0]
+            address = out['scriptPubKey']['address']
             if address in outputs.keys():
                 assert_equal(satoshi_round(outputs[address]), out['value'])
 
@@ -252,7 +253,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'changeAddress': change, 'changePosition': 0})
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         out = dec_tx['vout'][0]
-        assert_equal(change, out['scriptPubKey']['addresses'][0])
+        assert_equal(change, out['scriptPubKey']['address'])
 
     def test_coin_selection(self):
         self.log.info("Test fundrawtxn with a vin < required amount")
@@ -279,7 +280,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         matchingOuts = 0
         for i, out in enumerate(dec_tx['vout']):
             totalOut += out['value']
-            if out['scriptPubKey']['addresses'][0] in outputs:
+            if out['scriptPubKey']['address'] in outputs:
                 matchingOuts+=1
             else:
                 assert_equal(i, rawtxfund['changepos'])
@@ -310,7 +311,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         matchingOuts = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
-            if out['scriptPubKey']['addresses'][0] in outputs:
+            if out['scriptPubKey']['address'] in outputs:
                 matchingOuts+=1
 
         assert_equal(matchingOuts, 1)
@@ -344,7 +345,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         matchingOuts = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
-            if out['scriptPubKey']['addresses'][0] in outputs:
+            if out['scriptPubKey']['address'] in outputs:
                 matchingOuts+=1
 
         assert_equal(matchingOuts, 2)
@@ -727,7 +728,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         changeaddress = ""
         for out in res_dec['vout']:
             if out['value'] > 1.0:
-                changeaddress += out['scriptPubKey']['addresses'][0]
+                changeaddress += out['scriptPubKey']['address']
         assert changeaddress != ""
         nextaddr = self.nodes[3].getnewaddress()
         # Now the change address key should be removed from the keypool.
@@ -814,6 +815,41 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedtx = self.nodes[0].fundrawtransaction(rawtx, {'subtractFeeFromOutputs': [0]})
         signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx['hex'])
         self.nodes[0].sendrawtransaction(signedtx['hex'])
+
+    def test_include_unsafe(self):
+        self.log.info("Test fundrawtxn with unsafe inputs")
+
+        self.nodes[0].createwallet("unsafe")
+        wallet = self.nodes[0].get_wallet_rpc("unsafe")
+
+        # We receive unconfirmed funds from external keys (unsafe outputs).
+        addr = wallet.getnewaddress()
+        txid1 = self.nodes[2].sendtoaddress(addr, 6)
+        txid2 = self.nodes[2].sendtoaddress(addr, 4)
+        self.sync_all()
+        vout1 = find_vout_for_address(wallet, txid1, addr)
+        vout2 = find_vout_for_address(wallet, txid2, addr)
+
+        # Unsafe inputs are ignored by default.
+        rawtx = wallet.createrawtransaction([], [{self.nodes[2].getnewaddress(): 5}])
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, rawtx)
+
+        # But we can opt-in to use them for funding.
+        fundedtx = wallet.fundrawtransaction(rawtx, {"include_unsafe": True})
+        tx_dec = wallet.decoderawtransaction(fundedtx['hex'])
+        assert any([txin['txid'] == txid1 and txin['vout'] == vout1 for txin in tx_dec['vin']])
+        signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
+        wallet.sendrawtransaction(signedtx['hex'])
+
+        # And we can also use them once they're confirmed.
+        self.nodes[0].generate(1)
+        rawtx = wallet.createrawtransaction([], [{self.nodes[2].getnewaddress(): 3}])
+        fundedtx = wallet.fundrawtransaction(rawtx, {"include_unsafe": True})
+        tx_dec = wallet.decoderawtransaction(fundedtx['hex'])
+        assert any([txin['txid'] == txid2 and txin['vout'] == vout2 for txin in tx_dec['vin']])
+        signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
+        wallet.sendrawtransaction(signedtx['hex'])
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

@@ -89,9 +89,9 @@ class PSBTTest(BitcoinTestFramework):
         p2pkh_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
-            if out['scriptPubKey']['addresses'][0] == p2sh:
+            if out['scriptPubKey']['address'] == p2sh:
                 p2sh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2pkh:
+            elif out['scriptPubKey']['address'] == p2pkh:
                 p2pkh_pos = out['n']
 
         # spend single key from node 1
@@ -201,6 +201,14 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(complete_psbt, double_processed_psbt)
         # We don't care about the decode result, but decoding must succeed.
         self.nodes[0].decodepsbt(double_processed_psbt["psbt"])
+
+        # Make sure unsafe inputs are included if specified
+        self.nodes[2].createwallet(wallet_name="unsafe")
+        wunsafe = self.nodes[2].get_wallet_rpc("unsafe")
+        self.nodes[0].sendtoaddress(wunsafe.getnewaddress(), 2)
+        self.sync_mempools()
+        assert_raises_rpc_error(-4, "Insufficient funds", wunsafe.walletcreatefundedpsbt, [], [{self.nodes[0].getnewaddress(): 1}])
+        wunsafe.walletcreatefundedpsbt([], [{self.nodes[0].getnewaddress(): 1}], 0, {"include_unsafe": True})
 
         # BIP 174 Test Vectors
 

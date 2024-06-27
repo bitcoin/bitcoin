@@ -226,6 +226,7 @@ public:
     bool EraseDestData(const std::string &address, const std::string &key);
 
     bool WriteActiveScriptPubKeyMan(const uint256& id, bool internal);
+    bool EraseActiveScriptPubKeyMan(bool internal);
 
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(std::vector<uint256>& vTxHash, std::list<CWalletTx>& vWtx);

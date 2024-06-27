@@ -32,11 +32,8 @@
             "scriptPubKey": {
                 "asm": "OP_DUP OP_HASH160 1fc11f39be1729bf973a7ab6a615ca4729d64574 OP_EQUALVERIFY OP_CHECKSIG",
                 "hex": "76a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac",
-                "reqSigs": 1,
-                "type": "pubkeyhash",
-                "addresses": [
-                    "Xdak8YsJz8tm1iHFmycfTyKeUvHgfbdpyw"
-                ]
+                "address": "Xdak8YsJz8tm1iHFmycfTyKeUvHgfbdpyw",
+                "type": "pubkeyhash"
             }
         }
     ],

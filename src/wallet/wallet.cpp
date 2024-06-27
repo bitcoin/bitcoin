@@ -2576,7 +2576,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
 
     CAmount balance = 0;
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl);
+    AvailableCoins(vCoins, coinControl);
     for (const COutput& out : vCoins) {
         if (out.fSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
@@ -2585,7 +2585,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount) const
+void CWallet::AvailableCoins(std::vector<COutput> &vCoins, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -2598,6 +2598,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
     bool allow_used_addresses = !IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
+    const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
 
     std::set<uint256> trusted_parents;
     for (auto pcoin : GetSpendableTXs()) {
@@ -2618,7 +2619,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
         bool safeTx = IsTrusted(*pcoin, trusted_parents);
 
-        if (fOnlySafe && !safeTx) {
+        if (only_safe && !safeTx) {
             continue;
         }
 
@@ -2932,8 +2933,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(1, 1, 0), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) return true;
 
         // Fall back to using zero confirmation change (but with as few ancestors in the mempool as
-        // possible) if we cannot fund the transaction otherwise. We never spend unconfirmed
-        // outputs received from other wallets.
+        // possible) if we cannot fund the transaction otherwise.
         if (m_spend_zero_conf_change) {
             if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) return true;
             if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
@@ -2949,6 +2949,14 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // in their entirety.
             if (SelectCoinsMinConf(value_to_select, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
                                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used, nCoinType)) {
+                return true;
+            }
+            // Try with unsafe inputs if they are allowed. This may spend unconfirmed outputs
+            // received from other wallets.
+            if (coin_control.m_include_unsafe_inputs
+                && SelectCoinsMinConf(value_to_select,
+                    CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) {
                 return true;
             }
             // Try with unlimited ancestors/descendants. The transaction will still need to meet
@@ -3159,7 +3167,7 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(vCoins, true, &coin_control);
+    AvailableCoins(vCoins, &coin_control);
     WalletCJLogPrint((*this), "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
 
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
@@ -3359,7 +3367,7 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(vCoins, true, &coin_control);
+    AvailableCoins(vCoins, &coin_control);
     // larger denoms first
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
@@ -3398,8 +3406,9 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
+    coin_control.m_include_unsafe_inputs = !fOnlyConfirmed;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
-    AvailableCoins(vCoins, fOnlyConfirmed, &coin_control);
+    AvailableCoins(vCoins, &coin_control);
 
     return !vCoins.empty();
 }
@@ -3473,7 +3482,7 @@ bool CWallet::CreateTransactionInternal(
         {
             CAmount nAmountAvailable{0};
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
+            AvailableCoins(vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.use_bnb = false; // never use BnB
 
@@ -5741,14 +5750,40 @@ void CWallet::AddActiveScriptPubKeyMan(uint256 id, bool internal)
 
 void CWallet::LoadActiveScriptPubKeyMan(uint256 id, bool internal)
 {
+    // Activating ScriptPubKeyManager for a given output and change type is incompatible with legacy wallets.
+    // Legacy wallets have only one ScriptPubKeyManager and it's active for all output and change types.
+    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(OutputType::LEGACY), static_cast<int>(internal));
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
+    auto& spk_mans_other = internal ? m_external_spk_managers : m_internal_spk_managers;
     auto spk_man = m_spk_managers.at(id).get();
     spk_man->SetInternal(internal);
     spk_mans = spk_man;
 
+    if (spk_mans_other == spk_man) {
+        spk_mans_other = nullptr;
+    }
+
     NotifyCanGetAddressesChanged();
 
+}
+
+void CWallet::DeactivateScriptPubKeyMan(uint256 id, bool internal)
+{
+    auto spk_man = GetScriptPubKeyMan(internal);
+    if (spk_man != nullptr && spk_man->GetID() == id) {
+        WalletLogPrintf("Deactivate spkMan: id = %s, type = %d, internal = %d\n", id.ToString(), static_cast<int>(OutputType::LEGACY), static_cast<int>(internal));
+        WalletBatch batch(GetDatabase());
+        if (!batch.EraseActiveScriptPubKeyMan(internal)) {
+            throw std::runtime_error(std::string(__func__) + ": erasing active ScriptPubKeyMan id failed");
+        }
+
+        auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
+        spk_mans = nullptr;
+    }
+
+    NotifyCanGetAddressesChanged();
 }
 
 bool CWallet::IsLegacy() const
@@ -5779,44 +5814,26 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     }
 
     LOCK(cs_wallet);
-    auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
-
-    // If we already have this descriptor, remove it from the maps but add the existing cache to desc
-    auto old_spk_man = GetDescriptorScriptPubKeyMan(desc);
-    if (old_spk_man) {
+    auto spk_man = GetDescriptorScriptPubKeyMan(desc);
+    if (spk_man) {
         WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
+        spk_man->UpdateWalletDescriptor(desc);
+    } else {
+        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+        spk_man = new_spk_man.get();
 
-        {
-            LOCK(old_spk_man->cs_desc_man);
-            new_spk_man->SetCache(old_spk_man->GetWalletDescriptor().cache);
-        }
-
-        // Remove from maps of active spkMans
-        auto old_spk_man_id = old_spk_man->GetID();
-        for (bool internal : {false, true}) {
-            { // only one OutputType - LEGACY
-                auto active_spk_man = GetScriptPubKeyMan(internal);
-                if (active_spk_man && active_spk_man->GetID() == old_spk_man_id) {
-                    if (internal) {
-                        m_internal_spk_managers = nullptr;
-                    } else {
-                        m_external_spk_managers = nullptr;
-                    }
-                    break;
-                }
-            }
-        }
-        m_spk_managers.erase(old_spk_man_id);
+        // Save the descriptor to memory
+        m_spk_managers[new_spk_man->GetID()] = std::move(new_spk_man);
     }
 
     // Add the private keys to the descriptor
     for (const auto& entry : signing_provider.keys) {
         const CKey& key = entry.second;
-        new_spk_man->AddDescriptorKey(key, key.GetPubKey());
+        spk_man->AddDescriptorKey(key, key.GetPubKey());
     }
 
     // Top up key pool, the manager will generate new scriptPubKeys internally
-    if (!new_spk_man->TopUp()) {
+    if (!spk_man->TopUp()) {
         WalletLogPrintf("Could not top up scriptPubKeys\n");
         return nullptr;
     }
@@ -5824,7 +5841,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     // Apply the label if necessary
     // Note: we disable labels for ranged descriptors
     if (!desc.descriptor->IsRange()) {
-        auto script_pub_keys = new_spk_man->GetScriptPubKeys();
+        auto script_pub_keys = spk_man->GetScriptPubKeys();
         if (script_pub_keys.empty()) {
             WalletLogPrintf("Could not generate scriptPubKeys (cache is empty)\n");
             return nullptr;
@@ -5836,12 +5853,8 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
         }
     }
 
-    // Save the descriptor to memory
-    auto ret = new_spk_man.get();
-    m_spk_managers[new_spk_man->GetID()] = std::move(new_spk_man);
-
     // Save the descriptor to DB
-    ret->WriteDescriptor();
+    spk_man->WriteDescriptor();
 
-    return ret;
+    return spk_man;
 }

@@ -134,7 +134,7 @@ class WalletHDTest(BitcoinTestFramework):
         keypath = ""
         for out in outs:
             if out['value'] != 1:
-                keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
+                keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['address'])['hdkeypath']
 
         assert_equal(keypath[0:13], "m/44'/1'/0'/1")
 
