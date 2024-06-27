@@ -5,7 +5,7 @@
 #ifndef BITCOIN_NODE_EVICTION_H
 #define BITCOIN_NODE_EVICTION_H
 
-#include <node/connection_types.h>
+#include <net/connection_types.h>
 #include <net_permissions.h>
 
 #include <chrono>

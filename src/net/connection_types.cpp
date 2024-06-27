@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/connection_types.h>
+#include <net/connection_types.h>
 #include <cassert>
 
 std::string ConnectionTypeAsString(ConnectionType conn_type)

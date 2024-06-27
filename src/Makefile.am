@@ -31,6 +31,7 @@ LIBBITCOIN_NODE=libbitcoin_node.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
+LIBBITCOIN_NET=libbitcoin_net.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.la
 LIBBITCOINQT=qt/libbitcoinqt.a
@@ -75,6 +76,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_NET) \
   $(LIBBITCOIN_NODE) \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_IPC) \
@@ -205,6 +207,7 @@ BITCOIN_CORE_H = \
   mapport.h \
   memusage.h \
   merkleblock.h \
+  net/connection_types.h \
   net.h \
   net_permissions.h \
   net_processing.h \
@@ -221,7 +224,6 @@ BITCOIN_CORE_H = \
   node/chainstatemanager_args.h \
   node/coin.h \
   node/coins_view_args.h \
-  node/connection_types.h \
   node/context.h \
   node/database_args.h \
   node/eviction.h \
@@ -427,7 +429,6 @@ libbitcoin_node_a_SOURCES = \
   node/chainstatemanager_args.cpp \
   node/coin.cpp \
   node/coins_view_args.cpp \
-  node/connection_types.cpp \
   node/context.cpp \
   node/database_args.cpp \
   node/eviction.cpp \
@@ -727,6 +728,14 @@ libbitcoin_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 #
 
+# net #
+libbitcoin_net_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+libbitcoin_net_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_net_a_SOURCES = \
+  net/connection_types.cpp \
+  $(BITCOIN_CORE_H)
+#
+
 # util #
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -791,6 +800,7 @@ endif
 bitcoin_bin_ldadd = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_NET) \
   $(LIBBITCOIN_UTIL) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_ZMQ) \

@@ -19,7 +19,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
-#include <node/connection_types.h>
+#include <net/connection_types.h>
 #include <node/protocol_version.h>
 #include <policy/feerate.h>
 #include <protocol.h>

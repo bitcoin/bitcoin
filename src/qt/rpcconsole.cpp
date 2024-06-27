@@ -10,7 +10,7 @@
 #include <chainparams.h>
 #include <common/system.h>
 #include <interfaces/node.h>
-#include <node/connection_types.h>
+#include <net/connection_types.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>

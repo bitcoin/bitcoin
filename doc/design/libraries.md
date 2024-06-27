@@ -7,6 +7,7 @@
 | *libbitcoin_consensus*   | Stable, backwards-compatible consensus functionality used by *libbitcoin_node* and *libbitcoin_wallet*. |
 | *libbitcoin_crypto*      | Hardware-optimized functions for data encryption, hashing, message authentication, and key derivation. |
 | *libbitcoin_kernel*      | Consensus engine and support library used for validation by *libbitcoin_node*. |
+| *libbitcoin_net*         | Network code used by *libbitcoin_node*. |
 | *libbitcoinqt*           | GUI functionality used by *bitcoin-qt* and *bitcoin-gui* executables. |
 | *libbitcoin_ipc*         | IPC functionality used by *bitcoin-node*, *bitcoin-wallet*, *bitcoin-gui* executables to communicate when [`--enable-multiprocess`](multiprocess.md) is used. |
 | *libbitcoin_node*        | P2P and RPC server functionality used by *bitcoind* and *bitcoin-qt* executables. |
@@ -64,10 +65,15 @@ libbitcoin_kernel-->libbitcoin_consensus;
 libbitcoin_kernel-->libbitcoin_crypto;
 libbitcoin_kernel-->libbitcoin_util;
 
+libbitcoin_net-->libbitcoin_crypto;
+libbitcoin_net-->libbitcoin_kernel;
+libbitcoin_net-->libbitcoin_util;
+
 libbitcoin_node-->libbitcoin_consensus;
 libbitcoin_node-->libbitcoin_crypto;
 libbitcoin_node-->libbitcoin_kernel;
 libbitcoin_node-->libbitcoin_common;
+libbitcoin_node-->libbitcoin_net;
 libbitcoin_node-->libbitcoin_util;
 
 libbitcoinqt-->libbitcoin_common;
