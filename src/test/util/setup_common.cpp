@@ -373,10 +373,17 @@ void TestChainSetup::mineBlocks(int num_blocks)
     }
 }
 
-CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChainSetup::CreateAndProcessBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CScript& scriptPubKey,
+    CChainState* chainstate)
 {
+    if (!chainstate) {
+        chainstate = &Assert(m_node.chainman)->ActiveChainstate();
+    }
+
     const CChainParams& chainparams = Params();
-    auto block = CreateBlock(txns, scriptPubKey);
+    auto block = this->CreateBlock(txns, scriptPubKey, *chainstate);
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
@@ -384,17 +391,23 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
     return block;
 }
 
-CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+CBlock TestChainSetup::CreateAndProcessBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CKey& scriptKey,
+    CChainState* chainstate)
 {
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateAndProcessBlock(txns, scriptPubKey);
+    return CreateAndProcessBlock(txns, scriptPubKey, chainstate);
 }
 
-CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChainSetup::CreateBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CScript& scriptPubKey,
+    CChainState& chainstate)
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler(chainstate, m_node, empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {
@@ -443,10 +456,13 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     return result;
 }
 
-CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+CBlock TestChainSetup::CreateBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CKey& scriptKey,
+    CChainState& chainstate)
 {
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateBlock(txns, scriptPubKey);
+    return CreateBlock(txns, scriptPubKey, chainstate);
 }
 
 
