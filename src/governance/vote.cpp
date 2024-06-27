@@ -208,12 +208,7 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
             return false;
         }
     } else {
-        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                 ::ToString(nVoteSignal) + "|" +
-                                 ::ToString(nVoteOutcome) + "|" +
-                                 ::ToString(nTime);
-
-        if (!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(keyID, vchSig, GetSignatureString(), strError)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -273,6 +268,14 @@ bool CGovernanceVote::IsValid(const CDeterministicMNList& tip_mn_list, bool useV
     } else {
         return CheckSignature(dmn->pdmnState->pubKeyOperator.Get());
     }
+}
+
+std::string CGovernanceVote::GetSignatureString() const
+{
+    return masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+                             ::ToString(nVoteSignal) + "|" +
+                             ::ToString(nVoteOutcome) + "|" +
+                             ::ToString(nTime);
 }
 
 bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)

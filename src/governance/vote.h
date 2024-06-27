@@ -105,6 +105,7 @@ public:
     bool Sign(const CActiveMasternodeManager& mn_activeman);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
+    std::string GetSignatureString() const;
     void Relay(PeerManager& peerman, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list) const;
 
     const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
