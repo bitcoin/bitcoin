@@ -3736,7 +3736,7 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
 
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
-        LogInfo(m_log, "Update existing descriptor: %s\n", desc.descriptor->ToString());
+        LogError(m_log, "Update existing descriptor: %s\n", desc.descriptor->ToString());
         if (auto spkm_res = spk_man->UpdateWalletDescriptor(desc); !spkm_res) {
             return util::Error{util::ErrorString(spkm_res)};
         }
