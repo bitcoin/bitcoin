@@ -17,7 +17,7 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <serialize.h>

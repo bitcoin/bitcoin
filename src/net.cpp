@@ -25,7 +25,7 @@
 #include <netbase.h>
 #include <node/eviction.h>
 #include <node/interface_ui.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <random.h>
 #include <scheduler.h>
 #include <util/fs.h>

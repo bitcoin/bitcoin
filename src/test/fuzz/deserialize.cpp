@@ -19,7 +19,7 @@
 #include <netgroup.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>

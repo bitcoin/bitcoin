@@ -6,7 +6,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/util/setup_common.h>

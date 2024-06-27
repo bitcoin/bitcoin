@@ -6,7 +6,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <primitives/transaction.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>

@@ -8,7 +8,7 @@
 
 #include <netaddress.h>
 #include <netgroup.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <streams.h>
 #include <util/time.h>
 

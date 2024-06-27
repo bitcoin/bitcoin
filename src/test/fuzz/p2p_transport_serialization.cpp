@@ -7,7 +7,7 @@
 #include <net/v1_transport.h>
 #include <net/v2_transport.h>
 #include <netmessagemaker.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>

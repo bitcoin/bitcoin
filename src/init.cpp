@@ -60,7 +60,7 @@
 #include <policy/fees_args.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>

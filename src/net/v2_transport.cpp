@@ -9,7 +9,7 @@
 #include <memusage.h>
 #include <net/constants.h>
 #include <net/net_message.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <util/check.h>
 #include <util/vector.h>
 

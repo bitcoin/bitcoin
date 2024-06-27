@@ -5,7 +5,7 @@
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>

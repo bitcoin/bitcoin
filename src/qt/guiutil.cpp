@@ -21,7 +21,7 @@
 #include <logging.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <script/script.h>
 #include <util/chaintype.h>
 #include <util/exception.h>

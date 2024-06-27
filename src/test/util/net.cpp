@@ -10,7 +10,7 @@
 #include <netmessagemaker.h>
 #include <net/connection_types.h>
 #include <node/eviction.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <random.h>
 #include <serialize.h>
 #include <span.h>

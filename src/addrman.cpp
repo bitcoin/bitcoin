@@ -12,7 +12,7 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <netaddress.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>

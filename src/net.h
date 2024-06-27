@@ -23,7 +23,7 @@
 #include <net/util.h>
 #include <node/protocol_version.h>
 #include <policy/feerate.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <random.h>
 #include <span.h>
 #include <streams.h>

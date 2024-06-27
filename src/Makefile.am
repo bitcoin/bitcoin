@@ -210,6 +210,7 @@ BITCOIN_CORE_H = \
   net/connection_types.h \
   net/constants.h \
   net/net_message.h \
+  net/protocol.h \
   net/transport.h \
   net/util.h \
   net/v1_transport.h \
@@ -261,7 +262,6 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   policy/settings.h \
   pow.h \
-  protocol.h \
   psbt.h \
   random.h \
   randomenv.h \
@@ -717,7 +717,6 @@ libbitcoin_common_a_SOURCES = \
   policy/v3_policy.cpp \
   policy/feerate.cpp \
   policy/policy.cpp \
-  protocol.cpp \
   psbt.cpp \
   rpc/external_signer.cpp \
   rpc/rawtransaction_util.cpp \
@@ -740,6 +739,7 @@ libbitcoin_net_a_SOURCES = \
   net/bip324.cpp \
   net/connection_types.cpp \
   net/net_message.cpp \
+  net/protocol.cpp \
   net/v1_transport.cpp \
   net/v2_transport.cpp \
   $(BITCOIN_CORE_H)

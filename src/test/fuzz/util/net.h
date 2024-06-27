@@ -10,7 +10,7 @@
 #include <netaddress.h>
 #include <net/connection_types.h>
 #include <node/eviction.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>

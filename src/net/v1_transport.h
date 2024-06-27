@@ -9,7 +9,7 @@
 #include <kernel/messagestartchars.h>
 #include <net/transport.h>
 #include <net/util.h>
-#include <protocol.h>
+#include <net/protocol.h>
 #include <sync.h>
 #include <uint256.h>
 
