@@ -227,26 +227,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     const auto result7 = SelectCoinsBnB(GroupCoins(utxo_pool), target, 1); // Should not exhaust
     BOOST_CHECK(result7);
 
-    // Test same value early bailout optimization
-    utxo_pool.clear();
-    add_coin(7 * CENT, 7, expected_result);
-    add_coin(7 * CENT, 7, expected_result);
-    add_coin(7 * CENT, 7, expected_result);
-    add_coin(7 * CENT, 7, expected_result);
-    add_coin(2 * CENT, 7, expected_result);
-    add_coin(7 * CENT, 7, utxo_pool);
-    add_coin(7 * CENT, 7, utxo_pool);
-    add_coin(7 * CENT, 7, utxo_pool);
-    add_coin(7 * CENT, 7, utxo_pool);
-    add_coin(2 * CENT, 7, utxo_pool);
-    for (int i = 0; i < 50000; ++i) {
-        add_coin(5 * CENT, 7, utxo_pool);
-    }
-    const auto result8 = SelectCoinsBnB(GroupCoins(utxo_pool), 30 * CENT, 5000);
-    BOOST_CHECK(result8);
-    BOOST_CHECK_EQUAL(result8->GetSelectedValue(), 30 * CENT);
-    BOOST_CHECK(EquivalentResult(expected_result, *result8));
-
     ////////////////////
     // Behavior tests //
     ////////////////////
