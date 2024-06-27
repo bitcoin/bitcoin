@@ -8,6 +8,7 @@ import unittest
 from test_framework.script import (
     CScript,
     OP_0,
+    OP_1,
     OP_15,
     OP_16,
     OP_CHECKMULTISIG,
@@ -41,6 +42,8 @@ assert MIN_PADDING == 5
 # standardness checks
 DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
 assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
+
+PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
 
 def key_to_p2pk_script(key):
     key = check_key(key)
