@@ -65,6 +65,7 @@ libbitcoin_kernel-->libbitcoin_consensus;
 libbitcoin_kernel-->libbitcoin_crypto;
 libbitcoin_kernel-->libbitcoin_util;
 
+libbitcoin_net-->libbitcoin_consensus;
 libbitcoin_net-->libbitcoin_crypto;
 libbitcoin_net-->libbitcoin_kernel;
 libbitcoin_net-->libbitcoin_util;

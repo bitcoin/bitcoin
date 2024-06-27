@@ -24,6 +24,9 @@ ALLOWED_DEPENDENCIES=(
     "common crypto"
     "common util"
     "consensus crypto"
+    # BIP324 uses XOnlyPubKey which is consensus.
+    # It also uses EllSwift which is not consensus.
+    "net consensus"
     "net crypto"
     "net kernel"
     "net util"
