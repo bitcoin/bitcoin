@@ -86,6 +86,9 @@ public:
     }
 };
 
+struct CCoinsCacheEntry;
+using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
+
 /**
  * A Coin in one level of the coins database caching hierarchy.
  *
@@ -155,8 +158,8 @@ using CCoinsMap = std::unordered_map<COutPoint,
                                      CCoinsCacheEntry,
                                      SaltedOutpointHasher,
                                      std::equal_to<COutPoint>,
-                                     PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
-                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4>>;
+                                     PoolAllocator<CoinsCachePair,
+                                                   sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
