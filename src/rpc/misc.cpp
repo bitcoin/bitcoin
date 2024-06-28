@@ -822,9 +822,12 @@ static RPCHelpMan getaddressutxos()
 
     std::vector<CAddressUnspentIndexEntry> unspentOutputs;
 
-    for (const auto& address : addresses) {
-        if (!GetAddressUnspentIndex(address.first, address.second, unspentOutputs)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+    {
+        LOCK(::cs_main);
+        for (const auto& address : addresses) {
+            if (!GetAddressUnspentIndex(*pblocktree, address.first, address.second, unspentOutputs)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+            }
         }
     }
 
@@ -907,14 +910,17 @@ static RPCHelpMan getaddressdeltas()
 
     std::vector<CAddressIndexEntry> addressIndex;
 
-    for (const auto& address : addresses) {
-        if (start > 0 && end > 0) {
-            if (!GetAddressIndex(address.first, address.second, addressIndex, start, end)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-            }
-        } else {
-            if (!GetAddressIndex(address.first, address.second, addressIndex)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+    {
+        LOCK(::cs_main);
+        for (const auto& address : addresses) {
+            if (start > 0 && end > 0) {
+                if (!GetAddressIndex(*pblocktree, address.first, address.second, addressIndex, start, end)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+                }
+            } else {
+                if (!GetAddressIndex(*pblocktree, address.first, address.second, addressIndex)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+                }
             }
         }
     }
@@ -976,14 +982,19 @@ static RPCHelpMan getaddressbalance()
 
     std::vector<CAddressIndexEntry> addressIndex;
 
-    for (const auto& address : addresses) {
-        if (!GetAddressIndex(address.first, address.second, addressIndex)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+
+    int nHeight;
+    {
+        LOCK(::cs_main);
+        for (const auto& address : addresses) {
+            if (!GetAddressIndex(*pblocktree, address.first, address.second, addressIndex)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+            }
         }
+        nHeight = chainman.ActiveChain().Height();
     }
 
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    int nHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Height());
 
     CAmount balance = 0;
     CAmount balance_spendable = 0;
@@ -1055,14 +1066,17 @@ static RPCHelpMan getaddresstxids()
 
     std::vector<CAddressIndexEntry> addressIndex;
 
-    for (const auto& address : addresses) {
-        if (start > 0 && end > 0) {
-            if (!GetAddressIndex(address.first, address.second, addressIndex, start, end)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-            }
-        } else {
-            if (!GetAddressIndex(address.first, address.second, addressIndex)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+    {
+        LOCK(::cs_main);
+        for (const auto& address : addresses) {
+            if (start > 0 && end > 0) {
+                if (!GetAddressIndex(*pblocktree, address.first, address.second, addressIndex, start, end)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+                }
+            } else {
+                if (!GetAddressIndex(*pblocktree, address.first, address.second, addressIndex)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+                }
             }
         }
     }
@@ -1134,7 +1148,7 @@ static RPCHelpMan getspentinfo()
     CSpentIndexValue value;
 
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-    if (!GetSpentIndex(mempool, key, value)) {
+    if (LOCK(::cs_main); !GetSpentIndex(*pblocktree, mempool, key, value)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to get spent info");
     }
 

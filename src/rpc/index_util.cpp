@@ -9,26 +9,30 @@
 #include <uint256.h>
 #include <validation.h>
 
-bool GetAddressIndex(const uint160& addressHash, const AddressType type,
+bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
                      std::vector<CAddressIndexEntry>& addressIndex,
                      const int32_t start, const int32_t end)
 {
+    AssertLockHeld(::cs_main);
+
     if (!fAddressIndex)
         return error("Address index not enabled");
 
-    if (!pblocktree->ReadAddressIndex(addressHash, type, addressIndex, start, end))
+    if (!block_tree_db.ReadAddressIndex(addressHash, type, addressIndex, start, end))
         return error("Unable to get txids for address");
 
     return true;
 }
 
-bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
+bool GetAddressUnspentIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
                             std::vector<CAddressUnspentIndexEntry>& unspentOutputs)
 {
+    AssertLockHeld(::cs_main);
+
     if (!fAddressIndex)
         return error("Address index not enabled");
 
-    if (!pblocktree->ReadAddressUnspentIndex(addressHash, type, unspentOutputs))
+    if (!block_tree_db.ReadAddressUnspentIndex(addressHash, type, unspentOutputs))
         return error("Unable to get txids for address");
 
     return true;
@@ -47,26 +51,32 @@ bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
     return true;
 }
 
-bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value)
+bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const CSpentIndexKey& key,
+                   CSpentIndexValue& value)
 {
+    AssertLockHeld(::cs_main);
+
     if (!fSpentIndex)
         return error("Spent index not enabled");
 
     if (mempool.getSpentIndex(key, value))
         return true;
 
-    if (!pblocktree->ReadSpentIndex(key, value))
+    if (!block_tree_db.ReadSpentIndex(key, value))
         return error("Unable to get spend information");
 
     return true;
 }
 
-bool GetTimestampIndex(const uint32_t high, const uint32_t low, std::vector<uint256>& hashes)
+bool GetTimestampIndex(CBlockTreeDB& block_tree_db, const uint32_t high, const uint32_t low,
+                       std::vector<uint256>& hashes)
 {
+    AssertLockHeld(::cs_main);
+
     if (!fTimestampIndex)
         return error("Timestamp index not enabled");
 
-    if (!pblocktree->ReadTimestampIndex(high, low, hashes))
+    if (!block_tree_db.ReadTimestampIndex(high, low, hashes))
         return error("Unable to get hashes for timestamps");
 
     return true;

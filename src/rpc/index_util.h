@@ -12,22 +12,33 @@
 #include <amount.h>
 #include <addressindex.h>
 #include <spentindex.h>
+#include <sync.h>
+#include <threadsafety.h>
 
+class CBlockTreeDB;
 class CTxMemPool;
 class uint160;
 class uint256;
 
 enum class AddressType : uint8_t;
 
-bool GetAddressIndex(const uint160& addressHash, const AddressType type,
+extern RecursiveMutex cs_main;
+
+bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
                      std::vector<CAddressIndexEntry>& addressIndex,
-                     const int32_t start = 0, const int32_t end = 0);
-bool GetAddressUnspentIndex(const uint160& addressHash, const AddressType type,
-                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs);
+                     const int32_t start = 0, const int32_t end = 0)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool GetAddressUnspentIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
+                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
                                  const std::vector<CMempoolAddressDeltaKey>& addressDeltaIndex,
                                  std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries);
-bool GetSpentIndex(const CTxMemPool& mempool, const CSpentIndexKey& key, CSpentIndexValue& value);
-bool GetTimestampIndex(const uint32_t high, const uint32_t low, std::vector<uint256>& hashes);
+bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const CSpentIndexKey& key,
+                   CSpentIndexValue& value)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool GetTimestampIndex(CBlockTreeDB& block_tree_db, const uint32_t high, const uint32_t low,
+                       std::vector<uint256>& hashes)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 #endif // BITCOIN_RPC_CLIENT_H
