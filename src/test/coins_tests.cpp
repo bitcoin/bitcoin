@@ -584,7 +584,7 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     }
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
-    entry.flags = flags;
+    entry.AddFlags(flags);
     SetCoinsValue(value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
