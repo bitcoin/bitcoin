@@ -29,11 +29,12 @@ bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, co
                      const int32_t start = 0, const int32_t end = 0)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 bool GetAddressUnspentIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
-                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs)
+                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs, const bool height_sort = false)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
                                  const std::vector<CMempoolAddressDeltaKey>& addressDeltaIndex,
-                                 std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries);
+                                 std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries,
+                                 const bool timestamp_sort = false);
 bool GetSpentIndex(CBlockTreeDB& block_tree_db, const CTxMemPool& mempool, const CSpentIndexKey& key,
                    CSpentIndexValue& value)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

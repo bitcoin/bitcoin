@@ -25,7 +25,7 @@ bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, co
 }
 
 bool GetAddressUnspentIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
-                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs)
+                            std::vector<CAddressUnspentIndexEntry>& unspentOutputs, const bool height_sort)
 {
     AssertLockHeld(::cs_main);
 
@@ -35,18 +35,33 @@ bool GetAddressUnspentIndex(CBlockTreeDB& block_tree_db, const uint160& addressH
     if (!block_tree_db.ReadAddressUnspentIndex(addressHash, type, unspentOutputs))
         return error("Unable to get txids for address");
 
+    if (height_sort) {
+        std::sort(unspentOutputs.begin(), unspentOutputs.end(),
+                  [](const CAddressUnspentIndexEntry &a, const CAddressUnspentIndexEntry &b) {
+                        return a.second.m_block_height < b.second.m_block_height;
+                  });
+    }
+
     return true;
 }
 
 bool GetMempoolAddressDeltaIndex(const CTxMemPool& mempool,
                                  const std::vector<CMempoolAddressDeltaKey>& addressDeltaIndex,
-                                 std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries)
+                                 std::vector<CMempoolAddressDeltaEntry>& addressDeltaEntries,
+                                 const bool timestamp_sort)
 {
     if (!fAddressIndex)
         return error("Address index not enabled");
 
     if (!mempool.getAddressIndex(addressDeltaIndex, addressDeltaEntries))
         return error("Unable to get address delta information");
+
+    if (timestamp_sort) {
+        std::sort(addressDeltaEntries.begin(), addressDeltaEntries.end(),
+                  [](const CMempoolAddressDeltaEntry &a, const CMempoolAddressDeltaEntry &b) {
+                        return a.second.m_time < b.second.m_time;
+                  });
+    }
 
     return true;
 }

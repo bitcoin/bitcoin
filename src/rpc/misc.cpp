@@ -701,14 +701,6 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
     return true;
 }
 
-static bool heightSort(CAddressUnspentIndexEntry a, CAddressUnspentIndexEntry b) {
-    return a.second.m_block_height < b.second.m_block_height;
-}
-
-static bool timestampSort(CMempoolAddressDeltaEntry a, CMempoolAddressDeltaEntry b) {
-    return a.second.m_time < b.second.m_time;
-}
-
 static RPCHelpMan getaddressmempool()
 {
     return RPCHelpMan{"getaddressmempool",
@@ -752,10 +744,9 @@ static RPCHelpMan getaddressmempool()
     for (const auto& [hash, type] : addresses) {
         input_addresses.push_back({type, hash});
     }
-    if (!GetMempoolAddressDeltaIndex(mempool, input_addresses, indexes)) {
+    if (!GetMempoolAddressDeltaIndex(mempool, input_addresses, indexes, /* timestamp_sort = */ true)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
     }
-    std::sort(indexes.begin(), indexes.end(), timestampSort);
 
     UniValue result(UniValue::VARR);
 
@@ -825,13 +816,12 @@ static RPCHelpMan getaddressutxos()
     {
         LOCK(::cs_main);
         for (const auto& address : addresses) {
-            if (!GetAddressUnspentIndex(*pblocktree, address.first, address.second, unspentOutputs)) {
+            if (!GetAddressUnspentIndex(*pblocktree, address.first, address.second, unspentOutputs,
+                                        /* height_sort = */ true)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
             }
         }
     }
-
-    std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 
     UniValue result(UniValue::VARR);
 
