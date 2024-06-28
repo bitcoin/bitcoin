@@ -370,7 +370,7 @@ static RPCHelpMan masternode_payments()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
 
-    CBlockIndex* pindex{nullptr};
+    const CBlockIndex* pindex{nullptr};
 
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();

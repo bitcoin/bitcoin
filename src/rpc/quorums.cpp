@@ -966,7 +966,7 @@ static RPCHelpMan verifychainlock()
     const ChainstateManager& chainman = EnsureChainman(node);
 
     int nBlockHeight;
-    CBlockIndex* pIndex{nullptr};
+    const CBlockIndex* pIndex{nullptr};
     if (request.params[2].isNull()) {
         pIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(nBlockHash));
         if (pIndex == nullptr) {

@@ -114,8 +114,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     SyncWithValidationInterfaceQueue();
 
     DashTestSetupClose(m_node);
-
-    WITH_LOCK(::cs_main, manager.Unload());
 }
 
 //! Test rebalancing the caches associated with each chainstate.
