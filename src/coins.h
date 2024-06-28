@@ -144,6 +144,10 @@ public:
 
     CCoinsCacheEntry() = default;
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)) {}
+    ~CCoinsCacheEntry()
+    {
+        ClearFlags();
+    }
 };
 
 /**
