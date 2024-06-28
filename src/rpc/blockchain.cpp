@@ -163,7 +163,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     UniValue txs(UniValue::VARR);
     if (txDetails) {
         CBlockUndo blockUndo;
-        const bool have_undo = !IsBlockPruned(blockindex) && UndoReadFromDisk(blockUndo, blockindex);
+        const bool have_undo{WITH_LOCK(::cs_main, return !IsBlockPruned(blockindex) && UndoReadFromDisk(blockUndo, blockindex))};
         for (size_t i = 0; i < block.vtx.size(); ++i) {
             const CTransactionRef& tx = block.vtx.at(i);
             // coinbase transaction (i == 0) doesn't have undo data
@@ -804,7 +804,8 @@ static RPCHelpMan getblockfrompeer()
 
     UniValue result = UniValue::VOBJ;
 
-    if (index->nStatus & BLOCK_HAVE_DATA) {
+    const bool block_has_data = WITH_LOCK(::cs_main, return index->nStatus & BLOCK_HAVE_DATA);
+    if (block_has_data) {
         result.pushKV("warnings", "Block already downloaded");
     } else if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
         throw JSONRPCError(RPC_MISC_ERROR, err.value());
@@ -1058,8 +1059,9 @@ static RPCHelpMan getblockheaders()
     };
 }
 
-static CBlock GetBlockChecked(const CBlockIndex* pblockindex)
+static CBlock GetBlockChecked(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
+    AssertLockHeld(::cs_main);
     CBlock block;
     if (IsBlockPruned(pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
@@ -1075,8 +1077,9 @@ static CBlock GetBlockChecked(const CBlockIndex* pblockindex)
     return block;
 }
 
-static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex)
+static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    AssertLockHeld(::cs_main);
     CBlockUndo blockUndo;
     if (IsBlockPruned(pblockindex)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");

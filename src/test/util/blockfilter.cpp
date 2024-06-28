@@ -10,6 +10,8 @@
 
 bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_index, BlockFilter& filter)
 {
+    LOCK(::cs_main);
+
     CBlock block;
     if (!ReadBlockFromDisk(block, block_index->GetBlockPos(), Params().GetConsensus())) {
         return false;

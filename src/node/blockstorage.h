@@ -7,10 +7,13 @@
 
 #include <fs.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
+#include <sync.h>
 #include <txdb.h>
 
 #include <cstdint>
 #include <vector>
+
+extern RecursiveMutex cs_main;
 
 class CActiveMasternodeManager;
 class ArgsManager;
@@ -159,7 +162,8 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
-    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams);
+    bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
@@ -183,7 +187,7 @@ public:
 };
 
 //! Check whether the block associated with this index entry is pruned or not.
-bool IsBlockPruned(const CBlockIndex* pblockindex);
+bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 void CleanupBlockRevFiles();
 

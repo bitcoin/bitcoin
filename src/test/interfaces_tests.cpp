@@ -123,6 +123,7 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
 
 BOOST_AUTO_TEST_CASE(hasBlocks)
 {
+    LOCK(::cs_main);
     auto& chain = m_node.chain;
     const CChain& active = Assert(m_node.chainman)->ActiveChain();
 
