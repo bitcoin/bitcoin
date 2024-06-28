@@ -755,14 +755,13 @@ logging messages. They should be used as follows:
   attacker to fill up storage. Note that `LogPrintf(fmt, params...)` is
   a deprecated alias for `LogInfo`.
 
-- `LogError(fmt, params...)` should be used in place of `LogInfo` for
-  severe problems that require the node (or a subsystem) to shut down
-  entirely (e.g., insufficient storage space).
+- `LogError(fmt, params...)` should be used instead of `LogInfo` for severe
+  errors that the node admin needs to address (e.g., failure to write data).
 
 - `LogWarning(fmt, params...)` should be used in place of `LogInfo` for
-  severe problems that the node admin should address, but are not
-  severe enough to warrant shutting down the node (e.g., system time
-  appears to be wrong, unknown soft fork appears to have activated).
+  unexpected conditions indicating potentially severe problems the node admin
+  should address (e.g. system time appears to be wrong, unknown soft fork
+  appears to have activated).
 
 - `LogTrace(BCLog::CATEGORY, fmt, params...)` should be used in place of
   `LogDebug` for log messages that would be unusable on a production
