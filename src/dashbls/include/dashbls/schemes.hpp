@@ -39,6 +39,7 @@ class CoreMPL {
 public:
     CoreMPL() = delete;
     CoreMPL(const std::string& strId) : strCiphersuiteId(strId) {}
+    virtual ~CoreMPL() {}
     // Generates a private key from a seed, similar to HD key generation
     // (hashes the seed), and reduces it mod the group order
     virtual PrivateKey KeyGen(const vector<uint8_t>& seed);
@@ -112,7 +113,7 @@ protected:
                       bool fLegacy);
 };
 
-class BasicSchemeMPL : public CoreMPL {
+class BasicSchemeMPL final : public CoreMPL {
 public:
     static const std::string CIPHERSUITE_ID;
     BasicSchemeMPL() : CoreMPL(BasicSchemeMPL::CIPHERSUITE_ID) {}
@@ -133,7 +134,7 @@ public:
                          const G2Element& signature) override;
 };
 
-class AugSchemeMPL : public CoreMPL {
+class AugSchemeMPL final : public CoreMPL {
 
 public:
     static const std::string CIPHERSUITE_ID;
@@ -186,7 +187,7 @@ public:
                          const G2Element& signature) override;
 };
 
-class PopSchemeMPL : public CoreMPL {
+class PopSchemeMPL final : public CoreMPL {
 
 public:
     static const std::string CIPHERSUITE_ID;
@@ -221,7 +222,7 @@ public:
 /**
  * This scheme reflects the Sign/Verify behaviour of older bls-signatures library versions (<0.1.29).
  */
-class LegacySchemeMPL : public CoreMPL {
+class LegacySchemeMPL final : public CoreMPL {
 
 public:
     LegacySchemeMPL() : CoreMPL(std::string{}) {}

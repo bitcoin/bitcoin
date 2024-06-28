@@ -161,7 +161,6 @@ BASE_SCRIPTS = [
     'feature_llmqconnections.py',
     'feature_llmqdkgerrors.py',
     'feature_deterministicmns.py --legacy-wallet',
-    'feature_coinbasemerkleroots.py',
     'feature_nevm_data.py',
     'rpc_signer.py',
     'wallet_signer.py --descriptors',

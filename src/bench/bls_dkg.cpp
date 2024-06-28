@@ -11,7 +11,7 @@ struct Member {
     CBLSId id;
 
     BLSVerificationVectorPtr vvec;
-    BLSSecretKeyVector skShares;
+    std::vector<CBLSSecretKey> skShares;
 };
 
 class DKG
@@ -21,7 +21,7 @@ private:
     std::vector<Member> members;
     std::vector<BLSVerificationVectorPtr> receivedVvecs;
 
-    BLSSecretKeyVector receivedSkShares;
+    std::vector<CBLSSecretKey> receivedSkShares;
     BLSVerificationVectorPtr quorumVvec;
     CBLSWorker blsWorker;
 
@@ -82,7 +82,7 @@ public:
         ReceiveVvecs();
 
         bench.minEpochIterations(epoch_iters).run([&] {
-            quorumVvec = blsWorker.BuildQuorumVerificationVector(receivedVvecs, 0, 0, false);
+            quorumVvec = blsWorker.BuildQuorumVerificationVector(receivedVvecs, false);
         });
     }
 

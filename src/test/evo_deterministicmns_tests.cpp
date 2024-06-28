@@ -20,6 +20,7 @@
 #include <evo/deterministicmns.h>
 #include <boost/test/unit_test.hpp>
 #include <test/util/txmempool.h>
+#include <interfaces/chain.h>
 using SimpleUTXOVec = std::vector<std::pair<COutPoint, std::pair<int, CAmount>> >;
 
 static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)
@@ -97,7 +98,7 @@ static CMutableTransaction CreateProRegTx(const node::NodeContext& node, SimpleU
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
-    proTx.pubKeyOperator = operatorKeyRet.GetPublicKey();
+    proTx.pubKeyOperator.Set(operatorKeyRet.GetPublicKey(), bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
     proTx.scriptPayout = scriptPayout;
     proTx.nOperatorReward = 5000;
@@ -136,7 +137,7 @@ static CMutableTransaction CreateProUpRegTx(const node::NodeContext& node, Simpl
     CProUpRegTx proTx;
     proTx.nVersion = CProUpRegTx::GetVersion(!bls::bls_legacy_scheme);
     proTx.proTxHash = proTxHash;
-    proTx.pubKeyOperator = pubKeyOperator;
+    proTx.pubKeyOperator.Set(pubKeyOperator, bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = keyIDVoting;
     proTx.scriptPayout = scriptPayout;
 
@@ -515,7 +516,7 @@ void FuncTestMempoolReorg(TestChain100Setup& setup)
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 1);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
-    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
     payload.scriptPayout = scriptPayout;
 
@@ -582,7 +583,7 @@ void FuncTestMempoolDualProregtx(TestChain100Setup& setup)
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 2);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
-    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
     payload.scriptPayout = scriptPayout;
 
@@ -645,7 +646,7 @@ void FuncVerifyDB(TestChain100Setup& setup)
     CProRegTx payload;
     payload.addr = LookupNumeric("1.1.1.1", 1);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
-    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
     payload.scriptPayout = scriptPayout;
 

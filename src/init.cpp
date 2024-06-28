@@ -131,6 +131,7 @@
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
+#include <llmq/quorums_dkgsessionmgr.h>
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
 using kernel::DumpMempool;
@@ -1790,7 +1791,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (status == node::ChainstateLoadStatus::FAILURE_FATAL || status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB || status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE) {
             return InitError(error);
         }
-
         if (!fLoaded && !ShutdownRequested()) {
             // first suggest a reindex
             if (!options.reindex) {
@@ -2091,6 +2091,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     node.scheduler->scheduleEvery([&] { deterministicMNManager->DoMaintenance(); }, std::chrono::seconds{10});
+    if (activeMasternodeManager) {
+        node.scheduler->scheduleEvery([&] { llmq::quorumDKGSessionManager->CleanupOldContributions(*node.chainman); }, std::chrono::hours{1});
+    }
     llmq::StartLLMQSystem();
     // ********************************************************* Step 12: start node
 

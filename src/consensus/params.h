@@ -144,6 +144,13 @@ struct LLMQParams {
 
     // How many members should we try to send all sigShares to before we give up.
     int recoveryMembers;
+    public:
+
+    // For how many blocks recent DKG info should be kept
+    [[ nodiscard ]] constexpr int max_store_depth() const
+    {
+        return (signingActiveQuorumCount * 2) * dkgInterval;
+    }
 };
 /**
  * Parameters that influence chain consensus.
@@ -166,7 +173,6 @@ struct Params {
     int nRolluxStartBlock;
     int nV19StartBlock;
     int nUTXOAssetsBlock;
-    int nUTXOAssetsBlockProvisioning;
     uint64_t nMinMNSubsidySats;
         
     int nSuperblockStartBlock;

@@ -67,8 +67,8 @@ terms of the MIT license. A copy of the license can be found in the file
   On windows initializes support for aligned allocation and
   large OS pages (if MIMALLOC_LARGE_OS_PAGES is true).
 ----------------------------------------------------------- */
-bool _mi_os_decommit(void* addr, size_t size, mi_stats_t* stats); // NOLINT(readability-redundant-declaration)
-bool _mi_os_commit(void* addr, size_t size, bool* is_zero, mi_stats_t* tld_stats); // NOLINT(readability-redundant-declaration)
+bool _mi_os_decommit(void* addr, size_t size, mi_stats_t* stats);
+bool _mi_os_commit(void* addr, size_t size, bool* is_zero, mi_stats_t* tld_stats);
 
 static void* mi_align_up_ptr(void* p, size_t alignment) {
   return (void*)_mi_align_up((uintptr_t)p, alignment);
@@ -958,7 +958,8 @@ bool _mi_os_commit(void* addr, size_t size, bool* is_zero, mi_stats_t* tld_stats
   mi_stats_t* stats = &_mi_stats_main;
   return mi_os_commitx(addr, size, true, false /* liberal */, is_zero, stats);
 }
-bool _mi_os_decommit(void* addr, size_t size, mi_stats_t* tld_stats) { // NOLINT(readability-redundant-declaration)
+
+bool _mi_os_decommit(void* addr, size_t size, mi_stats_t* tld_stats) {
   MI_UNUSED(tld_stats);
   mi_stats_t* stats = &_mi_stats_main;
   bool is_zero;

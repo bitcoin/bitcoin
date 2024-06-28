@@ -143,6 +143,7 @@ SYSCOIN_CORE_H = \
   evo/deterministicmns.h \
   evo/evodb.h \
   evo/mnauth.h \
+  evo/dmnstate.h \
   evo/providertx.h \
   evo/simplifiedmns.h \
   evo/specialtx.h \
@@ -481,6 +482,7 @@ libsyscoin_node_a_SOURCES = \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
   evo/mnauth.cpp \
+  evo/dmnstate.cpp \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \

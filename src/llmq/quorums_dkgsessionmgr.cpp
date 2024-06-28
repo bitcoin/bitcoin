@@ -61,7 +61,7 @@ void CDKGSessionManager::MigrateDKG()
 
     while (pcursor->Valid()) {
         decltype(start_vvec) k;
-        BLSVerificationVector v;
+        std::vector<CBLSPublicKey> v;
 
         if (!pcursor->GetKey(k) || std::get<0>(k) != DB_VVEC) {
             break;
@@ -315,7 +315,7 @@ void CDKGSessionManager::WriteEncryptedContributions(uint8_t llmqType, const CBl
 {
     db->Write(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), contributions);
 }
-bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const
+bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
     auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
@@ -332,7 +332,7 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
             ContributionsCacheKey cacheKey = {llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash};
             auto it = contributionsCache.find(cacheKey);
             if (it == contributionsCache.end()) {
-                auto vvecPtr = std::make_shared<BLSVerificationVector>();
+                auto vvecPtr = std::make_shared<std::vector<CBLSPublicKey>>();
                 CBLSSecretKey skContribution;
                 if (!db->Read(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), *vvecPtr)) {
                     return false;
@@ -389,6 +389,49 @@ void CDKGSessionManager::CleanupCache() const
             it = contributionsCache.erase(it);
         } else {
             ++it;
+        }
+    }
+}
+
+void CDKGSessionManager::CleanupOldContributions(ChainstateManager& chainstate) const
+{
+    if (db->IsEmpty()) {
+        return;
+    }
+
+    const auto prefixes = {DB_VVEC, DB_SKCONTRIB, DB_ENC_CONTRIB};
+
+    for (const auto& params : Params().GetConsensus().llmqs) {
+        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, params.second.type);
+
+        CDBBatch batch(*db);
+        size_t cnt_old{0}, cnt_all{0};
+        for (const auto& prefix : prefixes) {
+            std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
+            auto start = std::make_tuple(prefix, params.second.type, uint256(), uint256());
+            decltype(start) k;
+
+            pcursor->Seek(start);
+            LOCK(cs_main);
+            while (pcursor->Valid()) {
+                if (!pcursor->GetKey(k) || std::get<0>(k) != prefix || std::get<1>(k) != params.second.type) {
+                    break;
+                }
+                cnt_all++;
+                const CBlockIndex* pindexQuorum = chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
+                if (pindexQuorum == nullptr || chainstate.ActiveHeight() - pindexQuorum->nHeight > params.second.max_store_depth()) {
+                    // not found or too old
+                    batch.Erase(k);
+                    cnt_old++;
+                }
+                pcursor->Next();
+            }
+            pcursor.reset();
+        }
+        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries for llmq type %d\n", __func__, cnt_all, uint8_t(params.second.type));
+        if (cnt_old > 0) {
+            db->WriteBatch(batch);
+            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries for llmq type %d\n", __func__, cnt_old, uint8_t(params.second.type));
         }
     }
 }

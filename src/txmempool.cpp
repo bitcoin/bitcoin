@@ -521,7 +521,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
             if(dmn) {
                 newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
-                if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+                if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
                     newit->isKeyChangeProTx = true;
                 }
             }
@@ -775,7 +775,7 @@ void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID
     }
 }
 
-void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSPublicKey &pubKey)
+void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSLazyPublicKey &pubKey)
 {
     if (mapProTxBlsPubKeyHashes.count(pubKey.GetHash())) {
         uint256 conflictHash = mapProTxBlsPubKeyHashes[pubKey.GetHash()];
@@ -1211,7 +1211,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             return true; // i.e. failed to find validated ProTx == conflict
         }
         // only allow one operator key change in the mempool
-        if (dmn->pdmnState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+        if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
             if (hasKeyChangeInMempool(proTx.proTxHash)) {
                 return true;
             }

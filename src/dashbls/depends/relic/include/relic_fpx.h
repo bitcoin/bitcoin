@@ -4219,6 +4219,14 @@ void fp48_sqr_pck_lazyr(fp48_t c, fp48_t a);
  */
 int fp48_test_cyc(fp48_t a);
 
+/**
+ * Converts a 48-extension field element to a cyclotomic element.
+ * Computes c = a^(p^6 - 1)*(p^2 + 1).
+ *
+ * @param[out] c			- the result.
+ * @param[in] a				- a 48-extension field element.
+ */
+void fp48_conv_cyc(fp48_t c, fp48_t a);
 
 /**
  * Decompresses a compressed cyclotomic extension field element.
@@ -4571,6 +4579,14 @@ void fp54_sqr_pck_lazyr(fp54_t c, fp54_t a);
  */
 int fp54_test_cyc(fp54_t a);
 
+/**
+ * Converts a 54-extension field element to a cyclotomic element.
+ * Computes c = a^(p^6 - 1)*(p^2 + 1).
+ *
+ * @param[out] c			- the result.
+ * @param[in] a				- a 54-extension field element.
+ */
+void fp54_conv_cyc(fp54_t c, fp54_t a);
 
 /**
  * Decompresses a compressed cyclotomic extension field element.

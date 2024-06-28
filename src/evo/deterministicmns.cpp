@@ -20,55 +20,14 @@
 #include <shutdown.h>
 #include <common/args.h>
 #include <logging.h>
+#include <interfaces/chain.h>
+#include <boost/range/irange.hpp>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";
 static const std::string DB_LIST_DIFF = "dmn_D";
 
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
-
-std::string CDeterministicMNState::ToString() const
-{
-    CTxDestination dest;
-    std::string payoutAddress = "unknown";
-    std::string operatorPayoutAddress = "none";
-    if (ExtractDestination(scriptPayout, dest)) {
-        payoutAddress = EncodeDestination(dest);
-    }
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        operatorPayoutAddress = EncodeDestination(dest);
-    }
-
-    return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nCollateralHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-        "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, addr=%s, payoutAddress=%s, operatorPayoutAddress=%s)",
-        nRegisteredHeight, nCollateralHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-        EncodeDestination(WitnessV0KeyHash(keyIDOwner)), pubKeyOperator.Get().ToString(), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), addr.ToStringAddrPort(), payoutAddress, operatorPayoutAddress);
-}
-
-void CDeterministicMNState::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.pushKV("service", addr.ToStringAddrPort());
-    obj.pushKV("registeredHeight", nRegisteredHeight);
-    obj.pushKV("lastPaidHeight", nLastPaidHeight);
-    obj.pushKV("collateralHeight", nCollateralHeight);
-    obj.pushKV("PoSePenalty", nPoSePenalty);
-    obj.pushKV("PoSeRevivedHeight", nPoSeRevivedHeight);
-    obj.pushKV("PoSeBanHeight", nPoSeBanHeight);
-    obj.pushKV("revocationReason", nRevocationReason);
-    obj.pushKV("ownerAddress", EncodeDestination(WitnessV0KeyHash(keyIDOwner)));
-    obj.pushKV("votingAddress", EncodeDestination(WitnessV0KeyHash(keyIDVoting)));
-
-    CTxDestination dest;
-    if (ExtractDestination(scriptPayout, dest)) {
-        obj.pushKV("payoutAddress", EncodeDestination(dest));
-    }
-    obj.pushKV("pubKeyOperator", pubKeyOperator.Get().ToString());
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
-    }
-}
 
 uint64_t CDeterministicMN::GetInternalId() const
 {
@@ -349,17 +308,13 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
     UpdateMN(proTxHash, newState);
 }
 
-void CDeterministicMNList::PoSeDecrease(const uint256& proTxHash)
+void CDeterministicMNList::PoSeDecrease(const CDeterministicMN& dmn)
 {
-    auto dmn = GetMN(proTxHash);
-    if (!dmn) {
-        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
-    }
-    assert(dmn->pdmnState->nPoSePenalty > 0 && !dmn->pdmnState->IsBanned());
+    assert(dmn.pdmnState->nPoSePenalty > 0 && !dmn.pdmnState->IsBanned());
 
-    auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+    auto newState = std::make_shared<CDeterministicMNState>(*dmn.pdmnState);
     newState->nPoSePenalty--;
-    UpdateMN(proTxHash, newState);
+    UpdateMN(dmn, newState);
 }
 
 CDeterministicMNListDiff CDeterministicMNList::BuildDiff(const CDeterministicMNList& to) const
@@ -451,40 +406,6 @@ CDeterministicMNList CDeterministicMNList::ApplyDiff(const CBlockIndex* pindex, 
     return result;
 }
 
-// RepopulateUniquePropertyMap clears internal mnUniquePropertyMap, and repopulate it with currently MNs unique properties.
-// This is needed when the v19 fork activates, we need to store again pubKeyOperator in the mnUniquePropertyMap.
-// pubKeyOperator don't differ between the two schemes (legacy and basic(v19)) but their serialisation do: hence their hash.
-// And because mnUniquePropertyMap store only hashes, then we need to re-calculate hashes and repopulate.
-void CDeterministicMNList::RepopulateUniquePropertyMap() {
-    decltype(mnUniquePropertyMap) mnUniquePropertyMapEmpty;
-    mnUniquePropertyMap = mnUniquePropertyMapEmpty;
-
-    for (const auto &p: mnMap) {
-        auto dmn = p.second;
-        if (!AddUniqueProperty(*dmn, dmn->collateralOutpoint)) {
-            throw (std::runtime_error(
-                    strprintf("%s: Can't add a masternode %s with a duplicate collateralOutpoint=%s", __func__,
-                              dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
-        }
-        if (dmn->pdmnState->addr != CService() && !AddUniqueProperty(*dmn, dmn->pdmnState->addr)) {
-            throw (std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
-                                                dmn->proTxHash.ToString(),
-                                                dmn->pdmnState->addr.ToStringAddrPort())));
-        }
-        if (!AddUniqueProperty(*dmn, dmn->pdmnState->keyIDOwner)) {
-            throw (std::runtime_error(
-                    strprintf("%s: Can't add a masternode %s with a duplicate keyIDOwner=%s", __func__,
-                              dmn->proTxHash.ToString(), EncodeDestination(PKHash(dmn->pdmnState->keyIDOwner)))));
-        }
-        if (dmn->pdmnState->pubKeyOperator.Get().IsValid() &&
-            !AddUniqueProperty(*dmn, dmn->pdmnState->pubKeyOperator)) {
-            throw (std::runtime_error(
-                    strprintf("%s: Can't add a masternode %s with a duplicate pubKeyOperator=%s", __func__,
-                              dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
-        }
-    }
-}
-
 void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount)
 {
     assert(dmn != nullptr);
@@ -529,7 +450,52 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
     }
 }
 
-void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const CDeterministicMNStateCPtr& pdmnState)
+
+void CDeterministicMNList_old::AddMN(const CDeterministicMNCPtr_old& dmn, bool fBumpTotalCount)
+{
+    assert(dmn != nullptr);
+
+    if (mnMap.find(dmn->proTxHash)) {
+        throw(std::runtime_error(strprintf("%s: Can't add a masternode with a duplicate proTxHash=%s", __func__, dmn->proTxHash.ToString())));
+    }
+    if (mnInternalIdMap.find(dmn->internalId)) {
+        throw(std::runtime_error(strprintf("%s: Can't add a masternode with a duplicate internalId=%d", __func__, dmn->internalId)));
+    }
+
+    // All mnUniquePropertyMap's updates must be atomic.
+    // Using this temporary map as a checkpoint to rollback to in case of any issues.
+    decltype(mnUniquePropertyMap) mnUniquePropertyMapSaved = mnUniquePropertyMap;
+
+    if (!AddUniqueProperty(*dmn, dmn->collateralOutpoint)) {
+        mnUniquePropertyMap = mnUniquePropertyMapSaved;
+        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate collateralOutpoint=%s", __func__,
+                dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
+    }
+    if (dmn->pdmnState->addr != CService() && !AddUniqueProperty(*dmn, dmn->pdmnState->addr)) {
+        mnUniquePropertyMap = mnUniquePropertyMapSaved;
+        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
+                dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringAddrPort())));
+    }
+    if (!AddUniqueProperty(*dmn, dmn->pdmnState->keyIDOwner)) {
+        mnUniquePropertyMap = mnUniquePropertyMapSaved;
+        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate keyIDOwner=%s", __func__,
+                dmn->proTxHash.ToString(), EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)))));
+    }
+    if (dmn->pdmnState->pubKeyOperator.Get().IsValid() && !AddUniqueProperty(*dmn, dmn->pdmnState->pubKeyOperator)) {
+        mnUniquePropertyMap = mnUniquePropertyMapSaved;
+        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate pubKeyOperator=%s", __func__,
+                dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
+    }
+
+    mnMap = mnMap.set(dmn->proTxHash, dmn);
+    mnInternalIdMap = mnInternalIdMap.set(dmn->internalId, dmn->proTxHash);
+    if (fBumpTotalCount) {
+        // nTotalRegisteredCount acts more like a checkpoint, not as a limit,
+        nTotalRegisteredCount = std::max(dmn->internalId + 1, (uint64_t)nTotalRegisteredCount);
+    }
+}
+
+void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState)
 {
     auto dmn = std::make_shared<CDeterministicMN>(oldDmn);
     auto oldState = dmn->pdmnState;
@@ -558,7 +524,7 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const CDeter
     mnMap = mnMap.set(oldDmn.proTxHash, dmn);
 }
 
-void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState)
+void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState)
 {
     auto oldDmn = mnMap.find(proTxHash);
     if (!oldDmn) {
@@ -625,7 +591,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     int nHeight = pindex->nHeight;
 
     try {
-        LOCK(cs);
 
         if (!BuildNewListFromBlock(block, pindex->pprev, _state, view, newList, true)) {
             // pass the state returned by the function above
@@ -642,23 +607,17 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
         newList.SetBlockHash(pindex->GetBlockHash());
 
-        // If the fork is active for pindex block, then we need to repopulate property map
-        // (Check documentation of CDeterministicMNList::RepopulateUniquePropertyMap()).
-        // This is needed only when base list is pre-v19 fork and pindex is post-v19 fork.
-        bool v19_just_activated = pindex == llmq::CLLMQUtils::V19ActivationIndex(pindex);
-        if (v19_just_activated) {
-            newList.RepopulateUniquePropertyMap();
-        }
-
+        LOCK(cs);
+    
         oldList = GetListForBlockInternal(pindex->pprev);
         diff = oldList.BuildDiff(newList);
 
-        evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
-        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1 || v19_just_activated) {
-            evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
+        m_evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
+        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || pindex->pprev == m_initial_snapshot_index) {
+            m_evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
             mnListsCache.emplace(newList.GetBlockHash(), newList);
-            LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                __func__, nHeight, newList.GetAllMNsCount());
+            LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n", __func__,
+                      nHeight, newList.GetAllMNsCount());
         }
         
 
@@ -687,7 +646,7 @@ bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
     CDeterministicMNListDiff diff;
     {
         LOCK(cs);
-        evoDb.Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
+        m_evoDb.Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
 
         if (diff.HasChanges()) {
             // need to call this before erasing
@@ -719,7 +678,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
     int nHeight = pindexPrev->nHeight + 1;
 
-    CDeterministicMNList oldList = GetListForBlockInternal(pindexPrev);
+    CDeterministicMNList oldList = GetListForBlock(pindexPrev);
     CDeterministicMNList newList = oldList;
     newList.SetBlockHash(uint256()); // we can't know the final block hash, so better not return a (invalid) block hash
     newList.SetHeight(nHeight);
@@ -895,12 +854,14 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                     return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-hash");
                 }
                 auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-                if (newState->pubKeyOperator.Get() != proTx.pubKeyOperator) {
+                if (newState->pubKeyOperator != proTx.pubKeyOperator) {
                     // reset all operator related fields and put MN into PoSe-banned state in case the operator key changes
                     newState->ResetOperatorFields();
                     newState->BanIfNotBanned(nHeight);
+                    // we update pubKeyOperator here, make sure state version matches
+                    newState->nVersion = proTx.nVersion;
+                    newState->pubKeyOperator = proTx.pubKeyOperator;
                 }
-                newState->pubKeyOperator.Set(proTx.pubKeyOperator);
                 newState->keyIDVoting = proTx.keyIDVoting;
                 newState->scriptPayout = proTx.scriptPayout;
 
@@ -990,28 +951,33 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 
 void CDeterministicMNManager::DecreasePoSePenalties(CDeterministicMNList& mnList)
 {
-    std::vector<uint256> toDecrease;
+    std::vector<CDeterministicMNCPtr> toDecrease;
     toDecrease.reserve(mnList.GetAllMNsCount() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
-    mnList.ForEachMN(true /* onlyValid */, [&toDecrease](auto& dmn) {
+    mnList.ForEachMNShared(true /* onlyValid */, [&toDecrease](const CDeterministicMNCPtr& dmn) {
         // There is no reason to check if this MN is banned here since onlyValid=true will only run on non-banned MNs
-        if (dmn.pdmnState->nPoSePenalty > 0) {
-            toDecrease.emplace_back(dmn.proTxHash);
+        if (dmn->pdmnState->nPoSePenalty > 0) {
+            toDecrease.emplace_back(dmn);
         }
     });
 
-    for (const auto& proTxHash : toDecrease) {
-        mnList.PoSeDecrease(proTxHash);
+    for (const CDeterministicMNCPtr& dmnPtr : toDecrease) {
+        mnList.PoSeDecrease(*dmnPtr);
     }
 }
 
 CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlockIndex* pindex)
 {
+    AssertLockHeld(cs);
     CDeterministicMNList snapshot;
     std::list<const CBlockIndex*> listDiffIndexes;
-
-     while (true && pindex) {
+    const auto& consensusParams = Params().GetConsensus();
+    bool fDIP0003Active = pindex->nHeight >= consensusParams.DIP0003Height;
+    if (!fDIP0003Active) {
+        return snapshot;
+    }
+    while (true) {
         // try using cache before reading from disk
         auto itLists = mnListsCache.find(pindex->GetBlockHash());
         if (itLists != mnListsCache.end()) {
@@ -1019,7 +985,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlo
             break;
         }
 
-        if (evoDb.Read(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot)) {
+        if (m_evoDb.Read(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot)) {
             mnListsCache.emplace(pindex->GetBlockHash(), snapshot);
             break;
         }
@@ -1033,10 +999,13 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlo
         }
 
         CDeterministicMNListDiff diff;
-        if (!evoDb.Read(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), diff)) {
+        if (!m_evoDb.Read(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), diff)) {
             // no snapshot and no diff on disk means that it's the initial snapshot
-            snapshot = CDeterministicMNList(pindex->GetBlockHash(), -1, 0);
+            m_initial_snapshot_index = pindex;
+            snapshot = CDeterministicMNList(pindex->GetBlockHash(), pindex->nHeight, 0);
             mnListsCache.emplace(pindex->GetBlockHash(), snapshot);
+            LogPrintf("CDeterministicMNManager::%s -- initial snapshot. blockHash=%s nHeight=%d\n", __func__,
+                      snapshot.GetBlockHash().ToString(), snapshot.GetHeight());
             break;
         }
 
@@ -1062,16 +1031,18 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(const CBlo
             mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
         } else {
             // keep snapshots for yet alive quorums
-            if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& p_llmq){
-                const auto& [_, params] = p_llmq;
-                return (snapshot.GetHeight() % params.dkgInterval == 0) &&
-                (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >= tipIndex->nHeight);
-            })) {
+            if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& params) EXCLUSIVE_LOCKS_REQUIRED(cs) {
+                    AssertLockHeld(cs);
+                    return (snapshot.GetHeight() % params.second.dkgInterval == 0) &&
+                           (snapshot.GetHeight() + params.second.dkgInterval * (params.second.keepOldConnections + 1) >=
+                            tipIndex->nHeight);
+                })) {
                 mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
             }
         }
     }
 
+    assert(snapshot.GetHeight() != -1);
     return snapshot;
 }
 CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex) {
@@ -1168,4 +1139,31 @@ void CDeterministicMNManager::DoMaintenance() {
     LOCK(cs);
     CleanupCache(loc_to_cleanup);
     did_cleanup = loc_to_cleanup;
+}
+
+
+[[nodiscard]] static bool EraseOldDBData(CDBWrapper& db, const std::vector<std::string>& db_key_prefixes)
+{
+    bool erased{false};
+    for (const auto& db_key_prefix : db_key_prefixes) {
+        CDBBatch batch{db};
+        std::unique_ptr<CDBIterator> it{db.NewIterator()};
+        std::pair firstKey{db_key_prefix, uint256()};
+        it->Seek(firstKey);
+        while (it->Valid()) {
+            decltype(firstKey) curKey;
+            if (!it->GetKey(curKey) || std::get<0>(curKey) != db_key_prefix) {
+                break;
+            }
+            batch.Erase(curKey);
+            erased = true;
+            it->Next();
+        }
+        if (erased) {
+            LogPrintf("CDeterministicMNManager::%s -- updating db...\n", __func__);
+            db.WriteBatch(batch);
+            LogPrintf("CDeterministicMNManager::%s -- done cleaning old data for %s\n", __func__, db_key_prefix);
+        }
+    }
+    return erased;
 }

@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([Syscoin Core],[1.2.4])
+AC_INIT([libdashbls],[1.3.0])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
@@ -14,8 +14,8 @@ AC_CANONICAL_HOST
 AH_TOP([#ifndef RLC_CONF_H])
 AH_TOP([#define RLC_CONF_H])
 AH_BOTTOM([#endif /*RLC_CONF_H*/])
-# Require Automake 1.11.2 for AM_PROG_AR
-AM_INIT_AUTOMAKE([1.11.2 no-define foreign subdir-objects])
+AM_INIT_AUTOMAKE([foreign no-define subdir-objects])
+
 dnl faketime messes with timestamps and causes configure to be re-run.
 dnl --disable-maintainer-mode can be used to bypass this.
 AM_MAINTAINER_MODE([enable])
@@ -33,6 +33,7 @@ AC_PROG_CXX
 
 AM_PROG_CC_C_O
 
+AC_PROG_CC_C99
 if test x"$ac_cv_prog_cc_c99" = x"no"; then
   AC_MSG_ERROR([c99 compiler support required])
 fi
@@ -45,22 +46,17 @@ case $host in
      lt_cv_deplibs_check_method="pass_all"
   ;;
 esac
-
 dnl Require C++14 compiler (no GNU extensions)
-AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
+AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 
+dnl Libtool init checks.
+LT_INIT([pic-only])
 
+AC_PATH_TOOL(AR, ar)
+AC_PATH_TOOL(RANLIB, ranlib)
+AC_PATH_TOOL(STRIP, strip)
 
-AC_PROG_CC
 AM_PROG_AS
-AM_PROG_AR
-
-# Clear some cache variables as a workaround for a bug that appears due to a bad
-# interaction between AM_PROG_AR and LT_INIT when combining MSVC's archiver lib.exe.
-# https://debbugs.gnu.org/cgi/bugreport.cgi?bug=54421
-AS_UNSET(ac_cv_prog_AR)
-AS_UNSET(ac_cv_prog_ac_ct_AR)
-LT_INIT([pic-only win32-dll])
 
 AC_ARG_ENABLE(tests,
   [AS_HELP_STRING([--disable-tests],
@@ -342,6 +338,7 @@ if test x$use_big_endian = xyes; then
   AC_DEFINE([BIGED],   [1], [Define this symbol if big-endian support is enabled])
 fi
 
+use_pkgconfig=yes
 
 case $host_cpu in
   x86_64)
@@ -410,6 +407,7 @@ case $host in
      fi
      ;;
   *mingw*)
+     use_pkgconfig=no
      AC_DEFINE([OPSYS], [WINDOWS], [Detected operation system.])
      LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"
 
@@ -454,6 +452,15 @@ case $host in
     ;;
 esac
 
+if test x$use_pkgconfig = xyes; then
+  m4_ifndef([PKG_PROG_PKG_CONFIG], [AC_MSG_ERROR(PKG_PROG_PKG_CONFIG macro not found. Please install pkg-config and re-run autogen.sh.)])
+  m4_ifdef([PKG_PROG_PKG_CONFIG], [
+  PKG_PROG_PKG_CONFIG
+  if test x"$PKG_CONFIG" = "x"; then
+    AC_MSG_ERROR(pkg-config not found.)
+  fi
+  ])
+fi
 
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -pipe"
@@ -776,3 +783,4 @@ AC_OUTPUT
 
 dnl Peplace conflict-prone PACKAGE-prefixed macros with DASHBLS
 sed -i.old 's/PACKAGE/DASHBLS/g' depends/relic/include/relic_conf.h
+sed -i.old 's/PACKAGE/DASHBLS/g' config.status

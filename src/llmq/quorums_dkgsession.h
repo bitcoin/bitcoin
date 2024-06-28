@@ -52,7 +52,7 @@ public:
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
-        BLSVerificationVector tmp1;
+        std::vector<CBLSPublicKey> tmp1;
         CBLSIESMultiRecipientObjects<CBLSSecretKey> tmp2;
         s >> llmqType;
         s >> quorumHash;
@@ -61,7 +61,7 @@ public:
         s >> tmp2;
         s >> sig;
 
-        vvec = std::make_shared<BLSVerificationVector>(std::move(tmp1));
+        vvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(tmp1));
         contributions = std::make_shared<CBLSIESMultiRecipientObjects<CBLSSecretKey>>(std::move(tmp2));
     }
 
@@ -220,12 +220,12 @@ private:
     std::map<uint256, size_t> membersMap;
     std::set<uint256> relayMembers;
     BLSVerificationVectorPtr vvecContribution;
-    BLSSecretKeyVector skContributions;
+    std::vector<CBLSSecretKey> skContributions;
 
-    BLSIdVector memberIds;
+    std::vector<CBLSId> memberIds;
     std::vector<BLSVerificationVectorPtr> receivedVvecs;
     // these are not necessarily verified yet. Only trust in what was written to the DB
-    BLSSecretKeyVector receivedSkContributions;
+    std::vector<CBLSSecretKey> receivedSkContributions;
     /// Contains the received unverified/encrypted DKG contributions
     std::vector<std::shared_ptr<CBLSIESMultiRecipientObjects<CBLSSecretKey>>> vecEncryptedContributions;
 

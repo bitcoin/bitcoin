@@ -413,15 +413,7 @@ class DIP3Test(SyscoinTestFramework):
         # Recreate mn root as using one in BT would result in invalid merkle roots for masternode lists
         coinbase.nVersion = bt['version_coinbase']
         if len(bt['default_witness_commitment_extra']) != 0:
-            if use_mnmerkleroot_from_tip:
-                cbtx = from_hex(CCbTx(version=2), bt['default_witness_commitment_extra'])
-                if 'cbTx' in tip_block:
-                    cbtx.merkleRootMNList = int(tip_block['cbTx']['merkleRootMNList'], 16)
-                else:
-                    cbtx.merkleRootMNList = 0
-                coinbase.extraData = cbtx.serialize()
-            else:
-                coinbase.extraData = bytes.fromhex(bt['default_witness_commitment_extra'])
+            coinbase.extraData = bytes.fromhex(bt['default_witness_commitment_extra'])
 
         coinbase.calc_sha256(with_witness=True)
 

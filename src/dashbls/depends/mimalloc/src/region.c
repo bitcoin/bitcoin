@@ -43,8 +43,8 @@ Possible issues:
 size_t  _mi_os_large_page_size(void);
 bool    _mi_os_protect(void* addr, size_t size);
 bool    _mi_os_unprotect(void* addr, size_t size);
-bool    _mi_os_commit(void* p, size_t size, bool* is_zero, mi_stats_t* stats); // NOLINT(readability-redundant-declaration)
-bool    _mi_os_decommit(void* p, size_t size, mi_stats_t* stats); // NOLINT(readability-redundant-declaration)
+bool    _mi_os_commit(void* p, size_t size, bool* is_zero, mi_stats_t* stats);
+bool    _mi_os_decommit(void* p, size_t size, mi_stats_t* stats);
 bool    _mi_os_reset(void* p, size_t size, mi_stats_t* stats);
 bool    _mi_os_unreset(void* p, size_t size, bool* is_zero, mi_stats_t* stats);
 

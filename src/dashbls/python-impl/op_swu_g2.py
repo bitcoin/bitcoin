@@ -21,6 +21,7 @@ from bls12381 import h_eff, q
 from ec import JacobianPoint, default_ec_twist, eval_iso
 from fields import Fq, Fq2, roots_of_unity
 from hash_to_field import Hp2
+from typing import Union
 
 
 def sgn0(x: Fq2) -> int:
@@ -198,7 +199,7 @@ def iso3(P):
 #
 # map from Fq2 element(s) to point in G2 subgroup of Ell2
 #
-def opt_swu2_map(t: Fq2, t2: Fq2 = None) -> JacobianPoint:
+def opt_swu2_map(t: Fq2, t2: Union[Fq2, None] = None) -> JacobianPoint:
     Pp = iso3(osswu2_help(t))
     if t2 is not None:
         Pp2 = iso3(osswu2_help(t2))

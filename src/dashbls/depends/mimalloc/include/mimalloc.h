@@ -442,7 +442,7 @@ template<class T> struct mi_stl_allocator {
   mi_decl_nodiscard T* allocate(size_type count) { return static_cast<T*>(mi_new_n(count, sizeof(T))); }
   mi_decl_nodiscard T* allocate(size_type count, const void*) { return allocate(count); }
   #else
-  mi_decl_nodiscard pointer allocate(size_type count, const void* = nullptr) { return static_cast<pointer>(mi_new_n(count, sizeof(value_type))); }
+  mi_decl_nodiscard pointer allocate(size_type count, const void* = 0) { return static_cast<pointer>(mi_new_n(count, sizeof(value_type))); }
   #endif
 
   #if ((__cplusplus >= 201103L) || (_MSC_VER > 1900))  // C++11

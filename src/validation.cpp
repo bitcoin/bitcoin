@@ -2801,14 +2801,14 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     // SYSCOIN
     const uint256& blockHash = block.GetHash();
+    bool RolluxContext = pindex->nHeight >= params.GetConsensus().nRolluxStartBlock;
+    fScriptChecks = fScriptChecks && RolluxContext; 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, view, fJustCheck, fScriptChecks)) {
         LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
                      pindex->GetBlockHash().ToString(), state.ToString());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
-    bool RolluxContext = pindex->nHeight >= params.GetConsensus().nRolluxStartBlock;
-    fScriptChecks = fScriptChecks && RolluxContext; 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -4652,7 +4652,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // SYSCOIN
     bool fDIP0003Active_context = nHeight >= consensusParams.DIP0003Height;
     if(fDIP0003Active_context && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-cb-type", strprintf("%s : Incorrect version of coinbase transaction", __func__));
+        //return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-cb-type", strprintf("%s : Incorrect version of coinbase transaction", __func__));
     }
     for (const auto& txRef : block.vtx)
     {

@@ -294,7 +294,7 @@ static RPCHelpMan protx_register()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
         }
 
-        ptx.pubKeyOperator = pubKeyOperator;
+        ptx.pubKeyOperator.Set(pubKeyOperator, ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION);
         ptx.keyIDVoting = keyIDVoting;
         ptx.scriptPayout = GetScriptForDestination(payoutDest);
 
@@ -459,7 +459,7 @@ static RPCHelpMan protx_register_fund()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
     }
 
-    ptx.pubKeyOperator = pubKeyOperator;
+    ptx.pubKeyOperator.Set(pubKeyOperator, ptx.nVersion == CProUpServTx::LEGACY_BLS_VERSION);
     ptx.keyIDVoting = keyIDVoting;
     ptx.scriptPayout = GetScriptForDestination(payoutDest);
 
@@ -604,7 +604,7 @@ static RPCHelpMan protx_register_prepare()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid payout address: %s", request.params[paramIdx + 5].get_str()));
         }
 
-        ptx.pubKeyOperator = pubKeyOperator;
+        ptx.pubKeyOperator.Set(pubKeyOperator, ptx.nVersion == CProUpServTx::LEGACY_BLS_VERSION);
         ptx.keyIDVoting = keyIDVoting;
         ptx.scriptPayout = GetScriptForDestination(payoutDest);
 
@@ -873,12 +873,12 @@ static RPCHelpMan protx_update_registrar()
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
-    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator.Get();
+    ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator;
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
     if (request.params[1].get_str() != "") {
-        ptx.pubKeyOperator = ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", !v19active, specific_legacy_bls_scheme);
+        ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[1].get_str(), "operator BLS address", !v19active, specific_legacy_bls_scheme), ptx.nVersion == CProUpServTx::LEGACY_BLS_VERSION);
     }
     if (request.params[2].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[2].get_str(), "voting address");

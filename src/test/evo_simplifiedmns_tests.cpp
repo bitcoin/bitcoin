@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         vecBytes.resize(CBLSSecretKey::SerSize);
         sk.SetByteVector(vecBytes);
 
-        smle.pubKeyOperator.Set(sk.GetPublicKey());
+        smle.pubKeyOperator.Set(sk.GetPublicKey(), bls::bls_legacy_scheme.load());
         smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
 

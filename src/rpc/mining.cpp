@@ -1031,9 +1031,8 @@ static RPCHelpMan getblocktemplate()
     }
     
     result.pushKV("superblock", superblockObjArray);
-    if (!pblocktemplate->vchCoinbaseCommitmentExtra.empty()) {
-        result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra));
-    }
+    result.pushKV("default_witness_commitment_extra", HexStr(pblocktemplate->vchCoinbaseCommitmentExtra));
+    
     return result;
 },
     };

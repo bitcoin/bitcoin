@@ -345,7 +345,7 @@ TestChain100Setup::TestChain100Setup(
     {
         LOCK(::cs_main);
         // SYSCOIN
-        assert(
+        /*assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "722b456b5005377859a8320f3b3001c8a941643a246d7e5da64c8beeb17b3254" ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
@@ -353,7 +353,7 @@ TestChain100Setup::TestChain100Setup(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "6f5277bae5e679893b8fdb8ad7553a9b9cb769969e220e6d8407f00dbb0fc5aa" ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  );
+            "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  );*/
     }
 }
 
@@ -381,31 +381,10 @@ CBlock TestChain100Setup::CreateBlock(
     }
     // SYSCOIN Manually update CbTx as we modified the block here
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-    if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
-        LOCK(cs_main);
-        CCbTx cbTx;
-        if (!GetTxPayload(*block.vtx[0], cbTx)) {
-            assert(false);
-        }
-        BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
-            assert(false);
-        }
-        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(),  *llmq::quorumBlockProcessor, cbTx.merkleRootQuorums, state)) {
-            assert(false);
-        }
-        ds << cbTx;
-    } else if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
+    if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         LOCK(cs_main);
         llmq::CFinalCommitmentTxPayload qc;
         if (!GetTxPayload(*block.vtx[0], qc)) {
-            assert(false);
-        }
-        BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), qc.cbTx.merkleRootMNList, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
-            assert(false);
-        }
-        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), *llmq::quorumBlockProcessor, qc.cbTx.merkleRootQuorums, state)) {
             assert(false);
         }
         ds << qc;

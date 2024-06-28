@@ -29,10 +29,12 @@ bool CProRegTx::IsTriviallyValid(TxValidationState& state, bool is_basic_scheme_
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-mode");
     }
 
-    if (keyIDOwner.IsNull() || !pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
+    if (keyIDOwner.IsNull() || !pubKeyOperator.Get().IsValid() || keyIDVoting.IsNull()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-key-null");
     }
-
+    if (pubKeyOperator.IsLegacy() != (nVersion == LEGACY_BLS_VERSION)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-operator-pubkey");
+    }
     CTxDestination payoutDest;
     if (!ExtractDestination(scriptPayout, payoutDest)) {
         // should not happen as we checked script types before
@@ -412,7 +414,7 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-    nVersion, collateralOutpoint.ToStringShort(), addr.ToStringAddr(), (double)nOperatorReward / 100, EncodeDestination(WitnessV0KeyHash(keyIDOwner)), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
+    nVersion, collateralOutpoint.ToStringShort(), addr.ToStringAddr(), (double)nOperatorReward / 100, EncodeDestination(WitnessV0KeyHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
 }
 
 bool CProUpServTx::IsTriviallyValid(TxValidationState& state, bool is_basic_scheme_active) const
@@ -420,7 +422,6 @@ bool CProUpServTx::IsTriviallyValid(TxValidationState& state, bool is_basic_sche
     if (nVersion == 0 || nVersion > GetVersion(is_basic_scheme_active)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version");
     }
-
     return true;
 }
 
@@ -445,8 +446,11 @@ bool CProUpRegTx::IsTriviallyValid(TxValidationState& state, bool is_basic_schem
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-mode");
     }
 
-    if (!pubKeyOperator.IsValid() || keyIDVoting.IsNull()) {
+    if (!pubKeyOperator.Get().IsValid() || keyIDVoting.IsNull()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-key-null");
+    }
+    if (pubKeyOperator.IsLegacy() != (nVersion == LEGACY_BLS_VERSION)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-operator-pubkey");
     }
     return true;
 }
@@ -460,7 +464,7 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s)",
-        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(nVersion == LEGACY_BLS_VERSION), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
+        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(WitnessV0KeyHash(keyIDVoting)), payee);
 }
 
 bool CProUpRevTx::IsTriviallyValid(TxValidationState& state, bool is_basic_scheme_active) const

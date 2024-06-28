@@ -50,17 +50,17 @@ libdashbls_la_LIBADD = \
 
 libdashbls_la_CPPFLAGS = $(AM_CPPFLAGS) $(RELIC_INCLUDES) $(MIMALLOC_INCLUDES) $(DASHBLS_INCLUDES) $(DASHBLS_CPPFLAGS)
 libdashbls_la_CXXFLAGS = $(AM_CXXFLAGS)
-libdashbls_la_LDFLAGS  = $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
+libdashbls_la_LDFLAGS  = $(AM_LDFLAGS)
 
 include Makefile.mimalloc.include
 include Makefile.relic.include
 
-#if USE_TESTS
-#include Makefile.test.include
-#endif
+if USE_TESTS
+include Makefile.test.include
+endif
 
-#if USE_BENCH
-#include Makefile.bench.include
-#endif
+if USE_BENCH
+include Makefile.bench.include
+endif
 
-noinst_LTLIBRARIES += $(LIBDASHBLS)
+lib_LTLIBRARIES += $(LIBDASHBLS)

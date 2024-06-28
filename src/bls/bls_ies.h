@@ -69,8 +69,7 @@ public:
 class CBLSIESMultiRecipientBlobs
 {
 public:
-    // SYSCOIN
-    using Blob = std::vector<uint8_t>;
+    using Blob = std::vector<unsigned char>;
     using BlobVector = std::vector<Blob>;
 
     CBLSPublicKey ephemeralPubKey;
@@ -110,9 +109,7 @@ public:
                 ds.clear();
 
                 ds << _objects[i];
-                // SYSCOIN
-                const auto bytesVec = MakeUCharSpan(ds);
-                blobs[i].assign(bytesVec.begin(), bytesVec.end());
+                blobs[i].assign(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
             }
         } catch (const std::exception&) {
             return false;
@@ -125,9 +122,7 @@ public:
     {
         CDataStream ds(SER_NETWORK, nVersion);
         ds << obj;
-        // SYSCOIN
-        const auto bytesVec = MakeUCharSpan(ds);
-        Blob blob(bytesVec.begin(), bytesVec.end());
+        Blob blob(UCharCast(ds.data()), UCharCast(ds.data() + ds.size()));
         return CBLSIESMultiRecipientBlobs::Encrypt(idx, recipient, blob);
     }
 

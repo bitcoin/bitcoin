@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Dash Core developers
+// Copyright (c) 2018-2023 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -119,13 +119,18 @@ CBLSPublicKey CBLSSecretKey::GetPublicKey() const
 
 CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
 {
+    return Sign(hash, bls::bls_legacy_scheme.load());
+}
+
+CBLSSignature CBLSSecretKey::Sign(const uint256& hash, const bool specificLegacyScheme) const
+{
     if (!IsValid()) {
         return {};
     }
 
     CBLSSignature sigRet;
     try {
-        sigRet.impl = Scheme(bls::bls_legacy_scheme.load())->Sign(impl, bls::Bytes(hash.begin(), hash.size()));
+        sigRet.impl = Scheme(specificLegacyScheme)->Sign(impl, bls::Bytes(hash.begin(), hash.size()));
         sigRet.fValid = true;
     } catch (...) {
         sigRet.fValid = false;

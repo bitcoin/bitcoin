@@ -153,7 +153,6 @@ bool CoreMPL::Verify(const G1Element& pubkey, const Bytes& message, const G2Elem
 vector<uint8_t> CoreMPL::Aggregate(const vector<vector<uint8_t>> &signatures)
 {
     vector<G2Element> elements;
-    elements.reserve(signatures.size());
     for (const vector<uint8_t>& signature : signatures) {
         elements.push_back(G2Element::FromByteVector(signature));
     }
@@ -163,7 +162,6 @@ vector<uint8_t> CoreMPL::Aggregate(const vector<vector<uint8_t>> &signatures)
 vector<uint8_t> CoreMPL::Aggregate(const vector<Bytes>& signatures)
 {
     vector<G2Element> elements;
-    elements.reserve(signatures.size());
     for (const Bytes& signature : signatures) {
         elements.push_back(G2Element::FromBytes(signature));
     }

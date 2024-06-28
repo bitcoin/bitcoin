@@ -305,7 +305,7 @@ public:
         const bool fAllowPoDA = (s.GetVersion() & SERIALIZE_TRANSACTION_PODA);
         if(fAllowPoDA) {
             std::vector<uint8_t> vchNEVMDataIn;
-            s >> vchVersionHash;
+            s >> vchNEVMDataIn;
             vchNEVMData = new std::vector<uint8_t>{vchNEVMDataIn};
         }
     }

@@ -1,0 +1,41 @@
+diff --git a/include/relic_err.h b/include/relic_err.h
+index e16f71fe..a4adb107 100644
+--- a/include/relic_err.h
++++ b/include/relic_err.h
+@@ -33,7 +33,6 @@
+ #define RLC_ERR_H
+ 
+ #include <stdint.h>
+-#include <setjmp.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -43,6 +42,10 @@
+ #include "relic_util.h"
+ #include "relic_label.h"
+ 
++#ifdef CHECK
++#include <setjmp.h>
++#endif
++
+ /*============================================================================*/
+ /* Constant definitions                                                       */
+ /*============================================================================*/
+@@ -94,6 +97,8 @@ enum errors {
+  */
+ typedef int err_t;
+ 
++#ifdef CHECK
++
+ /**
+  * Type that describes an error status, including the error code and the program
+  * location where the error occurred.
+@@ -107,6 +112,8 @@ typedef struct _sts_t {
+ 	int block;
+ } sts_t;
+ 
++#endif
++
+ /*============================================================================*/
+ /* Macro definitions                                                          */
+ /*============================================================================*/

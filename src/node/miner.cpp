@@ -194,7 +194,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if(fDIP0003Active_context) {
         // Update coinbase transaction with additional info about masternode and governance payments,
         // get some info back to pass to getblocktemplate
-        coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE;
+        //coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_COINBASE;
         CCbTx cbTx;
         cbTx.nVersion = 2;
         cbTx.nHeight = nHeight;
@@ -204,21 +204,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (llmq::quorumBlockProcessor->GetMinableCommitment(chainparams.GetConsensus().llmqTypeChainLocks, nHeight, commitment)) {
             coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
             qc.commitments.push_back(commitment);
-        }
-        if (coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
-            qc.cbTx = cbTx;
-        }
-        // pass qc pointer here because we want to build merkleRootMNList / merkleRootQuorums which depends on qc if qc is valid
-        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, m_chainstate.CoinsTip(), &qc)) {
-            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
-        }
-        if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, *llmq::quorumBlockProcessor, cbTx.merkleRootQuorums, state, &qc)) {
-            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, state.ToString()));
-        }
-
-        if(coinbaseTx.nVersion == SYSCOIN_TX_VERSION_MN_COINBASE) {
-            ds << cbTx;
-        } else {
             qc.cbTx = cbTx;
             ds << qc;
         }

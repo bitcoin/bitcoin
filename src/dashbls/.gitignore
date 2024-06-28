@@ -15,6 +15,7 @@ blspy.*.so
 .mypy_cache/
 .pytest_chache/
 .eggs/
+cmake-build-debug/
 
 js_build
 node_modules
@@ -66,6 +67,8 @@ yarn-error.log
 
 .vs/
 out/
+
+target
 
 Makefile.in
 /ar-lib
