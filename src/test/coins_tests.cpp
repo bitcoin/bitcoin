@@ -58,7 +58,7 @@ public:
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock, bool erase = true) override
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = erase ? mapCoins.erase(it) : std::next(it)) {
-            if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+            if (it->second.IsDirty()) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;
                 if (it->second.coin.IsSpent() && InsecureRandRange(3) == 0) {

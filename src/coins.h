@@ -127,6 +127,9 @@ struct CCoinsCacheEntry
         FRESH = (1 << 1),
     };
 
+    inline bool IsDirty() const { return flags & DIRTY; }
+    inline bool IsFresh() const { return flags & FRESH; }
+
     CCoinsCacheEntry() : flags(0) {}
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
     CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
