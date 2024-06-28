@@ -125,7 +125,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
                 {
                     CCoinsCacheEntry coins_cache_entry;
-                    coins_cache_entry.AddFlags(fuzzed_data_provider.ConsumeIntegral<unsigned char>());
+                    coins_cache_entry.AddFlags(fuzzed_data_provider.ConsumeIntegral<uint8_t>());
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;
                     } else {

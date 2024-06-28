@@ -103,8 +103,11 @@ public:
  */
 struct CCoinsCacheEntry
 {
+private:
+    uint8_t m_flags{0};
+
+public:
     Coin coin; // The actual cached data.
-    unsigned char flags{0};
 
     enum Flags {
         /**
@@ -130,14 +133,14 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry() noexcept = default;
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
 
-    inline void AddFlags(unsigned char flags) noexcept { this->flags |= flags; }
+    inline void AddFlags(uint8_t flags) noexcept { m_flags |= flags; }
     inline void ClearFlags() noexcept
     {
-        flags = 0;
+        m_flags = 0;
     }
-    inline unsigned char GetFlags() const noexcept { return flags; }
-    inline bool IsDirty() const noexcept { return flags & DIRTY; }
-    inline bool IsFresh() const noexcept { return flags & FRESH; }
+    inline uint8_t GetFlags() const noexcept { return m_flags; }
+    inline bool IsDirty() const noexcept { return m_flags & DIRTY; }
+    inline bool IsFresh() const noexcept { return m_flags & FRESH; }
 };
 
 /**
