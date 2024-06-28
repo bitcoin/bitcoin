@@ -11,9 +11,11 @@ Checks LLMQs based ChainLocks
 '''
 
 import time
+from io import BytesIO
 
+from test_framework.messages import CBlock, CCbTx
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync, hex_str_to_bytes, softfork_active
 
 
 class LLMQChainLocksTest(DashTestFramework):
@@ -243,6 +245,15 @@ class LLMQChainLocksTest(DashTestFramework):
             assert_equal(tip_1['cbTx']['bestCLSignature'], tip_0['cbTx']['bestCLSignature'])
             assert_equal(tip_1['cbTx']['bestCLHeightDiff'], tip_0['cbTx']['bestCLHeightDiff'] + 1)
 
+        self.log.info("Test that bestCLHeightDiff conditions are relaxed before mn_rr")
+        self.test_bestCLHeightDiff(False)
+
+        self.activate_mn_rr()
+        self.log.info("Activated mn_rr at height:" + str(self.nodes[0].getblockcount()))
+
+        self.log.info("Test that bestCLHeightDiff conditions are stricter after mn_rr")
+        self.test_bestCLHeightDiff(True)
+
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)
         tx = node.getrawtransaction(txid, 1)
@@ -283,6 +294,73 @@ class LLMQChainLocksTest(DashTestFramework):
             assert node.verifychainlock(target_block_hash, best_cl_signature, best_cl_height)
         else:
             assert "bestCLHeightDiff" not in cbtx and "bestCLSignature" not in cbtx
+
+    def test_bestCLHeightDiff(self, mn_rr_active):
+        # We need 2 blocks we can grab clsigs from
+        for _ in range(2):
+            self.wait_for_chainlocked_block_all_nodes(self.nodes[0].generate(1)[0])
+        assert_equal(softfork_active(self.nodes[1], "mn_rr"), mn_rr_active)
+        tip1_hash = self.nodes[1].getbestblockhash()
+
+        self.isolate_node(1)
+        tip0_hash = self.nodes[0].generate(1)[0]
+        block_hex = self.nodes[0].getblock(tip0_hash, 0)
+        mal_block = CBlock()
+        mal_block.deserialize(BytesIO(hex_str_to_bytes(block_hex)))
+        cbtx = CCbTx()
+        cbtx.deserialize(BytesIO(mal_block.vtx[0].vExtraPayload))
+        assert_equal(cbtx.bestCLHeightDiff, 0)
+
+        cbtx.bestCLHeightDiff = 1
+        mal_block.vtx[0].vExtraPayload = cbtx.serialize()
+        mal_block.vtx[0].rehash()
+        mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
+        mal_block.solve()
+        result = self.nodes[1].submitblock(mal_block.serialize().hex())
+        assert_equal(result, "bad-cbtx-invalid-clsig")
+        assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
+
+        # Update the sig too and it should pass now
+        cbtx.bestCLSignature = hex_str_to_bytes(self.nodes[1].getblock(tip1_hash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
+        mal_block.vtx[0].vExtraPayload = cbtx.serialize()
+        mal_block.vtx[0].rehash()
+        mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
+        mal_block.solve()
+        result = self.nodes[1].submitblock(mal_block.serialize().hex())
+        assert_equal(result, None)
+        assert not self.nodes[1].getbestblockhash() == tip1_hash
+
+        # Revert to test another use case
+        self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
+        assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
+
+        # Now it's too old but fails because of another reason when mn_rr is active
+        cbtx.bestCLHeightDiff = 2
+        mal_block.vtx[0].vExtraPayload = cbtx.serialize()
+        mal_block.vtx[0].rehash()
+        mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
+        mal_block.solve()
+        result = self.nodes[1].submitblock(mal_block.serialize().hex())
+        assert_equal(result, "bad-cbtx-older-clsig" if mn_rr_active else "bad-cbtx-invalid-clsig")
+        assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
+
+        # Update the sig too and it should pass now when mn_rr is not active and fail otherwise
+        old_blockhash = self.nodes[1].getblockhash(self.nodes[1].getblockcount() - 1)
+        cbtx.bestCLSignature = hex_str_to_bytes(self.nodes[1].getblock(old_blockhash, 2)["tx"][0]["cbTx"]["bestCLSignature"])
+        mal_block.vtx[0].vExtraPayload = cbtx.serialize()
+        mal_block.vtx[0].rehash()
+        mal_block.hashMerkleRoot = mal_block.calc_merkle_root()
+        mal_block.solve()
+        result = self.nodes[1].submitblock(mal_block.serialize().hex())
+        if mn_rr_active:
+            assert_equal(result, "bad-cbtx-older-clsig")
+            assert_equal(self.nodes[1].getbestblockhash(), tip1_hash)
+        else:
+            assert_equal(result, None)
+            assert not self.nodes[1].getbestblockhash() == tip1_hash
+
+        self.reconnect_isolated_node(1, 0)
+        self.sync_all()
 
 
 if __name__ == '__main__':
