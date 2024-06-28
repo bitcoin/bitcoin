@@ -127,6 +127,8 @@ struct CCoinsCacheEntry
         FRESH = (1 << 1),
     };
 
+    inline void AddFlags(unsigned int flags) { this->flags |= flags; }
+    inline void ClearFlags() { flags = 0; }
     inline unsigned char GetFlags() const { return flags; }
     inline bool IsDirty() const { return flags & DIRTY; }
     inline bool IsFresh() const { return flags & FRESH; }
