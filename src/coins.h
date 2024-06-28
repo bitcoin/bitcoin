@@ -103,8 +103,11 @@ public:
  */
 struct CCoinsCacheEntry
 {
+private:
+    uint8_t m_flags{0};
+
+public:
     Coin coin; // The actual cached data.
-    unsigned char flags{0};
 
     enum Flags {
         /**
@@ -127,11 +130,11 @@ struct CCoinsCacheEntry
         FRESH = (1 << 1),
     };
 
-    inline void AddFlags(unsigned int flags) { this->flags |= flags; }
-    inline void ClearFlags() { flags = 0; }
-    inline unsigned char GetFlags() const { return flags; }
-    inline bool IsDirty() const { return flags & DIRTY; }
-    inline bool IsFresh() const { return flags & FRESH; }
+    inline void AddFlags(uint8_t flags) { m_flags |= flags; }
+    inline void ClearFlags() { m_flags = 0; }
+    inline uint8_t GetFlags() const { return m_flags; }
+    inline bool IsDirty() const { return m_flags & DIRTY; }
+    inline bool IsFresh() const { return m_flags & FRESH; }
 
     CCoinsCacheEntry() = default;
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)) {}
