@@ -160,6 +160,17 @@ public:
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
         bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
+        /**
+         * The maximum additional weight which the pool will add to the coinbase
+         * scriptSig, witness and outputs. This must include any additional
+         * weight needed for larger CompactSize encoded lengths.
+         */
+        size_t coinbase_max_additional_weight{4000};
+        /**
+         * The maximum additional sigops which the pool will add in coinbase
+         * transaction outputs.
+         */
+        size_t coinbase_output_max_additional_sigops{400};
     };
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
