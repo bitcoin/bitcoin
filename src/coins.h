@@ -133,7 +133,10 @@ public:
         FRESH = (1 << 1),
     };
 
-    inline void AddFlags(uint8_t flags) { m_flags |= flags; }
+    //! Adding a flag also requires a self reference to the pair that contains
+    //! this entry in the CCoinsCache map and a reference to the head of the
+    //! flagged pair linked list.
+    inline void AddFlags(uint8_t flags, CoinsCachePair& self, CCoinsCacheEntry& head) { m_flags |= flags; }
     inline void ClearFlags() { m_flags = 0; }
     inline uint8_t GetFlags() const { return m_flags; }
     inline bool IsDirty() const { return m_flags & DIRTY; }
@@ -248,6 +251,12 @@ protected:
      */
     mutable uint256 hashBlock;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
+    /**
+     * The head of the flagged entry linked list.
+     * Destroy it after cacheCoins, since any existing entries could still be
+     * flagged and reference the head in CCoinsCacheEntry's destructor
+     */
+    mutable CCoinsCacheEntry m_flagged_head;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */

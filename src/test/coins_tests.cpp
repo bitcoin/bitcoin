@@ -92,6 +92,7 @@ public:
     }
 
     CCoinsMap& map() const { return cacheCoins; }
+    CCoinsCacheEntry& entries() const { return m_flagged_head; }
     size_t& usage() const { return cachedCoinsUsage; }
 };
 
@@ -579,7 +580,7 @@ static void SetCoinsValue(CAmount value, Coin& coin)
     }
 }
 
-static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
+static size_t InsertCoinsMapEntry(CCoinsMap& map, CCoinsCacheEntry& flagged_head, CAmount value, char flags)
 {
     if (value == ABSENT) {
         assert(flags == NO_ENTRY);
@@ -587,10 +588,10 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     }
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
-    entry.AddFlags(flags);
     SetCoinsValue(value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
+    inserted.first->second.AddFlags(flags, *inserted.first, flagged_head);
     return inserted.first->second.coin.DynamicMemoryUsage();
 }
 
@@ -613,9 +614,13 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags, const C
 
 void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
 {
+    // flagged_head must go out of scope and be destroyed after map.
+    // Any remaining flagged entries in map need to reference the head
+    // when they are destroyed.
+    CCoinsCacheEntry flagged_head{};
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
-    InsertCoinsMapEntry(map, value, flags);
+    InsertCoinsMapEntry(map, flagged_head, value, flags);
     BOOST_CHECK(view.BatchWrite(map, {}));
 }
 
@@ -625,7 +630,7 @@ public:
     SingleEntryCacheTest(CAmount base_value, CAmount cache_value, char cache_flags)
     {
         WriteCoinsViewEntry(base, base_value, base_value == ABSENT ? NO_ENTRY : DIRTY);
-        cache.usage() += InsertCoinsMapEntry(cache.map(), cache_value, cache_flags);
+        cache.usage() += InsertCoinsMapEntry(cache.map(), cache.entries(), cache_value, cache_flags);
     }
 
     CCoinsView root;
