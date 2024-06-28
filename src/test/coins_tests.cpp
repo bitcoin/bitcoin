@@ -92,6 +92,7 @@ public:
     }
 
     CCoinsMap& map() const { return cacheCoins; }
+    CoinsCachePair& sentinel() const { return m_sentinel; }
     size_t& usage() const { return cachedCoinsUsage; }
 };
 
@@ -576,7 +577,7 @@ static void SetCoinsValue(CAmount value, Coin& coin)
     }
 }
 
-static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
+static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, CAmount value, char flags)
 {
     if (value == ABSENT) {
         assert(flags == NO_ENTRY);
@@ -584,10 +585,10 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     }
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
-    entry.AddFlags(flags);
     SetCoinsValue(value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
+    inserted.first->second.AddFlags(flags, *inserted.first, sentinel);
     return inserted.first->second.coin.DynamicMemoryUsage();
 }
 
@@ -610,9 +611,11 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags, const C
 
 void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
 {
+    CoinsCachePair sentinel{};
+    sentinel.second.SelfRef(sentinel);
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
-    InsertCoinsMapEntry(map, value, flags);
+    InsertCoinsMapEntry(map, sentinel, value, flags);
     BOOST_CHECK(view.BatchWrite(map, {}));
 }
 
@@ -622,7 +625,7 @@ public:
     SingleEntryCacheTest(CAmount base_value, CAmount cache_value, char cache_flags)
     {
         WriteCoinsViewEntry(base, base_value, base_value == ABSENT ? NO_ENTRY : DIRTY);
-        cache.usage() += InsertCoinsMapEntry(cache.map(), cache_value, cache_flags);
+        cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), cache_value, cache_flags);
     }
 
     CCoinsView root;

@@ -120,12 +120,14 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 random_mutable_transaction = *opt_mutable_transaction;
             },
             [&] {
+                CoinsCachePair sentinel{};
+                sentinel.second.SelfRef(sentinel);
                 CCoinsMapMemoryResource resource;
                 CCoinsMap coins_map{0, SaltedOutpointHasher{/*deterministic=*/true}, CCoinsMap::key_equal{}, &resource};
                 LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
                 {
                     CCoinsCacheEntry coins_cache_entry;
-                    coins_cache_entry.AddFlags(fuzzed_data_provider.ConsumeIntegral<uint8_t>());
+                    const auto flags{fuzzed_data_provider.ConsumeIntegral<uint8_t>()};
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;
                     } else {
@@ -136,7 +138,8 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                         }
                         coins_cache_entry.coin = *opt_coin;
                     }
-                    coins_map.emplace(random_out_point, std::move(coins_cache_entry));
+                    auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
+                    it->second.AddFlags(flags, *it, sentinel);
                 }
                 bool expected_code_path = false;
                 try {
