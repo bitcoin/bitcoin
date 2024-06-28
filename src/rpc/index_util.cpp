@@ -5,9 +5,10 @@
 
 #include <rpc/index_util.h>
 
+#include <node/blockstorage.h>
+#include <txdb.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <validation.h>
 
 bool GetAddressIndex(CBlockTreeDB& block_tree_db, const uint160& addressHash, const AddressType type,
                      std::vector<CAddressIndexEntry>& addressIndex,

@@ -15,6 +15,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
 #include <key_io.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <policy/policy.h>
 #include <rpc/rawtransaction_util.h>

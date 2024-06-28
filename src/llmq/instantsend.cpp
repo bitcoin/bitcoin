@@ -16,6 +16,7 @@
 #include <index/txindex.h>
 #include <masternode/sync.h>
 #include <net_processing.h>
+#include <node/blockstorage.h>
 #include <spork.h>
 #include <txmempool.h>
 #include <util/irange.h>
