@@ -261,9 +261,35 @@ namespace BCLog {
 
 namespace detail {
 //! Internal helper to get log context object from the first macro argument.
-static inline const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
-static inline Context GetContext(LogFlags category) { return Context{LogInstance(), category}; }
-static inline Context GetContext(std::string_view fmt) { return Context{LogInstance()}; }
+template <bool take_category>
+static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
+
+template <bool take_category>
+static Context GetContext(LogFlags category)
+{
+    //! Trigger a compile error if a caller tries to pass a category constant as
+    //! a source argument to a logging macro that specifies take_category ==
+    //! false. There is no technical reason why all logging macros cannot accept
+    //! category arguments, but for various reasons, such as (1) not wanting to
+    //! allow users filter by category at high priority levels, and (2) wanting
+    //! to incentivize developers to use lower log levels to avoid log spam,
+    //! passing category constants at higher levels is forbidden.
+    static_assert(take_category, "Cannot pass BCLog::LogFlags category argument to high level Info/Warning/Error logging macros. Please use lower level Debug/Trace macro, or drop the category argument!");
+    return Context{LogInstance(), category};
+}
+
+template <bool take_category>
+static Context GetContext(std::string_view fmt)
+{
+    //! Trigger a compile error if a caller forgets to pass a category constant
+    //! as a source argument to a logging macro that specifies take_category ==
+    //! true. There is no technical reason why all logging macros could not
+    //! allow the category argument to be optional, but low priority level
+    //! macros should specify category in order to only be visible when the
+    //! selected category is enabled. This helps reduce log spam.
+    static_assert(!take_category, "Must pass category to Debug/Trace logging macros.");
+    return Context{LogInstance()};
+}
 
 //! Internal helper to format log arguments and call a logging function.
 template <typename LogFn, typename Context, typename ContextArg, typename... Args>
@@ -304,9 +330,9 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 #define FirstArg_(args) FirstArg_Impl args
 
 //! Internal helper to conditionally log. Only evaluates arguments when needed.
-#define LogPrint_(level, ...)                                                  \
+#define LogPrint_(level, take_category, ...)                                   \
     do {                                                                       \
-        const auto& ctx{BCLog::detail::GetContext(FirstArg_((__VA_ARGS__)))};  \
+        const auto& ctx{BCLog::detail::GetContext<take_category>(FirstArg_((__VA_ARGS__)))}; \
         if (LogEnabled(ctx, (level))) {                                        \
             const auto& func = __func__;                                       \
             BCLog::detail::Format([&](auto&& message) {                        \
@@ -347,12 +373,12 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 //!   ...
 //!   LogDebug(m_log, "Forget txreconciliation state of peer=%d\n", peer_id);
 //!
-#define LogError(...) LogPrint_(BCLog::Level::Error, __VA_ARGS__)
-#define LogWarning(...) LogPrint_(BCLog::Level::Warning, __VA_ARGS__)
-#define LogInfo(...) LogPrint_(BCLog::Level::Info, __VA_ARGS__)
-#define LogDebug(...) LogPrint_(BCLog::Level::Debug, __VA_ARGS__)
-#define LogTrace(...) LogPrint_(BCLog::Level::Trace, __VA_ARGS__)
-#define LogPrintLevel(ctx, level, ...) LogPrint_(level, ctx, __VA_ARGS__)
+#define LogError(...) LogPrint_(BCLog::Level::Error, false, __VA_ARGS__)
+#define LogWarning(...) LogPrint_(BCLog::Level::Warning, false, __VA_ARGS__)
+#define LogInfo(...) LogPrint_(BCLog::Level::Info, false, __VA_ARGS__)
+#define LogDebug(...) LogPrint_(BCLog::Level::Debug, true, __VA_ARGS__)
+#define LogTrace(...) LogPrint_(BCLog::Level::Trace, true, __VA_ARGS__)
+#define LogPrintLevel(ctx, level, ...) LogPrint_(level, true, ctx, __VA_ARGS__)
 
 //! Deprecated macros.
 #define LogPrintf(...) LogInfo(__VA_ARGS__)

@@ -115,13 +115,23 @@ BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
     LogError("error\n");
     LogWarning("warning\n");
     LogInfo("info\n");
+    // LogDebug("debug\n"); // Not allowed because category is required!
+    // LogTrace("trace\n"); // Not allowed because category is required!
     LogError("error %s\n", "arg");
     LogWarning("warning %s\n", "arg");
     LogInfo("info %s\n", "arg");
+    // LogDebug("debug %s\n", "arg"); // Not allowed because category is required!
+    // LogTrace("trace %s\n", "arg"); // Not allowed because category is required!
 
     // Test logging with category constant arguments.
+    // LogError(BCLog::NET, "error\n"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning\n"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info\n"); // Not allowed because category is forbidden!
     LogDebug(BCLog::NET, "debug\n");
     LogTrace(BCLog::NET, "trace\n");
+    // LogError(BCLog::NET, "error %s\n", "arg"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning %s\n", "arg"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info %s\n", "arg"); // Not allowed because category is forbidden!
     LogDebug(BCLog::NET, "debug %s\n", "arg");
     LogTrace(BCLog::NET, "trace %s\n", "arg");
 
