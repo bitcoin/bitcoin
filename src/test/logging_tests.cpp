@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(logging_local_logger)
     LogTrace(log, "trace %s", "arg");
 
     constexpr auto expected{std::to_array({
-        "[net:error] error arg\n",
-        "[net:warning] warning arg\n",
-        "[net:info] info arg\n",
+        "[error] error arg\n",
+        "[warning] warning arg\n",
+        "info arg\n",
         "[net] debug arg\n",
         "[net:trace] trace arg\n",
     })};
@@ -141,13 +141,23 @@ BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
     LogError("error");
     LogWarning("warning");
     LogInfo("info");
+    // LogDebug("debug"); // Not allowed because category is required!
+    // LogTrace("trace"); // Not allowed because category is required!
     LogError("error %s", "arg");
     LogWarning("warning %s", "arg");
     LogInfo("info %s", "arg");
+    // LogDebug("debug %s", "arg"); // Not allowed because category is required!
+    // LogTrace("trace %s", "arg"); // Not allowed because category is required!
 
     // Test logging with category constant arguments.
+    // LogError(BCLog::NET, "error"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info"); // Not allowed because category is forbidden!
     LogDebug(BCLog::NET, "debug");
     LogTrace(BCLog::NET, "trace");
+    // LogError(BCLog::NET, "error %s", "arg"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning %s", "arg"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info %s", "arg"); // Not allowed because category is forbidden!
     LogDebug(BCLog::NET, "debug %s", "arg");
     LogTrace(BCLog::NET, "trace %s", "arg");
 
@@ -179,15 +189,15 @@ BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
         "[net] debug arg",
         "[net:trace] trace arg",
 
-        "[tor:error] error",
-        "[tor:warning] warning",
-        "[tor:info] info",
+        "[error] error",
+        "[warning] warning",
+        "info",
         "[tor] debug",
         "[tor:trace] trace",
 
-        "[tor:error] error arg",
-        "[tor:warning] warning arg",
-        "[tor:info] info arg",
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
         "[tor] debug arg",
         "[tor:trace] trace arg",
     })};
@@ -232,9 +242,9 @@ BOOST_FIXTURE_TEST_CASE(logging_CustomContext, LogSetup)
     }
     constexpr auto expected{std::to_array({
         "[validation] Custom #1 foo1: bar1",
-        "[validation:info] Custom #2 foo2: bar2",
-        "[validation:warning] Custom #3 foo3: bar3",
-        "[validation:error] Custom #4 foo4: bar4",
+        "Custom #2 foo2: bar2",
+        "[warning] Custom #3 foo3: bar3",
+        "[error] Custom #4 foo4: bar4",
     })};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
