@@ -344,7 +344,9 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 {
     if (category == LogFlags::NONE) category = LogFlags::ALL;
 
-    const bool has_category{m_always_print_category_level || category != LogFlags::ALL};
+    // Only log categories at debug level and below so users cannot use category
+    // filters at higher levels and miss important messages.
+    const bool has_category{level <= Level::Debug && (m_always_print_category_level || category != LogFlags::ALL)};
 
     // If there is no category, Info is implied
     if (!has_category && level == Level::Info) return {};

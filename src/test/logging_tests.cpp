@@ -179,7 +179,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 
     std::vector<Case> cases = {
         {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", SourceLocation{__func__}},
-        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", SourceLocation{__func__}},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "", SourceLocation{__func__}},
         {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
         {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", SourceLocation{__func__}},
         {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
