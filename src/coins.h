@@ -136,6 +136,10 @@ public:
 
     CCoinsCacheEntry() noexcept = default;
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
+    ~CCoinsCacheEntry()
+    {
+        ClearFlags();
+    }
 
     //! Adding a flag also requires a self reference to the pair that contains
     //! this entry in the CCoinsCache map and a reference to the sentinel of the
