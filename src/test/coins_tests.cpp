@@ -55,9 +55,9 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock, bool erase = true) override
+    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock, bool will_erase = true) override
     {
-        for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = erase ? mapCoins.erase(it) : std::next(it)) {
+        for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = will_erase ? mapCoins.erase(it) : std::next(it)) {
             if (it->second.IsDirty()) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;
