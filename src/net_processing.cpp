@@ -135,6 +135,17 @@ static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
 static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 /** Window, in blocks, for connecting to NODE_NETWORK_LIMITED peers */
 static const unsigned int NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS = 144;
+/** In case of receiving a 'notfound' for a block, don't request the block to the same peer twice
+ * when it is outside the re-try window. This is because all nodes should, sooner or later,
+ * have all blocks closer to the tip in the main chain. **/
+static constexpr int BLOCK_REQUEST_RETRY_WINDOW{72}; // half-day
+static_assert (BLOCK_REQUEST_RETRY_WINDOW <= static_cast<size_t>(NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS), "BLOCK_RE_REQUEST_WINDOW must not exceed NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS.");
+/** The maximum number of 'not found' blocks we can take before closing the connection **/
+static constexpr int MAX_MISSING_BLOCKS_NUM = 30;
+/** Delay between equal block requests to the same peer for blocks deeper than BLOCK_RE_REQUEST_WINDOW blocks **/
+static constexpr auto MISSING_OLD_BLOCK_TTL{24h};
+/** Delay between equal block requests to the same peer for blocks below BLOCK_RE_REQUEST_WINDOW blocks **/
+static constexpr auto MISSING_TIP_BLOCK_TTL{3min};
 /** Average delay between local address broadcasts */
 static constexpr auto AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL{24h};
 /** Average delay between peer address broadcasts */
@@ -430,6 +441,16 @@ struct CNodeState {
     std::chrono::microseconds m_downloading_since{0us};
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload{false};
+
+    struct NotFoundBlock {
+        uint256 hash;
+        mutable std::chrono::seconds time_to_live{0s};
+        bool operator<(const NotFoundBlock& b) const { return hash < b.hash; }
+    };
+
+    //! Blocks we know this peer does not know about because we requested them and it replied with a not found.
+    //! If the block is close to the tip, it will be added with a shorter ttl.
+    std::set<NotFoundBlock> m_missing_blocks;
     /** Whether this peer wants invs or cmpctblocks (when possible) for block announcements. */
     bool m_requested_hb_cmpctblocks{false};
     /** Whether this peer will send us cmpctblocks if we request them. */
@@ -976,6 +997,12 @@ private:
     /** Have we requested this block from an outbound peer */
     bool IsBlockRequestedFromOutbound(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    enum class RequestRemoveResult {
+        NOT_FOUND,
+        REMOVED_FROM_PEER,
+        REMOVED
+    };
+
     /** Remove this block from our tracked requested blocks. Called if:
      *  - the block has been received from a peer
      *  - the request for the block has timed out
@@ -983,7 +1010,7 @@ private:
      * flight from that peer (to avoid one peer's network traffic from
      * affecting another's state).
      */
-    void RemoveBlockRequest(const uint256& hash, std::optional<NodeId> from_peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    RequestRemoveResult RemoveBlockRequest(const uint256& hash, std::optional<NodeId> from_peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /* Mark a block as in flight
      * Returns false, still setting pit, if the block was already in flight from the same peer
@@ -1282,17 +1309,18 @@ bool PeerManagerImpl::IsBlockRequestedFromOutbound(const uint256& hash)
     return false;
 }
 
-void PeerManagerImpl::RemoveBlockRequest(const uint256& hash, std::optional<NodeId> from_peer)
+PeerManagerImpl::RequestRemoveResult PeerManagerImpl::RemoveBlockRequest(const uint256& hash, std::optional<NodeId> from_peer)
 {
     auto range = mapBlocksInFlight.equal_range(hash);
     if (range.first == range.second) {
         // Block was not requested from any peer
-        return;
+        return RequestRemoveResult::NOT_FOUND;
     }
 
     // We should not have requested too many of this block
     Assume(mapBlocksInFlight.count(hash) <= MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK);
 
+    bool removed{false};
     while (range.first != range.second) {
         auto [node_id, list_it] = range.first->second;
 
@@ -1316,7 +1344,16 @@ void PeerManagerImpl::RemoveBlockRequest(const uint256& hash, std::optional<Node
         state.m_stalling_since = 0us;
 
         range.first = mapBlocksInFlight.erase(range.first);
+        removed = true;
     }
+
+    if (removed) {
+        if (from_peer.has_value()) return RequestRemoveResult::REMOVED_FROM_PEER;
+        else return RequestRemoveResult::REMOVED;
+    }
+
+    // The block request exist but it wasn't requested to 'from_peer'
+    return RequestRemoveResult::NOT_FOUND;
 }
 
 bool PeerManagerImpl::BlockRequested(NodeId nodeid, const CBlockIndex& block, std::list<QueuedBlock>::iterator** pit)
@@ -1605,6 +1642,18 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
             // Don't request blocks that go further than what limited peers can provide
             if (is_limited_peer && (state->pindexBestKnownBlock->nHeight - pindex->nHeight >= static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS) - 2 /* two blocks buffer for possible races */)) {
                 continue;
+            }
+
+            // Don't request blocks this peer does not have
+            auto it = state->m_missing_blocks.find(CNodeState::NotFoundBlock{pindex->GetBlockHash(), 0s});
+            if (it != state->m_missing_blocks.end()) {
+                auto now = GetTime<std::chrono::seconds>();
+                if (it->time_to_live > now) {
+                    continue; // skip already requested block
+                } else {
+                    // Request blockage window ended, remove entry and re-request block
+                    state->m_missing_blocks.erase(it);
+                }
             }
 
             vBlocks.push_back(pindex);
@@ -5334,6 +5383,47 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // If we receive a NOTFOUND message for a tx we requested, mark the announcement for it as
                     // completed in TxRequestTracker.
                     m_txrequest.ReceivedResponse(pfrom.GetId(), inv.hash);
+                } else if (inv.IsGenBlkMsg()) {
+                    // Reset in-flight state just so it can be requested to other peer
+                    auto res = RemoveBlockRequest(inv.hash, pfrom.GetId());
+                    if (res == RequestRemoveResult::NOT_FOUND) {
+                        Misbehaving(*peer, "sent 'notfound' for a block we don't requested");
+                        pfrom.fDisconnect = true;
+                        return;
+                    }
+
+                    const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
+                    if (!pindex) { // pindex should exist as this is a response to a getblock data we did.
+                        return;
+                    }
+
+                    // Mark block as missing to not request it again for a certain time window
+                    CNodeState& state = *State(pfrom.GetId());
+                    auto it = state.m_missing_blocks.emplace(CNodeState::NotFoundBlock{inv.hash, 0s});
+                    if (!it.second) {
+                        // As we erase the entry from 'missing_blocks' prior to requesting the block to the peer,
+                        // this existing entry shouldn't be possible.
+                        // todo: deal with this.
+                    } else {
+                        auto& not_found_block = *(it.first);
+                        int best_header_height = m_chainman.m_best_header->nHeight;
+                        std::chrono::seconds now{GetTime<std::chrono::seconds>()};
+                        // Avoid requesting block by setting a "not request" window
+                        not_found_block.time_to_live = now +
+                                (best_header_height - pindex->nHeight > BLOCK_REQUEST_RETRY_WINDOW ? MISSING_OLD_BLOCK_TTL : MISSING_TIP_BLOCK_TTL);
+
+                        // If this peer misses a large number of blocks when it shouldn't, let's disconnect.
+                        if (size_t num_missing = state.m_missing_blocks.size(); num_missing > MAX_MISSING_BLOCKS_NUM) {
+                            // Check all missing blocks are still active prior to disconnect
+                            size_t erased = std::erase_if(state.m_missing_blocks, [now](const CNodeState::NotFoundBlock& not_found_block) {
+                                return not_found_block.time_to_live <= now;
+                            });
+                            if (num_missing - erased > MAX_MISSING_BLOCKS_NUM) {
+                                LogPrint(BCLog::NET, "peer=%d exceeded max missing blocks number, disconnecting..\n", pfrom.GetId());
+                                pfrom.fDisconnect = true;
+                            }
+                        }
+                    }
                 }
             }
         }
