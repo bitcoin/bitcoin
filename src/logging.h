@@ -390,11 +390,38 @@ namespace BCLog {
 
 namespace detail {
 //! Internal helper to get log context object from the first macro argument.
-template <typename Context>
+template <bool take_category, typename Context>
 requires (Context::log_context)
 static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
-static inline Context GetContext(LogFlags category) { return Context{LogInstance(), category}; }
-static inline Context GetContext(std::string_view fmt) { return Context{LogInstance()}; }
+
+template <bool take_category>
+static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
+
+template <bool take_category>
+static Context GetContext(LogFlags category)
+{
+    //! Trigger compile error if caller tries to pass a category constant as a
+    //! first argument to a logging call that specifies take_category == false.
+    //! There is no technical reason why all logging calls could not accept
+    //! category arguments, but for various reasons, such as (1) not wanting to
+    //! allow users filter by category at high priority levels, and (2) wanting
+    //! to incentivize developers to use lower log levels to avoid log spam,
+    //! passing category constants at higher levels is forbidden.
+    static_assert(take_category, "Cannot pass BCLog::LogFlags category argument to Info/Warning/Error logging call. Please switch to Debug/Trace call, or drop the category argument!");
+    return Context{LogInstance(), category};
+}
+
+template <bool take_category>
+static Context GetContext(std::string_view fmt)
+{
+    //! Trigger compile error if caller does not pass a category constant as the
+    //! first argument to a logging call that specifies take_category == true.
+    //! There is no technical reason why category arguments need to be required,
+    //! but categories are useful for finding and filtering relevant messages
+    //! when debugging, so we want to encourage them.
+    static_assert(!take_category, "Missing required BCLog::LogFlags category argument for Debug/Trace logging call. Category can only be omitted for Info/Warning/Error calls.");
+    return Context{LogInstance()};
+}
 
 //! Internal helper to format log arguments and call a logging function.
 template <typename LogFn, typename Context, typename ContextArg, typename... Args>
@@ -436,11 +463,11 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 //! Internal helper to conditionally log. Only evaluates arguments when needed.
 // Allow __func__ to be used in any context without warnings:
 // NOLINTBEGIN(bugprone-lambda-function-name)
-#define LogPrint_(level, ratelimit, ...)                                       \
+#define LogPrint_(level, ratelimit, take_category, ...)                        \
     do {                                                                       \
-        const auto& ctx{BCLog::detail::GetContext(FirstArg_((__VA_ARGS__)))};  \
+        const auto& ctx{BCLog::detail::GetContext<take_category>(FirstArg_((__VA_ARGS__)))}; \
         if (const BCLog::Level lvl{level}; LogEnabled(ctx, lvl)) {             \
-            const BCLog::LogFlags cat{ctx.category};                           \
+            const BCLog::LogFlags cat{take_category ? ctx.category : BCLog::LogFlags::ALL}; \
             const bool rl{ratelimit};                                          \
             SourceLocation loc{SourceLocation{__func__}};                      \
             BCLog::detail::Format([&](auto&& message) {                        \
@@ -490,11 +517,11 @@ bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 //! disk filling attacks. Users enabling logging at Debug and lower levels are
 //! assumed to be developers or power users who are aware that -debug may cause
 //! excessive disk usage due to logging.
-#define LogError(...) LogPrint_(BCLog::Level::Error, true, __VA_ARGS__)
-#define LogWarning(...) LogPrint_(BCLog::Level::Warning, true, __VA_ARGS__)
-#define LogInfo(...) LogPrint_(BCLog::Level::Info, true, __VA_ARGS__)
-#define LogDebug(...) LogPrint_(BCLog::Level::Debug, false, __VA_ARGS__)
-#define LogTrace(...) LogPrint_(BCLog::Level::Trace, false, __VA_ARGS__)
-#define LogPrintLevel_(ctx, level, ratelimit, ...) LogPrint_((level), (ratelimit), (ctx), __VA_ARGS__)
+#define LogError(...) LogPrint_(BCLog::Level::Error, true, false, __VA_ARGS__)
+#define LogWarning(...) LogPrint_(BCLog::Level::Warning, true, false, __VA_ARGS__)
+#define LogInfo(...) LogPrint_(BCLog::Level::Info, true, false, __VA_ARGS__)
+#define LogDebug(...) LogPrint_(BCLog::Level::Debug, false, true, __VA_ARGS__)
+#define LogTrace(...) LogPrint_(BCLog::Level::Trace, false, true, __VA_ARGS__)
+#define LogPrintLevel_(ctx, level, ratelimit, ...) LogPrint_((level), (ratelimit), true, (ctx), __VA_ARGS__)
 
 #endif // BITCOIN_LOGGING_H
