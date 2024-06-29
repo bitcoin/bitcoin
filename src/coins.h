@@ -108,6 +108,24 @@ using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
 struct CCoinsCacheEntry
 {
 private:
+    /**
+     * These are used to create a doubly linked list of flagged entries.
+     * They are set in AddFlags and unset in ClearFlags.
+     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     *
+     * DIRTY entries are tracked so that only modified entries can be passed to
+     * the parent cache for batch writing. This is a performance optimization
+     * compared to giving all entries in the cache to the parent and having the
+     * parent scan for only modified entries.
+     *
+     * FRESH-but-not-DIRTY coins can not occur in practice, since that would
+     * mean a spent coin exists in the parent CCoinsView and not in the child
+     * CCoinsViewCache. Nevertheless, if a spent coin is retrieved from the
+     * parent cache, the FRESH-but-not-DIRTY coin will be tracked by the linked
+     * list and deleted when Sync or Flush is called on the CCoinsViewCache.
+     */
+    CoinsCachePair* m_prev{nullptr};
+    CoinsCachePair* m_next{nullptr};
     uint8_t m_flags{0};
 
 public:
@@ -147,20 +165,45 @@ public:
     inline void AddFlags(uint8_t flags, CoinsCachePair& self, CoinsCachePair& sentinel) noexcept
     {
         Assume(&self.second == this);
+        if (!m_flags && flags) {
+            m_prev = sentinel.second.m_prev;
+            m_next = &sentinel;
+            sentinel.second.m_prev = &self;
+            m_prev->second.m_next = &self;
+        }
         m_flags |= flags;
     }
     inline void ClearFlags() noexcept
     {
+        if (!m_flags) return;
+        m_next->second.m_prev = m_prev;
+        m_prev->second.m_next = m_next;
         m_flags = 0;
     }
     inline uint8_t GetFlags() const noexcept { return m_flags; }
     inline bool IsDirty() const noexcept { return m_flags & DIRTY; }
     inline bool IsFresh() const noexcept { return m_flags & FRESH; }
 
+    //! Only call Next when this entry is DIRTY, FRESH, or both
+    inline CoinsCachePair* Next() const noexcept {
+        Assume(m_flags);
+        return m_next;
+    }
+
+    //! Only call Prev when this entry is DIRTY, FRESH, or both
+    inline CoinsCachePair* Prev() const noexcept {
+        Assume(m_flags);
+        return m_prev;
+    }
+
     //! Only use this for initializing the linked list sentinel
     inline void SelfRef(CoinsCachePair& self) noexcept
     {
         Assume(&self.second == this);
+        m_prev = &self;
+        m_next = &self;
+        // Set sentinel to DIRTY so we can call Next on it
+        m_flags = DIRTY;
     }
 };
 
