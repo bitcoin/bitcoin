@@ -635,13 +635,13 @@ public:
     void addUnchecked(const CTxMemPoolEntry& entry, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void addUnchecked(const CTxMemPoolEntry& entry, setEntries& setAncestors, bool validFeeEstimate = true) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
-    void addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
-    bool getAddressIndex(std::vector<std::pair<uint160, AddressType> > &addresses,
-                         std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > &results);
+    void addAddressIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
+    bool getAddressIndex(const std::vector<CMempoolAddressDeltaKey>& addresses,
+                         std::vector<CMempoolAddressDeltaEntry>& results) const;
     bool removeAddressIndex(const uint256 txhash);
 
-    void addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
-    bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+    void addSpentIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
+    bool getSpentIndex(const CSpentIndexKey& key, CSpentIndexValue& value) const;
     bool removeSpentIndex(const uint256 txhash);
 
     void removeRecursive(const CTransaction& tx, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);

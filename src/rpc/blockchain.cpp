@@ -30,6 +30,7 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <rpc/index_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -834,7 +835,7 @@ static RPCHelpMan getblockhashes()
     unsigned int low = request.params[1].get_int();
     std::vector<uint256> blockHashes;
 
-    if (!GetTimestampIndex(high, low, blockHashes)) {
+    if (LOCK(::cs_main); !GetTimestampIndex(*pblocktree, high, low, blockHashes)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for block hashes");
     }
 

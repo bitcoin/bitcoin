@@ -26,6 +26,7 @@
 #include <primitives/transaction.h>
 #include <psbt.h>
 #include <rpc/blockchain.h>
+#include <rpc/index_util.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -58,6 +59,8 @@
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempool, CChainState& active_chainstate, llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman, UniValue& entry)
 {
+    LOCK(::cs_main);
+
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
     //
     // Blockchain contextual information (confirmations and blocktime) is not
@@ -72,7 +75,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
         if (!tx.IsCoinBase()) {
             CSpentIndexValue spentInfo;
             CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
-            if (GetSpentIndex(mempool, spentKey, spentInfo)) {
+            if (GetSpentIndex(*pblocktree, mempool, spentKey, spentInfo)) {
                 txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
             }
         }
@@ -80,7 +83,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         CSpentIndexValue spentInfo;
         CSpentIndexKey spentKey(txid, i);
-        if (GetSpentIndex(mempool, spentKey, spentInfo)) {
+        if (GetSpentIndex(*pblocktree, mempool, spentKey, spentInfo)) {
             txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
         }
     }
@@ -89,8 +92,6 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
 
     bool chainLock = false;
     if (!hashBlock.IsNull()) {
-        LOCK(cs_main);
-
         entry.pushKV("blockhash", hashBlock.GetHex());
         CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
         if (pindex) {
