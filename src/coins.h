@@ -256,10 +256,10 @@ public:
     virtual std::vector<uint256> GetHeadBlocks() const;
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
-    //! The passed mapCoins can be modified if will_erase is true.
+    //! The passed pairs are a linked list that can be modified if will_erase is true.
     //! If will_erase is true, the coins will be erased by the caller afterwards,
     //! so the coins can be moved out of the pairs instead of copied
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool will_erase = true);
+    virtual bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
@@ -285,7 +285,7 @@ public:
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool will_erase = true) override;
+    bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -328,7 +328,7 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool will_erase = true) override;
+    bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }

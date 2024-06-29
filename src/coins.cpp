@@ -12,7 +12,7 @@
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
 std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
-bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool will_erase) { return false; }
+bool CCoinsView::BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase) { return false; }
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
 
 bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
@@ -27,7 +27,7 @@ bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
-bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool will_erase) { return base->BatchWrite(mapCoins, hashBlock, will_erase); }
+bool CCoinsViewBacked::BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase) { return base->BatchWrite(pairs, hashBlock, will_erase); }
 std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 
@@ -181,10 +181,10 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
     hashBlock = hashBlockIn;
 }
 
-bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn, bool will_erase) {
-    for (CCoinsMap::iterator it = mapCoins.begin();
-            it != mapCoins.end();
-            it = will_erase ? mapCoins.erase(it) : std::next(it)) {
+bool CCoinsViewCache::BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlockIn, bool will_erase) {
+    for (auto it{pairs};
+            it != nullptr;
+            it = it->second.Next(/*clear_flags=*/will_erase || !it->second.coin.IsSpent())) { // Keep flags for spent coins so they can be erased in Sync
         // Ignore non-dirty entries (optimization).
         if (!(it->second.IsDirty())) {
             continue;
@@ -253,11 +253,11 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
 }
 
 bool CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*will_erase=*/true);
+    bool fOk = base->BatchWrite(m_flagged_head.Next(), hashBlock, /*will_erase=*/true);
     if (fOk) {
-        if (!cacheCoins.empty()) {
-            /* BatchWrite must erase all cacheCoins elements when will_erase=true. */
-            throw std::logic_error("Not all cached coins were erased");
+        if (m_flagged_head.Next() != nullptr) {
+            /* BatchWrite must unset all flagged entries when will_erase=true. */
+            throw std::logic_error("Not all flagged entries were erased");
         }
         ReallocateCache();
     }
@@ -267,17 +267,19 @@ bool CCoinsViewCache::Flush() {
 
 bool CCoinsViewCache::Sync()
 {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock, /*will_erase=*/false);
-    // Instead of clearing `cacheCoins` as we would in Flush(), just clear the
-    // FRESH/DIRTY flags of any coin that isn't spent.
-    for (auto it = cacheCoins.begin(); it != cacheCoins.end(); ) {
+    bool fOk = base->BatchWrite(m_flagged_head.Next(), hashBlock, /*will_erase=*/false);
+    // Instead of clearing `cacheCoins` as we would in Flush(), just erase the
+    // spent coins. All coins left in the linked list after BatchWrite should be spent.
+    for (auto it{m_flagged_head.Next()}; it != nullptr; ) {
+        const auto next_entry{it->second.Next(/*clear_flags=*/true)};
         if (it->second.coin.IsSpent()) {
             cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-            it = cacheCoins.erase(it);
-        } else {
-            it->second.ClearFlags();
-            ++it;
+            cacheCoins.erase(it->first);
+        } else if (fOk) {
+            /* BatchWrite must unset all unspent entries when will_erase=false. */
+            throw std::logic_error("Not all unspent flagged entries were unset");
         }
+        it = next_entry;
     }
     return fOk;
 }
@@ -315,8 +317,6 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 
 void CCoinsViewCache::ReallocateCache()
 {
-    // Cache should be empty when we're calling this.
-    assert(cacheCoins.size() == 0);
     cacheCoins.~CCoinsMap();
     m_cache_coins_memory_resource.~CCoinsMapMemoryResource();
     ::new (&m_cache_coins_memory_resource) CCoinsMapMemoryResource{};

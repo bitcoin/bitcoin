@@ -172,9 +172,9 @@ public:
     std::unique_ptr<CCoinsViewCursor> Cursor() const final { return {}; }
     size_t EstimateSize() const final { return m_data.size(); }
 
-    bool BatchWrite(CCoinsMap& data, const uint256&, bool will_erase) final
+    bool BatchWrite(CoinsCachePair* pairs, const uint256&, bool will_erase) final
     {
-        for (auto it = data.begin(); it != data.end(); it = will_erase ? data.erase(it) : std::next(it)) {
+        for (auto it{pairs}; it != nullptr; it = it->second.Next(/*clear_flags=*/will_erase || !it->second.coin.IsSpent())) { // Keep flags for spent coins so they can be erased in Sync
             if (it->second.IsDirty()) {
                 if (it->second.coin.IsSpent() && (it->first.n % 5) != 4) {
                     m_data.erase(it->first);
