@@ -104,6 +104,7 @@ if(WITH_BDB)
 endif()
 cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
+option(ENABLE_HARDENING "Attempt to harden the resulting executables." ON)
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
 option(WITH_NATPMP "Enable NAT-PMP." OFF)
@@ -351,6 +352,59 @@ try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK
 # -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
 try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 
+if(ENABLE_HARDENING)
+  add_library(hardening_interface INTERFACE)
+  target_link_libraries(core_interface INTERFACE hardening_interface)
+  if(MSVC)
+    try_append_linker_flag("/DYNAMICBASE" TARGET hardening_interface)
+    try_append_linker_flag("/HIGHENTROPYVA" TARGET hardening_interface)
+    try_append_linker_flag("/NXCOMPAT" TARGET hardening_interface)
+  else()
+    try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
+      RESULT_VAR cxx_supports_fortify_source
+    )
+    if(cxx_supports_fortify_source)
+      # When the build configuration is Debug, all optimizations are disabled.
+      # However, _FORTIFY_SOURCE requires that there is some level of optimization,
+      # otherwise it does nothing and just creates a compiler warning.
+      # Since _FORTIFY_SOURCE is a no-op without optimizations, do not enable it
+      # when the build configuration is Debug.
+      target_compile_options(hardening_interface INTERFACE
+        $<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE>
+        $<$<NOT:$<CONFIG:Debug>>:-D_FORTIFY_SOURCE=3>
+      )
+    endif()
+    unset(cxx_supports_fortify_source)
+
+    try_append_cxx_flags("-Wstack-protector" TARGET hardening_interface SKIP_LINK)
+    try_append_cxx_flags("-fstack-protector-all" TARGET hardening_interface)
+    try_append_cxx_flags("-fcf-protection=full" TARGET hardening_interface)
+
+    if(MINGW)
+      # stack-clash-protection doesn't compile with GCC 10 and earlier.
+      # In any case, it is a no-op for Windows.
+      # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+    else()
+      try_append_cxx_flags("-fstack-clash-protection" TARGET hardening_interface)
+    endif()
+
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+      try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
+    endif()
+
+    try_append_linker_flag("-Wl,--enable-reloc-section" TARGET hardening_interface)
+    try_append_linker_flag("-Wl,--dynamicbase" TARGET hardening_interface)
+    try_append_linker_flag("-Wl,--nxcompat" TARGET hardening_interface)
+    try_append_linker_flag("-Wl,--high-entropy-va" TARGET hardening_interface)
+    try_append_linker_flag("-Wl,-z,relro" TARGET hardening_interface)
+    try_append_linker_flag("-Wl,-z,now" TARGET hardening_interface)
+    try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+      try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
+    endif()
+  endif()
+endif()
+
 find_package(Python3 3.9 COMPONENTS Interpreter)
 if(Python3_EXECUTABLE)
   set(PYTHON_COMMAND ${Python3_EXECUTABLE})
@@ -409,6 +463,7 @@ message("")
 message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}, ${CMAKE_CXX_COMPILER}")
 include(FlagsSummary)
 flags_summary()
+message("Attempt to harden executables ......... ${ENABLE_HARDENING}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
 if(configure_warnings)
