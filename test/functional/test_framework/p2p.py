@@ -63,6 +63,7 @@ from test_framework.messages import (
     msg_sendaddrv2,
     msg_sendcmpct,
     msg_sendheaders,
+    msg_sendnotfound,
     msg_sendtxrcncl,
     msg_tx,
     MSG_TX,
@@ -134,6 +135,7 @@ MESSAGEMAP = {
     b"inv": msg_inv,
     b"mempool": msg_mempool,
     b"merkleblock": msg_merkleblock,
+    b"sendnotfound": msg_sendnotfound,
     b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
@@ -541,6 +543,7 @@ class P2PInterface(P2PConnection):
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
     def on_sendtxrcncl(self, message): pass
+    def on_sendnotfound(self, message): pass
     def on_tx(self, message): pass
     def on_wtxidrelay(self, message): pass
 

@@ -222,6 +222,9 @@ struct Peer {
     /** Services this peer offered to us. */
     std::atomic<ServiceFlags> m_their_services{NODE_NONE};
 
+    /** Whether this peer can handle 'notfound' messages for blocks */
+    std::atomic<bool> m_supports_notfound{false};
+
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
     /** Whether this peer should be disconnected and marked as discouraged (unless it has NetPermissionFlags::NoBan permission). */
@@ -3761,6 +3764,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // it to nodes with a version before 70016, as no software is known to support
             // BIP155 that doesn't announce at least that protocol version number.
             MakeAndPushMessage(pfrom, NetMsgType::SENDADDRV2);
+
+            // Notify we support sending 'notfound' messages for unknown blocks.
+            // TODO: Add BIP<>. 'sendnotfound' feature negotiation support
+            MakeAndPushMessage(pfrom, NetMsgType::SENDNOTFOUND);
         }
 
         pfrom.m_has_all_wanted_services = HasAllDesirableServiceFlags(nServices);
@@ -4057,6 +4064,17 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             pfrom.fDisconnect = true;
             return;
         }
+        return;
+    }
+
+    if (msg_type == NetMsgType::SENDNOTFOUND) {
+        if (pfrom.fSuccessfullyConnected) {
+            // Disconnect peers that send a SENDNOTFOUND message after VERACK.
+            LogPrint(BCLog::NET, "'%s' received after verack from peer=%d; disconnecting\n", NetMsgType::SENDNOTFOUND, pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+        peer->m_supports_notfound = true;
         return;
     }
 

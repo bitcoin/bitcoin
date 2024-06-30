@@ -149,6 +149,11 @@ inline constexpr const char* PING{"ping"};
  */
 inline constexpr const char* PONG{"pong"};
 /**
+ * The sendnotfound message signals support for sending NOTFOUND messages for
+ * unknown or pruned blocks.
+ */
+inline constexpr const char* SENDNOTFOUND{"sendnotfound"};
+/**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
  * @since protocol version 70001.
@@ -285,6 +290,7 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::MEMPOOL,
     NetMsgType::PING,
     NetMsgType::PONG,
+    NetMsgType::SENDNOTFOUND,
     NetMsgType::NOTFOUND,
     NetMsgType::FILTERLOAD,
     NetMsgType::FILTERADD,

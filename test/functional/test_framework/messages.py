@@ -1443,6 +1443,21 @@ class msg_mempool:
     def __repr__(self):
         return "msg_mempool()"
 
+class msg_sendnotfound:
+    __slots__ = ()
+    msgtype = b"sendnotfound"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_sendnotfound()"
 
 class msg_notfound:
     __slots__ = ("vec", )
