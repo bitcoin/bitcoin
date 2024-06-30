@@ -8,8 +8,12 @@
 from collections import defaultdict
 
 from test_framework.messages import (
+    CBlockHeader,
     CInv,
+    from_hex,
     msg_getdata,
+    msg_headers,
+    msg_notfound,
     msg_sendnotfound,
     MSG_BLOCK,
     MSG_FILTERED_BLOCK,
@@ -51,6 +55,16 @@ class NotFoundConnTracker(P2PInterface):
     def on_block(self, message):
         message.block.calc_sha256()
         self.blocks_received_map[message.block.sha256] += 1
+
+
+class GetDataTrackerConn(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.vec_getdata = []
+
+    def on_getdata(self, message):
+        self.vec_getdata += message.inv
+
 
 class NotFoundBlockTest(BitcoinTestFramework):
 
@@ -166,10 +180,99 @@ class NotFoundBlockTest(BitcoinTestFramework):
         self.log.info("(e) Test getdata (merkleblock) for a peer that does not have TxRelay enabled")
         self.send_getdata_and_wait_for_notfound(node0, node0.getbestblockhash(), block_request_type=MSG_FILTERED_BLOCK)
 
+    def test_notfound_handler(self):
+        self.log.info("Test 'notfound' msg handler")
+        node0 = self.nodes[0]
+        node1 = self.nodes[1]
+
+        self.log.info("(a) Send not_found for a block the peer did not request")
+
+        conn = node0.add_p2p_connection(P2PInterface())
+        with node0.assert_debug_log(["Misbehaving: peer=11: sent 'notfound' for a block we don't requested"]):
+            conn.send_message(msg_notfound([CInv(t=MSG_BLOCK, h=0)]))
+            conn.wait_for_disconnect()
+
+        ################################################################################
+        self.log.info("(b) Send not_found for a block the peer requested but not to us")
+
+        # Generate block, in isolation, then relay header from a connection handled by us
+        self.sync_blocks()
+        self.disconnect_nodes(0, 1)
+        self.generate(node1, 1, sync_fun=self.no_op)
+        tip_header = from_hex(CBlockHeader(), node1.getblockheader(node1.getbestblockhash(), verbose=False))
+        tip_header.calc_sha256()
+
+        # Send tip header and wait for getdata request without responding to it.
+        conn = node0.add_p2p_connection(P2PInterface())
+        conn.send_message(msg_headers([tip_header]))
+        conn.wait_for_getdata([tip_header.sha256])
+
+        # Now send 'notfound' from another connection and expect disconnection.
+        conn = node0.add_p2p_connection(P2PInterface())
+        with node0.assert_debug_log(["Misbehaving: peer=13: sent 'notfound' for a block we don't requested"]):
+            conn.send_message(msg_notfound([CInv(t=MSG_BLOCK, h=tip_header.sha256)]))
+            conn.wait_for_disconnect()
+
+        ################################################################################
+        self.log.info("(c) Send not_found for an historical block")
+
+        # Context: node1 is already pruned.
+        # Restart it with the -reindex flag enabled so it resync blocks.
+        node_time = node0.getblockheader(node0.getbestblockhash())['time']  # set mocktime so it can be advanced later
+        self.restart_node(1, extra_args=["-reindex", f'-mocktime={node_time}'])
+        conn = node1.add_p2p_connection(GetDataTrackerConn())
+        conn.wait_for_getheaders()
+
+        # Send header and wait for getdata
+        block_1_header = from_hex(CBlockHeader(), node0.getblockheader(node0.getblockhash(1), verbose=False))
+        conn.send_message(msg_headers([block_1_header]))
+        self.wait_until(lambda: len(conn.vec_getdata) > 0)
+
+        # Now we received the getdata, send not_found
+        inv = conn.vec_getdata[0]
+        conn.send_message(msg_notfound([inv]))
+        # Check the block was properly marked as missing
+        block_to_request = inv.hash.to_bytes(32, 'big').hex()
+        self.wait_until(lambda: block_to_request in node1.getpeerinfo()[-1]['missing_blocks'])
+
+        # Verify the node will retry to download the block after 24h (when the 'missing block' entry expires)
+        node_time += 60 * 60 * 24 + 1
+        node1.setmocktime(node_time)
+        self.wait_until(lambda: block_to_request not in node1.getpeerinfo()[-1]['missing_blocks'])
+        assert_equal(len(conn.vec_getdata), 2)  # two requests for the same block
+
+        ################################################################################
+        self.log.info("(d) Send multiple not_found to surpass the accepted limit")
+        MAX_MISSING_BLOCKS_NUM = 30
+
+        msg = msg_headers()
+        for block_num in range(2, MAX_MISSING_BLOCKS_NUM + 3):  # range of 31 blocks
+            msg.headers.append(from_hex(CBlockHeader(), node0.getblockheader(node0.getblockhash(block_num), verbose=False)))
+        conn.vec_getdata.clear()  # remove all previous requests
+        conn.send_message(msg)
+
+        # As blocks are requested in windows of 15 blocks max, once we respond with the not_found, the node will try
+        # to download blocks that follows the last not_found block, and we will continue responding with a not_found
+        # until the limit is reached.
+        num_notfound_sent = 0
+        with node1.assert_debug_log(["peer=0 exceeded max missing blocks number, disconnecting.."]):
+            while num_notfound_sent <= 30:
+                self.wait_until(lambda: len(conn.vec_getdata) > 0)
+                not_found_msg = msg_notfound(conn.vec_getdata.copy())
+                conn.vec_getdata.clear()  # remove all previous requests
+                conn.send_message(not_found_msg)
+                num_notfound_sent += len(not_found_msg.vec)
+            conn.wait_for_disconnect()
+
+        # TODO: Test: when the node is synced and receives a notfound for a block close to the tip
+        # Now connect the real node, so it can sync-up the entire chain
+        #self.connect_nodes(1, 0)
+        #self.sync_blocks()
 
     def run_test(self):
         self.test_feature_negotiation()
         self.test_getdata_response()
+        self.test_notfound_handler()
 
 
 if __name__ == '__main__':
