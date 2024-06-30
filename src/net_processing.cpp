@@ -3937,6 +3937,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (pfrom.nVersion == 0) {
         // Must have a version message before anything else
         LogPrint(BCLog::NET, "non-version message before version handshake. Message \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
+        // TODO: Should disconnect if a negotiation message is received prior to the version message?
+        //  This is because the remote peer could be expecting certain behavior and it will not happen
+        if (msg_type == NetMsgType::SENDNOTFOUND) {
+            LogPrint(BCLog::NET, "Disconnecting peer=%d for sending a feature negotiation message '%s' before the version msg\n", pfrom.GetId(), SanitizeString(msg_type));
+            pfrom.fDisconnect = true;
+        }
         return;
     }
 
