@@ -29,13 +29,13 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
 static void LogPrintLevelWithThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=1", "-debug=net"}, [] {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
+        LogPrintLevel(BCLog::NET, BCLog::Level::Alert, "%s\n", "test"); });
 }
 
 static void LogPrintLevelWithoutThreadNames(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
+        LogPrintLevel(BCLog::NET, BCLog::Level::Alert, "%s\n", "test"); });
 }
 
 static void LogPrintWithCategory(benchmark::Bench& bench)

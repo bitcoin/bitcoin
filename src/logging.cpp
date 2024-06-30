@@ -223,10 +223,6 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
         return "info";
     case BCLog::Level::Alert:
         return "alert";
-    case BCLog::Level::Warning:
-        return "warning";
-    case BCLog::Level::Error:
-        return "error";
     }
     assert(false);
 }
@@ -248,10 +244,6 @@ static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
         return BCLog::Level::Info;
     } else if (level_str == "alert") {
         return BCLog::Level::Alert;
-    } else if (level_str == "warning") {
-        return BCLog::Level::Warning;
-    } else if (level_str == "error") {
-        return BCLog::Level::Error;
     } else {
         return std::nullopt;
     }

@@ -119,7 +119,7 @@ bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& blo
         // indicate database corruption or a disk failure, and starting the index would cause
         // further corruption.
         if (m_db->Exists(DB_FILTER_POS)) {
-            LogError("%s: Cannot read current %s state; index may be corrupted\n",
+            LogAlert("%s: Cannot read current %s state; index may be corrupted\n",
                          __func__, GetName());
             return false;
         }
@@ -132,7 +132,7 @@ bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& blo
     if (block) {
         auto op_last_header = ReadFilterHeader(block->height, block->hash);
         if (!op_last_header) {
-            LogError("Cannot read last block filter header; index may be corrupted\n");
+            LogAlert("Cannot read last block filter header; index may be corrupted\n");
             return false;
         }
         m_last_header = *op_last_header;
@@ -148,11 +148,11 @@ bool BlockFilterIndex::CustomCommit(CDBBatch& batch)
     // Flush current filter file to disk.
     AutoFile file{m_filter_fileseq->Open(pos)};
     if (file.IsNull()) {
-        LogError("%s: Failed to open filter file %d\n", __func__, pos.nFile);
+        LogAlert("%s: Failed to open filter file %d\n", __func__, pos.nFile);
         return false;
     }
     if (!FileCommit(file.Get())) {
-        LogError("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
+        LogAlert("%s: Failed to commit filter file %d\n", __func__, pos.nFile);
         return false;
     }
 
@@ -173,13 +173,13 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, const uint256&
     try {
         filein >> block_hash >> encoded_filter;
         if (Hash(encoded_filter) != hash) {
-            LogError("Checksum mismatch in filter decode.\n");
+            LogAlert("Checksum mismatch in filter decode.\n");
             return false;
         }
         filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter), /*skip_decode_check=*/true);
     }
     catch (const std::exception& e) {
-        LogError("%s: Failed to deserialize block filter from disk: %s\n", __func__, e.what());
+        LogAlert("%s: Failed to deserialize block filter from disk: %s\n", __func__, e.what());
         return false;
     }
 
@@ -240,7 +240,7 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
     }
 
     if (read_out.first != expected_block_hash) {
-        LogError("%s: previous block header belongs to unexpected block %s; expected %s\n",
+        LogAlert("%s: previous block header belongs to unexpected block %s; expected %s\n",
                          __func__, read_out.first.ToString(), expected_block_hash.ToString());
         return std::nullopt;
     }
@@ -297,14 +297,14 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
 
     for (int height = start_height; height <= stop_height; ++height) {
         if (!db_it.GetKey(key) || key.height != height) {
-            LogError("%s: unexpected key in %s: expected (%c, %d)\n",
+            LogAlert("%s: unexpected key in %s: expected (%c, %d)\n",
                          __func__, index_name, DB_BLOCK_HEIGHT, height);
             return false;
         }
 
         std::pair<uint256, DBVal> value;
         if (!db_it.GetValue(value)) {
-            LogError("%s: unable to read value in %s at key (%c, %d)\n",
+            LogAlert("%s: unable to read value in %s at key (%c, %d)\n",
                          __func__, index_name, DB_BLOCK_HEIGHT, height);
             return false;
         }
@@ -361,11 +361,11 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
                         const CBlockIndex* stop_index, std::vector<DBVal>& results)
 {
     if (start_height < 0) {
-        LogError("%s: start height (%d) is negative\n", __func__, start_height);
+        LogAlert("%s: start height (%d) is negative\n", __func__, start_height);
         return false;
     }
     if (start_height > stop_index->nHeight) {
-        LogError("%s: start height (%d) is greater than stop height (%d)\n",
+        LogAlert("%s: start height (%d) is greater than stop height (%d)\n",
                      __func__, start_height, stop_index->nHeight);
         return false;
     }
@@ -383,7 +383,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 
         size_t i = static_cast<size_t>(height - start_height);
         if (!db_it->GetValue(values[i])) {
-            LogError("%s: unable to read value in %s at key (%c, %d)\n",
+            LogAlert("%s: unable to read value in %s at key (%c, %d)\n",
                          __func__, index_name, DB_BLOCK_HEIGHT, height);
             return false;
         }
@@ -407,7 +407,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
         }
 
         if (!db.Read(DBHashKey(block_hash), results[i])) {
-            LogError("%s: unable to read value in %s at key (%c, %s)\n",
+            LogAlert("%s: unable to read value in %s at key (%c, %s)\n",
                          __func__, index_name, DB_BLOCK_HASH, block_hash.ToString());
             return false;
         }
