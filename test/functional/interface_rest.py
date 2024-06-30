@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 from enum import Enum
+from io import BytesIO
 import http.client
 import json
 import typing
@@ -15,6 +16,7 @@ import urllib.parse
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     COIN,
+    deser_block_spent_outputs,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -425,6 +427,34 @@ class RESTTest (BitcoinTestFramework):
         self.log.info("Test compatibility of deprecated and newer endpoints")
         assert_equal(self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/headers/1/{bb_hash}"))
         assert_equal(self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 1}), self.test_rest_request(f"/blockfilterheaders/basic/5/{bb_hash}"))
+
+        self.log.info("Test the /spenttxouts URI")
+
+        block_count = self.nodes[0].getblockcount()
+        for height in range(0, block_count + 1):
+            blockhash = self.nodes[0].getblockhash(height)
+            spent_bin = self.test_rest_request(f"/spenttxouts/{blockhash}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+            spent_hex = self.test_rest_request(f"/spenttxouts/{blockhash}", req_type=ReqType.HEX, ret_type=RetType.BYTES)
+            spent_json = self.test_rest_request(f"/spenttxouts/{blockhash}", req_type=ReqType.JSON, ret_type=RetType.JSON)
+
+            assert_equal(bytes.fromhex(spent_hex.decode()), spent_bin)
+
+            spent = deser_block_spent_outputs(BytesIO(spent_bin))
+            block = self.nodes[0].getblock(blockhash, 3)  # return prevout for each input
+            assert_equal(len(spent), len(block["tx"]))
+            assert_equal(len(spent_json), len(block["tx"]))
+
+            for i, tx in enumerate(block["tx"]):
+                prevouts = [txin["prevout"] for txin in tx["vin"] if "coinbase" not in txin]
+                # compare with `getblock` JSON output (coinbase tx has no prevouts)
+                actual = [(txout.scriptPubKey.hex(), Decimal(txout.nValue) / COIN) for txout in spent[i]]
+                expected = [(p["scriptPubKey"]["hex"], p["value"]) for p in prevouts]
+                assert_equal(expected, actual)
+                # also compare JSON format
+                actual = [(prevout["scriptPubKey"], prevout["value"]) for prevout in spent_json[i]]
+                expected = [(p["scriptPubKey"], p["value"]) for p in prevouts]
+                assert_equal(expected, actual)
+
 
         self.log.info("Test the /deploymentinfo URI")
 
