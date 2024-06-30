@@ -1098,7 +1098,14 @@ private:
      */
     bool BlockRequestAllowed(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
+
+    // The 'ProcessGetBlockData' required action
+    enum class GetBlockDataActionRequired {
+        NONE,
+        DISCONNECT
+    };
+
+    GetBlockDataActionRequired ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
 
     /**
@@ -2380,7 +2387,7 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     }
 }
 
-void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
+PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
 {
     std::shared_ptr<const CBlock> a_recent_block;
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
@@ -2421,11 +2428,11 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         LOCK(cs_main);
         pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
         if (!pindex) {
-            return;
+            return GetBlockDataActionRequired::NONE;
         }
         if (!BlockRequestAllowed(pindex)) {
             LogPrint(BCLog::NET, "%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom.GetId());
-            return;
+            return GetBlockDataActionRequired::NONE;
         }
         // disconnect node in case we have reached the outbound limit for serving historical blocks
         if (m_connman.OutboundTargetReached(true) &&
@@ -2433,8 +2440,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             !pfrom.HasPermission(NetPermissionFlags::Download) // nodes with the download permission may exceed target
         ) {
             LogPrint(BCLog::NET, "historical block serving limit reached, disconnect peer=%d\n", pfrom.GetId());
-            pfrom.fDisconnect = true;
-            return;
+            return GetBlockDataActionRequired::DISCONNECT;
         }
         tip = m_chainman.ActiveChain().Tip();
         // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
@@ -2443,13 +2449,12 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
            )) {
             LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold, disconnect peer=%d\n", pfrom.GetId());
             //disconnect node and prevent it from stalling (would otherwise wait for the missing block)
-            pfrom.fDisconnect = true;
-            return;
+            return GetBlockDataActionRequired::DISCONNECT;
         }
         // Pruned nodes may have deleted the block, so check whether
         // it's available before trying to send.
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
-            return;
+            return GetBlockDataActionRequired::NONE;
         }
         can_direct_fetch = CanDirectFetch();
         block_pos = pindex->GetBlockPos();
@@ -2468,8 +2473,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             } else {
                 LogError("Cannot load block from disk, disconnect peer=%d\n", pfrom.GetId());
             }
-            pfrom.fDisconnect = true;
-            return;
+            return GetBlockDataActionRequired::DISCONNECT;
         }
         MakeAndPushMessage(pfrom, NetMsgType::BLOCK, Span{block_data});
         // Don't set pblock as we've sent the block
@@ -2482,8 +2486,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             } else {
                 LogError("Cannot load block from disk, disconnect peer=%d\n", pfrom.GetId());
             }
-            pfrom.fDisconnect = true;
-            return;
+            return GetBlockDataActionRequired::DISCONNECT;
         }
         pblock = pblockRead;
     }
@@ -2547,6 +2550,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             peer.m_continuation_block.SetNull();
         }
     }
+
+    // No further actions required
+    return GetBlockDataActionRequired::NONE;
 }
 
 CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
@@ -2611,7 +2617,10 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
     if (it != peer.m_getdata_requests.end() && !pfrom.fPauseSend) {
         const CInv &inv = *it++;
         if (inv.IsGenBlkMsg()) {
-            ProcessGetBlockData(pfrom, peer, inv);
+            GetBlockDataActionRequired required_action = ProcessGetBlockData(pfrom, peer, inv);
+            if (required_action == GetBlockDataActionRequired::DISCONNECT) {
+                pfrom.fDisconnect = true;
+            }
         }
         // else: If the first item on the queue is an unknown type, we erase it
         // and continue processing the queue on the next call.
