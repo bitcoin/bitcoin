@@ -8,111 +8,85 @@
 #include <dbwrapper.h>
 #include <sync.h>
 #include <uint256.h>
-#include <threadsafety.h>
+#include <unordered_map>
+#include <list>
+#include <utility>
+#include <logging.h>
 
-// "b_b" was used in the initial version of deterministic MN storage
-// "b_b2" was used after compact diffs were introduced
-// "b_b3" was used after masternode type introduction in evoDB
-// "b_b4" was used after storing protx version for each masternode in evoDB
-static const std::string EVODB_BEST_BLOCK = "b_b4";
-
-class CEvoDB;
-
-class CEvoDBScopedCommitter
-{
-private:
-    CEvoDB& evoDB;
-    bool didCommitOrRollback{false};
-
-public:
-    explicit CEvoDBScopedCommitter(CEvoDB& _evoDB);
-    ~CEvoDBScopedCommitter();
-
-    void Commit();
-    void Rollback();
-};
-
-class CEvoDB
-{
-public:
+template <typename K, typename V>
+class CEvoDB : public CDBWrapper {
+    std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> mapCache;
+    std::list<std::pair<K, V>> fifoList;
+    std::unordered_set<K> setEraseCache;
     mutable RecursiveMutex cs;
-private:
-    std::unique_ptr<CDBWrapper> m_db;
-
-    using RootTransaction = CDBTransaction<CDBWrapper, CDBBatch>;
-    using CurTransaction = CDBTransaction<RootTransaction, RootTransaction>;
-
-    CDBBatch rootBatch;
-    RootTransaction rootDBTransaction;
-    CurTransaction curDBTransaction;
+    size_t maxCacheSize;
 
 public:
-    explicit CEvoDB(DBParams db_params);
-    
-    std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction()
-    {
+    using CDBWrapper::CDBWrapper;
+    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSize) : CDBWrapper(db_params), maxCacheSize(maxCacheSize) {}
+
+    bool ReadCache(const K& key, V& value) const {
         LOCK(cs);
-        return std::make_unique<CEvoDBScopedCommitter>(*this);
+        auto it = mapCache.find(key);
+        if (it != mapCache.end()) {
+            value = it->second->second;
+            return true;
+        }
+        return Read(key, value);
     }
 
-    CurTransaction& GetCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(cs)
-    {
-        AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
-        return curDBTransaction;
-    }
-
-    template <typename K, typename V>
-    bool Read(const K& key, V& value)
-    {
+    void WriteCache(const K& key, const V& value) {
         LOCK(cs);
-        return curDBTransaction.Read(key, value);
+        auto it = mapCache.find(key);
+        if (it != mapCache.end()) {
+            fifoList.erase(it->second);
+            mapCache.erase(it);
+        }
+        fifoList.emplace_back(key, value);
+        mapCache[key] = --fifoList.end();
+        setEraseCache.erase(key);
+
+        if (mapCache.size() > maxCacheSize) {
+            auto oldest = fifoList.front();
+            fifoList.pop_front();
+            mapCache.erase(oldest.first);
+        }
     }
 
-    template <typename K, typename V>
-    void Write(const K& key, const V& value)
-    {
+    bool ExistsCache(const K& key) const {
         LOCK(cs);
-        curDBTransaction.Write(key, value);
+        return (mapCache.find(key) != mapCache.end() || Exists(key));
     }
 
-    template <typename K>
-    bool Exists(const K& key)
-    {
+    void EraseCache(const K& key) {
         LOCK(cs);
-        return curDBTransaction.Exists(key);
+        auto it = mapCache.find(key);
+        if (it != mapCache.end()) {
+            fifoList.erase(it->second);
+            mapCache.erase(it);
+        }
+        setEraseCache.insert(key);
     }
 
-    template <typename K>
-    void Erase(const K& key)
-    {
+    bool FlushCacheToDisk() {
         LOCK(cs);
-        curDBTransaction.Erase(key);
+        if (mapCache.empty() && setEraseCache.empty()) {
+            return true;
+        }
+        CDBBatch batch(*this);
+        for (const auto& [key, it] : mapCache) {
+            batch.Write(key, it->second);
+        }
+        for (const auto& key : setEraseCache) {
+            batch.Erase(key);
+        }
+        LogPrintf("Flushing cache (%s) to disk, storing %d items, erasing %d items\n", GetName(), mapCache.size(), setEraseCache.size());
+        bool res = WriteBatch(batch, true);
+        mapCache.clear();
+        fifoList.clear();
+        setEraseCache.clear();
+        return res;
     }
-
-    CDBWrapper& GetRawDB()
-    {
-        return *m_db;
-    }
-
-    size_t GetMemoryUsage() const
-    {
-        return rootDBTransaction.GetMemoryUsage();
-    }
-
-    bool CommitRootTransaction();
-
-    bool IsEmpty() { return m_db->IsEmpty(); }
-
-    bool VerifyBestBlock(const uint256& hash);
-    void WriteBestBlock(const uint256& hash);
-
-private:
-    // only CEvoDBScopedCommitter is allowed to invoke these
-    friend class CEvoDBScopedCommitter;
-    void CommitCurTransaction();
-    void RollbackCurTransaction();
 };
-
-extern std::unique_ptr<CEvoDB> evoDb;
 
 #endif // SYSCOIN_EVO_EVODB_H
