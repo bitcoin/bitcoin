@@ -1102,7 +1102,8 @@ private:
     // The 'ProcessGetBlockData' required action
     enum class GetBlockDataActionRequired {
         NONE,
-        DISCONNECT
+        DISCONNECT,
+        SEND_NOTFOUND
     };
 
     GetBlockDataActionRequired ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
@@ -1245,6 +1246,12 @@ static bool IsLimitedPeer(const Peer& peer)
 static bool CanServeWitnesses(const Peer& peer)
 {
     return peer.m_their_services & NODE_WITNESS;
+}
+
+/** Whether this peer supports NOT_FOUND messages for blocks */
+static bool CanSendNotFoundBlock(const Peer& peer)
+{
+    return peer.m_supports_notfound;
 }
 
 std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
@@ -2397,11 +2404,23 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
         a_recent_compact_block = m_most_recent_compact_block;
     }
 
+    bool can_send_not_found{CanSendNotFoundBlock(peer)};
+    const auto& func_process_action = [can_send_not_found](bool disconnect) {
+        if (can_send_not_found) return GetBlockDataActionRequired::SEND_NOTFOUND;
+        if (disconnect) return GetBlockDataActionRequired::DISCONNECT;
+        return GetBlockDataActionRequired::NONE;
+    };
+
     bool need_activate_chain = false;
     {
         LOCK(cs_main);
         const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
-        if (pindex) {
+        if (!pindex) {
+            // LogPrint(BCLog::NET, "block not found for getblock data request. Block hash %s\n", inv.hash.GetHex());
+            // TODO: maybe disconnect so the other peer does not wait for the timeout?
+            // TODO 2: maybe should try to request this block header from someone else via a getblockheader msg?
+            return func_process_action(/*disconnect=*/false);
+        } else {
             if (pindex->HaveNumChainTxs() && !pindex->IsValid(BLOCK_VALID_SCRIPTS) &&
                     pindex->IsValid(BLOCK_VALID_TREE)) {
                 // If we have the block and all of its parents, but have not yet validated it,
@@ -2428,11 +2447,11 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
         LOCK(cs_main);
         pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
         if (!pindex) {
-            return GetBlockDataActionRequired::NONE;
+            return func_process_action(/*disconnect=*/false);
         }
         if (!BlockRequestAllowed(pindex)) {
             LogPrint(BCLog::NET, "%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom.GetId());
-            return GetBlockDataActionRequired::NONE;
+            return func_process_action(/*disconnect=*/false);
         }
         // disconnect node in case we have reached the outbound limit for serving historical blocks
         if (m_connman.OutboundTargetReached(true) &&
@@ -2447,14 +2466,14 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
         if (!pfrom.HasPermission(NetPermissionFlags::NoBan) && (
                 (((peer.m_our_services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((peer.m_our_services & NODE_NETWORK) != NODE_NETWORK) && (tip->nHeight - pindex->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
            )) {
-            LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold, disconnect peer=%d\n", pfrom.GetId());
+            LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold\n");
             //disconnect node and prevent it from stalling (would otherwise wait for the missing block)
-            return GetBlockDataActionRequired::DISCONNECT;
+            return func_process_action(/*disconnect=*/true);
         }
         // Pruned nodes may have deleted the block, so check whether
         // it's available before trying to send.
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
-            return GetBlockDataActionRequired::NONE;
+            return func_process_action(/*disconnect=*/false);
         }
         can_direct_fetch = CanDirectFetch();
         block_pos = pindex->GetBlockPos();
@@ -2469,11 +2488,11 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
         std::vector<uint8_t> block_data;
         if (!m_chainman.m_blockman.ReadRawBlockFromDisk(block_data, block_pos)) {
             if (WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.IsBlockPruned(*pindex))) {
-                LogPrint(BCLog::NET, "Block was pruned before it could be read, disconnect peer=%s\n", pfrom.GetId());
+                LogPrint(BCLog::NET, "Block was pruned before it could be read, hash %s\n", pindex->GetBlockHash().ToString());
             } else {
-                LogError("Cannot load block from disk, disconnect peer=%d\n", pfrom.GetId());
+                LogError("Cannot load block %s from disk\n", pindex->GetBlockHash().ToString());
             }
-            return GetBlockDataActionRequired::DISCONNECT;
+            return func_process_action(/*disconnect=*/true);
         }
         MakeAndPushMessage(pfrom, NetMsgType::BLOCK, Span{block_data});
         // Don't set pblock as we've sent the block
@@ -2482,11 +2501,11 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
         if (!m_chainman.m_blockman.ReadBlockFromDisk(*pblockRead, block_pos)) {
             if (WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.IsBlockPruned(*pindex))) {
-                LogPrint(BCLog::NET, "Block was pruned before it could be read, disconnect peer=%s\n", pfrom.GetId());
+                LogPrint(BCLog::NET, "Block was pruned before it could be read, hash %s\n", pindex->GetBlockHash().ToString());
             } else {
-                LogError("Cannot load block from disk, disconnect peer=%d\n", pfrom.GetId());
+                LogError("Cannot load block %s from disk\n", pindex->GetBlockHash().ToString());
             }
-            return GetBlockDataActionRequired::DISCONNECT;
+            return func_process_action(/*disconnect=*/true);
         }
         pblock = pblockRead;
     }
@@ -2516,9 +2535,10 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
                 typedef std::pair<unsigned int, uint256> PairType;
                 for (PairType& pair : merkleBlock.vMatchedTxn)
                     MakeAndPushMessage(pfrom, NetMsgType::TX, TX_NO_WITNESS(*pblock->vtx[pair.first]));
+            } else {
+                // No response, send notfound if supported
+                return func_process_action(/*disconnect=*/false);
             }
-            // else
-            // no response
         } else if (inv.IsMsgCmpctBlk()) {
             // If a peer is asking for old blocks, we're almost guaranteed
             // they won't have a useful mempool to match against a compact block,
@@ -2534,9 +2554,13 @@ PeerManagerImpl::GetBlockDataActionRequired PeerManagerImpl::ProcessGetBlockData
             } else {
                 MakeAndPushMessage(pfrom, NetMsgType::BLOCK, TX_WITH_WITNESS(*pblock));
             }
+        } else {
+            // Unknown block type. Shouldn't happen but, just in case, send not found if supported
+            return func_process_action(/*disconnect=*/false);
         }
     }
 
+    // If we reach this point, the block msg was successfully pushed
     {
         LOCK(peer.m_block_inv_mutex);
         // Trigger the peer node to send a getblocks request for the next batch of inventory
@@ -2619,7 +2643,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         if (inv.IsGenBlkMsg()) {
             GetBlockDataActionRequired required_action = ProcessGetBlockData(pfrom, peer, inv);
             if (required_action == GetBlockDataActionRequired::DISCONNECT) {
+                // Usually, disconnection prevents stalling the remote peer which would otherwise wait for the missing block
+                LogInfo("Disconnecting peer=%d after getdata block processing.\n", pfrom.GetId());
                 pfrom.fDisconnect = true;
+            } else if (required_action == GetBlockDataActionRequired::SEND_NOTFOUND) {
+                vNotFound.push_back(inv);
             }
         }
         // else: If the first item on the queue is an unknown type, we erase it
@@ -2643,6 +2671,10 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         // In normal operation, we often send NOTFOUND messages for parents of
         // transactions that we relay; if a peer is missing a parent, they may
         // assume we have them and request the parents from us.
+        //
+        // We also send not_found messages for blocks we don't know, just so
+        // other nodes don't wait for us when we will not respond and try to
+        // fetch the block from someone else.
         MakeAndPushMessage(pfrom, NetMsgType::NOTFOUND, vNotFound);
     }
 }
