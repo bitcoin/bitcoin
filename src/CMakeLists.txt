@@ -309,6 +309,17 @@ if(BUILD_CLI)
 endif()
 
 
+if(BUILD_TX)
+  add_executable(bitcoin-tx bitcoin-tx.cpp)
+  target_link_libraries(bitcoin-tx
+    core_interface
+    bitcoin_common
+    bitcoin_util
+    univalue
+  )
+endif()
+
+
 add_subdirectory(test/util)
 if(BUILD_TESTS)
   add_subdirectory(test)
