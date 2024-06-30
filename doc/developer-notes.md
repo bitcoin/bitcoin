@@ -724,7 +724,7 @@ General Bitcoin Core
 Logging
 -------
 
-The macros `LogInfo`, `LogDebug`, `LogTrace`, `LogWarning` and `LogError` are available for
+The macros `LogDebug`, `LogInfo`, `LogAlert`, and `LogTrace` are available for
 logging messages. They should be used as follows:
 
 - `LogDebug(BCLog::CATEGORY, fmt, params...)` is what you want
@@ -742,14 +742,8 @@ logging messages. They should be used as follows:
   attacker to fill up storage. Note that `LogPrintf(fmt, params...)` is
   a deprecated alias for `LogInfo`.
 
-- `LogError(fmt, params...)` should be used in place of `LogInfo` for
-  severe problems that require the node (or a subsystem) to shut down
-  entirely (e.g., insufficient storage space).
-
-- `LogWarning(fmt, params...)` should be used in place of `LogInfo` for
-  severe problems that the node admin should address, but are not
-  severe enough to warrant shutting down the node (e.g., system time
-  appears to be wrong, unknown soft fork appears to have activated).
+- `LogAlert(fmt, params...)` should be used in place of `LogInfo` for
+  potentially severe issues that the node admin should address.
 
 - `LogTrace(BCLog::CATEGORY, fmt, params...)` should be used in place of
   `LogDebug` for log messages that would be unusable on a production

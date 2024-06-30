@@ -22,6 +22,7 @@ FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS = [
     'LogConnectFailure,1',
     'LogError,0',
     'LogWarning,0',
+    'LogAlert,0',
     'LogInfo,0',
     'LogDebug,1',
     'LogTrace,1',
