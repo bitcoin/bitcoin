@@ -378,7 +378,7 @@ static CAddress GetBindAddress(const Sock& sock)
     if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
         addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind);
     } else {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Warning: getsockname failed\n");
     }
     return addr_bind;
 }
@@ -1713,7 +1713,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Warning: Unknown socket family\n");
     } else {
         addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
     }
