@@ -85,6 +85,12 @@ target_link_libraries(core_interface INTERFACE
   $<$<CONFIG:Debug>:core_interface_debug>
 )
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(core_base_interface INTERFACE
+  Threads::Threads
+)
+
 include(cmake/introspection.cmake)
 
 # TODO: The `CMAKE_SKIP_BUILD_RPATH` variable setting can be deleted
