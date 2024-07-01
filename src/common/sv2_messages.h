@@ -38,6 +38,13 @@ enum class Sv2MsgType : uint8_t {
     COINBASE_OUTPUT_DATA_SIZE = 0x70,
 };
 
+static const std::map<Sv2MsgType, std::string> SV2_MSG_NAMES{
+    {Sv2MsgType::SETUP_CONNECTION, "SetupConnection"},
+    {Sv2MsgType::SETUP_CONNECTION_SUCCESS, "SetupConnectionSuccess"},
+    {Sv2MsgType::SETUP_CONNECTION_ERROR, "SetupConnectionError"},
+    {Sv2MsgType::COINBASE_OUTPUT_DATA_SIZE, "CoinbaseOutputDataSize"},
+};
+
 struct Sv2SetupConnectionMsg
 {
     /**
