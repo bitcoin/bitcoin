@@ -59,9 +59,9 @@ public:
     friend constexpr bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
 
     std::string GetHex() const;
-    void SetHex(const char* psz);
-    void SetHex(const std::string& str);
     void SetHex(std::string_view str);
+    inline void SetHex(const char* psz) { SetHex(std::string_view{psz}); }
+    inline void SetHex(const std::string& str) { SetHex(std::string_view{str}); }
     std::string ToString() const;
 
     constexpr const unsigned char* data() const { return m_data.data(); }
