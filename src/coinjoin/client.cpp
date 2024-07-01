@@ -715,6 +715,9 @@ bool CCoinJoinClientManager::CheckAutomaticBackup()
 {
     if (!CCoinJoinClientOptions::IsEnabled() || !IsMixing()) return false;
 
+    // We don't need auto-backups for descriptor wallets
+    if (!m_wallet.IsLegacy()) return true;
+
     switch (nWalletBackups) {
     case 0:
         strAutoDenomResult = _("Automatic backups disabled") + Untranslated(", ") + _("no mixing available.");
