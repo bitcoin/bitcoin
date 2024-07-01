@@ -13,7 +13,7 @@ class transaction_identifier
     uint256 m_wrapped;
 
     // Note: Use FromUint256 externally instead.
-    transaction_identifier(const uint256& wrapped) : m_wrapped{wrapped} {}
+    constexpr transaction_identifier(const uint256& wrapped) : m_wrapped{wrapped} {}
 
     // TODO: Comparisons with uint256 should be disallowed once we have
     // converted most of the code to using the new txid types.
@@ -37,7 +37,7 @@ public:
     bool operator<(const Other& other) const { return Compare(other) < 0; }
 
     const uint256& ToUint256() const LIFETIMEBOUND { return m_wrapped; }
-    static transaction_identifier FromUint256(const uint256& id) { return {id}; }
+    static constexpr transaction_identifier FromUint256(const uint256& id) { return {id}; }
 
     /** Wrapped `uint256` methods. */
     constexpr bool IsNull() const { return m_wrapped.IsNull(); }
@@ -68,7 +68,7 @@ using Wtxid = transaction_identifier<true>;
 
 inline Txid TxidFromString(std::string_view str)
 {
-    return Txid::FromUint256(uint256S(str.data()));
+    return Txid::FromUint256(uint256S(str));
 }
 
 #endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H

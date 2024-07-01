@@ -8,6 +8,7 @@
 
 #include <crypto/common.h>
 #include <span.h>
+#include <util/strencodings.h>
 
 #include <algorithm>
 #include <array>
@@ -60,6 +61,7 @@ public:
     std::string GetHex() const;
     void SetHex(const char* psz);
     void SetHex(const std::string& str);
+    void SetHex(std::string_view str);
     std::string ToString() const;
 
     constexpr const unsigned char* data() const { return m_data.data(); }
@@ -116,10 +118,41 @@ public:
  * This is a separate function because the constructor uint256(const char*) can result
  * in dangerously catching uint256(0).
  */
-inline uint256 uint256S(const char *str)
+consteval uint256 uint256S(const char *str)
 {
+    // Non lookup table version of HexDigit().
+    auto from_hex = [](const char c) -> int8_t {
+        if (c >= '0' && c <= '9')
+            return c - '0';
+        else if (c >= 'a' && c <= 'f')
+            return c - 'a' + 0xA;
+        else if (c >= 'A' && c <= 'F')
+            return c - 'A' + 0xA;
+        else
+            return -1;
+    };
+
+    // Skip leading spaces.
+    while (IsSpace(*str))
+        str += 1;
+    // Skip "0x" prefix.
+    if (str[0] == '0' && str[1] == 'x')
+        str += 2;
+
+    size_t digits = 0;
+    while (from_hex(str[digits]) != -1)
+        ++digits;
+    // 64 = 32 bytes * 2 chars each. 32 bytes = 256 bits.
+    assert(digits <= 64);
     uint256 rv;
-    rv.SetHex(str);
+    uint8_t* it = rv.begin();
+    while (digits > 0) {
+        *it = from_hex(str[--digits]);
+        if (digits > 0) {
+            *it |= from_hex(str[--digits]) << 4;
+            ++it;
+        }
+    }
     return rv;
 }
 /* uint256 from std::string.
@@ -127,6 +160,16 @@ inline uint256 uint256S(const char *str)
  * in dangerously catching uint256(0) via std::string(const char*).
  */
 inline uint256 uint256S(const std::string& str)
+{
+    uint256 rv;
+    rv.SetHex(str);
+    return rv;
+}
+/* uint256 from std::string_view.
+ * This is a separate function because the constructor uint256(std::string_view str) can result
+ * in dangerously catching uint256(0) via std::string_view(const char*).
+ */
+inline uint256 uint256S(std::string_view str)
 {
     uint256 rv;
     rv.SetHex(str);

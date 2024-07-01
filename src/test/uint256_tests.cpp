@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(uint256_tests)
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"
     "\x22\x81\xaa\xb5\x33\xf0\x08\x32\xd5\x56\xb1\xf9\xea\xe5\x1d\x7d";
-const char R1ArrayHex[] = "7D1DE5EAF9B156D53208F033B5AA8122D2d2355d5e12292b121156cfdb4a529c";
+constexpr char R1ArrayHex[] = "7D1DE5EAF9B156D53208F033B5AA8122D2d2355d5e12292b121156cfdb4a529c";
 const uint256 R1L = uint256(std::vector<unsigned char>(R1Array,R1Array+32));
 const uint160 R1S = uint160(std::vector<unsigned char>(R1Array,R1Array+20));
 
@@ -299,13 +299,27 @@ BOOST_AUTO_TEST_CASE( operator_with_self )
 
 BOOST_AUTO_TEST_CASE(parse)
 {
+    // Forces compile time evaluation so we use the correct uint256S() overload.
+    auto compile_time = [] (auto input) consteval {
+        return input;
+    };
+
     {
         std::string s_12{"0000000000000000000000000000000000000000000000000000000000000012"};
-        BOOST_CHECK_EQUAL(uint256S("12\0").GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S(std::string{"12\0", 3}).GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S("0x12").GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S(" 0x12").GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S(" 12").GetHex(), s_12);
+        BOOST_CHECK_EQUAL(compile_time(uint256S(    "12\0")).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string{     "12\0"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string_view{"12\0"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string{     "12\0", 3}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string_view{"12\0", 3}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(compile_time(uint256S(    "0x12")).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string{     "0x12"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string_view{"0x12"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(compile_time(uint256S(    " 0x12")).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string{     " 0x12"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string_view{" 0x12"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(compile_time(uint256S(    " 12")).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string{     " 12"}).GetHex(), s_12);
+        BOOST_CHECK_EQUAL(uint256S(std::string_view{" 12"}).GetHex(), s_12);
     }
     {
         std::string s_1{uint256::ONE.GetHex()};
@@ -329,6 +343,18 @@ BOOST_AUTO_TEST_CASE( check_ONE )
 {
     uint256 one = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
     BOOST_CHECK_EQUAL(one, uint256::ONE);
+}
+
+BOOST_AUTO_TEST_CASE( check_uint256S_overloads )
+{
+    const uint256 runtime_string = uint256S(std::string{
+                 "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
+    constexpr uint256 consteval_string = uint256S(
+             "\t0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33bgarbage suffix");
+    const uint256 runtime_string_view = uint256S(std::string_view{
+              " 0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b yet more garbage"});
+    BOOST_CHECK_EQUAL(consteval_string, runtime_string);
+    BOOST_CHECK_EQUAL(consteval_string, runtime_string_view);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

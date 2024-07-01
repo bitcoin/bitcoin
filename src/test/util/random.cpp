@@ -18,7 +18,7 @@ static uint256 GetUintFromEnv(const std::string& env_name)
 {
     const char* num = std::getenv(env_name.c_str());
     if (!num) return {};
-    return uint256S(num);
+    return uint256S(std::string_view(num));
 }
 
 void Seed(FastRandomContext& ctx)
