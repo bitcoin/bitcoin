@@ -276,12 +276,14 @@ def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets):
         target_corpus_dir = corpus_dir / target
         os.makedirs(target_corpus_dir, exist_ok=True)
         use_value_profile = int(random.random() < .3)
+        max_len = 0 if random.random() < .7 else 2**random.randint(6, 12)
         command = [
             fuzz_bin,
             "-rss_limit_mb=8000",
             "-max_total_time=6000",
             "-reload=0",
             f"-use_value_profile={use_value_profile}",
+            f"-max_len={max_len}",
             target_corpus_dir,
         ]
         futures.append(fuzz_pool.submit(job, command, target, t_env))
