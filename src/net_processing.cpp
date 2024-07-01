@@ -1886,6 +1886,9 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
             if (queue.pindex)
                 stats.vHeightInFlight.push_back(queue.pindex->nHeight);
         }
+        for (const auto& missing : state->m_missing_blocks) {
+            stats.missing_blocks.emplace_back(missing.hash);
+        }
     }
 
     PeerRef peer = GetPeerRef(nodeid);

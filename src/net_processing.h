@@ -38,6 +38,7 @@ struct CNodeStateStats {
     int m_starting_height = -1;
     std::chrono::microseconds m_ping_wait;
     std::vector<int> vHeightInFlight;
+    std::vector<uint256> missing_blocks;
     bool m_relay_txs;
     CAmount m_fee_filter_received;
     uint64_t m_addr_processed = 0;

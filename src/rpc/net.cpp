@@ -161,6 +161,10 @@ static RPCHelpMan getpeerinfo()
                     {
                         {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                     }},
+                    {RPCResult::Type::ARR, "missing_blocks", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "block_hash", "The hashes of blocks this peer told us to not have"},
+                    }},
                     {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
                     {RPCResult::Type::NUM, "addr_processed", "The total number of addresses processed, excluding those dropped due to rate limiting"},
                     {RPCResult::Type::NUM, "addr_rate_limited", "The total number of addresses dropped due to rate limiting"},
@@ -267,6 +271,11 @@ static RPCHelpMan getpeerinfo()
             heights.push_back(height);
         }
         obj.pushKV("inflight", std::move(heights));
+        UniValue missing_blocks(UniValue::VARR);
+        for (const auto& hash : statestats.missing_blocks) {
+            missing_blocks.push_back(hash.GetHex());
+        }
+        obj.pushKV("missing_blocks", std::move(missing_blocks));
         obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
         obj.pushKV("addr_processed", statestats.m_addr_processed);
         obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
