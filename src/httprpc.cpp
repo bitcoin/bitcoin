@@ -11,6 +11,8 @@
 #include <netaddress.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <walletinitinterface.h>
@@ -19,6 +21,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -291,8 +294,20 @@ static bool InitRPCAuthentication()
 {
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
-        LogPrintf("Using random cookie authentication.\n");
-        if (!GenerateAuthCookie(&strRPCUserColonPass)) {
+        LogInfo("Using random cookie authentication.\n");
+
+        std::optional<fs::perms> cookie_perms{std::nullopt};
+        auto cookie_perms_arg{gArgs.GetArg("-rpccookieperms")};
+        if (cookie_perms_arg) {
+            auto perm_opt = InterpretPermString(*cookie_perms_arg);
+            if (!perm_opt) {
+                LogInfo("Invalid -rpccookieperms=%s; must be one of 'owner', 'group', or 'all'.\n", *cookie_perms_arg);
+                return false;
+            }
+            cookie_perms = *perm_opt;
+        }
+
+        if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
             return false;
         }
     } else {

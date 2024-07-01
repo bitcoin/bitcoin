@@ -182,6 +182,12 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
         EWOULDBLOCK,
     };
     assert(buf != nullptr || len == 0);
+
+    // Do the latency before any of the "return" statements.
+    if (m_fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) {
+        std::this_thread::sleep_for(std::chrono::milliseconds{2});
+    }
+
     if (len == 0 || m_fuzzed_data_provider.ConsumeBool()) {
         const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
         if (r == -1) {
@@ -189,47 +195,41 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
         }
         return r;
     }
-    std::vector<uint8_t> random_bytes;
-    bool pad_to_len_bytes{m_fuzzed_data_provider.ConsumeBool()};
-    if (m_peek_data.has_value()) {
-        // `MSG_PEEK` was used in the preceding `Recv()` call, return `m_peek_data`.
-        random_bytes = m_peek_data.value();
+
+    size_t copied_so_far{0};
+
+    if (!m_peek_data.empty()) {
+        // `MSG_PEEK` was used in the preceding `Recv()` call, copy the first bytes from `m_peek_data`.
+        const size_t copy_len{std::min(len, m_peek_data.size())};
+        std::memcpy(buf, m_peek_data.data(), copy_len);
+        copied_so_far += copy_len;
         if ((flags & MSG_PEEK) == 0) {
-            m_peek_data.reset();
+            m_peek_data.erase(m_peek_data.begin(), m_peek_data.begin() + copy_len);
         }
-        pad_to_len_bytes = false;
-    } else if ((flags & MSG_PEEK) != 0) {
-        // New call with `MSG_PEEK`.
-        random_bytes = ConsumeRandomLengthByteVector(m_fuzzed_data_provider, len);
-        if (!random_bytes.empty()) {
-            m_peek_data = random_bytes;
-            pad_to_len_bytes = false;
-        }
-    } else {
-        random_bytes = ConsumeRandomLengthByteVector(m_fuzzed_data_provider, len);
     }
-    if (random_bytes.empty()) {
-        const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
-        if (r == -1) {
-            SetFuzzedErrNo(m_fuzzed_data_provider, recv_errnos);
-        }
-        return r;
+
+    if (copied_so_far == len) {
+        return copied_so_far;
     }
-    // `random_bytes` might exceed the size of `buf` if e.g. Recv is called with
-    // len=N and MSG_PEEK first and afterwards called with len=M (M < N) and
-    // without MSG_PEEK.
-    size_t recv_len{std::min(random_bytes.size(), len)};
-    std::memcpy(buf, random_bytes.data(), recv_len);
-    if (pad_to_len_bytes) {
-        if (len > random_bytes.size()) {
-            std::memset((char*)buf + random_bytes.size(), 0, len - random_bytes.size());
-        }
-        return len;
+
+    auto new_data = ConsumeRandomLengthByteVector(m_fuzzed_data_provider, len - copied_so_far);
+    if (new_data.empty()) return copied_so_far;
+
+    std::memcpy(reinterpret_cast<uint8_t*>(buf) + copied_so_far, new_data.data(), new_data.size());
+    copied_so_far += new_data.size();
+
+    if ((flags & MSG_PEEK) != 0) {
+        m_peek_data.insert(m_peek_data.end(), new_data.begin(), new_data.end());
     }
-    if (m_fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{2});
+
+    if (copied_so_far == len || m_fuzzed_data_provider.ConsumeBool()) {
+        return copied_so_far;
     }
-    return recv_len;
+
+    // Pad to len bytes.
+    std::memset(reinterpret_cast<uint8_t*>(buf) + copied_so_far, 0x0, len - copied_so_far);
+
+    return len;
 }
 
 int FuzzedSock::Connect(const sockaddr*, socklen_t) const

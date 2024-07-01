@@ -5,12 +5,11 @@
 
 #include <rpc/request.h>
 
-#include <util/fs.h>
-
 #include <common/args.h>
 #include <logging.h>
 #include <random.h>
 #include <rpc/protocol.h>
+#include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/strencodings.h>
 
@@ -95,7 +94,7 @@ static fs::path GetAuthCookieFile(bool temp=false)
 
 static bool g_generated_cookie = false;
 
-bool GenerateAuthCookie(std::string *cookie_out)
+bool GenerateAuthCookie(std::string* cookie_out, std::optional<fs::perms> cookie_perms)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
@@ -109,7 +108,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     fs::path filepath_tmp = GetAuthCookieFile(true);
     file.open(filepath_tmp);
     if (!file.is_open()) {
-        LogPrintf("Unable to open cookie authentication file %s for writing\n", fs::PathToString(filepath_tmp));
+        LogInfo("Unable to open cookie authentication file %s for writing\n", fs::PathToString(filepath_tmp));
         return false;
     }
     file << cookie;
@@ -117,11 +116,21 @@ bool GenerateAuthCookie(std::string *cookie_out)
 
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
-        LogPrintf("Unable to rename cookie authentication file %s to %s\n", fs::PathToString(filepath_tmp), fs::PathToString(filepath));
+        LogInfo("Unable to rename cookie authentication file %s to %s\n", fs::PathToString(filepath_tmp), fs::PathToString(filepath));
         return false;
     }
+    if (cookie_perms) {
+        std::error_code code;
+        fs::permissions(filepath, cookie_perms.value(), fs::perm_options::replace, code);
+        if (code) {
+            LogInfo("Unable to set permissions on cookie authentication file %s\n", fs::PathToString(filepath_tmp));
+            return false;
+        }
+    }
+
     g_generated_cookie = true;
-    LogPrintf("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
+    LogInfo("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
+    LogInfo("Permissions used for cookie: %s\n", PermsToSymbolicString(fs::status(filepath).permissions()));
 
     if (cookie_out)
         *cookie_out = cookie;
