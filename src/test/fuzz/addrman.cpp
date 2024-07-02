@@ -39,13 +39,6 @@ void initialize_addrman()
     g_setup = testing_setup.get();
 }
 
-[[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
-    return NetGroupManager(asmap);
-}
-
 FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
@@ -118,121 +111,19 @@ void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
     }
 }
 
-class AddrManDeterministic : public AddrMan
-{
-public:
-    explicit AddrManDeterministic(const NetGroupManager& netgroupman, FuzzedDataProvider& fuzzed_data_provider)
-        : AddrMan(netgroupman, /*deterministic=*/true, GetCheckRatio())
-    {
-        WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
-    }
-
-    /**
-     * Compare with another AddrMan.
-     * This compares:
-     * - the values in `mapInfo` (the keys aka ids are ignored)
-     * - vvNew entries refer to the same addresses
-     * - vvTried entries refer to the same addresses
-     */
-    bool operator==(const AddrManDeterministic& other) const
-    {
-        LOCK2(m_impl->cs, other.m_impl->cs);
-
-        if (m_impl->mapInfo.size() != other.m_impl->mapInfo.size() || m_impl->nNew != other.m_impl->nNew ||
-            m_impl->nTried != other.m_impl->nTried) {
-            return false;
-        }
-
-        // Check that all values in `mapInfo` are equal to all values in `other.mapInfo`.
-        // Keys may be different.
-
-        auto addrinfo_hasher = [](const AddrInfo& a) {
-            CSipHasher hasher(0, 0);
-            auto addr_key = a.GetKey();
-            auto source_key = a.source.GetAddrBytes();
-            hasher.Write(TicksSinceEpoch<std::chrono::seconds>(a.m_last_success));
-            hasher.Write(a.nAttempts);
-            hasher.Write(a.nRefCount);
-            hasher.Write(a.fInTried);
-            hasher.Write(a.GetNetwork());
-            hasher.Write(a.source.GetNetwork());
-            hasher.Write(addr_key.size());
-            hasher.Write(source_key.size());
-            hasher.Write(addr_key);
-            hasher.Write(source_key);
-            return (size_t)hasher.Finalize();
-        };
-
-        auto addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
-            return std::tie(static_cast<const CService&>(lhs), lhs.source, lhs.m_last_success, lhs.nAttempts, lhs.nRefCount, lhs.fInTried) ==
-                   std::tie(static_cast<const CService&>(rhs), rhs.source, rhs.m_last_success, rhs.nAttempts, rhs.nRefCount, rhs.fInTried);
-        };
-
-        using Addresses = std::unordered_set<AddrInfo, decltype(addrinfo_hasher), decltype(addrinfo_eq)>;
-
-        const size_t num_addresses{m_impl->mapInfo.size()};
-
-        Addresses addresses{num_addresses, addrinfo_hasher, addrinfo_eq};
-        for (const auto& [id, addr] : m_impl->mapInfo) {
-            addresses.insert(addr);
-        }
-
-        Addresses other_addresses{num_addresses, addrinfo_hasher, addrinfo_eq};
-        for (const auto& [id, addr] : other.m_impl->mapInfo) {
-            other_addresses.insert(addr);
-        }
-
-        if (addresses != other_addresses) {
-            return false;
-        }
-
-        auto IdsReferToSameAddress = [&](int id, int other_id) EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs, other.m_impl->cs) {
-            if (id == -1 && other_id == -1) {
-                return true;
-            }
-            if ((id == -1 && other_id != -1) || (id != -1 && other_id == -1)) {
-                return false;
-            }
-            return m_impl->mapInfo.at(id) == other.m_impl->mapInfo.at(other_id);
-        };
-
-        // Check that `vvNew` contains the same addresses as `other.vvNew`. Notice - `vvNew[i][j]`
-        // contains just an id and the address is to be found in `mapInfo.at(id)`. The ids
-        // themselves may differ between `vvNew` and `other.vvNew`.
-        for (size_t i = 0; i < ADDRMAN_NEW_BUCKET_COUNT; ++i) {
-            for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
-                if (!IdsReferToSameAddress(m_impl->vvNew[i][j], other.m_impl->vvNew[i][j])) {
-                    return false;
-                }
-            }
-        }
-
-        // Same for `vvTried`.
-        for (size_t i = 0; i < ADDRMAN_TRIED_BUCKET_COUNT; ++i) {
-            for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
-                if (!IdsReferToSameAddress(m_impl->vvTried[i][j], other.m_impl->vvTried[i][j])) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-};
-
 FUZZ_TARGET(addrman, .init = initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
-    auto addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider);
+    auto addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio());
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         DataStream ds{serialized_data};
         try {
             ds >> *addr_man_ptr;
         } catch (const std::ios_base::failure&) {
-            addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider);
+            addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio());
         }
     }
     AddrManDeterministic& addr_man = *addr_man_ptr;
@@ -292,8 +183,8 @@ FUZZ_TARGET(addrman_serdeser, .init = initialize_addrman)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
-    AddrManDeterministic addr_man1{netgroupman, fuzzed_data_provider};
-    AddrManDeterministic addr_man2{netgroupman, fuzzed_data_provider};
+    AddrManDeterministic addr_man1{netgroupman, fuzzed_data_provider, GetCheckRatio()};
+    AddrManDeterministic addr_man2{netgroupman, fuzzed_data_provider, GetCheckRatio()};
 
     DataStream data_stream{};
 
