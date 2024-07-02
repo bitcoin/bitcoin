@@ -162,7 +162,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
         self.check_mempool([tx_v3_bip125_rbf_v2["txid"], tx_v3_parent["txid"], tx_v3_child["txid"]])
 
 
-    @cleanup(extra_args=None)
+    @cleanup(extra_args=["-mempoolfullrbf=0"])
     def test_v3_bip125(self):
         node = self.nodes[0]
         self.log.info("Test v3 transactions that don't signal BIP125 are replaceable")
