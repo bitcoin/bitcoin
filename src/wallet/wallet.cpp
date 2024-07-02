@@ -5014,6 +5014,11 @@ bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString
         return false;
     }
 
+    if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        error = Untranslated("Use RPC 'importdescriptors' to add new descriptors to Descriptor Wallets");
+        return false;
+    }
+
     WalletLogPrintf("Upgrading wallet to HD\n");
     SetMinVersion(FEATURE_HD);
 
