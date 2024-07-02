@@ -83,6 +83,8 @@ Descriptors consist of several types of expressions. The top level expression is
 - `addr(ADDR)` (top level only): the script which ADDR expands to.
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX.
 - `rawtr(KEY)` (top level only): P2TR output with the specified key as output key. NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
+- `rawnode(HEX)` (inside `tr` only): specify tree or branch merkle root in HEX encoding. NOTE: this hides script paths which are only revealed after spending. Use at your own risk
+- `rawleaf(HEX,[LEAF_VERSION_HEX])`(inside `tr` only): specify raw leaf script and leaf version in hex encoding. `LEAF_VERSION_HEX` defaults to `c0`
 
 `KEY` expressions:
 - Optionally, key origin information, consisting of:

@@ -55,6 +55,12 @@ DESCS = [
     f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')}}})",
     # A Taproot with all above scripts in its tree.
     f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{{{P2WSH_MINISCRIPTS[0]},{P2WSH_MINISCRIPTS[1]}}},{{{P2WSH_MINISCRIPTS[2].replace('multi', 'multi_a')},{P2WSH_MINISCRIPTS[3]}}}}})",
+    # A Taproot with rawnode as root in its tree
+    f"tr({TPUBS[0]}/*,rawnode(8a62dc0a100c4156cc2a4b7c2a97747ce0dfe90562673fd662678aaae93121fb))",
+    # A Taproot with rawnode as branch root in its tree
+    f"tr(4d54bb9928a0683b7e383de72943b214b0716f58aa54c7ba6bcea2328bc9c768,{{{P2WSH_MINISCRIPTS[0]},rawnode(8a62dc0a100c4156cc2a4b7c2a97747ce0dfe90562673fd662678aaae93121fb)}})",
+    # A Taproot with rawleaf in its tree
+    f"tr({TPUBS[0]}/*,rawleaf(aa2061e33e9dbfefc45f6a194187684d278f789fd4d5e207a357e79971b6519a8b128821{PUBKEYS[0]}ac))"
 ]
 
 DESCS_PRIV = [
@@ -199,6 +205,14 @@ DESCS_PRIV = [
         "sigs_count": 2,
         "stack_size": 8,
     },
+    # Taproot with a rawnode in the tree
+    {
+        "desc": f"tr({TPUBS[0]}/*,{{pk({TPRVS[0]}/*),rawnode(8a62dc0a100c4156cc2a4b7c2a97747ce0dfe90562673fd662678aaae93121fb)}})",
+        "sequence": None,
+        "locktime": None,
+        "sigs_count": 1,
+        "stack_size": 3,
+    }
 ]
 
 
