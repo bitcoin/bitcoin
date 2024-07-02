@@ -10,6 +10,7 @@ import argparse
 import collections
 import ipaddress
 from pathlib import Path
+import random
 import re
 import sys
 from typing import Union
@@ -41,11 +42,12 @@ PATTERN_AGENT = re.compile(
     r"0.19.(0|1|2|99)|"
     r"0.20.(0|1|2|99)|"
     r"0.21.(0|1|2|99)|"
-    r"22.(0|1|99)|"
-    r"23.(0|1|99)|"
-    r"24.(0|1|99)|"
-    r"25.(0|1|99)|"
-    r"26.(0|99)|"
+    r"22.(0|1|99).0|"
+    r"23.(0|1|99).0|"
+    r"24.(0|1|2|99).(0|1)|"
+    r"25.(0|1|2|99).0|"
+    r"26.(0|1|99).0|"
+    r"27.(0|99).0|"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:
@@ -86,6 +88,8 @@ def parseline(line: str) -> Union[dict, None]:
             if m.group(1) in ['::']: # Not interested in localhost
                 return None
             ipstr = m.group(1)
+            if ipstr.startswith("fc"): # cjdns looks like ipv6 but always begins with fc
+                net = "cjdns"
             sortkey = ipstr # XXX parse IPv6 into number, could use name_to_ipv6 from generate-seeds
             port = int(m.group(2))
     else:
@@ -152,6 +156,7 @@ def filterbyasn(asmap: ASMap, ips: list[dict], max_per_asn: dict, max_per_net: i
     ips_ipv46 = [ip for ip in ips if ip['net'] in ['ipv4', 'ipv6']]
     ips_onion = [ip for ip in ips if ip['net'] == 'onion']
     ips_i2p = [ip for ip in ips if ip['net'] == 'i2p']
+    ips_cjdns = [ip for ip in ips if ip["net"] == "cjdns"]
 
     # Filter IPv46 by ASN, and limit to max_per_net per network
     result = []
@@ -176,6 +181,7 @@ def filterbyasn(asmap: ASMap, ips: list[dict], max_per_asn: dict, max_per_net: i
     # Add back Onions (up to max_per_net)
     result.extend(ips_onion[0:max_per_net])
     result.extend(ips_i2p[0:max_per_net])
+    result.extend(ips_cjdns[0:max_per_net])
     return result
 
 def ip_stats(ips: list[dict]) -> str:
@@ -185,7 +191,7 @@ def ip_stats(ips: list[dict]) -> str:
         if ip is not None:
             hist[ip['net']] += 1
 
-    return f"{hist['ipv4']:6d} {hist['ipv6']:6d} {hist['onion']:6d} {hist['i2p']:6d}"
+    return f"{hist['ipv4']:6d} {hist['ipv6']:6d} {hist['onion']:6d} {hist['i2p']:6d} {hist['cjdns']:6d}"
 
 def parse_args():
     argparser = argparse.ArgumentParser(description='Generate a list of bitcoin node seed ip addresses.')
@@ -205,9 +211,10 @@ def main():
     with open(args.seeds, 'r', encoding='utf8') as f:
         lines = f.readlines()
     ips = [parseline(line) for line in lines]
+    random.shuffle(ips)
     print('Done.', file=sys.stderr)
 
-    print('\x1b[7m  IPv4   IPv6  Onion  I2P Pass                                               \x1b[0m', file=sys.stderr)
+    print('\x1b[7m  IPv4   IPv6  Onion  I2P    CJDNS Pass                                               \x1b[0m', file=sys.stderr)
     print(f'{ip_stats(ips):s} Initial', file=sys.stderr)
     # Skip entries with invalid address.
     ips = [ip for ip in ips if ip is not None]
@@ -227,6 +234,7 @@ def main():
         'ipv6': 50,
         'onion': 10,
         'i2p' : 10,
+        'cjdns': 10,
     }
     ips = [ip for ip in ips if ip['uptime'] > req_uptime[ip['net']]]
     print(f'{ip_stats(ips):s} Require minimum uptime', file=sys.stderr)
@@ -244,7 +252,7 @@ def main():
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
     for ip in ips:
-        if ip['net'] == 'ipv6':
+        if ip['net'] == 'ipv6' or ip["net"] == "cjdns":
             print(f"[{ip['ip']}]:{ip['port']}", end="")
         else:
             print(f"{ip['ip']}:{ip['port']}", end="")
