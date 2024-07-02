@@ -134,36 +134,6 @@ public:
         setEraseCache.clear();
         return res;
     }
-    std::vector<std::pair<K, V>> GetAllEntriesReverse() {
-        LOCK(cs);
-        std::vector<std::pair<K, V>> result;
-
-        // Add all entries from the cache in reverse order
-        for (auto it = fifoList.rbegin(); it != fifoList.rend(); ++it) {
-            result.push_back(*it);
-        }
-
-        // If max cache size isn’t reached, load from DB
-        if (mapCache.size() < maxCacheSize) {
-            auto pcursor = NewIterator();
-            for (pcursor->SeekToFirst(); pcursor->Valid(); pcursor->Next()) {
-                K key;
-                V value;
-                if (pcursor->GetKey(key) && pcursor->GetValue(value)) {
-                    if (setEraseCache.find(key) == setEraseCache.end()) {
-                        if (mapCache.find(key) == mapCache.end()) {
-                            result.push_back(std::make_pair(key, value));
-                            // Use WriteCache to add to cache
-                            WriteCache(key, value);
-                        }
-                    }
-                }
-            }
-            std::reverse(result.begin(), result.end());
-        }
-
-        return result;
-    }
 
     // Getter for testing purposes
     std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> GetMapCache() const {

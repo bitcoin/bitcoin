@@ -186,6 +186,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         bool isCommitmentRequired = IsCommitmentRequired(type, pindex->nHeight);
         
         if (hasCommitmentInNewBlock && !isCommitmentRequired) {
+
             // If we're either not in the mining phase or a non-null commitment was mined already, reject the block
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-not-allowed");
         }
@@ -388,31 +389,28 @@ CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(uint8_t llmqType, 
 }
 
 // The returned quorums are in reversed order, so the most recent one is at index 0
-std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount) {
+std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount)
+{
     int currentHeight = pindex->nHeight;
     std::vector<const CBlockIndex*> ret;
     ret.reserve(maxCount);
-
-    // Retrieve all entries in reverse order
-    auto allEntriesReverse = m_inverse_height_evoDb.GetAllEntriesReverse();
-
-    for (const auto& entry : allEntriesReverse) {
-        if (ret.size() >= maxCount) {
-            break;
-        }
-        int quorumHeight = entry.first;
-        if (quorumHeight > currentHeight) {
+    while (currentHeight >= 0 && ret.size() < maxCount) {
+        int quorumHeight;
+        if(!m_inverse_height_evoDb.ExistsCache(currentHeight)) {
+            currentHeight--;
             continue;
+        }
+        if (!m_inverse_height_evoDb.ReadCache(currentHeight, quorumHeight)) {
+            break;
         }
 
         auto pQuorumBaseBlockIndex = pindex->GetAncestor(quorumHeight);
         assert(pQuorumBaseBlockIndex);
         ret.emplace_back(pQuorumBaseBlockIndex);
+        currentHeight--;
     }
-
     return ret;
 }
-
 
 bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const
 {
