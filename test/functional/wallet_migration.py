@@ -538,10 +538,17 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["descriptors"], True)
         assert_equal(info["format"], "sqlite")
 
+        walletdir_list = wallet.listwalletdir()
+        assert {"name": info["walletname"]} in walletdir_list["wallets"]
+
         # Check backup existence and its non-empty wallet filename
-        backup_path = self.nodes[0].wallets_path / f'default_wallet_{curr_time}.legacy.bak'
+        backup_filename = f"default_wallet_{curr_time}.legacy.bak"
+        backup_path = self.nodes[0].wallets_path / backup_filename
         assert backup_path.exists()
         assert_equal(str(backup_path), res['backup_path'])
+        assert {"name": backup_filename} not in walletdir_list["wallets"]
+
+        wallet.setmocktime(0)
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
