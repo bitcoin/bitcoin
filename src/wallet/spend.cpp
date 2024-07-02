@@ -271,12 +271,8 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             input_bytes = GetVirtualTransactionSize(input_bytes, 0, 0);
         }
         CTxOut txout;
-        if (auto ptr_wtx = wallet.GetWalletTx(outpoint.hash)) {
-            // Clearly invalid input, fail
-            if (ptr_wtx->tx->vout.size() <= outpoint.n) {
-                return util::Error{strprintf(_("Invalid pre-selected input %s"), outpoint.ToString())};
-            }
-            txout = ptr_wtx->tx->vout.at(outpoint.n);
+        if (auto txo = wallet.GetTXO(outpoint)) {
+            txout = txo->GetTxOut();
             if (input_bytes == -1) {
                 input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
             }
@@ -324,136 +320,144 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     std::vector<COutPoint> outpoints;
 
     std::set<uint256> trusted_parents;
-    for (const auto& entry : wallet.mapWallet)
-    {
-        const uint256& txid = entry.first;
-        const CWalletTx& wtx = entry.second;
+    // Cache for whether each tx passes the tx level checks (first bool), and whether the transaction is "safe" (second bool)
+    std::unordered_map<uint256, std::pair<bool, bool>, SaltedTxidHasher> tx_safe_cache;
+    for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
+        const CTxOut& output = txo.GetTxOut();
 
-        if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
-            continue;
-
-        int nDepth = wallet.GetTxDepthInMainChain(wtx);
-        if (nDepth < 0)
-            continue;
-
-        // We should not consider coins which aren't at least in our mempool
-        // It's possible for these to be conflicted via ancestors which we may never be able to detect
-        if (nDepth == 0 && !wtx.InMempool())
-            continue;
-
-        bool safeTx = CachedTxIsTrusted(wallet, wtx, trusted_parents);
-
-        // We should not consider coins from transactions that are replacing
-        // other transactions.
-        //
-        // Example: There is a transaction A which is replaced by bumpfee
-        // transaction B. In this case, we want to prevent creation of
-        // a transaction B' which spends an output of B.
-        //
-        // Reason: If transaction A were initially confirmed, transactions B
-        // and B' would no longer be valid, so the user would have to create
-        // a new transaction C to replace B'. However, in the case of a
-        // one-block reorg, transactions B' and C might BOTH be accepted,
-        // when the user only wanted one of them. Specifically, there could
-        // be a 1-block reorg away from the chain where transactions A and C
-        // were accepted to another chain where B, B', and C were all
-        // accepted.
-        if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
-            safeTx = false;
-        }
-
-        // Similarly, we should not consider coins from transactions that
-        // have been replaced. In the example above, we would want to prevent
-        // creation of a transaction A' spending an output of A, because if
-        // transaction B were initially confirmed, conflicting with A and
-        // A', we wouldn't want to the user to create a transaction D
-        // intending to replace A', but potentially resulting in a scenario
-        // where A, A', and D could all be accepted (instead of just B and
-        // D, or just A and A' like the user would want).
-        if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
-            safeTx = false;
-        }
-
-        if (only_safe && !safeTx) {
+        if (tx_safe_cache.contains(outpoint.hash) && !tx_safe_cache.at(outpoint.hash).first) {
             continue;
         }
 
-        if (nDepth < min_depth || nDepth > max_depth) {
+        // Skip manually selected coins (the caller can fetch them directly)
+        if (coinControl && coinControl->HasSelected() && coinControl->IsSelected(outpoint))
+            continue;
+
+        if (wallet.IsLockedCoin(outpoint) && params.skip_locked)
+            continue;
+
+        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
+        Assert(nDepth >= 0);
+        Assert(!wallet.IsSpent(outpoint, /*min_depth=*/1));
+
+        if (wallet.IsSpent(outpoint))
+            continue;
+
+        if (output.nValue < params.min_amount || output.nValue > params.max_amount)
+            continue;
+
+        if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
             continue;
         }
 
-        bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
+        if (wallet.IsTXOInImmatureCoinBase(txo) && !params.include_immature_coinbase)
+            continue;
 
-        for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
-            const CTxOut& output = wtx.tx->vout[i];
-            const COutPoint outpoint(Txid::FromUint256(txid), i);
+        isminetype mine = wallet.IsMine(output);
 
-            if (output.nValue < params.min_amount || output.nValue > params.max_amount)
+        assert(mine != ISMINE_NO);
+
+        if (!tx_safe_cache.contains(outpoint.hash)) {
+            tx_safe_cache[outpoint.hash] = {false, false};
+            const CWalletTx& wtx = *wallet.GetWalletTx(outpoint.hash);
+
+            // We should not consider coins which aren't at least in our mempool
+            // It's possible for these to be conflicted via ancestors which we may never be able to detect
+            if (nDepth == 0 && !wtx.InMempool())
                 continue;
 
-            // Skip manually selected coins (the caller can fetch them directly)
-            if (coinControl && coinControl->HasSelected() && coinControl->IsSelected(outpoint))
-                continue;
+            bool safeTx = CachedTxIsTrusted(wallet, wtx, trusted_parents);
 
-            if (wallet.IsLockedCoin(outpoint) && params.skip_locked)
-                continue;
+            // We should not consider coins from transactions that are replacing
+            // other transactions.
+            //
+            // Example: There is a transaction A which is replaced by bumpfee
+            // transaction B. In this case, we want to prevent creation of
+            // a transaction B' which spends an output of B.
+            //
+            // Reason: If transaction A were initially confirmed, transactions B
+            // and B' would no longer be valid, so the user would have to create
+            // a new transaction C to replace B'. However, in the case of a
+            // one-block reorg, transactions B' and C might BOTH be accepted,
+            // when the user only wanted one of them. Specifically, there could
+            // be a 1-block reorg away from the chain where transactions A and C
+            // were accepted to another chain where B, B', and C were all
+            // accepted.
+            if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
+                safeTx = false;
+            }
 
-            if (wallet.IsSpent(outpoint))
-                continue;
+            // Similarly, we should not consider coins from transactions that
+            // have been replaced. In the example above, we would want to prevent
+            // creation of a transaction A' spending an output of A, because if
+            // transaction B were initially confirmed, conflicting with A and
+            // A', we wouldn't want to the user to create a transaction D
+            // intending to replace A', but potentially resulting in a scenario
+            // where A, A', and D could all be accepted (instead of just B and
+            // D, or just A and A' like the user would want).
+            if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
+                safeTx = false;
+            }
 
-            isminetype mine = wallet.IsMine(output);
-
-            if (mine == ISMINE_NO) {
+            if (only_safe && !safeTx) {
                 continue;
             }
 
-            if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
+            if (nDepth < min_depth || nDepth > max_depth) {
                 continue;
             }
 
-            std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
+            tx_safe_cache[outpoint.hash] = {true, safeTx};
+        }
+        const auto& [tx_ok, tx_safe] = tx_safe_cache.at(outpoint.hash);
+        if (!Assume(tx_ok)) {
+            continue;
+        }
 
-            int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), can_grind_r, coinControl);
-            // Because CalculateMaximumSignedInputSize infers a solvable descriptor to get the satisfaction size,
-            // it is safe to assume that this input is solvable if input_bytes is greater than -1.
-            bool solvable = input_bytes > -1;
-            bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
+        bool tx_from_me = CheckIsFromMeMap(txo.GetTxFromMe(), ISMINE_ALL);
 
-            // Filter by spendable outputs only
-            if (!spendable && params.only_spendable) continue;
+        std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
-            // Obtain script type
-            std::vector<std::vector<uint8_t>> script_solutions;
-            TxoutType type = Solver(output.scriptPubKey, script_solutions);
+        int input_bytes = CalculateMaximumSignedInputSize(output, COutPoint(), provider.get(), can_grind_r, coinControl);
+        // Because CalculateMaximumSignedInputSize infers a solvable descriptor to get the satisfaction size,
+        // it is safe to assume that this input is solvable if input_bytes is greater than -1.
+        bool solvable = input_bytes > -1;
+        bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
 
-            // If the output is P2SH and solvable, we want to know if it is
-            // a P2SH (legacy) or one of P2SH-P2WPKH, P2SH-P2WSH (P2SH-Segwit). We can determine
-            // this from the redeemScript. If the output is not solvable, it will be classified
-            // as a P2SH (legacy), since we have no way of knowing otherwise without the redeemScript
-            bool is_from_p2sh{false};
-            if (type == TxoutType::SCRIPTHASH && solvable) {
-                CScript script;
-                if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
-                type = Solver(script, script_solutions);
-                is_from_p2sh = true;
-            }
+        // Filter by spendable outputs only
+        if (!spendable && params.only_spendable) continue;
 
-            result.Add(GetOutputType(type, is_from_p2sh),
-                       COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate));
+        // Obtain script type
+        std::vector<std::vector<uint8_t>> script_solutions;
+        TxoutType type = Solver(output.scriptPubKey, script_solutions);
 
-            outpoints.push_back(outpoint);
+        // If the output is P2SH and solvable, we want to know if it is
+        // a P2SH (legacy) or one of P2SH-P2WPKH, P2SH-P2WSH (P2SH-Segwit). We can determine
+        // this from the redeemScript. If the output is not solvable, it will be classified
+        // as a P2SH (legacy), since we have no way of knowing otherwise without the redeemScript
+        bool is_from_p2sh{false};
+        if (type == TxoutType::SCRIPTHASH && solvable) {
+            CScript script;
+            if (!provider->GetCScript(CScriptID(uint160(script_solutions[0])), script)) continue;
+            type = Solver(script, script_solutions);
+            is_from_p2sh = true;
+        }
 
-            // Checks the sum amount of all UTXO's.
-            if (params.min_sum_amount != MAX_MONEY) {
-                if (result.GetTotalAmount() >= params.min_sum_amount) {
-                    return result;
-                }
-            }
+        result.Add(GetOutputType(type, is_from_p2sh),
+                   COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, tx_safe, txo.GetTxTime(), tx_from_me, feerate));
 
-            // Checks the maximum number of UTXO's.
-            if (params.max_count > 0 && result.Size() >= params.max_count) {
+        outpoints.push_back(outpoint);
+
+        // Checks the sum amount of all UTXO's.
+        if (params.min_sum_amount != MAX_MONEY) {
+            if (result.GetTotalAmount() >= params.min_sum_amount) {
                 return result;
             }
+        }
+
+        // Checks the maximum number of UTXO's.
+        if (params.max_count > 0 && result.Size() >= params.max_count) {
+            return result;
         }
     }
 

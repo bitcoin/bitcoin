@@ -17,18 +17,17 @@
 #include <memory>
 
 namespace wallet {
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
+std::shared_ptr<CWallet> CreateSyncedWallet(WalletContext& context, const CKey& key)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase());
-    {
-        LOCK2(wallet->cs_wallet, ::cs_main);
-        wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
-    }
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto wallet = CWallet::Create(context, "", CreateMockableWalletDatabase(), WALLET_FLAG_DESCRIPTORS, error, warnings);
+
+    // Allow the fallback fee with it's default
+    wallet->m_allow_fallback_fee = true;
+
     {
         LOCK(wallet->cs_wallet);
-        wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet->SetupDescriptorScriptPubKeyMans();
-
         FlatSigningProvider provider;
         std::string error;
         std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
@@ -38,11 +37,13 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
-    CWallet::ScanResult result = wallet->ScanForWalletTransactions(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
+    CWallet::ScanResult result = wallet->ScanForWalletTransactions(context.chain->getBlockHash(0), /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false);
     assert(result.status == CWallet::ScanResult::SUCCESS);
-    assert(result.last_scanned_block == cchain.Tip()->GetBlockHash());
-    assert(*result.last_scanned_height == cchain.Height());
+    int tip_height = context.chain->getHeight().value();
+    assert(*result.last_scanned_height == tip_height);
+    assert(result.last_scanned_block == context.chain->getBlockHash(tip_height));
     assert(result.last_failed_block.IsNull());
+
     return wallet;
 }
 

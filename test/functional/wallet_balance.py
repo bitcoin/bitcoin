@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
 from decimal import Decimal
+import time
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.blocktools import COINBASE_MATURITY
@@ -12,7 +13,9 @@ from test_framework.util import (
     assert_equal,
     assert_is_hash_string,
     assert_raises_rpc_error,
+    find_vout_for_address,
 )
+from test_framework.wallet_util import get_generate_key
 
 
 def create_transactions(node, address, amt, fees):
@@ -311,7 +314,40 @@ class WalletTest(BitcoinTestFramework):
             self.nodes[0].createwallet('w2', False, True)
             self.nodes[0].importprivkey(privkey)
             assert_equal(self.nodes[0].getbalances()['mine']['untrusted_pending'], Decimal('0.1'))
+            self.nodes[0].unloadwallet("w2")
 
+            self.log.info("Test that an import that makes something spendable updates \"mine\" balance")
+            self.nodes[0].loadwallet(self.default_wallet_name)
+            default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+            self.nodes[0].createwallet(wallet_name="legacyspendableupdate", descriptors=False)
+            wallet = self.nodes[0].get_wallet_rpc("legacyspendableupdate")
+
+            import_key1 = get_generate_key()
+            import_key2 = get_generate_key()
+            wallet.importaddress(import_key1.p2wpkh_addr)
+            wallet.importaddress(import_key2.p2wpkh_addr)
+
+            amount = Decimal(15)
+            default.sendtoaddress(import_key1.p2wpkh_addr, amount)
+            default.sendtoaddress(import_key2.p2wpkh_addr, amount)
+            self.generate(self.nodes[0], 1)
+
+            balances = wallet.getbalances()
+            assert_equal(balances["mine"]["trusted"], 0)
+            assert_equal(balances["watchonly"]["trusted"], amount * 2)
+
+            # Rescanning should always update the txos by virtue of finding them again
+            wallet.importprivkey(privkey=import_key1.privkey, rescan=True)
+            balances = wallet.getbalances()
+            assert_equal(balances["mine"]["trusted"], amount)
+            assert_equal(balances["watchonly"]["trusted"], amount)
+
+            # Don't rescan to make sure that the import updates the wallet txos
+            wallet.importprivkey(privkey=import_key2.privkey, rescan=False)
+            balances = wallet.getbalances()
+            assert_equal(balances["mine"]["trusted"], amount * 2)
+            assert_equal(balances["watchonly"]["trusted"], 0)
+            self.nodes[0].unloadwallet("legacyspendableupdate")
 
         # Tests the lastprocessedblock JSON object in getbalances, getwalletinfo
         # and gettransaction by checking for valid hex strings and by comparing
@@ -337,6 +373,61 @@ class WalletTest(BitcoinTestFramework):
         tx_info = self.nodes[1].gettransaction(txid)
         assert_equal(tx_info['lastprocessedblock']['height'], prev_height)
         assert_equal(tx_info['lastprocessedblock']['hash'], prev_hash)
+
+        self.log.info("Test that the balance is updated by an import that makes an untracked output in an existing tx \"mine\"")
+        default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.nodes[0].createwallet("importupdate")
+        wallet = self.nodes[0].get_wallet_rpc("importupdate")
+
+        import_key1 = get_generate_key()
+        import_key2 = get_generate_key()
+        wallet.importprivkey(import_key1.privkey)
+
+        amount = 15
+        default.send([{import_key1.p2wpkh_addr: amount},{import_key2.p2wpkh_addr: amount}])
+        self.generate(self.nodes[0], 1)
+        # Mock the time forward by 1 day so that "now" will exclude the block we just mined
+        self.nodes[0].setmocktime(int(time.time()) + 86400)
+        # Mine 11 blocks to move the MTP past the block we just mined
+        self.generate(self.nodes[0], 11, sync_fun=self.no_op)
+
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount)
+
+        # Don't rescan to make sure that the import updates the wallet txos
+        wallet.importprivkey(privkey=import_key2.privkey, rescan=False)
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount * 2)
+
+        wallet.unloadwallet()
+
+        self.log.info("Test that the balance is unchanged by an import that makes an already spent output in an existing tx \"mine\"")
+        self.nodes[0].createwallet("importalreadyspent")
+        wallet = self.nodes[0].get_wallet_rpc("importalreadyspent")
+
+        import_change_key = get_generate_key()
+        addr1 = wallet.getnewaddress()
+        addr2 = wallet.getnewaddress()
+
+        default.importprivkey(privkey=import_change_key.privkey, rescan=False)
+
+        res = default.send(outputs=[{addr1: amount}], options={"change_address": import_change_key.p2wpkh_addr})
+        inputs = [{"txid":res["txid"], "vout": find_vout_for_address(default, res["txid"], import_change_key.p2wpkh_addr)}]
+        default.send(outputs=[{addr2: amount}], options={"inputs": inputs, "add_inputs": True})
+
+        # Mock the time forward by another day so that "now" will exclude the block we just mined
+        self.nodes[0].setmocktime(int(time.time()) + 86400 * 2)
+        # Mine 11 blocks to move the MTP past the block we just mined
+        self.generate(self.nodes[0], 11, sync_fun=self.no_op)
+
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount * 2)
+
+        # Don't rescan to make sure that the import updates the wallet txos
+        # The balance should not change because the output for this key is already spent
+        wallet.importprivkey(privkey=import_change_key.privkey, rescan=False)
+        balances = wallet.getbalances()
+        assert_equal(balances["mine"]["trusted"], amount * 2)
 
 if __name__ == '__main__':
     WalletTest().main()

@@ -330,7 +330,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
 
     CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine, include_change);
 
-    bool involvesWatchonly = CachedTxIsFromMe(wallet, wtx, ISMINE_WATCH_ONLY);
+    bool involvesWatchonly = CheckIsFromMeMap(wtx.m_from_me, ISMINE_WATCH_ONLY);
 
     // Sent
     if (!filter_label.has_value())
@@ -779,10 +779,11 @@ RPCHelpMan gettransaction()
     CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, filter);
     CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx, filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    bool from_me = CheckIsFromMeMap(wtx.m_from_me, filter);
+    CAmount nFee = (from_me ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-    if (CachedTxIsFromMe(*pwallet, wtx, filter))
+    if (from_me)
         entry.pushKV("fee", ValueFromAmount(nFee));
 
     WalletTxToJSON(*pwallet, wtx, entry);
