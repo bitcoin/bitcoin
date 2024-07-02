@@ -54,10 +54,6 @@ if test -z "$with_miniupnpc" && test -n "@no_upnp@"; then
   with_miniupnpc=no
 fi
 
-if test -z "$with_natpmp" && test -n "@no_natpmp@"; then
-  with_natpmp=no
-fi
-
 if test -z "$with_gui" && test -n "@no_qt@"; then
   with_gui=no
 fi

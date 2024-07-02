@@ -316,8 +316,10 @@ BITCOIN_CORE_H = \
   util/insert.h \
   util/macros.h \
   util/moneystr.h \
+  util/netif.h \
   util/overflow.h \
   util/overloaded.h \
+  util/pcp.h \
   util/rbf.h \
   util/readwritefile.h \
   util/result.h \
@@ -384,7 +386,7 @@ obj/build.h: FORCE
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # node #
-libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LEVELDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LEVELDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_node_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_node_a_SOURCES = \
   addrdb.cpp \
@@ -751,7 +753,9 @@ libbitcoin_util_a_SOURCES = \
   util/hasher.cpp \
   util/sock.cpp \
   util/syserror.cpp \
+  util/netif.cpp \
   util/moneystr.cpp \
+  util/pcp.cpp \
   util/rbf.cpp \
   util/readwritefile.cpp \
   util/signalinterrupt.cpp \
@@ -800,7 +804,7 @@ bitcoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+bitcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 bitcoind_SOURCES = $(bitcoin_daemon_sources) init/bitcoind.cpp
 bitcoind_CPPFLAGS = $(bitcoin_bin_cppflags)

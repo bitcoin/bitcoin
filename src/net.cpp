@@ -28,6 +28,7 @@
 #include <random.h>
 #include <scheduler.h>
 #include <util/fs.h>
+#include <util/netif.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/thread.h>
@@ -3089,46 +3090,10 @@ void Discover()
     if (!fDiscover)
         return;
 
-#ifdef WIN32
-    // Get local host IP
-    char pszHostName[256] = "";
-    if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR)
-    {
-        const std::vector<CNetAddr> addresses{LookupHost(pszHostName, 0, true)};
-        for (const CNetAddr& addr : addresses)
-        {
-            if (AddLocal(addr, LOCAL_IF))
-                LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToStringAddr());
-        }
+    for (const CNetAddr &addr: GetLocalAddresses()) {
+        if (AddLocal(addr, LOCAL_IF))
+            LogPrintf("%s: %s\n", __func__, addr.ToStringAddr());
     }
-#elif (HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS)
-    // Get local host ip
-    struct ifaddrs* myaddrs;
-    if (getifaddrs(&myaddrs) == 0)
-    {
-        for (struct ifaddrs* ifa = myaddrs; ifa != nullptr; ifa = ifa->ifa_next)
-        {
-            if (ifa->ifa_addr == nullptr) continue;
-            if ((ifa->ifa_flags & IFF_UP) == 0) continue;
-            if ((ifa->ifa_flags & IFF_LOOPBACK) != 0) continue;
-            if (ifa->ifa_addr->sa_family == AF_INET)
-            {
-                struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
-                CNetAddr addr(s4->sin_addr);
-                if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("%s: IPv4 %s: %s\n", __func__, ifa->ifa_name, addr.ToStringAddr());
-            }
-            else if (ifa->ifa_addr->sa_family == AF_INET6)
-            {
-                struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
-                CNetAddr addr(s6->sin6_addr);
-                if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("%s: IPv6 %s: %s\n", __func__, ifa->ifa_name, addr.ToStringAddr());
-            }
-        }
-        freeifaddrs(myaddrs);
-    }
-#endif
 }
 
 void CConnman::SetNetworkActive(bool active)

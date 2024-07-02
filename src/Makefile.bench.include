@@ -78,8 +78,7 @@ bench_bench_bitcoin_LDADD = \
   $(LIBUNIVALUE) \
   $(EVENT_PTHREADS_LIBS) \
   $(EVENT_LIBS) \
-  $(MINIUPNPC_LIBS) \
-  $(NATPMP_LIBS)
+  $(MINIUPNPC_LIBS)
 
 if ENABLE_ZMQ
 bench_bench_bitcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)

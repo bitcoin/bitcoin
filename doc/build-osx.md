@@ -134,19 +134,7 @@ Skip if you do not need this functionality.
 brew install miniupnpc
 ```
 
-###### libnatpmp
-
-libnatpmp may be used for NAT-PMP port mapping.
-Skip if you do not need this functionality.
-
-``` bash
-brew install libnatpmp
-```
-
-Note: UPnP and NAT-PMP support will be compiled in and disabled by default.
-Check out the [further configuration](#further-configuration) section for more information.
-
----
+Note: UPnP support will be compiled in and disabled by default.
 
 #### ZMQ Dependencies
 

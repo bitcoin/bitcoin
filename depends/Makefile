@@ -42,7 +42,6 @@ NO_WALLET ?=
 NO_ZMQ ?=
 NO_UPNP ?=
 NO_USDT ?=
-NO_NATPMP ?=
 MULTIPROCESS ?=
 LTO ?=
 NO_HARDEN ?=
@@ -159,13 +158,12 @@ sqlite_packages_$(NO_SQLITE) = $(sqlite_packages)
 wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages_)
 
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
-natpmp_packages_$(NO_NATPMP) = $(natpmp_packages)
 
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
 multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
 usdt_packages_$(NO_USDT) = $(usdt_$(host_os)_packages)
 
-packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) $(libevent_packages_) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(natpmp_packages_) $(usdt_packages_)
+packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(boost_packages_) $(libevent_packages_) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(usdt_packages_)
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
 
 ifneq ($(zmq_packages_),)
@@ -241,7 +239,6 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@no_sqlite@|$(NO_SQLITE)|' \
             -e 's|@no_upnp@|$(NO_UPNP)|' \
             -e 's|@no_usdt@|$(NO_USDT)|' \
-            -e 's|@no_natpmp@|$(NO_NATPMP)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@lto@|$(LTO)|' \
             -e 's|@no_harden@|$(NO_HARDEN)|' \
