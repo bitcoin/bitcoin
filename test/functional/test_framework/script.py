@@ -856,7 +856,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpat
 def TaprootSignatureHash(*args, **kwargs):
     return TaggedHash("TapSighash", TaprootSignatureMsg(*args, **kwargs))
 
-def taproot_tree_helper(scripts):
+def taproot_tree_helper(scripts, leaf_version):
     if len(scripts) == 0:
         return ([], bytes())
     if len(scripts) == 1:
@@ -864,30 +864,29 @@ def taproot_tree_helper(scripts):
         script = scripts[0]
         assert not callable(script)
         if isinstance(script, list):
-            return taproot_tree_helper(script)
+            return taproot_tree_helper(script, leaf_version)
         assert isinstance(script, tuple)
-        version = LEAF_VERSION_TAPSCRIPT
         name = script[0]
         code = script[1]
         if len(script) == 3:
-            version = script[2]
-        assert version & 1 == 0
+            leaf_version = script[2]
+        assert leaf_version & 1 == 0
         assert isinstance(code, bytes)
-        h = TaggedHash("TapLeaf", bytes([version]) + ser_string(code))
+        h = TaggedHash("TapLeaf", bytes([leaf_version]) + ser_string(code))
         if name is None:
             return ([], h)
-        return ([(name, version, code, bytes(), h)], h)
+        return ([(name, leaf_version, code, bytes(), h)], h)
     elif len(scripts) == 2 and callable(scripts[1]):
         # Two entries, and the right one is a function
-        left, left_h = taproot_tree_helper(scripts[0:1])
+        left, left_h = taproot_tree_helper(scripts[0:1], leaf_version)
         right_h = scripts[1](left_h)
         left = [(name, version, script, control + right_h, leaf) for name, version, script, control, leaf in left]
         right = []
     else:
         # Two or more entries: descend into each side
         split_pos = len(scripts) // 2
-        left, left_h = taproot_tree_helper(scripts[0:split_pos])
-        right, right_h = taproot_tree_helper(scripts[split_pos:])
+        left, left_h = taproot_tree_helper(scripts[0:split_pos], leaf_version)
+        right, right_h = taproot_tree_helper(scripts[split_pos:], leaf_version)
         left = [(name, version, script, control + right_h, leaf) for name, version, script, control, leaf in left]
         right = [(name, version, script, control + left_h, leaf) for name, version, script, control, leaf in right]
     if right_h < left_h:
@@ -910,7 +909,7 @@ TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tw
 # - merklebranch: the merkle branch to use for this leaf (32*N bytes)
 TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch,leaf_hash")
 
-def taproot_construct(pubkey, scripts=None, treat_internal_as_infinity=False):
+def taproot_construct(pubkey, leaf_version, scripts=None, treat_internal_as_infinity=False):
     """Construct a tree of Taproot spending conditions
 
     pubkey: a 32-byte xonly pubkey for the internal pubkey (bytes)
@@ -927,7 +926,7 @@ def taproot_construct(pubkey, scripts=None, treat_internal_as_infinity=False):
     if scripts is None:
         scripts = []
 
-    ret, h = taproot_tree_helper(scripts)
+    ret, h = taproot_tree_helper(scripts,leaf_version)
     tweak = TaggedHash("TapTweak", pubkey + h)
     if treat_internal_as_infinity:
         tweaked, negated = compute_xonly_pubkey(tweak)
