@@ -19,11 +19,13 @@ class CEvoDB : public CDBWrapper {
     std::list<std::pair<K, V>> fifoList;
     std::unordered_set<K> setEraseCache;
     mutable RecursiveMutex cs;
-    size_t maxCacheSize;
+    size_t maxCacheSize{0};
     DBParams m_db_params;
 public:
     using CDBWrapper::CDBWrapper;
-    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSize) : CDBWrapper(db_params), maxCacheSize(maxCacheSize), m_db_params(db_params) {}
+    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSizeIn) : CDBWrapper(db_params), maxCacheSize(maxCacheSizeIn), m_db_params(db_params) {
+        assert(maxCacheSize > 0);
+    }
     bool IsCacheFull() const {
         return mapCache.size() >= maxCacheSize;
     }
@@ -131,6 +133,37 @@ public:
         setEraseCache.clear();
         return res;
     }
+    std::vector<std::pair<K, V>> GetAllEntriesReverse() {
+        LOCK(cs);
+        std::vector<std::pair<K, V>> result;
+
+        // Add all entries from the cache in reverse order
+        for (auto it = fifoList.rbegin(); it != fifoList.rend(); ++it) {
+            result.push_back(*it);
+        }
+
+        // If max cache size isn’t reached, load from DB
+        if (mapCache.size() < maxCacheSize) {
+            auto pcursor = NewIterator();
+            pcursor->SeekToLast();
+            while (pcursor->Valid()) {
+                K key;
+                V value;
+                if (pcursor->GetKey(key) && pcursor->GetValue(value)) {
+                    if (setEraseCache.find(key) == setEraseCache.end()) {
+                        if (mapCache.find(key) == mapCache.end()) {
+                            result.push_back(std::make_pair(key, value));
+                            WriteCache(key, value);
+                        }
+                    }
+                }
+                pcursor->Prev();
+            }
+    }
+
+    return result;
+}
+
 };
 
 #endif // SYSCOIN_EVO_EVODB_H
