@@ -64,6 +64,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         n0.createwallet('w')
         w = n0.get_wallet_rpc("w")
+        w.backupwallet("backup_w.dat")
 
         # Generate a series of blocks that `n0` will have in the snapshot,
         # but that n1 doesn't yet see. In order for the snapshot to activate,
@@ -83,8 +84,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         for n in self.nodes:
             assert_equal(n.getblockchaininfo()[
                          "headers"], SNAPSHOT_BASE_HEIGHT)
-
-        w.backupwallet("backup_w.dat")
 
         self.log.info("-- Testing assumeutxo")
 

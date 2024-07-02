@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
     // Verify the coin selection process does not produce a BnB solution when SFFO is enabled.
     // This is currently problematic because it could require a change output. And BnB is specialized on changeless solutions.
     std::unique_ptr<CWallet> wallet = NewWallet(m_node);
-    WITH_LOCK(wallet->cs_wallet, wallet->SetLastBlockProcessed(300, uint256{})); // set a high block so internal UTXOs are selectable
+    WITH_LOCK(wallet->cs_wallet, wallet->SetBestBlock(300, uint256{})); // set a high block so internal UTXOs are selectable
 
     FastRandomContext rand{};
     CoinSelectionParams params{

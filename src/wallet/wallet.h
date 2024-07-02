@@ -295,6 +295,39 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+struct BestBlock
+{
+    CBlockLocator m_locator;
+    uint256 m_hash;
+    std::optional<int> m_height;
+
+    bool IsNull() const { return m_locator.IsNull(); }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_locator;
+        // No need to write m_hash since it's the first thing in m_locator
+        if (m_height.has_value()) {
+            s << m_height.value();
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_locator;
+        if (!s.eof()) {
+            int height;
+            s >> height;
+            m_height = height;
+        }
+        if (!m_locator.IsNull()) {
+            m_hash = m_locator.vHave[0];
+        }
+    }
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -308,7 +341,6 @@ private:
 
     std::atomic<bool> fAbortRescan{false};
     std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
-    std::atomic<bool> m_attaching_chain{false};
     std::atomic<bool> m_scanning_with_passphrase{false};
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
@@ -396,20 +428,11 @@ private:
     std::unique_ptr<WalletDatabase> m_database;
 
     /**
-     * The following is used to keep track of how far behind the wallet is
+     * m_best_block is used to keep track of how far behind the wallet is
      * from the chain sync, and to allow clients to block on us being caught up.
-     *
-     * Processed hash is a pointer on node's tip and doesn't imply that the wallet
-     * has scanned sequentially all blocks up to this one.
+     * The wallet is guaranteed to have completed scanning up to this block.
      */
-    uint256 m_last_block_processed GUARDED_BY(cs_wallet);
-
-    /** Height of last block processed is used by wallet to know depth of transactions
-     * without relying on Chain interface beyond asynchronous updates. For safety, we
-     * initialize it to -1. Height is a pointer on node's tip and doesn't imply
-     * that the wallet has scanned sequentially all blocks up to this one.
-     */
-    int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
+    BestBlock m_best_block GUARDED_BY(cs_wallet);
 
     std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
@@ -430,7 +453,7 @@ private:
 
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
-     * block locator and m_last_block_processed, and registering for
+     * block locator, and registering for
      * notifications about new blocks and transactions.
      */
     static bool AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings);
@@ -788,7 +811,6 @@ public:
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
-    void chainStateFlushed(ChainstateRole role, const CBlockLocator& loc) override;
 
     DBErrors LoadWallet();
 
@@ -972,25 +994,29 @@ public:
     bool HasEncryptionKeys() const override;
 
     /** Get last block processed height */
-    int GetLastBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    int GetBestBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        assert(m_last_block_processed_height >= 0);
-        return m_last_block_processed_height;
+        assert(m_best_block.m_height.has_value());
+        return m_best_block.m_height.value();
     };
-    uint256 GetLastBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    bool HasBestBlockHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
-        AssertLockHeld(cs_wallet);
-        assert(m_last_block_processed_height >= 0);
-        return m_last_block_processed;
+        return m_best_block.m_height.has_value();
     }
-    /** Set last block processed height, currently only use in unit test */
-    void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    uint256 GetBestBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        m_last_block_processed_height = block_height;
-        m_last_block_processed = block_hash;
-    };
+        return m_best_block.m_hash;
+    }
+    CBlockLocator GetBestBlockLocator() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        AssertLockHeld(cs_wallet);
+        return m_best_block.m_locator;
+    }
+    /** Set last block processed height, and write to database */
+    void SetBestBlock(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadBestBlock(const BestBlock& best_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
     void ConnectScriptPubKeyManNotifiers();

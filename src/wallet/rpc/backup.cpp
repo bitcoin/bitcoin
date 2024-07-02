@@ -107,7 +107,7 @@ static void EnsureBlockDataFromTime(const CWallet& wallet, int64_t timestamp)
     int height{0};
     const bool found{chain.findFirstBlockWithTimeAndHeight(timestamp - TIMESTAMP_WINDOW, 0, FoundBlock().height(height))};
 
-    uint256 tip_hash{WITH_LOCK(wallet.cs_wallet, return wallet.GetLastBlockHash())};
+    uint256 tip_hash{WITH_LOCK(wallet.cs_wallet, return wallet.GetBestBlockHash())};
     if (found && !chain.hasBlocks(tip_hash, height)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Pruned blocks from height %d required to import keys. Use RPC call getblockchaininfo to determine your pruned height.", height));
     }
@@ -352,7 +352,7 @@ RPCHelpMan importprunedfunds()
 
     LOCK(pwallet->cs_wallet);
     int height;
-    if (!pwallet->chain().findAncestorByHash(pwallet->GetLastBlockHash(), merkleBlock.header.GetHash(), FoundBlock().height(height))) {
+    if (!pwallet->chain().findAncestorByHash(pwallet->GetBestBlockHash(), merkleBlock.header.GetHash(), FoundBlock().height(height))) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
     }
 
@@ -527,7 +527,7 @@ RPCHelpMan importwallet()
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
         }
-        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(nTimeBegin)));
+        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetBestBlockHash(), FoundBlock().time(nTimeBegin)));
 
         int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
         file.seekg(0, file.beg);
@@ -738,7 +738,7 @@ RPCHelpMan dumpwallet()
     wallet.GetKeyBirthTimes(mapKeyBirth);
 
     int64_t block_time = 0;
-    CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetLastBlockHash(), FoundBlock().time(block_time)));
+    CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetBestBlockHash(), FoundBlock().time(block_time)));
 
     // Note: To avoid a lock order issue, access to cs_main must be locked before cs_KeyStore.
     // So we do the two things in this function that lock cs_main first: GetKeyBirthTimes, and findBlock.
@@ -759,7 +759,7 @@ RPCHelpMan dumpwallet()
     // produce output
     file << strprintf("# Wallet dump created by %s %s\n", PACKAGE_NAME, FormatFullVersion());
     file << strprintf("# * Created on %s\n", FormatISO8601DateTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", wallet.GetLastBlockHeight(), wallet.GetLastBlockHash().ToString());
+    file << strprintf("# * Best block at time of backup was %i (%s),\n", wallet.GetBestBlockHeight(), wallet.GetBestBlockHash().ToString());
     file << strprintf("#   mined on %s\n", FormatISO8601DateTime(block_time));
     file << "\n";
 
@@ -1361,7 +1361,7 @@ RPCHelpMan importmulti()
         if (!is_watchonly) EnsureWalletIsUnlocked(wallet);
 
         // Verify all timestamps are present before importing any keys.
-        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(nLowestTimestamp).mtpTime(now)));
+        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetBestBlockHash(), FoundBlock().time(nLowestTimestamp).mtpTime(now)));
         for (const UniValue& data : requests.getValues()) {
             GetImportTimestamp(data, now);
         }
@@ -1660,7 +1660,7 @@ RPCHelpMan importdescriptors()
         LOCK(pwallet->cs_wallet);
         EnsureWalletIsUnlocked(*pwallet);
 
-        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
+        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetBestBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
 
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {

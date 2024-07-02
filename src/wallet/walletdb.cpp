@@ -175,16 +175,21 @@ bool WalletBatch::EraseWatchOnly(const CScript &dest)
     return EraseIC(std::make_pair(DBKeys::WATCHS, dest));
 }
 
-bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
+bool WalletBatch::WriteBestBlock(const BestBlock& best_block)
 {
     WriteIC(DBKeys::BESTBLOCK, CBlockLocator()); // Write empty block locator so versions that require a merkle branch automatically rescan
-    return WriteIC(DBKeys::BESTBLOCK_NOMERKLE, locator);
+    return WriteIC(DBKeys::BESTBLOCK_NOMERKLE, best_block);
 }
 
-bool WalletBatch::ReadBestBlock(CBlockLocator& locator)
+bool WalletBatch::ReadBestBlock(BestBlock& best_block)
 {
-    if (m_batch->Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) return true;
-    return m_batch->Read(DBKeys::BESTBLOCK_NOMERKLE, locator);
+    CBlockLocator locator;
+    if (m_batch->Read(DBKeys::BESTBLOCK, locator) && !locator.vHave.empty()) {
+        best_block.m_locator = locator;
+        best_block.m_hash = locator.vHave[0];
+        return true;
+    }
+    return m_batch->Read(DBKeys::BESTBLOCK_NOMERKLE, best_block);
 }
 
 bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
@@ -471,6 +476,16 @@ static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIV
             pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
             return DBErrors::TOO_NEW;
         }
+    }
+    return DBErrors::LOAD_OK;
+}
+
+static DBErrors LoadBestBlock(CWallet* pwallet, WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    AssertLockHeld(pwallet->cs_wallet);
+    BestBlock best_block;
+    if (batch.ReadBestBlock(best_block) && !best_block.IsNull()) {
+        pwallet->LoadBestBlock(best_block);
     }
     return DBErrors::LOAD_OK;
 }
@@ -1172,6 +1187,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;
         }
 #endif
+
+        // Load the best block
+        if ((result = LoadBestBlock(pwallet, *this)) != DBErrors::LOAD_OK) return result;
 
         // Load legacy wallet keys
         result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, last_client), result);

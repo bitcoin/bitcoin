@@ -93,7 +93,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet.SetLastBlockProcessed(chainstate.m_chain.Height(), chainstate.m_chain.Tip()->GetBlockHash());
+        wallet.SetBestBlock(chainstate.m_chain.Height(), chainstate.m_chain.Tip()->GetBlockHash());
     }
 
     auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
