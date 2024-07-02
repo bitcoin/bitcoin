@@ -151,6 +151,24 @@ def check_PE_Canary(binary) -> bool:
     '''
     return binary.has_symbol('__stack_chk_fail')
 
+def check_PE_SecureZeroMemory(binary) -> bool:
+    '''
+    Check for use of SecureZeroMemory()
+    '''
+    cleanse = binary.get_symbol('_Z14memory_cleansePvy').value
+
+    section_addr = binary.section_from_rva(cleanse).virtual_address
+    virtual_address = binary.optional_header.imagebase + section_addr + cleanse
+
+    content = binary.get_content_from_virtual_address(virtual_address, 40, lief.Binary.VA_TYPES.VA)
+
+    # We are looking for rep stosb, which is f3 aa (243 170).
+    # We search for 170, and check for a preceding 243,
+    # so we don't match the endbr64 instruction at the
+    # beginning of the function.
+    aa = content.index(170)
+    return content[aa-1] == 243
+
 def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     Check for no undefined references.
@@ -218,6 +236,7 @@ BASE_PE = [
     ('RELOC_SECTION', check_PE_RELOC_SECTION),
     ('CONTROL_FLOW', check_PE_control_flow),
     ('Canary', check_PE_Canary),
+    ('SecureZeroMemory', check_PE_SecureZeroMemory),
 ]
 
 BASE_MACHO = [

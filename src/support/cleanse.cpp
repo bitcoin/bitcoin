@@ -7,14 +7,14 @@
 
 #include <cstring>
 
-#if defined(_MSC_VER)
-#include <Windows.h> // For SecureZeroMemory.
+#if defined(WIN32)
+#include <windows.h>
 #endif
 
 void memory_cleanse(void *ptr, size_t len)
 {
-#if defined(_MSC_VER)
-    /* SecureZeroMemory is guaranteed not to be optimized out by MSVC. */
+#if defined(WIN32)
+    /* SecureZeroMemory is guaranteed not to be optimized out. */
     SecureZeroMemory(ptr, len);
 #else
     std::memset(ptr, 0, len);
