@@ -82,7 +82,7 @@ usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 
   @inputs = @inputs + $inputs;
   @sigops = @sigops + $sigops;
 
-  @durations = hist($duration / 1000);
+  @durations = hist($duration / 1e6);
 
   if ($height == $1 && $height != 0) {
     @start = nsecs;
@@ -92,7 +92,7 @@ usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 
   if ($2 > 0 && $height >= $2) {
     @end = nsecs;
     $duration = @end - @start;
-    printf("\nTook %d ms to connect the blocks between height %d and %d.\n", $duration / 1000000, $1, $2);
+    printf("\nTook %d ms to connect the blocks between height %d and %d.\n", $duration / 1e9, $1, $2);
     exit();
   }
 }
@@ -102,7 +102,7 @@ usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 
   blocks where the time it took to connect the block is above the
   <logging threshold in ms>.
 */
-usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
+usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1e6 > $3 /
 {
   $hash = arg0;
   $height = (int32) arg1;
@@ -120,7 +120,7 @@ usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
       printf("%02x", $b);
       $p -= 1;
   }
-  printf(")  %4d tx  %5d ins  %5d sigops  took %4d ms\n", $transactions, $inputs, $sigops, (uint64) $duration / 1000);
+  printf(")  %4d tx  %5d ins  %5d sigops  took %4d ms\n", $transactions, $inputs, $sigops, (uint64) $duration / 1e6);
 }
 
 
