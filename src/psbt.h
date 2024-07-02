@@ -967,6 +967,7 @@ struct PartiallySignedTransaction
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
+    void StripDerivationPaths();
     PartiallySignedTransaction() {}
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
     /**
