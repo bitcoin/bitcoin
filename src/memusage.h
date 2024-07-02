@@ -6,10 +6,10 @@
 #define BITCOIN_MEMUSAGE_H
 
 #include <indirectmap.h>
+#include <malloc_usage.h>
 #include <prevector.h>
 #include <support/allocators/pool.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <list>
 #include <map>
@@ -22,9 +22,6 @@
 
 namespace memusage
 {
-
-/** Compute the total memory used by allocating alloc bytes. */
-static size_t MallocUsage(size_t alloc);
 
 /** Dynamic memory usage for built-in types is zero. */
 static inline size_t DynamicUsage(const int8_t& v) { return 0; }
@@ -47,20 +44,6 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
  *  application data structures require more accurate inner accounting, they should
  *  iterate themselves, or use more efficient caching + updating on modification.
  */
-
-static inline size_t MallocUsage(size_t alloc)
-{
-    // Measured on libc6 2.19 on Linux.
-    if (alloc == 0) {
-        return 0;
-    } else if (sizeof(void*) == 8) {
-        return ((alloc + 31) >> 4) << 4;
-    } else if (sizeof(void*) == 4) {
-        return ((alloc + 15) >> 3) << 3;
-    } else {
-        assert(0);
-    }
-}
 
 // STL data structures
 
@@ -192,14 +175,7 @@ static inline size_t DynamicUsage(const std::unordered_map<Key,
                                                                          MAX_BLOCK_SIZE_BYTES,
                                                                          ALIGN_BYTES>>& m)
 {
-    auto* pool_resource = m.get_allocator().resource();
-
-    // The allocated chunks are stored in a std::list. Size per node should
-    // therefore be 3 pointers: next, previous, and a pointer to the chunk.
-    size_t estimated_list_node_size = MallocUsage(sizeof(void*) * 3);
-    size_t usage_resource = estimated_list_node_size * pool_resource->NumAllocatedChunks();
-    size_t usage_chunks = MallocUsage(pool_resource->ChunkSizeBytes()) * pool_resource->NumAllocatedChunks();
-    return usage_resource + usage_chunks + MallocUsage(sizeof(void*) * m.bucket_count());
+    return m.get_allocator().resource()->DynamicMemoryUsage();
 }
 
 } // namespace memusage
