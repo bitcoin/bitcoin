@@ -175,7 +175,11 @@ static RPCHelpMan getdescriptorinfo()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys"},
+                {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys. For a multipath descriptor, only the first will be returned."},
+                {RPCResult::Type::ARR, "multipath_expansion", /*optional=*/true, "All descriptors produced by expanding multipath derivation elements. Only if the provided descriptor specifies multipath derivation elements.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
                 {RPCResult::Type::STR, "checksum", "The checksum for the input descriptor"},
                 {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                 {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
@@ -191,20 +195,63 @@ static RPCHelpMan getdescriptorinfo()
         {
             FlatSigningProvider provider;
             std::string error;
-            auto desc = Parse(request.params[0].get_str(), provider, error);
-            if (!desc) {
+            auto descs = Parse(request.params[0].get_str(), provider, error);
+            if (descs.empty()) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
 
             UniValue result(UniValue::VOBJ);
-            result.pushKV("descriptor", desc->ToString());
+            result.pushKV("descriptor", descs.at(0)->ToString());
+
+            if (descs.size() > 1) {
+                UniValue multipath_descs(UniValue::VARR);
+                for (const auto& d : descs) {
+                    multipath_descs.push_back(d->ToString());
+                }
+                result.pushKV("multipath_expansion", multipath_descs);
+            }
+
             result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
-            result.pushKV("isrange", desc->IsRange());
-            result.pushKV("issolvable", desc->IsSolvable());
+            result.pushKV("isrange", descs.at(0)->IsRange());
+            result.pushKV("issolvable", descs.at(0)->IsSolvable());
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
             return result;
         },
     };
+}
+
+static UniValue DeriveAddresses(const Descriptor* desc, int64_t range_begin, int64_t range_end, FlatSigningProvider& key_provider)
+{
+    UniValue addresses(UniValue::VARR);
+
+    for (int64_t i = range_begin; i <= range_end; ++i) {
+        FlatSigningProvider provider;
+        std::vector<CScript> scripts;
+        if (!desc->Expand(i, key_provider, scripts, provider)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot derive script without private keys");
+        }
+
+        for (const CScript& script : scripts) {
+            CTxDestination dest;
+            if (!ExtractDestination(script, dest)) {
+                // ExtractDestination no longer returns true for P2PK since it doesn't have a corresponding address
+                // However combo will output P2PK and should just ignore that script
+                if (scripts.size() > 1 && std::get_if<PubKeyDestination>(&dest)) {
+                    continue;
+                }
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor does not have a corresponding address");
+            }
+
+            addresses.push_back(EncodeDestination(dest));
+        }
+    }
+
+    // This should not be possible, but an assert seems overkill:
+    if (addresses.empty()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Unexpected empty result");
+    }
+
+    return addresses;
 }
 
 static RPCHelpMan deriveaddresses()
@@ -226,11 +273,24 @@ static RPCHelpMan deriveaddresses()
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
         },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::STR, "address", "the derived addresses"},
-            }
+        {
+            RPCResult{"for single derivation descriptors",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {RPCResult::Type::STR, "address", "the derived addresses"},
+                }
+            },
+            RPCResult{"for multipath descriptors",
+                RPCResult::Type::ARR, "", "The derived addresses for each of the multipath expansions of the descriptor, in multipath specifier order",
+                {
+                    {
+                        RPCResult::Type::ARR, "", "The derived addresses for a multipath descriptor expansion",
+                        {
+                            {RPCResult::Type::STR, "address", "the derived address"},
+                        },
+                    },
+                },
+            },
         },
         RPCExamples{
             "First three native segwit receive addresses\n" +
@@ -250,11 +310,11 @@ static RPCHelpMan deriveaddresses()
 
             FlatSigningProvider key_provider;
             std::string error;
-            auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
-            if (!desc) {
+            auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+            if (descs.empty()) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
-
+            auto& desc = descs.at(0);
             if (!desc->IsRange() && request.params.size() > 1) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
             }
@@ -263,36 +323,18 @@ static RPCHelpMan deriveaddresses()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified for a ranged descriptor");
             }
 
-            UniValue addresses(UniValue::VARR);
+            UniValue addresses = DeriveAddresses(desc.get(), range_begin, range_end, key_provider);
 
-            for (int64_t i = range_begin; i <= range_end; ++i) {
-                FlatSigningProvider provider;
-                std::vector<CScript> scripts;
-                if (!desc->Expand(i, key_provider, scripts, provider)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cannot derive script without private keys");
+            if (descs.size() > 1) {
+                UniValue ret(UniValue::VARR);
+                ret.push_back(addresses);
+                for (size_t i = 1; i < descs.size(); ++i) {
+                    ret.push_back(DeriveAddresses(descs.at(i).get(), range_begin, range_end, key_provider));
                 }
-
-                for (const CScript& script : scripts) {
-                    CTxDestination dest;
-                    if (!ExtractDestination(script, dest)) {
-                        // ExtractDestination no longer returns true for P2PK since it doesn't have a corresponding address
-                        // However combo will output P2PK and should just ignore that script
-                        if (scripts.size() > 1 && std::get_if<PubKeyDestination>(&dest)) {
-                            continue;
-                        }
-                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor does not have a corresponding address");
-                    }
-
-                    addresses.push_back(EncodeDestination(dest));
-                }
+                return ret;
+            } else {
+                return addresses;
             }
-
-            // This should not be possible, but an assert seems overkill:
-            if (addresses.empty()) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Unexpected empty result");
-            }
-
-            return addresses;
         },
     };
 }
