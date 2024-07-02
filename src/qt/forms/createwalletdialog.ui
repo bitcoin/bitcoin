@@ -102,10 +102,10 @@
       <item>
        <widget class="QCheckBox" name="descriptor_checkbox">
         <property name="toolTip">
-         <string>Use descriptors for scriptPubKey management</string>
+         <string>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</string>
         </property>
         <property name="text">
-         <string>Descriptor Wallet</string>
+         <string>Descriptor Wallet (EXPERIMENTAL)</string>
         </property>
        </widget>
       </item>
