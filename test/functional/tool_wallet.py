@@ -6,18 +6,22 @@
 
 import os
 import platform
+import random
 import stat
+import string
 import subprocess
 import textwrap
 
 from collections import OrderedDict
 
+from test_framework.bdb import dump_bdb_kv
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     sha256sum_file,
 )
+from test_framework.wallet import getnewdestination
 
 
 class ToolWalletTest(BitcoinTestFramework):
@@ -545,6 +549,36 @@ class ToolWalletTest(BitcoinTestFramework):
         self.stop_node(0)
         self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", "-wallet=unclean_lsn", f"-dumpfile={wallet_dump}", "dump")
 
+    def test_compare_legacy_dump_with_framework_bdb_parser(self):
+        self.log.info("Verify that legacy wallet database dump matches the one from the test framework's BDB parser")
+        wallet_name = "bdb_ro_test"
+        self.start_node(0)
+        # add some really large labels (above twice the largest valid page size) to create BDB overflow pages
+        self.nodes[0].createwallet(wallet_name)
+        wallet_rpc = self.nodes[0].get_wallet_rpc(wallet_name)
+        for i in range(10):
+            large_label = ''.join([random.choice(string.ascii_letters) for _ in range(150000)])
+            wallet_rpc.setlabel(getnewdestination()[2], large_label)
+        self.stop_node(0)
+
+        wallet_dumpfile = self.nodes[0].datadir_path / "bdb_ro_test.dump"
+        args = ["-wallet={}".format(wallet_name), "-dumpfile={}".format(wallet_dumpfile), "dump"]
+        p = self.bitcoin_wallet_process(*args)
+        _, _ = p.communicate()
+        assert_equal(p.poll(), 0)
+
+        expected_dump = self.read_dump(wallet_dumpfile)
+        # remove extra entries from wallet tool dump that are not actual key/value pairs from the database
+        del expected_dump['BITCOIN_CORE_WALLET_DUMP']
+        del expected_dump['format']
+        del expected_dump['checksum']
+        bdb_ro_parser_dump_raw = dump_bdb_kv(self.nodes[0].wallets_path / wallet_name / "wallet.dat")
+        bdb_ro_parser_dump = OrderedDict()
+        assert any([len(bytes.fromhex(value)) >= 150000 for value in expected_dump.values()])
+        for key, value in sorted(bdb_ro_parser_dump_raw.items()):
+            bdb_ro_parser_dump[key.hex()] = value.hex()
+        assert_equal(bdb_ro_parser_dump, expected_dump)
+
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
         self.test_invalid_tool_commands_and_args()
@@ -561,6 +595,9 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_dump_createfromdump()
         self.test_chainless_conflicts()
         self.test_dump_very_large_records()
+        if not self.options.descriptors and self.is_bdb_compiled() and not self.options.swap_bdb_endian:
+            self.test_compare_legacy_dump_with_framework_bdb_parser()
+
 
 if __name__ == '__main__':
     ToolWalletTest().main()
