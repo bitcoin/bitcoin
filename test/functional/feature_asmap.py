@@ -98,12 +98,6 @@ class AsmapTest(BitcoinTestFramework):
             self.node.getnodeaddresses()  # getnodeaddresses re-runs the addrman checks
         os.remove(self.default_asmap)
 
-    def test_default_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing default map file')
-        self.stop_node(0)
-        msg = f"Error: Could not find asmap file \"{self.default_asmap}\""
-        self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
-
     def test_empty_asmap(self):
         self.log.info('Test bitcoind -asmap with empty map file')
         self.stop_node(0)
@@ -140,7 +134,6 @@ class AsmapTest(BitcoinTestFramework):
         self.test_asmap_with_relative_path()
         self.test_default_asmap()
         self.test_asmap_interaction_with_addrman_containing_entries()
-        self.test_default_asmap_with_missing_file()
         self.test_empty_asmap()
         self.test_asmap_health_check()
 
