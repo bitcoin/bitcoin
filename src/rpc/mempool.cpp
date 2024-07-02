@@ -9,6 +9,7 @@
 
 #include <chainparams.h>
 #include <core_io.h>
+#include <index/txospenderindex.h>
 #include <kernel/mempool_entry.h>
 #include <node/mempool_persist_args.h>
 #include <node/types.h>
@@ -597,6 +598,11 @@ static RPCHelpMan gettxspendingprevout()
                     },
                 },
             },
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                {
+                    {"mempool_only", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true if txospenderindex unavailable, otherwise false"}, "If true, txospenderindex will not be used even if mempool lacks a relevant spend. If false and txospenderindex is unavailable, throws an exception if any outpoint lacks a mempool spend."},
+                },
+            },
         },
         RPCResult{
             RPCResult::Type::ARR, "", "",
@@ -606,6 +612,10 @@ static RPCHelpMan gettxspendingprevout()
                     {RPCResult::Type::STR_HEX, "txid", "the transaction id of the checked output"},
                     {RPCResult::Type::NUM, "vout", "the vout value of the checked output"},
                     {RPCResult::Type::STR_HEX, "spendingtxid", /*optional=*/true, "the transaction id of the mempool transaction spending this output (omitted if unspent)"},
+                    {RPCResult::Type::ARR, "warnings", /* optional */ true, "If spendingtxid isn't found in the mempool, and the mempool_only option isn't set explicitly, this will advise of issues using the txospenderindex.",
+                    {
+                        {RPCResult::Type::STR, "", ""},
+                    }},
                 }},
             }
         },
@@ -618,6 +628,19 @@ static RPCHelpMan gettxspendingprevout()
             const UniValue& output_params = request.params[0].get_array();
             if (output_params.empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, outputs are missing");
+            }
+
+            std::optional<bool> mempool_only;
+            if (!request.params[1].isNull()) {
+                const UniValue& options = request.params[1];
+                RPCTypeCheckObj(options,
+                    {
+                        {"mempool_only", UniValueType(UniValue::VBOOL)},
+                    },
+                    /*fAllowNull=*/true, /*fStrict=*/true);
+                if (options.exists("mempool_only")) {
+                    mempool_only = options["mempool_only"].get_bool();
+                }
             }
 
             std::vector<COutPoint> prevouts;
@@ -641,6 +664,11 @@ static RPCHelpMan gettxspendingprevout()
                 prevouts.emplace_back(txid, nOutput);
             }
 
+            bool f_txospenderindex_ready{false};
+            if (g_txospenderindex && !mempool_only.value_or(false)) {
+                f_txospenderindex_ready = g_txospenderindex->BlockUntilSyncedToCurrentChain();
+            }
+
             const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
             LOCK(mempool.cs);
 
@@ -654,6 +682,36 @@ static RPCHelpMan gettxspendingprevout()
                 const CTransaction* spendingTx = mempool.GetConflictTx(prevout);
                 if (spendingTx != nullptr) {
                     o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+                } else if (mempool_only.value_or(false)) {
+                    // do nothing
+                } else if (g_txospenderindex) {
+                    // no spending tx in mempool, query txospender index
+                    uint256 spendingtxid;
+                    if (g_txospenderindex->FindSpender(prevout, spendingtxid)) {
+                        o.pushKV("spendingtxid", spendingtxid.GetHex());
+                        if (!f_txospenderindex_ready) {
+                            // warn if index is not ready as the spending tx that we found may be stale (it may be reorged out)
+                            UniValue warnings(UniValue::VARR);
+                            warnings.push_back("txospenderindex is still being synced.");
+                            o.pushKV("warnings", warnings);
+                        }
+                    } else if (!f_txospenderindex_ready) {
+                        if (mempool_only.has_value()) {  // NOTE: value is false here
+                            throw JSONRPCError(RPC_MISC_ERROR, strprintf("No spending tx for the outpoint %s:%d found, and txospenderindex is still being synced.", prevout.hash.GetHex(), prevout.n));
+                        } else {
+                            UniValue warnings(UniValue::VARR);
+                            warnings.push_back("txospenderindex is still being synced.");
+                            o.pushKV("warnings", warnings);
+                        }
+                    }
+                } else {
+                    if (mempool_only.has_value()) {  // NOTE: value is false here
+                        throw JSONRPCError(RPC_MISC_ERROR, strprintf("No spending tx for the outpoint %s:%d in mempool, and txospenderindex is unavailable.", prevout.hash.GetHex(), prevout.n));
+                    } else {
+                        UniValue warnings(UniValue::VARR);
+                        warnings.push_back("txospenderindex is unavailable.");
+                        o.pushKV("warnings", warnings);
+                    }
                 }
 
                 result.push_back(std::move(o));

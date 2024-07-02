@@ -261,6 +261,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getmempoolancestors", 1, "verbose" },
     { "getmempooldescendants", 1, "verbose" },
     { "gettxspendingprevout", 0, "outputs" },
+    { "gettxspendingprevout", 1, "options" },
     { "bumpfee", 1, "options" },
     { "bumpfee", 1, "conf_target"},
     { "bumpfee", 1, "fee_rate"},
