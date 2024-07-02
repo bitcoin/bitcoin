@@ -157,12 +157,13 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIn
     if (pa->nChainWork > pb->nChainWork) return false;
     if (pa->nChainWork < pb->nChainWork) return true;
 
-    // ... then by earliest time received, ...
+    // ... then by earliest activatable time, ...
     if (pa->nSequenceId < pb->nSequenceId) return false;
     if (pa->nSequenceId > pb->nSequenceId) return true;
 
     // Use pointer address as tie breaker (should only happen with blocks
-    // loaded from disk, as those all have id 0).
+    // loaded from disk, as those share the same id: 0 for blocks on the
+    // best chain, 1 for all others).
     if (pa < pb) return false;
     if (pa > pb) return true;
 
@@ -213,7 +214,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockInde
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
-    pindexNew->nSequenceId = 0;
+    pindexNew->nSequenceId = 1;
 
     pindexNew->phashBlock = &((*mi).first);
     BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);

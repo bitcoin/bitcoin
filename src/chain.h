@@ -192,7 +192,9 @@ public:
     uint32_t nNonce{0};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
-    int32_t nSequenceId{0};
+    //! Initialized to 1 when loading blocks from disk, except for blocks belonging to the best chain
+    //! which overwrite it to 0.
+    int32_t nSequenceId{1};
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
