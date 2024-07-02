@@ -12,12 +12,6 @@
 
 #include <cassert>
 
-/** Expiration time for orphan transactions */
-static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
-/** Minimum time between orphan transactions expire time checks */
-static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
-
-
 bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 {
     LOCK(m_mutex);
