@@ -304,13 +304,20 @@ Balance GetBalance(const CWallet& wallet, const int min_depth, bool avoid_reuse)
             const int tx_depth{wallet.GetTxDepthInMainChain(wtx)};
             const CAmount tx_credit_mine{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_WATCH_ONLY | reuse_filter)};
+            const CAmount tx_credit_mine_used{CachedTxGetAvailableCredit(wallet, wtx, ISMINE_SPENDABLE | ISMINE_USED)};
+            if (is_trusted) { // min_depth == 0 when calculating used balance and tx_depth >= 0
+                ret.m_mine_used += tx_credit_mine_used;
+            }
             if (is_trusted && tx_depth >= min_depth) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
+                ret.m_mine_used -= tx_credit_mine; // remove overlap from used_balance
             }
             if (!is_trusted && tx_depth == 0 && wtx.InMempool()) {
                 ret.m_mine_untrusted_pending += tx_credit_mine;
                 ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
+                ret.m_mine_used += tx_credit_mine_used;
+                ret.m_mine_used -= tx_credit_mine; // remove overlap from used_balance
             }
             ret.m_mine_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE);
             ret.m_watchonly_immature += CachedTxGetImmatureCredit(wallet, wtx, ISMINE_WATCH_ONLY);
