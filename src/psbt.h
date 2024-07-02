@@ -14,8 +14,10 @@
 #include <script/signingprovider.h>
 #include <span.h>
 #include <streams.h>
+#include <uint256.h>
 
 #include <optional>
+#include <bitset>
 
 namespace node {
 enum class TransactionError;
@@ -27,6 +29,11 @@ static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
 // Global types
 static constexpr uint8_t PSBT_GLOBAL_UNSIGNED_TX = 0x00;
 static constexpr uint8_t PSBT_GLOBAL_XPUB = 0x01;
+static constexpr uint8_t PSBT_GLOBAL_TX_VERSION = 0x02;
+static constexpr uint8_t PSBT_GLOBAL_FALLBACK_LOCKTIME = 0x03;
+static constexpr uint8_t PSBT_GLOBAL_INPUT_COUNT = 0x04;
+static constexpr uint8_t PSBT_GLOBAL_OUTPUT_COUNT = 0x05;
+static constexpr uint8_t PSBT_GLOBAL_TX_MODIFIABLE = 0x06;
 static constexpr uint8_t PSBT_GLOBAL_VERSION = 0xFB;
 static constexpr uint8_t PSBT_GLOBAL_PROPRIETARY = 0xFC;
 
@@ -44,6 +51,11 @@ static constexpr uint8_t PSBT_IN_RIPEMD160 = 0x0A;
 static constexpr uint8_t PSBT_IN_SHA256 = 0x0B;
 static constexpr uint8_t PSBT_IN_HASH160 = 0x0C;
 static constexpr uint8_t PSBT_IN_HASH256 = 0x0D;
+static constexpr uint8_t PSBT_IN_PREVIOUS_TXID = 0x0e;
+static constexpr uint8_t PSBT_IN_OUTPUT_INDEX = 0x0f;
+static constexpr uint8_t PSBT_IN_SEQUENCE = 0x10;
+static constexpr uint8_t PSBT_IN_REQUIRED_TIME_LOCKTIME = 0x11;
+static constexpr uint8_t PSBT_IN_REQUIRED_HEIGHT_LOCKTIME = 0x12;
 static constexpr uint8_t PSBT_IN_TAP_KEY_SIG = 0x13;
 static constexpr uint8_t PSBT_IN_TAP_SCRIPT_SIG = 0x14;
 static constexpr uint8_t PSBT_IN_TAP_LEAF_SCRIPT = 0x15;
@@ -56,6 +68,8 @@ static constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
 static constexpr uint8_t PSBT_OUT_REDEEMSCRIPT = 0x00;
 static constexpr uint8_t PSBT_OUT_WITNESSSCRIPT = 0x01;
 static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
+static constexpr uint8_t PSBT_OUT_AMOUNT = 0x03;
+static constexpr uint8_t PSBT_OUT_SCRIPT = 0x04;
 static constexpr uint8_t PSBT_OUT_TAP_INTERNAL_KEY = 0x05;
 static constexpr uint8_t PSBT_OUT_TAP_TREE = 0x06;
 static constexpr uint8_t PSBT_OUT_TAP_BIP32_DERIVATION = 0x07;
@@ -70,7 +84,7 @@ static constexpr uint8_t PSBT_SEPARATOR = 0x00;
 const std::streamsize MAX_FILE_SIZE_PSBT = 100000000; // 100 MB
 
 // PSBT version number
-static constexpr uint32_t PSBT_HIGHEST_VERSION = 0;
+static constexpr uint32_t PSBT_HIGHEST_VERSION = 2;
 
 /** A structure for PSBT proprietary types */
 struct PSBTProprietary
@@ -209,6 +223,12 @@ struct PSBTInput
     std::map<uint160, std::vector<unsigned char>> hash160_preimages;
     std::map<uint256, std::vector<unsigned char>> hash256_preimages;
 
+    Txid prev_txid;
+    std::optional<uint32_t> prev_out;
+    std::optional<uint32_t> sequence;
+    std::optional<uint32_t> time_locktime;
+    std::optional<uint32_t> height_locktime;
+
     // Taproot fields
     std::vector<unsigned char> m_tap_key_sig;
     std::map<std::pair<XOnlyPubKey, uint256>, std::vector<unsigned char>> m_tap_script_sigs;
@@ -221,11 +241,21 @@ struct PSBTInput
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
 
+    uint32_t m_psbt_version;
+
     bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
-    PSBTInput() {}
+    /**
+     * Retrieves the UTXO for this input
+     *
+     * @param[out] utxo The UTXO of this input
+     * @return Whether the UTXO could be retrieved
+     */
+    bool GetUTXO(CTxOut& utxo) const;
+    COutPoint GetOutPoint() const;
+    PSBTInput(uint32_t version) : m_psbt_version(version) {}
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -348,6 +378,31 @@ struct PSBTInput
         if (!final_script_witness.IsNull()) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTWITNESS));
             SerializeToVector(s, final_script_witness.stack);
+        }
+
+        // Write PSBTv2 fields
+        if (m_psbt_version >= 2) {
+            // Write prev txid, vout, sequence, and lock times
+            if (!prev_txid.IsNull()) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PREVIOUS_TXID));
+                SerializeToVector(s, prev_txid);
+            }
+            if (prev_out != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_OUTPUT_INDEX));
+                SerializeToVector(s, *prev_out);
+            }
+            if (sequence != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_SEQUENCE));
+                SerializeToVector(s, *sequence);
+            }
+            if (time_locktime != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_REQUIRED_TIME_LOCKTIME));
+                SerializeToVector(s, *time_locktime);
+            }
+            if (height_locktime != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_REQUIRED_HEIGHT_LOCKTIME));
+                SerializeToVector(s, *height_locktime);
+            }
         }
 
         // Write proprietary things
@@ -572,6 +627,80 @@ struct PSBTInput
                     hash256_preimages.emplace(hash, std::move(preimage));
                     break;
                 }
+                case PSBT_IN_PREVIOUS_TXID:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, previous txid is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Previous txid key is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Previous txid is not allowed in PSBTv0");
+                    }
+                    UnserializeFromVector(s, prev_txid);
+                    break;
+                }
+                case PSBT_IN_OUTPUT_INDEX:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, previous output's index is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Previous output's index is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Previous output's index is not allowed in PSBTv0");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    prev_out = v;
+                    break;
+                }
+                case PSBT_IN_SEQUENCE:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, sequence is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Sequence key is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Sequence is not allowed in PSBTv0");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    sequence = v;
+                    break;
+                }
+                case PSBT_IN_REQUIRED_TIME_LOCKTIME:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, required time based locktime is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Required time based locktime is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Required time based locktime is not allowed in PSBTv0");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    if (v < LOCKTIME_THRESHOLD) {
+                        throw std::ios_base::failure("Required time based locktime is invalid (less than 500000000)");
+                    }
+                    time_locktime = v;
+                    break;
+                }
+                case PSBT_IN_REQUIRED_HEIGHT_LOCKTIME:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, required height based locktime is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Required height based locktime is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Required height based locktime is not allowed in PSBTv0");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    if (v >= LOCKTIME_THRESHOLD) {
+                        throw std::ios_base::failure("Required time based locktime is invalid (greater than or equal to 500000000)");
+                    }
+                    height_locktime = v;
+                    break;
+                }
                 case PSBT_IN_TAP_KEY_SIG:
                 {
                     if (!key_lookup.emplace(key).second) {
@@ -702,6 +831,16 @@ struct PSBTInput
         if (!found_sep) {
             throw std::ios_base::failure("Separator is missing at the end of an input map");
         }
+
+        // Make sure required PSBTv2 fields are present
+        if (m_psbt_version >= 2) {
+            if (prev_txid.IsNull()) {
+                throw std::ios_base::failure("Previous TXID is required in PSBTv2");
+            }
+            if (prev_out == std::nullopt) {
+                throw std::ios_base::failure("Previous output's index is required in PSBTv2");
+            }
+        }
     }
 
     template <typename Stream>
@@ -716,17 +855,24 @@ struct PSBTOutput
     CScript redeem_script;
     CScript witness_script;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
+
+    std::optional<CAmount> amount;
+    std::optional<CScript> script;
+
     XOnlyPubKey m_tap_internal_key;
     std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> m_tap_tree;
     std::map<XOnlyPubKey, std::pair<std::set<uint256>, KeyOriginInfo>> m_tap_bip32_paths;
+
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
+
+    uint32_t m_psbt_version;
 
     bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTOutput& output);
-    PSBTOutput() {}
+    PSBTOutput(uint32_t version) : m_psbt_version(version) {}
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -744,6 +890,18 @@ struct PSBTOutput
 
         // Write any hd keypaths
         SerializeHDKeypaths(s, hd_keypaths, CompactSizeWriter(PSBT_OUT_BIP32_DERIVATION));
+
+        if (m_psbt_version >= 2) {
+            // Write amount and spk
+            if (amount != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_OUT_AMOUNT));
+                SerializeToVector(s, *amount);
+            }
+            if (script.has_value()) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_OUT_SCRIPT));
+                s << *script;
+            }
+        }
 
         // Write proprietary things
         for (const auto& entry : m_proprietary) {
@@ -839,6 +997,34 @@ struct PSBTOutput
                 case PSBT_OUT_BIP32_DERIVATION:
                 {
                     DeserializeHDKeypaths(s, key, hd_keypaths);
+                    break;
+                }
+                case PSBT_OUT_AMOUNT:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, output amount is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Output amount key is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Output amount is not allowed in PSBTv0");
+                    }
+                    CAmount v;
+                    UnserializeFromVector(s, v);
+                    amount = v;
+                    break;
+                }
+                case PSBT_OUT_SCRIPT:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, output script is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Output script key is more than one byte type");
+                    } else if (m_psbt_version == 0) {
+                        throw std::ios_base::failure("Output script is not allowed in PSBTv0");
+                    }
+                    CScript v;
+                    s >> v;
+                    script = v;
                     break;
                 }
                 case PSBT_OUT_TAP_INTERNAL_KEY:
@@ -938,6 +1124,16 @@ struct PSBTOutput
         if (!found_sep) {
             throw std::ios_base::failure("Separator is missing at the end of an output map");
         }
+
+        // Make sure required PSBTv2 fields are present
+        if (m_psbt_version >= 2) {
+            if (amount == std::nullopt) {
+                throw std::ios_base::failure("Output amount is required in PSBTv2");
+            }
+            if (!script.has_value()) {
+                throw std::ios_base::failure("Output script is required in PSBTv2");
+            }
+        }
     }
 
     template <typename Stream>
@@ -953,6 +1149,9 @@ struct PartiallySignedTransaction
     // We use a vector of CExtPubKey in the event that there happens to be the same KeyOriginInfos for different CExtPubKeys
     // Note that this map swaps the key and values from the serialization
     std::map<KeyOriginInfo, std::set<CExtPubKey>> m_xpubs;
+    std::optional<int32_t> tx_version;
+    std::optional<uint32_t> fallback_locktime;
+    std::optional<std::bitset<8>> m_tx_modifiable;
     std::vector<PSBTInput> inputs;
     std::vector<PSBTOutput> outputs;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
@@ -965,18 +1164,15 @@ struct PartiallySignedTransaction
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
-    bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
-    bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
+    bool AddInput(PSBTInput& psbtin);
+    bool AddOutput(const PSBTOutput& psbtout);
+    void SetupFromTx(const CMutableTransaction& tx);
+    void CacheUnsignedTxPieces();
+    bool ComputeTimeLock(uint32_t& locktime) const;
+    CMutableTransaction GetUnsignedTx() const;
+    uint256 GetUniqueID() const;
     PartiallySignedTransaction() {}
-    explicit PartiallySignedTransaction(const CMutableTransaction& tx);
-    /**
-     * Finds the UTXO for a given input index
-     *
-     * @param[out] utxo The UTXO of the input if found
-     * @param[in] input_index Index of the input to retrieve the UTXO of
-     * @return Whether the UTXO for the specified input was found
-     */
-    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
+    explicit PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version = 2);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -984,11 +1180,13 @@ struct PartiallySignedTransaction
         // magic bytes
         s << PSBT_MAGIC_BYTES;
 
-        // unsigned tx flag
-        SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
+        if (GetVersion() == 0) {
+            // unsigned tx flag
+            SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
 
-        // Write serialized tx to a stream
-        SerializeToVector(s, TX_NO_WITNESS(*tx));
+            // Write serialized tx to a stream
+            SerializeToVector(s, TX_NO_WITNESS(GetUnsignedTx()));
+        }
 
         // Write xpubs
         for (const auto& xpub_pair : m_xpubs) {
@@ -999,6 +1197,26 @@ struct PartiallySignedTransaction
                 // The xpub is the key (for uniqueness) while the path is the value
                 SerializeToVector(s, PSBT_GLOBAL_XPUB, ser_xpub);
                 SerializeHDKeypath(s, xpub_pair.first);
+            }
+        }
+
+        if (GetVersion() >= 2) {
+            // Write PSBTv2 tx version, locktime, counts, etc.
+            SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_TX_VERSION));
+            SerializeToVector(s, *tx_version);
+            if (fallback_locktime != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_FALLBACK_LOCKTIME));
+                SerializeToVector(s, *fallback_locktime);
+            }
+
+            SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_INPUT_COUNT));
+            SerializeToVector(s, CompactSizeWriter(inputs.size()));
+            SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_OUTPUT_COUNT));
+            SerializeToVector(s, CompactSizeWriter(outputs.size()));
+
+            if (m_tx_modifiable != std::nullopt) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_TX_MODIFIABLE));
+                SerializeToVector(s, static_cast<uint8_t>(m_tx_modifiable->to_ulong()));
             }
         }
 
@@ -1051,6 +1269,10 @@ struct PartiallySignedTransaction
 
         // Read global data
         bool found_sep = false;
+        uint64_t input_count = 0;
+        uint64_t output_count = 0;
+        bool found_input_count = false;
+        bool found_output_count = false;
         while(!s.empty()) {
             // Read
             std::vector<unsigned char> key;
@@ -1086,6 +1308,69 @@ struct PartiallySignedTransaction
                             throw std::ios_base::failure("Unsigned tx does not have empty scriptSigs and scriptWitnesses.");
                         }
                     }
+                    // Set the input and output counts
+                    input_count = tx->vin.size();
+                    output_count = tx->vout.size();
+                    break;
+                }
+                case PSBT_GLOBAL_TX_VERSION:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, global transaction version is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global transaction version key is more than one byte type");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    tx_version = v;
+                    break;
+                }
+                case PSBT_GLOBAL_FALLBACK_LOCKTIME:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, global fallback locktime is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global fallback locktime key is more than one byte type");
+                    }
+                    uint32_t v;
+                    UnserializeFromVector(s, v);
+                    fallback_locktime = v;
+                    break;
+                }
+                case PSBT_GLOBAL_INPUT_COUNT:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, global input count is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global input count key is more than one byte type");
+                    }
+                    CompactSizeReader reader(input_count);
+                    UnserializeFromVector(s, reader);
+                    found_input_count = true;
+                    break;
+                }
+                case PSBT_GLOBAL_OUTPUT_COUNT:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, global output count is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global output count key is more than one byte type");
+                    }
+                    CompactSizeReader reader(output_count);
+                    UnserializeFromVector(s, reader);
+                    found_output_count = true;
+                    break;
+                }
+                case PSBT_GLOBAL_TX_MODIFIABLE:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, tx modifiable flags is already provided");
+                    } else if (key.size() != 1) {
+                        throw std::ios_base::failure("Global tx modifiable flags key is more than one byte type");
+                    }
+                    uint8_t tx_mod;
+                    UnserializeFromVector(s, tx_mod);
+                    m_tx_modifiable.emplace(tx_mod);
                     break;
                 }
                 case PSBT_GLOBAL_XPUB:
@@ -1164,41 +1449,84 @@ struct PartiallySignedTransaction
             throw std::ios_base::failure("Separator is missing at the end of the global map");
         }
 
-        // Make sure that we got an unsigned tx
-        if (!tx) {
-            throw std::ios_base::failure("No unsigned transaction was provided");
+        uint32_t psbt_ver = GetVersion();
+
+        // Check PSBT version constraints
+        if (psbt_ver == 0) {
+            // Make sure that we got an unsigned tx for PSBTv0
+            if (!tx) {
+                throw std::ios_base::failure("No unsigned transaction was provided");
+            }
+            // Make sure no PSBTv2 fields are present
+            if (tx_version != std::nullopt) {
+                throw std::ios_base::failure("PSBT_GLOBAL_TX_VERSION is not allowed in PSBTv0");
+            }
+            if (fallback_locktime != std::nullopt) {
+                throw std::ios_base::failure("PSBT_GLOBAL_FALLBACK_LOCKTIME is not allowed in PSBTv0");
+            }
+            if (found_input_count) {
+                throw std::ios_base::failure("PSBT_GLOBAL_INPUT_COUNT is not allowed in PSBTv0");
+            }
+            if (found_output_count) {
+                throw std::ios_base::failure("PSBT_GLOBAL_OUTPUT_COUNT is not allowed in PSBTv0");
+            }
+            if (m_tx_modifiable != std::nullopt) {
+                throw std::ios_base::failure("PSBT_GLOBAL_TX_MODIFIABLE is not allowed in PSBTv0");
+            }
+        }
+        // Disallow v1
+        if (psbt_ver == 1) {
+            throw std::ios_base::failure("There is no PSBT version 1");
+        }
+        if (psbt_ver >= 2) {
+            // Tx version, input, and output counts are required
+            if (tx_version == std::nullopt) {
+                throw std::ios_base::failure("PSBT_GLOBAL_TX_VERSION is required in PSBTv2");
+            }
+            if (!found_input_count) {
+                throw std::ios_base::failure("PSBT_GLOBAL_INPUT_COUNT is required in PSBTv2");
+            }
+            if (!found_output_count) {
+                throw std::ios_base::failure("PSBT_GLOBAL_OUTPUT_COUNT is required in PSBTv2");
+            }
+            // Unsigned tx is disallowed
+            if (tx) {
+                throw std::ios_base::failure("PSBT_GLOBAL_UNSIGNED_TX is not allowed in PSBTv2");
+            }
         }
 
         // Read input data
         unsigned int i = 0;
-        while (!s.empty() && i < tx->vin.size()) {
-            PSBTInput input;
+        while (!s.empty() && i < input_count) {
+            PSBTInput input(psbt_ver);
             s >> input;
             inputs.push_back(input);
 
             // Make sure the non-witness utxo matches the outpoint
-            if (input.non_witness_utxo && input.non_witness_utxo->GetHash() != tx->vin[i].prevout.hash) {
+            if (input.non_witness_utxo && ((tx != std::nullopt && input.non_witness_utxo->GetHash() != tx->vin[i].prevout.hash) || (!input.prev_txid.IsNull() && input.non_witness_utxo->GetHash() != input.prev_txid))) {
                 throw std::ios_base::failure("Non-witness UTXO does not match outpoint hash");
             }
             ++i;
         }
         // Make sure that the number of inputs matches the number of inputs in the transaction
-        if (inputs.size() != tx->vin.size()) {
+        if (inputs.size() != input_count) {
             throw std::ios_base::failure("Inputs provided does not match the number of inputs in transaction.");
         }
 
         // Read output data
         i = 0;
-        while (!s.empty() && i < tx->vout.size()) {
-            PSBTOutput output;
+        while (!s.empty() && i < output_count) {
+            PSBTOutput output(psbt_ver);
             s >> output;
             outputs.push_back(output);
             ++i;
         }
         // Make sure that the number of outputs matches the number of outputs in the transaction
-        if (outputs.size() != tx->vout.size()) {
+        if (outputs.size() != output_count) {
             throw std::ios_base::failure("Outputs provided does not match the number of outputs in transaction.");
         }
+
+        CacheUnsignedTxPieces();
     }
 
     template <typename Stream>

@@ -38,13 +38,13 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
     @staticmethod
     def _check_psbt(psbt, to, value, multisig):
         """Helper function for any of the N participants to check the psbt with decodepsbt and verify it is OK before signing."""
-        tx = multisig.decodepsbt(psbt)["tx"]
+        decoded = multisig.decodepsbt(psbt)
         amount = 0
-        for vout in tx["vout"]:
-            address = vout["scriptPubKey"]["address"]
+        for psbt_out in decoded["outputs"]:
+            address = psbt_out["script"]["address"]
             assert_equal(multisig.getaddressinfo(address)["ischange"], address != to)
             if address == to:
-                amount += vout["value"]
+                amount += psbt_out["amount"]
         assert_approx(amount, float(value), vspan=0.001)
 
     def participants_create_multisigs(self, xpubs):
