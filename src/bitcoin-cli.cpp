@@ -33,6 +33,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -68,6 +69,8 @@ static const std::string DEFAULT_NBLOCKS = "1";
 
 /** Default -color setting. */
 static const std::string DEFAULT_COLOR_SETTING{"auto"};
+
+constexpr std::array<std::string_view, 4> CLI_COMMANDS{"-netinfo", "-getinfo", "-addrinfo", "-generate"};
 
 static void SetupCliArgs(ArgsManager& argsman)
 {
@@ -947,7 +950,8 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
             strPrint += ("error message:\n" + err_msg.get_str());
         }
         if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED) {
-            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli command line.";
+            strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to bitcoin-cli before the RPC <command> ";
+            strPrint += "(run \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see which wallets are currently loaded).";
         }
     } else {
         strPrint = "error: " + error.write();
@@ -1140,6 +1144,48 @@ static UniValue GetNewAddress()
 }
 
 /**
+ * ValidateCliCommand checks for:
+ *  1. duplicate command line arguments
+ *  2. multiple bitcoin-cli commands that need to run exclusively
+ *  3. unrecognized bitcoin-cli commands or other arguments starting with a slash
+ * @throws std::runtime_error if any of the conditions above are met.
+ */
+static void ValidateCliCommand(int argc, char *argv[])
+{
+    std::unordered_set<std::string_view> commands;
+    std::string_view exclusively_command;
+    for (int i = 1; i < argc; ++i) {
+        if (!IsSwitchChar(argv[i][0])) continue;
+        std::string_view command(argv[i]);
+        // Check if the command line argument has an =, in that case, ignore what's after;
+        // e.g.: -color=never; we just want to check "-color"
+        if (const auto pos{command.find_first_of('=')}; pos != std::string_view::npos) {
+            command = command.substr(0, pos);
+        }
+
+        // Check if this command has already been seen
+        if (commands.contains(command)) {
+            throw std::runtime_error(strprintf("duplicate bitcoin-cli command %s.", command));
+        }
+
+        if (std::find(std::begin(CLI_COMMANDS), std::end(CLI_COMMANDS), command) != std::end(CLI_COMMANDS)) {
+            if (!exclusively_command.empty()) {
+                throw std::runtime_error(strprintf("you can only run one bitcoin-cli command at a time, either %s or %s.", exclusively_command, command));
+            }
+            exclusively_command = command;
+        }
+
+        // Check if the "-" command was recognised by the ArgsManager or interpreted as a parameter
+        // e.g.: bitcoin-cli -generate 1 -rpcwallet=xxx, is an invalid call
+        if (!exclusively_command.empty() && !gArgs.IsArgSet(std::string(command))) {
+            throw std::runtime_error(strprintf("invalid bitcoin-cli argument; if \"%s\" is a valid option, try passing it before the \"%s\" command.", argv[i], exclusively_command));
+        }
+
+        commands.insert(command);
+    }
+}
+
+/**
  * Check bounds and set up args for RPC generatetoaddress params: nblocks, address, maxtries.
  * @param[in] address  Reference to const string address to insert into the args.
  * @param     args     Reference to vector of string args to modify.
@@ -1160,6 +1206,7 @@ static int CommandLineRPC(int argc, char *argv[])
     std::string strPrint;
     int nRet = 0;
     try {
+        ValidateCliCommand(argc, argv);
         // Skip switches
         while (argc > 1 && IsSwitchChar(argv[1][0])) {
             argc--;

@@ -30,8 +30,10 @@ JSON_PARSING_ERROR = 'error: Error parsing JSON: foo'
 BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
 TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 WALLET_NOT_LOADED = 'Requested wallet does not exist or is not loaded'
-WALLET_NOT_SPECIFIED = 'Wallet file not specified'
-
+WALLET_NOT_SPECIFIED = "Multiple wallets are loaded. Please specify which wallet to use"
+INVALID_CLI_COMMAND_ARGUMENT = 'error: invalid bitcoin-cli argument; if \"{}\" is a valid option, try passing it before the \"{}\" command'
+DUPLICATE_COMMAND_ERROR = 'error: duplicate bitcoin-cli command {}'
+MULTIPLE_CLI_COMMAND_ERROR = "error: you can only run one bitcoin-cli command at a time, either {} or {}"
 
 def cli_get_info_string_to_dict(cli_get_info_string):
     """Helper method to convert human-readable -getinfo into a dictionary"""
@@ -307,6 +309,11 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(len(generate["blocks"]), n1)
             assert_equal(self.nodes[0].getblockcount(), blocks + 1 + n1)
 
+            # Single or Multi wallet modes don't matter here as -generate command validation is performed before we send to RPC
+            # Note also that -rpcwallet arg intentionally adds some confusion but could be any arg starting with "-"
+            self.log.info('Test -generate with nblocks and -rpcwallet afterwards')
+            assert_raises_process_error(1, INVALID_CLI_COMMAND_ARGUMENT.format(rpcwallet3, "-generate"), self.nodes[0].cli('-generate', 1, rpcwallet3).send_cli)
+
             self.log.info('Test -generate with nblocks and maxtries')
             generate = self.nodes[0].cli('-generate', n2, 1000000).send_cli()
             assert_equal(set(generate.keys()), {'address', 'blocks'})
@@ -323,6 +330,8 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate').echo)
             assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 'foo').echo)
             assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 0).echo)
+
+            self.log.info('Test -generate with bad args & -rpcwallet=unloaded wallet')
             assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 1, 2, 3).echo)
 
             # Test bitcoin-cli -generate with -rpcwallet in multiwallet mode.
@@ -348,6 +357,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(len(generate["blocks"]), n3)
             assert_equal(self.nodes[0].getblockcount(), blocks + 1 + n3)
 
+            # Note, same as above, -rpcwallet arg intentionally adds some confusion but could be any arg starting with "-"
+            self.log.info('Test -generate -rpcwallet with nblocks and -rpcwallet again afterwards')
+            assert_raises_process_error(1, DUPLICATE_COMMAND_ERROR.format("-rpcwallet"), self.nodes[0].cli(rpcwallet3, '-generate', 1, rpcwallet3).send_cli)
+
             self.log.info('Test -generate -rpcwallet with nblocks and maxtries')
             generate = self.nodes[0].cli(rpcwallet2, '-generate', n4, 1000000).send_cli()
             assert_equal(set(generate.keys()), {'address', 'blocks'})
@@ -358,7 +371,12 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate').echo)
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 'foo').echo)
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 0).echo)
+
+            self.log.info('Test -generate with bad args & without -rpcwallet in multiwallet mode')
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 1, 2, 3).echo)
+
+            self.log.info('Test running multiple CLI commands in one line')
+            assert_raises_process_error(1, MULTIPLE_CLI_COMMAND_ERROR.format("-generate", "-getinfo"), self.nodes[0].cli('-generate', '-getinfo', "-addrinfo").send_cli)
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch
