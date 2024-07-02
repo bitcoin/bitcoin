@@ -195,11 +195,11 @@ FUZZ_TARGET(coin_grinder_is_optimal)
 
     if (best_weight < std::numeric_limits<int>::max()) {
         // Sufficient funds and acceptable weight: CoinGrinder should find at least one solution
-        int high_max_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(best_weight, std::numeric_limits<int>::max());
+        int high_max_selection_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(best_weight, std::numeric_limits<int>::max());
 
-        auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, high_max_weight);
+        auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, high_max_selection_weight);
         assert(result_cg);
-        assert(result_cg->GetWeight() <= high_max_weight);
+        assert(result_cg->GetWeight() <= high_max_selection_weight);
         assert(result_cg->GetSelectedEffectiveValue() >= target + coin_params.m_min_change_target);
         assert(best_weight < result_cg->GetWeight() || (best_weight == result_cg->GetWeight() && best_amount <= result_cg->GetSelectedEffectiveValue()));
         if (result_cg->GetAlgoCompleted()) {
@@ -210,8 +210,8 @@ FUZZ_TARGET(coin_grinder_is_optimal)
     }
 
     // CoinGrinder cannot ever find a better solution than the brute-forced best, or there is none in the first place
-    int low_max_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, best_weight - 1);
-    auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, low_max_weight);
+    int low_max_selection_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, best_weight - 1);
+    auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, low_max_selection_weight);
     // Max_weight should have been exceeded, or there were insufficient funds
     assert(!result_cg);
 }
@@ -256,29 +256,34 @@ FUZZ_TARGET(coinselection)
         (void)group.EligibleForSpending(filter);
     }
 
+    int max_selection_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max());
+
     // Run coinselection algorithms
     auto result_bnb = coin_params.m_subtract_fee_outputs ? util::Error{Untranslated("BnB disabled when SFFO is enabled")} :
-                      SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT);
+                      SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, max_selection_weight);
     if (result_bnb) {
         assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0);
         assert(result_bnb->GetSelectedValue() >= target);
+        assert(result_bnb->GetWeight() <= max_selection_weight);
         (void)result_bnb->GetShuffledInputVector();
         (void)result_bnb->GetInputSet();
     }
 
-    auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
+    auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, max_selection_weight);
     if (result_srd) {
         assert(result_srd->GetSelectedValue() >= target);
         assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0); // Demonstrate that SRD creates change of at least CHANGE_LOWER
+        assert(result_srd->GetWeight() <= max_selection_weight);
         result_srd->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
         (void)result_srd->GetShuffledInputVector();
         (void)result_srd->GetInputSet();
     }
 
     CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
-    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, MAX_STANDARD_TX_WEIGHT);
+    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, max_selection_weight);
     if (result_knapsack) {
         assert(result_knapsack->GetSelectedValue() >= target);
+        assert(result_knapsack->GetWeight() <= max_selection_weight);
         result_knapsack->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
         (void)result_knapsack->GetShuffledInputVector();
         (void)result_knapsack->GetInputSet();
