@@ -7,6 +7,7 @@
 
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/bag.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
@@ -36,9 +37,8 @@ private:
     //! Master thread blocks on this when out of work
     std::condition_variable m_master_cv;
 
-    //! The queue of elements to be processed.
-    //! As the order of booleans doesn't matter, it is used as a LIFO (stack)
-    std::vector<T> queue GUARDED_BY(m_mutex);
+    //! A bag of elements to be processed. The order doesn't matter.
+    Bag<T> m_bag GUARDED_BY(m_mutex);
 
     //! The number of workers (including the master) that are idle.
     int nIdle GUARDED_BY(m_mutex){0};
@@ -51,7 +51,7 @@ private:
 
     /**
      * Number of verifications that haven't completed yet.
-     * This includes elements that are no longer queued, but still in the
+     * This includes elements that are no longer in the bag, but still in the
      * worker's own batches.
      */
     unsigned int nTodo GUARDED_BY(m_mutex){0};
@@ -85,7 +85,7 @@ private:
                     nTotal++;
                 }
                 // logically, the do loop starts here
-                while (queue.empty() && !m_request_stop) {
+                while (m_bag.empty() && !m_request_stop) {
                     if (fMaster && nTodo == 0) {
                         nTotal--;
                         bool fRet = fAllOk;
@@ -107,10 +107,8 @@ private:
                 //   all workers finish approximately simultaneously.
                 // * Try to account for idle jobs which will instantly start helping.
                 // * Don't do batches smaller than 1 (duh), or larger than nBatchSize.
-                nNow = std::max(1U, std::min(nBatchSize, (unsigned int)queue.size() / (nTotal + nIdle + 1)));
-                auto start_it = queue.end() - nNow;
-                vChecks.assign(std::make_move_iterator(start_it), std::make_move_iterator(queue.end()));
-                queue.erase(start_it, queue.end());
+                nNow = std::max(1U, std::min(nBatchSize, (unsigned int)m_bag.size() / (nTotal + nIdle + 1)));
+                m_bag.pop(nNow, vChecks);
                 // Check whether we need to do work at all
                 fOk = fAllOk;
             }
@@ -158,14 +156,14 @@ public:
         if (vChecks.empty()) {
             return;
         }
-
+        auto num_checks = vChecks.size();
         {
             LOCK(m_mutex);
-            queue.insert(queue.end(), std::make_move_iterator(vChecks.begin()), std::make_move_iterator(vChecks.end()));
-            nTodo += vChecks.size();
+            m_bag.push(std::move(vChecks));
+            nTodo += num_checks;
         }
 
-        if (vChecks.size() == 1) {
+        if (num_checks == 1) {
             m_worker_cv.notify_one();
         } else {
             m_worker_cv.notify_all();
