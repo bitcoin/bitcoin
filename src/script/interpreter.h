@@ -143,6 +143,12 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // Validating OP_CHECKSIGFROMSTACK
+    SCRIPT_VERIFY_CHECKSIGFROMSTACK = (1U << 21),
+
+    // Making OP_CHECKSIGFROMSTACK non-standard
+    SCRIPT_VERIFY_DISCOURAGE_CHECKSIGFROMSTACK = (1U << 22),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
