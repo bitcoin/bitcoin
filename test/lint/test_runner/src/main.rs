@@ -410,6 +410,7 @@ fn lint_markdown() -> LintResult {
         "--offline",
         "--ignore-path",
         md_ignore_path_str.as_str(),
+        "--gitignore",
         "--root-dir",
         ".",
     ])

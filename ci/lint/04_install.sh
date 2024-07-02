@@ -58,7 +58,7 @@ curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_
     tar --xz -xf - --directory /tmp/
 mv "/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/bin/
 
-MLC_VERSION=v0.16.3
+MLC_VERSION=v0.18.0
 MLC_BIN=mlc-x86_64-linux
 curl -sL "https://github.com/becheran/mlc/releases/download/${MLC_VERSION}/${MLC_BIN}" -o "/usr/bin/mlc"
 chmod +x /usr/bin/mlc
