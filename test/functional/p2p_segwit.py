@@ -166,12 +166,10 @@ class TestP2PConn(P2PInterface):
     def on_wtxidrelay(self, message):
         self.last_wtxidrelay.append(message)
 
-    def announce_tx_and_wait_for_getdata(self, tx, success=True, use_wtxid=False):
+    def announce_tx_and_wait_for_getdata(self, tx, success=True, use_wtxid=False, datatype=None):
         if success:
             # sanity check
             assert (self.wtxidrelay and use_wtxid) or (not self.wtxidrelay and not use_wtxid)
-        with p2p_lock:
-            self.last_message.pop("getdata", None)
         if use_wtxid:
             wtxid = tx.calc_sha256(True)
             self.send_message(msg_inv(inv=[CInv(MSG_WTX, wtxid)]))
@@ -180,16 +178,14 @@ class TestP2PConn(P2PInterface):
 
         if success:
             if use_wtxid:
-                self.wait_for_getdata([wtxid])
+                self.wait_for_getdata([wtxid], datatype=datatype)
             else:
-                self.wait_for_getdata([tx.sha256])
+                self.wait_for_getdata([tx.sha256], datatype=datatype)
         else:
             time.sleep(5)
             assert not self.last_message.get("getdata")
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
-        with p2p_lock:
-            self.last_message.pop("getdata", None)
         msg = msg_headers()
         msg.headers = [CBlockHeader(block)]
         if use_header:
@@ -198,7 +194,7 @@ class TestP2PConn(P2PInterface):
             self.send_message(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
             self.wait_for_getheaders(block_hash=block.hashPrevBlock, timeout=timeout)
             self.send_message(msg)
-        self.wait_for_getdata([block.sha256], timeout=timeout)
+        self.wait_for_getdata([block.sha256], datatype=(MSG_BLOCK | MSG_WITNESS_FLAG), timeout=timeout)
 
     def request_block(self, blockhash, inv_type, timeout=60):
         with p2p_lock:
@@ -360,8 +356,6 @@ class SegWitTest(BitcoinTestFramework):
         This is true regardless of segwit activation.
         Also test that we don't ask for blocks from unupgraded peers."""
 
-        blocktype = 2 | MSG_WITNESS_FLAG
-
         # test_node has set NODE_WITNESS, so all getdata requests should be for
         # witness blocks.
         # Test announcing a block via inv results in a getdata, and that
@@ -374,14 +368,12 @@ class SegWitTest(BitcoinTestFramework):
         self.test_node.send_message(msg_headers())
 
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
         block2 = self.build_next_block()
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block2, True)
 
         # Check that we can getdata for witness blocks or regular blocks,
@@ -536,8 +528,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Verify that if a peer doesn't set nServices to include NODE_WITNESS,
         # the getdata is just for the non-witness portion.
-        self.old_node.announce_tx_and_wait_for_getdata(tx)
-        assert self.old_node.last_message["getdata"].inv[0].type == MSG_TX
+        self.old_node.announce_tx_and_wait_for_getdata(tx, datatype=MSG_TX)
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
@@ -2049,8 +2040,6 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx2.sha256)])
 
         # Send tx2 through; it's an orphan so won't be accepted
-        with p2p_lock:
-            self.wtx_node.last_message.pop("getdata", None)
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
 
         # Expect a request for parent (tx) by txid despite use of WTX peer

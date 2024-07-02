@@ -391,8 +391,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 test_node.send_header_for_blocks([block])
             else:
                 test_node.send_header_for_blocks([block])
-            test_node.wait_for_getdata([block.sha256], timeout=30)
-            assert_equal(test_node.last_message["getdata"].inv[0].type, 4)
+            test_node.wait_for_getdata([block.sha256], datatype=MSG_CMPCT_BLOCK, timeout=30)
 
             # Send back a compactblock message that omits the coinbase
             comp_block = HeaderAndShortIDs()
@@ -558,9 +557,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
 
         # We should receive a getdata request
-        test_node.wait_for_getdata([block.sha256], timeout=10)
-        assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK or \
-               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG
+        test_node.wait_for_getdata([block.sha256], datatype=(MSG_BLOCK | MSG_WITNESS_FLAG), timeout=10)
 
         # Deliver the block
         test_node.send_and_ping(msg_block(block))

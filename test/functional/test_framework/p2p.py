@@ -600,6 +600,19 @@ class P2PInterface(P2PConnection):
 
     # Message receiving helper methods
 
+    def _check_last_getdata(self, hash_list, datatype=None):
+        last_data = self.last_message.pop("getdata", None)
+        if not last_data:
+            return False
+        if datatype is None:
+            return [x.hash for x in last_data.inv] == hash_list
+        else:
+            return [(x.hash, x.type) for x in last_data.inv] == [(h, datatype) for h in hash_list]
+
+    def check_last_getdata(self, hash_list, datatype=None):
+        with p2p_lock:
+            self._check_last_getdata(hash_list, datatype)
+
     def wait_for_tx(self, txid, *, timeout=60):
         def test_function():
             if not self.last_message.get('tx'):
@@ -632,15 +645,12 @@ class P2PInterface(P2PConnection):
 
         self.wait_until(test_function, timeout=timeout)
 
-    def wait_for_getdata(self, hash_list, *, timeout=60):
+    def wait_for_getdata(self, hash_list, *, datatype=None, timeout=60):
         """Waits for a getdata message.
 
         The object hashes in the inventory vector must match the provided hash_list."""
         def test_function():
-            last_data = self.last_message.get("getdata")
-            if not last_data:
-                return False
-            return [x.hash for x in last_data.inv] == hash_list
+            return self._check_last_getdata(hash_list, datatype)
 
         self.wait_until(test_function, timeout=timeout)
 
