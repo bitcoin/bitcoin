@@ -241,7 +241,7 @@ index 7601a6ea84..702d0f56ce 100644
      // Check start string, network magic
 -    if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
 +    if (false && memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) { // skip network magic checking
-         LogPrint(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
+         LogDebug(BCLog::NET, "Header error: Wrong MessageStart %s received, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
          return -1;
      }
 @@ -788,7 +788,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds
@@ -250,7 +250,7 @@ index 7601a6ea84..702d0f56ce 100644
      // Check checksum and header message type string
 -    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
 +    if (false && memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) { // skip checksum checking
-         LogPrint(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
+         LogDebug(BCLog::NET, "Header error: Wrong checksum (%s, %u bytes), expected %s was %s, peer=%d\n",
                   SanitizeString(msg.m_type), msg.m_message_size,
                   HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
 EOF

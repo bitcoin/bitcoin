@@ -82,7 +82,7 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
                 fs::quoted(fs::PathToString(orig_config_path)),
                 config_source);
             if (args.GetBoolArg("-allowignoredconf", false)) {
-                LogPrintf("Warning: %s\n", error);
+                LogInfo("Warning: %s\n", error);
             } else {
                 return ConfigError{ConfigStatus::FAILED, Untranslated(error)};
             }

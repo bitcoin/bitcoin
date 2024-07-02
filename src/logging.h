@@ -241,7 +241,6 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 #define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
 
 // Deprecated unconditional logging.
-#define LogPrintf(...) LogInfo(__VA_ARGS__)
 #define LogPrintfCategory(category, ...) LogPrintLevel_(category, BCLog::Level::Info, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
@@ -258,8 +257,5 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 // Log conditionally, prefixing the output with the passed category name.
 #define LogDebug(category, ...) LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
 #define LogTrace(category, ...) LogPrintLevel(category, BCLog::Level::Trace, __VA_ARGS__)
-
-// Deprecated conditional logging
-#define LogPrint(category, ...)  LogDebug(category, __VA_ARGS__)
 
 #endif // BITCOIN_LOGGING_H

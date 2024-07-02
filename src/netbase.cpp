@@ -92,7 +92,7 @@ enum Network ParseNetwork(const std::string& net_in) {
     if (net == "ipv6") return NET_IPV6;
     if (net == "onion") return NET_ONION;
     if (net == "tor") {
-        LogPrintf("Warning: net name 'tor' is deprecated and will be removed in the future. You should use 'onion' instead.\n");
+        LogInfo("Warning: net name 'tor' is deprecated and will be removed in the future. You should use 'onion' instead.\n");
         return NET_ONION;
     }
     if (net == "i2p") {
@@ -362,7 +362,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
 {
     try {
         IntrRecvError recvr;
-        LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
+        LogDebug(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
         if (strDest.size() > 255) {
             LogError("Hostname too long\n");
             return false;
@@ -381,7 +381,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         sock.SendComplete(vSocks5Init, g_socks5_recv_timeout, g_socks5_interrupt);
         uint8_t pchRet1[2];
         if (InterruptibleRecv(pchRet1, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-            LogPrintf("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
+            LogInfo("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
             return false;
         }
         if (pchRet1[0] != SOCKSVersion::SOCKS5) {
@@ -401,7 +401,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             vAuth.push_back(auth->password.size());
             vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
             sock.SendComplete(vAuth, g_socks5_recv_timeout, g_socks5_interrupt);
-            LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
+            LogDebug(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
             uint8_t pchRetA[2];
             if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
                 LogError("Error reading proxy authentication response\n");
@@ -445,7 +445,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         }
         if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
             // Failures to connect to a peer that are not proxy errors
-            LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
+            LogInfo("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
             return false;
         }
         if (pchRet2[2] != 0x00) { // Reserved field must be 0
@@ -479,7 +479,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             LogError("Error reading from proxy\n");
             return false;
         }
-        LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
+        LogDebug(BCLog::NET, "SOCKS5 connected %s\n", strDest);
         return true;
     } catch (const std::runtime_error& e) {
         LogError("Error during SOCKS5 proxy handshake: %s\n", e.what());
@@ -507,7 +507,7 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
     if (!sock->IsSelectable()) {
-        LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
+        LogInfo("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
         return nullptr;
     }
 
@@ -516,14 +516,14 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
     // should use the MSG_NOSIGNAL flag for every send.
     if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int)) == SOCKET_ERROR) {
-        LogPrintf("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
+        LogInfo("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
                   NetworkErrorString(WSAGetLastError()));
     }
 #endif
 
     // Set the non-blocking option on the socket.
     if (!sock->SetNonBlocking()) {
-        LogPrintf("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogInfo("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
 
@@ -535,7 +535,7 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
         // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
         const int on{1};
         if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-            LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+            LogDebug(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
         }
     }
 
@@ -548,9 +548,9 @@ template<typename... Args>
 static void LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args) {
     std::string error_message = tfm::format(fmt, args...);
     if (manual_connection) {
-        LogPrintf("%s\n", error_message);
+        LogInfo("%s\n", error_message);
     } else {
-        LogPrint(BCLog::NET, "%s\n", error_message);
+        LogDebug(BCLog::NET, "%s\n", error_message);
     }
 }
 
@@ -568,12 +568,12 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             const Sock::Event requested = Sock::RECV | Sock::SEND;
             Sock::Event occurred;
             if (!sock.Wait(std::chrono::milliseconds{nConnectTimeout}, requested, &occurred)) {
-                LogPrintf("wait for connect to %s failed: %s\n",
+                LogInfo("wait for connect to %s failed: %s\n",
                           dest_str,
                           NetworkErrorString(WSAGetLastError()));
                 return false;
             } else if (occurred == 0) {
-                LogPrint(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
+                LogDebug(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
                 return false;
             }
 
@@ -585,7 +585,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             socklen_t sockerr_len = sizeof(sockerr);
             if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
-                LogPrintf("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
+                LogInfo("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
                 return false;
             }
             if (sockerr != 0) {
@@ -621,7 +621,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!dest.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogPrintf("Cannot get sockaddr for %s: unsupported network\n", dest.ToStringAddrPort());
+        LogInfo("Cannot get sockaddr for %s: unsupported network\n", dest.ToStringAddrPort());
         return {};
     }
 

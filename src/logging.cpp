@@ -27,7 +27,7 @@ BCLog::Logger& LogInstance()
  * cleaned up by the OS/libc. Defining a logger as a global object doesn't work
  * since the order of destruction of static/global objects is undefined.
  * Consider if the logger gets destroyed, and then some later destructor calls
- * LogPrintf, maybe indirectly, and you get a core dump at shutdown trying to
+ * LogInfo, maybe indirectly, and you get a core dump at shutdown trying to
  * access the logger. When the shutdown sequence is fully audited and tested,
  * explicit destruction of these objects can be implemented by changing this
  * from a raw pointer to a std::unique_ptr.
@@ -426,7 +426,7 @@ void BCLog::Logger::ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
-            LogPrintf("Failed to shrink debug log file: fseek(...) failed\n");
+            LogInfo("Failed to shrink debug log file: fseek(...) failed\n");
             fclose(file);
             return;
         }

@@ -294,7 +294,7 @@ void BlockManager::FindFilesToPruneManual(
         setFilesToPrune.insert(fileNumber);
         count++;
     }
-    LogPrintf("[%s] Prune (Manual): prune_height=%d removed %d blk/rev pairs\n",
+    LogInfo("[%s] Prune (Manual): prune_height=%d removed %d blk/rev pairs\n",
         chain.GetRole(), last_block_can_prune, count);
 }
 
@@ -366,7 +366,7 @@ void BlockManager::FindFilesToPrune(
         }
     }
 
-    LogPrint(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
+    LogDebug(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
              chain.GetRole(), target / 1024 / 1024, nCurrentUsage / 1024 / 1024,
              (int64_t(target) - int64_t(nCurrentUsage)) / 1024 / 1024,
              min_block_to_prune, last_block_can_prune, count);
@@ -414,7 +414,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
         // to disk, we must bootstrap the value for assumedvalid chainstates
         // from the hardcoded assumeutxo chainparams.
         base->nChainTx = au_data.nChainTx;
-        LogPrintf("[snapshot] set nChainTx=%d for %s\n", au_data.nChainTx, snapshot_blockhash->ToString());
+        LogInfo("[snapshot] set nChainTx=%d for %s\n", au_data.nChainTx, snapshot_blockhash->ToString());
     } else {
         // If this isn't called with a snapshot blockhash, make sure the cached snapshot height
         // is null. This is relevant during snapshot completion, when the blockman may be loaded
@@ -504,11 +504,11 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     // Load block file info
     m_block_tree_db->ReadLastBlockFile(max_blockfile_num);
     m_blockfile_info.resize(max_blockfile_num + 1);
-    LogPrintf("%s: last block file = %i\n", __func__, max_blockfile_num);
+    LogInfo("%s: last block file = %i\n", __func__, max_blockfile_num);
     for (int nFile = 0; nFile <= max_blockfile_num; nFile++) {
         m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
     }
-    LogPrintf("%s: last block file info: %s\n", __func__, m_blockfile_info[max_blockfile_num].ToString());
+    LogInfo("%s: last block file info: %s\n", __func__, m_blockfile_info[max_blockfile_num].ToString());
     for (int nFile = max_blockfile_num + 1; true; nFile++) {
         CBlockFileInfo info;
         if (m_block_tree_db->ReadBlockFileInfo(nFile, info)) {
@@ -519,7 +519,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     }
 
     // Check presence of blk files
-    LogPrintf("Checking all blk files are present...\n");
+    LogInfo("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
     for (const auto& [_, block_index] : m_block_index) {
         if (block_index.nStatus & BLOCK_HAVE_DATA) {
@@ -545,7 +545,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     // Check whether we have ever pruned block & undo files
     m_block_tree_db->ReadFlag("prunedblockfiles", m_have_pruned);
     if (m_have_pruned) {
-        LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
+        LogInfo("LoadBlockIndexDB(): Block files have previously been pruned\n");
     }
 
     // Check whether we need to continue reindexing
@@ -632,7 +632,7 @@ void BlockManager::CleanupBlockRevFiles() const
     // Glob all blk?????.dat and rev?????.dat files from the blocks directory.
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
-    LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
+    LogInfo("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
     for (fs::directory_iterator it(m_opts.blocks_dir); it != fs::directory_iterator(); it++) {
         const std::string path = fs::PathToString(it->path().filename());
         if (fs::is_regular_file(*it) &&
@@ -816,7 +816,7 @@ void BlockManager::UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const
         const bool removed_blockfile{fs::remove(BlockFileSeq().FileName(pos), ec)};
         const bool removed_undofile{fs::remove(UndoFileSeq().FileName(pos), ec)};
         if (removed_blockfile || removed_undofile) {
-            LogPrint(BCLog::BLOCKSTORAGE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+            LogDebug(BCLog::BLOCKSTORAGE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
         }
     }
 }
@@ -858,7 +858,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
         assert(chain_type == BlockfileType::ASSUMED);
         const auto new_cursor = BlockfileCursor{this->MaxBlockfileNum() + 1};
         m_blockfile_cursors[chain_type] = new_cursor;
-        LogPrint(BCLog::BLOCKSTORAGE, "[%s] initializing blockfile cursor to %s\n", chain_type, new_cursor);
+        LogDebug(BCLog::BLOCKSTORAGE, "[%s] initializing blockfile cursor to %s\n", chain_type, new_cursor);
     }
     const int last_blockfile = m_blockfile_cursors[chain_type]->file_num;
 
@@ -901,7 +901,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
     pos.nPos = m_blockfile_info[nFile].nSize;
 
     if (nFile != last_blockfile) {
-        LogPrint(BCLog::BLOCKSTORAGE, "Leaving block file %i: %s (onto %i) (height %i)\n",
+        LogDebug(BCLog::BLOCKSTORAGE, "Leaving block file %i: %s (onto %i) (height %i)\n",
                  last_blockfile, m_blockfile_info[last_blockfile].ToString(), nFile, nHeight);
 
         // Do not propagate the return code. The flush concerns a previous block
@@ -1196,17 +1196,17 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             if (file.IsNull()) {
                 break; // This error is logged in OpenBlockFile
             }
-            LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
+            LogInfo("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
             if (chainman.m_interrupt) {
-                LogPrintf("Interrupt requested. Exit %s\n", __func__);
+                LogInfo("Interrupt requested. Exit %s\n", __func__);
                 return;
             }
             nFile++;
         }
         WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
         chainman.m_blockman.m_blockfiles_indexed = true;
-        LogPrintf("Reindexing finished\n");
+        LogInfo("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         chainman.ActiveChainstate().LoadGenesisBlock();
     }
@@ -1215,14 +1215,14 @@ void ImportBlocks(ChainstateManager& chainman, std::vector<fs::path> vImportFile
     for (const fs::path& path : vImportFiles) {
         AutoFile file{fsbridge::fopen(path, "rb")};
         if (!file.IsNull()) {
-            LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
+            LogInfo("Importing blocks file %s...\n", fs::PathToString(path));
             chainman.LoadExternalBlockFile(file);
             if (chainman.m_interrupt) {
-                LogPrintf("Interrupt requested. Exit %s\n", __func__);
+                LogInfo("Interrupt requested. Exit %s\n", __func__);
                 return;
             }
         } else {
-            LogPrintf("Warning: Could not open blocks file %s\n", fs::PathToString(path));
+            LogInfo("Warning: Could not open blocks file %s\n", fs::PathToString(path));
         }
     }
 
