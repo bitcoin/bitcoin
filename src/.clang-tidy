@@ -6,6 +6,7 @@ bugprone-move-forwarding-reference,
 bugprone-string-constructor,
 bugprone-use-after-move,
 bugprone-lambda-function-name,
+bugprone-unhandled-self-assignment,
 misc-unused-using-decls,
 misc-no-recursion,
 modernize-use-default-member-init,
@@ -23,8 +24,10 @@ readability-const-return-type,
 readability-redundant-declaration,
 readability-redundant-string-init,
 '
+HeaderFilterRegex: '.'
 WarningsAsErrors: '*'
 CheckOptions:
  - key: performance-move-const-arg.CheckTriviallyCopyableMove
    value: false
-HeaderFilterRegex: '.'
+ - key: bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField
+   value: false
