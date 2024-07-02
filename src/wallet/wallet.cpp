@@ -636,15 +636,19 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
     return false;
 }
 
-void CWallet::chainStateFlushed(ChainstateRole role, const CBlockLocator& loc)
+void CWallet::chainStateFlushed(ChainstateRole role)
 {
     // Don't update the best block until the chain is attached so that in case of a shutdown,
     // the rescan will be restarted at next startup.
     if (m_attaching_chain || role == ChainstateRole::BACKGROUND) {
         return;
     }
-    WalletBatch batch(GetDatabase());
-    batch.WriteBestBlock(loc);
+    CBlockLocator loc;
+    WITH_LOCK(cs_wallet, chain().findBlock(m_last_block_processed, FoundBlock().locator(loc)));
+    if (!loc.IsNull()) {
+        WalletBatch batch(GetDatabase());
+        batch.WriteBestBlock(loc);
+    }
 }
 
 void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
@@ -1954,8 +1958,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 result.last_scanned_height = block_height;
 
                 if (save_progress && next_interval) {
-                    CBlockLocator loc = m_chain->getActiveChainLocator(block_hash);
-
+                    CBlockLocator loc;
+                    chain().findBlock(block_hash, FoundBlock().locator(loc));
                     if (!loc.IsNull()) {
                         WalletLogPrintf("Saving scan progress %d.\n", block_height);
                         WalletBatch batch(GetDatabase());
@@ -3044,7 +3048,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
 
         if (chain) {
-            walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain->getTipLocator());
+            walletInstance->chainStateFlushed(ChainstateRole::NORMAL);
         }
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
@@ -3331,7 +3335,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
             }
         }
         walletInstance->m_attaching_chain = false;
-        walletInstance->chainStateFlushed(ChainstateRole::NORMAL, chain.getTipLocator());
+        walletInstance->chainStateFlushed(ChainstateRole::NORMAL);
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
     walletInstance->m_attaching_chain = false;

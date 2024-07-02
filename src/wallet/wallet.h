@@ -788,7 +788,7 @@ public:
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
-    void chainStateFlushed(ChainstateRole role, const CBlockLocator& loc) override;
+    void chainStateFlushed(ChainstateRole role) override;
 
     DBErrors LoadWallet();
 
