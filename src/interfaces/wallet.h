@@ -423,6 +423,8 @@ struct WalletTxStatus
     bool is_abandoned;
     bool is_coinbase;
     bool is_in_main_chain;
+    // The block containing this transaction is assumed valid
+    bool is_assumed;
 };
 
 //! Wallet transaction output.

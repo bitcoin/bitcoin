@@ -411,6 +411,13 @@ private:
      */
     int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
 
+    /**
+     * The following is used to track whether a confirmed transaction is in
+     * a block that background validation hasn't checked yet, or above the
+     * assume utxo snapshot height when background validation hasn't completed.
+     */
+    int m_background_validation_height GUARDED_BY(cs_wallet) = -1;
+
     std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
     std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
 
@@ -521,6 +528,7 @@ public:
      * referenced in transaction, and might cause assert failures.
      */
     int GetTxDepthInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsTxAssumed(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * @return number of blocks to maturity for this transaction:
@@ -990,6 +998,12 @@ public:
         AssertLockHeld(cs_wallet);
         m_last_block_processed_height = block_height;
         m_last_block_processed = block_hash;
+    };
+    /** Height of background validation. Returns -1 if there is no background validation. */
+    int GetBackgroundValidationHeight() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+    {
+        AssertLockHeld(cs_wallet);
+        return m_background_validation_height;
     };
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
