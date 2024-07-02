@@ -237,28 +237,35 @@ class NetTest(BitcoinTestFramework):
     def test_addnode_getaddednodeinfo(self):
         self.log.info("Test addnode and getaddednodeinfo")
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
-        # add a node (node2) to node0
+        self.log.info("Add a node (node2) to node0")
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
         self.nodes[0].addnode(node=ip_port, command='add')
-        # try to add an equivalent ip
-        # (note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)
+        self.log.info("Try to add an equivalent ip and check it fails")
+        self.log.debug("(note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)")
         if platform.system() != "OpenBSD":
             ip_port2 = "127.1:{}".format(p2p_port(2))
             assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port2, command='add')
-        # check that the node has indeed been added
+        self.log.info("Check that the node has indeed been added")
         added_nodes = self.nodes[0].getaddednodeinfo()
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
-        # check that node cannot be added again
+        self.log.info("Check that filtering by node works")
+        self.nodes[0].addnode(node="11.22.33.44", command='add')
+        first_added_node = self.nodes[0].getaddednodeinfo(node=ip_port)
+        assert_equal(added_nodes, first_added_node)
+        assert_equal(len(self.nodes[0].getaddednodeinfo()), 2)
+        self.log.info("Check that node cannot be added again")
         assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
-        # check that node can be removed
+        self.log.info("Check that node can be removed")
         self.nodes[0].addnode(node=ip_port, command='remove')
-        assert_equal(self.nodes[0].getaddednodeinfo(), [])
-        # check that an invalid command returns an error
+        added_nodes = self.nodes[0].getaddednodeinfo()
+        assert_equal(len(added_nodes), 1)
+        assert_equal(added_nodes[0]['addednode'], "11.22.33.44")
+        self.log.info("Check that an invalid command returns an error")
         assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
-        # check that trying to remove the node again returns an error
+        self.log.info("Check that trying to remove the node again returns an error")
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
-        # check that a non-existent node returns an error
+        self.log.info("Check that a non-existent node returns an error")
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
 
     def test_service_flags(self):
