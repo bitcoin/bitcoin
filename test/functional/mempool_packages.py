@@ -14,15 +14,11 @@ from test_framework.p2p import P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
 
 # custom limits for node1
-CUSTOM_ANCESTOR_LIMIT = 5
 CUSTOM_DESCENDANT_LIMIT = 10
-assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
-
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -33,8 +29,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
             [
             ],
             [
-                "-limitancestorcount={}".format(CUSTOM_ANCESTOR_LIMIT),
                 "-limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
+                "-limitclustercount={}".format(CUSTOM_DESCENDANT_LIMIT),
             ],
         ]
 
@@ -70,10 +66,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert_equal(ancestor_vsize, sum([mempool[tx]['vsize'] for tx in mempool]))
         ancestor_count = DEFAULT_ANCESTOR_LIMIT
         assert_equal(ancestor_fees, sum([mempool[tx]['fees']['base'] for tx in mempool]))
-
-        # Adding one more transaction on to the chain should fail.
-        next_hop = self.wallet.create_self_transfer(utxo_to_spend=chain[-1]["new_utxo"])["hex"]
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", lambda: self.nodes[0].sendrawtransaction(next_hop))
 
         descendants = []
         ancestors = [t["txid"] for t in chain]
@@ -190,23 +182,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
                 assert_equal(entry['fees']['modified'], entry['fees']['base'] + Decimal("0.00002"))
             assert_equal(entry['fees']['descendant'], descendant_fees + Decimal("0.00002"))
 
-        # Check that node1's mempool is as expected (-> custom ancestor limit)
-        mempool0 = self.nodes[0].getrawmempool(False)
-        mempool1 = self.nodes[1].getrawmempool(False)
-        assert_equal(len(mempool1), CUSTOM_ANCESTOR_LIMIT)
-        assert set(mempool1).issubset(set(mempool0))
-        for tx in chain[:CUSTOM_ANCESTOR_LIMIT]:
-            assert tx in mempool1
-            entry0 = self.nodes[0].getmempoolentry(tx)
-            entry1 = self.nodes[1].getmempoolentry(tx)
-            assert not entry0['unbroadcast']
-            assert not entry1['unbroadcast']
-            assert_equal(entry1['fees']['base'], entry0['fees']['base'])
-            assert_equal(entry1['vsize'], entry0['vsize'])
-            assert_equal(entry1['depends'], entry0['depends'])
-
         # Now test descendant chain limits
-
         tx_children = []
         # First create one parent tx with 10 children
         tx_with_children = self.wallet.send_self_transfer_multi(from_node=self.nodes[0], num_outputs=10)
@@ -231,32 +207,25 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for child in tx_children:
             assert_equal(mempool[child]['depends'], [parent_transaction])
 
-        # Sending one more chained transaction will fail
-        next_hop = self.wallet.create_self_transfer(utxo_to_spend=transaction_package.pop(0))["hex"]
-        assert_raises_rpc_error(-26, "too-long-mempool-chain", lambda: self.nodes[0].sendrawtransaction(next_hop))
-
         # Check that node1's mempool is as expected, containing:
-        # - txs from previous ancestor test (-> custom ancestor limit)
         # - parent tx for descendant test
         # - txs chained off parent tx (-> custom descendant limit)
-        self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
-                                CUSTOM_ANCESTOR_LIMIT + 1 + CUSTOM_DESCENDANT_LIMIT, timeout=10)
+        self.wait_until(lambda: len(self.nodes[1].getrawmempool()) == 2*CUSTOM_DESCENDANT_LIMIT, timeout=10)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
         assert set(mempool1).issubset(set(mempool0))
         assert parent_transaction in mempool1
-        for tx in chain[:CUSTOM_DESCENDANT_LIMIT]:
-            assert tx in mempool1
-        for tx in chain[CUSTOM_DESCENDANT_LIMIT:]:
-            assert tx not in mempool1
-        for tx in mempool1:
-            entry0 = self.nodes[0].getmempoolentry(tx)
-            entry1 = self.nodes[1].getmempoolentry(tx)
-            assert not entry0['unbroadcast']
-            assert not entry1['unbroadcast']
-            assert_equal(entry1['fees']['base'], entry0['fees']['base'])
-            assert_equal(entry1['vsize'], entry0['vsize'])
-            assert_equal(entry1['depends'], entry0['depends'])
+        for tx in chain:
+            if tx in mempool1:
+                entry0 = self.nodes[0].getmempoolentry(tx)
+                entry1 = self.nodes[1].getmempoolentry(tx)
+                assert not entry0['unbroadcast']
+                assert not entry1['unbroadcast']
+                assert entry1["descendantcount"] <= CUSTOM_DESCENDANT_LIMIT
+                assert_equal(entry1['fees']['base'], entry0['fees']['base'])
+                assert_equal(entry1['vsize'], entry0['vsize'])
+                assert_equal(entry1['depends'], entry0['depends'])
+
         # Test reorg handling
         # First, the basics:
         self.generate(self.nodes[0], 1)

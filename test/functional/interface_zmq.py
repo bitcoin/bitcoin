@@ -446,14 +446,13 @@ class ZMQTest (BitcoinTestFramework):
         mempool_seq += 1
         assert_equal((bump_txid, "A", mempool_seq), seq.receive_sequence())
         mempool_seq += 1
+        mempool_seq += len(more_tx)
         # Conflict announced first, then block
         assert_equal((bump_txid, "R", mempool_seq), seq.receive_sequence())
-        mempool_seq += 1
         assert_equal((tip, "C", None), seq.receive_sequence())
-        mempool_seq += len(more_tx)
+        mempool_seq += 1
         # Last tx
         assert_equal((orig_txid_2, "A", mempool_seq), seq.receive_sequence())
-        mempool_seq += 1
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
         self.sync_all()  # want to make sure we didn't break "consensus" for other tests
 

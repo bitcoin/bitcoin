@@ -251,53 +251,109 @@ static RPCHelpMan testmempoolaccept()
     };
 }
 
+static std::vector<RPCResult> ClusterDescription()
+{
+    return {
+        RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
+        RPCResult{RPCResult::Type::NUM, "txcount", "number of transactions (including this one)"},
+        RPCResult{RPCResult::Type::NUM, "clusterid", "id of the cluster containing this tx"},
+        RPCResult{RPCResult::Type::ARR, "chunks", "the cluster's chunks",
+            {RPCResult{RPCResult::Type::OBJ, "chunkentry", "",
+                {
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "fee", "fee of this chunk"},
+                    RPCResult{RPCResult::Type::NUM, "vsize", "virtual size of this chunk"},
+                    RPCResult{RPCResult::Type::NUM, "feerate", "fee rate in " + CURRENCY_UNIT + "/kvB"},
+                    RPCResult{RPCResult::Type::ARR, "txids", "txids in this chunk in sorted order",
+                        {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "the transaction id"}}}
+                }}
+            }
+        }
+    };
+}
+
 static std::vector<RPCResult> MempoolEntryDescription()
 {
     return {
         RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted."},
-        RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
-        RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
-        RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
-        RPCResult{RPCResult::Type::NUM, "descendantcount", "number of in-mempool descendant transactions (including this one)"},
-        RPCResult{RPCResult::Type::NUM, "descendantsize", "virtual transaction size of in-mempool descendants (including this one)"},
-        RPCResult{RPCResult::Type::NUM, "ancestorcount", "number of in-mempool ancestor transactions (including this one)"},
-        RPCResult{RPCResult::Type::NUM, "ancestorsize", "virtual transaction size of in-mempool ancestors (including this one)"},
-        RPCResult{RPCResult::Type::STR_HEX, "wtxid", "hash of serialized transaction, including witness data"},
-        RPCResult{RPCResult::Type::OBJ, "fees", "",
-            {
-                RPCResult{RPCResult::Type::STR_AMOUNT, "base", "transaction fee, denominated in " + CURRENCY_UNIT},
-                RPCResult{RPCResult::Type::STR_AMOUNT, "modified", "transaction fee with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT},
-                RPCResult{RPCResult::Type::STR_AMOUNT, "ancestor", "transaction fees of in-mempool ancestors (including this one) with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT},
-                RPCResult{RPCResult::Type::STR_AMOUNT, "descendant", "transaction fees of in-mempool descendants (including this one) with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT},
-            }},
-        RPCResult{RPCResult::Type::ARR, "depends", "unconfirmed transactions used as inputs for this transaction",
-            {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "parent transaction id"}}},
-        RPCResult{RPCResult::Type::ARR, "spentby", "unconfirmed transactions spending outputs from this transaction",
-            {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "child transaction id"}}},
-        RPCResult{RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability.\n"},
-        RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
+            RPCResult{RPCResult::Type::NUM, "weight", "transaction weight as defined in BIP 141."},
+            RPCResult{RPCResult::Type::NUM_TIME, "time", "local time transaction entered pool in seconds since 1 Jan 1970 GMT"},
+            RPCResult{RPCResult::Type::NUM, "height", "block height when transaction entered pool"},
+            RPCResult{RPCResult::Type::NUM, "descendantcount", "number of in-mempool descendant transactions (including this one)"},
+            RPCResult{RPCResult::Type::NUM, "descendantsize", "virtual transaction size of in-mempool descendants (including this one)"},
+            RPCResult{RPCResult::Type::NUM, "ancestorcount", "number of in-mempool ancestor transactions (including this one)"},
+            RPCResult{RPCResult::Type::NUM, "ancestorsize", "virtual transaction size of in-mempool ancestors (including this one)"},
+            RPCResult{RPCResult::Type::NUM, "chunksize", "virtual transaction size of this transaction's chunk"},
+            RPCResult{RPCResult::Type::NUM, "clusterid", "id of the cluster containing this tx"},
+            RPCResult{RPCResult::Type::STR_HEX, "wtxid", "hash of serialized transaction, including witness data"},
+            RPCResult{RPCResult::Type::OBJ, "fees", "",
+                {
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "base", "transaction fee, denominated in " + CURRENCY_UNIT},
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "modified", "transaction fee with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT},
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "ancestor", "transaction fees of in-mempool ancestors (including this one) with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT},
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "descendant", "transaction fees of in-mempool descendants (including this one) with fee deltas used for mining priority, denominated in " + CURRENCY_UNIT},
+                    RPCResult{RPCResult::Type::STR_AMOUNT, "chunk", "transaction fees of chunk, denominated in " + CURRENCY_UNIT},
+                }},
+            RPCResult{RPCResult::Type::ARR, "depends", "unconfirmed transactions used as inputs for this transaction",
+                {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "parent transaction id"}}},
+            RPCResult{RPCResult::Type::ARR, "spentby", "unconfirmed transactions spending outputs from this transaction",
+                {RPCResult{RPCResult::Type::STR_HEX, "transactionid", "child transaction id"}}},
+            RPCResult{RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability.\n"},
+            RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
     };
+}
+
+static void clusterToJSON(const CTxMemPool& pool, UniValue& info, const TxGraphCluster& c) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+{
+    AssertLockHeld(pool.cs);
+    info.pushKV("vsize", (int)c.m_tx_size);
+    info.pushKV("txcount", (int)c.m_tx_count);
+    info.pushKV("clusterid", (int)c.m_id);
+    UniValue chunks(UniValue::VARR);
+    for (auto &chunk : c.m_chunks) {
+        UniValue chunkdata(UniValue::VOBJ);
+        chunkdata.pushKV("vsize", (int)chunk.feerate.size);
+        chunkdata.pushKV("fee", ValueFromAmount((int)chunk.feerate.fee));
+        chunkdata.pushKV("feerate", ValueFromAmount(CFeeRate(chunk.feerate.fee, chunk.feerate.size).GetFeePerK()));
+
+        UniValue txids(UniValue::VARR);
+        for (auto &tx : chunk.txs) {
+            txids.push_back(static_cast<const CTxMemPoolEntry&>(tx.get()).GetTx().GetHash().ToString());
+        }
+        chunkdata.pushKV("txids", txids);
+
+        chunks.push_back(chunkdata);
+    }
+    info.pushKV("chunks", chunks);
 }
 
 static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     AssertLockHeld(pool.cs);
 
+    size_t ancestor_size{0}, descendant_size{0};
+    size_t ancestor_count{0}, descendant_count{0};
+    CAmount ancestor_fees{0}, descendant_fees{0};
+    pool.CalculateAncestorData(e, ancestor_count, ancestor_size, ancestor_fees);
+    pool.CalculateDescendantData(e, descendant_count, descendant_size, descendant_fees);
+
     info.pushKV("vsize", (int)e.GetTxSize());
     info.pushKV("weight", (int)e.GetTxWeight());
     info.pushKV("time", count_seconds(e.GetTime()));
     info.pushKV("height", (int)e.GetHeight());
-    info.pushKV("descendantcount", e.GetCountWithDescendants());
-    info.pushKV("descendantsize", e.GetSizeWithDescendants());
-    info.pushKV("ancestorcount", e.GetCountWithAncestors());
-    info.pushKV("ancestorsize", e.GetSizeWithAncestors());
+    info.pushKV("descendantcount", descendant_count);
+    info.pushKV("descendantsize", descendant_size);
+    info.pushKV("ancestorcount", ancestor_count);
+    info.pushKV("ancestorsize", ancestor_size);
     info.pushKV("wtxid", e.GetTx().GetWitnessHash().ToString());
+    info.pushKV("chunksize", e.m_cluster->m_chunks[e.m_loc.first].feerate.size);
+    info.pushKV("clusterid", e.m_cluster->m_id);
 
     UniValue fees(UniValue::VOBJ);
     fees.pushKV("base", ValueFromAmount(e.GetFee()));
     fees.pushKV("modified", ValueFromAmount(e.GetModifiedFee()));
-    fees.pushKV("ancestor", ValueFromAmount(e.GetModFeesWithAncestors()));
-    fees.pushKV("descendant", ValueFromAmount(e.GetModFeesWithDescendants()));
+    fees.pushKV("ancestor", ValueFromAmount(ancestor_fees));
+    fees.pushKV("descendant", ValueFromAmount(descendant_fees));
+    fees.pushKV("chunk", ValueFromAmount(e.m_cluster->m_chunks[e.m_loc.first].feerate.fee));
     info.pushKV("fees", std::move(fees));
 
     const CTransaction& tx = e.GetTx();
@@ -317,7 +373,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     info.pushKV("depends", std::move(depends));
 
     UniValue spent(UniValue::VARR);
-    for (const CTxMemPoolEntry& child : e.GetMemPoolChildrenConst()) {
+    for (const CTxMemPoolEntry& child : pool.GetChildren(e)) {
         spent.push_back(child.GetTx().GetHash().ToString());
     }
 
@@ -372,6 +428,49 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
             return o;
         }
     }
+}
+
+static RPCHelpMan getmempoolfeeratediagram()
+{
+    return RPCHelpMan{"getmempoolfeeratediagram",
+        "Returns the feerate diagram for the whole mempool.",
+        {},
+        {
+            RPCResult{"mempool chunks",
+                RPCResult::Type::ARR, "", "",
+                {
+                    {
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "size", "cumulative size"},
+                            {RPCResult::Type::NUM, "fee", "cumulative fee"}
+                        }
+                    }
+                }
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getmempoolfeeratediagram", "")
+            + HelpExampleRpc("getmempoolfeeratediagram", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+            LOCK(mempool.cs);
+
+            UniValue result(UniValue::VARR);
+
+            auto diagram = mempool.GetFeerateDiagram();
+
+            for (auto f : diagram) {
+                UniValue o(UniValue::VOBJ);
+                o.pushKV("size", f.size);
+                o.pushKV("fee", ValueFromAmount(f.fee));
+                result.push_back(o);
+            }
+            return result;
+        }
+    };
 }
 
 static RPCHelpMan getrawmempool()
@@ -462,21 +561,20 @@ static RPCHelpMan getmempoolancestors()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    auto ancestors{mempool.AssumeCalculateMemPoolAncestors(self.m_name, *entry, CTxMemPool::Limits::NoLimits(), /*fSearchForParents=*/false)};
+    auto ancestors{mempool.CalculateMemPoolAncestorsFast(*entry, /*fSearchForParents=*/false)};
 
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
-            o.push_back(ancestorIt->GetTx().GetHash().ToString());
+        for (auto ancestor : ancestors) {
+            o.push_back(ancestor.get().GetTx().GetHash().ToString());
         }
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter ancestorIt : ancestors) {
-            const CTxMemPoolEntry &e = *ancestorIt;
-            const uint256& _hash = e.GetTx().GetHash();
+        for (auto ancestor : ancestors) {
+            const uint256& _hash = ancestor.get().GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(mempool, info, e);
+            entryToJSON(mempool, info, ancestor.get());
             o.pushKV(_hash.ToString(), std::move(info));
         }
         return o;
@@ -523,21 +621,21 @@ static RPCHelpMan getmempooldescendants()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
 
-    CTxMemPool::setEntries setDescendants;
-    mempool.CalculateDescendants(*it, setDescendants);
-    // CTxMemPool::CalculateDescendants will include the given tx
-    setDescendants.erase(*it);
+    CTxMemPool::Entries descendants = mempool.CalculateDescendants({*it});
 
+    // Note: CTxMemPool::CalculateDescendants will include the given tx
     if (!fVerbose) {
         UniValue o(UniValue::VARR);
-        for (CTxMemPool::txiter descendantIt : setDescendants) {
+        for (CTxMemPool::txiter descendantIt : descendants) {
+            if (descendantIt == it) continue;
             o.push_back(descendantIt->GetTx().GetHash().ToString());
         }
 
         return o;
     } else {
         UniValue o(UniValue::VOBJ);
-        for (CTxMemPool::txiter descendantIt : setDescendants) {
+        for (CTxMemPool::txiter descendantIt : descendants) {
+            if (descendantIt == it) continue;
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
@@ -546,6 +644,40 @@ static RPCHelpMan getmempooldescendants()
         }
         return o;
     }
+},
+    };
+}
+
+static RPCHelpMan getmempoolcluster()
+{
+    return RPCHelpMan{"getmempoolcluster",
+        "\nReturns mempool data for given cluster\n",
+        {
+            {"id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The cluster id (must be in mempool)"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", ClusterDescription()},
+        RPCExamples{
+            HelpExampleCli("getmempoolcluster", "cluster_id")
+            + HelpExampleRpc("getmempoolcluster", "cluster_id")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    int64_t cluster_id = request.params[0].getInt<int>();
+
+    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    LOCK(mempool.cs);
+
+    LOCK(mempool.txgraph.cs);
+    auto it = mempool.txgraph.GetClusterMap().find(cluster_id);
+    if (it == mempool.txgraph.GetClusterMap().end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Cluster not in mempool");
+    }
+
+    const TxGraphCluster &c = *(it->second);
+    UniValue info(UniValue::VOBJ);
+    clusterToJSON(mempool, info, c);
+    return info;
 },
     };
 }
@@ -668,6 +800,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
 {
     // Make sure this call is atomic in the pool.
     LOCK(pool.cs);
+    LOCK(pool.txgraph.cs);
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("loaded", pool.GetLoadTried());
     ret.pushKV("size", (int64_t)pool.size());
@@ -680,6 +813,19 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
     ret.pushKV("fullrbf", pool.m_opts.full_rbf);
+    ret.pushKV("numberofclusters", pool.txgraph.GetClusterMap().size());
+    int64_t max_cluster_count = 0;
+    int64_t max_cluster_size = 0;
+    for (const auto& [id, cluster] : pool.txgraph.GetClusterMap()) {
+        if (cluster->m_tx_count > max_cluster_count) {
+            max_cluster_count = cluster->m_tx_count;
+        }
+        if (cluster->m_tx_size > max_cluster_size) {
+            max_cluster_size = cluster->m_tx_size;
+        }
+    }
+    ret.pushKV("maxclustercount", max_cluster_count);
+    ret.pushKV("maxclustersize", max_cluster_size);
     return ret;
 }
 
@@ -702,6 +848,9 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                 {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
                 {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection"},
+                {RPCResult::Type::NUM, "numberofclusters", "Number of mempool clusters"},
+                {RPCResult::Type::NUM, "maxclustercount", "Count of biggest cluster"},
+                {RPCResult::Type::NUM, "maxclustersize", "Size of biggest cluster"}
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")
@@ -1022,8 +1171,10 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &getmempoolancestors},
         {"blockchain", &getmempooldescendants},
         {"blockchain", &getmempoolentry},
+        {"blockchain", &getmempoolcluster},
         {"blockchain", &gettxspendingprevout},
         {"blockchain", &getmempoolinfo},
+        {"blockchain", &getmempoolfeeratediagram},
         {"blockchain", &getrawmempool},
         {"blockchain", &importmempool},
         {"blockchain", &savemempool},

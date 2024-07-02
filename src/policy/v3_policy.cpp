@@ -55,9 +55,9 @@ struct ParentInfo {
     {}
 };
 
-std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t vsize,
+std::optional<std::string> PackageV3Checks(const CTxMemPool& pool, const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors)
+                                           const CTxMemPool::Entries& mempool_parents)
 {
     // This function is specialized for these limits, and must be reimplemented if they ever change.
     static_assert(V3_ANCESTOR_LIMIT == 2);
@@ -73,12 +73,12 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(), vsize, V3_MAX_VSIZE);
         }
 
-        if (mempool_ancestors.size() + in_package_parents.size() + 1 > V3_ANCESTOR_LIMIT) {
+        if (mempool_parents.size() + in_package_parents.size() + 1 > V3_ANCESTOR_LIMIT) {
             return strprintf("tx %s (wtxid=%s) would have too many ancestors",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
         }
 
-        const bool has_parent{mempool_ancestors.size() + in_package_parents.size() > 0};
+        const bool has_parent{mempool_parents.size() + in_package_parents.size() > 0};
         if (has_parent) {
             // A v3 child cannot be too large.
             if (vsize > V3_CHILD_MAX_VSIZE) {
@@ -89,12 +89,12 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
 
             // Exactly 1 parent exists, either in mempool or package. Find it.
             const auto parent_info = [&] {
-                if (mempool_ancestors.size() > 0) {
-                    auto& mempool_parent = *mempool_ancestors.begin();
+                if (mempool_parents.size() > 0) {
+                    auto& mempool_parent = *mempool_parents.begin();
                     return ParentInfo{mempool_parent->GetTx().GetHash(),
                                       mempool_parent->GetTx().GetWitnessHash(),
                                       mempool_parent->GetTx().version,
-                                      /*has_mempool_descendant=*/mempool_parent->GetCountWithDescendants() > 1};
+                                      /*has_mempool_descendant=*/pool.GetNumChildren(mempool_parent) > 0};
                 } else {
                     auto& parent_index = in_package_parents.front();
                     auto& package_parent = package.at(parent_index);
@@ -141,7 +141,7 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
         }
     } else {
         // Non-v3 transactions cannot have v3 parents.
-        for (auto it : mempool_ancestors) {
+        for (auto it : mempool_parents) {
             if (it->GetTx().version == TRUC_VERSION) {
                 return strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                                  ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
@@ -161,13 +161,14 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
     return std::nullopt;
 }
 
-std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
+std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTxMemPool& pool, const CTransactionRef& ptx,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize)
 {
+    CTxMemPool::Entries parents = pool.CalculateParentsOf(*ptx);
+
     // Check v3 and non-v3 inheritance.
-    for (const auto& entry : mempool_ancestors) {
+    for (const auto& entry : parents) {
         if (ptx->version != TRUC_VERSION && entry->GetTx().version == TRUC_VERSION) {
             return std::make_pair(strprintf("non-v3 tx %s (wtxid=%s) cannot spend from v3 tx %s (wtxid=%s)",
                              ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString(),
@@ -195,14 +196,14 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
     }
 
     // Check that V3_ANCESTOR_LIMIT would not be violated.
-    if (mempool_ancestors.size() + 1 > V3_ANCESTOR_LIMIT) {
+    if (parents.size() + 1 > V3_ANCESTOR_LIMIT) {
         return std::make_pair(strprintf("tx %s (wtxid=%s) would have too many ancestors",
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString()),
             nullptr);
     }
 
     // Remaining checks only pertain to transactions with unconfirmed ancestors.
-    if (mempool_ancestors.size() > 0) {
+    if (parents.size() > 0) {
         // If this transaction spends V3 parents, it cannot be too large.
         if (vsize > V3_CHILD_MAX_VSIZE) {
             return std::make_pair(strprintf("v3 child tx %s (wtxid=%s) is too big: %u > %u virtual bytes",
@@ -211,25 +212,32 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
         }
 
         // Check the descendant counts of in-mempool ancestors.
-        const auto& parent_entry = *mempool_ancestors.begin();
+        const auto& parent_entry = parents[0];
+
+        // If we have a single parent, that transaction may not have any of its own parents.
+        if (pool.GetParents(*parent_entry).size() > 0) {
+            return std::make_pair(strprintf("tx %s (wtxid=%s) would have too many ancestors",
+                    ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString()), nullptr);
+        }
+
         // If there are any ancestors, this is the only child allowed. The parent cannot have any
         // other descendants. We handle the possibility of multiple children as that case is
         // possible through a reorg.
-        const auto& children = parent_entry->GetMemPoolChildrenConst();
+        const auto& children = pool.GetChildren(*parent_entry);
         // Don't double-count a transaction that is going to be replaced. This logic assumes that
         // any descendant of the V3 transaction is a direct child, which makes sense because a V3
         // transaction can only have 1 descendant.
         const bool child_will_be_replaced = !children.empty() &&
             std::any_of(children.cbegin(), children.cend(),
                 [&direct_conflicts](const CTxMemPoolEntry& child){return direct_conflicts.count(child.GetTx().GetHash()) > 0;});
-        if (parent_entry->GetCountWithDescendants() + 1 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
+        if (pool.GetNumChildren(parent_entry) + 2 > V3_DESCENDANT_LIMIT && !child_will_be_replaced) {
             // Allow sibling eviction for v3 transaction: if another child already exists, even if
             // we don't conflict inputs with it, consider evicting it under RBF rules. We rely on v3 rules
             // only permitting 1 descendant, as otherwise we would need to have logic for deciding
             // which descendant to evict. Skip if this isn't true, e.g. if the transaction has
             // multiple children or the sibling also has descendants due to a reorg.
-            const bool consider_sibling_eviction{parent_entry->GetCountWithDescendants() == 2 &&
-                children.begin()->get().GetCountWithAncestors() == 2};
+            const bool consider_sibling_eviction{pool.GetNumChildren(parent_entry) == 1 &&
+                pool.GetNumChildren(children.begin()->get()) == 0};
 
             // Return the sibling if its eviction can be considered. Provide the "descendant count
             // limit" string either way, as the caller may decide not to do sibling eviction.

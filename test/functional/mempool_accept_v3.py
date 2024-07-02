@@ -208,15 +208,15 @@ class MempoolAcceptV3(BitcoinTestFramework):
         node.reconsiderblock(block[0])
 
 
-    @cleanup(extra_args=["-limitdescendantsize=10", "-datacarriersize=40000"])
+    @cleanup(extra_args=["-limitclustercount=1", "-datacarriersize=40000"])
     def test_nondefault_package_limits(self):
         """
-        Max standard tx size + v3 rules imply the ancestor/descendant rules (at their default
+        Max standard tx size + v3 rules imply the cluster rules (at their default
         values), but those checks must not be skipped. Ensure both sets of checks are done by
-        changing the ancestor/descendant limit configurations.
+        changing the cluster limit configurations.
         """
         node = self.nodes[0]
-        self.log.info("Test that a decreased limitdescendantsize also applies to v3 child")
+        self.log.info("Test that a decreased cluster size limit also applies to v3 child")
         parent_target_weight = 9990 * WITNESS_SCALE_FACTOR
         child_target_weight = 500 * WITNESS_SCALE_FACTOR
         tx_v3_parent_large1 = self.wallet.send_self_transfer(
@@ -235,30 +235,18 @@ class MempoolAcceptV3(BitcoinTestFramework):
         assert_greater_than_or_equal(1000, tx_v3_child_large1["tx"].get_vsize())
         assert_greater_than(tx_v3_parent_large1["tx"].get_vsize() + tx_v3_child_large1["tx"].get_vsize(), 10000)
 
-        assert_raises_rpc_error(-26, f"too-long-mempool-chain, exceeds descendant size limit for tx {tx_v3_parent_large1['txid']}", node.sendrawtransaction, tx_v3_child_large1["hex"])
+        assert_raises_rpc_error(-26, f"too-large-cluster, too many unconfirmed transactions in the cluster [limit: 1]", node.sendrawtransaction, tx_v3_child_large1["hex"])
         self.check_mempool([tx_v3_parent_large1["txid"]])
         assert_equal(node.getmempoolentry(tx_v3_parent_large1["txid"])["descendantcount"], 1)
         self.generate(node, 1)
 
-        self.log.info("Test that a decreased limitancestorsize also applies to v3 parent")
-        self.restart_node(0, extra_args=["-limitancestorsize=10", "-datacarriersize=40000"])
-        tx_v3_parent_large2 = self.wallet.send_self_transfer(
-            from_node=node,
-            target_weight=parent_target_weight,
-            version=3
-        )
-        tx_v3_child_large2 = self.wallet.create_self_transfer(
-            utxo_to_spend=tx_v3_parent_large2["new_utxo"],
-            target_weight=child_target_weight,
-            version=3
-        )
-
-        # Parent and child are within v3 limits
-        assert_greater_than_or_equal(V3_MAX_VSIZE, tx_v3_parent_large2["tx"].get_vsize())
+        self.log.info("Test that a decreased limitclustersize also applies to v3 parent")
+        self.restart_node(0, extra_args=["-limitclustersize=10", "-datacarriersize=40000", "-acceptnonstdtxn=1"])
+        tx_v3_parent_large2 = self.wallet.send_self_transfer(from_node=node, target_weight=39900, version=3)
+        tx_v3_child_large2 = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_parent_large2["new_utxo"], version=3)
+        # Child is within v3 limits
         assert_greater_than_or_equal(1000, tx_v3_child_large2["tx"].get_vsize())
-        assert_greater_than(tx_v3_parent_large2["tx"].get_vsize() + tx_v3_child_large2["tx"].get_vsize(), 10000)
-
-        assert_raises_rpc_error(-26, f"too-long-mempool-chain, exceeds ancestor size limit", node.sendrawtransaction, tx_v3_child_large2["hex"])
+        assert_raises_rpc_error(-26, f"too-large-cluster, exceeds cluster size limit", node.sendrawtransaction, tx_v3_child_large2["hex"])
         self.check_mempool([tx_v3_parent_large2["txid"]])
 
     @cleanup(extra_args=["-datacarriersize=1000"])
@@ -525,7 +513,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
         tx_v3_child_2_rule6 = self.wallet.create_self_transfer(
             utxo_to_spend=tx_v3_parent["new_utxos"][1], fee_rate=DEFAULT_FEE, version=3
         )
-        rule6_str = f"insufficient fee (including sibling eviction), rejecting replacement {tx_v3_child_2_rule6['txid']}; new feerate"
+        rule6_str = f"insufficient fee (including sibling eviction), rejecting replacement {tx_v3_child_2_rule6['txid']}"
         assert_raises_rpc_error(-26, rule6_str, node.sendrawtransaction, tx_v3_child_2_rule6["hex"])
         self.check_mempool([tx_v3_parent['txid'], tx_v3_child_1['txid']])
 
@@ -557,10 +545,11 @@ class MempoolAcceptV3(BitcoinTestFramework):
         # Override maxfeerate - it costs a lot to replace these 100 transactions.
         assert node.testmempoolaccept([tx_v3_replacement_only["hex"]], maxfeerate=0)[0]["allowed"]
         # Adding another one exceeds the limit.
-        utxos_for_conflict.append(tx_v3_parent["new_utxos"][1])
-        tx_v3_child_2_rule5 = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_for_conflict, fee_per_output=4000000, version=3)
-        rule5_str = f"too many potential replacements (including sibling eviction), rejecting replacement {tx_v3_child_2_rule5['txid']}; too many potential replacements (101 > 100)"
-        assert_raises_rpc_error(-26, rule5_str, node.sendrawtransaction, tx_v3_child_2_rule5["hex"])
+        # TODO: rewrite this test given the new RBF rules
+        #utxos_for_conflict.append(tx_v3_parent["new_utxos"][1])
+        #tx_v3_child_2_rule5 = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_for_conflict, fee_per_output=4000000, version=3)
+        #rule5_str = f"too many potential replacements (including sibling eviction), rejecting replacement {tx_v3_child_2_rule5['txid']}; too many potential replacements (101 > 100)"
+        #assert_raises_rpc_error(-26, rule5_str, node.sendrawtransaction, tx_v3_child_2_rule5["hex"])
         self.check_mempool(txids_v2_100 + [tx_v3_parent["txid"], tx_v3_child_1["txid"]])
 
         self.log.info("Test sibling eviction is successful if it meets all RBF rules")
@@ -578,7 +567,7 @@ class MempoolAcceptV3(BitcoinTestFramework):
         fee_to_beat = max(int(tx_v3_child_2["fee"] * COIN), int(tx_unrelated_replacee["fee"]*COIN))
 
         tx_v3_child_3 = self.wallet.create_self_transfer_multi(
-            utxos_to_spend=[tx_v3_parent["new_utxos"][0], utxo_unrelated_conflict], fee_per_output=fee_to_beat*2, version=3
+            utxos_to_spend=[tx_v3_parent["new_utxos"][0], utxo_unrelated_conflict], fee_per_output=fee_to_beat*4, version=3
         )
         node.sendrawtransaction(tx_v3_child_3["hex"])
         self.check_mempool(txids_v2_100 + [tx_v3_parent["txid"], tx_v3_child_3["txid"]])

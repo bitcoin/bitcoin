@@ -46,7 +46,7 @@ static_assert(V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT
  * 6. A v3 tx must be within V3_MAX_VSIZE.
  *
  *
- * @param[in]   mempool_ancestors       The in-mempool ancestors of ptx.
+ * @param[in]   pool                    A reference to the mempool.
  * @param[in]   direct_conflicts        In-mempool transactions this tx conflicts with. These conflicts
  *                                      are used to more accurately calculate the resulting descendant
  *                                      count of in-mempool ancestors.
@@ -60,8 +60,7 @@ static_assert(V3_MAX_VSIZE + V3_CHILD_MAX_VSIZE <= DEFAULT_DESCENDANT_SIZE_LIMIT
  * - debug string + nullptr if this transaction violates some v3 rule and sibling eviction is not
  *   applicable.
  */
-std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTransactionRef& ptx,
-                                          const CTxMemPool::setEntries& mempool_ancestors,
+std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTxMemPool& pool, const CTransactionRef& ptx,
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize);
 
@@ -86,8 +85,8 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
  *
  * @returns debug string if an error occurs, std::nullopt otherwise.
  * */
-std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t vsize,
+std::optional<std::string> PackageV3Checks(const CTxMemPool& pool, const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors);
+                                           const CTxMemPool::Entries& mempool_parents);
 
 #endif // BITCOIN_POLICY_V3_POLICY_H

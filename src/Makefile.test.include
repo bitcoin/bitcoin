@@ -158,6 +158,7 @@ BITCOIN_TESTS =\
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
   test/translation_tests.cpp \
+  test/txgraph_tests.cpp \
   test/txindex_tests.cpp \
   test/txpackage_tests.cpp \
   test/txreconciliation_tests.cpp \
@@ -303,6 +304,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/buffered_file.cpp \
  test/fuzz/chain.cpp \
  test/fuzz/checkqueue.cpp \
+ test/fuzz/cluster_linearize.cpp \
  test/fuzz/coins_view.cpp \
  test/fuzz/coinscache_sim.cpp \
  test/fuzz/connman.cpp \
@@ -395,6 +397,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
  test/fuzz/tx_pool.cpp \
+ test/fuzz/txgraph.cpp \
  test/fuzz/txorphan.cpp \
  test/fuzz/txrequest.cpp \
  test/fuzz/utxo_snapshot.cpp \
