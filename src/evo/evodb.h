@@ -9,6 +9,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #include <utility>
 #include <logging.h>
@@ -145,24 +146,33 @@ public:
         // If max cache size isn’t reached, load from DB
         if (mapCache.size() < maxCacheSize) {
             auto pcursor = NewIterator();
-            pcursor->SeekToLast();
-            while (pcursor->Valid()) {
+            for (pcursor->SeekToFirst(); pcursor->Valid(); pcursor->Next()) {
                 K key;
                 V value;
                 if (pcursor->GetKey(key) && pcursor->GetValue(value)) {
                     if (setEraseCache.find(key) == setEraseCache.end()) {
                         if (mapCache.find(key) == mapCache.end()) {
                             result.push_back(std::make_pair(key, value));
+                            // Use WriteCache to add to cache
                             WriteCache(key, value);
                         }
                     }
                 }
-                pcursor->Prev();
             }
+            std::reverse(result.begin(), result.end());
+        }
+
+        return result;
     }
 
-    return result;
-}
+    // Getter for testing purposes
+    std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> GetMapCache() const {
+        return mapCache;
+    }
+
+    std::list<std::pair<K, V>> GetFifoList() const {
+        return fifoList;
+    }
 
 };
 
