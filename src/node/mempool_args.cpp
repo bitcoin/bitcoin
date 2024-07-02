@@ -79,6 +79,8 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         }
     }
 
+    mempool_opts.permit_bare_pubkey = argsman.GetBoolArg("-permitbarepubkey", DEFAULT_PERMIT_BAREPUBKEY);
+
     mempool_opts.permit_bare_multisig = argsman.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
 
     if (argsman.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER)) {

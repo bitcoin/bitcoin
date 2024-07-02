@@ -91,7 +91,7 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_pubkey, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     if (tx.version > TX_MAX_STANDARD_VERSION || tx.version < 1) {
         reason = "version";
@@ -138,6 +138,10 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
 
         if (whichType == TxoutType::NULL_DATA)
             nDataOut++;
+        else if ((whichType == TxoutType::PUBKEY) && (!permit_bare_pubkey)) {
+            reason = "bare-pubkey";
+            return false;
+        }
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
