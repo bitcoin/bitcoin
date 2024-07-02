@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from test_framework.messages import tx_from_hex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -301,21 +302,35 @@ class AssumeutxoTest(BitcoinTestFramework):
             the snapshot, and final values after the snapshot is validated."""
             for height, block in blocks.items():
                 tx = n1.getblockheader(block.hash)["nTx"]
-                chain_tx = n1.getchaintxstats(nblocks=1, blockhash=block.hash)["txcount"]
+                stats = n1.getchaintxstats(nblocks=1, blockhash=block.hash)
+                chain_tx = stats.get("txcount", None)
+                window_tx_count = stats.get("window_tx_count", None)
+                tx_rate = stats.get("txrate", None)
+                window_interval = stats.get("window_interval")
 
                 # Intermediate nTx of the starting block should be set, but nTx of
                 # later blocks should be 0 before they are downloaded.
+                # The window_tx_count of one block is equal to the blocks tx count.
+                # If the window tx count is unknown, the value is missing.
+                # The tx_rate is calculated from window_tx_count and window_interval
+                # when possible.
                 if final or height == START_HEIGHT:
                     assert_equal(tx, block.tx)
+                    assert_equal(window_tx_count, tx)
+                    if window_interval > 0:
+                        assert_approx(tx_rate, window_tx_count / window_interval, vspan=0.1)
+                    else:
+                        assert_equal(tx_rate, None)
                 else:
                     assert_equal(tx, 0)
+                    assert_equal(window_tx_count, None)
 
                 # Intermediate nChainTx of the starting block and snapshot block
-                # should be set, but others should be 0 until they are downloaded.
+                # should be set, but others should be None until they are downloaded.
                 if final or height in (START_HEIGHT, SNAPSHOT_BASE_HEIGHT):
                     assert_equal(chain_tx, block.chain_tx)
                 else:
-                    assert_equal(chain_tx, 0)
+                    assert_equal(chain_tx, None)
 
         check_tx_counts(final=False)
 

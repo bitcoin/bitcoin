@@ -51,7 +51,6 @@ unsigned-integer-overflow:CCoinsViewCache::Uncache
 unsigned-integer-overflow:CompressAmount
 unsigned-integer-overflow:DecompressAmount
 unsigned-integer-overflow:crypto/
-unsigned-integer-overflow:getchaintxstats*
 unsigned-integer-overflow:MurmurHash3
 unsigned-integer-overflow:CBlockPolicyEstimator::processBlockTx
 unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
@@ -63,7 +62,6 @@ implicit-integer-sign-change:CBlockPolicyEstimator::processBlockTx
 implicit-integer-sign-change:SetStdinEcho
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
-implicit-integer-sign-change:getchaintxstats*
 implicit-integer-sign-change:TxConfirmStats::removeTx
 implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:verify_flags
