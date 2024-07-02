@@ -12,6 +12,7 @@ from test_framework.descriptors import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -53,7 +54,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(8, len([d for d in result['descriptors'] if d['active']]))
         assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
         for item in result['descriptors']:
-            assert item['desc'] != ''
+            assert_not_equal(item['desc'], '')
             assert item['next_index'] == 0
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None

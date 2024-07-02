@@ -32,6 +32,7 @@ from .p2p import P2P_SERVICES, P2P_SUBVERSION
 from .util import (
     MAX_NODES,
     assert_equal,
+    assert_not_equal,
     append_config,
     delete_cookie_file,
     get_auth_cookie,
@@ -636,7 +637,7 @@ class TestNode():
                 self.start(extra_args, stdout=log_stdout, stderr=log_stderr, *args, **kwargs)
                 ret = self.process.wait(timeout=self.rpc_timeout)
                 self.log.debug(self._node_msg(f'bitcoind exited with status {ret} during initialization'))
-                assert ret != 0  # Exit code must indicate failure
+                assert_not_equal(ret, 0) # Exit code must indicate failure
                 self.running = False
                 self.process = None
                 # Check stderr for expected message

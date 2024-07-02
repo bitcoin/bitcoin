@@ -19,7 +19,10 @@ import time
 
 from test_framework.p2p import P2PInterface, msg_getheaders
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
 REGTEST_WORK_PER_BLOCK = 2
@@ -72,7 +75,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[2].getchaintips()), 1)
         assert_equal(self.nodes[2].getchaintips()[0]['height'], 0)
 
-        assert self.nodes[1].getbestblockhash() != self.nodes[0].getbestblockhash()
+        assert_not_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Check that getheaders requests to node2 are ignored")

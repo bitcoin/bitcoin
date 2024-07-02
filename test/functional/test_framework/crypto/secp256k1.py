@@ -17,6 +17,7 @@ Exports:
 
 import unittest
 from hashlib import sha256
+from test_framework.util import assert_not_equal
 
 class FE:
     """Objects of this class represent elements of the field GF(2**256 - 2**32 - 977).
@@ -40,7 +41,7 @@ class FE:
             num = (num * b._den) % FE.SIZE
         else:
             den = (den * b) % FE.SIZE
-        assert den != 0
+        assert_not_equal(den, 0)
         if num == 0:
             den = 1
         self._num = num

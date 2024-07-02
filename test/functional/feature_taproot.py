@@ -93,6 +93,7 @@ from test_framework.script_util import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_raises_rpc_error,
     assert_equal,
 )
@@ -1571,20 +1572,20 @@ class TaprootTest(BitcoinTestFramework):
         # Require negated taps[0]
         assert taps[0].negflag
         # Require one negated and one non-negated in taps 1 and 2.
-        assert taps[1].negflag != taps[2].negflag
+        assert_not_equal(taps[1].negflag, taps[2].negflag)
         # Require one negated and one non-negated in taps 3 and 4.
-        assert taps[3].negflag != taps[4].negflag
+        assert_not_equal(taps[3].negflag, taps[4].negflag)
         # Require one negated and one non-negated in taps 5 and 6.
-        assert taps[5].negflag != taps[6].negflag
+        assert_not_equal(taps[5].negflag, taps[6].negflag)
 
         cblks = [{leaf: get({**DEFAULT_CONTEXT, 'tap': taps[i], 'leaf': leaf}, 'controlblock') for leaf in taps[i].leaves} for i in range(7)]
         # Require one swapped and one unswapped in taps 3 and 4.
-        assert (cblks[3]['0'][33:65] < cblks[3]['1'][33:65]) != (cblks[4]['0'][33:65] < cblks[4]['1'][33:65])
+        assert_not_equal((cblks[3]['0'][33:65] < cblks[3]['1'][33:65]), (cblks[4]['0'][33:65] < cblks[4]['1'][33:65]))
         # Require one swapped and one unswapped in taps 5 and 6, both at the top and child level.
-        assert (cblks[5]['0'][33:65] < cblks[5]['1'][65:]) != (cblks[6]['0'][33:65] < cblks[6]['1'][65:])
-        assert (cblks[5]['1'][33:65] < cblks[5]['2'][33:65]) != (cblks[6]['1'][33:65] < cblks[6]['2'][33:65])
+        assert_not_equal((cblks[5]['0'][33:65] < cblks[5]['1'][65:]), (cblks[6]['0'][33:65] < cblks[6]['1'][65:]))
+        assert_not_equal((cblks[5]['1'][33:65] < cblks[5]['2'][33:65]), (cblks[6]['1'][33:65] < cblks[6]['2'][33:65]))
         # Require within taps 5 (and thus also 6) that one level is swapped and the other is not.
-        assert (cblks[5]['0'][33:65] < cblks[5]['1'][65:]) != (cblks[5]['1'][33:65] < cblks[5]['2'][33:65])
+        assert_not_equal((cblks[5]['0'][33:65] < cblks[5]['1'][65:]), (cblks[5]['1'][33:65] < cblks[5]['2'][33:65]))
 
         # Compute a deterministic set of scriptPubKeys
         tap_spks = []

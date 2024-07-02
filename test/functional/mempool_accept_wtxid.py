@@ -31,6 +31,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 
@@ -86,7 +87,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
         child_two_txid = child_two.rehash()
 
         assert_equal(child_one_txid, child_two_txid)
-        assert child_one_wtxid != child_two_wtxid
+        assert_not_equal(child_one_wtxid, child_two_wtxid)
 
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
