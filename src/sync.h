@@ -299,6 +299,7 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! The above is detectable at compile-time with the -Wreturn-local-addr flag in
 //! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
 #define WITH_LOCK(cs, code) (MaybeCheckNotHeld(cs), [&]() -> decltype(auto) { LOCK(cs); code; }())
+#define WITH_REVERSE_LOCK(cs, code) ([&]() -> decltype(auto) { REVERSE_LOCK(cs); code; }())
 
 /** An implementation of a semaphore.
  *
