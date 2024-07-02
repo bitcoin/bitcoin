@@ -329,8 +329,7 @@ esac
 
 if test "$enable_debug" = "yes"; then
 
-  dnl Disable all optimizations
-  AX_CHECK_COMPILE_FLAG([-O0], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -O0"], [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Og], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -Og"], [], [$CXXFLAG_WERROR])
 
   dnl Prefer -g3, fall back to -g if that is unavailable.
   AX_CHECK_COMPILE_FLAG(

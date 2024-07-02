@@ -10,7 +10,7 @@ endif
 linux_release_CFLAGS=-O2
 linux_release_CXXFLAGS=$(linux_release_CFLAGS)
 
-linux_debug_CFLAGS=-O1 -g
+linux_debug_CFLAGS=-Og -g
 linux_debug_CXXFLAGS=$(linux_debug_CFLAGS)
 
 # https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html
