@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
 
+import select
 import socket
 import threading
 import queue
@@ -41,6 +42,16 @@ class Socks5Configuration():
         self.unauth = False  # Support unauthenticated
         self.auth = False  # Support authentication
         self.keep_alive = False  # Do not automatically close connections
+        # An array of objects like:
+        # {
+        #     "to_addr": "127.0.0.1"
+        #     "to_port": 28276
+        #     "node": python_p2p_node,
+        #     "requested_to_addr": "the_client_asked_to_connect_to_this_addr.onion",
+        # }
+        # Redirect the i'th connection to destinations[i] to_addr:to_port
+        self.destinations = []
+        self.destinations_used = 0
 
 class Socks5Command():
     """Information about an incoming socks5 command."""
@@ -117,6 +128,33 @@ class Socks5Connection():
             cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
             self.serv.queue.put(cmdin)
             logger.debug('Proxy: %s', cmdin)
+
+            num_destinations = len(self.serv.conf.destinations)
+            if self.serv.conf.destinations_used < num_destinations:
+                dest = self.serv.conf.destinations[self.serv.conf.destinations_used]
+                dest["requested_to_addr"] = addr.decode("utf-8")
+                self.serv.conf.destinations_used += 1
+                with socket.create_connection((dest["to_addr"], dest["to_port"])) as conn_to:
+                    self.conn.setblocking(False)
+                    conn_to.setblocking(False)
+                    sockets = [self.conn, conn_to]
+                    done = False
+                    while not done:
+                        rlist, _, xlist = select.select(sockets, [], sockets)
+                        if len(xlist) > 0:
+                            raise IOError("Exceptional condition on socket")
+                        for s in rlist:
+                            data = s.recv(4096)
+                            if data is None or len(data) == 0:
+                                done = True
+                                break
+                            if s == self.conn:
+                                conn_to.sendall(data)
+                            else:
+                                self.conn.sendall(data)
+            elif num_destinations > 0:
+                logger.warning(f"It was requested to redirect the first {num_destinations} connections to the SOCKS5 proxy. Closing subsequent connection without redirecting it.")
+
             # Fall through to disconnect
         except Exception as e:
             logger.exception("socks5 request handling failed.")
