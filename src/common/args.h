@@ -85,13 +85,8 @@ struct SectionInfo {
 };
 
 std::string SettingToString(const common::SettingsValue&, const std::string&);
-std::optional<std::string> SettingToString(const common::SettingsValue&);
-
 int64_t SettingToInt(const common::SettingsValue&, int64_t);
-std::optional<int64_t> SettingToInt(const common::SettingsValue&);
-
 bool SettingToBool(const common::SettingsValue&, bool);
-std::optional<bool> SettingToBool(const common::SettingsValue&);
 
 class ArgsManager
 {
@@ -101,11 +96,11 @@ public:
      * interpreted.
      */
     enum Flags : uint32_t {
-        ALLOW_ANY = 0x01,         //!< disable validation
-        // ALLOW_BOOL = 0x02,     //!< unimplemented, draft implementation in #16545
-        // ALLOW_INT = 0x04,      //!< unimplemented, draft implementation in #16545
-        // ALLOW_STRING = 0x08,   //!< unimplemented, draft implementation in #16545
-        // ALLOW_LIST = 0x10,     //!< unimplemented, draft implementation in #16545
+        ALLOW_ANY = 0x01,         //!< allow any argument value (no type checking)
+        ALLOW_BOOL = 0x02,        //!< allow -foo=1, -foo=0, -foo, -nofoo, -nofoo=1, and -foo=
+        ALLOW_INT = 0x04,         //!< allow -foo=123, -nofoo, -nofoo=1, and -foo=
+        ALLOW_STRING = 0x08,      //!< allow -foo=abc, -nofoo, -nofoo=1, and -foo=
+        ALLOW_LIST = 0x10,        //!< allow multiple -foo=bar -foo=baz values
         DISALLOW_NEGATION = 0x20, //!< disallow -nofoo syntax
         DISALLOW_ELISION = 0x40,  //!< disallow -foo syntax that doesn't assign any value
 
@@ -142,6 +137,8 @@ protected:
     mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
 
+    bool CheckArgFlags(const std::string& name, uint32_t require, uint32_t forbid, const char* context) const;
+
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
     /**
@@ -155,9 +152,12 @@ protected:
     /**
      * Get setting value.
      *
-     * Result will be null if setting was unset, true if "-setting" argument was passed
-     * false if "-nosetting" argument was passed, and a string if a "-setting=value"
-     * argument was passed.
+     * Result will be null if setting was unset, true if `-setting` argument was
+     * passed, false if `-nosetting` argument was passed, and a string, integer,
+     * or boolean depending on ALLOW_{BOOL|INT|STRING} flags if a
+     * `-setting=value` argument was passed. See \ref IntepretValue for an
+     * exact description of how command line and configuration strings map to
+     * JSON values.
      */
     common::SettingsValue GetSetting(const std::string& arg) const;
 
@@ -436,6 +436,13 @@ private:
         const std::string& section,
         const std::map<std::string, std::vector<common::SettingsValue>>& args) const;
 };
+
+//! Whether the type of the argument has been specified and extra validation
+//! rules should apply.
+inline bool TypedArg(uint32_t flags)
+{
+    return flags & (ArgsManager::ALLOW_BOOL | ArgsManager::ALLOW_INT |  ArgsManager::ALLOW_STRING);
+}
 
 extern ArgsManager gArgs;
 

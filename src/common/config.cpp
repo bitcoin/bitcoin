@@ -101,6 +101,10 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         std::optional<unsigned int> flags = GetArgFlags('-' + key.name);
         if (!IsConfSupported(key, error)) return false;
         if (flags) {
+            if (TypedArg(*flags) && !(*flags & ALLOW_LIST) && m_settings.ro_config[key.section].count(key.name)) {
+                error = strprintf("Multiple values specified for -%s in same section of config file.", key.name);
+                return false;
+            }
             std::optional<common::SettingsValue> value = InterpretValue(key, &option.second, *flags, error);
             if (!value) {
                 return false;
