@@ -28,6 +28,8 @@ constexpr static size_t ECDH_SECRET_SIZE = CSHA256::OUTPUT_SIZE;
 // Used to represent ECDH shared secret (ECDH_SECRET_SIZE bytes)
 using ECDHSecret = std::array<std::byte, ECDH_SECRET_SIZE>;
 
+class KeyPair;
+
 /** An encapsulated private key. */
 class CKey
 {
@@ -200,6 +202,20 @@ public:
     ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
                                        const EllSwiftPubKey& our_ellswift,
                                        bool initiating) const;
+    /** Compute a KeyPair
+     *
+     *  Wraps a `secp256k1_keypair` type. `merkle_root` is used to optionally perform tweaking of
+     *  the internal key, as specified in BIP341:
+     *
+     *  - If merkle_root == nullptr: no tweaking is done, use the internal key directly (this is
+     *                               used for signatures in BIP342 script).
+     *  - If merkle_root->IsNull():  tweak the internal key with H_TapTweak(pubkey) (this is used for
+     *                               key path spending when no scripts are present).
+     *  - Otherwise:                 tweak the internal key H_TapTweak(pubkey || *merkle_root)
+     *                               (this is used for key path spending, with specific
+     *                               Merkle root of the script tree).
+     */
+    KeyPair ComputeKeyPair(const uint256* merkle_root) const;
 };
 
 CKey GenerateRandomKey(bool compressed = true) noexcept;
@@ -231,6 +247,41 @@ struct CExtKey {
     [[nodiscard]] bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
     void SetSeed(Span<const std::byte> seed);
+};
+
+/** KeyPair
+ *
+ *  Wraps a `secp256k1_keypair` type. `merkle_root` is used to optionally perform tweaking of
+ *  the internal key, as specified in BIP341:
+ *
+ *  - If merkle_root == nullptr: no tweaking is done, use the internal key directly (this is
+ *                               used for signatures in BIP342 script).
+ *  - If merkle_root->IsNull():  tweak the internal key with H_TapTweak(pubkey) (this is used for
+ *                               key path spending when no scripts are present).
+ *  - Otherwise:                 tweak the internal key H_TapTweak(pubkey || *merkle_root)
+ *                               (this is used for key path spending, with specific
+ *                               Merkle root of the script tree).
+ */
+class KeyPair
+{
+public:
+    KeyPair(KeyPair&&) noexcept = default;
+    KeyPair& operator=(KeyPair&&) noexcept = default;
+
+    friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
+    [[nodiscard]] bool GetKey(CKey& key) const;
+    [[nodiscard]] bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256& aux) const;
+
+    //! Simple read-only vector-like interface.
+    unsigned int size() const { return m_keydata ? m_keydata->size() : 0; }
+    const std::byte* data() const { return m_keydata ? reinterpret_cast<const std::byte*>(m_keydata->data()) : nullptr; }
+    const std::byte* begin() const { return data(); }
+    const std::byte* end() const { return data() + size(); }
+private:
+    KeyPair(const CKey& key, const uint256* merkle_root);
+
+    using KeyType = std::array<unsigned char, 96>;
+    secure_unique_ptr<KeyType> m_keydata;
 };
 
 /** Check that required EC support is available at runtime. */
