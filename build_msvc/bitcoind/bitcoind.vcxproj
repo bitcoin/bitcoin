@@ -84,7 +84,7 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
-                  Replace="@ENABLE_EXTERNAL_SIGNER_TRUE@" By="#"></ReplaceInFile>
+                  Replace="@ENABLE_EXTERNAL_SIGNER_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_USDT_TRACEPOINTS_TRUE@" By="#"></ReplaceInFile>
   </Target>
