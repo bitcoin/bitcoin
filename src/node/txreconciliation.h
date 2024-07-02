@@ -10,15 +10,39 @@
 
 #include <memory>
 #include <tuple>
+#include <optional>
 
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
+
+/**
+ * Maximum number of wtxids stored in a peer local set, bounded to protect the memory use of
+ * reconciliation sets and short ids mappings, and CPU used for sketch computation.
+ */
+constexpr size_t MAX_RECONSET_SIZE = 3000;
 
 enum class ReconciliationRegisterResult {
     NOT_FOUND,
     SUCCESS,
     ALREADY_REGISTERED,
     PROTOCOL_VIOLATION,
+};
+
+/**
+ * Record whether or not a wtxid was successfully added to a reconciliation set.
+ * In case of failure, check whether this was due to a shortid collision and record
+ * the colliding wtxid.
+*/
+class AddToSetResult
+{
+    public:
+        bool m_succeeded;
+        std::optional<Wtxid> m_conflict;
+
+        explicit AddToSetResult(bool added, std::optional<Wtxid> conflict);
+        static AddToSetResult Succeeded();
+        static AddToSetResult Failed();
+        static AddToSetResult Collision(Wtxid);
 };
 
 /**
@@ -55,7 +79,7 @@ private:
     const std::unique_ptr<Impl> m_impl;
 
 public:
-    explicit TxReconciliationTracker(uint32_t recon_version);
+    explicit TxReconciliationTracker(uint32_t recon_version, CSipHasher hasher);
     ~TxReconciliationTracker();
 
     /**
@@ -67,12 +91,37 @@ public:
      */
     uint64_t PreRegisterPeer(NodeId peer_id);
 
+
+    /**
+     * For testing purposes only. This SHOULD NEVER be used in production.
+    */
+    void PreRegisterPeerWithSalt(NodeId peer_id, uint64_t local_salt);
+
     /**
      * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
      * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
      */
     ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound,
                                               uint32_t peer_recon_version, uint64_t remote_salt);
+
+    /**
+     * Step 1. Add a new transaction we want to announce to the peer to the local reconciliation set
+     * of the peer, so that it will be reconciled later, unless the set limit is reached.
+     * Returns whether the transaction appears in the set.
+     */
+    AddToSetResult AddToSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Checks whether a wtxid has a short id collision in the peer's reconciliation set.
+    */
+   bool HasCollision(NodeId peer_id, const Wtxid& wtxid, Wtxid& collision, uint32_t &short_id);
+
+    /**
+     * Before Step 2, we might want to remove a wtxid from the reconciliation set, for example if
+     * the peer just announced the transaction to us.
+     * Returns whether the wtxid was removed.
+     */
+    bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
@@ -84,6 +133,18 @@ public:
      * Check if a peer is registered to reconcile transactions with us.
      */
     bool IsPeerRegistered(NodeId peer_id) const;
+
+    /**
+     * Returns whether the peer is chosen as a low-fanout destination for a given tx.
+     */
+    bool ShouldFanoutTo(const Wtxid& wtxid, NodeId peer_id,
+                        size_t inbounds_fanout_tx_relay, size_t outbounds_fanout_tx_relay);
+
+    /**
+     * Returns a collections of node ids sorted by how many parents the peer has in its reconciliation set
+     * (from less to more)
+    */
+    std::vector<NodeId> SortPeersByFewestParents(std::vector<Wtxid> parents);
 };
 
 #endif // BITCOIN_NODE_TXRECONCILIATION_H
