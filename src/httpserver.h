@@ -131,7 +131,7 @@ public:
      */
     void WriteReply(int nStatus, std::string_view reply = "")
     {
-        WriteReply(nStatus, std::as_bytes(std::span{reply.data(), reply.size()}));
+        WriteReply(nStatus, std::as_bytes(std::span{reply}));
     }
     void WriteReply(int nStatus, std::span<const std::byte> reply);
 };
