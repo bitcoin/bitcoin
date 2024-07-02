@@ -261,6 +261,9 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         )
         self.restart_node(1, extra_args=["-coinstatsindex"])
 
+        self.log.info("Test obtaining info for a non-existent block hash")
+        assert_raises_rpc_error(-5, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", use_index=True)
+
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
 
