@@ -15,16 +15,12 @@ Interesting test cases could be loading an assumeutxo snapshot file with:
 
 - TODO: Valid snapshot file, but referencing a snapshot block that turns out to be
       invalid, or has an invalid parent
-- TODO: Valid snapshot file and snapshot block, but the block is not on the
-      most-work chain
 
 Interesting starting states could be loading a snapshot when the current chain tip is:
 
 - TODO: An ancestor of snapshot block
-- TODO: Not an ancestor of the snapshot block but has less work
 - TODO: The snapshot block
 - TODO: A descendant of the snapshot block
-- TODO: Not an ancestor or a descendant of the snapshot block and has more work
 
 """
 from shutil import rmtree
@@ -51,18 +47,20 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 3
+        self.num_nodes = 5
         self.rpc_timeout = 120
         self.extra_args = [
             [],
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            [],
+            []
         ]
 
     def setup_network(self):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
-        self.add_nodes(3)
+        self.add_nodes(5)
         self.start_nodes(extra_args=self.extra_args)
 
     def test_invalid_snapshot_scenarios(self, valid_snapshot_path):
@@ -204,6 +202,42 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", node.loadtxoutset, dump_output_path)
         self.restart_node(0, extra_args=self.extra_args[0])
 
+    def test_snapshot_in_a_divergent_chain(self, dump_output_path):
+        n0 = self.nodes[0]
+        n3 = self.nodes[3]
+        n4 = self.nodes[4]
+        assert_equal(n0.getblockcount(), FINAL_HEIGHT)
+        assert_equal(n3.getblockcount(), START_HEIGHT)
+        assert_equal(n4.getblockcount(), START_HEIGHT)
+
+        self.log.info("Check importing a snapshot where current chain-tip is not an ancestor of the snapshot block but has less work")
+        # Generate a divergent chain in n3 up to 298
+        self.generate(n3, nblocks=99, sync_fun=self.no_op)
+        assert_equal(n3.getblockcount(), SNAPSHOT_BASE_HEIGHT - 1)
+
+        # Try importing the snapshot and assert its success
+        self.log.info("Importing the snapshot into n3")
+        loaded = n3.loadtxoutset(dump_output_path)
+        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+        normal, snapshot = n3.getchainstates()["chainstates"]
+        assert_equal(normal['blocks'], START_HEIGHT + 99)
+        assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
+
+        # Now lets sync the nodes and wait for the background validation to finish
+        self.connect_nodes(0, 3)
+        self.sync_blocks(nodes=(n0, n3))
+        self.log.info("Ensuring background validation finishes")
+        self.wait_until(lambda: len(n3.getchainstates()['chainstates']) == 1)
+
+        self.log.info("Check importing a snapshot where current chain-tip is not an ancestor or a descendant of the snapshot block and has more work")
+        # Generate a divergent chain in n4 that has more work than the snapshot
+        # This covers the scenario where the snapshot block is not on the most-work chain
+        self.generate(n4, nblocks=101, sync_fun=self.no_op)
+        assert_equal(n4.getblockcount(), SNAPSHOT_BASE_HEIGHT + 1)
+        # Import the snapshot and assert its failure
+        with n4.assert_debug_log(expected_msgs=["[snapshot] activation failed - work does not exceed active chainstate"]):
+            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", n4.loadtxoutset, dump_output_path)
+
     def run_test(self):
         """
         Bring up two (disconnected) nodes, mine some new blocks on the first,
@@ -215,6 +249,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         n0 = self.nodes[0]
         n1 = self.nodes[1]
         n2 = self.nodes[2]
+        n3 = self.nodes[3]
+        n4 = self.nodes[4]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -265,6 +301,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             # block.
             n1.submitheader(block)
             n2.submitheader(block)
+            n3.submitheader(block)
+            n4.submitheader(block)
 
         # Ensure everyone is seeing the same headers.
         for n in self.nodes:
@@ -455,7 +493,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.connect_nodes(0, 2)
         self.wait_until(lambda: n2.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
-        self.sync_blocks()
+        self.sync_blocks(nodes=(n0, n2))
 
         self.log.info("Ensuring background validation completes")
         self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
@@ -491,6 +529,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.restart_node(2, extra_args=['-reindex=1', *self.extra_args[2]])
         self.connect_nodes(0, 2)
         self.wait_until(lambda: n2.getblockcount() == FINAL_HEIGHT)
+
+        self.test_snapshot_in_a_divergent_chain(dump_output['path'])
 
 @dataclass
 class Block:
