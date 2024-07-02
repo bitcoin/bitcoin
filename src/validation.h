@@ -1307,4 +1307,11 @@ bool IsBIP30Repeat(const CBlockIndex& block_index);
 /** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
 bool IsBIP30Unspendable(const CBlockIndex& block_index);
 
+bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
+                       const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+
 #endif // BITCOIN_VALIDATION_H

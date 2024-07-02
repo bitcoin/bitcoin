@@ -131,12 +131,6 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
     return m_chain.Genesis();
 }
 
-bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
-                       const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
-                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
-                       std::vector<CScriptCheck>* pvChecks = nullptr)
-                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
 {
     AssertLockHeld(cs_main);
