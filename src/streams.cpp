@@ -85,4 +85,5 @@ void AutoFile::write(Span<const std::byte> src)
             current_pos += buf_now.size();
         }
     }
+    m_was_written = true;
 }

@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #endif
         AutoFile xor_file{raw_file(mode), xor_pat};
         xor_file << test1 << test2;
+        BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
     }
     {
         // Read raw from disk
@@ -378,8 +379,8 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // by the rewind window (relative to our farthest read position, 40).
     BOOST_CHECK(bf.GetPos() <= 30U);
 
-    // We can explicitly close the file, or the destructor will do it.
-    file.fclose();
+    // Explicitly close the file and check that the close succeeds.
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
 
     fs::remove(streams_test_filename);
 }
@@ -429,7 +430,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     bf.SkipTo(13);
     BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
 
-    file.fclose();
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     fs::remove(streams_test_filename);
 }
 
@@ -550,6 +551,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             if (maxPos < currentPos)
                 maxPos = currentPos;
         }
+        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     }
     fs::remove(streams_test_filename);
 }

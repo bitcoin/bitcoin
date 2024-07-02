@@ -696,6 +696,11 @@ bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos
     hasher << blockundo;
     fileout << hasher.GetHash();
 
+    if (fileout.fclose() != 0) {
+        LogError("%s: fclose failed\n", __func__);
+        return false;
+    }
+
     return true;
 }
 
@@ -1002,6 +1007,11 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
     }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << TX_WITH_WITNESS(block);
+
+    if (fileout.fclose() != 0) {
+        LogError("WriteBlockToDisk: fclose failed\n");
+        return false;
+    }
 
     return true;
 }
