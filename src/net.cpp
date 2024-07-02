@@ -1875,7 +1875,11 @@ void CConnman::DisconnectNodes()
             // Disconnect any connected nodes
             for (CNode* pnode : m_nodes) {
                 if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "Network not active, dropping peer=%d\n", pnode->GetId());
+                    LogPrint(BCLog::NET,
+                        "Network not active, disconnecting peer=%d%s\n",
+                        pnode->GetId(),
+                        fLogIPs ? strprintf(" peeraddr=%s", pnode->addr.ToStringAddrPort()) : ""
+                    );
                     pnode->fDisconnect = true;
                 }
             }
@@ -1968,22 +1972,41 @@ bool CConnman::InactivityCheck(const CNode& node) const
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
     if (last_recv.count() == 0 || last_send.count() == 0) {
-        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, node.GetId());
+        LogPrint(BCLog::NET,
+            "socket no message in first %i seconds, %d %d disconnecting peer=%d%s\n",
+            count_seconds(m_peer_connect_timeout),
+            last_recv.count() != 0,
+            last_send.count() != 0,
+            node.GetId(),
+            fLogIPs ? strprintf(" peeraddr=%s", node.addr.ToStringAddrPort()) : ""
+        );
         return true;
     }
 
     if (now > last_send + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", count_seconds(now - last_send), node.GetId());
+        LogPrint(BCLog::NET,
+            "socket sending timeout: %is, disconnecting peer=%d%s\n", count_seconds(now - last_send),
+            node.GetId(),
+            fLogIPs ? strprintf(" peeraddr=%s", node.addr.ToStringAddrPort()) : ""
+        );
         return true;
     }
 
     if (now > last_recv + TIMEOUT_INTERVAL) {
-        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", count_seconds(now - last_recv), node.GetId());
+        LogPrint(BCLog::NET,
+            "socket receive timeout: %is, disconnecting peer=%d%s\n", count_seconds(now - last_recv),
+            node.GetId(),
+            fLogIPs ? strprintf(" peeraddr=%s", node.addr.ToStringAddrPort()) : ""
+        );
         return true;
     }
 
     if (!node.fSuccessfullyConnected) {
-        LogPrint(BCLog::NET, "version handshake timeout peer=%d\n", node.GetId());
+        LogPrint(BCLog::NET,
+            "version handshake timeout, disconnecting peer=%d%s\n",
+            node.GetId(),
+            fLogIPs ? strprintf(" peeraddr=%s", node.addr.ToStringAddrPort()) : ""
+        );
         return true;
     }
 
@@ -2110,6 +2133,11 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             {
                 bool notify = false;
                 if (!pnode->ReceiveMsgBytes({pchBuf, (size_t)nBytes}, notify)) {
+                    LogPrint(BCLog::NET,
+                        "receiving message bytes failed for peer=%d%s\n",
+                        pnode->GetId(),
+                        fLogIPs ? strprintf(" peeraddr=%s", pnode->addr.ToStringAddrPort()) : ""
+                    );
                     pnode->CloseSocketDisconnect();
                 }
                 RecordBytesRecv(nBytes);
