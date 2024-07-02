@@ -3650,6 +3650,14 @@ bool CWallet::HasEncryptionKeys() const
     return !mapMasterKeys.empty();
 }
 
+bool CWallet::HaveCryptedKeys() const
+{
+    for (const auto& spkm : GetAllScriptPubKeyMans()) {
+        if (spkm->HaveCryptedKeys()) return true;
+    }
+    return false;
+}
+
 void CWallet::ConnectScriptPubKeyManNotifiers()
 {
     for (const auto& spk_man : GetActiveScriptPubKeyMans()) {

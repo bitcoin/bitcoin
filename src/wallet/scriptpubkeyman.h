@@ -221,6 +221,7 @@ public:
     virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return true; }
 
     virtual bool HavePrivateKeys() const { return false; }
+    virtual bool HaveCryptedKeys() const { return false; }
 
     //! The action to do when the DB needs rewrite
     virtual void RewriteDB() {}
@@ -404,6 +405,7 @@ public:
     bool Upgrade(int prev_version, int new_version, bilingual_str& error) override;
 
     bool HavePrivateKeys() const override;
+    bool HaveCryptedKeys() const override;
 
     void RewriteDB() override;
 
@@ -637,6 +639,7 @@ public:
     bool HasPrivKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     //! Retrieve the particular key if it is available. Returns nullopt if the key is not in the wallet, or if the wallet is locked.
     std::optional<CKey> GetKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+    bool HaveCryptedKeys() const override;
 
     std::optional<int64_t> GetOldestKeyPoolTime() const override;
     unsigned int GetKeyPoolSize() const override;

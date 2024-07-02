@@ -524,6 +524,12 @@ bool LegacyScriptPubKeyMan::HavePrivateKeys() const
     return !mapKeys.empty() || !mapCryptedKeys.empty();
 }
 
+bool LegacyScriptPubKeyMan::HaveCryptedKeys() const
+{
+    LOCK(cs_KeyStore);
+    return !mapCryptedKeys.empty();
+}
+
 void LegacyScriptPubKeyMan::RewriteDB()
 {
     LOCK(cs_KeyStore);
@@ -2369,6 +2375,12 @@ bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
 {
     LOCK(cs_desc_man);
     return m_map_keys.size() > 0 || m_map_crypted_keys.size() > 0;
+}
+
+bool DescriptorScriptPubKeyMan::HaveCryptedKeys() const
+{
+    LOCK(cs_desc_man);
+    return !m_map_crypted_keys.empty();
 }
 
 std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
