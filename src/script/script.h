@@ -507,14 +507,18 @@ public:
     {
         if (opcode == OP_0)
             return 0;
+        if (opcode == OP_1NEGATE)
+            return -1;
         assert(opcode >= OP_1 && opcode <= OP_16);
         return (int)opcode - (int)(OP_1 - 1);
     }
     static opcodetype EncodeOP_N(int n)
     {
-        assert(n >= 0 && n <= 16);
+        assert(n >= -1 && n <= 16);
         if (n == 0)
             return OP_0;
+        if (n == -1)
+            return OP_1NEGATE;
         return (opcodetype)(OP_1+n-1);
     }
 
