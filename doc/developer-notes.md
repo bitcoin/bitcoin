@@ -648,8 +648,8 @@ Threads
     : Application level message handling (sending and receiving). Almost
     all net_processing and validation logic runs on this thread.
 
-  - [ThreadDNSAddressSeed (`b-dnsseed`)](https://doxygen.bitcoincore.org/class_c_connman.html#aa7c6970ed98a4a7bafbc071d24897d13)
-    : Loads addresses of peers from the DNS.
+  - [ThreadAddressSeed (`b-addrseed`)](https://doxygen.bitcoincore.org/class_c_connman.html#aa7c6970ed98a4a7bafbc071d24897d13)
+    : Loads addresses of peers from DNS and from fixed seeds.
 
   - ThreadMapPort (`b-mapport`)
     : Universal plug-and-play startup/shutdown.

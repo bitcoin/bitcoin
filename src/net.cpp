@@ -2178,13 +2178,12 @@ void CConnman::WakeMessageHandler()
     condMsgProc.notify_one();
 }
 
-void CConnman::ThreadDNSAddressSeed()
+void CConnman::QueryDNSSeeds(std::chrono::time_point<NodeClock> start)
 {
     constexpr int TARGET_OUTBOUND_CONNECTIONS = 2;
     int outbound_connection_count = 0;
 
     if (gArgs.IsArgSet("-seednode")) {
-        auto start = NodeClock::now();
         constexpr std::chrono::seconds SEEDNODE_TIMEOUT = 30s;
         LogPrintf("-seednode enabled. Trying the provided seeds for %d seconds before defaulting to the dnsseeds.\n", SEEDNODE_TIMEOUT.count());
         while (!interruptNet) {
@@ -2234,7 +2233,6 @@ void CConnman::ThreadDNSAddressSeed()
         //   that query them.
         // * If we continue having problems, eventually query all the
         //   DNS seeds, and if that fails too, also try the fixed seeds.
-        //   (done in ThreadOpenConnections)
         int found = 0;
         const std::chrono::seconds seeds_wait_time = (addrman.Size() >= DNSSEEDS_DELAY_PEER_THRESHOLD ? DNSSEEDS_DELAY_MANY_PEERS : DNSSEEDS_DELAY_FEW_PEERS);
 
@@ -2315,6 +2313,99 @@ void CConnman::ThreadDNSAddressSeed()
         LogPrintf("%d addresses found from DNS seeds\n", found);
     } else {
         LogPrintf("Skipping DNS seeds. Enough peers have been found\n");
+    }
+}
+
+void CConnman::ProcessFixedSeeds(std::chrono::time_point<NodeClock> start)
+{
+    const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
+    const bool use_seednodes{gArgs.IsArgSet("-seednode")};
+
+    while (!interruptNet) {
+        const std::unordered_set<Network> fixed_seed_networks{GetReachableEmptyNetworks()};
+        if (!fixed_seed_networks.empty()) {
+            // When the node starts with an empty peers.dat, there are a few other sources of peers before
+            // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
+            // If none of those are available, we fallback on to fixed seeds immediately, else we allow
+            // 60 seconds for any of those sources to populate addrman.
+            bool add_fixed_seeds_now = false;
+            // It is cheapest to check if enough time has passed first.
+            if (NodeClock::now() > start + std::chrono::minutes{1}) {
+                add_fixed_seeds_now = true;
+                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
+            }
+
+            // Perform cheap checks before locking a mutex.
+            else if (!dnsseed && !use_seednodes) {
+                LOCK(m_added_nodes_mutex);
+                if (m_added_node_params.empty()) {
+                    add_fixed_seeds_now = true;
+                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
+                }
+            }
+
+            if (add_fixed_seeds_now) {
+                std::vector<CAddress> seed_addrs{ConvertSeeds(m_params.FixedSeeds())};
+                // We will not make outgoing connections to peers that are unreachable
+                // (e.g. because of -onlynet configuration).
+                // Therefore, we do not add them to addrman in the first place.
+                // In case previously unreachable networks become reachable
+                // (e.g. in case of -onlynet changes by the user), fixed seeds will
+                // be loaded only for networks for which we have no addresses.
+                seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
+                                                [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
+                                 seed_addrs.end());
+                Shuffle(seed_addrs.begin(), seed_addrs.end(), FastRandomContext());
+
+                // Make AddrFetch connections to 10 fixed seeds first. This reduces the
+                // load on the fixed seeds that would otherwise be serving blocks for
+                // many new peers requiring IBD. Try this with multiple fixed seeds for
+                // a better diversity of received addrs and because some may be offline.
+                const std::chrono::minutes wait_time{2};
+                LogPrintf("Initiating AddrFetch connections to fixed seeds. This might take up to %d minutes.\n", wait_time.count());
+                for (size_t addr_pos = 0; addr_pos < 10; ++addr_pos) {
+                    if (addr_pos >= seed_addrs.size()) {
+                        break;
+                    }
+                    AddAddrFetch(seed_addrs.at(addr_pos).ToStringAddr());
+                }
+                // Give AddrFetch peers some time to provide us with addresses
+                // before adding the fixed seeds to AddrMan
+                if (!interruptNet.sleep_for(wait_time)) {
+                    return;
+                }
+                // The fixed seeds queried in the previous steps might have been offline,
+                // failed to send us any addresses or sent us fake ones. As a fallback for this,
+                // we now add all reachable fixed seeds to AddrMan.
+                CNetAddr local;
+                local.SetInternal("fixedseeds");
+                addrman.Add(seed_addrs, local);
+                LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
+                return;
+            }
+            if (!interruptNet.sleep_for(std::chrono::milliseconds(500))) {
+                return;
+            }
+        } else {
+            LogPrint(BCLog::NET, "No fixed seeds were added (sufficient addresses available for every reachable network).\n");
+            return;
+        }
+    }
+}
+
+void CConnman::ThreadAddressSeed()
+{
+    auto start_time{NodeClock::now()};
+    if (gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED)) {
+        QueryDNSSeeds(start_time);
+    } else {
+        LogPrintf("DNS seeding disabled\n");
+    }
+
+    if (gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS)) {
+        ProcessFixedSeeds(start_time);
+    } else {
+        LogPrintf("Fixed seeds are disabled\n");
     }
 }
 
@@ -2484,13 +2575,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     auto next_feeler = GetExponentialRand(start, FEELER_INTERVAL);
     auto next_extra_block_relay = GetExponentialRand(start, EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
     auto next_extra_network_peer{GetExponentialRand(start, EXTRA_NETWORK_PEER_INTERVAL)};
-    const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
-    bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
-    const bool use_seednodes{gArgs.IsArgSet("-seednode")};
-
-    if (!add_fixed_seeds) {
-        LogPrintf("Fixed seeds are disabled\n");
-    }
 
     while (!interruptNet)
     {
@@ -2504,47 +2588,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         CSemaphoreGrant grant(*semOutbound);
         if (interruptNet)
             return;
-
-        const std::unordered_set<Network> fixed_seed_networks{GetReachableEmptyNetworks()};
-        if (add_fixed_seeds && !fixed_seed_networks.empty()) {
-            // When the node starts with an empty peers.dat, there are a few other sources of peers before
-            // we fallback on to fixed seeds: -dnsseed, -seednode, -addnode
-            // If none of those are available, we fallback on to fixed seeds immediately, else we allow
-            // 60 seconds for any of those sources to populate addrman.
-            bool add_fixed_seeds_now = false;
-            // It is cheapest to check if enough time has passed first.
-            if (GetTime<std::chrono::seconds>() > start + std::chrono::minutes{1}) {
-                add_fixed_seeds_now = true;
-                LogPrintf("Adding fixed seeds as 60 seconds have passed and addrman is empty for at least one reachable network\n");
-            }
-
-            // Perform cheap checks before locking a mutex.
-            else if (!dnsseed && !use_seednodes) {
-                LOCK(m_added_nodes_mutex);
-                if (m_added_node_params.empty()) {
-                    add_fixed_seeds_now = true;
-                    LogPrintf("Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n");
-                }
-            }
-
-            if (add_fixed_seeds_now) {
-                std::vector<CAddress> seed_addrs{ConvertSeeds(m_params.FixedSeeds())};
-                // We will not make outgoing connections to peers that are unreachable
-                // (e.g. because of -onlynet configuration).
-                // Therefore, we do not add them to addrman in the first place.
-                // In case previously unreachable networks become reachable
-                // (e.g. in case of -onlynet changes by the user), fixed seeds will
-                // be loaded only for networks for which we have no addresses.
-                seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
-                                                [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
-                                 seed_addrs.end());
-                CNetAddr local;
-                local.SetInternal("fixedseeds");
-                addrman.Add(seed_addrs, local);
-                add_fixed_seeds = false;
-                LogPrintf("Added %d fixed seeds from reachable networks.\n", seed_addrs.size());
-            }
-        }
 
         //
         // Choose an address to connect to based on most recently seen
@@ -3281,10 +3324,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
 
-    if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
-        LogPrintf("DNS seeding disabled\n");
-    else
-        threadDNSAddressSeed = std::thread(&util::TraceThread, "dnsseed", [this] { ThreadDNSAddressSeed(); });
+    threadAddressSeed = std::thread(&util::TraceThread, "addrseed", [this] { ThreadAddressSeed(); });
 
     // Initiate manual connections
     threadOpenAddedConnections = std::thread(&util::TraceThread, "addcon", [this] { ThreadOpenAddedConnections(); });
@@ -3373,8 +3413,8 @@ void CConnman::StopThreads()
         threadOpenConnections.join();
     if (threadOpenAddedConnections.joinable())
         threadOpenAddedConnections.join();
-    if (threadDNSAddressSeed.joinable())
-        threadDNSAddressSeed.join();
+    if (threadAddressSeed.joinable())
+        threadAddressSeed.join();
     if (threadSocketHandler.joinable())
         threadSocketHandler.join();
 }

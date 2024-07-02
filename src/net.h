@@ -1323,7 +1323,9 @@ private:
     void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
 
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
-    void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
+    void ThreadAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex);
+    void QueryDNSSeeds(std::chrono::time_point<NodeClock> start) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
+    void ProcessFixedSeeds(std::chrono::time_point<NodeClock> start) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_addr_fetches_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
@@ -1529,7 +1531,7 @@ private:
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
 
-    std::thread threadDNSAddressSeed;
+    std::thread threadAddressSeed;
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
