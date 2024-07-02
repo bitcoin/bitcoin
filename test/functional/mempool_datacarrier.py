@@ -13,7 +13,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 
 from random import randbytes
@@ -45,6 +45,14 @@ class DataCarrierTest(BitcoinTestFramework):
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
+
+        assert_equal(self.nodes[0].getmempoolinfo()["maxdatacarriersize"], MAX_OP_RETURN_RELAY)
+        assert_equal(self.nodes[1].getmempoolinfo()["maxdatacarriersize"], 0)
+        assert_equal(self.nodes[2].getmempoolinfo()["maxdatacarriersize"], MAX_OP_RETURN_RELAY - 1)
+        assert_equal(self.nodes[3].getmempoolinfo()["maxdatacarriersize"], 2)
+
+        # Test that bare multisig is allowed by default.
+        assert_equal(self.nodes[0].getmempoolinfo()["permitbaremultisig"], True)
 
         # By default, only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
         default_size_data = randbytes(MAX_OP_RETURN_RELAY - 3)
