@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <core_memusage.h>
+#include <kernel/mempool_options.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
@@ -57,10 +58,9 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
         Assert(res == state_with_dupe_check.IsValid());
     }
 
-    const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
     std::string reason;
-    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, std::nullopt, /* permit_bare_multisig= */ true, dust_relay_fee, reason);
-    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, std::nullopt, /* permit_bare_multisig= */ false, dust_relay_fee, reason);
+    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, kernel::MemPoolOptions{.permit_bare_multisig = true}, reason);
+    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, kernel::MemPoolOptions{.permit_bare_multisig = false}, reason);
     if (is_standard_without_permit_bare_multisig) {
         assert(is_standard_with_permit_bare_multisig);
     }
