@@ -6,9 +6,11 @@
 #define BITCOIN_NODE_COIN_H
 
 #include <map>
+#include <set>
 
 class COutPoint;
 class Coin;
+class CScript;
 
 namespace node {
 struct NodeContext;
@@ -22,6 +24,15 @@ struct NodeContext;
  * @param[in,out] coins map to fill
  */
 void FindCoins(const node::NodeContext& node, std::map<COutPoint, Coin>& coins);
+
+/**
+ * Scans the UTXO set for coins belonging to output_scripts.
+ *
+ * @param[in] node The node context to use for lookup
+ * @param[in] output_scripts The scripts to scan for coins
+ * @param[in,out] coins map to fill
+ */
+void GetCoins(const NodeContext& node, std::set<CScript>& output_scripts, std::map<COutPoint, Coin>& coins);
 } // namespace node
 
 #endif // BITCOIN_NODE_COIN_H

@@ -429,7 +429,9 @@ RPCHelpMan getbalances()
     return RPCHelpMan{
         "getbalances",
         "Returns an object with all balances in " + CURRENCY_UNIT + ".\n",
-        {},
+        {
+            {"scan_utxoset", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to scan (true) or not to scan (false) the unspent transactions output set"},
+        },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
@@ -450,8 +452,10 @@ RPCHelpMan getbalances()
             }
             },
         RPCExamples{
-            HelpExampleCli("getbalances", "") +
-            HelpExampleRpc("getbalances", "")},
+            HelpExampleCli("getbalances", "")
+            + HelpExampleRpc("getbalances", "")
+            + HelpExampleCli("getbalances", "true")
+        },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
@@ -465,10 +469,35 @@ RPCHelpMan getbalances()
     LOCK(wallet.cs_wallet);
 
     const auto bal = GetBalance(wallet);
+
+    CAmount utxo_balance = 0;
+
+    bool scan_utxoset = false;
+    if (!request.params[0].isNull()) {
+        scan_utxoset = request.params[0].get_bool();
+    }
+    if (scan_utxoset) {
+        std::set<CScript> output_scripts;
+        for (const auto spkm : wallet.GetAllScriptPubKeyMans()) {
+            for (const auto& script : spkm->GetScriptPubKeys()) {
+                output_scripts.emplace(script);
+            }
+        }
+
+        // Get coins belonging to wallet scripts from utxo set
+        std::map<COutPoint, Coin> coins;
+        wallet.chain().getCoinsByScript(output_scripts, coins);
+
+        for (const auto& it : coins) {
+            const Coin& coin = it.second;
+            utxo_balance += coin.out.nValue;
+        }
+    }
+
     UniValue balances{UniValue::VOBJ};
     {
         UniValue balances_mine{UniValue::VOBJ};
-        balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
+        balances_mine.pushKV("trusted", ValueFromAmount(scan_utxoset ? utxo_balance : bal.m_mine_trusted));
         balances_mine.pushKV("untrusted_pending", ValueFromAmount(bal.m_mine_untrusted_pending));
         balances_mine.pushKV("immature", ValueFromAmount(bal.m_mine_immature));
         if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
