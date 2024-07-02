@@ -57,7 +57,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.log.info("Test TRUC-specific maximum transaction vsize")
         tx_v3_heavy = self.wallet.create_self_transfer(target_weight=(TRUC_MAX_VSIZE + 1) * WITNESS_SCALE_FACTOR, version=3)
         assert_greater_than_or_equal(tx_v3_heavy["tx"].get_vsize(), TRUC_MAX_VSIZE)
-        expected_error_heavy = f"TRUC-violation, v3 tx {tx_v3_heavy['txid']} (wtxid={tx_v3_heavy['wtxid']}) is too big"
+        expected_error_heavy = f"TRUC-violation, version=3 tx {tx_v3_heavy['txid']} (wtxid={tx_v3_heavy['wtxid']}) is too big"
         assert_raises_rpc_error(-26, expected_error_heavy, node.sendrawtransaction, tx_v3_heavy["hex"])
         self.check_mempool([])
 
@@ -77,7 +77,7 @@ class MempoolTRUC(BitcoinTestFramework):
             version=3
         )
         assert_greater_than_or_equal(tx_v3_child_heavy["tx"].get_vsize(), 1000)
-        expected_error_child_heavy = f"TRUC-violation, v3 child tx {tx_v3_child_heavy['txid']} (wtxid={tx_v3_child_heavy['wtxid']}) is too big"
+        expected_error_child_heavy = f"TRUC-violation, version=3 child tx {tx_v3_child_heavy['txid']} (wtxid={tx_v3_child_heavy['wtxid']}) is too big"
         assert_raises_rpc_error(-26, expected_error_child_heavy, node.sendrawtransaction, tx_v3_child_heavy["hex"])
         self.check_mempool([tx_v3_parent_normal["txid"]])
         # tx has no descendants
@@ -157,7 +157,7 @@ class MempoolTRUC(BitcoinTestFramework):
             utxo_to_spend=tx_v3_parent["new_utxo"],
             version=2
         )
-        expected_error_v2_v3 = f"TRUC-violation, non-v3 tx {tx_v3_child_rbf_v2['txid']} (wtxid={tx_v3_child_rbf_v2['wtxid']}) cannot spend from v3 tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']})"
+        expected_error_v2_v3 = f"TRUC-violation, non-version=3 tx {tx_v3_child_rbf_v2['txid']} (wtxid={tx_v3_child_rbf_v2['wtxid']}) cannot spend from version=3 tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']})"
         assert_raises_rpc_error(-26, expected_error_v2_v3, node.sendrawtransaction, tx_v3_child_rbf_v2["hex"])
         self.check_mempool([tx_v3_bip125_rbf_v2["txid"], tx_v3_parent["txid"], tx_v3_child["txid"]])
 
@@ -295,7 +295,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.check_mempool([])
         result = node.submitpackage([tx_v3_parent_normal["hex"], tx_v3_child_heavy["hex"]])
         # tx_v3_child_heavy is heavy based on weight, not sigops.
-        assert_equal(result['package_msg'], f"TRUC-violation, v3 child tx {tx_v3_child_heavy['txid']} (wtxid={tx_v3_child_heavy['wtxid']}) is too big: {tx_v3_child_heavy['tx'].get_vsize()} > 1000 virtual bytes")
+        assert_equal(result['package_msg'], f"TRUC-violation, version=3 child tx {tx_v3_child_heavy['txid']} (wtxid={tx_v3_child_heavy['wtxid']}) is too big: {tx_v3_child_heavy['tx'].get_vsize()} > 1000 virtual bytes")
         self.check_mempool([])
 
         tx_v3_parent = self.wallet.create_self_transfer(version=3)
@@ -426,7 +426,7 @@ class MempoolTRUC(BitcoinTestFramework):
         )
         self.check_mempool([])
         result = node.submitpackage([tx_v3_parent["hex"], tx_v2_child["hex"]])
-        assert_equal(result['package_msg'], f"TRUC-violation, non-v3 tx {tx_v2_child['txid']} (wtxid={tx_v2_child['wtxid']}) cannot spend from v3 tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']})")
+        assert_equal(result['package_msg'], f"TRUC-violation, non-version=3 tx {tx_v2_child['txid']} (wtxid={tx_v2_child['wtxid']}) cannot spend from version=3 tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']})")
         self.check_mempool([])
 
     @cleanup(extra_args=None)
@@ -447,11 +447,11 @@ class MempoolTRUC(BitcoinTestFramework):
         assert all([result["allowed"] for result in test_accept_v2_and_v3])
 
         test_accept_v3_from_v2 = node.testmempoolaccept([tx_v2["hex"], tx_v3_from_v2["hex"]])
-        expected_error_v3_from_v2 = f"TRUC-violation, v3 tx {tx_v3_from_v2['txid']} (wtxid={tx_v3_from_v2['wtxid']}) cannot spend from non-v3 tx {tx_v2['txid']} (wtxid={tx_v2['wtxid']})"
+        expected_error_v3_from_v2 = f"TRUC-violation, version=3 tx {tx_v3_from_v2['txid']} (wtxid={tx_v3_from_v2['wtxid']}) cannot spend from non-version=3 tx {tx_v2['txid']} (wtxid={tx_v2['wtxid']})"
         assert all([result["package-error"] == expected_error_v3_from_v2 for result in test_accept_v3_from_v2])
 
         test_accept_v2_from_v3 = node.testmempoolaccept([tx_v3["hex"], tx_v2_from_v3["hex"]])
-        expected_error_v2_from_v3 = f"TRUC-violation, non-v3 tx {tx_v2_from_v3['txid']} (wtxid={tx_v2_from_v3['wtxid']}) cannot spend from v3 tx {tx_v3['txid']} (wtxid={tx_v3['wtxid']})"
+        expected_error_v2_from_v3 = f"TRUC-violation, non-version=3 tx {tx_v2_from_v3['txid']} (wtxid={tx_v2_from_v3['wtxid']}) cannot spend from version=3 tx {tx_v3['txid']} (wtxid={tx_v3['wtxid']})"
         assert all([result["package-error"] == expected_error_v2_from_v3 for result in test_accept_v2_from_v3])
 
         test_accept_pairs = node.testmempoolaccept([tx_v2["hex"], tx_v3["hex"], tx_v2_from_v2["hex"], tx_v3_from_v3["hex"]])
