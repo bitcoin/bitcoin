@@ -114,7 +114,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         for bad_block_hash in [bogus_block_hash, prev_block_hash]:
             with open(bad_snapshot_path, 'wb') as f:
                 f.write(valid_snapshot_contents[:11] + bogus_height.to_bytes(4, "little") + bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[47:])
-            error_details = f", assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}, height: {bogus_height}). The following snapshot heights are available: 110, 299."
+            error_details = f", assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}, height: {bogus_height}). The following snapshot heights are available: 110, 200, 299."
             expected_error(rpc_details=error_details)
 
         self.log.info("  - snapshot file with wrong number of coins")
