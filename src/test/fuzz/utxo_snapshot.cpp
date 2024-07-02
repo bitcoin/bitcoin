@@ -54,7 +54,7 @@ FUZZ_TARGET(utxo_snapshot, .init = initialize_chain)
         } catch (const std::ios_base::failure&) {
             return false;
         }
-        return chainman.ActivateSnapshot(infile, metadata, /*in_memory=*/true);
+        return !!chainman.ActivateSnapshot(infile, metadata, /*in_memory=*/true);
     }};
 
     if (fuzzed_data_provider.ConsumeBool()) {
