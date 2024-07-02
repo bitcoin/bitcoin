@@ -374,7 +374,7 @@ std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& n
     return wallet;
 }
 
-std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings, int hd_account)
 {
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -451,7 +451,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             {
                 LOCK(wallet->cs_wallet);
                 if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                    wallet->SetupDescriptorScriptPubKeyMans();
+                    wallet->SetupDescriptorScriptPubKeyMans(hd_account);
                 } else {
                     for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
                         if (!spk_man->SetupGeneration()) {
@@ -3709,7 +3709,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
     if (!batch.TxnCommit()) throw std::runtime_error("Error: cannot commit db transaction for descriptors setup");
 }
 
-void CWallet::SetupDescriptorScriptPubKeyMans()
+void CWallet::SetupDescriptorScriptPubKeyMans(int hd_account)
 {
     AssertLockHeld(cs_wallet);
 
@@ -3727,9 +3727,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 
-        // TODO: add account parameter
-        int account = 0;
-        UniValue signer_res = signer.GetDescriptors(account);
+        UniValue signer_res = signer.GetDescriptors(hd_account);
 
         if (!signer_res.isObject()) throw std::runtime_error(std::string(__func__) + ": Unexpected result");
 

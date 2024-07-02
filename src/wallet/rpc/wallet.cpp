@@ -353,6 +353,7 @@ static RPCHelpMan createwallet()
                                                                        " support for creating and opening legacy wallets will be removed in the future."},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"hd_account", RPCArg::Type::NUM, RPCArg::Default{0}, "BIP44 account used to get the descriptors from the external signer. Requires external_signer set to true."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -412,6 +413,8 @@ static RPCHelpMan createwallet()
 #else
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
 #endif
+    } else if (!request.params[8].isNull()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Account parameter cannot be used without external signing support");
     }
 
 #ifndef USE_BDB
@@ -428,7 +431,8 @@ static RPCHelpMan createwallet()
     options.create_passphrase = passphrase;
     bilingual_str error;
     std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
-    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+    const int account = request.params[8].isNull() ? 0 : request.params[8].getInt<int>();
+    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings, account);
     if (!wallet) {
         RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
         throw JSONRPCError(code, error.original);

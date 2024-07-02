@@ -84,6 +84,10 @@ class WalletSignerTest(BitcoinTestFramework):
         hww = self.nodes[1].get_wallet_rpc('hww')
         assert_equal(hww.getwalletinfo()["external_signer"], True)
 
+        self.nodes[1].createwallet(wallet_name='hww_account', disable_private_keys=True, descriptors=True, external_signer=True, hd_account=2)
+        hww_account = self.nodes[1].get_wallet_rpc('hww_account')
+        assert_equal(hww_account.getwalletinfo()["external_signer"], True)
+
         # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, descriptors=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
