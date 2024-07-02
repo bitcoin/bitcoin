@@ -104,12 +104,14 @@ namespace BCLog {
         std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> m_categories{0};
+        std::atomic<uint32_t> m_categories{BCLog::NONE};
 
         std::string LogTimestampStr(const std::string& str);
 
         /** Slots that connect to the print signal */
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+
+        std::string GetLogPrefix(LogFlags category, Level level) const;
 
     public:
         bool m_print_to_console = false;
@@ -123,8 +125,6 @@ namespace BCLog {
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
-
-        std::string GetLogPrefix(LogFlags category, Level level) const;
 
         /** Send a string to the log output */
         void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level);
