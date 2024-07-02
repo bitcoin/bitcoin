@@ -388,7 +388,6 @@ void Shutdown(NodeContext& node)
         pnevmdatadb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
-        evoDb.reset();
     }
     for (const auto& client : node.chain_clients) {
         client->stop();
@@ -1183,13 +1182,14 @@ static bool LockDataDirectory(bool probeOnly)
 {
     // Make sure only a single Syscoin process is using the data directory.
     const fs::path& datadir = gArgs.GetDataDirNet();
-    if (!DirIsWritable(datadir)) {
+    switch (util::LockDirectory(datadir, ".lock", probeOnly)) {
+    case util::LockResult::ErrorWrite:
         return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), fs::PathToString(datadir)));
-    }
-    if (!LockDirectory(datadir, ".lock", probeOnly)) {
+    case util::LockResult::ErrorLock:
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), fs::PathToString(datadir), PACKAGE_NAME));
-    }
-    return true;
+    case util::LockResult::Success: return true;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 bool AppInitSanityChecks(const kernel::Context& kernel)
@@ -1724,7 +1724,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         RegisterValidationInterface(node.peerman.get());
         // This is defined and set here instead of inline in validation.h to avoid a hard
         // dependency between validation and index/base, since the latter is not in
-        // libbitcoinkernel.
+        // libsyscoinkernel.
         chainman.restart_indexes = [&node]() {
             LogPrintf("[snapshot] restarting indexes\n");
 
@@ -2090,7 +2090,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
-    node.scheduler->scheduleEvery([&] { deterministicMNManager->DoMaintenance(); }, std::chrono::seconds{10});
+    node.scheduler->scheduleEvery([&] { deterministicMNManager->DoMaintenance(); }, std::chrono::hours{1});
     if (activeMasternodeManager) {
         node.scheduler->scheduleEvery([&] { llmq::quorumDKGSessionManager->CleanupOldContributions(*node.chainman); }, std::chrono::hours{1});
     }

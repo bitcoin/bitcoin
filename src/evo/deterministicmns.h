@@ -6,7 +6,6 @@
 #define SYSCOIN_EVO_DETERMINISTICMNS_H
 
 #include <evo/dmnstate.h>
-
 #include <arith_uint256.h>
 #include <consensus/params.h>
 #include <crypto/common.h>
@@ -22,8 +21,8 @@
 #include <limits>
 #include <numeric>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
-#include <evo/deterministicmnsold.h>
 #include <interfaces/chain.h>
 class CBlock;
 class UniValue;
@@ -31,9 +30,9 @@ class CBlockIndex;
 class TxValidationState;
 class ChainstateManager;
 extern RecursiveMutex cs_main;
-class CSimplifiedMNListDiff;
 namespace llmq
 {
+    class CFinalCommitmentTxPayload;
     class CFinalCommitment;
 } // namespace llmq
 
@@ -62,14 +61,6 @@ public:
         s >> *this;
     }
 
-    explicit CDeterministicMN(const CDeterministicMN_old &s) :
-        internalId(s.internalId),
-        proTxHash(s.proTxHash),
-        collateralOutpoint(s.collateralOutpoint)
-    {
-        pdmnState.reset();
-        pdmnState = std::make_shared<const CDeterministicMNState>(CDeterministicMNState(*s.pdmnState));
-    }
 public:
     SERIALIZE_METHODS(CDeterministicMN, obj) {
         READWRITE(obj.proTxHash, VARINT(obj.internalId), obj.collateralOutpoint, obj.nOperatorReward, obj.pdmnState);
@@ -104,6 +95,7 @@ private:
     // map of unique properties like address and keys
     // we keep track of this as checking for duplicates would otherwise be painfully slow
     MnUniquePropertyMap mnUniquePropertyMap;
+    bool m_changed;
 
 public:
     CDeterministicMNList() = default;
@@ -113,16 +105,6 @@ public:
         nTotalRegisteredCount(_totalRegisteredCount)
     {
         assert(nHeight >= 0);
-    }
-
-    explicit CDeterministicMNList(const CDeterministicMNList_old& s) :
-        blockHash(s.blockHash),
-        nHeight(s.nHeight),
-        nTotalRegisteredCount(s.nTotalRegisteredCount)
-    {
-        for (const auto& p : s.mnMap) {
-            mnMap = mnMap.set(p.first, std::make_shared<const CDeterministicMN>(CDeterministicMN(*p.second)));
-        }
     }
 
     template<typename Stream>
@@ -159,6 +141,9 @@ public:
         blockHash.SetNull();
         nHeight = -1;
         nTotalRegisteredCount = 0;
+    }
+    [[nodiscard]] bool HasChanges() const {
+        return m_changed;
     }
     [[nodiscard]] size_t GetAllMNsCount() const
     {
@@ -303,7 +288,6 @@ public:
      * Only allowed on non-banned MNs.
      */
     void PoSeDecrease(const CDeterministicMN& dmn);
-    CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to, const int nHeight) const;
 
     [[nodiscard]] CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     [[nodiscard]] CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
@@ -414,19 +398,6 @@ public:
     // keys are all relating to the internalId of MNs
     std::unordered_map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
     std::set<uint64_t> removedMns;
-    CDeterministicMNListDiff() = default;
-    explicit CDeterministicMNListDiff(const CDeterministicMNListDiff_old& s)
-    {
-        for (const auto& mn : s.addedMNs) {
-            addedMNs.push_back(std::make_shared<CDeterministicMN>(CDeterministicMN(*mn)));
-        }
-        for (const auto& p : s.updatedMNs) {
-            updatedMNs.emplace(p.first, CDeterministicMNStateDiff(p.second));
-        }
-        for (const auto& id : s.removedMns) {
-            removedMns.emplace(id);
-        }
-    }
 
     template<typename Stream>
     void Serialize(Stream& s) const
@@ -474,59 +445,51 @@ public:
         return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
     }
 };
-
-
 class CDeterministicMNManager
 {
     static constexpr int DISK_SNAPSHOT_PERIOD = 576; // once per day
     static constexpr int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
-    static constexpr int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
+    static constexpr int LIST_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
 
 private:
     Mutex cs;
     Mutex cs_cleanup;
     // We have performed CleanupCache() on this height.
     int did_cleanup GUARDED_BY(cs_cleanup) {0};
-
     // Main thread has indicated we should perform cleanup up to this height
     std::atomic<int> to_cleanup {0};
 
-    CEvoDB& m_evoDb;
-
-    std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
-    std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache GUARDED_BY(cs);
     const CBlockIndex* tipIndex GUARDED_BY(cs) {nullptr};
     const CBlockIndex* m_initial_snapshot_index GUARDED_BY(cs) {nullptr};
 
 public:
-    explicit CDeterministicMNManager(CEvoDB& evoDb) :
-        m_evoDb(evoDb) {}
+    std::unique_ptr<CEvoDB<uint256, CDeterministicMNList>> m_evoDb GUARDED_BY(cs);
+    explicit CDeterministicMNManager(const DBParams& db_params)
+        : m_evoDb(std::make_unique<CEvoDB<uint256, CDeterministicMNList>>(db_params, LIST_CACHE_SIZE)) {}
+       
     ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state,
-                      const CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(!cs, cs_main);
-    bool UndoBlock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
-    void UpdatedBlockTip(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+                      const CCoinsViewCache& view, bool fJustCheck, bool ibd) EXCLUSIVE_LOCKS_REQUIRED(!cs, cs_main);
+    bool UndoBlock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs, cs_main);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, const CCoinsViewCache& view,
-                               CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+                               CDeterministicMNList& mnListRet, CDeterministicMNList& mnOldListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
-    static void DecreasePoSePenalties(CDeterministicMNList& mnList);
+    static void DecreasePoSePenalties(CDeterministicMNList& mnList, const std::vector<CDeterministicMNCPtr> &toDecrease);
 
-    CDeterministicMNList GetListForBlock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    CDeterministicMNList GetListAtChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    const CDeterministicMNList GetListForBlock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void GetListForBlock(const CBlockIndex* pindex, CDeterministicMNList& list) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    const CDeterministicMNList GetListAtChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
     bool IsDIP3Enforced(int nHeight = -1) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
-    void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cleanup);
-
+    bool FlushCacheToDisk() EXCLUSIVE_LOCKS_REQUIRED(!cs_cleanup, !cs);
+    void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs_cleanup, !cs);
 private:
-    void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    const CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE; // keep them for a week
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;

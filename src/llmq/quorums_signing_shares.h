@@ -18,7 +18,6 @@
 #include <threadsafety.h>
 #include <utility>
 
-class CEvoDB;
 class CScheduler;
 class CConnman;
 class BanMan;
@@ -421,11 +420,11 @@ private:
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
-            std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
+            std::unordered_map<uint256, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     bool ProcessPendingSigShares();
 
     void ProcessPendingSigShares(const std::vector<CSigShare>& sigSharesToProcess,
-            const std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums);
+            const std::unordered_map<uint256, CQuorumCPtr, StaticSaltedHasher>& quorums);
 
     void ProcessSigShare(const CSigShare& sigShare, const CQuorumCPtr& quorum);
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);

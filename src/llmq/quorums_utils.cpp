@@ -36,15 +36,12 @@ const CBlockIndex* CLLMQUtils::V19ActivationIndex(const CBlockIndex* pindex)
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex)
 {
     static RecursiveMutex cs_members;
-    static std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapQuorumMembers;
+    static unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher, 10> mapQuorumMembers;
 
     std::vector<CDeterministicMNCPtr> quorumMembers;
     {
         LOCK(cs_members);
-        if (mapQuorumMembers.empty()) {
-            InitQuorumsCache(mapQuorumMembers);
-        }
-        if (mapQuorumMembers[llmqParams.type].get(pQuorumBaseBlockIndex->GetBlockHash(), quorumMembers)) {
+        if (mapQuorumMembers.get(pQuorumBaseBlockIndex->GetBlockHash(), quorumMembers)) {
             return quorumMembers;
         }
     }
@@ -53,7 +50,7 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensu
     auto modifier = ::SerializeHash(std::make_pair(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()));
     quorumMembers = allMns.CalculateQuorum(llmqParams.size, modifier);
     LOCK(cs_members);
-    mapQuorumMembers[llmqParams.type].insert(pQuorumBaseBlockIndex->GetBlockHash(), quorumMembers);
+    mapQuorumMembers.insert(pQuorumBaseBlockIndex->GetBlockHash(), quorumMembers);
     return quorumMembers;
 }
 
@@ -203,7 +200,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType,
     std::set<size_t> result;
     uint256 rnd = qwatchConnectionSeed;
     for (size_t i = 0; i < connectionCount; i++) {
-        rnd = ::SerializeHash(std::make_pair(rnd, std::make_pair(llmqType, pQuorumBaseBlockIndex->GetBlockHash())));
+        rnd = ::SerializeHash(std::make_pair(rnd, pQuorumBaseBlockIndex->GetBlockHash()));
         result.emplace(rnd.GetUint64(0) % memberCount);
     }
     return result;

@@ -223,7 +223,7 @@ public:
         consensus.nNEVMStartBlock = 1317500;
         consensus.nPODAStartBlock = 1586000;
         consensus.nV19StartBlock = 1586000;
-        consensus.nRolluxStartBlock = 1850000;
+        consensus.nRolluxStartBlock = 2000000;
         consensus.nUTXOAssetsBlock = 1004200;
         consensus.DIP0003Height = 1004200;
         consensus.DIP0003EnforcementHeight = 1004200;
@@ -271,7 +271,7 @@ public:
         nMinSporkKeys = 2;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+       // consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
@@ -428,7 +428,7 @@ public:
         nMinSporkKeys = 2;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        //consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
@@ -693,26 +693,24 @@ public:
             }
         };
 
-        m_assumeutxo_data = {
+         m_assumeutxo_data = {
             {
                 .height = 110,
-                .hash_serialized = AssumeutxoHash{uint256S("0x70b3b480f5476ad86dfd98db1f12bda867a90b6cf1b37644332eb52c2ba74ac9")},
-                // TODO fill with SYS data
-                // .nChainTx = 111,
-                // .blockhash = uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c")
+                .hash_serialized = AssumeutxoHash{uint256S("0x6657b736d4fe4db0cbc796789e812d5dba7f5c143764b1b6905612f1830609d1")},
+                .nChainTx = 111,
+                .blockhash = uint256S("0x07fbf5f448734557e1f33b6919c0e6b93828f0eef1a5938519d8b18d6bfd7510")
             },
             {
                 .height = 200,
                 .hash_serialized = AssumeutxoHash{uint256S("0x51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62")},
-            },
-            // TODO fill with SYS data
-            // {
-            //     // For use by test/functional/feature_assumeutxo.py
-            //     .height = 299,
-            //     .hash_serialized = AssumeutxoHash{uint256S("0x61d9c2b29a2571a5fe285fe2d8554f91f93309666fc9b8223ee96338de25ff53")},
-            //     .nChainTx = 300,
-            //     .blockhash = uint256S("0x7e0517ef3ea6ecbed9117858e42eedc8eb39e8698a38dcbd1b3962a283233f4c")
-            // },
+            }
+            /*{
+                // For use by test/functional/feature_assumeutxo.py
+                .height = 299,
+                .hash_serialized = AssumeutxoHash{uint256S("0xa4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27")},
+                .nChainTx = 334,
+                .blockhash = uint256S("0x3bb7ce5eba0be48939b7a521ac1ba9316afee2c7bada3a0cca24188e6d7d96c0")
+            },*/
         };
 
         chainTxData = ChainTxData{

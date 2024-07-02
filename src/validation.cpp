@@ -74,8 +74,11 @@
 // SYSCOIN
 #include <masternode/masternodepayments.h>
 #include <evo/specialtx.h>
+#include <evo/deterministicmns.h>
 #include <llmq/quorums_chainlocks.h>
 #include <services/nevmconsensus.h>
+#include <llmq/quorums.h>
+#include <llmq/quorums_blockprocessor.h>
 #include <fstream>
 #include <cachemultimap.h>
 #include <nevm/sha3.h>
@@ -2379,12 +2382,6 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     AssertLockHeld(::cs_main);
     // SYSCOIN
     const auto& params = Params().GetConsensus();
-    bool fDIP0003Active = pindex->nHeight >= params.DIP0003Height;
-    if (fDIP0003Active && !evoDb->VerifyBestBlock(pindex->GetBlockHash())) {
-        // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
-        error("Found EvoDB inconsistency, you must reindex to continue");
-        return DISCONNECT_FAILED;
-    }
     bool fClean = true;
 
     CBlockUndo blockUndo;
@@ -2462,8 +2459,6 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     }
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
-    // SYSCOIN
-    evoDb->WriteBestBlock(pindex->pprev->GetBlockHash());
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
@@ -2620,14 +2615,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
-    // SYSCOIN
-    if (pindex->pprev) {
-        bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
-        if (fDIP0003Active && !evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash())) {
-            // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
-            return FatalError(m_chainman.GetNotifications(), state, "Found EvoDB inconsistency, you must reindex to continue");
-        }
-    }
     num_blocks_total++;
 
     // Special case for the genesis block, skipping connection of its transactions
@@ -2804,11 +2791,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     bool RolluxContext = pindex->nHeight >= params.GetConsensus().nRolluxStartBlock;
     fScriptChecks = fScriptChecks && RolluxContext; 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
-    if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, view, fJustCheck, fScriptChecks)) {
+    if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, view, fJustCheck, fScriptChecks, m_chainman.IsInitialBlockDownload())) {
         LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
                      pindex->GetBlockHash().ToString(), state.ToString());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
+
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2883,6 +2871,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, block, m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
     }
+
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
     if (bRegTestContext && bReverify && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, (uint32_t)pindex->nHeight, fJustCheck, mapPoDA)) {
         return false; // state filled by ConnectNEVMCommitment
@@ -2953,8 +2942,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
-    // SYSCOIN
-    evoDb->WriteBestBlock(pindex->GetBlockHash());
     const auto time_6{SteadyClock::now()};
     time_index += time_6 - time_5;
     LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n",
@@ -3079,10 +3066,8 @@ bool Chainstate::FlushStateToDisk(
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > m_last_write + DATABASE_WRITE_INTERVAL;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
         bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
-        // SYSCOIN The evodb cache is too large
-        bool fEvoDbCacheCritical = mode == FlushStateMode::IF_NEEDED && evoDb != nullptr && evoDb->GetMemoryUsage() >= (64 << 20);
         // Combine all conditions that result in a full cache flush.
-        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fEvoDbCacheCritical || fPeriodicFlush || fFlushForPrune;
+        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite) {
             // Ensure we can write block index
@@ -3124,6 +3109,15 @@ bool Chainstate::FlushStateToDisk(
             if (pnevmtxrootsdb && !pnevmtxrootsdb->FlushCacheToDisk()) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx roots db");
             }
+            if (deterministicMNManager && !deterministicMNManager->FlushCacheToDisk()) {
+                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit DMN DB");
+            }
+            if (llmq::quorumBlockProcessor && !llmq::quorumBlockProcessor->FlushCacheToDisk()) {
+                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit QC DB");
+            }
+            if (llmq::quorumManager && !llmq::quorumManager->FlushCacheToDisk()) {
+                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit QM DB");
+            }
             m_last_write = nNow;
         }
         // Flush best chain related state. This can only be done if the blocks / block index write was also done.
@@ -3142,9 +3136,6 @@ bool Chainstate::FlushStateToDisk(
             // Flush the chainstate (which may refer to block index entries).
             if (!CoinsTip().Flush())
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to write to coin database");
-            // SYSCOIN
-            if (!evoDb->CommitRootTransaction())
-                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit EvoDB");
             if (pnevmtxmintdb && !pnevmtxmintdb->FlushCacheToDisk())
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx mint db");
 
@@ -3293,16 +3284,12 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     std::vector<std::pair<uint256,uint32_t> > vecTXIDPairs;
     const auto time_start{SteadyClock::now()};
     {
-        // SYSCOIN
-        auto dbTx = evoDb->BeginTransaction();
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view, mapMintKeys, NEVMDataVecOut, vecNEVMBlocks, vecTXIDPairs, bReverify) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
-        // SYSCOIN
-        dbTx->Commit();
     }
     // SYSCOIN
     if(pnevmtxmintdb != nullptr){
@@ -3432,9 +3419,6 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     PoDAMAPMemory mapPoDA;
     std::vector<std::pair<uint256, uint32_t> > vecTXIDPairs;
     {
-        // SYSCOIN
-        auto dbTx = evoDb->BeginTransaction();
-
         CCoinsViewCache view(&CoinsTip());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, false, mapMintKeys, mapNEVMTxRoots, mapPoDA, vecTXIDPairs);
         GetMainSignals().BlockChecked(blockConnecting, state);
@@ -3452,8 +3436,6 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
                  Ticks<MillisecondsDouble>(time_connect_total) / num_blocks_total);
         bool flushed = view.Flush();
         assert(flushed);
-        // SYSCOIN
-        dbTx->Commit();
     }
     if(pnevmdatadb)
         pnevmdatadb->FlushDataToCache(mapPoDA, pindexNew->GetMedianTimePast());
@@ -3822,8 +3804,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
             if (this == &m_chainman.ActiveChainstate() && pindexFork != pindexNewTip) {
                 // Notify ValidationInterface subscribers
-                // SYSCOIN
-                GetMainSignals().SynchronousUpdatedBlockTip(pindexNewTip, pindexFork);
                 GetMainSignals().UpdatedBlockTip(pindexNewTip, pindexFork, m_chainman, still_in_ibd);
                 // Always notify the UI if a new block tip was connected
                 if (kernel::IsInterrupted(m_chainman.GetNotifications().blockTip(GetSynchronizationState(still_in_ibd), *pindexNewTip))) {
@@ -4106,8 +4086,6 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pinde
         // distinguish user-initiated invalidateblock changes from other
         // changes.
         (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(m_chainman.IsInitialBlockDownload()), *to_mark_failed->pprev);
-        // SYSCOIN for MN list to update
-        GetMainSignals().SynchronousUpdatedBlockTip(to_mark_failed->pprev, nullptr);
     }
     return true;
 }
@@ -4183,7 +4161,6 @@ bool Chainstate::MarkConflictingBlock(BlockValidationState& state, CBlockIndex *
     }
 
     ConflictingChainFound(pindex);
-    GetMainSignals().SynchronousUpdatedBlockTip(m_chain.Tip(), nullptr);
     GetMainSignals().UpdatedBlockTip(m_chain.Tip(), nullptr, m_chainman, false);
 
     // Only notify about a new block tip if the active chain was modified.
@@ -5044,9 +5021,6 @@ bool TestBlockValidity(BlockValidationState& state,
     indexDummy.nHeight = pindexPrev->nHeight + 1;
     indexDummy.phashBlock = &block_hash;
 
-    // SYSCOIN begin tx and let it rollback
-    auto dbTx = evoDb->BeginTransaction();
-
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev, adjusted_time_callback()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, state.ToString());
@@ -5122,8 +5096,6 @@ VerifyDBResult CVerifyDB::VerifyDB(
     if (chainstate.m_chain.Tip() == nullptr || chainstate.m_chain.Tip()->pprev == nullptr) {
         return VerifyDBResult::SUCCESS;
     }
-    // SYSCOIN begin tx and let it rollback
-    auto dbTx = evoDb->BeginTransaction();
     // Verify blocks in the best chain
     if (nCheckDepth <= 0 || nCheckDepth > chainstate.m_chain.Height()) {
         nCheckDepth = chainstate.m_chain.Height();
@@ -5270,7 +5242,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
     // SYSCOIN
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     BlockValidationState state;
-    if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, inputs, false /*fJustCheck*/, false /*fScriptChecks*/)) {
+    if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, inputs, false /*fJustCheck*/, false /*fScriptChecks*/, m_chainman.IsInitialBlockDownload())) {
         return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
             pindex->GetBlockHash().ToString(), state.ToString());
     }
@@ -5340,8 +5312,6 @@ bool Chainstate::ReplayBlocks()
         pindexFork = LastCommonAncestor(pindexOld, pindexNew);
         assert(pindexFork != nullptr);
     }
-    // SYSCOIN
-    auto dbTx = evoDb->BeginTransaction();
     // Rollback along the old branch.
     while (pindexOld != pindexFork) {
         if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
@@ -5381,8 +5351,6 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    // SYSCOIN
-    evoDb->WriteBestBlock(pindexNew->GetBlockHash());
     cache.Flush();
     if(pnevmdatadb) {
         pnevmdatadb->FlushDataToCache(mapPoDAConnect, pindexNew->GetMedianTimePast());
@@ -5396,7 +5364,6 @@ bool Chainstate::ReplayBlocks()
     if(pnevmtxrootsdb) {
         pnevmtxrootsdb->FlushDataToCache(mapNEVMTxRoots);
     }
-    dbTx->Commit();
     m_chainman.GetNotifications().progress(bilingual_str{}, 100, false);
     return true;
 }

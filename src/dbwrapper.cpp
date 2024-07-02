@@ -288,12 +288,6 @@ CDBWrapper::~CDBWrapper()
     DBContext().options.env = nullptr;
 }
 
-// SYSCOIN
-void CDBWrapper::CompactFull() const {
-     
-    DBContext().pdb->CompactRange(nullptr, nullptr);
-}
-
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
     const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug);

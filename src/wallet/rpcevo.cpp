@@ -19,7 +19,6 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
-#include <evo/simplifiedmns.h>
 
 #include <bls/bls.h>
 

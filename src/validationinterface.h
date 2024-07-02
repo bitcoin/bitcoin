@@ -184,7 +184,6 @@ protected:
 
     // SYSCOIN
     virtual void NotifyHeaderTip(const CBlockIndex *pindexNew) {}
-    virtual void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork) {}
     virtual void NotifyGovernanceVote(const uint256& vote) {}
     virtual void NotifyGovernanceObject(const uint256 &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
@@ -220,7 +219,6 @@ public:
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, ChainstateManager&, bool fInitialDownload);
     // SYSCOIN
     void NotifyHeaderTip(const CBlockIndex *pindexNew);
-    void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork);
     void TransactionAddedToMempool(const CTransactionRef&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void BlockConnected(ChainstateRole, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);

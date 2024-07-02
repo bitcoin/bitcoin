@@ -1350,36 +1350,6 @@ class CCbTx:
         r += ser_uint256(self.merkleRootQuorums)
         return r
 
-class CSimplifiedMNListEntry:
-    def __init__(self):
-        self.set_null()
-
-    def set_null(self):
-        self.proRegTxHash = 0
-        self.confirmedHash = 0
-        self.service = CService()
-        self.pubKeyOperator = b'\\x0' * 48
-        self.keyIDVoting = 0
-        self.isValid = False
-
-    def deserialize(self, f):
-        self.proRegTxHash = deser_uint256(f)
-        self.confirmedHash = deser_uint256(f)
-        self.service.deserialize(f)
-        self.pubKeyOperator = f.read(48)
-        self.keyIDVoting = f.read(20)
-        self.isValid = struct.unpack("<?", f.read(1))[0]
-
-    def serialize(self):
-        r = b""
-        r += ser_uint256(self.proRegTxHash)
-        r += ser_uint256(self.confirmedHash)
-        r += self.service.serialize()
-        r += self.pubKeyOperator
-        r += self.keyIDVoting
-        r += struct.pack("<?", self.isValid)
-        return r
-
 
 class CFinalCommitment:
     def __init__(self):
@@ -2107,47 +2077,6 @@ class msg_getmnlistd():
         return "msg_getmnlistd(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
 QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
-
-class msg_mnlistdiff():
-    msgtype = b"mnlistdiff"
-
-    def __init__(self):
-        self.baseBlockHash = 0
-        self.blockHash = 0
-        self.merkleProof = CPartialMerkleTree()
-        self.deletedMNs = []
-        self.mnList = []
-        self.deletedQuorums = []
-        self.newQuorums = []
-        self.merkleRootMNList = 0
-        self.merkleRootQuorums = 0
-
-    def deserialize(self, f):
-        self.baseBlockHash = deser_uint256(f)
-        self.blockHash = deser_uint256(f)
-        self.merkleProof.deserialize(f)
-        self.deletedMNs = deser_uint256_vector(f)
-        self.mnList = []
-        for i in range(deser_compact_size(f)):
-            e = CSimplifiedMNListEntry()
-            e.deserialize(f)
-            self.mnList.append(e)
-
-        self.deletedQuorums = []
-        for i in range(deser_compact_size(f)):
-            llmqType = struct.unpack("<B", f.read(1))[0]
-            quorumHash = deser_uint256(f)
-            self.deletedQuorums.append(QuorumId(llmqType, quorumHash))
-        self.newQuorums = []
-        for i in range(deser_compact_size(f)):
-            qc = CFinalCommitment()
-            qc.deserialize(f)
-            self.newQuorums.append(qc)
-        self.merkleRootMNList = deser_uint256(f)
-        self.merkleRootQuorums = deser_uint256(f)
-
-    def __repr__(self):
-        return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
 class msg_qsendrecsigs():
     __slots__ = ()

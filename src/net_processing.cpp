@@ -57,7 +57,6 @@
 #include <masternode/masternodemeta.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
-#include <evo/simplifiedmns.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
@@ -5147,27 +5146,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     if (msg_type == NetMsgType::GETCFCHECKPT) {
         ProcessGetCFCheckPt(pfrom, *peer, vRecv);
-        return;
-    }
-    // SYSCOIN
-    if (msg_type == NetMsgType::GETMNLISTDIFF) {
-        CGetSimplifiedMNListDiff cmd;
-        vRecv >> cmd;
-        CSimplifiedMNListDiff mnListDiff;
-        std::string strError;
-        if (BuildSimplifiedMNListDiff(m_chainman, cmd.baseBlockHash, cmd.blockHash, mnListDiff, strError)) {
-            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNLISTDIFF, mnListDiff));
-        } else {
-            strError = strprintf("getmnlistdiff failed for baseBlockHash=%s, blockHash=%s. error=%s", cmd.baseBlockHash.ToString(), cmd.blockHash.ToString(), strError);
-            Misbehaving(*peer, 1, strError);
-        }
-        return;
-    }
-
-
-    if (msg_type == NetMsgType::MNLISTDIFF) {
-        // we have never requested this
-        Misbehaving(*peer, 100, strprintf("received not-requested mnlistdiff. peer=%d", pfrom.GetId()));
         return;
     }
     if (msg_type == NetMsgType::NOTFOUND) {

@@ -25,8 +25,6 @@
 namespace llmq
 {
 
-static const std::string DB_QUORUM_SK_SHARE = "q_Qsk";
-static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
 
 CQuorumManager* quorumManager;
 
@@ -101,25 +99,23 @@ int CQuorum::GetMemberIndex(const uint256& proTxHash) const
     return -1;
 }
 
-void CQuorum::WriteContributions(CEvoDB& evoDb) const
+void CQuorum::WriteContributions(CEvoDB<uint256, std::vector<CBLSPublicKey>>& evoDb_vvec, CEvoDB<uint256, CBLSSecretKey>& evoDb_sk)
 {
     uint256 dbKey = MakeQuorumKey(*this);
-
     LOCK(cs);
     if (HasVerificationVector()) {
-        evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), *quorumVvec);
+        evoDb_vvec.WriteCache(dbKey, *quorumVvec);
     }
     if (skShare.IsValid()) {
-        evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
+        evoDb_sk.WriteCache(dbKey, skShare);
     }
 }
 
-bool CQuorum::ReadContributions(CEvoDB& evoDb)
+bool CQuorum::ReadContributions(const CEvoDB<uint256, std::vector<CBLSPublicKey>>& evoDb_vvec, const CEvoDB<uint256, CBLSSecretKey>& evoDb_sk)
 {
     uint256 dbKey = MakeQuorumKey(*this);
-
     std::vector<CBLSPublicKey> qv;
-    if (evoDb.Read(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), qv)) {
+    if (evoDb_vvec.ReadCache(dbKey, qv)) {
         WITH_LOCK(cs, quorumVvec = std::make_shared<std::vector<CBLSPublicKey>>(std::move(qv)));
     } else {
         return false;
@@ -127,19 +123,17 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 
     // We ignore the return value here as it is ok if this fails. If it fails, it usually means that we are not a
     // member of the quorum but observed the whole DKG process to have the quorum verification vector.
-    WITH_LOCK(cs, evoDb.Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare));
-
+    WITH_LOCK(cs, evoDb_sk.ReadCache(dbKey, skShare));
     return true;
 }
 
-CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman) :
-    evoDb(_evoDb),
+CQuorumManager::CQuorumManager(const DBParams& db_params_vvecs, const DBParams& db_params_sk, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman) :
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
-    chainman(_chainman)
+    chainman(_chainman),
+    evoDb_vvec(db_params_vvecs, 10),
+    evoDb_sk(db_params_sk, 10)
 {
-    CLLMQUtils::InitQuorumsCache(mapQuorumsCache);
-    CLLMQUtils::InitQuorumsCache(scanQuorumsCache);
     quorumThreadInterrupt.reset();
 }
 
@@ -157,7 +151,7 @@ void CQuorumManager::Stop()
     workerPool.stop(true);
 }
 
-void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload) const
+void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
@@ -169,7 +163,7 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
     CleanupOldQuorumData(pindexNew);
 }
 
-void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew) const
+void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexNew)
 {
     auto lastQuorums = ScanQuorums(llmqParams.type, pindexNew, (size_t)llmqParams.keepOldConnections);
 
@@ -191,7 +185,7 @@ void CQuorumManager::EnsureQuorumConnections(const Consensus::LLMQParams& llmqPa
     }
 }
 
-CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const
+CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex)
 {
     assert(pQuorumBaseBlockIndex);
 
@@ -210,11 +204,11 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, con
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
 
     bool hasValidVvec = false;
-    if (quorum->ReadContributions(evoDb)) {
+    if (quorum->ReadContributions(evoDb_vvec, evoDb_sk)) {
         hasValidVvec = true;
     } else {
         if (BuildQuorumContributions(quorum->qc, quorum)) {
-            quorum->WriteContributions(evoDb);
+            quorum->WriteContributions(evoDb_vvec, evoDb_sk);
             hasValidVvec = true;
         } else {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- llmqType[%d] quorum.ReadContributions and BuildQuorumContributions for quorumHash[%s] failed\n", __func__, llmqType, quorum->qc->quorumHash.ToString());
@@ -228,7 +222,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, con
         StartCachePopulatorThread(quorum);
     }
 
-    WITH_LOCK(cs_map_quorums, mapQuorumsCache[llmqType].insert(quorumHash, quorum));
+    WITH_LOCK(cs_map_quorums, mapQuorumsCache.insert(quorumHash, quorum));
 
     return quorum;
 }
@@ -270,13 +264,13 @@ bool CQuorumManager::HasQuorum(uint8_t llmqType, const uint256& quorumHash)
     return quorumBlockProcessor->HasMinedCommitment(llmqType, quorumHash);
 }
 
-std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, size_t nCountRequested) const
+std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, size_t nCountRequested)
 {
     const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.ActiveTip());
     return ScanQuorums(llmqType, pindex, nCountRequested);
 }
 
-std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested) const
+std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested)
 {
     if (pindexStart == nullptr || nCountRequested == 0 /*|| !utils::IsQuorumTypeEnabled(llmqType, *this, pindexStart)*/) {
         return {};
@@ -288,7 +282,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, const CBl
 
     {
         LOCK(cs_scan_quorums);
-        auto& cache = scanQuorumsCache[llmqType];
+        auto& cache = scanQuorumsCache;
         bool fCacheExists = cache.get(pindexStart->GetBlockHash(), vecResultQuorums);
         if (fCacheExists) {
             // We have exactly what requested so just return it
@@ -328,7 +322,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, const CBl
     if (nCountResult > 0) {
         LOCK(cs_scan_quorums);
         // Don't cache more than cache.max_size() elements
-        auto& cache = scanQuorumsCache[llmqType];
+        auto& cache = scanQuorumsCache;
         const size_t nCacheEndIndex = std::min(nCountResult, cache.max_size());
         cache.emplace(pindexStart->GetBlockHash(), {vecResultQuorums.begin(), vecResultQuorums.begin() + nCacheEndIndex});
     }
@@ -338,7 +332,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(uint8_t llmqType, const CBl
 }
 
 
-CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHash) const
+CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHash)
 {
     CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
     if (!pQuorumBaseBlockIndex) {
@@ -348,7 +342,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHas
     return GetQuorum(llmqType, pQuorumBaseBlockIndex);
 }
 
-CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const
+CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex)
 {
     assert(pQuorumBaseBlockIndex);
 
@@ -361,7 +355,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pQuor
     }
 
     CQuorumPtr pQuorum;
-    if (LOCK(cs_map_quorums); mapQuorumsCache[llmqType].get(quorumHash, pQuorum)) {
+    if (LOCK(cs_map_quorums); mapQuorumsCache.get(quorumHash, pQuorum)) {
         return pQuorum;
     }
 
@@ -389,48 +383,16 @@ void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const
 }
 
 
-static void DataCleanupHelper(CDBWrapper& db, std::set<uint256> skip_list)
+static void DataCleanupHelper(CEvoDB<uint256, std::vector<CBLSPublicKey>>& evoDb_vvec, CEvoDB<uint256, CBLSSecretKey>& evoDb_sk, std::set<uint256> skip_list)
 {
-    const auto prefixes = {DB_QUORUM_QUORUM_VVEC, DB_QUORUM_SK_SHARE};
-
-    CDBBatch batch(db);
-    std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
-
-    for (const auto& prefix : prefixes) {
-        auto start = std::make_tuple(prefix, uint256());
-        pcursor->Seek(start);
-
-        int count{0};
-        while (pcursor->Valid()) {
-            decltype(start) k;
-
-            if (!pcursor->GetKey(k) || std::get<0>(k) != prefix) {
-                break;
-            }
-
-            pcursor->Next();
-
-            if (skip_list.find(std::get<1>(k)) != skip_list.end()) continue;
-
-            ++count;
-            batch.Erase(k);
-
-            if (batch.SizeEstimate() >= (1 << 24)) {
-                db.WriteBatch(batch);
-                batch.Clear();
-            }
-        }
-
-        db.WriteBatch(batch);
-
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- %s removed %d\n", __func__, prefix, count);
+    for (const auto& prefix : skip_list) {
+        evoDb_vvec.EraseCache(prefix);
+        evoDb_sk.EraseCache(prefix);
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- %s removed %d\n", __func__, skip_list.size());
     }
-
-    pcursor.reset();
-    db.CompactFull();
 }
 
-void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex) const
+void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex)
 {
     if (!fMasternodeMode || pIndex == nullptr || (pIndex->nHeight % 576 != 0)) {
         return;
@@ -447,9 +409,13 @@ void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex) const
         }
     }
 
-    DataCleanupHelper(evoDb.GetRawDB(), dbKeys);
+    DataCleanupHelper(evoDb_vvec, evoDb_sk, dbKeys);
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- done\n", __func__);
 }
+bool CQuorumManager::FlushCacheToDisk() {
+    return evoDb_vvec.FlushCacheToDisk() && evoDb_sk.FlushCacheToDisk();
+}
+
 
 } // namespace llmq

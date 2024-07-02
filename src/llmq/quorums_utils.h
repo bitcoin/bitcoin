@@ -93,14 +93,6 @@ public:
         }
         return HexStr(vBytes);
     }
-    template <typename CacheType>
-    static void InitQuorumsCache(CacheType& cache)
-    {
-        for (auto& llmq : Params().GetConsensus().llmqs) {
-            cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.first),
-                      std::forward_as_tuple(llmq.second.signingActiveQuorumCount + 1));
-        }
-    }
 };
 const Consensus::LLMQParams& GetLLMQParams(uint8_t llmqType);
 

@@ -4,9 +4,7 @@
 
 #include <util/check.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/syscoin-config.h>
-#endif
+#include <config/syscoin-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
 #include <tinyformat.h>

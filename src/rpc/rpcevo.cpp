@@ -10,7 +10,6 @@
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
-#include <evo/simplifiedmns.h>
 
 #include <bls/bls.h>
 
@@ -124,52 +123,7 @@ static RPCHelpMan protx_info()
     return BuildDMNListEntry(node, *dmn, true);
 },
     };
-} 
-
-static uint256 ParseBlock(ChainstateManager& chainman, const UniValue& v, std::string strName) 
-{
-    try {
-        return ParseHashV(v, strName);
-    } catch (...) {
-        LOCK(cs_main);
-        int h = v.getInt<int>();
-        if (h < 1 || h > chainman.ActiveHeight())
-            throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
-        return *chainman.ActiveChain()[h]->phashBlock;
-    }
 }
-
-static RPCHelpMan protx_diff()
-{
-    return RPCHelpMan{"protx_diff",
-        "\nReturns detailed information about a deterministic masternode.\n",
-        {
-            {"baseBlock", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The starting block hash."},  
-            {"block", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The ending block hash."},                 
-        },
-        RPCResult{RPCResult::Type::ANY, "", ""},
-        RPCExamples{
-                HelpExampleCli("protx_diff", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("protx_diff", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-        },
-    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
-{
-    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
-    uint256 baseBlockHash = ParseBlock(*node.chainman, request.params[0], "baseBlock");
-    uint256 blockHash = ParseBlock(*node.chainman, request.params[1], "block");
-
-    CSimplifiedMNListDiff mnListDiff;
-    std::string strError;
-    if (!BuildSimplifiedMNListDiff(*node.chainman, baseBlockHash, blockHash, mnListDiff, strError)) {
-        throw std::runtime_error(strError);
-    }
-
-    UniValue ret;
-    mnListDiff.ToJson(ret);
-    return ret;
-},
-    };
-} 
 
 static RPCHelpMan bls_generate()
 {
@@ -256,7 +210,6 @@ void RegisterEvoRPCCommands(CRPCTable &t)
         {"evo", &bls_fromsecret},
         {"evo", &protx_list},
         {"evo", &protx_info},
-        {"evo", &protx_diff},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

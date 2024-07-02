@@ -7,7 +7,7 @@
 # Test deterministic masternodes
 #
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment, add_witness_commitment
-from test_framework.messages import CTransaction, from_hex, CCbTx, COIN, CTxOut
+from test_framework.messages import CTransaction, from_hex, COIN, CTxOut
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import p2p_port, Decimal, force_finish_mnsync, assert_equal, MAX_INITIAL_BROADCAST_DELAY
 class Masternode(object):

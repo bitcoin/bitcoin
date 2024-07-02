@@ -20,11 +20,16 @@ class CEvoDB : public CDBWrapper {
     std::unordered_set<K> setEraseCache;
     mutable RecursiveMutex cs;
     size_t maxCacheSize;
-
+    DBParams m_db_params;
 public:
     using CDBWrapper::CDBWrapper;
-    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSize) : CDBWrapper(db_params), maxCacheSize(maxCacheSize) {}
-
+    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSize) : CDBWrapper(db_params), maxCacheSize(maxCacheSize), m_db_params(db_params) {}
+    bool IsCacheFull() const {
+        return mapCache.size() >= maxCacheSize;
+    }
+    DBParams GetDBParams() const {
+        return m_db_params;
+    }
     bool ReadCache(const K& key, V& value) const {
         LOCK(cs);
         auto it = mapCache.find(key);
@@ -33,6 +38,45 @@ public:
             return true;
         }
         return Read(key, value);
+    }
+    std::unordered_map<K, V> GetMapCacheCopy() const {
+        LOCK(cs);
+        std::unordered_map<K, V> cacheCopy;
+        for (const auto& [key, it] : mapCache) {
+            cacheCopy[key] = it->second;
+        }
+        return cacheCopy;
+    }
+
+    std::unordered_set<K> GetEraseCacheCopy() const {
+        LOCK(cs);
+        return setEraseCache;
+    }
+
+    void RestoreCaches(const std::unordered_map<K, V>& mapCacheCopy, const std::unordered_set<K>& eraseCacheCopy) {
+        LOCK(cs);
+        for (const auto& [key, value] : mapCacheCopy) {
+            WriteCache(key, value);
+        }
+        setEraseCache = eraseCacheCopy;
+    }
+
+    void WriteCache(const K& key, V&& value) {
+        LOCK(cs);
+        auto it = mapCache.find(key);
+        if (it != mapCache.end()) {
+            fifoList.erase(it->second);
+            mapCache.erase(it);
+        }
+        fifoList.emplace_back(key, std::move(value));
+        mapCache[key] = --fifoList.end();
+        setEraseCache.erase(key);
+
+        if (mapCache.size() > maxCacheSize) {
+            auto oldest = fifoList.front();
+            fifoList.pop_front();
+            mapCache.erase(oldest.first);
+        }
     }
 
     void WriteCache(const K& key, const V& value) {

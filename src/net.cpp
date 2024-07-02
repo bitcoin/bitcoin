@@ -3851,7 +3851,7 @@ bool CConnman::AddPendingMasternode(const uint256& proTxHash)
 void CConnman::SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+    auto it = masternodeQuorumNodes.emplace(quorumHash, proTxHashes);
     if (!it.second) {
         it.first->second = proTxHashes;
     }
@@ -3861,7 +3861,7 @@ void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& 
 {
     {
         LOCK(cs_vPendingMasternodes);
-        auto it = masternodeQuorumRelayMembers.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+        auto it = masternodeQuorumRelayMembers.emplace(quorumHash, proTxHashes);
         if (!it.second) {
             it.first->second = proTxHashes;
         }
@@ -3894,7 +3894,7 @@ void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& 
 bool CConnman::HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
-    return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
+    return masternodeQuorumNodes.count(quorumHash);
 }
 
 
@@ -3903,19 +3903,16 @@ std::set<uint256> CConnman::GetMasternodeQuorums(uint8_t llmqType)
     LOCK(cs_vPendingMasternodes);
     std::set<uint256> result;
     for (const auto& p : masternodeQuorumNodes) {
-        if (p.first.first != llmqType) {
-            continue;
-        }
-        result.emplace(p.first.second);
+        result.emplace(p.first);
     }
     return result;
 }
 
-void CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, std::set<NodeId>& nodes) const
+void CConnman::GetMasternodeQuorumNodes(const uint256& quorumHash, std::set<NodeId>& nodes) const
 {
     LOCK2(m_nodes_mutex, cs_vPendingMasternodes);
     nodes.clear();
-    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    auto it = masternodeQuorumNodes.find(quorumHash);
     if (it == masternodeQuorumNodes.end()) {
         return;
     }
@@ -3937,8 +3934,8 @@ void CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
 void CConnman::RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
-    masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
-    masternodeQuorumRelayMembers.erase(std::make_pair(llmqType, quorumHash));
+    masternodeQuorumNodes.erase(quorumHash);
+    masternodeQuorumRelayMembers.erase(quorumHash);
 }
 
 bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)

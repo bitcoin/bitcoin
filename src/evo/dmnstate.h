@@ -14,11 +14,8 @@
 
 #include <memory>
 #include <utility>
-#include <evo/deterministicmnsold.h>
 class CProRegTx;
 class UniValue;
-
-class CDeterministicMNState;
 
 namespace llmq
 {
@@ -67,24 +64,7 @@ public:
         scriptPayout(proTx.scriptPayout)
     {
     }
-    explicit CDeterministicMNState(const CDeterministicMNState_old& s) :
-        nPoSeBanHeight(s.nPoSeBanHeight),
-        nRegisteredHeight(s.nRegisteredHeight),
-        nCollateralHeight(s.nCollateralHeight),
-        nLastPaidHeight(s.nLastPaidHeight),
-        nPoSePenalty(s.nPoSePenalty),
-        nPoSeRevivedHeight(s.nPoSeRevivedHeight),
-        nRevocationReason(s.nRevocationReason),
-        confirmedHash(s.confirmedHash),
-        confirmedHashWithProRegTxHash(s.confirmedHashWithProRegTxHash),
-        keyIDOwner(s.keyIDOwner),
-        pubKeyOperator(s.pubKeyOperator),
-        keyIDVoting(s.keyIDVoting),
-        addr(s.addr),
-        scriptPayout(s.scriptPayout),
-        scriptOperatorPayout(s.scriptOperatorPayout)
-    {
-    }
+
     template <typename Stream>
     CDeterministicMNState(deserialize_type, Stream& s)
     {
@@ -202,11 +182,6 @@ public:
 
 public:
     CDeterministicMNStateDiff() = default;
-    explicit CDeterministicMNStateDiff(const CDeterministicMNStateDiff_old& s) :
-        fields(s.fields),
-        state(s.state)
-    {
-    }
     CDeterministicMNStateDiff(const CDeterministicMNState& a, const CDeterministicMNState& b)
     {
 #define DMN_STATE_DIFF_LINE(f) if (a.f != b.f) { state.f = b.f; fields |= Field_##f; }

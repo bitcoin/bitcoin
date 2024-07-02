@@ -6,7 +6,7 @@
 #define SYSCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 
 #include <llmq/quorums_utils.h>
-
+#include <evo/evodb.h>
 #include <unordered_map>
 #include <unordered_lru_cache.h>
 #include <saltedhasher.h>
@@ -15,7 +15,6 @@ class CNode;
 class PeerManager;
 class BlockValidationState;
 class ChainstateManager;
-class CEvoDB;
 namespace llmq
 {
 class CFinalCommitment;
@@ -26,16 +25,16 @@ class CQuorumBlockProcessor
 private:
     PeerManager& peerman;
     ChainstateManager &chainman;
-    CEvoDB& evoDb;
-    // TODO cleanup
     mutable RecursiveMutex minableCommitmentsCs;
-    std::map<std::pair<uint8_t, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
+    std::map<uint256, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
     std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
 
-    mutable std::map<uint8_t, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
+    mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 10> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, PeerManager &_peerman, ChainstateManager& _chainman);
+    CEvoDB<uint256, std::pair<CFinalCommitment, uint256>> m_commitment_evoDb;
+    CEvoDB<uint32_t, int> m_inverse_height_evoDb;
+    explicit CQuorumBlockProcessor(const DBParams& db_commitment_params, const DBParams& db_inverse_height_params, PeerManager &_peerman, ChainstateManager& _chainman);
 
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman);
@@ -51,9 +50,8 @@ public:
     bool HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash) const;
     CFinalCommitmentPtr GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash) const;
 
-    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount) const;
-    std::map<uint8_t, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex) const;
-
+    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount);
+    bool FlushCacheToDisk();
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const uint32_t& nHeight, std::map<uint8_t, CFinalCommitment>& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

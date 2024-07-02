@@ -122,13 +122,12 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, const std::vecto
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     // SYSCOIN
-    evoDb.reset();
-    evoDb = std::make_unique<CEvoDB>(DBParams{
-    .path = "",
-    .cache_bytes = static_cast<size_t>(1 << 20),
-    .memory_only = true,
-    .wipe_data = true});
-    deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+    auto evoDmnDbParams = DBParams{
+        .path = "",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true};
+    deterministicMNManager.reset(new CDeterministicMNManager(evoDmnDbParams));
     gArgs.ForceSetArg("-mncollateral", "100");
     gArgs.ForceSetArg("-dip3params", "550:550");
     gArgs.ClearPathCache();
@@ -173,7 +172,6 @@ BasicTestingSetup::~BasicTestingSetup()
     pnevmdatadb.reset();
     governance.reset();
     deterministicMNManager.reset();
-    evoDb.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
@@ -341,19 +339,20 @@ TestChain100Setup::TestChain100Setup(
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
     // SYSCOIN Generate an n-block chain:
+    gArgs.ForceSetArg("-dip3params", "5050:5050");
     this->mineBlocks(count);
     {
         LOCK(::cs_main);
         // SYSCOIN
-        /*assert(
+       assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "722b456b5005377859a8320f3b3001c8a941643a246d7e5da64c8beeb17b3254" ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "7b923c7931fbbd3e65e1737a4986810935ca4b911e3e9d527d9c62a512bf7f63" ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "6f5277bae5e679893b8fdb8ad7553a9b9cb769969e220e6d8407f00dbb0fc5aa" ||
+            "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  );*/
+            "1434375060f59a913c5ff17621c69b120b1c7795c54cdb7c7d2542c0f3ca4050" );
     }
 }
 
@@ -381,6 +380,7 @@ CBlock TestChain100Setup::CreateBlock(
     }
     // SYSCOIN Manually update CbTx as we modified the block here
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    std::vector<unsigned char> vchCoinbaseCommitmentExtra;
     if (block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         LOCK(cs_main);
         llmq::CFinalCommitmentTxPayload qc;
@@ -388,12 +388,12 @@ CBlock TestChain100Setup::CreateBlock(
             assert(false);
         }
         ds << qc;
-    }
-    // SYSCOIN
-    const auto &bytesVec = MakeUCharSpan(ds);
-    std::vector<unsigned char> vchCoinbaseCommitmentExtra(bytesVec.begin(), bytesVec.end());
-    RegenerateCommitments(block, *Assert(m_node.chainman), vchCoinbaseCommitmentExtra);
+        // SYSCOIN
+        const auto &bytesVec = MakeUCharSpan(ds);
+        vchCoinbaseCommitmentExtra = std::vector<unsigned char>(bytesVec.begin(), bytesVec.end());
 
+    }
+    RegenerateCommitments(block, *Assert(m_node.chainman), vchCoinbaseCommitmentExtra);
     while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
 
     return block;

@@ -570,7 +570,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
 void CSigSharesManager::CollectPendingSigSharesToVerify(
         size_t maxUniqueSessions,
         std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
-        std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
+        std::unordered_map<uint256, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
 {
     {
         LOCK(cs);
@@ -613,14 +613,13 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
         for (const auto& sigShare : vecSigShares) {
             auto llmqType = sigShare.llmqType;
 
-            auto k = std::make_pair(llmqType, sigShare.quorumHash);
-            if (retQuorums.count(k)) {
+            if (retQuorums.count(sigShare.quorumHash)) {
                 continue;
             }
 
             CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
             assert(quorum != nullptr);
-            retQuorums.try_emplace(k, quorum);
+            retQuorums.try_emplace(sigShare.quorumHash, quorum);
         }
     }
     
@@ -629,7 +628,7 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
 bool CSigSharesManager::ProcessPendingSigShares()
 {
     std::unordered_map<NodeId, std::vector<CSigShare>> sigSharesByNodes;
-    std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
+    std::unordered_map<uint256, CQuorumCPtr, StaticSaltedHasher> quorums;
 
     const size_t nMaxBatchSize{32};
     CollectPendingSigSharesToVerify(nMaxBatchSize, sigSharesByNodes, quorums);
@@ -657,7 +656,7 @@ bool CSigSharesManager::ProcessPendingSigShares()
                 break;
             }
 
-            auto quorum = quorums.at(std::make_pair(sigShare.llmqType, sigShare.quorumHash));
+            auto quorum = quorums.at(sigShare.quorumHash);
             auto pubKeyShare = quorum->GetPubKeyShare(sigShare.quorumMember);
 
             if (!pubKeyShare.IsValid()) {
@@ -696,12 +695,11 @@ bool CSigSharesManager::ProcessPendingSigShares()
 
 // It's ensured that no duplicates are passed to this method
 void CSigSharesManager::ProcessPendingSigShares(const std::vector<CSigShare>& sigSharesToProcess,
-        const std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums)
+        const std::unordered_map<uint256, CQuorumCPtr, StaticSaltedHasher>& quorums)
 {
     cxxtimer::Timer t(true);
     for (const auto& sigShare : sigSharesToProcess) {
-        auto quorumKey = std::make_pair(sigShare.llmqType, sigShare.quorumHash);
-        ProcessSigShare(sigShare, quorums.at(quorumKey));
+        ProcessSigShare(sigShare, quorums.at(sigShare.quorumHash));
     }
     t.stop();
 
@@ -719,7 +717,7 @@ void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, const CQuorum
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
     if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType) && sigShare.quorumMember == quorum->GetMemberIndex(WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash))) {
-        connman.GetMasternodeQuorumNodes(sigShare.llmqType, sigShare.quorumHash, quorumNodes);
+        connman.GetMasternodeQuorumNodes(sigShare.quorumHash, quorumNodes);
     }
 
     if (quorumSigningManager->HasRecoveredSigForId(llmqType, sigShare.id)) {
@@ -1024,7 +1022,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 {
     AssertLockHeld(cs);
 
-    std::unordered_map<std::pair<uint8_t, uint256>, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
+    std::unordered_map<uint256, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
 
     sigSharesQueuedToAnnounce.ForEach([this, &quorumNodesMap, &sigSharesToAnnounce](const SigShareKey& sigShareKey, bool) {
         LOCK(cs);
@@ -1036,12 +1034,11 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         }
 
         // announce to the nodes which we know through the intra-quorum-communication system
-        auto quorumKey = std::make_pair(sigShare->llmqType, sigShare->quorumHash);
-        auto it = quorumNodesMap.find(quorumKey);
+        auto it = quorumNodesMap.find(sigShare->quorumHash);
         if (it == quorumNodesMap.end()) {
             std::set<NodeId> nodeIds;
-            connman.GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second, nodeIds);
-            it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
+            connman.GetMasternodeQuorumNodes(sigShare->quorumHash, nodeIds);
+            it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(sigShare->quorumHash), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 
         const auto& quorumNodes = it->second;
@@ -1277,19 +1274,19 @@ void CSigSharesManager::Cleanup()
     // loop through all sig shares again to find the ones belonging to the inactive quorums. We then delete the
     // sessions belonging to the sig shares. At the same time, we use this map as a cache when we later need to resolve
     // quorumHash -> quorumPtr (as GetQuorum() requires cs_main, leading to deadlocks with cs held)
-    std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
+    std::unordered_map<uint256, CQuorumCPtr, StaticSaltedHasher> quorums;
 
     {
         LOCK(cs);
         sigShares.ForEach([&quorums](const SigShareKey&, const CSigShare& sigShare) {
-            quorums.try_emplace(std::make_pair(sigShare.llmqType, sigShare.quorumHash), nullptr);
+            quorums.try_emplace(sigShare.quorumHash, nullptr);
         });
     }
 
     // Find quorums which became inactive
     for (auto it = quorums.begin(); it != quorums.end(); ) {
-        if (CLLMQUtils::IsQuorumActive(it->first.first, it->first.second)) {
-            it->second = quorumManager->GetQuorum(it->first.first, it->first.second);
+        if (CLLMQUtils::IsQuorumActive(0, it->first)) {
+            it->second = quorumManager->GetQuorum(0, it->first);
             ++it;
         } else {
             it = quorums.erase(it);
@@ -1301,7 +1298,7 @@ void CSigSharesManager::Cleanup()
         LOCK(cs);
         std::unordered_set<uint256, StaticSaltedHasher> inactiveQuorumSessions;
         sigShares.ForEach([&quorums, &inactiveQuorumSessions](const SigShareKey&, const CSigShare& sigShare) {
-            if (!quorums.count(std::make_pair(sigShare.llmqType, sigShare.quorumHash))) {
+            if (!quorums.count(sigShare.quorumHash)) {
                 inactiveQuorumSessions.emplace(sigShare.GetSignHash());
             }
         });
@@ -1344,7 +1341,7 @@ void CSigSharesManager::Cleanup()
 
                 std::string strMissingMembers;
                 if (LogAcceptCategory(BCLog::LLMQ_SIGS, BCLog::Level::Debug)) {
-                    if (const auto quorumIt = quorums.find(std::make_pair(oneSigShare.llmqType, oneSigShare.quorumHash)); quorumIt != quorums.end()) {
+                    if (const auto quorumIt = quorums.find(oneSigShare.quorumHash); quorumIt != quorums.end()) {
                         const auto& quorum = quorumIt->second;
                         for (size_t i = 0; i < quorum->members.size(); i++) {
                             if (!m->count((uint16_t)i)) {

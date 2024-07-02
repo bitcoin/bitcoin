@@ -62,7 +62,7 @@ bool IsSpecialTx(const CTransaction& tx)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs)
+bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs, bool ibd)
 {
     try {
         static SteadyClock::duration nTimeLoop{};
@@ -89,7 +89,7 @@ bool ProcessSpecialTxsInBlock(node::BlockManager &blockman, const CBlock& block,
         auto nTime3 = SystemClock::now(); nTimeQuorum += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n",  Ticks<MillisecondsDouble>(nTime3 - nTime2), Ticks<SecondsDouble>(nTimeQuorum));
 
-        if (!deterministicMNManager || !deterministicMNManager->ProcessBlock(block, pindex, state, view, fJustCheck)) {
+        if (!deterministicMNManager || !deterministicMNManager->ProcessBlock(block, pindex, state, view, fJustCheck, ibd)) {
             // pass the state returned by the function above
             return false;
         }

@@ -31,7 +31,6 @@
 #include <masternode/masternodesync.h>
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
-#include <evo/simplifiedmns.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>

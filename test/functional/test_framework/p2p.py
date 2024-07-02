@@ -73,8 +73,6 @@ from test_framework.messages import (
     NODE_WITNESS,
     sha256,
     # Syscoin Specific
-    msg_getmnlistd,
-    msg_mnlistdiff,
     msg_clsig,
     msg_qsendrecsigs,
 )
@@ -145,10 +143,8 @@ MESSAGEMAP = {
     b"wtxidrelay": msg_wtxidrelay,
     # Syscoin Specific
     b"clsig": msg_clsig,
-    b"getmnlistd": msg_getmnlistd,
     b"getsporks": None,
     b"govsync": None,
-    b"mnlistdiff": msg_mnlistdiff,
     b"qfcommit": None,
     b"qsendrecsigs": msg_qsendrecsigs,
     b"spork": None,
@@ -459,7 +455,6 @@ class P2PInterface(P2PConnection):
     def on_wtxidrelay(self, message): pass
 
     # SYSCOIN
-    def on_mnlistdiff(self, message): pass
     def on_clsig(self, message): pass
     def on_qsendrecsigs(self, message): pass
     def on_inv(self, message):

@@ -14,14 +14,13 @@
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
-
+#include <evo/evodb.h>
 class CNode;
 class CConnman;
 class CBlockIndex;
 
 class CDeterministicMN;
 class ChainstateManager;
-class CEvoDB;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 
@@ -83,8 +82,8 @@ public:
     CBLSSecretKey GetSkShare() const;
 
 private:
-    void WriteContributions(CEvoDB& evoDb) const;
-    bool ReadContributions(CEvoDB& evoDb);
+    void WriteContributions(CEvoDB<uint256, std::vector<CBLSPublicKey>>& evoDb_vvec, CEvoDB<uint256, CBLSSecretKey>& evoDb_sk);
+    bool ReadContributions(const CEvoDB<uint256, std::vector<CBLSPublicKey>>& evoDb_vvec, const CEvoDB<uint256, CBLSSecretKey>& evoDb_sk);
 };
 
 /**
@@ -96,47 +95,48 @@ private:
 class CQuorumManager
 {
 private:
-    CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     ChainstateManager& chainman;
     mutable RecursiveMutex cs_map_quorums;
     mutable RecursiveMutex cs_scan_quorums;
-    mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
-    mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache GUARDED_BY(cs_scan_quorums);
+    mutable unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher, 10> mapQuorumsCache GUARDED_BY(cs_map_quorums);
+    mutable unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher, 10> scanQuorumsCache GUARDED_BY(cs_scan_quorums);
 
     mutable ctpl::thread_pool workerPool;
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman);
+    CEvoDB<uint256, std::vector<CBLSPublicKey>> evoDb_vvec;
+    CEvoDB<uint256, CBLSSecretKey> evoDb_sk;
+    explicit CQuorumManager(const DBParams& db_params_vvecs, const DBParams& db_params_sk, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, ChainstateManager& _chainman);
     ~CQuorumManager() { Stop(); };
 
     void Start();
     void Stop();
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload) const;
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
 
     static bool HasQuorum(uint8_t llmqType, const uint256& quorumHash);
 
     // all these methods will lock cs_main for a short period of time
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash) const;
-    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, size_t nCountRequested) const;
+    CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash);
+    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, size_t nCountRequested);
 
     // this one is cs_main-free
-    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested) const;
-
+    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested);
+    bool FlushCacheToDisk();
 private:
     // all private methods here are cs_main-free
-    void EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pindexNew) const;
+    void EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pindexNew);
 
-    CQuorumPtr BuildQuorumFromCommitment(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex) const;
+    CQuorumPtr BuildQuorumFromCommitment(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
+    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex);
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
-    void CleanupOldQuorumData(const CBlockIndex* pIndex) const;
+    void CleanupOldQuorumData(const CBlockIndex* pIndex);
 };
 
 extern CQuorumManager* quorumManager;

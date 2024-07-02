@@ -268,9 +268,6 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
 void CMainSignals::NotifyHeaderTip(const CBlockIndex *pindexNew) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyHeaderTip(pindexNew); });
 }
-void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork) {
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.SynchronousUpdatedBlockTip(pindexNew, pindexFork); });
-}
 void CMainSignals::NotifyGovernanceVote(const uint256& vote) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
 }

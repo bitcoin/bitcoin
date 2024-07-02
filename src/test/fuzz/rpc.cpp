@@ -118,7 +118,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "bls_fromsecret",
     "protx_list",
     "protx_info",
-    "protx_diff",
     "quorum_list",
     "quorum_info",
     "quorum_dkgstatus",

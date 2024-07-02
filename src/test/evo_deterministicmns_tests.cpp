@@ -250,10 +250,6 @@ void FuncDIP3Activation(TestChain100Setup& setup)
     // Mining a block with a DIP3 transaction should succeed now
     block = std::make_shared<CBlock>(setup.CreateAndProcessBlock(txns, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey())));
 
-    if(deterministicMNManager) {
-        LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 2);
     BOOST_CHECK_EQUAL(block->GetHash() , setup.m_node.chain->getBlockHash(*setup.m_node.chain->getHeight()));
     
@@ -302,11 +298,6 @@ void FuncDIP3Protx(TestChain100Setup& setup)
 
         setup.CreateAndProcessBlock({tx}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
 
-        if(deterministicMNManager) {
-            LOCK(cs_main);
-            deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-        }
-
         BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 1);
         
         auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -318,11 +309,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
     const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = *setup.m_node.chain->getHeight() + 1;
     
     setup.CreateAndProcessBlock({}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     nHeight++;
 
     // check MN reward payments
@@ -331,11 +318,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
         auto dmnExpectedPayee = mnList.GetMNPayee();
 
         CBlock block = setup.CreateAndProcessBlock({}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-        {
-            LOCK(cs_main);
-            if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-        }
+
         assert(!block.vtx.empty());
 
         auto dmnPayout = FindPayoutDmn(block);
@@ -358,12 +341,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
             txns.emplace_back(tx);
         }
         setup.CreateAndProcessBlock(txns, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-        {
-            LOCK(cs_main);
-            if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-            BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 1);
-        }
+
 
         for (size_t j = 0; j < 3; j++) {
             assert(deterministicMNManager->GetListAtChainTip().HasMN(txns[j].GetHash()));
@@ -375,10 +353,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
     // test ProUpServTx
     auto tx = CreateProUpServTx(setup.m_node, utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], 1000, setup.coinbaseKey);
     setup.CreateAndProcessBlock({tx}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
@@ -387,11 +362,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
     // test ProUpRevTx
     tx = CreateProUpRevTx(setup.m_node, utxos, dmnHashes[0], operatorKeys[dmnHashes[0]], setup.coinbaseKey);
     setup.CreateAndProcessBlock({tx}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 1);
     
     nHeight++;
@@ -404,11 +375,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
         assert(dmnExpectedPayee->proTxHash != dmnHashes[0]);
 
         CBlock block = setup.CreateAndProcessBlock({}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-        {
-            LOCK(cs_main);
-            if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-        }
+
         assert(!block.vtx.empty());
 
         auto dmnPayout = FindPayoutDmn(block);
@@ -435,21 +402,13 @@ void FuncDIP3Protx(TestChain100Setup& setup)
     }
     // now process the block
     setup.CreateAndProcessBlock({tx}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
 
     tx = CreateProUpServTx(setup.m_node, utxos, dmnHashes[0], newOperatorKey, 100, setup.coinbaseKey);
     setup.CreateAndProcessBlock({tx}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        if(deterministicMNManager)
-            deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 1);
     nHeight++;
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
@@ -465,11 +424,7 @@ void FuncDIP3Protx(TestChain100Setup& setup)
         }
 
         CBlock block = setup.CreateAndProcessBlock({}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-        {
-            LOCK(cs_main);
-            if(deterministicMNManager)
-                deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-        }
+
         assert(!block.vtx.empty());
 
         auto dmnPayout = FindPayoutDmn(block);
@@ -506,10 +461,7 @@ void FuncTestMempoolReorg(TestChain100Setup& setup)
     SignTransaction(setup.m_node, tx_collateral, setup.coinbaseKey);
 
     auto block = setup.CreateAndProcessBlock({tx_collateral}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*(setup.m_node.chain->getHeight()) , nHeight + 1);
     BOOST_CHECK_EQUAL(block.GetHash() , setup.m_node.chain->getBlockHash(*setup.m_node.chain->getHeight()));
 
@@ -636,10 +588,7 @@ void FuncVerifyDB(TestChain100Setup& setup)
 
 
     auto block = setup.CreateAndProcessBlock({tx_collateral}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     assert(*setup.m_node.chain->getHeight() == nHeight + 1);
     assert(block.GetHash() == setup.m_node.chain->getBlockHash(*setup.m_node.chain->getHeight()));
 
@@ -668,10 +617,7 @@ void FuncVerifyDB(TestChain100Setup& setup)
     auto tx_reg_hash = tx_reg.GetHash();
 
     block = setup.CreateAndProcessBlock({tx_reg}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 2);
     BOOST_CHECK_EQUAL(block.GetHash() , setup.m_node.chain->getBlockHash(*setup.m_node.chain->getHeight()));
     assert(deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
@@ -682,10 +628,7 @@ void FuncVerifyDB(TestChain100Setup& setup)
     auto proUpRevTx = CreateProUpRevTx(setup.m_node, collateral_utxos, tx_reg_hash, operatorKey, collateralKey);
 
     block = setup.CreateAndProcessBlock({proUpRevTx}, GetScriptForRawPubKey(setup.coinbaseKey.GetPubKey()));
-    {
-        LOCK(cs_main);
-        deterministicMNManager->UpdatedBlockTip(setup.m_node.chainman->ActiveTip());
-    }
+
     BOOST_CHECK_EQUAL(*setup.m_node.chain->getHeight() , nHeight + 3);
     BOOST_CHECK_EQUAL(block.GetHash() , setup.m_node.chain->getBlockHash(*setup.m_node.chain->getHeight()));
     assert(!deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
