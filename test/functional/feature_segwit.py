@@ -84,21 +84,18 @@ class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
+        # This test tests SegWit post-activation
         self.extra_args = [
             [
                 "-acceptnonstdtxn=1",
-                "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
             [
                 "-acceptnonstdtxn=1",
-                "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
             [
                 "-acceptnonstdtxn=1",
-                "-testactivationheight=segwit@165",
                 "-addresstype=legacy",
             ],
         ]
@@ -123,17 +120,6 @@ class SegWitTest(BitcoinTestFramework):
 
     def run_test(self):
         self.generate(self.nodes[0], 161)  # block 161
-
-        self.log.info("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
-        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        tmpl = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert_equal(tmpl['sizelimit'], 1000000)
-        assert 'weightlimit' not in tmpl
-        assert_equal(tmpl['sigoplimit'], 20000)
-        assert_equal(tmpl['transactions'][0]['hash'], txid)
-        assert_equal(tmpl['transactions'][0]['sigops'], 2)
-        assert '!segwit' not in tmpl['rules']
-        self.generate(self.nodes[0], 1)  # block 162
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
