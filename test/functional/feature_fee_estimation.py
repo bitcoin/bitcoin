@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
 from copy import deepcopy
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
 import os
 import random
 import time
@@ -38,9 +38,9 @@ def small_txpuzzle_randfee(
     # It's best to exponentially distribute our random fees
     # because the buckets are exponentially spaced.
     # Exponentially distributed from 1-128 * fee_increment
-    rand_fee = float(fee_increment) * (1.1892 ** random.randint(0, 28))
+    rand_fee = satoshi_round(fee_increment * Decimal(1.1892 ** random.randint(0, 28)), rounding=ROUND_DOWN)
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
-    fee = min_fee - fee_increment + satoshi_round(rand_fee)
+    fee = min_fee - fee_increment + rand_fee
     utxos_to_spend = []
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
@@ -73,36 +73,38 @@ def small_txpuzzle_randfee(
 
 def check_raw_estimates(node, fees_seen):
     """Call estimaterawfee and verify that the estimates meet certain invariants."""
-
-    delta = 1.0e-6  # account for rounding error
+    delta = Decimal('0.000001')  # account for rounding error
     for i in range(1, 26):
         for _, e in node.estimaterawfee(i).items():
-            feerate = float(e["feerate"])
+            feerate = Decimal(e["feerate"])
             assert_greater_than(feerate, 0)
 
-            if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+            min_fees_seen = satoshi_round(min(fees_seen), rounding=ROUND_DOWN)
+            max_fees_seen = satoshi_round(max(fees_seen), rounding=ROUND_UP)
+            if feerate + delta < min_fees_seen or feerate - delta > max_fees_seen:
                 raise AssertionError(
-                    f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})"
+                    f"Estimated fee ({feerate}) out of range ({min_fees_seen},{max_fees_seen})"
                 )
 
 
 def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
-
-    delta = 1.0e-6  # account for rounding error
-    last_feerate = float(max(fees_seen))
+    delta = Decimal('0.000001')  # account for rounding error
+    last_feerate = Decimal(max(fees_seen))
     all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
-        feerate = float(e["feerate"])
+        feerate = Decimal(e["feerate"])
         assert_greater_than(feerate, 0)
-        assert_greater_than_or_equal(feerate, float(mempoolMinFee))
-        assert_greater_than_or_equal(feerate, float(minRelaytxFee))
+        assert_greater_than_or_equal(feerate, mempoolMinFee)
+        assert_greater_than_or_equal(feerate, minRelaytxFee)
 
-        if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+        min_fees_seen = satoshi_round(min(fees_seen), rounding=ROUND_DOWN)
+        max_fees_seen = satoshi_round(max(fees_seen), rounding=ROUND_UP)
+        if feerate + delta < min_fees_seen or feerate - delta > max_fees_seen:
             raise AssertionError(
-                f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})"
+                f"Estimated fee ({feerate}) out of range ({min_fees_seen},{max_fees_seen})"
             )
         if feerate - delta > last_feerate:
             raise AssertionError(
