@@ -186,17 +186,6 @@ It is required that you have `python` installed.
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### Wallet (BDB + SQlite) Support, No GUI:
-
-If `berkeley-db@4` is installed, then legacy wallet support will be built.
-If `sqlite` is installed, then descriptor wallet support will also be built.
-Additionally, this explicitly disables the GUI.
-
-``` bash
-./autogen.sh
-./configure --with-gui=no
-```
-
 ##### Wallet (only SQlite) and GUI Support:
 
 This explicitly enables the GUI and disables legacy wallet support.
@@ -206,7 +195,7 @@ If `sqlite` is not installed, then wallet functionality will be disabled.
 
 ``` bash
 ./autogen.sh
-./configure --without-bdb --with-gui=yes
+./configure --with-gui=yes
 ```
 
 ##### No Wallet or GUI

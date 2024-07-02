@@ -46,6 +46,7 @@ enum isminetype : unsigned int;
 struct CRecipient;
 struct WalletContext;
 using isminefilter = std::underlying_type<isminetype>::type;
+enum class DatabaseFormat;
 } // namespace wallet
 
 namespace interfaces {
@@ -282,9 +283,6 @@ public:
     // Remove wallet.
     virtual void remove() = 0;
 
-    //! Return whether is a legacy wallet
-    virtual bool isLegacy() = 0;
-
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;
@@ -343,7 +341,7 @@ public:
     virtual util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) = 0;
 
     //! Return available wallets in wallet directory.
-    virtual std::vector<std::string> listWalletDir() = 0;
+    virtual std::vector<std::pair<std::string, std::string>> listWalletDir() = 0;
 
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;

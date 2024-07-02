@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
 #include <bench/bench.h>
 #include <interfaces/chain.h>
 #include <key.h>
@@ -61,15 +60,8 @@ static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_co
     TestUnloadWallet(std::move(wallet));
 }
 
-#ifdef USE_BDB
-static void WalletIsMineLegacy(benchmark::Bench& bench) { WalletIsMine(bench, /*legacy_wallet=*/true); }
-BENCHMARK(WalletIsMineLegacy, benchmark::PriorityLevel::LOW);
-#endif
-
-#ifdef USE_SQLITE
 static void WalletIsMineDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*legacy_wallet=*/false); }
 static void WalletIsMineMigratedDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*legacy_wallet=*/false, /*num_combo=*/2000); }
 BENCHMARK(WalletIsMineDescriptors, benchmark::PriorityLevel::LOW);
 BENCHMARK(WalletIsMineMigratedDescriptors, benchmark::PriorityLevel::LOW);
-#endif
 } // namespace wallet

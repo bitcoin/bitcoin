@@ -46,9 +46,6 @@ ALLOWED_DEPENDENCIES+=(
 
 # Declare list of known errors that should be suppressed.
 declare -A SUPPRESS
-# init.cpp file currently calls Berkeley DB sanity check function on startup, so
-# there is an undocumented dependency of the node library on the wallet library.
-SUPPRESS["libbitcoin_node_a-init.o libbitcoin_wallet_a-bdb.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
 # init/common.cpp file calls InitError and InitWarning from interface_ui which
 # is currently part of the node library. interface_ui should just be part of the
 # common library instead, and is moved in

@@ -58,15 +58,14 @@ public:
     ~WalletController();
 
     WalletModel* getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet);
+    WalletModel* getWallet(const std::string& name);
 
     //! Returns all wallet names in the wallet dir mapped to whether the wallet
     //! is loaded.
-    std::map<std::string, bool> listWalletDir() const;
+    std::map<std::string, std::pair<bool, std::string>> listWalletDir() const;
 
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
     void closeAllWallets(QWidget* parent = nullptr);
-
-    void migrateWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void walletAdded(WalletModel* wallet_model);
@@ -186,7 +185,7 @@ class MigrateWalletActivity : public WalletControllerActivity
 public:
     MigrateWalletActivity(WalletController* wallet_controller, QWidget* parent) : WalletControllerActivity(wallet_controller, parent) {}
 
-    void migrate(WalletModel* wallet_model);
+    void migrate(const std::string& path);
 
 Q_SIGNALS:
     void migrated(WalletModel* wallet_model);

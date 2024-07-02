@@ -5,8 +5,6 @@
 #ifndef BITCOIN_WALLET_TEST_UTIL_H
 #define BITCOIN_WALLET_TEST_UTIL_H
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
-
 #include <addresstype.h>
 #include <wallet/db.h>
 
@@ -26,12 +24,7 @@ class WalletDatabase;
 struct WalletContext;
 
 static const DatabaseFormat DATABASE_FORMATS[] = {
-#ifdef USE_SQLITE
        DatabaseFormat::SQLITE,
-#endif
-#ifdef USE_BDB
-       DatabaseFormat::BERKELEY,
-#endif
 };
 
 const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
@@ -82,7 +75,6 @@ public:
     explicit MockableBatch(MockableData& records, bool pass) : m_records(records), m_pass(pass) {}
     ~MockableBatch() {}
 
-    void Flush() override {}
     void Close() override {}
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override
@@ -109,20 +101,14 @@ public:
     ~MockableDatabase() {};
 
     void Open() override {}
-    void AddRef() override {}
-    void RemoveRef() override {}
 
     bool Rewrite(const char* pszSkip=nullptr) override { return m_pass; }
     bool Backup(const std::string& strDest) const override { return m_pass; }
-    void Flush() override {}
     void Close() override {}
-    bool PeriodicFlush() override { return m_pass; }
-    void IncrementUpdateCounter() override {}
-    void ReloadDbEnv() override {}
 
     std::string Filename() override { return "mockable"; }
     std::string Format() override { return "mock"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<MockableBatch>(m_records, m_pass); }
+    std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<MockableBatch>(m_records, m_pass); }
 };
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records = {});

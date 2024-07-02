@@ -62,7 +62,6 @@ public:
     DatabaseBatch(const DatabaseBatch&) = delete;
     DatabaseBatch& operator=(const DatabaseBatch&) = delete;
 
-    virtual void Flush() = 0;
     virtual void Close() = 0;
 
     template <typename K, typename T>
@@ -130,18 +129,14 @@ class WalletDatabase
 {
 public:
     /** Create dummy DB handle */
-    WalletDatabase() : nUpdateCounter(0) {}
-    virtual ~WalletDatabase() {};
+    WalletDatabase() = default;
+    virtual ~WalletDatabase() = default;
 
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
 
     //! Counts the number of active database users to be sure that the database is not closed while someone is using it
     std::atomic<int> m_refcount{0};
-    /** Indicate the a new database user has began using the database. Increments m_refcount */
-    virtual void AddRef() = 0;
-    /** Indicate that database user has stopped using the database and that it could be flushed or closed. Decrement m_refcount */
-    virtual void RemoveRef() = 0;
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
@@ -151,40 +146,23 @@ public:
      */
     virtual bool Backup(const std::string& strDest) const = 0;
 
-    /** Make sure all changes are flushed to database file.
-     */
-    virtual void Flush() = 0;
     /** Flush to the database file and close the database.
      *  Also close the environment if no other databases are open in it.
      */
     virtual void Close() = 0;
-    /* flush the wallet passively (TRY_LOCK)
-       ideal to be called periodically */
-    virtual bool PeriodicFlush() = 0;
-
-    virtual void IncrementUpdateCounter() = 0;
-
-    virtual void ReloadDbEnv() = 0;
 
     /** Return path to main database file for logs and error messages. */
     virtual std::string Filename() = 0;
 
     virtual std::string Format() = 0;
 
-    std::atomic<unsigned int> nUpdateCounter;
-    unsigned int nLastSeen{0};
-    unsigned int nLastFlushed{0};
-    int64_t nLastWalletUpdate{0};
-
     /** Make a DatabaseBatch connected to this database */
-    virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
+    virtual std::unique_ptr<DatabaseBatch> MakeBatch() = 0;
 };
 
 enum class DatabaseFormat {
-    BERKELEY,
     SQLITE,
     BERKELEY_RO,
-    BERKELEY_SWAP,
 };
 
 struct DatabaseOptions {
@@ -216,7 +194,7 @@ enum class DatabaseStatus {
 };
 
 /** Recursively list database paths in directory. */
-std::vector<fs::path> ListDatabases(const fs::path& path);
+std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& path);
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);

@@ -40,13 +40,10 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-descriptors", "Create descriptors wallet. Only for 'create'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-legacy", "Create legacy wallet. Only for 'create'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-format=<format>", "The format of the wallet file to create. Either \"bdb\" or \"sqlite\". Only used with 'createfromdump'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-withinternalbdb", "Use the internal Berkeley DB parser when dumping a Berkeley DB wallet file (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
     argsman.AddCommand("info", "Get wallet info");
     argsman.AddCommand("create", "Create new wallet file");
-    argsman.AddCommand("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.");
     argsman.AddCommand("dump", "Print out all of the wallet key-value records");
     argsman.AddCommand("createfromdump", "Create new wallet file from dumped records");
 }

@@ -28,9 +28,6 @@ from test_framework.util import (
 
 
 class BackwardsCompatibilityTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 12
@@ -91,44 +88,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def major_version_at_least(self, node, major):
         node_major, _, _ = self.split_version(node)
         return node_major >= major
-
-    def test_v19_addmultisigaddress(self):
-        if not self.is_bdb_compiled():
-            return
-        # Specific test for addmultisigaddress using v19
-        # See #18075
-        self.log.info("Testing 0.19 addmultisigaddress case (#18075)")
-        node_master = self.nodes[1]
-        node_v19 = self.nodes[self.num_nodes - 4]
-        node_v19.rpc.createwallet(wallet_name="w1_v19")
-        wallet = node_v19.get_wallet_rpc("w1_v19")
-        info = wallet.getwalletinfo()
-        assert info['private_keys_enabled']
-        assert info['keypoolsize'] > 0
-        # Use addmultisigaddress (see #18075)
-        address_18075 = wallet.rpc.addmultisigaddress(1, ["0296b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52", "037211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073"], "", "legacy")["address"]
-        assert wallet.getaddressinfo(address_18075)["solvable"]
-        node_v19.unloadwallet("w1_v19")
-
-        # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
-        shutil.copytree(
-            os.path.join(node_v19.wallets_path, "w1_v19"),
-            os.path.join(node_master.wallets_path, "w1_v19")
-        )
-        node_master.loadwallet("w1_v19")
-        wallet = node_master.get_wallet_rpc("w1_v19")
-        assert wallet.getaddressinfo(address_18075)["solvable"]
-
-        # Now copy that same wallet back to 0.19 to make sure no automatic upgrade breaks it
-        node_master.unloadwallet("w1_v19")
-        shutil.rmtree(os.path.join(node_v19.wallets_path, "w1_v19"))
-        shutil.copytree(
-            os.path.join(node_master.wallets_path, "w1_v19"),
-            os.path.join(node_v19.wallets_path, "w1_v19")
-        )
-        node_v19.loadwallet("w1_v19")
-        wallet = node_v19.get_wallet_rpc("w1_v19")
-        assert wallet.getaddressinfo(address_18075)["solvable"]
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -209,21 +168,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 else:
                     shutil.copytree(source, dest)
 
-        self.test_v19_addmultisigaddress()
-
         self.log.info("Test that a wallet made on master can be opened on:")
-        # In descriptors wallet mode, run this test on the nodes that support descriptor wallets
-        # In legacy wallets mode, run this test on the nodes that support legacy wallets
-        for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
-            if self.major_version_less_than(node, 17):
-                # loadwallet was introduced in v0.17.0
-                continue
+        # This test only works on the nodes that support descriptor wallets
+        # since we can no longer create legacy wallets.
+        for node in descriptors_nodes:
             self.log.info(f"- {node.version}")
             for wallet_name in ["w1", "w2", "w3"]:
-                if self.major_version_less_than(node, 18) and wallet_name == "w3":
-                    # Blank wallets were introduced in v0.18.0. We test the loading error below.
-                    continue
-                if self.major_version_less_than(node, 22) and wallet_name == "w1" and self.options.descriptors:
+                if self.major_version_less_than(node, 22) and wallet_name == "w1":
                     # Descriptor wallets created after 0.21 have taproot descriptors which 0.21 does not support, tested below
                     continue
                 # Also try to reopen on master after opening on old
@@ -263,51 +214,109 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         )
 
         # Check that descriptor wallets don't work on legacy only nodes
-        if self.options.descriptors:
-            self.log.info("Test descriptor wallet incompatibility on:")
-            for node in legacy_only_nodes:
-                # RPC loadwallet failure causes bitcoind to exit in <= 0.17, in addition to the RPC
-                # call failure, so the following test won't work:
-                # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3')
-                if self.major_version_less_than(node, 18):
-                    continue
-                self.log.info(f"- {node.version}")
-                # Descriptor wallets appear to be corrupted wallets to old software
-                assert self.major_version_at_least(node, 18) and self.major_version_less_than(node, 21)
-                for wallet_name in ["w1", "w2", "w3"]:
-                    assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
+        self.log.info("Test descriptor wallet incompatibility on:")
+        for node in legacy_only_nodes:
+            # RPC loadwallet failure causes bitcoind to exit in <= 0.17, in addition to the RPC
+            # call failure, so the following test won't work:
+            # assert_raises_rpc_error(-4, "Wallet loading failed.", node_v17.loadwallet, 'w3')
+            if self.major_version_less_than(node, 18):
+                continue
+            self.log.info(f"- {node.version}")
+            # Descriptor wallets appear to be corrupted wallets to old software
+            assert self.major_version_at_least(node, 18) and self.major_version_less_than(node, 21)
+            for wallet_name in ["w1", "w2", "w3"]:
+                assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
 
         # Instead, we stop node and try to launch it with the wallet:
         self.stop_node(node_v17.index)
-        if self.options.descriptors:
-            self.log.info("Test descriptor wallet incompatibility with 0.17")
-            # Descriptor wallets appear to be corrupted wallets to old software
-            node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: wallet.dat corrupt, salvage failed")
-            node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
-        else:
-            self.log.info("Test blank wallet incompatibility with v17")
-            node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: Error loading w3: Wallet requires newer version of Bitcoin Core")
+        self.log.info("Test descriptor wallet incompatibility with 0.17")
+        # Descriptor wallets appear to be corrupted wallets to old software
+        node_v17.assert_start_raises_init_error(["-wallet=w1"], "Error: wallet.dat corrupt, salvage failed")
+        node_v17.assert_start_raises_init_error(["-wallet=w2"], "Error: wallet.dat corrupt, salvage failed")
+        node_v17.assert_start_raises_init_error(["-wallet=w3"], "Error: wallet.dat corrupt, salvage failed")
         self.start_node(node_v17.index)
 
         # No wallet created in master can be opened in 0.16
         self.log.info("Test that wallets created in master are too new for 0.16")
         self.stop_node(node_v16.index)
         for wallet_name in ["w1", "w2", "w3"]:
-            if self.options.descriptors:
-                node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: {wallet_name} corrupt, salvage failed")
-            else:
-                node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: Error loading {wallet_name}: Wallet requires newer version of Bitcoin Core")
+            node_v16.assert_start_raises_init_error([f"-wallet={wallet_name}"], f"Error: {wallet_name} corrupt, salvage failed")
 
-        # When descriptors are enabled, w1 cannot be opened by 0.21 since it contains a taproot descriptor
-        if self.options.descriptors:
-            self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
-            assert_raises_rpc_error(-1, "map::at", node_v21.loadwallet, "w1")
+        # w1 cannot be opened by 0.21 since it contains a taproot descriptor
+        self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
+        assert_raises_rpc_error(-1, "map::at", node_v21.loadwallet, "w1")
 
         self.log.info("Test that a wallet can upgrade to and downgrade from master, from:")
-        for node in descriptors_nodes if self.options.descriptors else legacy_nodes:
+        for node in descriptors_nodes:
             self.log.info(f"- {node.version}")
             wallet_name = f"up_{node.version}"
+            node.rpc.createwallet(wallet_name=wallet_name, descriptors=True)
+            wallet_prev = node.get_wallet_rpc(wallet_name)
+            address = wallet_prev.getnewaddress('', "bech32")
+            addr_info = wallet_prev.getaddressinfo(address)
+
+            hdkeypath = addr_info["hdkeypath"].replace("'", "h")
+            pubkey = addr_info["pubkey"]
+
+            # Make a backup of the wallet file
+            backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")
+            wallet_prev.backupwallet(backup_path)
+
+            # Remove the wallet from old node
+            wallet_prev.unloadwallet()
+
+            # Restore the wallet to master
+            load_res = node_master.restorewallet(wallet_name, backup_path)
+
+            # There should be no warnings
+            assert "warnings" not in load_res
+
+            wallet = node_master.get_wallet_rpc(wallet_name)
+            info = wallet.getaddressinfo(address)
+            descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
+            assert_equal(info["desc"], descsum_create(descriptor))
+
+            # Make backup so the wallet can be copied back to old node
+            down_wallet_name = f"re_down_{node.version}"
+            down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
+            wallet.backupwallet(down_backup_path)
+
+            # Check that taproot descriptors can be added to 0.21 wallets
+            # This must be done after the backup is created so that 0.21 can still load
+            # the backup
+            if self.major_version_equals(node, 21):
+                assert_raises_rpc_error(-12, "No bech32m addresses available", wallet.getnewaddress, address_type="bech32m")
+                xpubs = wallet.gethdkeys(active_only=True)
+                assert_equal(len(xpubs), 1)
+                assert_equal(len(xpubs[0]["descriptors"]), 6)
+                wallet.createwalletdescriptor("bech32m")
+                xpubs = wallet.gethdkeys(active_only=True)
+                assert_equal(len(xpubs), 1)
+                assert_equal(len(xpubs[0]["descriptors"]), 8)
+                tr_descs = [desc["desc"] for desc in xpubs[0]["descriptors"] if desc["desc"].startswith("tr(")]
+                assert_equal(len(tr_descs), 2)
+                for desc in tr_descs:
+                    assert info["hdmasterfingerprint"] in desc
+                wallet.getnewaddress(address_type="bech32m")
+
+            wallet.unloadwallet()
+
+            # Check that no automatic upgrade broke the downgrading the wallet
+            target_dir = node.wallets_path / down_wallet_name
+            os.makedirs(target_dir, exist_ok=True)
+            shutil.copyfile(
+                down_backup_path,
+                target_dir / "wallet.dat"
+            )
+            node.loadwallet(down_wallet_name)
+            wallet_res = node.get_wallet_rpc(down_wallet_name)
+            info = wallet_res.getaddressinfo(address)
+            assert_equal(info, addr_info)
+
+        self.log.info("Test that a wallet from a legacy only node must be migrated, from:")
+        for node in legacy_nodes:
+            self.log.info(f"- {node.version}")
+            wallet_name = f"legacy_up_{node.version}"
             if self.major_version_less_than(node, 17):
                 # createwallet is only available in 0.17+
                 self.restart_node(node.index, extra_args=[f"-wallet={wallet_name}"])
@@ -316,7 +325,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 addr_info = wallet_prev.validateaddress(address)
             else:
                 if self.major_version_at_least(node, 21):
-                    node.rpc.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors)
+                    node.rpc.createwallet(wallet_name=wallet_name, descriptors=False)
                 else:
                     node.rpc.createwallet(wallet_name=wallet_name)
                 wallet_prev = node.get_wallet_rpc(wallet_name)
@@ -337,67 +346,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 self.stop_node(node.index)
 
             # Restore the wallet to master
-            load_res = node_master.restorewallet(wallet_name, backup_path)
-
-            # Make sure this wallet opens with only the migration warning. See https://github.com/bitcoin/bitcoin/pull/19054
-            if not self.options.descriptors:
-                # Legacy wallets will have only a deprecation warning
-                assert_equal(load_res["warnings"], ["Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."])
-            else:
-                assert "warnings" not in load_res
-
-            wallet = node_master.get_wallet_rpc(wallet_name)
-            info = wallet.getaddressinfo(address)
-            descriptor = f"wpkh([{info['hdmasterfingerprint']}{hdkeypath[1:]}]{pubkey})"
-            assert_equal(info["desc"], descsum_create(descriptor))
-
-            # Make backup so the wallet can be copied back to old node
-            down_wallet_name = f"re_down_{node.version}"
-            down_backup_path = os.path.join(self.options.tmpdir, f"{down_wallet_name}.dat")
-            wallet.backupwallet(down_backup_path)
-
-            # Check that taproot descriptors can be added to 0.21 wallets
-            # This must be done after the backup is created so that 0.21 can still load
-            # the backup
-            if self.options.descriptors and self.major_version_equals(node, 21):
-                assert_raises_rpc_error(-12, "No bech32m addresses available", wallet.getnewaddress, address_type="bech32m")
-                xpubs = wallet.gethdkeys(active_only=True)
-                assert_equal(len(xpubs), 1)
-                assert_equal(len(xpubs[0]["descriptors"]), 6)
-                wallet.createwalletdescriptor("bech32m")
-                xpubs = wallet.gethdkeys(active_only=True)
-                assert_equal(len(xpubs), 1)
-                assert_equal(len(xpubs[0]["descriptors"]), 8)
-                tr_descs = [desc["desc"] for desc in xpubs[0]["descriptors"] if desc["desc"].startswith("tr(")]
-                assert_equal(len(tr_descs), 2)
-                for desc in tr_descs:
-                    assert info["hdmasterfingerprint"] in desc
-                wallet.getnewaddress(address_type="bech32m")
-
-            wallet.unloadwallet()
-
-            # Check that no automatic upgrade broke the downgrading the wallet
-            if self.major_version_less_than(node, 17):
-                # loadwallet is only available in 0.17+
-                shutil.copyfile(
-                    down_backup_path,
-                    node.wallets_path / down_wallet_name
-                )
-                self.start_node(node.index, extra_args=[f"-wallet={down_wallet_name}"])
-                wallet_res = node.get_wallet_rpc(down_wallet_name)
-                info = wallet_res.validateaddress(address)
-                assert_equal(info, addr_info)
-            else:
-                target_dir = node.wallets_path / down_wallet_name
-                os.makedirs(target_dir, exist_ok=True)
-                shutil.copyfile(
-                    down_backup_path,
-                    target_dir / "wallet.dat"
-                )
-                node.loadwallet(down_wallet_name)
-                wallet_res = node.get_wallet_rpc(down_wallet_name)
-                info = wallet_res.getaddressinfo(address)
-                assert_equal(info, addr_info)
+            # Legacy wallets are no longer supported. Trying to load these should result in an error
+            assert_raises_rpc_error(-18, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC)", node_master.restorewallet, wallet_name, backup_path)
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()

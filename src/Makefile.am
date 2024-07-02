@@ -344,7 +344,6 @@ BITCOIN_CORE_H = \
   validation.h \
   validationinterface.h \
   versionbits.h \
-  wallet/bdb.h \
   wallet/coincontrol.h \
   wallet/coinselection.h \
   wallet/context.h \
@@ -359,7 +358,6 @@ BITCOIN_CORE_H = \
   wallet/receive.h \
   wallet/rpc/util.h \
   wallet/rpc/wallet.h \
-  wallet/salvage.h \
   wallet/scriptpubkeyman.h \
   wallet/spend.h \
   wallet/sqlite.h \
@@ -482,7 +480,6 @@ libbitcoin_node_a_SOURCES = \
 
 if ENABLE_WALLET
 libbitcoin_node_a_SOURCES += wallet/init.cpp
-libbitcoin_node_a_CPPFLAGS += $(BDB_CPPFLAGS)
 endif
 if !ENABLE_WALLET
 libbitcoin_node_a_SOURCES += dummywallet.cpp
@@ -503,7 +500,7 @@ endif
 #
 
 # wallet #
-libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(BDB_CPPFLAGS) $(SQLITE_CFLAGS)
+libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(SQLITE_CFLAGS)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   wallet/coincontrol.cpp \
@@ -529,20 +526,13 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpc/wallet.cpp \
   wallet/scriptpubkeyman.cpp \
   wallet/spend.cpp \
+  wallet/sqlite.cpp \
   wallet/transaction.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
   $(BITCOIN_CORE_H)
-
-if USE_SQLITE
-libbitcoin_wallet_a_SOURCES += wallet/sqlite.cpp
-endif
-if USE_BDB
-libbitcoin_wallet_a_SOURCES += wallet/bdb.cpp wallet/salvage.cpp
-endif
-#
 
 # wallet tool #
 libbitcoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
@@ -800,7 +790,7 @@ bitcoin_bin_ldadd = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+bitcoin_bin_ldadd += $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
 bitcoind_SOURCES = $(bitcoin_daemon_sources) init/bitcoind.cpp
 bitcoind_CPPFLAGS = $(bitcoin_bin_cppflags)
@@ -868,7 +858,6 @@ bitcoin_wallet_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1) \
-  $(BDB_LIBS) \
   $(SQLITE_LIBS)
 
 if TARGET_WINDOWS

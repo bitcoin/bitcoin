@@ -177,11 +177,7 @@ public:
     }
     bool haveWatchOnly() override
     {
-        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
-        if (spk_man) {
-            return spk_man->HaveWatchOnly();
-        }
-        return false;
+        return m_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS);
     };
     bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::optional<AddressPurpose>& purpose) override
     {
@@ -516,7 +512,6 @@ public:
     bool hasExternalSigner() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER); }
     bool privateKeysDisabled() override { return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS); }
     bool taprootEnabled() override {
-        if (m_wallet->IsLegacy()) return false;
         auto spk_man = m_wallet->GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/false);
         return spk_man != nullptr;
     }
@@ -526,7 +521,6 @@ public:
     {
         RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
     }
-    bool isLegacy() override { return m_wallet->IsLegacy(); }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
         return MakeSignalHandler(m_wallet->NotifyUnload.connect(fn));
@@ -593,7 +587,7 @@ public:
         m_context.scheduler = &scheduler;
         return StartWallets(m_context);
     }
-    void flush() override { return FlushWallets(m_context); }
+    void flush() override {}
     void stop() override { return StopWallets(m_context); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
     void schedulerMockForward(std::chrono::seconds delta) override { Assert(m_context.scheduler)->MockForward(delta); }
@@ -656,11 +650,11 @@ public:
     {
         return fs::PathToString(GetWalletDir());
     }
-    std::vector<std::string> listWalletDir() override
+    std::vector<std::pair<std::string, std::string>> listWalletDir() override
     {
-        std::vector<std::string> paths;
-        for (auto& path : ListDatabases(GetWalletDir())) {
-            paths.push_back(fs::PathToString(path));
+        std::vector<std::pair<std::string, std::string>> paths;
+        for (auto& [path, format] : ListDatabases(GetWalletDir())) {
+            paths.emplace_back(fs::PathToString(path), format);
         }
         return paths;
     }
