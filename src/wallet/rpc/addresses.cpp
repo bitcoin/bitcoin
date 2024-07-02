@@ -564,6 +564,10 @@ RPCHelpMan getaddressinfo()
                         {
                             {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
                         }},
+                        {RPCResult::Type::ARR, "use_txids", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "txid", "The ids of transactions involving this wallet which received with the address"},
+                        }},
                     }
                 },
                 RPCExamples{
@@ -656,6 +660,15 @@ RPCHelpMan getaddressinfo()
         labels.push_back(address_book_entry->GetLabel());
     }
     ret.pushKV("labels", std::move(labels));
+
+    // NOTE: Intentionally not special-casing a single txid: while addresses
+    // should never be reused, it's not unexpected to have RBF result in
+    // multiple txids for a single use.
+    UniValue use_txids(UniValue::VARR);
+    pwallet->FindScriptPubKeyUsed(std::set<CScript>{scriptPubKey}, [&use_txids](const CWalletTx&wtx) {
+        use_txids.push_back(wtx.GetHash().GetHex());
+    });
+    ret.pushKV("use_txids", std::move(use_txids));
 
     return ret;
 },

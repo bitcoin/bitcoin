@@ -45,7 +45,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
     wallet_instance->TopUpKeyPool();
 }
 
-static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options)
+static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options, CWallet::do_init_used_flag do_init_used_flag_val = CWallet::do_init_used_flag::Init)
 {
     DatabaseStatus status;
     bilingual_str error;
@@ -59,7 +59,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
     std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, std::move(database)), WalletToolReleaseWallet};
     DBErrors load_wallet_ret;
     try {
-        load_wallet_ret = wallet_instance->LoadWallet();
+        load_wallet_ret = wallet_instance->LoadWallet(do_init_used_flag_val);
     } catch (const std::runtime_error&) {
         tfm::format(std::cerr, "Error loading %s. Is wallet being used by another process?\n", name);
         return nullptr;
@@ -165,7 +165,8 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
-        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
+        // NOTE: We need to skip initialisation of the m_used flag, or else the address book count might be wrong
+        const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options, CWallet::do_init_used_flag::Skip);
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
