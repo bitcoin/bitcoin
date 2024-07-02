@@ -371,10 +371,43 @@ class ConfArgsTest(BitcoinTestFramework):
     def test_acceptstalefeeestimates_arg_support(self):
         self.log.info("Test -acceptstalefeeestimates option support")
         conf_file = self.nodes[0].datadir_path / "bitcoin.conf"
-        for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet")}:
+        for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet"), ("testnet4", "testnet4")}:
             util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
         util.write_config(conf_file, n=0, chain="regtest")  # Reset to regtest
+
+    def test_testnet3_deprecation_msg(self):
+        self.log.info("Test testnet3 deprecation warning")
+        t3_warning_log = "Warning: Support for testnet3 is deprecated and will be removed in an upcoming release. Consider switching to testnet4."
+
+        def warning_msg(node, approx_size):
+            return f'Warning: Disk space for "{node.datadir_path / node.chain / "blocks" }" may not accommodate the block files. Approximately {approx_size} GB of data will be stored in this directory.'
+
+        # Testnet3 node will log the warning
+        self.nodes[0].chain = 'testnet3'
+        self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[test]')])
+        with self.nodes[0].assert_debug_log([t3_warning_log]):
+            self.start_node(0)
+        # Some CI environments will have limited space and some others won't
+        # so we need to handle both cases as a valid result.
+        self.nodes[0].stderr.seek(0)
+        err = self.nodes[0].stdout.read()
+        self.nodes[0].stderr.seek(0)
+        self.nodes[0].stderr.truncate()
+        if err != b'' and err != warning_msg(self.nodes[0], 42):
+            raise AssertionError("Unexpected stderr after shutdown of Testnet3 node")
+        self.stop_node(0)
+
+        # Testnet4 node will not log the warning
+        self.nodes[0].chain = 'testnet4'
+        self.nodes[0].replace_in_config([('testnet=', 'testnet4='), ('[test]', '[testnet4]')])
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=[t3_warning_log]):
+            self.start_node(0)
+        self.stop_node(0)
+
+        # Reset to regtest
+        self.nodes[0].chain = 'regtest'
+        self.nodes[0].replace_in_config([('testnet4=', 'regtest='), ('[testnet4]', '[regtest]')])
 
     def run_test(self):
         self.test_log_buffer()
@@ -389,6 +422,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_ignored_conf()
         self.test_ignored_default_conf()
         self.test_acceptstalefeeestimates_arg_support()
+        self.test_testnet3_deprecation_msg()
 
         # Remove the -datadir argument so it doesn't override the config file
         self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-datadir")]

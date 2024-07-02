@@ -20,6 +20,7 @@ import os
 class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
+        # TODO: Update to testnet4 when a checkpoint is available
         self.chain = 'testnet3'  # Use testnet chain because it has an early checkpoint
         self.num_nodes = 2
         self.extra_args = [["-minimumchainwork=0x0", '-prune=550']] * self.num_nodes

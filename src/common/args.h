@@ -423,7 +423,7 @@ private:
     fs::path GetDataDir(bool net_specific) const;
 
     /**
-     * Return -regtest/-signet/-testnet/-chain= setting as a ChainType enum if a
+     * Return -regtest/-signet/-testnet/-testnet4/-chain= setting as a ChainType enum if a
      * recognized chain type was set, or as a string if an unrecognized chain
      * name was set. Raise an exception if an invalid combination of flags was
      * provided.

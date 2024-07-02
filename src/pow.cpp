@@ -61,7 +61,28 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     // Retarget
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
+
+    // Special difficulty rule for Testnet4
+    if (params.hashGenesisBlock == uint256S("0x00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043")) {
+        // Here we use the last non-special-min-difficulty-rules-block if the
+        // last block of the previous period was a min-difficulty block.
+        //
+        // Note that if hash power were to suddenly drop in a difficulty
+        // adjustment period A, this rule will find the last "real" nBits value
+        // and apply it to the first block of the next period (B). If nothing
+        // changes, then for period C this seeks back to the first block of
+        // period B, finds the real value and applies it. This way the "real"
+        // nBits are preserved because the first blocks of periods B and C
+        // do not allow for the usage of the min-difficulty exception.
+        const CBlockIndex* pindex = pindexLast;
+        const uint32_t pow_min{bnPowLimit.GetCompact()};
+        while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == pow_min)
+            pindex = pindex->pprev;
+        bnNew.SetCompact(pindex->nBits);
+    } else {
+        bnNew.SetCompact(pindexLast->nBits);
+    }
+
     bnNew *= nActualTimespan;
     bnNew /= params.nPowTargetTimespan;
 
