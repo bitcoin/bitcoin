@@ -123,7 +123,11 @@ enum BlockStatus : uint32_t {
     BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
     BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
+
+    //! Descends from failed block. As failed blocks are encountered, this flag is set on a best-effort basis.
+    //! It's set consistently for all blocks only during startup. Therefore, code should not rely on it being
+    //! set for each descendant of a failed block.
+    BLOCK_FAILED_CHILD       =   64,
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
     BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client

@@ -1002,10 +1002,11 @@ public:
 
     /**
      * In order to efficiently track invalidity of headers, we keep the set of
-     * blocks which we tried to connect and found to be invalid here (ie which
-     * were set to BLOCK_FAILED_VALID since the last restart). We can then
+     * blocks which were found to be invalid while connecting or accepting do disk
+     * (ie which were set to BLOCK_FAILED_VALID since the last restart). We can then
      * walk this set and check if a new header is a descendant of something in
-     * this set, preventing us from having to walk m_block_index when we try
+     * this set, preventing us from accepting headers building on invalid blocks into
+     * our blockindex and from having to walk m_block_index when we try
      * to connect a bad block and fail.
      *
      * While this is more complicated than marking everything which descends
@@ -1021,7 +1022,17 @@ public:
      */
     std::set<CBlockIndex*> m_failed_blocks;
 
-    /** Best header we've seen so far (used for getheaders queries' starting points). */
+    /**
+     * Best header we've seen so far for a block that is not known to be invalid.
+     * Should not be relied upon in critical parts of the code, because it is
+     * determined on a best-effort basis andd can be off in certain situations
+     * with invalid blocks and/or invalidateblock/reconsiderblock where we'd need
+     * to walk through the entire block index to compute the correct value, but
+     * currently don't for performance reasons.
+     *
+     * Used for example for getheaders queries' starting points and reporting
+     * (rpc, gui).
+     */
     CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
 
     //! The total number of bytes available for us to use across all in-memory
