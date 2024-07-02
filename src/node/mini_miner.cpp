@@ -170,7 +170,8 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
     Assume(m_to_be_replaced.empty());
     Assume(m_requested_outpoints_by_txid.empty());
     Assume(m_bump_fees.empty());
-    Assume(m_inclusion_order.empty());
+    Assume(m_linearize_result.inclusion_order.empty());
+    Assume(m_linearize_result.size_per_feerate.empty());
     SanityCheck();
 }
 
@@ -188,11 +189,7 @@ struct AncestorFeerateComparator
             const int64_t ancestor_size{e.GetSizeWithAncestors()};
             const CAmount tx_fee{e.GetModifiedFee()};
             const int64_t tx_size{e.GetTxSize()};
-            // Comparing ancestor feerate with individual feerate:
-            //     ancestor_fee / ancestor_size <= tx_fee / tx_size
-            // Avoid division and possible loss of precision by
-            // multiplying both sides by the sizes:
-            return ancestor_fee * tx_size < tx_fee * ancestor_size ?
+            return CFeeRate(ancestor_fee, ancestor_size) <= CFeeRate(tx_fee, tx_size) ?
                        CFeeRate(ancestor_fee, ancestor_size) :
                        CFeeRate(tx_fee, tx_size);
         };
@@ -264,13 +261,15 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         // Pick highest ancestor feerate entry.
         auto best_iter = m_entries.begin();
         Assume(best_iter != m_entries.end());
-        const auto ancestor_package_size = (*best_iter)->second.GetSizeWithAncestors();
+        const uint64_t ancestor_package_size = (*best_iter)->second.GetSizeWithAncestors();
         const auto ancestor_package_fee = (*best_iter)->second.GetModFeesWithAncestors();
         // Stop here. Everything that didn't "make it into the block" has bumpfee.
         if (target_feerate.has_value() &&
             ancestor_package_fee < target_feerate->GetFee(ancestor_package_size)) {
             break;
         }
+
+        m_linearize_result.size_per_feerate.emplace_back(CFeeRate{ancestor_package_fee, ancestor_package_size}, ancestor_package_size);
 
         // Calculate ancestors on the fly. This lookup should be fairly cheap, and ancestor sets
         // change at every iteration, so this is more efficient than maintaining a cache.
@@ -294,7 +293,7 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         }
         // Track the order in which transactions were selected.
         for (const auto& ancestor : ancestors) {
-            m_inclusion_order.emplace(Txid::FromUint256(ancestor->first), sequence_num);
+            m_linearize_result.inclusion_order.emplace(Txid::FromUint256(ancestor->first), sequence_num);
         }
         DeleteAncestorPackage(ancestors);
         SanityCheck();
@@ -306,16 +305,16 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         Assume(m_in_block.empty() || m_total_fees >= target_feerate->GetFee(m_total_vsize));
     }
     Assume(m_in_block.empty() || sequence_num > 0);
-    Assume(m_in_block.size() == m_inclusion_order.size());
+    Assume(m_in_block.size() == m_linearize_result.inclusion_order.size());
     // Do not try to continue building the block template with a different feerate.
     m_ready_to_calculate = false;
 }
 
 
-std::map<Txid, uint32_t> MiniMiner::Linearize()
+LinearizationResult MiniMiner::Linearize()
 {
     BuildMockTemplate(std::nullopt);
-    return m_inclusion_order;
+    return m_linearize_result;
 }
 
 std::map<COutPoint, CAmount> MiniMiner::CalculateBumpFees(const CFeeRate& target_feerate)

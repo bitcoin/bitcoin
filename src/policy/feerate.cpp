@@ -9,9 +9,9 @@
 
 #include <cmath>
 
-CFeeRate::CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes)
+CFeeRate::CFeeRate(const CAmount& nFeePaid, uint64_t num_bytes)
 {
-    const int64_t nSize{num_bytes};
+    const int64_t nSize{static_cast<int64_t>(num_bytes)};
 
     if (nSize > 0) {
         nSatoshisPerK = nFeePaid * 1000 / nSize;
@@ -20,9 +20,9 @@ CFeeRate::CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes)
     }
 }
 
-CAmount CFeeRate::GetFee(uint32_t num_bytes) const
+CAmount CFeeRate::GetFee(uint64_t num_bytes) const
 {
-    const int64_t nSize{num_bytes};
+    const int64_t nSize{static_cast<int64_t>(num_bytes)};
 
     // Be explicit that we're converting from a double to int64_t (CAmount) here.
     // We've previously had issues with the silent double->int64_t conversion.

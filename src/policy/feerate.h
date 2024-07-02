@@ -50,14 +50,14 @@ public:
      * param@[in]   nFeePaid    The fee paid by a transaction, in satoshis
      * param@[in]   num_bytes   The vsize of a transaction, in vbytes
      */
-    CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes);
+    CFeeRate(const CAmount& nFeePaid, uint64_t num_bytes);
 
     /**
      * Return the fee in satoshis for the given vsize in vbytes.
      * If the calculated fee would have fractional satoshis, then the
      * returned fee will always be rounded up to the nearest satoshi.
      */
-    CAmount GetFee(uint32_t num_bytes) const;
+    CAmount GetFee(uint64_t num_bytes) const;
 
     /**
      * Return the fee in satoshis for a vsize of 1000 vbytes
