@@ -33,6 +33,8 @@ LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.la
+LIBBITCOIN_KERNEL=libbitcoin_kernel.a
+LIBBITCOIN_UTIL_KERNEL=libbitcoin_util_kernel.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
@@ -76,6 +78,8 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_NODE) \
+  $(LIBBITCOIN_KERNEL) \
+  $(LIBBITCOIN_UTIL_KERNEL) \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_IPC) \
   $(LIBBITCOIN_WALLET) \
@@ -381,7 +385,7 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	$(AM_V_GEN) $(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
-libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libbitcoin_util_kernel_a-clientversion.$(OBJEXT): obj/build.h
 
 # node #
 libbitcoin_node_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LEVELDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
@@ -393,11 +397,6 @@ libbitcoin_node_a_SOURCES = \
   bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
-  chain.cpp \
-  consensus/tx_verify.cpp \
-  dbwrapper.cpp \
-  deploymentstatus.cpp \
-  flatfile.cpp \
   headerssync.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -407,22 +406,13 @@ libbitcoin_node_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
-  kernel/chain.cpp \
-  kernel/checks.cpp \
-  kernel/coinstats.cpp \
-  kernel/context.cpp \
-  kernel/cs_main.cpp \
-  kernel/disconnected_transactions.cpp \
-  kernel/mempool_removal_reason.cpp \
   mapport.cpp \
   net.cpp \
   net_processing.cpp \
   netgroup.cpp \
   node/abort.cpp \
   node/blockmanager_args.cpp \
-  node/blockstorage.cpp \
   node/caches.cpp \
-  node/chainstate.cpp \
   node/chainstatemanager_args.cpp \
   node/coin.cpp \
   node/coins_view_args.cpp \
@@ -444,17 +434,11 @@ libbitcoin_node_a_SOURCES = \
   node/timeoffsets.cpp \
   node/transaction.cpp \
   node/txreconciliation.cpp \
-  node/utxo_snapshot.cpp \
   node/validation_cache_args.cpp \
   node/warnings.cpp \
   noui.cpp \
-  policy/v3_policy.cpp \
   policy/fees.cpp \
   policy/fees_args.cpp \
-  policy/packages.cpp \
-  policy/rbf.cpp \
-  policy/settings.cpp \
-  pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/fees.cpp \
@@ -468,16 +452,9 @@ libbitcoin_node_a_SOURCES = \
   rpc/server_util.cpp \
   rpc/signmessage.cpp \
   rpc/txoutproof.cpp \
-  script/sigcache.cpp \
-  signet.cpp \
   torcontrol.cpp \
-  txdb.cpp \
-  txmempool.cpp \
   txorphanage.cpp \
   txrequest.cpp \
-  validation.cpp \
-  validationinterface.cpp \
-  versionbits.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
@@ -681,7 +658,6 @@ libbitcoin_common_a_SOURCES = \
   bech32.cpp \
   chainparamsbase.cpp \
   chainparams.cpp \
-  coins.cpp \
   common/args.cpp \
   common/bloom.cpp \
   common/config.cpp \
@@ -693,13 +669,9 @@ libbitcoin_common_a_SOURCES = \
   common/signmessage.cpp \
   common/system.cpp \
   common/url.cpp \
-  compressor.cpp \
-  core_read.cpp \
   core_write.cpp \
-  deploymentinfo.cpp \
   external_signer.cpp \
   init/common.cpp \
-  kernel/chainparams.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
@@ -708,9 +680,6 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   net_permissions.cpp \
   outputtype.cpp \
-  policy/v3_policy.cpp \
-  policy/feerate.cpp \
-  policy/policy.cpp \
   protocol.cpp \
   psbt.cpp \
   rpc/external_signer.cpp \
@@ -723,7 +692,6 @@ libbitcoin_common_a_SOURCES = \
   script/parsing.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
-  script/solver.cpp \
   $(BITCOIN_CORE_H)
 #
 
@@ -731,40 +699,85 @@ libbitcoin_common_a_SOURCES = \
 libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_util_a_SOURCES = \
-  support/lockedpool.cpp \
-  clientversion.cpp \
-  logging.cpp \
-  random.cpp \
-  randomenv.cpp \
-  streams.cpp \
-  sync.cpp \
   util/asmap.cpp \
   util/batchpriority.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
+  util/exception.cpp \
+  util/sock.cpp \
+  util/readwritefile.cpp \
+  util/thread.cpp \
+  util/threadinterrupt.cpp \
+  $(BITCOIN_CORE_H)
+#
+
+# kernel #
+libbitcoin_kernel_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+libbitcoin_kernel_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_kernel_a_SOURCES = \
+  chain.cpp \
+  coins.cpp \
+  compressor.cpp \
+  consensus/tx_verify.cpp \
+  dbwrapper.cpp \
+  deploymentstatus.cpp \
+  flatfile.cpp \
+  kernel/chain.cpp \
+  kernel/checks.cpp \
+  kernel/coinstats.cpp \
+  kernel/context.cpp \
+  kernel/cs_main.cpp \
+  kernel/disconnected_transactions.cpp \
+  kernel/mempool_removal_reason.cpp \
+  node/blockstorage.cpp \
+  node/chainstate.cpp \
+  node/utxo_snapshot.cpp \
+  policy/v3_policy.cpp \
+  policy/feerate.cpp \
+  policy/packages.cpp \
+  policy/policy.cpp \
+  policy/rbf.cpp \
+  policy/settings.cpp \
+  pow.cpp \
+  script/sigcache.cpp \
+  script/solver.cpp \
+  signet.cpp \
+  txdb.cpp \
+  txmempool.cpp \
+  validation.cpp \
+  validationinterface.cpp
+
+# util kernel #
+libbitcoin_util_kernel_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+libbitcoin_util_kernel_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_util_kernel_a_SOURCES = \
+  clientversion.cpp \
+  core_read.cpp \
+  deploymentinfo.cpp \
+  kernel/chainparams.cpp \
+  logging.cpp \
+  random.cpp \
+  randomenv.cpp \
+  support/lockedpool.cpp \
+  streams.cpp \
+  sync.cpp \
   util/chaintype.cpp \
   util/check.cpp \
-  util/exception.cpp \
   util/feefrac.cpp \
   util/fs.cpp \
   util/fs_helpers.cpp \
   util/hasher.cpp \
-  util/sock.cpp \
-  util/syserror.cpp \
   util/moneystr.cpp \
   util/rbf.cpp \
-  util/readwritefile.cpp \
-  util/signalinterrupt.cpp \
-  util/thread.cpp \
-  util/threadinterrupt.cpp \
-  util/threadnames.cpp \
   util/serfloat.cpp \
+  util/signalinterrupt.cpp \
   util/strencodings.cpp \
   util/string.cpp \
+  util/syserror.cpp \
+  util/threadnames.cpp \
   util/time.cpp \
   util/tokenpipe.cpp \
-  $(BITCOIN_CORE_H)
-#
+  versionbits.cpp
 
 # cli #
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -791,9 +804,11 @@ endif
 bitcoin_bin_ldadd = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_KERNEL) \
   $(LIBBITCOIN_UTIL) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_ZMQ) \
+  $(LIBBITCOIN_UTIL_KERNEL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
@@ -829,6 +844,7 @@ bitcoin_cli_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_UTIL_KERNEL) \
   $(LIBBITCOIN_CRYPTO)
 
 bitcoin_cli_LDADD += $(EVENT_LIBS)
@@ -848,6 +864,8 @@ bitcoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_KERNEL) \
+  $(LIBBITCOIN_UTIL_KERNEL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
@@ -864,6 +882,8 @@ bitcoin_wallet_LDADD = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_KERNEL) \
+  $(LIBBITCOIN_UTIL_KERNEL) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
@@ -889,6 +909,7 @@ endif
 bitcoin_util_LDADD = \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_UTIL_KERNEL) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
@@ -923,81 +944,7 @@ libbitcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp
 # Note this is a quick hack that will be removed as we incrementally define what
 # to export from the library.
 libbitcoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
-
-# TODO: libbitcoinkernel is a work in progress consensus engine library, as more
-#       and more modules are decoupled from the consensus engine, this list will
-#       shrink to only those which are absolutely necessary.
-libbitcoinkernel_la_SOURCES = \
-  kernel/bitcoinkernel.cpp \
-  arith_uint256.cpp \
-  chain.cpp \
-  clientversion.cpp \
-  coins.cpp \
-  compressor.cpp \
-  consensus/merkle.cpp \
-  consensus/tx_check.cpp \
-  consensus/tx_verify.cpp \
-  core_read.cpp \
-  dbwrapper.cpp \
-  deploymentinfo.cpp \
-  deploymentstatus.cpp \
-  flatfile.cpp \
-  hash.cpp \
-  kernel/chain.cpp \
-  kernel/checks.cpp \
-  kernel/chainparams.cpp \
-  kernel/coinstats.cpp \
-  kernel/context.cpp \
-  kernel/cs_main.cpp \
-  kernel/disconnected_transactions.cpp \
-  kernel/mempool_removal_reason.cpp \
-  logging.cpp \
-  node/blockstorage.cpp \
-  node/chainstate.cpp \
-  node/utxo_snapshot.cpp \
-  policy/v3_policy.cpp \
-  policy/feerate.cpp \
-  policy/packages.cpp \
-  policy/policy.cpp \
-  policy/rbf.cpp \
-  policy/settings.cpp \
-  pow.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
-  pubkey.cpp \
-  random.cpp \
-  randomenv.cpp \
-  script/interpreter.cpp \
-  script/script.cpp \
-  script/script_error.cpp \
-  script/sigcache.cpp \
-  script/solver.cpp \
-  signet.cpp \
-  streams.cpp \
-  support/lockedpool.cpp \
-  sync.cpp \
-  txdb.cpp \
-  txmempool.cpp \
-  uint256.cpp \
-  util/chaintype.cpp \
-  util/check.cpp \
-  util/feefrac.cpp \
-  util/fs.cpp \
-  util/fs_helpers.cpp \
-  util/hasher.cpp \
-  util/moneystr.cpp \
-  util/rbf.cpp \
-  util/serfloat.cpp \
-  util/signalinterrupt.cpp \
-  util/strencodings.cpp \
-  util/string.cpp \
-  util/syserror.cpp \
-  util/threadnames.cpp \
-  util/time.cpp \
-  util/tokenpipe.cpp \
-  validation.cpp \
-  validationinterface.cpp \
-  versionbits.cpp
+libbitcoinkernel_la_SOURCES = kernel/bitcoinkernel.cpp $(libbitcoin_kernel_a_SOURCES) $(libbitcoin_util_kernel_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
