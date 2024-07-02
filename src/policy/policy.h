@@ -8,6 +8,7 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/solver.h>
@@ -139,11 +140,12 @@ static constexpr decltype(CTransaction::version) TX_MAX_STANDARD_VERSION{3};
 */
 bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
 /**
-* Check for standard transaction types
-* @param[in] mapInputs       Map of previous transactions that have outputs we're spending
-* @return True if all inputs (scriptSigs) use only standard transaction forms
-*/
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+ * Check for standard transaction types
+ * @param[in] mapInputs       Map of previous transactions that have outputs we're spending
+ * @returns valid TxValidationState if all inputs (scriptSigs) use only standard transaction forms else returns
+ * invalid TxValidationState which states why an input is not standard.
+ */
+TxValidationState HasNonStandardInput(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 /**
 * Check if the transaction is over standard P2WSH resources limit:
 * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements
