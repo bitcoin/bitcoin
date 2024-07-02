@@ -76,6 +76,123 @@ struct LogSetup : public BasicTestingSetup {
     }
 };
 
+//! Test logging to local logger.
+BOOST_AUTO_TEST_CASE(logging_local_logger)
+{
+    BCLog::Logger logger;
+    logger.m_log_timestamps = false;
+    logger.EnableCategory(BCLog::LogFlags::ALL);
+    logger.SetLogLevel(BCLog::Level::Trace);
+    logger.StartLogging();
+
+    std::vector<std::string> messages;
+    logger.PushBackCallback([&](const std::string& s) { messages.push_back(s); });
+
+    BCLog::Source log{BCLog::NET, logger};
+    LogError(log, "error %s\n", "arg");
+    LogWarning(log, "warning %s\n", "arg");
+    LogInfo(log, "info %s\n", "arg");
+    LogDebug(log, "debug %s\n", "arg");
+    LogTrace(log, "trace %s\n", "arg");
+
+    constexpr auto expected{std::to_array({
+        "[net:error] error arg\n",
+        "[net:warning] warning arg\n",
+        "[net:info] info arg\n",
+        "[net] debug arg\n",
+        "[net:trace] trace arg\n",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(messages.begin(), messages.end(), expected.begin(), expected.end());
+}
+
+//! Test logging to global logger with different types of source arguments.
+BOOST_FIXTURE_TEST_CASE(logging_source_args, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Trace);
+
+    // Test logging with no source arguments.
+    LogError("error\n");
+    LogWarning("warning\n");
+    LogInfo("info\n");
+    LogDebug("debug\n");
+    LogTrace("trace\n");
+    LogError("error %s\n", "arg");
+    LogWarning("warning %s\n", "arg");
+    LogInfo("info %s\n", "arg");
+    LogDebug("debug %s\n", "arg");
+    LogTrace("trace %s\n", "arg");
+
+    // Test logging with category arguments.
+    LogError(BCLog::NET, "error\n");
+    LogWarning(BCLog::NET, "warning\n");
+    LogInfo(BCLog::NET, "info\n");
+    LogDebug(BCLog::NET, "debug\n");
+    LogTrace(BCLog::NET, "trace\n");
+    LogError(BCLog::NET, "error %s\n", "arg");
+    LogWarning(BCLog::NET, "warning %s\n", "arg");
+    LogInfo(BCLog::NET, "info %s\n", "arg");
+    LogDebug(BCLog::NET, "debug %s\n", "arg");
+    LogTrace(BCLog::NET, "trace %s\n", "arg");
+
+    // Test logging with source object.
+    BCLog::Source log{BCLog::TOR};
+    LogError(log, "error\n");
+    LogWarning(log, "warning\n");
+    LogInfo(log, "info\n");
+    LogDebug(log, "debug\n");
+    LogTrace(log, "trace\n");
+    LogError(log, "error %s\n", "arg");
+    LogWarning(log, "warning %s\n", "arg");
+    LogInfo(log, "info %s\n", "arg");
+    LogDebug(log, "debug %s\n", "arg");
+    LogTrace(log, "trace %s\n", "arg");
+
+    constexpr auto expected{std::to_array({
+        "[error] error",
+        "[warning] warning",
+        "info",
+        "[debug] debug",
+        "[trace] trace",
+
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
+        "[debug] debug arg",
+        "[trace] trace arg",
+
+        "[net:error] error",
+        "[net:warning] warning",
+        "[net:info] info",
+        "[net] debug",
+        "[net:trace] trace",
+
+        "[net:error] error arg",
+        "[net:warning] warning arg",
+        "[net:info] info arg",
+        "[net] debug arg",
+        "[net:trace] trace arg",
+
+        "[tor:error] error",
+        "[tor:warning] warning",
+        "[tor:info] info",
+        "[tor] debug",
+        "[tor:trace] trace",
+
+        "[tor:error] error arg",
+        "[tor:warning] warning arg",
+        "[tor:info] info arg",
+        "[tor] debug arg",
+        "[tor:trace] trace arg",
+    })};
+    std::ifstream file{tmp_log_path};
+    std::vector<std::string> log_lines;
+    for (std::string log; std::getline(file, log);) {
+        log_lines.push_back(log);
+    }
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
@@ -83,15 +200,16 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
 }
 
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
+BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
-    LogInstance().m_log_sourcelocations = true;
-    LogPrintf_("fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug, "foo1: %s\n", "bar1");
-    LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info, "foo2: %s\n", "bar2");
-    LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug, "foo3: %s\n", "bar3");
-    LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info, "foo4: %s\n", "bar4");
-    LogPrintf_("fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo5: %s\n", "bar5");
-    LogPrintf_("fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info, "foo6: %s\n", "bar6");
+    BCLog::Logger& logger{LogInstance()};
+    logger.m_log_sourcelocations = true;
+    logger.LogPrintStr(strprintf("foo1: %s\n", "bar1"), "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
+    logger.LogPrintStr(strprintf("foo2: %s\n", "bar2"), "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
+    logger.LogPrintStr(strprintf("foo3: %s\n", "bar3"), "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
+    logger.LogPrintStr(strprintf("foo4: %s\n", "bar4"), "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
+    logger.LogPrintStr(strprintf("foo5: %s\n", "bar5"), "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
+    logger.LogPrintStr(strprintf("foo6: %s\n", "bar6"), "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
