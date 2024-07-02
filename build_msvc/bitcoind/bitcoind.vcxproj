@@ -42,6 +42,9 @@
     <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
       <Project>{bb493552-3b8c-4a8c-bf69-a6e7a51d2ea6}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\libminisketch\libminisketch.vcxproj">
+      <Project>{542007e3-be0d-4b0d-a6b0-aa8813e2558d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\libleveldb\libleveldb.vcxproj">
       <Project>{18430fef-6b61-4c53-b396-718e02850f1b}</Project>
     </ProjectReference>

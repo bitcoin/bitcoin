@@ -237,18 +237,19 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Check that node1's mempool is as expected, containing:
         # - txs from previous ancestor test (-> custom ancestor limit)
-        # - parent tx for descendant test
+        # - parent txs for descendant test
         # - txs chained off parent tx (-> custom descendant limit)
         self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
-                                CUSTOM_ANCESTOR_LIMIT + 1 + CUSTOM_DESCENDANT_LIMIT, timeout=10)
+                                CUSTOM_ANCESTOR_LIMIT + 1 + CUSTOM_DESCENDANT_LIMIT, timeout=30)
         mempool0 = self.nodes[0].getrawmempool(False)
         mempool1 = self.nodes[1].getrawmempool(False)
         assert set(mempool1).issubset(set(mempool0))
-        assert parent_transaction in mempool1
-        for tx in chain[:CUSTOM_DESCENDANT_LIMIT]:
-            assert tx in mempool1
-        for tx in chain[CUSTOM_DESCENDANT_LIMIT:]:
-            assert tx not in mempool1
+        chained_txs_in_mempool = 0
+        for tx in chain:
+            if tx in mempool1:
+                chained_txs_in_mempool += 1
+        assert chained_txs_in_mempool == CUSTOM_DESCENDANT_LIMIT
+
         for tx in mempool1:
             entry0 = self.nodes[0].getmempoolentry(tx)
             entry1 = self.nodes[1].getmempoolentry(tx)

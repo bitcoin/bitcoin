@@ -55,6 +55,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/rpc_mempool.cpp \
   bench/streams_findbyte.cpp \
   bench/strencodings.cpp \
+  bench/txreconciliation.cpp \
   bench/util_time.cpp \
   bench/verify_script.cpp \
   bench/xor.cpp
@@ -78,6 +79,7 @@ bench_bench_bitcoin_LDADD = \
   $(LIBUNIVALUE) \
   $(EVENT_PTHREADS_LIBS) \
   $(EVENT_LIBS) \
+  $(MINISKETCH_LIBS) \
   $(MINIUPNPC_LIBS) \
   $(NATPMP_LIBS)
 
