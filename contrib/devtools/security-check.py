@@ -7,6 +7,7 @@ Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 '''
+import re
 import sys
 
 import lief
@@ -116,6 +117,21 @@ def check_ELF_control_flow(binary) -> bool:
         return True
     return False
 
+def check_ELF_FORTIFY(binary) -> bool:
+
+    chk_funcs = set()
+
+    for sym in binary.symbols:
+        match = re.search(r'__[a-z]*_chk', sym.name)
+        if match:
+            chk_funcs.add(match.group(0))
+
+    # ignore stack-protector and bdb
+    chk_funcs.discard('__stack_chk')
+    chk_funcs.discard('__db_chk')
+
+    return len(chk_funcs) >= 1
+
 def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
     return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
@@ -208,6 +224,7 @@ BASE_ELF = [
     ('RELRO', check_ELF_RELRO),
     ('Canary', check_ELF_Canary),
     ('separate_code', check_ELF_separate_code),
+    ('FORTIFY', check_ELF_FORTIFY),
 ]
 
 BASE_PE = [
