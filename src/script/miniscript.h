@@ -341,6 +341,9 @@ struct InputResult {
     InputResult(A&& in_nsat, B&& in_sat) : nsat(std::forward<A>(in_nsat)), sat(std::forward<B>(in_sat)) {}
 };
 
+//! Sanity check a satisfaction/dissatisfaction.
+void SanityCheckSatisfaction(Type typ, const InputResult& ret);
+
 //! Class whose objects represent the maximum of a list of integers.
 template<typename I>
 struct MaxInt {
@@ -635,7 +638,7 @@ private:
             stack.pop_back();
         }
         // The final remaining results element is the root result, return it.
-        assert(results.size() == 1);
+        Assume(results.size() == 1);
         return std::move(results[0]);
     }
 
@@ -1201,7 +1204,7 @@ private:
                     // The dissatisfaction consists of as many empty vectors as there are keys, which is the same as
                     // satisfying 0 keys.
                     auto& nsat{sats[0]};
-                    assert(node.k != 0);
+                    Assume(node.k != 0);
                     assert(node.k <= sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
@@ -1363,44 +1366,7 @@ private:
 
         auto tester = [&helper](const Node& node, Span<InputResult> subres) -> InputResult {
             auto ret = helper(node, subres);
-
-            // Do a consistency check between the satisfaction code and the type checker
-            // (the actual satisfaction code in ProduceInputHelper does not use GetType)
-
-            // For 'z' nodes, available satisfactions/dissatisfactions must have stack size 0.
-            if (node.GetType() << "z"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 0);
-            if (node.GetType() << "z"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 0);
-
-            // For 'o' nodes, available satisfactions/dissatisfactions must have stack size 1.
-            if (node.GetType() << "o"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 1);
-            if (node.GetType() << "o"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 1);
-
-            // For 'n' nodes, available satisfactions/dissatisfactions must have stack size 1 or larger. For satisfactions,
-            // the top element cannot be 0.
-            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() >= 1);
-            if (node.GetType() << "n"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() >= 1);
-            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.stack.back().empty());
-
-            // For 'd' nodes, a dissatisfaction must exist, and they must not need a signature. If it is non-malleable,
-            // it must be canonical.
-            if (node.GetType() << "d"_mst) assert(ret.nsat.available != Availability::NO);
-            if (node.GetType() << "d"_mst) assert(!ret.nsat.has_sig);
-            if (node.GetType() << "d"_mst && !ret.nsat.malleable) assert(!ret.nsat.non_canon);
-
-            // For 'f'/'s' nodes, dissatisfactions/satisfactions must have a signature.
-            if (node.GetType() << "f"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.has_sig);
-            if (node.GetType() << "s"_mst && ret.sat.available != Availability::NO) assert(ret.sat.has_sig);
-
-            // For non-malleable 'e' nodes, a non-malleable dissatisfaction must exist.
-            if (node.GetType() << "me"_mst) assert(ret.nsat.available != Availability::NO);
-            if (node.GetType() << "me"_mst) assert(!ret.nsat.malleable);
-
-            // For 'm' nodes, if a satisfaction exists, it must be non-malleable.
-            if (node.GetType() << "m"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.malleable);
-
-            // If a non-malleable satisfaction exists, it must be canonical.
-            if (ret.sat.available != Availability::NO && !ret.sat.malleable) assert(!ret.sat.non_canon);
-
+            SanityCheckSatisfaction(node.GetType(), ret);
             return ret;
         };
 
@@ -1580,7 +1546,8 @@ public:
                 case Fragment::THRESH:
                     return static_cast<uint32_t>(std::count(subs.begin(), subs.end(), true)) >= node.k;
                 default: // wrappers
-                    assert(subs.size() == 1);
+                    assert(subs.size() >= 1);
+                    Assume(subs.size() == 1);
                     return subs[0];
             }
         });
@@ -2130,8 +2097,9 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     }
 
     // Sanity checks on the produced miniscript
-    assert(constructed.size() == 1);
-    assert(constructed[0]->ScriptSize() == script_size);
+    assert(constructed.size() >= 1);
+    Assume(constructed.size() == 1);
+    Assume(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
     NodeRef<Key> tl_node = std::move(constructed.front());
     tl_node->DuplicateKeyCheck(ctx);
