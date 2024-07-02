@@ -25,12 +25,18 @@ FUZZ_TARGET(script_interpreter)
             const CTransaction tx_to{*mtx};
             const unsigned int in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
             if (in < tx_to.vin.size()) {
-                (void)SignatureHash(script_code, tx_to, in, fuzzed_data_provider.ConsumeIntegral<int>(), ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0}), nullptr);
+                auto n_hash_type = fuzzed_data_provider.ConsumeIntegral<int>();
+                auto amount = ConsumeMoney(fuzzed_data_provider);
+                auto sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
+                (void)SignatureHash(script_code, tx_to, in, n_hash_type, amount, sigversion, nullptr);
                 const std::optional<CMutableTransaction> mtx_precomputed = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS);
                 if (mtx_precomputed) {
                     const CTransaction tx_precomputed{*mtx_precomputed};
                     const PrecomputedTransactionData precomputed_transaction_data{tx_precomputed};
-                    (void)SignatureHash(script_code, tx_to, in, fuzzed_data_provider.ConsumeIntegral<int>(), ConsumeMoney(fuzzed_data_provider), fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0}), &precomputed_transaction_data);
+                    n_hash_type = fuzzed_data_provider.ConsumeIntegral<int>();
+                    amount = ConsumeMoney(fuzzed_data_provider);
+                    sigversion = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
+                    (void)SignatureHash(script_code, tx_to, in, n_hash_type, amount, sigversion, &precomputed_transaction_data);
                 }
             }
         }
