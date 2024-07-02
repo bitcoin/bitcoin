@@ -275,7 +275,7 @@ $ cd bitcoin/
 $ sudo vim /etc/apt/sources.list # Uncomment the lines starting with 'deb-src'.
 $ sudo apt-get update
 $ sudo apt-get build-dep qemu
-$ sudo apt-get install libtool libtool-bin wget automake autoconf bison gdb
+$ sudo apt-get install libtool libtool-bin wget automake autoconf gdb
 ```
 
 At this point, you must install the .NET core.  The process differs, depending on your Linux distribution.
