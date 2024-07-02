@@ -39,6 +39,7 @@ from .util import (
     rpc_url,
     wait_until_helper_internal,
     p2p_port,
+    tor_port,
 )
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
@@ -88,8 +89,11 @@ class TestNode():
         self.coverage_dir = coverage_dir
         self.cwd = cwd
         self.descriptors = descriptors
+        self.has_explicit_bind = False
         if extra_conf is not None:
             append_config(self.datadir_path, extra_conf)
+            # Remember if there is bind=... in the config file.
+            self.has_explicit_bind = any(e.startswith("bind=") for e in extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
@@ -209,6 +213,17 @@ class TestNode():
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
+
+        # If listening and no -bind is given, then bitcoind would bind P2P ports on
+        # 0.0.0.0:P and 127.0.0.1:18445 (for incoming Tor connections), where P is
+        # a unique port chosen by the test framework and configured as port=P in
+        # bitcoin.conf. To avoid collisions on 127.0.0.1:18445, change it to
+        # 127.0.0.1:tor_port().
+        will_listen = all(e != "-nolisten" and e != "-listen=0" for e in extra_args)
+        has_explicit_bind = self.has_explicit_bind or any(e.startswith("-bind=") for e in extra_args)
+        if will_listen and not has_explicit_bind:
+            extra_args.append(f"-bind=0.0.0.0:{p2p_port(self.index)}")
+            extra_args.append(f"-bind=127.0.0.1:{tor_port(self.index)}=onion")
 
         self.use_v2transport = "-v2transport=1" in extra_args or (self.default_to_v2 and "-v2transport=0" not in extra_args)
 
