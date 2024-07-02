@@ -818,6 +818,7 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
     // gather a list of random nodes, skipping those of low quality
     const auto now{Now<NodeSeconds>()};
     std::vector<CAddress> addresses;
+    addresses.reserve(nNodes);
     for (unsigned int n = 0; n < vRandom.size(); n++) {
         if (addresses.size() >= nNodes)
             break;
