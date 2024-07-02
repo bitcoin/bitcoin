@@ -5,20 +5,28 @@
 """
 A test for RPC users with restricted permissions
 """
+
+import os
+import http.client
+import urllib.parse
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    get_datadir_path,
     str_to_b64str,
 )
-import http.client
-import urllib.parse
 
-def rpccall(node, user, method):
+
+def rpccall(node, user, method, password=None):
     url = urllib.parse.urlparse(node.url)
-    headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user[0], user[3]))}
+    if password is not None:
+        auth_value = str_to_b64str(f'{user}:{password}')
+    else:
+        auth_value = str_to_b64str(f'{user[0]}:{user[3]}')
+    headers = {"Authorization": "Basic " + auth_value}
     conn = http.client.HTTPConnection(url.hostname, url.port)
     conn.connect()
-    conn.request('POST', '/', '{"method": "' + method + '"}', headers)
+    conn.request('POST', '/', f'{{"method": "{method}"}}', headers)
     resp = conn.getresponse()
     conn.close()
     return resp
@@ -91,6 +99,80 @@ class RPCWhitelistTest(BitcoinTestFramework):
         assert_equal(403, rpccall(self.nodes[0], self.strange_users[3], "getbestblockhash").status)
         self.log.info("Strange test 5")
         assert_equal(200, rpccall(self.nodes[0], self.strange_users[4], "getblockcount").status)
+
+        #rpcwhitelistdefaulttest
+        self.test_rpcwhitelist_default_0_without_whitelist()
+        self.test_rpcwhitelist_default_0_specific_whitelist()
+        self.test_whitelistdefault_1_with_specified_permission()
+        self.test_whitelistdefault_1_without_specified_permission()
+
+    def test_rpcwhitelist_default_0_without_whitelist(self):
+        """
+        Tests that with rpcwhitelistdefault=0 and no entries in rpcwhitelist,
+        all authorized users (with rpcauth entries) are allowed to access all RPC methods
+        """
+        self.log.info("Testing rpcwhitelistdefault=0 with no specified permissions")
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
+            f.write("rpcwhitelistdefault=0\n")
+            f.write("rpcauth=user3:50358aa884c841648e0700b073c32b2e$b73e95fff0748cc0b517859d2ca47d9bac1aa78231f3e48fa9222b612bd2083e\n")
+            f.write("rpcauth=user4:6e0499f40b6420da2d6a3baaec1a1268$4c03b56943444ad141e3a2d8389aa22b2ade5b09d6710d5299ade7b2902086f1\n")
+        self.restart_node(0)
+
+        assert_equal(200, rpccall(self.nodes[0], "user3", "getbestblockhash", "12345").status)
+        assert_equal(200, rpccall(self.nodes[0], "user4", "getbestblockhash", "12345").status)
+
+
+    def test_rpcwhitelist_default_0_specific_whitelist(self):
+        """
+        Tests that with rpcwhitelistdefault=0 and a specific whitelist for a user,
+        only allowed RPC calls are permitted for that user, while other users retain full access.
+        """
+        self.log.info("Testing rpcwhitelistdefault=0 with whitelist for getblockcount")
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
+            f.write("rpcwhitelistdefault=0\n")
+            f.write("rpcauth=user3:50358aa884c841648e0700b073c32b2e$b73e95fff0748cc0b517859d2ca47d9bac1aa78231f3e48fa9222b612bd2083e\n")
+            f.write("rpcauth=user4:6e0499f40b6420da2d6a3baaec1a1268$4c03b56943444ad141e3a2d8389aa22b2ade5b09d6710d5299ade7b2902086f1\n")
+            f.write("rpcwhitelist=user4:getblockcount\n")
+        self.restart_node(0)
+
+        assert_equal(200, rpccall(self.nodes[0], "user3", "getnetworkinfo" ,"12345").status)
+        assert_equal(403, rpccall(self.nodes[0], "user4", "getbestblockhash","12345").status)
+        assert_equal(200, rpccall(self.nodes[0], "user4", "getblockcount", "12345").status)
+
+
+    def test_whitelistdefault_1_with_specified_permission(self):
+        """
+        Tests that with rpcwhitelistdefault=1 (whitelist by default), a user with a specific whitelist entry
+        can access the whitelisted methods, while users without a whitelist entry are denied access.
+        """
+        self.log.info("Testing rpcwhitelistdefault=1 with specified permissions")
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
+            f.write("rpcwhitelistdefault=1\n")
+            f.write("rpcauth=user3:50358aa884c841648e0700b073c32b2e$b73e95fff0748cc0b517859d2ca47d9bac1aa78231f3e48fa9222b612bd2083e\n")
+            f.write("rpcauth=user4:6e0499f40b6420da2d6a3baaec1a1268$4c03b56943444ad141e3a2d8389aa22b2ade5b09d6710d5299ade7b2902086f1\n")
+            f.write("rpcwhitelist=user3:getbestblockhash\n")
+        self.restart_node(0)
+
+        assert_equal(200, rpccall(self.nodes[0], "user3","getbestblockhash","12345").status)
+        assert_equal(403, rpccall(self.nodes[0], "user4","getbestblockhash","12345").status)
+
+
+    def test_whitelistdefault_1_without_specified_permission(self):
+        """
+        Tests that with rpcwhitelistdefault=1  and no entries in rpcwhitelist,
+        all RPC methods are denied for users (even those with rpcauth entries).
+        """
+        self.log.info("Testing rpcwhitelistdefault=1 with no specified permissions")
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
+            f.write("rpcwhitelistdefault=1\n")
+            f.write("rpcauth=user3:50358aa884c841648e0700b073c32b2e$b73e95fff0748cc0b517859d2ca47d9bac1aa78231f3e48fa9222b612bd2083e\n")
+            f.write("rpcauth=user4:6e0499f40b6420da2d6a3baaec1a1268$4c03b56943444ad141e3a2d8389aa22b2ade5b09d6710d5299ade7b2902086f1\n")
+        self.restart_node(0)
+
+        assert_equal(403, rpccall(self.nodes[0], "user3", "getwalletinfo", "12345").status)
+        assert_equal(403, rpccall(self.nodes[0], "user4", "getdifficulty", "12345").status)
+
+
 
 if __name__ == "__main__":
     RPCWhitelistTest().main()
