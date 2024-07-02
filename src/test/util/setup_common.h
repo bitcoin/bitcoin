@@ -8,6 +8,7 @@
 #include <common/args.h> // IWYU pragma: export
 #include <kernel/context.h>
 #include <key.h>
+#include <logging.h>
 #include <node/caches.h>
 #include <node/context.h> // IWYU pragma: export
 #include <primitives/transaction.h>
@@ -52,6 +53,7 @@ static constexpr CAmount CENT{1000000};
  * This just configures logging, data dir and chain parameters.
  */
 struct BasicTestingSetup {
+    BCLog::Logger& m_logger;
     util::SignalInterrupt m_interrupt;
     node::NodeContext m_node; // keep as first member to be destructed last
 

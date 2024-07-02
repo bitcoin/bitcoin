@@ -94,13 +94,13 @@ static CSignatureCache signatureCache;
 
 // To be called once in AppInitMain/BasicTestingSetup to initialize the
 // signatureCache.
-bool InitSignatureCache(size_t max_size_bytes)
+bool InitSignatureCache(BCLog::Logger& logger, size_t max_size_bytes)
 {
     auto setup_results = signatureCache.setup_bytes(max_size_bytes);
     if (!setup_results) return false;
 
     const auto [num_elems, approx_size_bytes] = *setup_results;
-    LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
+    LogInfo(logger, "Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
     return true;
 }
