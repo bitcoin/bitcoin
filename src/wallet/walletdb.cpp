@@ -526,7 +526,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
     return LoadRecords(pwallet, batch, key, prefix, load_func);
 }
 
-static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, WalletBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
     DBErrors result = DBErrors::LOAD_OK;
@@ -539,7 +539,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
 
             DataStream prefix;
             prefix << type;
-            std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
+            std::unique_ptr<DatabaseCursor> cursor = batch.m_batch->GetNewPrefixCursor(prefix);
             if (!cursor) {
                 pwallet->WalletLogPrintf("Error getting database cursor for '%s' records\n", type);
                 return DBErrors::CORRUPT;
@@ -557,28 +557,28 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
 
     // Load HD Chain
     // Note: There should only be one HDCHAIN record with no data following the type
-    LoadResult hd_chain_res = LoadRecords(pwallet, batch, DBKeys::HDCHAIN,
+    LoadResult hd_chain_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::HDCHAIN,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         return LoadHDChain(pwallet, value, err) ? DBErrors:: LOAD_OK : DBErrors::CORRUPT;
     });
     result = std::max(result, hd_chain_res.m_result);
 
     // Load unencrypted keys
-    LoadResult key_res = LoadRecords(pwallet, batch, DBKeys::KEY,
+    LoadResult key_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::KEY,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         return LoadKey(pwallet, key, value, err) ? DBErrors::LOAD_OK : DBErrors::CORRUPT;
     });
     result = std::max(result, key_res.m_result);
 
     // Load encrypted keys
-    LoadResult ckey_res = LoadRecords(pwallet, batch, DBKeys::CRYPTED_KEY,
+    LoadResult ckey_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::CRYPTED_KEY,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         return LoadCryptedKey(pwallet, key, value, err) ? DBErrors::LOAD_OK : DBErrors::CORRUPT;
     });
     result = std::max(result, ckey_res.m_result);
 
     // Load scripts
-    LoadResult script_res = LoadRecords(pwallet, batch, DBKeys::CSCRIPT,
+    LoadResult script_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::CSCRIPT,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
         uint160 hash;
         key >> hash;
@@ -601,13 +601,13 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
 
     // Load keymeta
     std::map<uint160, CHDChain> hd_chains;
-    LoadResult keymeta_res = LoadRecords(pwallet, batch, DBKeys::KEYMETA,
-        [&hd_chains] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+    std::vector<CPubKey> updated_metas;
+    LoadResult keymeta_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::KEYMETA,
+        [&hd_chains, &updated_metas] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
         CPubKey vchPubKey;
         key >> vchPubKey;
         CKeyMetadata keyMeta;
         value >> keyMeta;
-        pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKeyMetadata(vchPubKey.GetID(), keyMeta);
 
         // Extract some CHDChain info from this metadata if it has any
         if (keyMeta.nVersion >= CKeyMetadata::VERSION_WITH_HDDATA && !keyMeta.hd_seed_id.IsNull() && keyMeta.hdKeypath.size() > 0) {
@@ -618,13 +618,32 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
             uint32_t index = 0;
             if (keyMeta.hdKeypath != "s" && keyMeta.hdKeypath != "m") {
                 std::vector<uint32_t> path;
-                if (keyMeta.has_key_origin) {
-                    // We have a key origin, so pull it from its path vector
-                    path = keyMeta.key_origin.path;
-                } else {
-                    // No key origin, have to parse the string
-                    if (!ParseHDKeypath(keyMeta.hdKeypath, path)) {
-                        strErr = "Error reading wallet database: keymeta with invalid HD keypath";
+                // Always parse the path string
+                if (!ParseHDKeypath(keyMeta.hdKeypath, path)) {
+                    strErr = "Error reading wallet database: keymeta with invalid HD keypath";
+                    return DBErrors::NONCRITICAL_ERROR;
+                }
+                // If there is a key origin, make sure that path matches
+                if (keyMeta.has_key_origin && path != keyMeta.key_origin.path) {
+                    // Detect if this metadata has a bad derivation path from a bug in inactive hd key derivation that was present in 0.21 and 22.x
+                    // See https://github.com/bitcoin/bitcoin/issues/29109
+                    // Markers for bad derivation:
+                    // - 6 indexes
+                    // - path[5] == path[2] + 1
+                    // - path[0:2] == path[3:5]
+                    // - path[3:6] matches hdKeypath
+                    if (keyMeta.key_origin.path.size() == 6
+                        && keyMeta.key_origin.path[5] == keyMeta.key_origin.path[2] + 1
+                        && keyMeta.key_origin.path[0] == keyMeta.key_origin.path[3]
+                        && keyMeta.key_origin.path[1] == keyMeta.key_origin.path[4]
+                        && std::equal(keyMeta.key_origin.path.begin() + 3, keyMeta.key_origin.path.end(), path.begin(), path.end())
+                    ) {
+                        // Matches the pattern, just reset it to the parsed path
+                        pwallet->WalletLogPrintf("Repairing derivation path for %s\n", HexStr(vchPubKey));
+                        keyMeta.key_origin.path = path;
+                        updated_metas.push_back(vchPubKey);
+                    } else {
+                        strErr = "keymeta with mismatched hdkeypath string and key origin derivation path";
                         return DBErrors::NONCRITICAL_ERROR;
                     }
                 }
@@ -668,9 +687,25 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
                 chain.nExternalChainCounter = std::max(chain.nExternalChainCounter, index + 1);
             }
         }
+
+        pwallet->GetOrCreateLegacyScriptPubKeyMan()->LoadKeyMetadata(vchPubKey.GetID(), keyMeta);
+
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, keymeta_res.m_result);
+
+    // Update any changed metadata
+    if (!updated_metas.empty()) {
+        LegacyScriptPubKeyMan* spkm = pwallet->GetLegacyScriptPubKeyMan();
+        Assert(spkm);
+        LOCK(spkm->cs_KeyStore);
+        for (const auto& pubkey : updated_metas) {
+            if (!batch.WriteKeyMetadata(spkm->mapKeyMetadata.at(pubkey.GetID()), pubkey, true)) {
+                pwallet->WalletLogPrintf("Unable to write repaired keymeta for %s\n", HexStr(pubkey));
+                result = std::max(result, DBErrors::NONCRITICAL_ERROR);
+            }
+        }
+    }
 
     // Set inactive chains
     if (!hd_chains.empty()) {
@@ -688,7 +723,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     }
 
     // Load watchonly scripts
-    LoadResult watch_script_res = LoadRecords(pwallet, batch, DBKeys::WATCHS,
+    LoadResult watch_script_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::WATCHS,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         CScript script;
         key >> script;
@@ -702,7 +737,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     result = std::max(result, watch_script_res.m_result);
 
     // Load watchonly meta
-    LoadResult watch_meta_res = LoadRecords(pwallet, batch, DBKeys::WATCHMETA,
+    LoadResult watch_meta_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::WATCHMETA,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         CScript script;
         key >> script;
@@ -714,7 +749,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     result = std::max(result, watch_meta_res.m_result);
 
     // Load keypool
-    LoadResult pool_res = LoadRecords(pwallet, batch, DBKeys::POOL,
+    LoadResult pool_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::POOL,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         int64_t nIndex;
         key >> nIndex;
@@ -731,7 +766,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     // We don't want or need the default key, but if there is one set,
     // we want to make sure that it is valid so that we can detect corruption
     // Note: There should only be one DEFAULTKEY with nothing trailing the type
-    LoadResult default_key_res = LoadRecords(pwallet, batch, DBKeys::DEFAULTKEY,
+    LoadResult default_key_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::DEFAULTKEY,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         CPubKey default_pubkey;
         try {
@@ -749,7 +784,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
     result = std::max(result, default_key_res.m_result);
 
     // "wkey" records are unsupported, if we see any, throw an error
-    LoadResult wkey_res = LoadRecords(pwallet, batch, DBKeys::OLD_KEY,
+    LoadResult wkey_res = LoadRecords(pwallet, *batch.m_batch, DBKeys::OLD_KEY,
         [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
         err = "Found unsupported 'wkey' record, try loading with version 0.18";
         return DBErrors::LOAD_FAIL;
@@ -1174,7 +1209,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #endif
 
         // Load legacy wallet keys
-        result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, last_client), result);
+        result = std::max(LoadLegacyWalletRecords(pwallet, *this, last_client), result);
 
         // Load descriptors
         result = std::max(LoadDescriptorWalletRecords(pwallet, *m_batch, last_client), result);

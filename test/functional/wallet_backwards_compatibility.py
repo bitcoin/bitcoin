@@ -41,7 +41,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v25.0
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v24.0.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v23.0
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v22.0
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1", "-keypool=10"], # v22.0
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.21.0
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.20.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v0.19.1
@@ -129,6 +129,77 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v19.loadwallet("w1_v19")
         wallet = node_v19.get_wallet_rpc("w1_v19")
         assert wallet.getaddressinfo(address_18075)["solvable"]
+
+
+    def test_v22_inactivehdchain_path(self):
+        if self.options.descriptors:
+            return
+
+        self.log.info("Testing inactive hd chain bad derivation path cleanup")
+        # 0.21.x and 22.x would both produce bad derivation paths when topping up an inactive hd chain
+        # Make sure that this is being detected and automatically cleaned up
+        node_master = self.nodes[1]
+        node_v22 = self.nodes[self.num_nodes - 7]
+        wallet_name = "bad_deriv_path"
+        node_v22.createwallet(wallet_name=wallet_name, descriptors=False)
+        wallet = node_v22.get_wallet_rpc(wallet_name)
+
+        # Make a dump of the wallet to get an unused address
+        dump_path = node_v22.wallets_path / f"{wallet_name}.dump"
+        wallet.dumpwallet(dump_path)
+        addr = None
+        seed = None
+        with open(dump_path, encoding="utf8") as f:
+            for line in f:
+                if "hdkeypath=m/0'/0'/9'" in line:
+                    addr = line.split(" ")[4].split("=")[1]
+                elif " hdseed=1 " in line:
+                    seed = line.split(" ")[0]
+        assert addr is not None
+        assert seed is not None
+        # Rotate seed and unload
+        wallet.sethdseed()
+        wallet.unloadwallet()
+        # Receive at addr to trigger inactive chain topup on next load
+        self.nodes[0].sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        self.sync_all(nodes=[self.nodes[0], node_master, node_v22])
+        node_v22.loadwallet(wallet_name)
+
+        # Dump again to find bad hd keypath
+        bad_deriv_path = "m/0'/0'/9'/0'/0'/10'"
+        good_deriv_path = "m/0'/0'/10'"
+        os.unlink(dump_path)
+        wallet.dumpwallet(dump_path)
+        bad_path_addr = None
+        with open(dump_path, encoding="utf8") as f:
+            for line in f:
+                if f"hdkeypath={bad_deriv_path}" in line:
+                    bad_path_addr = line.split(" ")[4].split("=")[1]
+        assert bad_path_addr is not None
+        assert_equal(wallet.getaddressinfo(bad_path_addr)["hdkeypath"], bad_deriv_path)
+
+        # Verify that this addr is actually at m/0'/0'/10' by making a new wallet with the same seed
+        node_v22.createwallet(wallet_name="path_verify", descriptors=False, blank=True)
+        verify_wallet = node_v22.get_wallet_rpc("path_verify")
+        verify_wallet.sethdseed(True, seed)
+        # Bad addr is after keypool, so need to generate it by refilling
+        verify_wallet.keypoolrefill(12)
+        assert_equal(verify_wallet.getaddressinfo(bad_path_addr)["hdkeypath"], good_deriv_path)
+
+        # Load into master, the path should now be fixed
+        backup_path = node_v22.wallets_path / f"{wallet_name}.bak"
+        wallet.backupwallet(backup_path)
+        with node_master.assert_debug_log(expected_msgs=["Repairing derivation path for"]):
+            node_master.restorewallet(wallet_name, backup_path)
+        wallet_master = node_master.get_wallet_rpc(wallet_name)
+        assert_equal(wallet_master.getaddressinfo(bad_path_addr)["hdkeypath"], good_deriv_path)
+
+        # Check persistence
+        wallet_master.unloadwallet()
+        with node_master.assert_debug_log(expected_msgs=[], unexpected_msgs=["Repairing derivation path for"]):
+            node_master.loadwallet(wallet_name)
+        assert_equal(wallet_master.getaddressinfo(bad_path_addr)["hdkeypath"], good_deriv_path)
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -398,6 +469,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 wallet_res = node.get_wallet_rpc(down_wallet_name)
                 info = wallet_res.getaddressinfo(address)
                 assert_equal(info, addr_info)
+
+        self.test_v22_inactivehdchain_path()
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()
