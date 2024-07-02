@@ -752,7 +752,7 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
  * Outpoint is spent if any non-conflicted transaction
  * spends it:
  */
-bool CWallet::IsSpent(const COutPoint& outpoint) const
+bool CWallet::IsSpent(const COutPoint& outpoint, bool* in_mempool) const
 {
     std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
     range = mapTxSpends.equal_range(outpoint);
@@ -762,8 +762,10 @@ bool CWallet::IsSpent(const COutPoint& outpoint) const
         const auto mit = mapWallet.find(wtxid);
         if (mit != mapWallet.end()) {
             const auto& wtx = mit->second;
-            if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted())
+            if (!wtx.isAbandoned() && !wtx.isBlockConflicted() && !wtx.isMempoolConflicted()) {
+                if (in_mempool) *in_mempool = wtx.InMempool();
                 return true; // Spent
+            }
         }
     }
     return false;
