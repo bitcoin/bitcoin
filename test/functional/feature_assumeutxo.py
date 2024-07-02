@@ -22,8 +22,6 @@ Interesting starting states could be loading a snapshot when the current chain t
 
 - TODO: An ancestor of snapshot block
 - TODO: Not an ancestor of the snapshot block but has less work
-- TODO: The snapshot block
-- TODO: A descendant of the snapshot block
 - TODO: Not an ancestor or a descendant of the snapshot block and has more work
 
 """
@@ -51,18 +49,19 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 3
+        self.num_nodes = 4
         self.rpc_timeout = 120
         self.extra_args = [
             [],
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            [],
         ]
 
     def setup_network(self):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
-        self.add_nodes(3)
+        self.add_nodes(4)
         self.start_nodes(extra_args=self.extra_args)
 
     def test_invalid_snapshot_scenarios(self, valid_snapshot_path):
@@ -215,6 +214,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         n0 = self.nodes[0]
         n1 = self.nodes[1]
         n2 = self.nodes[2]
+        n3 = self.nodes[3]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -265,6 +265,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             # block.
             n1.submitheader(block)
             n2.submitheader(block)
+            n3.submitheader(block)
 
         # Ensure everyone is seeing the same headers.
         for n in self.nodes:
@@ -276,9 +277,24 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(dump_output["nchaintx"], blocks[SNAPSHOT_BASE_HEIGHT].chain_tx)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
+        self.log.info("Test loading snapshot with current chain tip at SNAPSHOT_BASE_HEIGHT (h=299)")
+        self.connect_nodes(0,3)
+        self.wait_until(lambda: n3.getchainstates()['chainstates'][-1]['blocks'] == SNAPSHOT_BASE_HEIGHT)
+        self.sync_blocks(nodes=(n0, n3))
+        assert_equal(n3.getblockcount(), SNAPSHOT_BASE_HEIGHT)
+        with n3.assert_debug_log(expected_msgs=["[snapshot] activation failed - work does not exceed active chainstate"]):
+            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", n3.loadtxoutset, dump_output['path'])
+
+        self.log.info("Test loading snapshot with current chain tip at a descendant of snapshot block (h=300)")
+        # Mine one block on top of the snapshot block
+        self.generate(n0, nblocks=1, sync_fun=self.no_op)
+        assert_equal(n3.getblockcount(), SNAPSHOT_BASE_HEIGHT + 1)
+        with n3.assert_debug_log(expected_msgs=["[snapshot] activation failed - work does not exceed active chainstate"]):
+            assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", n3.loadtxoutset, dump_output['path'])
+
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
         # will allow us to test n1's sync-to-tip on top of a snapshot.
-        self.generate(n0, nblocks=100, sync_fun=self.no_op)
+        self.generate(n0, nblocks=99, sync_fun=self.no_op)
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)
         assert_equal(n1.getblockcount(), START_HEIGHT)
