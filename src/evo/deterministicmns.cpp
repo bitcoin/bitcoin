@@ -624,27 +624,32 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     if(decreasePoSE) {
         DecreasePoSePenalties(newList, toDecrease);
     }
-    // coinbase can be quorum commitments
-    // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
-    const bool &IsQCIn = qcIn && !qcIn->IsNull();
-    if(IsQCIn || (block.vtx[0] && block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
-        llmq::CFinalCommitmentTxPayload qc;
-        if(IsQCIn)
-            qc = *qcIn;
-        else if (!GetTxPayload(*block.vtx[0], qc)) {
-            return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
-        }
-        for(const auto& commitment: qc.commitments) {
-            if (!commitment.IsNull() && Params().GetConsensus().llmqs.count(commitment.llmqType)) {
-                const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
-                uint32_t quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
-                auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
-                if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have caught it...but let's be sure
-                    return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
-                }
 
-                HandleQuorumCommitment(commitment, quorumIndex, newList, debugLogs);
+    bool fRollActive = nHeight >= Params().GetConsensus().nRolluxStartBlock;
+
+    if(fRollActive) {
+        // coinbase can be quorum commitments
+        // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
+        const bool &IsQCIn = qcIn && !qcIn->IsNull();
+        if(IsQCIn || (block.vtx[0] && block.vtx[0]->nVersion == SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT)) {
+            llmq::CFinalCommitmentTxPayload qc;
+            if(IsQCIn)
+                qc = *qcIn;
+            else if (!GetTxPayload(*block.vtx[0], qc)) {
+                return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-payload");
+            }
+            for(const auto& commitment: qc.commitments) {
+                if (!commitment.IsNull() && Params().GetConsensus().llmqs.count(commitment.llmqType)) {
+                    const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
+                    uint32_t quorumHeight = qc.cbTx.nHeight - (qc.cbTx.nHeight % params.dkgInterval);
+                    auto quorumIndex = pindexPrev->GetAncestor(quorumHeight);
+                    if (!quorumIndex || quorumIndex->GetBlockHash() != commitment.quorumHash) {
+                        // we should actually never get into this case as validation should have caught it...but let's be sure
+                        return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
+                    }
+
+                    HandleQuorumCommitment(commitment, quorumIndex, newList, debugLogs);
+                }
             }
         }
     }
