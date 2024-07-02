@@ -1885,6 +1885,10 @@ void PeerManagerImpl::Misbehaving(Peer& peer, const std::string& message)
     const std::string message_prefixed = message.empty() ? "" : (": " + message);
     peer.m_should_discourage = true;
     LogPrint(BCLog::NET, "Misbehaving: peer=%d%s\n", peer.m_id, message_prefixed);
+    TRACE2(net, misbehaving_connection,
+        peer.m_id,
+        message.c_str()
+    );
 }
 
 void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
