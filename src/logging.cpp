@@ -178,6 +178,7 @@ static const std::map<std::string, BCLog::LogFlags> LOG_CATEGORIES_BY_STR{
     {"blockstorage", BCLog::BLOCKSTORAGE},
     {"txreconciliation", BCLog::TXRECONCILIATION},
     {"scan", BCLog::SCAN},
+    {"sv2", BCLog::SV2},
     {"txpackages", BCLog::TXPACKAGES},
     {"1", BCLog::ALL},
     {"all", BCLog::ALL},

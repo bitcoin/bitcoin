@@ -20,12 +20,19 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
+#include <util/mining.h>
+
 class ArgsManager;
 class CBlockIndex;
 class CChainParams;
 class CScript;
 class Chainstate;
 class ChainstateManager;
+
+/** Default for -sv2interval **/
+static constexpr unsigned int DEFAULT_SV2_INTERVAL{30};
+/** Default for -sv2feedelta */
+static constexpr unsigned int DEFAULT_SV2_FEE_DELTA{1000};
 
 namespace Consensus { struct Params; };
 
@@ -159,6 +166,17 @@ public:
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
+        /**
+         * The maximum additional weight which the pool will add to the coinbase
+         * scriptSig, witness and outputs. This must include any additional
+         * weight needed for larger CompactSize encoded lengths.
+         */
+        size_t coinbase_max_additional_weight{DEFAULT_COINBASE_MAX_ADDITIONAL_WEIGHT};
+        /**
+         * The maximum additional sigops which the pool will add in coinbase
+         * transaction outputs.
+         */
+        size_t coinbase_output_max_additional_sigops{DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS};
     };
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);

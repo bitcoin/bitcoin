@@ -9,7 +9,7 @@ _bitcoin_rpc() {
     local rpcargs=()
     for i in ${COMP_LINE}; do
         case "$i" in
-            -conf=*|-datadir=*|-regtest|-rpc*|-testnet)
+            -conf=*|-datadir=*|-regtest|-rpc*|-testnet|-testnet4)
                 rpcargs=( "${rpcargs[@]}" "$i" )
                 ;;
         esac

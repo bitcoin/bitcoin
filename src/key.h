@@ -200,6 +200,31 @@ public:
     ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
                                        const EllSwiftPubKey& our_ellswift,
                                        bool initiating) const;
+
+    /** Straight-forward serialization of key bytes (and compressed flag).
+     *  Use GetPrivKey() for OpenSSL compatible DER encoding.
+     */
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        if (!IsValid()) {
+            throw std::ios_base::failure("invalid key");
+        }
+        s << fCompressed;
+        ::Serialize(s, Span{*this});
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> fCompressed;
+        MakeKeyData();
+        s >> Span{*keydata};
+        if (!Check(keydata->data())) {
+            ClearKeyData();
+            throw std::ios_base::failure("invalid key");
+        }
+    }
 };
 
 CKey GenerateRandomKey(bool compressed = true) noexcept;
