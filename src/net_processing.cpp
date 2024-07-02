@@ -3358,8 +3358,6 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
     AssertLockHeld(g_msgproc_mutex);
     LOCK(cs_main);
 
-    CTransactionRef porphanTx = nullptr;
-
     while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id)) {
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
