@@ -12,6 +12,7 @@
 #include <util/string.h>
 
 #include <atomic>
+#include <bitset>
 #include <cstdint>
 #include <functional>
 #include <list>
@@ -36,41 +37,108 @@ struct LogCategory {
 };
 
 namespace BCLog {
-    enum LogFlags : uint32_t {
-        NONE        = 0,
-        NET         = (1 <<  0),
-        TOR         = (1 <<  1),
-        MEMPOOL     = (1 <<  2),
-        HTTP        = (1 <<  3),
-        BENCH       = (1 <<  4),
-        ZMQ         = (1 <<  5),
-        WALLETDB    = (1 <<  6),
-        RPC         = (1 <<  7),
-        ESTIMATEFEE = (1 <<  8),
-        ADDRMAN     = (1 <<  9),
-        SELECTCOINS = (1 << 10),
-        REINDEX     = (1 << 11),
-        CMPCTBLOCK  = (1 << 12),
-        RAND        = (1 << 13),
-        PRUNE       = (1 << 14),
-        PROXY       = (1 << 15),
-        MEMPOOLREJ  = (1 << 16),
-        LIBEVENT    = (1 << 17),
-        COINDB      = (1 << 18),
-        QT          = (1 << 19),
-        LEVELDB     = (1 << 20),
-        VALIDATION  = (1 << 21),
-        I2P         = (1 << 22),
-        IPC         = (1 << 23),
+    enum LogFlags {
+        NET,
+        TOR,
+        MEMPOOL,
+        HTTP,
+        BENCH,
+        ZMQ,
+        WALLETDB,
+        RPC,
+        ESTIMATEFEE,
+        ADDRMAN,
+        SELECTCOINS,
+        REINDEX,
+        CMPCTBLOCK,
+        RAND,
+        PRUNE,
+        PROXY,
+        MEMPOOLREJ,
+        LIBEVENT,
+        COINDB,
+        QT,
+        LEVELDB,
+        VALIDATION,
+        I2P,
+        IPC,
 #ifdef DEBUG_LOCKCONTENTION
-        LOCK        = (1 << 24),
+        LOCK,
 #endif
-        BLOCKSTORAGE = (1 << 25),
-        TXRECONCILIATION = (1 << 26),
-        SCAN        = (1 << 27),
-        TXPACKAGES  = (1 << 28),
-        ALL         = ~(uint32_t)0,
+        BLOCKSTORAGE,
+        TXRECONCILIATION,
+        SCAN,
+        TXPACKAGES,
+        // Add new entries before this line.
+
+        // The following have no representation in m_categories:
+        ALL, // this is also the size of the bitset
+        NONE,
     };
+
+    template<typename FlagType, size_t BITS, typename T=uint64_t>
+    class AtomicBitSet {
+    private:
+        // bits in a single T (an integer type)
+        static constexpr size_t BITS_PER_T = 8 * sizeof(T);
+
+        // number of Ts needed for BITS bits (round up)
+        static constexpr size_t NT = (BITS + BITS_PER_T - 1) / BITS_PER_T;
+
+        std::atomic<T> bits[NT]{0};
+
+    public:
+        AtomicBitSet() = default;
+        AtomicBitSet(FlagType f) { set(f); }
+
+        AtomicBitSet(const AtomicBitSet&) = delete;
+        AtomicBitSet(AtomicBitSet&&) = delete;
+        AtomicBitSet& operator=(const AtomicBitSet&) = delete;
+        AtomicBitSet& operator=(AtomicBitSet&&) = delete;
+        ~AtomicBitSet() = default;
+
+        constexpr size_t size() const { return BITS; }
+
+        bool is_any() const
+        {
+            for (const auto& i : bits) {
+                if (i > 0) return true;
+            }
+            return false;
+        }
+        bool is_none() const { return !is_any(); }
+        void set()
+        {
+            for (size_t i = 0; i < NT; ++i) {
+                bits[i] = ~T{0};
+            }
+        }
+        void reset()
+        {
+            for (size_t i = 0; i < NT; ++i) {
+                bits[i] = T{0};
+            }
+        }
+        void set(FlagType f)
+        {
+            if (f < 0 || f >= BITS) return;
+            bits[f/BITS_PER_T] |= (T{1} << (f % BITS_PER_T));
+        }
+        void reset(FlagType f)
+        {
+            if (f < 0 || f >= BITS) return;
+            bits[f/BITS_PER_T] &= ~(T{1} << (f % BITS_PER_T));
+        }
+        bool test(FlagType f) const
+        {
+            if (f < 0 || f >= BITS) return false;
+            const T i{bits[f/BITS_PER_T].load(std::memory_order_relaxed)};
+            return i & (T{1} << (f % BITS_PER_T));
+
+        }
+    };
+    using LogFlagsBitset = AtomicBitSet<LogFlags, LogFlags::ALL, uint32_t>;
+
     enum class Level {
         Trace = 0, // High-volume or detailed logging for development/debugging
         Debug,     // Reasonably noisy logging, but still usable in production
@@ -104,7 +172,7 @@ namespace BCLog {
         std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> m_categories{0};
+        LogFlagsBitset m_categories;
 
         std::string LogTimestampStr(const std::string& str);
 
@@ -174,7 +242,10 @@ namespace BCLog {
         void SetLogLevel(Level level) { m_log_level = level; }
         bool SetLogLevel(const std::string& level);
 
-        uint32_t GetCategoryMask() const { return m_categories.load(); }
+        const LogFlagsBitset& GetCategoryMask() const
+        {
+            return m_categories;
+        }
 
         void EnableCategory(LogFlags flag);
         bool EnableCategory(const std::string& str);
