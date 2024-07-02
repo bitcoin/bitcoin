@@ -92,6 +92,11 @@ public:
      */
     virtual void RequestTransactionData(Sv2Client& client, node::Sv2RequestTransactionDataMsg msg) = 0;
 
+    /**
+     * We received and successfully parsed a SubmitSolution message.
+     */
+    virtual void SubmitSolution(node::Sv2SubmitSolutionMsg solution) = 0;
+
     virtual ~Sv2EventsInterface() = default;
 };
 
