@@ -212,6 +212,7 @@ public:
     //! Return false if the transaction could not be added due to the fee or for another reason.
     virtual bool broadcastTransaction(const CTransactionRef& tx,
         const CAmount& max_tx_fee,
+        const CFeeRate& max_tx_fee_rate,
         bool relay,
         std::string& err_string) = 0;
 
