@@ -159,6 +159,10 @@ public:
     void ReceivedMessage(Sv2Client& client, node::Sv2MsgType msg_type) override {
     }
 
+    void RequestTransactionData(Sv2Client& client, node::Sv2RequestTransactionDataMsg msg) override {
+        BOOST_TEST_MESSAGE("Process RequestTransactionData");
+    }
+
 };
 
 BOOST_AUTO_TEST_CASE(client_tests)

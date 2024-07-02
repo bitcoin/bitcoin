@@ -163,6 +163,33 @@ BOOST_AUTO_TEST_CASE(client_tests)
     // There should now be one template
     BOOST_REQUIRE_EQUAL(tester.GetBlockTemplateCount(), 1);
 
+    // Get the template id
+    uint64_t template_id = 0;
+    {
+        LOCK(tester.m_tp->m_tp_mutex);
+        for (auto& t : tester.m_tp->GetBlockTemplates()) {
+            if (t.first > template_id) {
+                template_id = t.first;
+            }
+        }
+    }
+
+    // Have the peer send us RequestTransactionData
+    // We should reply with RequestTransactionData.Success
+    node::Sv2NetHeader req_tx_data_header{node::Sv2MsgType::REQUEST_TRANSACTION_DATA, 8};
+    DataStream ss;
+    ss << template_id;
+    std::vector<unsigned char> template_id_bytes;
+    template_id_bytes.resize(8);
+    ss >> MakeWritableByteSpan(template_id_bytes);
+
+    msg = node::Sv2NetMsg{req_tx_data_header.m_msg_type, std::move(template_id_bytes)};
+    tester.receiveMessage(msg);
+    const size_t template_id_size = 8;
+    const size_t excess_data_size = 2 + 32;
+    size_t tx_list_size = 2; // no transactions, so transaction_list is 0x0100
+    BOOST_REQUIRE_EQUAL(tester.PeerReceiveBytes(), SV2_HEADER_ENCRYPTED_SIZE + template_id_size + excess_data_size + tx_list_size + Poly1305::TAGLEN);
+
     // Create a new block
     mineBlocks(1);
 
