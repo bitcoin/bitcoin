@@ -205,12 +205,6 @@ public:
      */
     virtual std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) { return {}; }
 
-    /** Sets up the key generation stuff, i.e. generates new HD seeds and sets them as active.
-      * Returns false if already setup or setup fails, true if setup is successful
-      * Set force=true to make it re-setup if already setup, used for upgrades
-      */
-    virtual bool SetupGeneration(bool force = false) { return false; }
-
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
 
@@ -278,18 +272,22 @@ static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
 
 class DescriptorScriptPubKeyMan;
 
+using WatchOnlySet = std::set<CScript>;
+using WatchKeyMap = std::map<CKeyID, CPubKey>;
+using KeyMap = std::map<CKeyID, CKey>;
+using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
+using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
+
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
 {
 private:
     //! keeps track of whether Unlock has run a thorough check before
     bool fDecryptionThoroughlyChecked = true;
 
-    using WatchOnlySet = std::set<CScript>;
-    using WatchKeyMap = std::map<CKeyID, CPubKey>;
 
     WalletBatch *encrypted_batch GUARDED_BY(cs_KeyStore) = nullptr;
 
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
 
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
@@ -399,7 +397,11 @@ public:
 
     bool IsHDEnabled() const override;
 
-    bool SetupGeneration(bool force = false) override;
+    /** Sets up the key generation stuff, i.e. generates new HD seeds and sets them as active.
+      * Returns false if already setup or setup fails, true if setup is successful
+      * Set force=true to make it re-setup if already setup, used for upgrades
+      */
+    bool SetupGeneration(bool force = false);
 
     bool Upgrade(int prev_version, int new_version, bilingual_str& error) override;
 
@@ -561,11 +563,6 @@ public:
 class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 {
 private:
-    using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
-    using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
-    using KeyMap = std::map<CKeyID, CKey>;
-
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
@@ -592,22 +589,32 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    void SetCache(const DescriptorCache& cache);
+
+    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
+    void UpdateWithSigningProvider(const FlatSigningProvider& signing_provider);
+
+    //! Setup descriptors based on the given CExtkey
+    bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
+
 protected:
+    DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
+        :   ScriptPubKeyMan(storage),
+            m_keypool_size(keypool_size)
+        {}
+
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
     //! Same as 'TopUp' but designed for use within a batch transaction context
     bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
 
 public:
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
-        :   ScriptPubKeyMan(storage),
-            m_keypool_size(keypool_size),
-            m_wallet_descriptor(descriptor)
-        {}
-    DescriptorScriptPubKeyMan(WalletStorage& storage, int64_t keypool_size)
-        :   ScriptPubKeyMan(storage),
-            m_keypool_size(keypool_size)
-        {}
+    //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider);
+    //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
+    //! Create an automatically generated DescriptorScriptPubKeyMan
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     mutable RecursiveMutex cs_desc_man;
 
@@ -629,9 +636,6 @@ public:
     std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
 
     bool IsHDEnabled() const override;
-
-    //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     bool HavePrivateKeys() const override;
     bool HasPrivKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -657,15 +661,9 @@ public:
 
     uint256 GetID() const override;
 
-    void SetCache(const DescriptorCache& cache);
-
-    bool AddKey(const CKeyID& key_id, const CKey& key);
-    bool AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key);
-
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
-    void UpdateWalletDescriptor(WalletDescriptor& descriptor);
+    void UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider);
     bool CanUpdateToWalletDescriptor(const WalletDescriptor& descriptor, std::string& error);
-    void AddDescriptorKey(const CKey& key, const CPubKey &pubkey);
     void WriteDescriptor();
 
     WalletDescriptor GetWalletDescriptor() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);

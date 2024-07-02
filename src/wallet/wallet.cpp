@@ -432,39 +432,17 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
         return nullptr;
     }
 
+    // Unset the blank flag if not specified by the user
+    if (!create_blank) {
+        wallet->UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+    }
+
     // Encrypt the wallet
     if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         if (!wallet->EncryptWallet(passphrase)) {
             error = Untranslated("Error: Wallet created but failed to encrypt.");
             status = DatabaseStatus::FAILED_ENCRYPT;
             return nullptr;
-        }
-        if (!create_blank) {
-            // Unlock the wallet
-            if (!wallet->Unlock(passphrase)) {
-                error = Untranslated("Error: Wallet was encrypted but could not be unlocked");
-                status = DatabaseStatus::FAILED_ENCRYPT;
-                return nullptr;
-            }
-
-            // Set a seed for the wallet
-            {
-                LOCK(wallet->cs_wallet);
-                if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                    wallet->SetupDescriptorScriptPubKeyMans();
-                } else {
-                    for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
-                        if (!spk_man->SetupGeneration()) {
-                            error = Untranslated("Unable to generate initial keys");
-                            status = DatabaseStatus::FAILED_CREATE;
-                            return nullptr;
-                        }
-                    }
-                }
-            }
-
-            // Relock the wallet
-            wallet->Lock();
         }
     }
 
@@ -870,16 +848,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Lock();
         Unlock(strWalletPassphrase);
 
-        // If we are using descriptors, make new descriptors with a new seed
-        if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
-            SetupDescriptorScriptPubKeyMans();
-        } else if (auto spk_man = GetLegacyScriptPubKeyMan()) {
-            // if we are using HD, replace the HD seed with a new one
-            if (spk_man->IsHDEnabled()) {
-                if (!spk_man->SetupGeneration(true)) {
-                    return false;
-                }
-            }
+        // Generate new descriptors or seed if not blank or disable private keys
+        if (!SetupWalletGeneration()) {
+            return false;
         }
         Lock();
 
@@ -3022,25 +2993,9 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
         walletInstance->InitWalletFlags(wallet_creation_flags);
 
-        // Only create LegacyScriptPubKeyMan when not descriptor wallet
-        if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            walletInstance->SetupLegacyScriptPubKeyMan();
-        }
-
-        if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
-            LOCK(walletInstance->cs_wallet);
-            if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                walletInstance->SetupDescriptorScriptPubKeyMans();
-                // SetupDescriptorScriptPubKeyMans already calls SetupGeneration for us so we don't need to call SetupGeneration separately
-            } else {
-                // Legacy wallets need SetupGeneration here.
-                for (auto spk_man : walletInstance->GetActiveScriptPubKeyMans()) {
-                    if (!spk_man->SetupGeneration()) {
-                        error = _("Unable to generate initial keys");
-                        return nullptr;
-                    }
-                }
-            }
+        if (!walletInstance->SetupWalletGeneration()) {
+            error = _("Unable to generate initial keys");
+            return nullptr;
         }
 
         if (chain) {
@@ -3659,22 +3614,21 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
     }
 }
 
-DescriptorScriptPubKeyMan& CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
+void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, const KeyMap& keys, const CryptedKeyMap& ckeys)
 {
     DescriptorScriptPubKeyMan* spk_manager;
     if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        spk_manager = new ExternalSignerScriptPubKeyMan(*this, desc, m_keypool_size);
+        spk_manager = new ExternalSignerScriptPubKeyMan(*this, id, desc, m_keypool_size, keys, ckeys);
     } else {
-        spk_manager = new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size);
+        spk_manager = new DescriptorScriptPubKeyMan(*this, id, desc, m_keypool_size, keys, ckeys);
     }
     AddScriptPubKeyMan(id, std::unique_ptr<ScriptPubKeyMan>(spk_manager));
-    return *spk_manager;
 }
 
 DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
 {
     AssertLockHeld(cs_wallet);
-    auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
+    auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, batch, m_keypool_size, master_key, output_type, internal));
     if (IsCrypted()) {
         if (IsLocked()) {
             throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot setup new descriptors");
@@ -3683,7 +3637,6 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
             throw std::runtime_error(std::string(__func__) + ": Could not encrypt new descriptors");
         }
     }
-    spk_manager->SetupDescriptorGeneration(batch, master_key, output_type, internal);
     DescriptorScriptPubKeyMan* out = spk_manager.get();
     uint256 id = spk_manager->GetID();
     AddScriptPubKeyMan(id, std::move(spk_manager));
@@ -3751,8 +3704,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                     continue;
                 }
                 OutputType t =  *desc->GetOutputType();
-                auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, m_keypool_size));
-                spk_manager->SetupDescriptor(batch, std::move(desc));
+                auto spk_manager = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, batch, m_keypool_size, std::move(desc)));
                 uint256 id = spk_manager->GetID();
                 AddScriptPubKeyMan(id, std::move(spk_manager));
                 AddActiveScriptPubKeyManWithDb(batch, id, t, internal);
@@ -3762,6 +3714,33 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         // Ensure imported descriptors are committed to disk
         if (!batch.TxnCommit()) throw std::runtime_error("Error: cannot commit db transaction for descriptors import");
     }
+}
+
+bool CWallet::SetupWalletGeneration()
+{
+    LOCK(cs_wallet);
+    // Skip if blank or no privkeys
+    if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) &&
+        (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET) || IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS))) {
+        // Just make sure that there's a legacy spkm if this wallet is legacy
+        if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            SetupLegacyScriptPubKeyMan();
+        }
+        return true;
+    }
+    // If we are using descriptors, make new descriptors with a new seed
+    if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        SetupDescriptorScriptPubKeyMans();
+    } else if (auto spk_man = GetOrCreateLegacyScriptPubKeyMan()) {
+        // if we are using HD, set or replace the HD seed with a new one
+        // non-HD always has key generation enabled by default
+        if (CanSupportFeature(FEATURE_HD)) {
+            if (!spk_man->SetupGeneration(true)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void CWallet::AddActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
@@ -3873,26 +3852,14 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
         WalletLogPrintf("Update existing descriptor: %s\n", desc.descriptor->ToString());
-        spk_man->UpdateWalletDescriptor(desc);
+        spk_man->UpdateWalletDescriptor(desc, signing_provider);
     } else {
-        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
+        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size, signing_provider));
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory
         uint256 id = new_spk_man->GetID();
         AddScriptPubKeyMan(id, std::move(new_spk_man));
-    }
-
-    // Add the private keys to the descriptor
-    for (const auto& entry : signing_provider.keys) {
-        const CKey& key = entry.second;
-        spk_man->AddDescriptorKey(key, key.GetPubKey());
-    }
-
-    // Top up key pool, the manager will generate new scriptPubKeys internally
-    if (!spk_man->TopUp()) {
-        WalletLogPrintf("Could not top up scriptPubKeys\n");
-        return nullptr;
     }
 
     // Apply the label if necessary

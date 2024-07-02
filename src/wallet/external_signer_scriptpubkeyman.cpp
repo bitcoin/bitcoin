@@ -21,7 +21,8 @@
 using common::PSBTError;
 
 namespace wallet {
-bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor> desc)
+ExternalSignerScriptPubKeyMan::ExternalSignerScriptPubKeyMan(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc)
+  :   DescriptorScriptPubKeyMan(storage, keypool_size)
 {
     LOCK(cs_desc_man);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -42,7 +43,6 @@ bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::uni
     TopUpWithDB(batch);
 
     m_storage.UnsetBlankWalletFlag(batch);
-    return true;
 }
 
 ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
