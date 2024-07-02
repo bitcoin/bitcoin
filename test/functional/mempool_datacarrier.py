@@ -24,9 +24,9 @@ class DataCarrierTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.extra_args = [
             [],
-            ["-datacarrier=0"],
-            ["-datacarrier=1", f"-datacarriersize={MAX_OP_RETURN_RELAY - 1}"],
-            ["-datacarrier=1", f"-datacarriersize=2"],
+            ["-datacarriersize=0"],
+            [f"-datacarriersize={MAX_OP_RETURN_RELAY - 1}"],
+            ["-datacarriersize=2"],
         ]
 
     def test_null_data_transaction(self, node: TestNode, data, success: bool) -> None:
@@ -53,13 +53,13 @@ class DataCarrierTest(BitcoinTestFramework):
         one_byte = randbytes(1)
         zero_bytes = randbytes(0)
 
-        self.log.info("Testing null data transaction with default -datacarrier and -datacarriersize values.")
+        self.log.info("Testing null data transaction with the default -datacarriersize value.")
         self.test_null_data_transaction(node=self.nodes[0], data=default_size_data, success=True)
 
         self.log.info("Testing a null data transaction larger than allowed by the default -datacarriersize value.")
         self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=False)
 
-        self.log.info("Testing a null data transaction with -datacarrier=false.")
+        self.log.info("Testing a null data transaction with -datacarriersize=0.")
         self.test_null_data_transaction(node=self.nodes[1], data=default_size_data, success=False)
 
         self.log.info("Testing a null data transaction with a size larger than accepted by -datacarriersize.")
