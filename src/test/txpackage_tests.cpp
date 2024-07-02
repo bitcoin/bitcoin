@@ -45,9 +45,9 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
 }
 
 // Create a Wtxid from a hex string
-inline Wtxid WtxidFromString(std::string_view str)
+consteval Wtxid WtxidFromString(const char* str)
 {
-    return Wtxid::FromUint256(uint256S(str.data()));
+    return Wtxid::FromUint256(uint256S(str));
 }
 
 BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)

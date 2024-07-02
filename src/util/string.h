@@ -76,6 +76,16 @@ std::vector<T> Split(const Span<const char>& sp, char sep)
     return str.substr(front, end - front + 1);
 }
 
+[[nodiscard]] inline std::string_view LeftTrimStringView(std::string_view str, std::string_view pattern = " \f\n\r\t\v")
+{
+    std::string::size_type front = str.find_first_not_of(pattern);
+    if (front == std::string::npos) {
+        return {};
+    }
+    str.remove_prefix(front);
+    return str;
+}
+
 [[nodiscard]] inline std::string TrimString(std::string_view str, std::string_view pattern = " \f\n\r\t\v")
 {
     return std::string(TrimStringView(str, pattern));
@@ -83,8 +93,8 @@ std::vector<T> Split(const Span<const char>& sp, char sep)
 
 [[nodiscard]] inline std::string_view RemovePrefixView(std::string_view str, std::string_view prefix)
 {
-    if (str.substr(0, prefix.size()) == prefix) {
-        return str.substr(prefix.size());
+    if (str.starts_with(prefix)) {
+        str.remove_prefix(prefix.size());
     }
     return str;
 }
