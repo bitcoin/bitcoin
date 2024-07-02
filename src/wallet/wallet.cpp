@@ -1152,6 +1152,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     // Break debit/credit balance caches:
     wtx.MarkDirty();
 
+    // Cache the outputs that belong to the wallet
+    RefreshWalletTxTXOs(wtx);
+
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(hash, fInsertedNew ? CT_NEW : CT_UPDATED);
 
@@ -1215,6 +1218,8 @@ bool CWallet::LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx
     // Update birth time when tx time is older than it.
     MaybeUpdateBirthTime(wtx.GetTxTime());
 
+    // Make sure the tx outputs are known by the wallet
+    RefreshWalletTxTXOs(wtx);
     return true;
 }
 
@@ -1583,16 +1588,10 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
 // and a not-"is mine" (according to the filter) input.
 CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 {
-    {
-        LOCK(cs_wallet);
-        const auto mi = mapWallet.find(txin.prevout.hash);
-        if (mi != mapWallet.end())
-        {
-            const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
-                    return prev.tx->vout[txin.prevout.n].nValue;
-        }
+    LOCK(cs_wallet);
+    auto txo = GetTXO(txin.prevout);
+    if (txo && (txo->GetIsMine() & filter)) {
+        return txo->GetTxOut().nValue;
     }
     return 0;
 }
@@ -2410,6 +2409,9 @@ util::Result<void> CWallet::RemoveTxs(std::vector<uint256>& txs_to_remove)
         wtxOrdered.erase(it->second.m_it_wtxOrdered);
         for (const auto& txin : it->second.tx->vin)
             mapTxSpends.erase(txin.prevout);
+        for (unsigned int i = 0; i < it->second.tx->vout.size(); ++i) {
+            m_txos.erase(COutPoint(Txid::FromUint256(hash), i));
+        }
         mapWallet.erase(it);
         NotifyTransactionChanged(hash, CT_DELETED);
     }
@@ -4071,6 +4073,10 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         return false;
     }
 
+    // Update m_txos to match the descriptors remaining in this wallet
+    m_txos.clear();
+    RefreshAllTXOs();
+
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
     std::vector<uint256> txids_to_delete;
@@ -4564,5 +4570,41 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
         }
     }
     return std::nullopt;
+}
+
+void CWallet::RefreshWalletTxTXOs(const CWalletTx& wtx)
+{
+    AssertLockHeld(cs_wallet);
+    for (uint32_t i = 0; i < wtx.tx->vout.size(); ++i) {
+        const CTxOut& txout = wtx.tx->vout.at(i);
+        isminetype ismine = IsMine(txout);
+        if (ismine == ISMINE_NO) {
+            continue;
+        }
+        COutPoint outpoint(wtx.GetHash(), i);
+        if (m_txos.contains(outpoint)) {
+            m_txos.at(outpoint).SetIsMine(ismine);
+        } else {
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout, ismine});
+        }
+    }
+}
+
+void CWallet::RefreshAllTXOs()
+{
+    AssertLockHeld(cs_wallet);
+    for (const auto& [_, wtx] : mapWallet) {
+        RefreshWalletTxTXOs(wtx);
+    }
+}
+
+std::optional<WalletTXO> CWallet::GetTXO(const COutPoint& outpoint) const
+{
+    AssertLockHeld(cs_wallet);
+    const auto& it = m_txos.find(outpoint);
+    if (it == m_txos.end()) {
+        return std::nullopt;
+    }
+    return it->second;
 }
 } // namespace wallet
