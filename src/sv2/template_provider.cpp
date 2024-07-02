@@ -140,12 +140,21 @@ void Sv2TemplateProvider::RequestTransactionData(Sv2Client& client, node::Sv2Req
     if (cached_block != m_block_template_cache.end()) {
         CBlock block = (*cached_block->second).getBlock();
 
+        if (block.hashPrevBlock != m_best_prev_hash) {
+            LogTrace(BCLog::SV2, "Template id=%lu prevhash=%s, tip=%s\n", msg.m_template_id, HexStr(block.hashPrevBlock), HexStr(m_best_prev_hash));
+            node::Sv2RequestTransactionDataErrorMsg request_tx_data_error{msg.m_template_id, "stale-template-id"};
+
+
+            LogDebug(BCLog::SV2, "Send 0x75 RequestTransactionData.Error (stale-template-id) to client id=%zu\n",
+                    client.m_id);
+            client.m_send_messages.emplace_back(request_tx_data_error);
+            return;
+        }
+
         std::vector<uint8_t> witness_reserve_value;
-        if (!block.IsNull()) {
-            auto scriptWitness = block.vtx[0]->vin[0].scriptWitness;
-            if (!scriptWitness.IsNull()) {
-                std::copy(scriptWitness.stack[0].begin(), scriptWitness.stack[0].end(), std::back_inserter(witness_reserve_value));
-            }
+        auto scriptWitness = block.vtx[0]->vin[0].scriptWitness;
+        if (!scriptWitness.IsNull()) {
+            std::copy(scriptWitness.stack[0].begin(), scriptWitness.stack[0].end(), std::back_inserter(witness_reserve_value));
         }
         std::vector<CTransactionRef> txs;
         if (block.vtx.size() > 0) {
