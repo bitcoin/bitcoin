@@ -102,7 +102,7 @@ enum BlockStatus : uint32_t {
      *
      * If a block's validity is at least VALID_TRANSACTIONS, CBlockIndex::nTx will be set. If a block and all previous
      * blocks back to the genesis block or an assumeutxo snapshot block are at least VALID_TRANSACTIONS,
-     * CBlockIndex::nChainTx will be set.
+     * CBlockIndex::m_chain_tx_count will be set.
      */
     BLOCK_VALID_TRANSACTIONS =    3,
 
@@ -174,7 +174,7 @@ public:
     //! to the genesis block or an assumeutxo snapshot block have reached the
     //! VALID_TRANSACTIONS level.
     //! Change to 64-bit type before 2024 (assuming worst case of 60 byte transactions).
-    unsigned int nChainTx{0};
+    uint64_t m_chain_tx_count{0};
 
     //! Verification status of this block. See enum BlockStatus
     //!
@@ -254,10 +254,10 @@ public:
      * Does not imply the transactions are consensus-valid (ConnectTip might fail)
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
      *
-     * Note that this will be true for the snapshot base block, if one is loaded, since its nChainTx value will have
+     * Note that this will be true for the snapshot base block, if one is loaded, since its m_chain_tx_count value will have
      * been set manually based on the related AssumeutxoData entry.
      */
-    bool HaveNumChainTxs() const { return nChainTx != 0; }
+    bool HaveNumChainTxs() const { return m_chain_tx_count != 0; }
 
     NodeSeconds Time() const
     {
