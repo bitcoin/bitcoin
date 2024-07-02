@@ -227,6 +227,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     DBContext().iteroptions.fill_cache = false;
     DBContext().syncoptions.sync = true;
     DBContext().options = GetOptions(params.cache_bytes);
+    DBContext().options.max_file_size = params.options.max_file_size;
     DBContext().options.create_if_missing = true;
     if (params.memory_only) {
         DBContext().penv = leveldb::NewMemEnv(leveldb::Env::Default());
