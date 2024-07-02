@@ -19,6 +19,7 @@ JSON_TEST_FILES = \
   test/data/bip341_wallet_vectors.json \
   test/data/base58_encode_decode.json \
   test/data/blockfilters.json \
+  test/data/ctvhash.json \
   test/data/key_io_valid.json \
   test/data/key_io_invalid.json \
   test/data/script_tests.json \
@@ -89,6 +90,7 @@ BITCOIN_TESTS =\
   test/compilerbug_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
+  test/ctvhash_tests.cpp \
   test/cuckoocache_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/denialofservice_tests.cpp \
