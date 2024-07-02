@@ -82,6 +82,7 @@ class TestNode():
         self.stdout_dir = self.datadir_path / "stdout"
         self.stderr_dir = self.datadir_path / "stderr"
         self.chain = chain
+        self.signet_chain = ""
         self.rpchost = rpchost
         self.rpc_timeout = timewait
         self.binary = bitcoind
@@ -174,6 +175,9 @@ class TestNode():
             AddressKeyPair('mzRe8QZMfGi58KyWCse2exxEFry2sfF2Y7', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
     ]
 
+    def get_chain(self):
+        return self.signet_chain if self.chain == 'signet' else self.chain
+
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
         assert len(self.PRIV_KEYS) == MAX_NODES
@@ -256,7 +260,7 @@ class TestNode():
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
                 rpc = get_rpc_proxy(
-                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+                    rpc_url(self.datadir_path, self.index, self.get_chain(), self.rpchost),
                     self.index,
                     timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
                     coveragedir=self.coverage_dir,
@@ -320,7 +324,7 @@ class TestNode():
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             try:
-                get_auth_cookie(self.datadir_path, self.chain)
+                get_auth_cookie(self.datadir_path, self.get_chain())
                 self.log.debug("Cookie credentials successfully retrieved")
                 return
             except ValueError:  # cookie file not found and no rpcuser or rpcpassword; bitcoind is still starting
@@ -440,7 +444,7 @@ class TestNode():
 
     @property
     def chain_path(self) -> Path:
-        return self.datadir_path / self.chain
+        return self.datadir_path / self.get_chain()
 
     @property
     def debug_log_path(self) -> Path:

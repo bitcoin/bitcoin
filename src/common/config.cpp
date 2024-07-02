@@ -199,6 +199,9 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             for (const std::string& conf_file_name : conf_file_names) {
                 tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
             }
+
+            // Read signet args of the provided chain and update the signet config
+            ReadSignetChainConfigs();
         }
     }
 

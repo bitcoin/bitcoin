@@ -5,6 +5,7 @@
 
 #include <common/args.h>
 
+#include <hash.h>
 #include <chainparamsbase.h>
 #include <common/settings.h>
 #include <logging.h>
@@ -277,6 +278,18 @@ fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value)
     return result.has_filename() ? result : result.parent_path();
 }
 
+fs::path ArgsManager::GetSignetDataDir() const
+{
+    const std::string base_data_dir = BaseParams().DataDir();
+    const std::string signet_challenge_str = GetArg("-signetchallenge", "");
+    if (!signet_challenge_str.empty()) {
+        std::vector<uint8_t> signet_challenge = ParseHex(signet_challenge_str);
+        const auto data_dir_suffix = HexStr(Hash160(signet_challenge)).substr(0, 8);
+        return fs::PathFromString(base_data_dir + "_" + data_dir_suffix);
+    }
+    return fs::PathFromString(base_data_dir);
+}
+
 fs::path ArgsManager::GetBlocksDirPath() const
 {
     LOCK(cs_args);
@@ -296,7 +309,12 @@ fs::path ArgsManager::GetBlocksDirPath() const
         path = GetDataDirBase();
     }
 
-    path /= fs::PathFromString(BaseParams().DataDir());
+    if (GetChainType() == ChainType::SIGNET) {
+        path /= GetSignetDataDir();
+    } else {
+        path /= fs::PathFromString(BaseParams().DataDir());
+    }
+
     path /= "blocks";
     fs::create_directories(path);
     return path;
@@ -322,7 +340,11 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
     }
 
     if (net_specific && !BaseParams().DataDir().empty()) {
-        path /= fs::PathFromString(BaseParams().DataDir());
+        if (GetChainType() == ChainType::SIGNET) {
+            path /= GetSignetDataDir();
+        } else {
+            path /= fs::PathFromString(BaseParams().DataDir());
+        }
     }
 
     return path;
@@ -355,6 +377,48 @@ std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
         ret.args.push_back(*(it++));
     }
     return ret;
+}
+
+std::vector<common::SettingsValue> ArgsManager::GetSectionArg(const std::string& section, const std::string& strArg) const
+{
+    std::vector<common::SettingsValue> result;
+    LOCK(cs_args);
+    if (auto* _section = common::FindKey(m_settings.ro_config, section)) {
+        if (auto* values = common::FindKey(*_section, strArg)) {
+            for (int i = 0; i < values->size(); i++) {
+                result.push_back((*values)[i]);
+            }
+
+        }
+    }
+    return result;
+}
+
+template <typename Key, typename Value, typename SectionKey>
+void ArgsManager::AddConfigArg(const Key& key, const Value& value, SectionKey sectionKey)
+{
+    auto& section = m_settings.ro_config[sectionKey];
+    section[key].push_back(value);
+}
+
+void ArgsManager::UpdateConfigFromSection(const std::string& section, const std::string& strArg)
+{
+    auto arg = GetSectionArg(section, strArg);
+    for(auto& sv : arg) {
+        LOCK(cs_args);
+        AddConfigArg(strArg, sv, m_network);
+    }
+}
+
+void ArgsManager::ReadSignetChainConfigs()
+{
+    const std::string SIGNET_CHAIN_PREFIX = "signet_";
+
+    const std::string chain = GetArg("-chain", "");
+    if (chain.starts_with(SIGNET_CHAIN_PREFIX)){
+        UpdateConfigFromSection(chain, "signetchallenge");
+        UpdateConfigFromSection(chain, "seednode");
+    }
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const

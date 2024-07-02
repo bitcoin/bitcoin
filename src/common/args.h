@@ -211,6 +211,14 @@ protected:
     std::optional<const Command> GetCommand() const;
 
     /**
+     * Get signet data directory path.
+     * If a signet-challange argument is provided, it is used in constructing the directory path.
+     *
+     * @return The path to the signet data directory.
+    */
+    fs::path GetSignetDataDir() const;
+
+    /**
      * Get blocks directory path
      *
      * @return Blocks path which is network specific
@@ -235,6 +243,38 @@ protected:
      * Clear cached directory paths
      */
     void ClearPathCache();
+
+    /**
+     * Retrieves values associated with a specified argument in a given configuration section.
+     *
+     * @param section section in m_settings.ro_config to seach
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return Vector of string values for the argument in the configuration file.
+     */
+    std::vector<common::SettingsValue> GetSectionArg(const std::string& section, const std::string& strArg) const;
+
+    /**
+     * Adds a configuration argument to a specified section in the configuration settings.
+     *
+     * @param key The key to be added to the configuration section.
+     * @param value The value to be associated with the specified key.
+     * @param sectionKey The section key identifying the section where the key-value pair will be added.
+     */
+    template <typename Key, typename Value, typename SectionKey>
+    void AddConfigArg(const Key& key, const Value& value, SectionKey sectionKey);
+
+    /**
+     * Updates the configuration settings by adding arguments from a specified section.
+     *
+     * @param section The name of the section from which to retrieve arguments.
+     * @param strArg The key whose associated arguments are to be retrieved and added to the configuration settings.
+     */
+    void UpdateConfigFromSection(const std::string& section, const std::string& strArg);
+
+    /**
+     * Read singnet chain args if signet chain arg is provided 
+    */
+    void ReadSignetChainConfigs();
 
     /**
      * Return a vector of strings of the given argument
