@@ -47,19 +47,31 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
  *  application data structures require more accurate inner accounting, they should
  *  iterate themselves, or use more efficient caching + updating on modification.
  */
-
 static inline size_t MallocUsage(size_t alloc)
 {
-    // Measured on libc6 2.19 on Linux.
-    if (alloc == 0) {
-        return 0;
-    } else if (sizeof(void*) == 8) {
-        return ((alloc + 31) >> 4) << 4;
-    } else if (sizeof(void*) == 4) {
-        return ((alloc + 15) >> 3) << 3;
-    } else {
-        assert(0);
-    }
+    // There are few if any actual zero-length allocations; when
+    // DynamicUsage(std::vector<X>& v) calls this function, and v.capacity() == 0,
+    // for example, there has not been a zero-byte allocation (which would require
+    // some physical space). std::vector has optimized this case. Experimental
+    // evidence indicates the same is true of other data structures -- there are
+    // no actual zero-length allocations observed, although of course this is
+    // library-dependent.
+    if (alloc == 0) return 0;
+
+    static constexpr size_t overhead = sizeof(void*);
+#if defined(__arm__)
+    // tested with ARM 32bit
+    static constexpr size_t step = sizeof(void*) * 2;
+    static constexpr size_t min_alloc = 9;
+#else
+    static constexpr size_t step = 16U;
+    static constexpr size_t min_alloc = sizeof(void*) == 8 ? 9 : 0;
+#endif
+    // step should be nonzero and a power of 2
+    static_assert(step > 0);
+    static_assert((step & (step-1)) == 0);
+    // tested with Linux glibc 2.31 and 2.38, 32bit and 64bit
+    return (std::max(min_alloc, alloc) + overhead + (step - 1)) & ~(step - 1);
 }
 
 // STL data structures
@@ -164,11 +176,16 @@ static inline size_t DynamicUsage(const std::list<X>& l)
     return MallocUsage(sizeof(list_node<X>)) * l.size();
 }
 
+// struct unordered_node adds the container overhead to the given structure X,
+// although this varies across library container implementations (platforms).
+// It is believed that some containers use two pointers per node, so this
+// generates a conservative memory usage estimate (it may be slightly too high).
 template<typename X>
 struct unordered_node : private X
 {
 private:
-    void* ptr;
+    void* ptr_back;
+    void* ptr_forward;
 };
 
 template<typename X, typename Y>
