@@ -19,7 +19,6 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <reverse_iterator.h>
 #include <serialize.h>
 #include <signet.h>
 #include <span.h>
@@ -37,6 +36,7 @@
 #include <validation.h>
 
 #include <map>
+#include <ranges>
 #include <unordered_map>
 
 namespace kernel {
@@ -578,7 +578,7 @@ const CBlockIndex* BlockManager::GetLastCheckpoint(const CCheckpointData& data)
 {
     const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
-    for (const MapCheckpoints::value_type& i : reverse_iterate(checkpoints)) {
+    for (const MapCheckpoints::value_type& i : checkpoints | std::views::reverse) {
         const uint256& hash = i.second;
         const CBlockIndex* pindex = LookupBlockIndex(hash);
         if (pindex) {

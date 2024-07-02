@@ -3,16 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <prevector.h>
-#include <vector>
-
-#include <reverse_iterator.h>
 #include <serialize.h>
 #include <streams.h>
-
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <ranges>
+#include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
@@ -58,14 +57,14 @@ class prevector_tester {
         for (const T& v : pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        for (const T& v : reverse_iterate(pre_vector)) {
-             local_check(v == real_vector[--pos]);
+        for (const T& v : pre_vector | std::views::reverse) {
+            local_check(v == real_vector[--pos]);
         }
         for (const T& v : const_pre_vector) {
              local_check(v == real_vector[pos++]);
         }
-        for (const T& v : reverse_iterate(const_pre_vector)) {
-             local_check(v == real_vector[--pos]);
+        for (const T& v : const_pre_vector | std::views::reverse) {
+            local_check(v == real_vector[--pos]);
         }
         DataStream ss1{};
         DataStream ss2{};
