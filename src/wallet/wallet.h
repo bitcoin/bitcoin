@@ -11,6 +11,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <kernel/cs_main.h>
+#include <kernel/mempool_removal_reason.h>
 #include <logging.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -56,7 +57,6 @@ class CKeyID;
 class CPubKey;
 class Coin;
 class SigningProvider;
-enum class MemPoolRemovalReason;
 enum class SigningResult;
 namespace common {
 enum class PSBTError;
@@ -429,6 +429,11 @@ private:
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
 
     /**
+     * Tracks txids of unrelated double-spending txs  to wallet transactions
+     */
+    std::unordered_map<Txid, CTransactionRef, SaltedTxidHasher> m_unrelated_conflict_tx_watchlist GUARDED_BY(cs_wallet);
+
+    /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
      * notifications about new blocks and transactions.
@@ -631,7 +636,7 @@ public:
         uint256 last_failed_block;
     };
     ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, const bool save_progress);
-    void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
+    void transactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
     void SetNextResend() { m_next_resend = GetDefaultNextResend(); }
     /** Return true if all conditions for periodically resending transactions are met. */

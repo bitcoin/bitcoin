@@ -8,6 +8,7 @@
 
 #include <kernel/chain.h>
 #include <kernel/cs_main.h>
+#include <kernel/mempool_removal_reason.h>
 #include <primitives/transaction.h> // CTransaction(Ref)
 #include <sync.h>
 
@@ -25,7 +26,6 @@ class BlockValidationState;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
-enum class MemPoolRemovalReason;
 struct RemovedMempoolTransactionInfo;
 struct NewMempoolTransactionInfo;
 
@@ -100,7 +100,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {}
+    virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason, uint64_t mempool_sequence) {}
     /*
      * Notifies listeners of transactions removed from the mempool as
      * as a result of new block being connected.
@@ -215,7 +215,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
-    void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
+    void TransactionRemovedFromMempool(const CTransactionRef&, const MemPoolRemovalReason&, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
     void BlockConnected(ChainstateRole, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);

@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/system.h>
+#include <primitives/transaction.h>
 #include <policy/policy.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/time.h>
 
 #include <test/util/setup_common.h>
@@ -15,7 +17,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)
 
-static constexpr auto REMOVAL_REASON_DUMMY = MemPoolRemovalReason::REPLACED;
+static const auto REMOVAL_REASON_DUMMY = ReplacedReason(MakeTransactionRef(CTransaction(CMutableTransaction())));
 
 class MemPoolTest final : public CTxMemPool
 {
@@ -401,7 +403,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     /* after tx6 is mined, tx7 should move up in the sort */
     std::vector<CTransactionRef> vtx;
     vtx.push_back(MakeTransactionRef(tx6));
-    pool.removeForBlock(vtx, 1);
+    pool.removeForBlock(vtx, uint256::ZERO, 1);
 
     sortedOrder.erase(sortedOrder.begin()+1);
     // Ties are broken by hash
@@ -561,7 +563,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     SetMockTime(42 + CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
     // ... we should keep the same min fee until we get a block
-    pool.removeForBlock(vtx, 1);
+    pool.removeForBlock(vtx, uint256::ZERO, 1);
     SetMockTime(42 + 2*CTxMemPool::ROLLING_FEE_HALFLIFE);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + 1000)/2.0));
     // ... then feerate should drop 1/2 each halflife

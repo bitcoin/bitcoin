@@ -78,7 +78,7 @@ struct TxStateUnrecognized {
 using TxState = std::variant<TxStateConfirmed, TxStateInMempool, TxStateBlockConflicted, TxStateInactive, TxStateUnrecognized>;
 
 //! Subset of states transaction sync logic is implemented to handle.
-using SyncTxState = std::variant<TxStateConfirmed, TxStateInMempool, TxStateInactive>;
+using SyncTxState = std::variant<TxStateConfirmed, TxStateInMempool, TxStateInactive, TxStateBlockConflicted>;
 
 //! Try to interpret deserialized TxStateUnrecognized data as a recognized state.
 static inline TxState TxStateInterpretSerialized(TxStateUnrecognized data)

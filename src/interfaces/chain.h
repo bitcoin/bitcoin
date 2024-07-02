@@ -7,6 +7,7 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
+#include <kernel/mempool_removal_reason.h>
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/result.h>
 
@@ -26,7 +27,6 @@ class CRPCCommand;
 class CScheduler;
 class Coin;
 class uint256;
-enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
 enum class ChainstateRole;
 struct bilingual_str;
@@ -311,7 +311,7 @@ public:
     public:
         virtual ~Notifications() {}
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
-        virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
+        virtual void transactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason) {}
         virtual void blockConnected(ChainstateRole role, const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
         virtual void updatedBlockTip() {}

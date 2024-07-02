@@ -19,8 +19,6 @@
 #include <unordered_map>
 #include <utility>
 
-std::string RemovalReasonToString(const MemPoolRemovalReason& r) noexcept;
-
 /**
  * ValidationSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.
  *
@@ -193,7 +191,7 @@ void ValidationSignals::TransactionAddedToMempool(const NewMempoolTransactionInf
                           tx.info.m_tx->GetWitnessHash().ToString());
 }
 
-void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {
+void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason, uint64_t mempool_sequence) {
     auto event = [tx, reason, mempool_sequence, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(tx, reason, mempool_sequence); });
     };
