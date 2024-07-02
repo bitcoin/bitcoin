@@ -12,6 +12,7 @@
 #include <util/hash_type.h>
 
 #include <string>
+#include <sstream>
 
 CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in)) {}
 
@@ -156,6 +157,25 @@ std::string GetOpName(opcodetype opcode)
     }
 }
 
+std::string GetOpNameAsm(const opcodetype& opcode)
+{
+    // Directly handle numeric opcode range
+    if ((opcode > OP_0) && (opcode < OP_PUSHDATA1)) {
+        std::ostringstream ss;
+        ss << static_cast<int>(opcode);
+        return ss.str();
+    }
+
+    std::string o = GetOpName(opcode);
+
+    constexpr std::string_view prefix = "OP_";
+    if (o.starts_with(prefix)) {
+        o.erase(0, prefix.length());
+    }
+
+    return o;
+}
+
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
 {
     unsigned int n = 0;
@@ -298,6 +318,7 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
     if (end - pc < 1)
         return false;
     unsigned int opcode = *pc++;
+    opcodeRet = static_cast<opcodetype>(opcode);
 
     // Immediate operand
     if (opcode <= OP_PUSHDATA4)
@@ -327,14 +348,19 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
             nSize = ReadLE32(&pc[0]);
             pc += 4;
         }
-        if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
+
+        // Fail if there's not enough data
+        unsigned int available_data = static_cast<unsigned int>(end - pc);
+        if (available_data < nSize)
+        {
             return false;
-        if (pvchRet)
-            pvchRet->assign(pc, pc + nSize);
-        pc += nSize;
+        } else {
+            if (pvchRet)
+                pvchRet->assign(pc, pc + nSize);
+            pc += nSize;
+        }
     }
 
-    opcodeRet = static_cast<opcodetype>(opcode);
     return true;
 }
 

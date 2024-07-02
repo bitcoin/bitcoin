@@ -215,6 +215,7 @@ enum opcodetype
 static const unsigned int MAX_OPCODE = OP_NOP10;
 
 std::string GetOpName(opcodetype opcode);
+std::string GetOpNameAsm(const opcodetype& opcode);
 
 class scriptnum_error : public std::runtime_error
 {

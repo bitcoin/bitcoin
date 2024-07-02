@@ -40,7 +40,7 @@
             "value": 0.18000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "OP_DUP OP_HASH160 1fc11f39be1729bf973a7ab6a615ca4729d64574 OP_EQUALVERIFY OP_CHECKSIG",
+                "asm": "DUP HASH160 <1fc11f39be1729bf973a7ab6a615ca4729d64574> EQUALVERIFY CHECKSIG",
                 "desc": "addr(13tuJJDR2RgArmgfv6JScSdreahzgc4T6o)#ztmwxg4c",
                 "hex": "76a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac",
                 "address": "13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
@@ -51,7 +51,7 @@
             "value": 4.00000000,
             "n": 1,
             "scriptPubKey": {
-                "asm": "OP_DUP OP_HASH160 f2d4db28cad6502226ee484ae24505c2885cb12d OP_EQUALVERIFY OP_CHECKSIG",
+                "asm": "DUP HASH160 <f2d4db28cad6502226ee484ae24505c2885cb12d> EQUALVERIFY CHECKSIG",
                 "desc": "addr(1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46)#vdmdu766",
                 "hex": "76a914f2d4db28cad6502226ee484ae24505c2885cb12d88ac",
                 "address": "1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46",

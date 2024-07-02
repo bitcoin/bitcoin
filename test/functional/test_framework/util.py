@@ -548,3 +548,12 @@ def find_vout_for_address(node, txid, addr):
         if addr == tx["vout"][i]["scriptPubKey"]["address"]:
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
+
+def asm_hex(val: str) -> str:
+    """
+    Add < > brackets around a hex value to match asm representation
+    returned by script decoder.
+    """
+    return f"<{val}>"
+

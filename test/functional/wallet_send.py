@@ -170,7 +170,7 @@ class WalletSendTest(BitcoinTestFramework):
                 else:
                     assert_greater_than(from_balance_before - from_balance, amount)
             else:
-                assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "OP_RETURN 35"), None)
+                assert next((out for out in tx["vout"] if out["scriptPubKey"]["asm"] == "RETURN 35"), None)
         else:
             assert_equal(from_balance_before, from_balance)
 

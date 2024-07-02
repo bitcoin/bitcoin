@@ -609,6 +609,13 @@ SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
 SIGHASH_ANYONECANPAY = 0x80
 
+def FormatSigHashHex(sighash: int) -> str:
+    """
+    Format a sighash flag as a two character hex string without leading 0x
+    """
+    return "{:02x}".format(sighash)
+
+
 def FindAndDelete(script, sig):
     """Consensus critical, see FindAndDelete() in Satoshi codebase"""
     r = b''

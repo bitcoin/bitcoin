@@ -85,7 +85,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
 static std::vector<RPCResult> ScriptPubKeyDoc() {
     return
          {
-             {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
+             {RPCResult::Type::STR, "asm", "Disassembly of the public key script."},
              {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
              {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
              {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
@@ -112,7 +112,7 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                 {RPCResult::Type::NUM, "vout", /*optional=*/true, "The output number (if not coinbase transaction)"},
                 {RPCResult::Type::OBJ, "scriptSig", /*optional=*/true, "The script (if not coinbase transaction)",
                 {
-                    {RPCResult::Type::STR, "asm", "Disassembly of the signature script"},
+                    {RPCResult::Type::STR, "asm", "Disassembly of the signature script."},
                     {RPCResult::Type::STR_HEX, "hex", "The raw signature script bytes, hex-encoded"},
                 }},
                 {RPCResult::Type::ARR, "txinwitness", /*optional=*/true, "",
@@ -506,7 +506,7 @@ static RPCHelpMan decodescript()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR, "asm", "Script public key"},
+                {RPCResult::Type::STR, "asm", "Script public key."},
                 {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
                 {RPCResult::Type::STR, "type", "The output type (e.g. " + GetAllOutputTypes() + ")"},
                 {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
@@ -515,7 +515,7 @@ static RPCHelpMan decodescript()
                 {RPCResult::Type::OBJ, "segwit", /*optional=*/true,
                  "Result of a witness script public key wrapping this redeem script (not returned for types that should not be wrapped)",
                  {
-                     {RPCResult::Type::STR, "asm", "String representation of the script public key"},
+                     {RPCResult::Type::STR, "asm", "String representation of the script public key."},
                      {RPCResult::Type::STR_HEX, "hex", "Hex string of the script public key"},
                      {RPCResult::Type::STR, "type", "The type of the script public key (e.g. witness_v0_keyhash or witness_v0_scripthash)"},
                      {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
@@ -833,7 +833,7 @@ const RPCResult decodepsbt_inputs{
                 {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                 {
-                    {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
+                    {RPCResult::Type::STR, "asm", "Disassembly of the public key script."},
                     {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                     {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
@@ -847,13 +847,13 @@ const RPCResult decodepsbt_inputs{
             {RPCResult::Type::STR, "sighash", /*optional=*/true, "The sighash type to be used"},
             {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the redeem script"},
+                {RPCResult::Type::STR, "asm", "Disassembly of the redeem script."},
                 {RPCResult::Type::STR_HEX, "hex", "The raw redeem script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
             {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the witness script"},
+                {RPCResult::Type::STR, "asm", "Disassembly of the witness script."},
                 {RPCResult::Type::STR_HEX, "hex", "The raw witness script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
@@ -868,7 +868,7 @@ const RPCResult decodepsbt_inputs{
             }},
             {RPCResult::Type::OBJ, "final_scriptSig", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the final signature script"},
+                {RPCResult::Type::STR, "asm", "Disassembly of the final signature script."},
                 {RPCResult::Type::STR_HEX, "hex", "The raw final signature script bytes, hex-encoded"},
             }},
             {RPCResult::Type::ARR, "final_scriptwitness", /*optional=*/true, "",
@@ -953,13 +953,13 @@ const RPCResult decodepsbt_outputs{
         {
             {RPCResult::Type::OBJ, "redeem_script", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the redeem script"},
+                {RPCResult::Type::STR, "asm", "Disassembly of the redeem script."},
                 {RPCResult::Type::STR_HEX, "hex", "The raw redeem script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
             {RPCResult::Type::OBJ, "witness_script", /*optional=*/true, "",
             {
-                {RPCResult::Type::STR, "asm", "Disassembly of the witness script"},
+                {RPCResult::Type::STR, "asm", "Disassembly of the witness script."},
                 {RPCResult::Type::STR_HEX, "hex", "The raw witness script bytes, hex-encoded"},
                 {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
             }},
@@ -1202,7 +1202,7 @@ static RPCHelpMan decodepsbt()
         // Final scriptSig and scriptwitness
         if (!input.final_script_sig.empty()) {
             UniValue scriptsig(UniValue::VOBJ);
-            scriptsig.pushKV("asm", ScriptToAsmStr(input.final_script_sig, true));
+            scriptsig.pushKV("asm", ScriptToAsmStr(input.final_script_sig));
             scriptsig.pushKV("hex", HexStr(input.final_script_sig));
             in.pushKV("final_scriptSig", std::move(scriptsig));
         }

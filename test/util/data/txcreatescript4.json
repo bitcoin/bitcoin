@@ -13,7 +13,7 @@
             "value": 0.00000000,
             "n": 0,
             "scriptPubKey": {
-                "asm": "OP_HASH160 6a2c482f4985f57e702f325816c90e3723ca81ae OP_EQUAL",
+                "asm": "HASH160 <6a2c482f4985f57e702f325816c90e3723ca81ae> EQUAL",
                 "desc": "addr(3BNQbeFeJJGMAyDxPwWPuqxPMrjsFLjk3f)#fdleltnv",
                 "hex": "a9146a2c482f4985f57e702f325816c90e3723ca81ae87",
                 "address": "3BNQbeFeJJGMAyDxPwWPuqxPMrjsFLjk3f",
