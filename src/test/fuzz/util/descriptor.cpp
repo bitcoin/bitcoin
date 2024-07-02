@@ -3,6 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/fuzz/util/descriptor.h>
+#include <reverse_iterator.h>
+
+#include <stack>
 
 void MockedDescriptorConverter::Init() {
     // The data to use as a private key or a seed for an xprv.
@@ -80,6 +83,37 @@ bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
             depth = 0;
         } else if (ch == '/') {
             if (++depth > max_depth) return true;
+        }
+    }
+    return false;
+}
+
+bool HasLargeFrag(const FuzzBufferType& buff, const int max_subs)
+{
+    std::stack<int> counts;
+    for (const auto& ch: buff) {
+        if (ch == '(') {
+            counts.push(1);
+        } else if (ch == ',' && !counts.empty()) {
+            if (++counts.top() > max_subs) return true;
+        } else if (ch == ')' && !counts.empty()) {
+            counts.pop();
+        }
+    }
+    return false;
+}
+
+bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers)
+{
+    auto count{0};
+    // We iterate in reverse order to start counting when we encounter a colon.
+    for (const auto ch: reverse_iterate(buff)) {
+        if (ch == ':') {
+            count++;
+        } else if (ch == ',' || ch == '(' || ch == '{') {
+            count = 0;
+        } else if (count > 0 && ++count > max_wrappers) {
+            return true;
         }
     }
     return false;
