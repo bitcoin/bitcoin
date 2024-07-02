@@ -69,6 +69,7 @@ namespace BCLog {
         TXRECONCILIATION = (1 << 26),
         SCAN        = (1 << 27),
         TXPACKAGES  = (1 << 28),
+        PRIVATE_BROADCAST = (1 << 29),
         ALL         = ~(uint32_t)0,
     };
     enum class Level {

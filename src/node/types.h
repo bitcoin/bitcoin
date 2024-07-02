@@ -13,6 +13,8 @@
 #ifndef BITCOIN_NODE_TYPES_H
 #define BITCOIN_NODE_TYPES_H
 
+#include <cstdint>
+
 namespace node {
 enum class TransactionError {
     OK, //!< No error
@@ -23,6 +25,20 @@ enum class TransactionError {
     MAX_FEE_EXCEEDED,
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
+};
+
+/**
+ * Methods to broadcast a local transaction.
+ * Used to influence `BroadcastTransaction()` and its callers.
+ */
+enum TxBroadcastMethod : uint8_t {
+    /// Add the transaction to the mempool and broadcast to all currently connected peers.
+    ADD_TO_MEMPOOL_AND_BROADCAST_TO_ALL,
+    /// Add the transaction to the mempool, but don't broadcast to anybody.
+    ADD_TO_MEMPOOL_NO_BROADCAST,
+    /// Omit the mempool and directly send the transaction via a few dedicated connections to
+    /// peers on privacy networks.
+    NO_MEMPOOL_PRIVATE_BROADCAST,
 };
 } // namespace node
 
