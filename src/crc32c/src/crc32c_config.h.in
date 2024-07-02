@@ -5,9 +5,6 @@
 #ifndef CRC32C_CRC32C_CONFIG_H_
 #define CRC32C_CRC32C_CONFIG_H_
 
-// Define to 1 if building for a big-endian platform.
-#cmakedefine01 BYTE_ORDER_BIG_ENDIAN
-
 // Define to 1 if the compiler has the __builtin_prefetch intrinsic.
 #cmakedefine01 HAVE_BUILTIN_PREFETCH
 
