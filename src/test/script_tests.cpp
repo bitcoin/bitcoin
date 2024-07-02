@@ -913,16 +913,34 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     // amount (nValue) to use in the crediting tx
     UniValue tests = read_json(json_tests::script_tests);
 
+    const KeyData keys;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
         std::string strTest = test.write();
         CScriptWitness witness;
+        TaprootBuilder taprootBuilder;
         CAmount nValue = 0;
         unsigned int pos = 0;
         if (test.size() > 0 && test[pos].isArray()) {
             unsigned int i=0;
             for (i = 0; i < test[pos].size()-1; i++) {
-                witness.stack.push_back(ParseHex(test[pos][i].get_str()));
+                auto element = test[pos][i].get_str();
+                // We use #SCRIPT# to flag a non-hex script that we can read using ParseScript
+                // Taproot script must be third from the last element in witness stack
+                std::string scriptFlag = std::string("#SCRIPT#");
+                if (element.find(scriptFlag) == 0) {
+                    CScript script = ParseScript(element.substr(scriptFlag.size()));
+                    witness.stack.push_back(ToByteVector(script));
+                } else if (strcmp(element.c_str(), "#CONTROLBLOCK#") == 0) {
+                    // Taproot script control block - second from the last element in witness stack
+                    // If #CONTROLBLOCK# we auto-generate the control block
+                    taprootBuilder.Add(/*depth=*/0, witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+                    taprootBuilder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
+                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
+                    witness.stack.push_back(*(controlblocks.begin()));
+                } else {
+                    witness.stack.push_back(ParseHex(element));
+                }
             }
             nValue = AmountFromValue(test[pos][i]);
             pos++;
@@ -937,7 +955,14 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         std::string scriptSigString = test[pos++].get_str();
         CScript scriptSig = ParseScript(scriptSigString);
         std::string scriptPubKeyString = test[pos++].get_str();
-        CScript scriptPubKey = ParseScript(scriptPubKeyString);
+        CScript scriptPubKey;
+        // If requested, auto-generate the taproot output
+        if (strcmp(scriptPubKeyString.c_str(), "0x51 0x20 #TAPROOTOUTPUT#")== 0) {
+            BOOST_CHECK_MESSAGE(taprootBuilder.IsComplete(), "Failed to autogenerate Tapscript Script PubKey");
+            scriptPubKey = CScript() << OP_1 << ToByteVector(taprootBuilder.GetOutput());
+        } else {
+            scriptPubKey = ParseScript(scriptPubKeyString);
+        }
         unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
@@ -1692,6 +1717,76 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
 
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, Span(script)), tlc0);
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, Span(script)), tlc2);
+}
+
+void DoTapscriptTest(std::vector<unsigned char> witVerifyScript, std::vector<std::vector<unsigned char>> witData, const std::string& message, int scriptError)
+{
+    const KeyData keys;
+    TaprootBuilder builder;
+    builder.Add(/*depth=*/0, witVerifyScript, TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+    builder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
+
+    CScriptWitness witness;
+    witness.stack.insert(witness.stack.begin(), witData.begin(), witData.end());
+    witness.stack.push_back(witVerifyScript);
+    auto controlblock = *(builder.GetSpendData().scripts[{witVerifyScript, TAPROOT_LEAF_TAPSCRIPT}].begin());
+    witness.stack.push_back(controlblock);
+
+    uint32_t flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_OP_CAT;
+    CScript scriptPubKey = CScript() << OP_1 << ToByteVector(builder.GetOutput());
+    CScript scriptSig = CScript(); // Script sig is always size 0 and empty in tapscript
+    DoTest(scriptPubKey, scriptSig, witness, flags, message, scriptError, /*nValue=*/1);
+}
+
+BOOST_AUTO_TEST_CASE(cat_simple)
+{
+    std::vector<std::vector<unsigned char>> witData;
+    witData.emplace_back(ParseHex("aa"));
+    witData.emplace_back(ParseHex("bbbb"));
+    std::vector<unsigned char> witVerifyScript = {OP_CAT, OP_PUSHDATA1, 0x03, 0xaa, 0xbb, 0xbb, OP_EQUAL};
+    DoTapscriptTest(witVerifyScript, witData, "Simple CAT", SCRIPT_ERR_OK);
+}
+
+
+BOOST_AUTO_TEST_CASE(cat_empty_stack)
+{
+    // Ensures that OP_CAT successfully handles concatenating two empty stack elements
+    std::vector<std::vector<unsigned char>> witData;
+    witData.emplace_back();
+    witData.emplace_back();
+    std::vector<unsigned char> witVerifyScript = {OP_CAT, OP_PUSHDATA1, 0x00,OP_EQUAL};
+    DoTapscriptTest(witVerifyScript, witData, "CAT empty stack", SCRIPT_ERR_OK);
+}
+
+BOOST_AUTO_TEST_CASE(cat_dup_test)
+{
+    // CAT DUP exhaustion attacks using all element sizes from 1 to 522
+    // with CAT DUP repetitions up to 10. Ensures the correct error is thrown
+    // or not thrown, as appropriate.
+    unsigned int maxElementSize = 522;
+    unsigned int maxDupsToCheck = 10;
+
+    std::vector<std::vector<unsigned char>> witData;
+    witData.emplace_back();
+    for (unsigned int elementSize = 1; elementSize <= maxElementSize; elementSize++) {
+        std::vector<unsigned char> witVerifyScript;
+        // increase the size of stack element by one byte
+        witData.at(0).emplace_back(0x1A);
+        for (unsigned int dups = 1; dups <= maxDupsToCheck; dups++) {
+            witVerifyScript.emplace_back(OP_DUP);
+            witVerifyScript.emplace_back(OP_CAT);
+            int expectedErr = SCRIPT_ERR_OK;
+            unsigned int catedStackElementSize = witData.at(0).size()<<dups;
+            if (catedStackElementSize > MAX_SCRIPT_ELEMENT_SIZE || elementSize > MAX_SCRIPT_ELEMENT_SIZE){
+                expectedErr = SCRIPT_ERR_PUSH_SIZE;
+                break;
+            }
+            DoTapscriptTest(witVerifyScript, witData, "CAT DUP test", expectedErr);
+            // Once we hit the stack element size limit, break
+            if (expectedErr == SCRIPT_ERR_OK)
+                break;
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

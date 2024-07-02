@@ -143,6 +143,10 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // Support OP_CAT in tapscript
+    SCRIPT_VERIFY_OP_CAT = (1U << 26),
+    SCRIPT_VERIFY_DISCOURAGE_OP_CAT = (1U << 27),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
