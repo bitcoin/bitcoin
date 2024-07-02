@@ -1983,7 +1983,11 @@ bool CConnman::InactivityCheck(const CNode& node) const
     }
 
     if (!node.fSuccessfullyConnected) {
-        LogPrint(BCLog::NET, "version handshake timeout peer=%d\n", node.GetId());
+        if (node.m_transport->GetInfo().transport_type == TransportProtocolType::DETECTING) {
+            LogPrint(BCLog::NET, "V2 handshake timeout peer=%d\n", node.GetId());
+        } else {
+            LogPrint(BCLog::NET, "version handshake timeout peer=%d\n", node.GetId());
+        }
         return true;
     }
 
