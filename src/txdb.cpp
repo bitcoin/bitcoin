@@ -93,17 +93,21 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, boo
     size_t count = 0;
     size_t changed = 0;
     assert(!hashBlock.IsNull());
+    bool unfinished_replay{false};
 
     uint256 old_tip = GetBestBlock();
     if (old_tip.IsNull()) {
-        // We may be in the middle of replaying.
+        // We may be in the process of replaying.
         std::vector<uint256> old_heads = GetHeadBlocks();
         if (old_heads.size() == 2) {
             if (old_heads[0] != hashBlock) {
-                LogPrintLevel(BCLog::COINDB, BCLog::Level::Error, "The coins database detected an inconsistent state, likely due to a previous crash or shutdown. You will need to restart bitcoind with the -reindex-chainstate or -reindex configuration option.\n");
+                // We haven't reached the target of replaying yet.
+                // This happens if the replay was interrupted by the user.
+                unfinished_replay = true;
+            } else {
+                // Replaying has reached its end, flush the results.
+                old_tip = old_heads[1];
             }
-            assert(old_heads[0] == hashBlock);
-            old_tip = old_heads[1];
         }
     }
 
@@ -111,8 +115,10 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, boo
     // transition from old_tip to hashBlock.
     // A vector is used for future extensibility, as we may want to support
     // interrupting after partial writes from multiple independent reorgs.
-    batch.Erase(DB_BEST_BLOCK);
-    batch.Write(DB_HEAD_BLOCKS, Vector(hashBlock, old_tip));
+    if (!unfinished_replay) {
+        batch.Erase(DB_BEST_BLOCK);
+        batch.Write(DB_HEAD_BLOCKS, Vector(hashBlock, old_tip));
+    }
 
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
@@ -139,9 +145,19 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, boo
         }
     }
 
-    // In the last batch, mark the database as consistent with hashBlock again.
-    batch.Erase(DB_HEAD_BLOCKS);
-    batch.Write(DB_BEST_BLOCK, hashBlock);
+    if (unfinished_replay) {
+        // This is called when, during ReplayBlocks, an interrupt is received.
+        // Update the replay origin (saved in second place in DB_HEAD_BLOCKS)
+        // so that the replay can pick up from here after restart.
+        // The replay target remains unchanged.
+        std::vector<uint256> old_heads = GetHeadBlocks();
+        assert(old_heads.size() == 2);
+        batch.Write(DB_HEAD_BLOCKS, Vector(old_heads[0], hashBlock));
+    } else {
+        // In the last batch, mark the database as consistent with hashBlock again.
+        batch.Erase(DB_HEAD_BLOCKS);
+        batch.Write(DB_BEST_BLOCK, hashBlock);
+    }
 
     LogPrint(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));
     bool ret = m_db->WriteBatch(batch);
