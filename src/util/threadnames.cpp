@@ -29,7 +29,7 @@ static void SetThreadName(const char* name)
     ::prctl(PR_SET_NAME, name, 0, 0, 0);
 #elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
     pthread_set_name_np(pthread_self(), name);
-#elif defined(MAC_OSX)
+#elif defined(__APPLE__)
     pthread_setname_np(name);
 #else
     // Prevent warnings for unused parameters...
