@@ -1454,4 +1454,402 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
 
     return res;
 }
+
+// We use 2 outputs for deniablization transactions, as that's a common output count for spend transactions (which we're trying to mimic)
+// Furthermore, more outputs would rapidly increase the cost per cycle, thus limiting the number of cycles for a given budget
+// At any rate, we use the below constant in case we want to play with other output counts in the future.
+constexpr int NUM_DENIABILIZATION_OUTPUTS = 2;
+
+static unsigned int CalculateDeniabilizationTxSize(const CScript& script, CAmount value, unsigned int numTxIn)
+{
+    // Calculation based on the comments and code in GetDustThreshold and CreateTransactionInternal
+    unsigned int txOutSize = (unsigned int)GetSerializeSize(CTxOut(value, script));
+
+    const size_t txOutCount = NUM_DENIABILIZATION_OUTPUTS;
+    unsigned int txSize = 10 + GetSizeOfCompactSize(txOutCount); // bytes for output count
+    txSize += txOutSize * txOutCount;
+
+    int witnessversion = 0;
+    std::vector<unsigned char> witnessprogram;
+    if (script.IsWitnessProgram(witnessversion, witnessprogram)) {
+        txSize += (unsigned int)roundf(numTxIn * (41 + 107 / float(WITNESS_SCALE_FACTOR)));
+    } else {
+        txSize += numTxIn * (41 + 107);
+    }
+    return txSize;
+}
+
+float CalculateDeniabilizationProbability(unsigned int deniabilization_cycles)
+{
+    // 100%, 50%, 25%, 13%, 6%, 3%, 2%, 1%
+    return powf(0.5f, deniabilization_cycles);
+}
+
+bool IsDeniabilizationWorthwhile(CAmount total_value, CAmount fee_estimate)
+{
+    constexpr CAmount value_to_fee_ratio = 10;
+    return total_value > fee_estimate * value_to_fee_ratio;
+}
+
+CCoinControl SetupDeniabilizationCoinControl(unsigned int confirm_target)
+{
+    CCoinControl coin_control;
+    coin_control.m_avoid_address_reuse = true;
+    coin_control.m_avoid_partial_spends = true;
+    coin_control.m_allow_other_inputs = false;
+    coin_control.m_signal_bip125_rbf = true;
+    coin_control.m_confirm_target = confirm_target;
+    // we'll automatically bump the fee if economical ends up not confirming by the next deniabilization cycle
+    coin_control.m_fee_mode = FeeEstimateMode::ECONOMICAL;
+    return coin_control;
+}
+
+CFeeRate CalculateDeniabilizationFeeRate(const CWallet& wallet, unsigned int confirm_target)
+{
+    CCoinControl coin_control = SetupDeniabilizationCoinControl(confirm_target);
+
+    CFeeRate requiredFeeRate = GetRequiredFeeRate(wallet);
+    FeeCalculation fee_calc;
+    CFeeRate minFeeRate = GetMinimumFeeRate(wallet, coin_control, &fee_calc);
+    if (fee_calc.reason == FeeReason::FALLBACK || requiredFeeRate > minFeeRate)
+        return requiredFeeRate;
+    return minFeeRate;
+}
+
+static CAmount CalculateDeniabilizationTxFee(const CScript& shared_script, CAmount total_value, unsigned int num_utxos, const CFeeRate& fee_rate)
+{
+    Assert(num_utxos > 0);
+    unsigned int deniabilization_tx_size = CalculateDeniabilizationTxSize(shared_script, total_value, num_utxos);
+    return fee_rate.GetFee(deniabilization_tx_size);
+}
+
+CAmount CalculateDeniabilizationFeeEstimate(const CScript& shared_script, CAmount total_value, unsigned int num_utxos, unsigned int deniabilization_cycles, const CFeeRate& fee_rate)
+{
+    float deniabilizationProbability = CalculateDeniabilizationProbability(deniabilization_cycles);
+    // convert to integer percent to truncate and check for zero probability
+    unsigned int deniabilizationProbabilityPercent = deniabilizationProbability * 100;
+    if (deniabilizationProbabilityPercent == 0) {
+        return 0;
+    }
+
+    // this cycle will use all the UTXOs, while following cycles will have just one UTXO
+    CAmount deniabilizationFee = CalculateDeniabilizationTxFee(shared_script, total_value, num_utxos, fee_rate);
+
+    // calculate the fees from future deniabilization cycles
+    CAmount futureDeniabilizationFee = CalculateDeniabilizationFeeEstimate(shared_script, total_value / NUM_DENIABILIZATION_OUTPUTS, 1, deniabilization_cycles + 1, fee_rate) * NUM_DENIABILIZATION_OUTPUTS;
+
+    // if it's worthwhile to do future deniabilizations then add them to this cycle estimate
+    if (IsDeniabilizationWorthwhile(total_value, deniabilizationFee + futureDeniabilizationFee)) {
+        deniabilizationFee += futureDeniabilizationFee;
+    }
+    return deniabilizationFee;
+}
+
+std::pair<unsigned int, bool> CalculateDeniabilizationCycles(CWallet& wallet, const COutPoint& outpoint)
+{
+    LOCK(wallet.cs_wallet);
+    auto walletTx = wallet.GetWalletTx(outpoint.hash);
+    if (!walletTx) {
+        return std::make_pair(0, false);
+    }
+    auto tx = walletTx->tx;
+
+    if (tx->IsCoinBase()) {
+        // this is a block reward tx, so we tag it as such
+        return std::make_pair(0, true);
+    }
+
+    // an deniabilized coin is one we sent to ourselves
+    // all txIn should belong to our wallet
+    if (tx->vin.empty()) {
+        return std::make_pair(0, false);
+    }
+    for (const auto& txIn : tx->vin) {
+        if (InputIsMine(wallet, txIn) == ISMINE_NO) {
+            return std::make_pair(0, false);
+        }
+    }
+
+    // all txOut should belong to our wallet
+    Assert(outpoint.n < tx->vout.size());
+    unsigned int n = 0;
+    for (const auto& txOut : tx->vout) {
+        if (wallet.IsMine(txOut) == ISMINE_NO) {
+            Assert(n != outpoint.n);
+            return std::make_pair(0, false);
+        }
+        n++;
+    }
+
+    unsigned int uniqueTxOutCount = 0;
+    for (const auto& txOut : tx->vout) {
+        // check if it's a valid destination
+        CTxDestination txOutDestination;
+        ExtractDestination(txOut.scriptPubKey, txOutDestination);
+        if (std::get_if<CNoDestination>(&txOutDestination)) {
+            continue;
+        }
+
+        // don't count outputs that match any input addresses (eg it's change output)
+        bool matchesInput = false;
+        for (const auto& txIn : tx->vin) {
+            auto prevWalletTx = wallet.GetWalletTx(txIn.prevout.hash);
+            if (prevWalletTx && prevWalletTx->tx->vout[txIn.prevout.n].scriptPubKey == txOut.scriptPubKey) {
+                matchesInput = true;
+                break;
+            }
+        }
+        if (matchesInput) {
+            continue;
+        }
+
+        uniqueTxOutCount++;
+    }
+
+    // we consider two or more unique outputs an "deniabilization" of the coin
+    unsigned int deniabilizationCycles = uniqueTxOutCount >= 2 ? 1 : 0;
+
+    // all txIn and txOut are from our wallet
+    // however if we have multiple txIn this was either an initial deniabilization of multiple UTXOs or the user manually merged deniabilized UTXOs
+    // in either case we don't need to recurse into parent transactions and we can return the calculated cycles
+    if (tx->vin.size() > 1) {
+        return std::make_pair(deniabilizationCycles, false);
+    }
+
+    const auto& txIn = tx->vin[0];
+    // now recursively calculate the deniabilization cycles of the input
+    auto inputStats = CalculateDeniabilizationCycles(wallet, txIn.prevout);
+    return std::make_pair(inputStats.first + deniabilizationCycles, inputStats.second);
+};
+
+void SpoofTransactionFingerprint(CMutableTransaction& tx, FastRandomContext& rng_fast, const std::optional<bool>& signal_bip125_rbf)
+{
+    // Transaction "fingerprint" spoofing
+    struct Fingerprint {
+        bool standardVersion = false;
+        bool antiFeeSniping = false;
+        bool bip69Ordering = false;
+        bool noRBF = false;
+    };
+
+    // wallet fingerprints based on info from variuous sources, see:
+    // https://github.com/achow101/wallet-fingerprinting/blob/main/fingerprints.md
+    // https://gitlab.com/1440000bytes/goldfish
+    // https://ishaana.com/blog/wallet_fingerprinting/
+    // clang-format off
+    static const Fingerprint s_walletFingerprints[] = {
+        //  std-ver,    anti-sniping,   bip69,      no-rbf
+        {   true,       true,           false,      false   },     // Core
+        {   true,       true,           true,       false   },     // Electrum
+        {   true,       false,          false,      false   },     // Blue
+        {   false,      false,          true,       false   },     // Trezor
+        {   false,      false,          false,      false   },     // Trust, Ledger
+        {   true,       false,          false,      true    },     // Coinbase/Exodus
+    };
+    // clang-format on
+    constexpr size_t NUM_WALLET_FINGERPRINTS = sizeof(s_walletFingerprints) / sizeof(s_walletFingerprints[0]);
+
+    auto fingerprintIndex = rng_fast.randrange(NUM_WALLET_FINGERPRINTS);
+    const Fingerprint& fingerprint = s_walletFingerprints[fingerprintIndex];
+
+    if (fingerprint.standardVersion) {
+        Assert(tx.nVersion == TX_MAX_STANDARD_VERSION);
+    } else {
+        tx.nVersion = 1;
+    }
+
+    if (fingerprint.antiFeeSniping) {
+        // By default "Core" implements anti-fee-sniping (nLockTime == block_height - rng_fast.randrange(100))
+    } else {
+        // no anti-fee-sniping
+        tx.nLockTime = 0;
+    }
+
+    if (fingerprint.bip69Ordering) {
+        // Sort the inputs and outputs in accordance with BIP69
+        auto sortInputsBip69 = [](const CTxIn& a, const CTxIn& b) {
+            // COutPoint operator< does sort in accordance with Bip69, so just use that.
+            return a.prevout < b.prevout;
+        };
+        std::sort(tx.vin.begin(), tx.vin.end(), sortInputsBip69);
+
+        auto sortOutputsBip69 = [](const CTxOut& a, const CTxOut& b) {
+            if (a.nValue == b.nValue) {
+                // Note: prevector operator< does NOT properly order scriptPubKeys lexicographically. So instead we
+                // fall-back to using std::memcmp.
+                const auto& spkA = a.scriptPubKey;
+                const auto& spkB = b.scriptPubKey;
+                const int cmp = std::memcmp(spkA.data(), spkB.data(), std::min(spkA.size(), spkB.size()));
+                return cmp < 0 || (cmp == 0 && spkA.size() < spkB.size());
+            }
+            return a.nValue < b.nValue;
+        };
+        std::sort(tx.vout.begin(), tx.vout.end(), sortOutputsBip69);
+    } else {
+        // By default "Core" doesn't perform BIP69 ordering
+    }
+
+    if (!signal_bip125_rbf.value_or(false) && fingerprint.noRBF) {
+        for (auto& in : tx.vin) {
+            in.nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
+        }
+    } else {
+        // By default "Core" respects the opt-in RBF flag
+        for (const auto& in : tx.vin) {
+            Assert(in.nSequence == CTxIn::MAX_SEQUENCE_NONFINAL || in.nSequence == MAX_BIP125_RBF_SEQUENCE);
+        }
+    }
+}
+
+util::Result<CreatedTransactionResult> CreateDeniabilizationTransaction(CWallet& wallet, const std::set<COutPoint>& inputs, const std::optional<OutputType>& opt_output_type, unsigned int confirm_target, unsigned int deniabilization_cycles, bool sign, bool& insufficient_amount)
+{
+    if (inputs.empty()) {
+        return util::Error{_("Inputs must not be empty")};
+    }
+
+    CCoinControl coin_control = SetupDeniabilizationCoinControl(confirm_target);
+    // TODO: Do we need to limit number of inputs to OUTPUT_GROUP_MAX_ENTRIES
+    for (const auto& input : inputs) {
+        coin_control.Select(input);
+    }
+    Assert(coin_control.HasSelected());
+    CFeeRate deniabilization_fee_rate = CalculateDeniabilizationFeeRate(wallet, confirm_target);
+    coin_control.m_feerate = deniabilization_fee_rate;
+
+    LOCK(wallet.cs_wallet);
+
+    FastRandomContext rng_fast;
+    CoinSelectionParams coin_selection_params{rng_fast};
+    coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
+    coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
+    coin_selection_params.m_effective_feerate = deniabilization_fee_rate;
+    coin_selection_params.m_long_term_feerate = wallet.m_consolidate_feerate;
+    coin_selection_params.m_subtract_fee_outputs = true;
+
+    auto res_fetch_inputs = FetchSelectedInputs(wallet, coin_control, coin_selection_params);
+    if (!res_fetch_inputs) {
+        return util::Error{util::ErrorString(res_fetch_inputs)};
+    }
+    PreSelectedInputs preset_inputs = *res_fetch_inputs;
+    CAmount total_amount = preset_inputs.total_amount;
+
+    // validate that all UTXOs share the same address
+    std::optional<CScript> op_shared_script;
+    for (const auto& coin : preset_inputs.coins) {
+        if (!op_shared_script) {
+            op_shared_script = coin->txout.scriptPubKey;
+        }
+        if (!op_shared_script || !(*op_shared_script == coin->txout.scriptPubKey)) {
+            return util::Error{_("Input addresses must all match.")};
+        }
+    }
+    Assert(op_shared_script);
+    CScript shared_script = *op_shared_script;
+
+    CFeeRate discard_feerate = GetDiscardRate(wallet);
+    CAmount dust_threshold = GetDustThreshold(CTxOut(total_amount, shared_script), discard_feerate);
+
+    // deniabilize the UTXOs by splitting the value randomly
+    // find a split that leaves enough amount post split to finish the deniabilization process in each new UTXO
+    CAmount min_post_split_amount = CalculateDeniabilizationFeeEstimate(shared_script, total_amount / NUM_DENIABILIZATION_OUTPUTS, 1, deniabilization_cycles + 1, deniabilization_fee_rate) + dust_threshold;
+    CAmount estimated_tx_fee = CalculateDeniabilizationTxFee(shared_script, total_amount, preset_inputs.coins.size(), deniabilization_fee_rate);
+
+    CAmount total_random_range = total_amount - min_post_split_amount * NUM_DENIABILIZATION_OUTPUTS - estimated_tx_fee;
+    if (total_random_range < 0) {
+        insufficient_amount = true;
+        return util::Error{strprintf(_("Insufficient amount (%d) for a deniabilization transaction, min amount (%d), tx fee (%d)."), total_amount, min_post_split_amount, estimated_tx_fee)};
+    }
+
+    OutputType output_type = wallet.m_default_address_type;
+    if (opt_output_type) {
+        output_type = *opt_output_type;
+    } else {
+        // if no output type was specified, try to infer it from the source inputs
+        CTxDestination shared_destination = CNoDestination();
+        if (ExtractDestination(shared_script, shared_destination)) {
+            std::optional<OutputType> opt_shared_output_type = OutputTypeFromDestination(shared_destination);
+            if (opt_shared_output_type) {
+                output_type = *opt_shared_output_type;
+            }
+        }
+    }
+
+    const int num_recipients = NUM_DENIABILIZATION_OUTPUTS;
+    std::vector<CRecipient> recipients(num_recipients);
+    std::list<ReserveDestination> reservedests;
+    constexpr bool reservdest_internal = false; // TODO: Should this be "true" or "false". What does "internal" mean?
+    for (int recipient_index = 0; recipient_index < num_recipients; recipient_index++) {
+        bool lastRecipient = recipient_index == (num_recipients - 1);
+        if (!lastRecipient) {
+            // all recipients except for the last one,
+            // calculate a random range based on the remaining total random range and the number of remaining recipients
+            // then generate a random amount within that range
+            CAmount random_range = total_random_range / (num_recipients - recipient_index - 1);
+            CAmount random_amount = 0;
+            if (random_range > 0) {
+                random_amount = GetRand<CAmount>(random_range);
+                Assert(total_random_range >= random_amount);
+                total_random_range -= random_amount;
+            }
+            recipients[recipient_index].nAmount = min_post_split_amount + random_amount;
+        } else {
+            // the last recipient takes any leftover random amount and the estimated fee
+            recipients[recipient_index].nAmount = min_post_split_amount + total_random_range + estimated_tx_fee;
+        }
+
+        // the last recipient pays the tx fees
+        recipients[recipient_index].fSubtractFeeFromAmount = lastRecipient;
+
+        auto& reservedest = reservedests.emplace_back(&wallet, output_type);
+        CTxDestination dest;
+        auto op_dest = reservedest.GetReservedDestination(reservdest_internal);
+        if (!op_dest) {
+            return util::Error{_("Failed to reserve a new address.") + Untranslated(" ") + util::ErrorString(op_dest)};
+        }
+        dest = *op_dest;
+        recipients[recipient_index].dest = dest;
+        if (lastRecipient) {
+            // we don't expect to get change, but we provide the address to prevent CreateTransactionInternal from generating a change address
+            coin_control.destChange = dest;
+        }
+    }
+
+    CAmount recipient_amount = std::accumulate(recipients.cbegin(), recipients.cend(), CAmount{0},
+                                               [](CAmount sum, const CRecipient& recipient) {
+                                                   return sum + recipient.nAmount;
+                                               });
+    Assert(total_amount == recipient_amount);
+
+    auto res = CreateTransactionInternal(wallet, recipients, std::nullopt, coin_control, /*sign=*/false);
+    if (!res) {
+        TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), false, 0, 0);
+        return res;
+    }
+
+    // make sure we didn't get a change position assigned (we don't expect to use the channge address)
+    Assert(!res->change_pos.has_value());
+    // the transaction was created successfully
+    TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), true, res->fee, 0);
+
+    // spoof the transaction fingerprint to increase the transaction privacy
+    {
+        CMutableTransaction spoofedTx(*res->tx);
+        SpoofTransactionFingerprint(spoofedTx, rng_fast, coin_control.m_signal_bip125_rbf);
+        if (sign && !wallet.SignTransaction(spoofedTx)) {
+            return util::Error{_("Signing the deniabilization transaction failed")};
+        }
+        // store the spoofed transaction in the result
+        res->tx = MakeTransactionRef(std::move(spoofedTx));
+    }
+
+    // add to the address book and commit the reserved destinations
+    for (auto& reservedest : reservedests) {
+        auto op_dest = reservedest.GetReservedDestination(reservdest_internal);
+        Assert(op_dest);
+        wallet.SetAddressBook(*op_dest, "deniability", AddressPurpose::RECEIVE);
+        reservedest.KeepDestination();
+    }
+    return res;
+}
+
 } // namespace wallet

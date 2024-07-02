@@ -17,6 +17,7 @@
 #include <rpc/server.h>
 #include <script/solver.h>
 #include <test/util/logging.h>
+#include <test/util/mining.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
@@ -24,6 +25,7 @@
 #include <validationinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/feebumper.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
@@ -985,6 +987,130 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
     BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx)),
                           std::runtime_error,
                           HasReason("DB error adding transaction to wallet, write failed"));
+}
+
+BOOST_FIXTURE_TEST_CASE(deniability_tests, TestChain100Setup)
+{
+    CKey walletKey;
+    // Make a new wallet key
+    walletKey.MakeNewKey(true);
+    // Mine a block with the wallet key
+    MineBlock(m_node, GetScriptForRawPubKey(walletKey.GetPubKey()));
+
+    // Mine 100 blocks to mature the wallet coinbase tx
+    mineBlocks(COINBASE_MATURITY);
+
+    // Make a wallet with the wallet key
+    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), walletKey);
+
+    std::map<CTxDestination, std::vector<COutput>> list;
+    {
+        LOCK(wallet->cs_wallet);
+        list = ListCoins(*wallet);
+    }
+    // We expect a single coinbase (mining reward) transaction
+    BOOST_CHECK_EQUAL(list.size(), 1u);
+    const auto& coin = *list.begin();
+    CTxDestination destination = coin.first;
+    std::optional<OutputType> opt_output_type = OutputTypeFromDestination(destination);
+    const auto& outputs = coin.second;
+    BOOST_CHECK_EQUAL(outputs.size(), 1u);
+    const auto& output = outputs.front();
+    CAmount initial_amount = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet).GetTotalAmount());
+
+    // Verify the deniabilization cycle calculation detects the coinbase transactions correctly
+    auto cycles_res = CalculateDeniabilizationCycles(*wallet, output.outpoint);
+    unsigned int deniabilization_cycles = cycles_res.first;
+    bool from_coinbase_tx = cycles_res.second;
+    BOOST_CHECK_EQUAL(deniabilization_cycles, 0u);
+    BOOST_CHECK_EQUAL(from_coinbase_tx, true);
+
+    // Prepare the deniabilize transaction
+    std::set<COutPoint> inputs;
+    inputs.emplace(output.outpoint);
+    const unsigned int confirm_target = 6;
+    bool sign = !wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+    CTransactionRef tx;
+    CAmount tx_fee = 0;
+    {
+        bool insufficient_amount = false;
+        auto res = CreateDeniabilizationTransaction(*wallet, inputs, opt_output_type, confirm_target, deniabilization_cycles, sign, insufficient_amount);
+        BOOST_CHECK(res);
+        tx = res->tx;
+        tx_fee = res->fee;
+    }
+    // Commit the deniabilization transaction
+    {
+        LOCK(wallet->cs_wallet);
+        wallet->SetBroadcastTransactions(true);
+        wallet->CommitTransaction(tx, {}, {});
+    }
+
+    // Get the resulting coins
+    {
+        LOCK(wallet->cs_wallet);
+        list = ListCoins(*wallet);
+    }
+    // We expect to have two unique addresses, with one output each
+    BOOST_CHECK_EQUAL(list.size(), 2U);
+    for (const auto& pair : list) {
+        BOOST_CHECK_EQUAL(pair.second.size(), 1u);
+        const auto& output = pair.second.front();
+        // Check the deniabilization count is 1
+        auto cycles_res = CalculateDeniabilizationCycles(*wallet, output.outpoint);
+        unsigned int deniabilization_cycles = cycles_res.first;
+        bool from_coinbase_tx = cycles_res.second;
+        BOOST_CHECK_EQUAL(deniabilization_cycles, 1u);
+        BOOST_CHECK_EQUAL(from_coinbase_tx, true);
+    }
+
+    // Check the resulting amount matches the initial amount (minus the tx fee)
+    CAmount post_tx_amount = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet).GetTotalAmount());
+    BOOST_CHECK_EQUAL(initial_amount, post_tx_amount + tx_fee);
+
+    // Bump the min fee to test fee bumping
+    wallet->m_min_fee = CFeeRate(10000);
+
+    // Prepare a fee bump transaction
+    CTransactionRef new_tx;
+    CAmount old_fee = 0;
+    CAmount new_fee = 0;
+    {
+        bilingual_str error;
+        auto res = feebumper::CreateRateBumpDeniabilizationTransaction(*wallet, tx->GetHash(), confirm_target, sign, error, old_fee, new_fee, new_tx);
+        BOOST_CHECK_EQUAL(res, feebumper::Result::OK);
+    }
+    // Verify the calculated old fee matches what we paid
+    BOOST_CHECK_EQUAL(tx_fee, old_fee);
+    // Verify the new fee is larger than the old fee
+    BOOST_CHECK_GT(new_fee, old_fee);
+
+    // Commit the fee bump transaction
+    std::vector<bilingual_str> errors;
+    uint256 new_hash;
+    auto commit_res = feebumper::CommitTransaction(*wallet, tx->GetHash(), CMutableTransaction(*new_tx), errors, new_hash);
+    BOOST_CHECK_EQUAL(commit_res, feebumper::Result::OK);
+
+    // mine a block to confirm the transactions, so we can get the available balance
+    MineBlock(m_node, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    {
+        LOCK(wallet->cs_wallet);
+        LOCK(Assert(m_node.chainman)->GetMutex());
+        wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
+    }
+    // Sync the wallet
+    {
+        WalletRescanReserver reserver(*wallet);
+        reserver.reserve();
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(Params().GetConsensus().hashGenesisBlock, /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/false);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(result.last_scanned_block, WITH_LOCK(m_node.chainman->GetMutex(), return m_node.chainman->ActiveChain().Tip()->GetBlockHash()));
+        BOOST_CHECK(result.last_failed_block.IsNull());
+    }
+
+    // Check the resulting amount matches the initial amount (minus the new tx fee)
+    CAmount post_bump_amount = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet).GetTotalAmount());
+    BOOST_CHECK_EQUAL(initial_amount, post_bump_amount + new_fee);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

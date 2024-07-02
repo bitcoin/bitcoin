@@ -1768,4 +1768,129 @@ RPCHelpMan walletcreatefundedpsbt()
 },
     };
 }
+
+// clang-format off
+RPCHelpMan walletdeniabilizecoin()
+{
+    return RPCHelpMan{"walletdeniabilizecoin",
+        "\nDeniabilize one or more UTXOs that share the same address.\n",
+        {
+            {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Specify inputs (must share the same address). A JSON array of JSON objects",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                    {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                },
+            },
+            {"output_type", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Optional output type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\" and \"bech32m\". If not specified the output type is inferred from the inputs."},
+            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
+            {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns the serialized transaction without broadcasting or adding it to the wallet"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "txid", "The deniabilization transaction id."},
+                    {RPCResult::Type::STR_AMOUNT, "fee", "The fee used in the deniabilization transaction."},
+                    {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "If add_to_wallet is false, the hex-encoded raw transaction with signature(s)"},
+                }
+        },
+        RPCExamples{
+            "\nDeniabilize a single UTXO\n"
+            + HelpExampleCli("walletdeniabilizecoin", "'[{\"txid\":\"4c14d20709daef476854fe7ef75bdfcfd5a7636a431b4622ec9481f297e12e8c\", \"vout\": 0}]'") +
+            "\nDeniabilize a single UTXO using a specific output type\n"
+            + HelpExampleCli("walletdeniabilizecoin", "'[{\"txid\":\"4c14d20709daef476854fe7ef75bdfcfd5a7636a431b4622ec9481f297e12e8c\", \"vout\": 0}]' bech32") +
+            "\nDeniabilize a single UTXO with an explicit confirmation target\n"
+            + HelpExampleCli("walletdeniabilizecoin", "'[{\"txid\":\"4c14d20709daef476854fe7ef75bdfcfd5a7636a431b4622ec9481f297e12e8c\", \"vout\": 0}]' null 144") +
+            "\nDeniabilize a single UTXO without broadcasting the transaction\n"
+            + HelpExampleCli("walletdeniabilizecoin", "'[{\"txid\":\"4c14d20709daef476854fe7ef75bdfcfd5a7636a431b4622ec9481f297e12e8c\", \"vout\": 0}]' null 6 false")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+
+            std::optional<CScript> shared_script;
+            std::set<COutPoint> inputs;
+            unsigned int deniabilization_cycles = UINT_MAX;
+            for (const UniValue& input : request.params[0].get_array().getValues()) {
+                Txid txid = Txid::FromUint256(ParseHashO(input, "txid"));
+
+                const UniValue& vout_v = input.find_value("vout");
+                if (!vout_v.isNum()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
+                }
+                int nOutput = vout_v.getInt<int>();
+                if (nOutput < 0) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
+                }
+
+                COutPoint outpoint(txid, nOutput);
+                LOCK(pwallet->cs_wallet);
+                auto walletTx = pwallet->GetWalletTx(outpoint.hash);
+                if (!walletTx) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, txid not found in wallet.");
+                }
+                if (outpoint.n >= walletTx->tx->vout.size()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout is out of range");
+                }
+                const auto& output = walletTx->tx->vout[outpoint.n];
+
+                isminetype mine = pwallet->IsMine(output);
+                if (mine == ISMINE_NO) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, transaction's output doesn't belong to this wallet.");
+                }
+
+                bool spendable = (mine & ISMINE_SPENDABLE) != ISMINE_NO;
+                if (spendable) {
+                    auto script = FindNonChangeParentOutput(*pwallet, outpoint).scriptPubKey;
+                    if (!shared_script) {
+                        shared_script = script;
+                    }
+                    else if (!(*shared_script == script)) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, inputs must share the same address");
+                    }
+                } else {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, inputs must be spendable and have a valid address");
+                }
+
+                inputs.emplace(outpoint);
+                auto cycles_res = CalculateDeniabilizationCycles(*pwallet, outpoint);
+                deniabilization_cycles = std::min(deniabilization_cycles, cycles_res.first);
+            }
+
+            if (inputs.empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, inputs must not be empty");
+            }
+
+            std::optional<OutputType> opt_output_type = !request.params[1].isNull() ? ParseOutputType(request.params[1].get_str()) : std::nullopt;
+            unsigned int confirm_target = !request.params[2].isNull() ? request.params[2].getInt<unsigned int>() : pwallet->m_confirm_target;
+            const bool add_to_wallet = !request.params[3].isNull() ? request.params[3].get_bool() : true;
+
+            CTransactionRef tx;
+            CAmount tx_fee = 0;
+            {
+                bool sign = !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+                bool insufficient_amount = false;
+                auto res = CreateDeniabilizationTransaction(*pwallet, inputs, opt_output_type, confirm_target, deniabilization_cycles, sign, insufficient_amount);
+                if (!res) {
+                    throw JSONRPCError(RPC_TRANSACTION_ERROR, ErrorString(res).original);
+                }
+                tx = res->tx;
+                tx_fee = res->fee;
+            }
+
+            UniValue result(UniValue::VOBJ);
+            result.pushKV("txid", tx->GetHash().GetHex());
+            if (add_to_wallet) {
+                pwallet->CommitTransaction(tx, {}, /*orderForm=*/{});
+            } else {
+                std::string hex{EncodeHexTx(*tx)};
+                result.pushKV("hex", hex);
+            }
+            result.pushKV("fee", ValueFromAmount(tx_fee));
+            return result;
+        }
+    };
+}
+// clang-format on
+
 } // namespace wallet

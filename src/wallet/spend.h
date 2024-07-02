@@ -225,6 +225,50 @@ util::Result<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const 
  * calling CreateTransaction();
  */
 util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const std::vector<CRecipient>& recipients, std::optional<unsigned int> change_pos, bool lockUnspents, CCoinControl);
+
+/**
+ * Calculate the probability for a deniabilization transaction given the number of deniabilization cycles already performed
+ */
+float CalculateDeniabilizationProbability(unsigned int deniabilization_cycles);
+
+/**
+ * Determine if it's worth performing deniabilization given a coin amount and fee estimate (see CalculateDeniabilizationFeeEstimate)
+ */
+bool IsDeniabilizationWorthwhile(CAmount total_value, CAmount fee_estimate);
+
+/**
+ * Setup a coin control to be used in deniabilization transactions
+ */
+CCoinControl SetupDeniabilizationCoinControl(unsigned int confirm_target);
+
+/**
+ * Estimate the total deniabilization transaction fees for a given set of UTXOs that share an input destination
+ */
+CAmount CalculateDeniabilizationFeeEstimate(const CScript& shared_script, CAmount total_value, unsigned int num_utxos, unsigned int deniabilization_cycles, const CFeeRate& fee_rate);
+
+/**
+ * Calculate the fee rate for a deniabilization transaction
+ */
+CFeeRate CalculateDeniabilizationFeeRate(const CWallet& wallet, unsigned int confirm_target);
+
+/**
+ * Calculate how many deniabilization cycles have been performed for the given UTXO
+ * Result.first is the deniabilization cycle count
+ * Result.second indicates if the transaction chain is from a coinbase transaction (block reward)
+ */
+std::pair<unsigned int, bool> CalculateDeniabilizationCycles(CWallet& wallet, const COutPoint& outpoint);
+
+/**
+ * Spoof the transaction fingerprint to increase transaction privacy
+ */
+void SpoofTransactionFingerprint(CMutableTransaction& tx, FastRandomContext& rng_fast, const std::optional<bool>& signal_bip125_rbf);
+
+/**
+ * Create a deniabilization transaction with the provided set of inputs (must share the same destination)
+ * confirm_target is the confirmation target for the deniabilization transaction
+ * deniabilization_cycles is the number of deniabilization cycles these inputs have already had
+ */
+util::Result<CreatedTransactionResult> CreateDeniabilizationTransaction(CWallet& wallet, const std::set<COutPoint>& inputs, const std::optional<OutputType>& opt_output_type, unsigned int confirm_target, unsigned int deniabilization_cycles, bool sign, bool& insufficient_amount);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_SPEND_H
