@@ -1,6 +1,7 @@
 #include <sv2/template_provider.h>
 
 #include <base58.h>
+#include <consensus/merkle.h>
 #include <crypto/hex_base.h>
 #include <common/args.h>
 #include <logging.h>
@@ -173,6 +174,31 @@ void Sv2TemplateProvider::RequestTransactionData(Sv2Client& client, node::Sv2Req
                 msg.m_template_id, client.m_id);
         client.m_send_messages.emplace_back(request_tx_data_error);
     }
+}
+
+void Sv2TemplateProvider::SubmitSolution(node::Sv2SubmitSolutionMsg solution)
+{
+        LogPrintLevel(BCLog::SV2, BCLog::Level::Trace, "version=%d, timestamp=%d, nonce=%d\n",
+            solution.m_version,
+            solution.m_header_timestamp,
+            solution.m_header_nonce
+        );
+
+        std::unique_ptr<BlockTemplate> block_template;
+        {
+            // We can't hold this lock until submitSolution() because it's
+            // possible that the new block arrives via the p2p network at the
+            // same time. That leads to a deadlock in g_best_block_mutex.
+            LOCK(m_tp_mutex);
+            auto cached_block_template = m_block_template_cache.find(solution.m_template_id);
+            if (cached_block_template == m_block_template_cache.end()) {
+                LogPrintLevel(BCLog::SV2, BCLog::Level::Debug, "Template with id=%lu is no longer in cache\n",
+                solution.m_template_id);
+            }
+            block_template = std::move(cached_block_template->second);
+        }
+
+        block_template->submitSolution(solution.m_version, solution.m_header_timestamp, solution.m_header_nonce, solution.m_coinbase_tx);
 }
 
 Sv2TemplateProvider::NewWorkSet Sv2TemplateProvider::BuildNewWorkSet(bool future_template, unsigned int coinbase_output_max_additional_size)

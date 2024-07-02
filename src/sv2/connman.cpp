@@ -344,6 +344,25 @@ void Sv2Connman::ProcessSv2Message(const Sv2NetMsg& sv2_net_msg, Sv2Client& clie
 
         break;
     }
+    case Sv2MsgType::SUBMIT_SOLUTION: {
+        if (!client.m_setup_connection_confirmed && !client.m_coinbase_output_data_size_recv) {
+            client.m_disconnect_flag = true;
+            return;
+        }
+
+        node::Sv2SubmitSolutionMsg submit_solution;
+        try {
+            ss >> submit_solution;
+        } catch (const std::exception& e) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error, "Received invalid SubmitSolution message from client id=%zu: %e\n",
+                          client.m_id, e.what());
+            return;
+        }
+
+        m_msgproc->SubmitSolution(submit_solution);
+
+        break;
+    }
     case Sv2MsgType::REQUEST_TRANSACTION_DATA:
     {
         node::Sv2RequestTransactionDataMsg request_tx_data;
