@@ -38,11 +38,11 @@ The following rules are enforced for all packages:
 
 * Only limited package replacements are currently considered. (#28984)
 
-   - All direct conflicts must signal replacement (or have `-mempoolfullrbf=1` set).
+   - All direct conflicts must signal replacement (or the node must have `-mempoolfullrbf=1` set).
 
    - Packages are 1-parent-1-child, with no in-mempool ancestors of the package.
 
-   - All conflicting clusters(connected components of mempool transactions) must be clusters of up to size 2.
+   - All conflicting clusters (connected components of mempool transactions) must be clusters of up to size 2.
 
    - No more than MAX_REPLACEMENT_CANDIDATES transactions can be replaced, analogous to
      regular [replacement rule](./mempool-replacements.md) 5).
@@ -56,7 +56,7 @@ The following rules are enforced for all packages:
 
    - *Rationale*: Basic support for package RBF can be used by wallets
      by making chains of no longer than two, then directly conflicting
-     those chains when needed. Combined with V3 transactions this can
+     those chains when needed. Combined with TRUC transactions this can
      result in more robust fee bumping. More general package RBF may be
      enabled in the future.
 
