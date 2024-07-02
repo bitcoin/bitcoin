@@ -6,6 +6,13 @@
 
 BOOST_AUTO_TEST_SUITE(compilerbug_tests)
 
+// At least one test case is required to avoid the "Test setup error: no test
+// cases matching filter or all test cases were disabled" errror.
+BOOST_AUTO_TEST_CASE(dummy)
+{
+    BOOST_CHECK(true);
+}
+
 #if defined(__GNUC__)
 // This block will also be built under clang, which is fine (as it supports noinline)
 void __attribute__ ((noinline)) set_one(unsigned char* ptr)

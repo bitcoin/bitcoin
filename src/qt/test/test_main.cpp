@@ -28,22 +28,6 @@
 
 #include <functional>
 
-#if defined(QT_STATICPLUGIN)
-#include <QtPlugin>
-#if defined(QT_QPA_PLATFORM_MINIMAL)
-Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
-#endif
-#if defined(QT_QPA_PLATFORM_XCB)
-Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_WINDOWS)
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_COCOA)
-Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_ANDROID)
-Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
-#endif
-#endif
-
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};

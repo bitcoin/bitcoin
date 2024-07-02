@@ -635,4 +635,4 @@ class BlockchainTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    BlockchainTest().main()
+    BlockchainTest(__file__).main()

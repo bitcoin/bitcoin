@@ -387,4 +387,4 @@ class AddressTypeTest(BitcoinTestFramework):
             assert_raises_rpc_error(-8, "Legacy wallets cannot provide bech32m addresses", self.nodes[0].getrawchangeaddress, "bech32m")
 
 if __name__ == '__main__':
-    AddressTypeTest().main()
+    AddressTypeTest(__file__).main()

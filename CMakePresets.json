@@ -1,0 +1,86 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0},
+  "configurePresets": [
+    {
+      "name": "ci-common",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_BENCH": "ON",
+        "BUILD_FUZZ_BINARY": "ON",
+        "ENABLE_WALLET": "ON",
+        "WITH_SQLITE": "ON",
+        "WITH_BDB": "ON",
+        "WITH_NATPMP": "ON",
+        "WITH_MINIUPNPC": "ON",
+        "WITH_ZMQ": "ON",
+        "WERROR": "ON",
+        "WITH_CCACHE": "ON"
+      }
+    },
+    {
+      "name": "ci-linux",
+      "inherits": "ci-common",
+      "displayName": "Build for CI tests on Linux",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "ENABLE_EXTERNAL_SIGNER": "ON",
+        "WITH_USDT": "ON"
+      }
+    },
+    {
+      "name": "ci-darwin",
+      "inherits": "ci-common",
+      "displayName": "Build for CI tests on macOS",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "BUILD_GUI": "ON",
+        "ENABLE_EXTERNAL_SIGNER": "ON"
+      }
+    },
+    {
+      "name": "vs2022",
+      "displayName": "Build using 'Visual Studio 17 2022' generator and 'x64-windows' triplet",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "BUILD_GUI": "ON",
+        "WITH_QRENCODE": "OFF",
+        "WITH_NATPMP": "OFF"
+      }
+    },
+    {
+      "name": "vs2022-static",
+      "displayName": "Build using 'Visual Studio 17 2022' generator and 'x64-windows-static' triplet",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "toolchainFile": "$env{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "BUILD_GUI": "ON",
+        "WITH_QRENCODE": "OFF",
+        "WITH_NATPMP": "OFF"
+      }
+    }
+  ]
+}

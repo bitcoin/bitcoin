@@ -13,6 +13,6 @@ export PACKAGES="llvm clang g++-multilib"
 export DEP_OPTS="DEBUG=1 MULTIPROCESS=1"
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--v2transport"
-export BITCOIN_CONFIG="--enable-debug CC='clang -m32' CXX='clang++ -m32' \
-CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE' CXXFLAGS='-Wno-error=documentation'"
+export BITCOIN_CONFIG="-DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER='clang;-m32' -DCMAKE_CXX_COMPILER='clang++;-m32' \
+-DCMAKE_CXX_FLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE -Wno-error=documentation'"
 export BITCOIND=bitcoin-node  # Used in functional tests

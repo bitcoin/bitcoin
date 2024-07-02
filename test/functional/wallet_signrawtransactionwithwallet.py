@@ -310,4 +310,4 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    SignRawTransactionWithWalletTest().main()
+    SignRawTransactionWithWalletTest(__file__).main()

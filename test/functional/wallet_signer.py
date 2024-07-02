@@ -263,4 +263,4 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "GetExternalSigner: More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, descriptors=True, external_signer=True)
 
 if __name__ == '__main__':
-    WalletSignerTest().main()
+    WalletSignerTest(__file__).main()

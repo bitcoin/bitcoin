@@ -246,4 +246,4 @@ class RPCInterfaceTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    RPCInterfaceTest().main()
+    RPCInterfaceTest(__file__).main()

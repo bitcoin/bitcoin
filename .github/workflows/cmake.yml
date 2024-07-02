@@ -1,0 +1,696 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+name: CMake
+on:
+  # Running for pushes is enough in the cmake-staging branch.
+  # pull_request:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-info:
+    name: 'Test obj/build.h generation'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: cp cmake/script/GenerateBuildInfo.cmake ${{ runner.temp }}
+
+      - name: Test at HEAD
+        run: |
+          rm -rf src/obj build/src/obj
+          mkdir -p src/obj build/src/obj
+          ./share/genbuild.sh ${PWD}/src/obj/build.h ${PWD}
+          cmake -DBUILD_INFO_HEADER_PATH=${PWD}/build/src/obj/build.h -DSOURCE_DIR=${PWD} -P ${{ runner.temp }}/GenerateBuildInfo.cmake
+          cat src/obj/build.h
+          diff -u src/obj/build.h build/src/obj/build.h
+
+      - name: Test out of tree
+        run: |
+          rm -rf src/obj build/src/obj
+          mkdir -p src/obj build/src/obj
+          ./share/genbuild.sh ${PWD}/src/obj/build.h ${{ runner.temp }}
+          cmake -DBUILD_INFO_HEADER_PATH=${PWD}/build/src/obj/build.h -DSOURCE_DIR=${{ runner.temp }} -P ${{ runner.temp }}/GenerateBuildInfo.cmake
+          cat src/obj/build.h
+          diff -u src/obj/build.h build/src/obj/build.h
+
+      - name: Test at tag
+        run: |
+          rm -rf src/obj build/src/obj
+          mkdir -p src/obj build/src/obj
+          git -c advice.detachedHead=false checkout v25.1
+          ./share/genbuild.sh ${PWD}/src/obj/build.h ${PWD}
+          cmake -DBUILD_INFO_HEADER_PATH=${PWD}/build/src/obj/build.h -DSOURCE_DIR=${PWD} -P ${{ runner.temp }}/GenerateBuildInfo.cmake
+          cat src/obj/build.h
+          diff -u src/obj/build.h build/src/obj/build.h
+
+      - name: Test dirty tree
+        run: |
+          rm -rf src/obj build/src/obj
+          mkdir -p src/obj build/src/obj
+          echo "test" >> README.md
+          ./share/genbuild.sh ${PWD}/src/obj/build.h ${PWD}
+          cmake -DBUILD_INFO_HEADER_PATH=${PWD}/build/src/obj/build.h -DSOURCE_DIR=${PWD} -P ${{ runner.temp }}/GenerateBuildInfo.cmake
+          cat src/obj/build.h
+          diff -u src/obj/build.h build/src/obj/build.h
+
+      - name: Test BITCOIN_GENBUILD_NO_GIT
+        env:
+          BITCOIN_GENBUILD_NO_GIT: '1'
+        run: |
+          rm -rf src/obj build/src/obj
+          mkdir -p src/obj build/src/obj
+          ./share/genbuild.sh ${PWD}/src/obj/build.h ${PWD}
+          cmake -DBUILD_INFO_HEADER_PATH=${PWD}/build/src/obj/build.h -DSOURCE_DIR=${PWD} -P ${{ runner.temp }}/GenerateBuildInfo.cmake
+          cat src/obj/build.h
+          diff -u src/obj/build.h build/src/obj/build.h
+
+
+  deps-search:
+    name: 'Test dependency search'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          # Boost: Header-only. Using CMake's FindBoost module.
+          # Libevent: Using CMake's FindPkgConfig module.
+          - system_packages: ''
+            depends_options: 'NO_BOOST=1 NO_LIBEVENT=1 NO_WALLET=1 NO_USDT=1'
+            build_options: ''
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_BOOST=1 NO_LIBEVENT=1 NO_WALLET=1 NO_USDT=1'
+            build_options: ''
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_LIBEVENT=1 NO_WALLET=1 NO_USDT=1'
+            build_options: ''
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_BOOST=1 NO_WALLET=1 NO_USDT=1'
+            build_options: ''
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_WALLET=1 NO_USDT=1'
+            build_options: ''
+            expected: 'pass'
+
+          # BerkeleyDB: Using our own FindBerkeleyDB module.
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_BDB=1 NO_SQLITE=1 NO_USDT=1'
+            build_options: '-DWITH_BDB=ON'
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev libdb-dev libdb++-dev'
+            depends_options: 'NO_BDB=1 NO_SQLITE=1 NO_USDT=1'
+            build_options: '-DWITH_BDB=ON'
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_SQLITE=1 NO_USDT=1'
+            build_options: '-DWITH_BDB=ON'
+            expected: 'pass'
+
+          # SQLite: Using CMake's FindSQLite3 module.
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_BDB=1 NO_SQLITE=1 NO_USDT=1'
+            build_options: '-DWITH_SQLITE=ON'
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev libsqlite3-dev'
+            depends_options: 'NO_BDB=1 NO_SQLITE=1 NO_USDT=1'
+            build_options: '-DWITH_SQLITE=ON'
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_BDB=1 NO_USDT=1'
+            build_options: '-DWITH_SQLITE=ON'
+            expected: 'pass'
+
+          # USDT: Header-only. Using CMake's find_path function.
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_WALLET=1 NO_USDT=1'
+            build_options: '-DWITH_USDT=ON'
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev systemtap-sdt-dev'
+            depends_options: 'NO_WALLET=1 NO_USDT=1'
+            build_options: '-DWITH_USDT=ON'
+            expected: 'fail'
+          - system_packages: 'libboost-dev libevent-dev'
+            depends_options: 'NO_WALLET=1'
+            build_options: '-DWITH_USDT=ON'
+            expected: 'pass'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        if: ${{ matrix.conf.system_packages != '' }}
+        run: |
+          # Workaround for https://github.com/actions/runner-images/issues/9733.
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends ${{ matrix.conf.system_packages }}
+
+      - name: Build depends
+        working-directory: depends
+        run: |
+          make -j $(nproc) ${{ matrix.conf.depends_options }} NO_QT=1 NO_ZMQ=1 NO_UPNP=1 NO_NATPMP=1 LOG=1
+
+      - name: Generate build system. Expected to FAIL
+        if: ${{ matrix.conf.expected == 'fail' }}
+        run: |
+          ! cmake -B build --toolchain depends/x86_64-pc-linux-gnu/toolchain.cmake ${{ matrix.conf.build_options }}
+
+      - name: Generate build system. Expected to PASS
+        if: ${{ matrix.conf.expected == 'pass' }}
+        run: |
+          cmake -B build --toolchain depends/x86_64-pc-linux-gnu/toolchain.cmake
+
+
+  ubuntu-jammy-native:
+    name: 'Ubuntu 22.04, CMake 3.22, Boost ${{ matrix.conf.boost_version }}'
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          - boost_version: '1.73.0'
+            boost_archive: 'boost_1_73_0'
+          - boost_version: '1.78.0'
+            boost_archive: 'boost_1_78_0'
+          - boost_version: '1.84.0'
+            boost_archive: 'boost_1_84_0'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove preinstalled CMake
+        run: |
+          sudo rm /usr/local/bin/cmake /usr/local/bin/ctest
+
+      - name: Install packages
+        run: |
+          # Workaround for https://github.com/actions/runner-images/issues/9733.
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends curl cmake ccache libevent-dev libsqlite3-dev libdb-dev libdb++-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev systemtap-sdt-dev
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache" >> "$GITHUB_ENV"
+
+      - name: CMake version
+        run: |
+          cmake --version
+          ctest --version
+
+      - name: Download Boost
+        run: |
+          curl --location --remote-name https://boostorg.jfrog.io/artifactory/main/release/${{ matrix.conf.boost_version }}/source/${{ matrix.conf.boost_archive }}.tar.gz
+          tar -xf ${{ matrix.conf.boost_archive }}.tar.gz
+
+      - name: Restore Ccache cache
+        uses: actions/cache/restore@v4
+        id: ccache-cache
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-ccache-
+
+      - name: Generate build system
+        run: |
+          cmake -B build --preset ci-linux -DBoost_INCLUDE_DIR="${PWD}/${{ matrix.conf.boost_archive }}"
+
+      - name: Build
+        working-directory: build
+        run: |
+          cmake --build . -j $(nproc)
+
+      - name: Ccache stats
+        run: |
+          ccache --version | head -n 1
+          ccache --show-stats
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+
+      - name: Test
+        working-directory: build
+        run: |
+          ctest -j $(nproc)
+
+      - name: Install and run
+        run: |
+          cmake --install build --prefix install
+          tree install
+          ./install/bin/bitcoind -version
+
+
+  ubuntu-chainstate:
+    name: 'Ubuntu, chainstate + ${{ matrix.conf.job_name }} libkernel'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          - shared_libs: '-DBUILD_SHARED_LIBS=OFF'
+            job_name: 'STATIC'
+          - shared_libs: '-DBUILD_SHARED_LIBS=ON'
+            job_name: 'SHARED'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends ccache libboost-dev libevent-dev
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache" >> "$GITHUB_ENV"
+
+      - name: CMake version
+        run: |
+          cmake --version
+          ctest --version
+
+      - name: Restore Ccache cache
+        uses: actions/cache/restore@v4
+        id: ccache-cache
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ github.job }}-${{ matrix.conf.job_name }}-ccache-
+
+      - name: Generate build system
+        run: |
+          cmake -B build -DBUILD_UTIL_CHAINSTATE=ON ${{ matrix.conf.shared_libs }}
+
+      - name: Build
+        working-directory: build
+        run: |
+          ccache --zero-stats
+          cmake --build . -j $(nproc) --target bitcoin-chainstate
+
+      - name: Ccache stats
+        run: |
+          ccache --version | head -n 1
+          ccache --show-stats
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-${{ matrix.conf.job_name }}-ccache-${{ github.run_id }}
+
+      - name: Run bitcoin-chainstate
+        run: |
+          ./build/src/bitcoin-chainstate || [[ $? -eq 1 ]]
+
+
+  cross-build:
+    name: ${{ matrix.host.name }}
+    runs-on: ubuntu-latest
+    container: ubuntu:noble
+
+    strategy:
+      fail-fast: false
+      matrix:
+        host:
+          - name: 'Linux 32-bit, Clang, link to libatomic'
+            triplet: 'i686-pc-linux-gnu'
+            packages: 'clang-16 g++-multilib'
+            c_compiler: 'clang-16 -m32'
+            cxx_compiler: 'clang++-16 -m32'
+            depends_options: ''
+            configure_options: '-DWERROR=ON'
+          - name: 'Linux 64-bit, multiprocess'
+            triplet: 'x86_64-pc-linux-gnu'
+            depends_options: 'MULTIPROCESS=1'
+            configure_options: '-DWERROR=ON'
+          - name: 'MinGW-w64'
+            triplet: 'x86_64-w64-mingw32'
+            packages: 'g++-mingw-w64-x86-64-posix'
+            depends_options: ''
+            exe_extension: '.exe'
+          - name: 'MinGW-w64, debug'
+            triplet: 'x86_64-w64-mingw32'
+            packages: 'g++-mingw-w64-x86-64-posix'
+            depends_options: 'DEBUG=1'
+            configure_options: '-DCMAKE_BUILD_TYPE=Debug'
+            cache_suffix: '-debug'
+            exe_extension: '.exe'
+            # Avoid "No space left on device" error.
+            skip_install: 'true'
+          - name: 'macOS x86_64'
+            triplet: 'x86_64-apple-darwin'
+            packages: 'clang lld llvm zip'
+            macos_sdk: 'Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers'
+            configure_options: '-DWERROR=ON'
+          - name: 'macOS arm64'
+            triplet: 'arm64-apple-darwin'
+            packages: 'clang lld llvm zip'
+            macos_sdk: 'Xcode-15.0-15A240d-extracted-SDK-with-libcxx-headers'
+            configure_options: '-DWERROR=ON'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependency packages
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y autoconf automake binutils bison ca-certificates ccache cmake curl g++ lbzip2 libtool make patch pkg-config python3 tree xz-utils wget ${{ matrix.host.packages }}
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache" >> "$GITHUB_ENV"
+
+      - name: Depends fingerprint (1)
+        if: ${{ matrix.host.c_compiler != '' }}
+        run: |
+          ${{ matrix.host.c_compiler }} -v 2>&1 | tee depends/c_compiler_version
+
+      - name: Depends fingerprint (2)
+        if: ${{ matrix.host.cxx_compiler != '' }}
+        run: |
+          ${{ matrix.host.cxx_compiler }} -v 2>&1 | tee depends/cxx_compiler_version
+
+      - name: Depends fingerprint (3)
+        run: |
+          echo ${{ matrix.host.depends_options }} > depends/depends_options
+
+      - name: Depends fingerprint (4)
+        if: ${{ matrix.host.triplet == 'x86_64-apple-darwin' || matrix.host.triplet == 'arm64-apple-darwin' }}
+        run: |
+          echo ${{ matrix.host.macos_sdk }} > depends/macos_sdk
+
+      - name: Depends fingerprint (5)
+        id: depends_fingerprint
+        run: |
+          echo "hash=${{ hashFiles('depends/**') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Download macOS SDK
+        if: ${{ matrix.host.triplet == 'x86_64-apple-darwin' || matrix.host.triplet == 'arm64-apple-darwin' }}
+        run: |
+          wget --no-verbose https://bitcoincore.org/depends-sources/sdks/${{ matrix.host.macos_sdk }}.tar.gz
+          mkdir depends/SDKs
+          tar -xf ${{ matrix.host.macos_sdk }}.tar.gz --directory depends/SDKs
+
+      - name: Depends cache
+        id: depends_cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/built
+          key: ${{ matrix.host.triplet }}${{ matrix.host.cache_suffix }}-depends-${{ steps.depends_fingerprint.outputs.hash }}
+
+      - name: Build depends
+        working-directory: depends
+        run: |
+          make -j$(nproc) HOST=${{ matrix.host.triplet }} CC="${{ matrix.host.c_compiler }}" CXX="${{ matrix.host.cxx_compiler }}" ${{ matrix.host.depends_options }} LOG=1 NO_UPNP=1
+          echo "LD_LIBRARY_PATH=${PWD}/${{ matrix.host.triplet }}/lib" >> "$GITHUB_ENV"
+
+      - name: Restore Ccache cache
+        uses: actions/cache/restore@v4
+        id: ccache-cache
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ matrix.host.triplet }}${{ matrix.host.cache_suffix }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ matrix.host.triplet }}${{ matrix.host.cache_suffix }}-ccache-
+
+      - name: Generate build system
+        run: |
+          cmake -B build --toolchain depends/${{ matrix.host.triplet }}/toolchain.cmake ${{ matrix.host.configure_options }}
+
+      - name: Build
+        run: |
+          ccache --zero-stats
+          cmake --build build -j $(nproc)
+          file build/src/bitcoind${{ matrix.host.exe_extension }}
+
+      - name: Ccache stats
+        run: |
+          ccache --version | head -n 1
+          ccache --show-stats --verbose
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ matrix.host.triplet }}${{ matrix.host.cache_suffix }}-ccache-${{ github.run_id }}
+
+      - name: Test
+        if: ${{ matrix.host.triplet == 'i686-pc-linux-gnu' || matrix.host.triplet == 'x86_64-pc-linux-gnu' }}
+        run: |
+          ctest --test-dir build -j $(nproc)
+
+      - name: Install
+        if: ${{ matrix.host.skip_install != 'true' }}
+        run: |
+          cmake --install build --prefix install
+          tree install
+
+
+  win64-native-builtin-tools:
+    name: ${{ matrix.conf.name }}
+    runs-on: windows-2022
+
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          - name: 'Win64, VS 2022, dynamic'
+            triplet: 'x64-windows'
+            preset: 'vs2022'
+          - name: 'Win64, VS 2022, static'
+            triplet: 'x64-windows-static'
+            preset: 'vs2022-static'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove non-MSVC tool installations
+        run: |
+          Remove-Item -Path "$env:ProgramFiles/CMake" -Recurse -Force
+
+      - name: Configure Visual Studio Developer PowerShell
+        # Using microsoft/setup-msbuild is not enough as it does not add other Visual Studio tools to PATH.
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Check build tools
+        run: |
+          cmake --version | Out-File -FilePath "cmake_version"
+          Get-Content -Path "cmake_version"
+          Write-Output "---"
+          msbuild -version | Out-File -FilePath "msbuild_version"
+          Get-Content -Path "msbuild_version"
+          Write-Output "---"
+          $env:VCToolsVersion | Out-File -FilePath "toolset_version"
+          Get-Content -Path "toolset_version"
+          # GHA Windows images have different versions of MSVC toolsets being installed
+          # side-by-side. Therefore, the VCPKG_PLATFORM_TOOLSET_VERSION must be set explicitly
+          # to avoid linker errors when using vcpkg in the manifest mode.
+          # See: https://github.com/bitcoin/bitcoin/pull/28934
+          Add-Content -Path "$env:VCPKG_INSTALLATION_ROOT\triplets\${{ matrix.conf.triplet }}.cmake" -Value "set(VCPKG_PLATFORM_TOOLSET_VERSION $env:VCToolsVersion)"
+          # Skip debug configuration to speed up build and minimize cache size.
+          Add-Content -Path "$env:VCPKG_INSTALLATION_ROOT\triplets\x64-windows.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
+          Add-Content -Path "$env:VCPKG_INSTALLATION_ROOT\triplets\${{ matrix.conf.triplet }}.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
+
+      - name: Restore vcpkg binary cache
+        uses: actions/cache/restore@v4
+        id: vcpkg-binary-cache
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: ${{ matrix.conf.triplet }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+
+      - name: Generate build system
+        run: |
+          cmake -B build --preset ${{ matrix.conf.preset }} -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWERROR=ON
+
+      - name: Save vcpkg binary cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: ${{ matrix.conf.triplet }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+
+      - name: Build Release configuration
+        working-directory: build
+        run: |
+          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
+
+      - name: Inspect build artifacts
+        working-directory: build
+        run: |
+          dumpbin /imports src\Release\bitcoind.exe | Select-String -Pattern "\.(?i:dll)" | Sort-Object
+          ""
+          (Get-Item src\Release\bitcoind.exe).Length
+
+      - name: Test Release configuration
+        if: ${{ matrix.conf.triplet == 'x64-windows-static' }}
+        working-directory: build
+        run: |
+          ctest -j $env:NUMBER_OF_PROCESSORS -C Release
+
+      - name: Install and run Release configuration
+        if: ${{ matrix.conf.triplet == 'x64-windows-static' }}
+        run: |
+          cmake --install build --prefix install --config Release
+          tree /f install
+          .\install\bin\bitcoind.exe -version
+
+
+  macos-native:
+    name: '${{ matrix.conf.name }}, ${{ matrix.xcode.name }}'
+    runs-on: ${{ matrix.conf.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        conf:
+          - name: 'macOS 13 native, x86_64'
+            os: macos-13
+            boost_package: 'boost'
+          - name: 'macOS 14 native, arm64'
+            os: macos-14
+            boost_package: 'boost'
+          - name: 'macOS 14 native, arm64, Boost 1.76'
+            os: macos-14
+            boost_package: 'boost@1.76'
+            build_options: '-DBoost_INCLUDE_DIR=/opt/homebrew/opt/boost@1.76/include'
+        xcode:
+          - name: 'Xcode 15.2'
+            id: 'xcode-15.2'
+            path: '/Applications/Xcode_15.2.app'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clang version, ${{ runner.arch }}
+        run: |
+          sudo xcode-select --switch ${{ matrix.xcode.path }}
+          clang --version
+
+      - name: Workaround for Homebrew python link
+        if: matrix.conf.os == 'macos-13'
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install python@3 || brew link --overwrite python@3
+
+      - name: Install Homebrew packages
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install ccache cmake pkg-config ${{ matrix.conf.boost_package }} libevent berkeley-db@4 qt@5 qrencode libnatpmp miniupnpc zeromq tree
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache" >> "$GITHUB_ENV"
+
+      - name: CMake version
+        run: |
+          cmake --version
+          ctest --version
+
+      - name: Restore Ccache cache
+        uses: actions/cache/restore@v4
+        id: ccache-cache
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ matrix.conf.os }}-${{ matrix.xcode.id }}-ccache-${{ github.run_id }}
+          restore-keys: ${{ matrix.conf.os }}-${{ matrix.xcode.id }}-ccache-
+
+      - name: Generate build system
+        run: |
+          cmake -B build --preset ci-darwin ${{ matrix.conf.build_options }}
+
+      - name: Build
+        env:
+          CCACHE_COMPILERCHECK: '%compiler% -v'
+        run: |
+          ccache --zero-stats
+          cmake --build build -j $(sysctl -n hw.logicalcpu)
+
+      - name: Ccache stats
+        run: |
+          ccache --version | head -n 1
+          ccache --show-stats --verbose
+
+      - name: Save Ccache cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ matrix.conf.os }}-${{ matrix.xcode.id }}-ccache-${{ github.run_id }}
+
+      - name: Test
+        run: |
+          ctest --test-dir build -j $(sysctl -n hw.logicalcpu)
+
+      - name: Install and run
+        run: |
+          cmake --install build --prefix install
+          tree install
+          ./install/bin/bitcoind -version
+
+      - name: Deploy
+        run: |
+          cmake --build build --target deploy
+          ls -l build/*.zip
+
+
+  macos-cross:
+    name: 'macOS 14 arm64, cross-compiling to x86_64'
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clang version, ${{ runner.arch }}
+        run: |
+          clang --version
+
+      - name: Install Homebrew packages
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install autoconf automake libtool make pkg-config
+
+      - name: Build depends
+        working-directory: depends
+        run: |
+          make HOST=x86_64-apple-darwin LOG=1
+
+      - name: Generate build system
+        run: |
+          cmake -B build --preset ci-darwin --toolchain depends/x86_64-apple-darwin/toolchain.cmake -DWITH_CCACHE=OFF
+
+      - name: Build
+        env:
+          CCACHE_COMPILERCHECK: '%compiler% -v'
+        run: |
+          cmake --build build -j $(sysctl -n hw.logicalcpu)
+          lipo -archs build/src/bitcoind
+          lipo -archs build/src/qt/bitcoin-qt
+
+      - name: Deploy
+        run: |
+          cmake --build build --target deploy
+          ls -l build/*.zip

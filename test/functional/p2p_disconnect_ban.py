@@ -147,4 +147,4 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert not [node for node in self.nodes[0].getpeerinfo() if node['id'] == id1]
 
 if __name__ == '__main__':
-    DisconnectBanTest().main()
+    DisconnectBanTest(__file__).main()

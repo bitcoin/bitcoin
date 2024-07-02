@@ -241,4 +241,4 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(newbalance, balance - Decimal("20"))
 
 if __name__ == '__main__':
-    AbandonConflictTest().main()
+    AbandonConflictTest(__file__).main()

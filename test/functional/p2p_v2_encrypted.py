@@ -131,4 +131,4 @@ class P2PEncrypted(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PEncrypted().main()
+    P2PEncrypted(__file__).main()

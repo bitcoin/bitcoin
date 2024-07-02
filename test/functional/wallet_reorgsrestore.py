@@ -101,4 +101,4 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         assert conflicting["blockhash"] != conflicted_after_reorg["blockhash"]
 
 if __name__ == '__main__':
-    ReorgsRestoreTest().main()
+    ReorgsRestoreTest(__file__).main()

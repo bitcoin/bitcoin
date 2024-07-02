@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
-
 #include <qt/guiutil.h>
 
 #include <qt/bitcoinaddressvalidator.h>
@@ -918,12 +916,7 @@ void LogQtInfo()
 #else
     const std::string qt_link{"dynamic"};
 #endif
-#ifdef QT_STATICPLUGIN
-    const std::string plugin_link{"static"};
-#else
-    const std::string plugin_link{"dynamic"};
-#endif
-    LogPrintf("Qt %s (%s), plugin=%s (%s)\n", qVersion(), qt_link, QGuiApplication::platformName().toStdString(), plugin_link);
+    LogPrintf("Qt %s (%s), plugin=%s\n", qVersion(), qt_link, QGuiApplication::platformName().toStdString());
     const auto static_plugins = QPluginLoader::staticPlugins();
     if (static_plugins.empty()) {
         LogPrintf("No static plugins.\n");

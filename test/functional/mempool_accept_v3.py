@@ -644,4 +644,4 @@ class MempoolAcceptV3(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    MempoolAcceptV3().main()
+    MempoolAcceptV3(__file__).main()

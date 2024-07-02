@@ -107,4 +107,4 @@ class P2PAddConnections(BitcoinTestFramework):
         assert_equal(feeler_conn.last_message["version"].relay, 0)
 
 if __name__ == '__main__':
-    P2PAddConnections().main()
+    P2PAddConnections(__file__).main()

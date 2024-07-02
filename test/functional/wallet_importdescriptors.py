@@ -709,4 +709,4 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
 if __name__ == '__main__':
-    ImportDescriptorsTest().main()
+    ImportDescriptorsTest(__file__).main()

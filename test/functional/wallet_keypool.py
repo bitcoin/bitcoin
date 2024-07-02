@@ -223,4 +223,4 @@ class KeyPoolTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, msg, w2.keypoolrefill, 100)
 
 if __name__ == '__main__':
-    KeyPoolTest().main()
+    KeyPoolTest(__file__).main()

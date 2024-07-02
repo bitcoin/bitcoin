@@ -232,4 +232,4 @@ class SendTxRcnclTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    SendTxRcnclTest().main()
+    SendTxRcnclTest(__file__).main()

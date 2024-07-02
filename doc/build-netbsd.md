@@ -12,8 +12,7 @@ Install the required dependencies the usual way you [install software on NetBSD]
 The example commands below use `pkgin`.
 
 ```bash
-pkgin install autoconf automake libtool pkg-config git gmake boost-headers libevent
-
+pkgin install git cmake pkg-config boost-headers libevent
 ```
 
 NetBSD currently ships with an older version of `gcc` than is needed to build. You should upgrade your `gcc` and then pass this new version to the configure script.
@@ -25,10 +24,10 @@ pkgin install gcc12
 
 Then, when configuring, pass the following:
 ```bash
-./configure
+cmake -B build
     ...
-    CC="/usr/pkg/gcc12/bin/gcc" \
-    CXX="/usr/pkg/gcc12/bin/g++" \
+    -DCMAKE_C_COMPILER="/usr/pkg/gcc12/bin/gcc" \
+    -DCMAKE_CXX_COMPILER="/usr/pkg/gcc12/bin/g++" \
     ...
 ```
 
@@ -89,28 +88,22 @@ pkgin install python39
 
 ### Building Bitcoin Core
 
-**Note**: Use `gmake` (the non-GNU `make` will exit with an error).
-
-
 ### 1. Configuration
 
 There are many ways to configure Bitcoin Core. Here is an example that
 explicitly disables the wallet and GUI:
 
 ```bash
-./autogen.sh
-./configure --without-wallet --with-gui=no \
-    CPPFLAGS="-I/usr/pkg/include" \
-    MAKE=gmake
+cmake -B build -DENABLE_WALLET=OFF -DBUILD_GUI=OFF
 ```
 
-For a full list of configuration options, see the output of `./configure --help`
+Run `cmake -B build -LH` to see the full list of available options.
 
 ### 2. Compile
 
 Build and run the tests:
 
 ```bash
-gmake # use "-j N" here for N parallel jobs
-gmake check # Run tests if Python 3 is available
+cmake --build build     # Use "-j N" for N parallel jobs.
+ctest --test-dir build  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 ```

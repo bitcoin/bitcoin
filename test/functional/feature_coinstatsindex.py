@@ -321,4 +321,4 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    CoinStatsIndexTest().main()
+    CoinStatsIndexTest(__file__).main()

@@ -11,4 +11,5 @@ export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
 export PACKAGES="clang-18 llvm-18 libclang-rt-18-dev libc++abi-18-dev libc++-18-dev python3-zmq"
 export DEP_OPTS="CC=clang-18 CXX='clang++-18 -stdlib=libc++'"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER -DDEBUG_LOCKCONTENTION' --with-sanitizers=thread"
+export BITCOIN_CONFIG="-DWITH_ZMQ=ON -DSANITIZERS=thread \
+-DCMAKE_CXX_FLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER -DDEBUG_LOCKCONTENTION'"

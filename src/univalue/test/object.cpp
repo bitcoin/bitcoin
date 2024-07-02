@@ -20,7 +20,7 @@
         try { \
             (stmt); \
             assert(0 && "No exception caught"); \
-        } catch (excMatch & e) { \
+        } catch (excMatch&) { \
 	} catch (...) { \
 	    assert(0 && "Wrong exception caught"); \
 	} \

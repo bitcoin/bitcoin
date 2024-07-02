@@ -109,4 +109,4 @@ class PreciousTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbestblockhash(), hashH)
 
 if __name__ == '__main__':
-    PreciousTest().main()
+    PreciousTest(__file__).main()

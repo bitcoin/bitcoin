@@ -36,4 +36,4 @@ x86_64_netbsd_CC=$(default_host_CC) -m64
 x86_64_netbsd_CXX=$(default_host_CXX) -m64
 endif
 
-netbsd_cmake_system=NetBSD
+netbsd_cmake_system_name=NetBSD

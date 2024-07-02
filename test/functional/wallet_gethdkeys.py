@@ -182,4 +182,4 @@ class WalletGetHDKeyTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    WalletGetHDKeyTest().main()
+    WalletGetHDKeyTest(__file__).main()

@@ -147,4 +147,4 @@ class P2PPermissionsTests(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PPermissionsTests().main()
+    P2PPermissionsTests(__file__).main()

@@ -7,12 +7,15 @@ To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/d
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ ./autogen.sh
-$ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="clang" \
+   -DCMAKE_CXX_COMPILER="clang++" \
+   -DENABLE_FUZZ=ON \
+   -DSANITIZERS=undefined,address,fuzzer
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
 # libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
-$ make
-$ FUZZ=process_message src/test/fuzz/fuzz
+$ cmake --build build_fuzz -j$(nproc)
+$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
 # abort fuzzing using ctrl-c
 ```
 
@@ -33,7 +36,7 @@ If you specify a corpus directory then any new coverage increasing inputs will b
 
 ```sh
 $ mkdir -p process_message-seeded-from-thin-air/
-$ FUZZ=process_message src/test/fuzz/fuzz process_message-seeded-from-thin-air/
+$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz process_message-seeded-from-thin-air/
 INFO: Seed: 840522292
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55e121ef9ab8, 0x55e121f613a6),
 INFO: Loaded 1 PC tables (424174 PCs): 424174 [0x55e121f613a8,0x55e1225da288),
@@ -77,7 +80,7 @@ of the test. Just make sure to use double-dash to distinguish them from the
 fuzzer's own arguments:
 
 ```sh
-$ FUZZ=address_deserialize_v2 src/test/fuzz/fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
+$ FUZZ=address_deserialize_v2 build_fuzz/src/test/fuzz/fuzz -runs=1 fuzz_seed_corpus/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
 ```
 
 ## Fuzzing corpora
@@ -88,7 +91,7 @@ To fuzz `process_message` using the [`bitcoin-core/qa-assets`](https://github.co
 
 ```sh
 $ git clone https://github.com/bitcoin-core/qa-assets
-$ FUZZ=process_message src/test/fuzz/fuzz qa-assets/fuzz_seed_corpus/process_message/
+$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz qa-assets/fuzz_seed_corpus/process_message/
 INFO: Seed: 1346407872
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),
 INFO: Loaded 1 PC tables (424174 PCs): 424174 [0x55d8a906c3a8,0x55d8a96e5288),
@@ -101,7 +104,15 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 
 ## Run without sanitizers for increased throughput
 
-Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` is good for finding bugs. However, the very slow execution even under libFuzzer will limit the ability to find new coverage. A good approach is to perform occasional long runs without the additional bug-detectors (configure `--with-sanitizers=fuzzer`) and then merge new inputs into a corpus as described in the qa-assets repo (https://github.com/bitcoin-core/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).  Patience is useful; even with improved throughput, libFuzzer may need days and 10s of millions of executions to reach deep/hard targets.
+Fuzzing on a harness compiled with `-DSANITIZERS=address,fuzzer,undefined` is
+good for finding bugs. However, the very slow execution even under libFuzzer
+will limit the ability to find new coverage. A good approach is to perform
+occasional long runs without the additional bug-detectors (just
+`-DSANITIZERS=fuzzer`) and then merge new inputs into a corpus as described in
+the qa-assets repo
+(https://github.com/bitcoin-core/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).
+Patience is useful; even with improved throughput, libFuzzer may need days and
+10s of millions of executions to reach deep/hard targets.
 
 ## Reproduce a fuzzer crash reported by the CI
 
@@ -112,7 +123,7 @@ Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` 
   more slowly with sanitizers enabled, but a crash should be reproducible very
   quickly from a crash case)
 - run the fuzzer with the case number appended to the seed corpus path:
-  `FUZZ=process_message src/test/fuzz/fuzz
+  `FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
   qa-assets/fuzz_seed_corpus/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
 
 ## Submit improved coverage
@@ -131,10 +142,14 @@ You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
 `clang` does not come first in your path.
 
-Full configure that was tested on macOS with `brew` installed `llvm`:
+Full configuration step that was tested on macOS with `brew` installed `llvm`:
 
 ```sh
-./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
+   -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
+   -DENABLE_FUZZ=ON \
+   -DSANITIZERS=undefined,address,fuzzer \
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
@@ -150,16 +165,18 @@ $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
 $ git clone https://github.com/AFLplusplus/AFLplusplus
 $ make -C AFLplusplus/ source-only
-$ ./autogen.sh
 # If afl-clang-lto is not available, see
 # https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
-$ CC=$(pwd)/AFLplusplus/afl-clang-lto CXX=$(pwd)/AFLplusplus/afl-clang-lto++ ./configure --enable-fuzz
-$ make
-# For macOS you may need to ignore x86 compilation checks when running "make". If so,
-# try compiling using: AFL_NO_X86=1 make
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto" \
+   -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
+   -DENABLE_FUZZ=ON
+$ cmake --build build_fuzz -j$(nproc)
+# For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
+# try compiling using: `AFL_NO_X86=1 cmake --build build_fuzz -j$(nproc)`
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
-$ FUZZ=bech32 AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
+$ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/src/test/fuzz/fuzz
 # You may have to change a few kernel parameters to test optimally - afl-fuzz
 # will print an error and suggestion if so.
 ```
@@ -175,15 +192,18 @@ To quickly get started fuzzing Bitcoin Core using [Honggfuzz](https://github.com
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ ./autogen.sh
 $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/
 $ make
 $ cd ..
-$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ ./configure --enable-fuzz --with-sanitizers=address,undefined
-$ make
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang" \
+   -DCMAKE_CXX_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++" \
+   -DENABLE_FUZZ=ON \
+   -DSANITIZERS=address,undefined
+$ cmake --build build_fuzz -j$(nproc)
 $ mkdir -p inputs/
-$ FUZZ=process_message honggfuzz/honggfuzz -i inputs/ -- src/test/fuzz/fuzz
+$ FUZZ=process_message ./honggfuzz/honggfuzz -i inputs/ -- build_fuzz/src/test/fuzz/fuzz
 ```
 
 Read the [Honggfuzz documentation](https://github.com/google/honggfuzz/blob/master/docs/USAGE.md) for more information.
@@ -204,15 +224,10 @@ $ mkdir bitcoin-honggfuzz-p2p/
 $ cd bitcoin-honggfuzz-p2p/
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ ./autogen.sh
 $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/
 $ make
 $ cd ..
-$ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang \
-      CXX=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++ \
-      ./configure --disable-wallet --with-gui=no \
-                  --with-sanitizers=address,undefined
 $ git apply << "EOF"
 diff --git a/src/compat/compat.h b/src/compat/compat.h
 index 8195bceaec..cce2b31ff0 100644
@@ -254,11 +269,17 @@ index 7601a6ea84..702d0f56ce 100644
                   SanitizeString(msg.m_type), msg.m_message_size,
                   HexStr(Span{hash}.first(CMessageHeader::CHECKSUM_SIZE)),
 EOF
-$ make -C src/ bitcoind
+$ cmake -B build_fuzz \
+   -DCMAKE_C_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang" \
+   -DCMAKE_CXX_COMPILER="$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang++" \
+   -DENABLE_WALLET=OFF \
+   -DBUILD_GUI=OFF \
+   -DSANITIZERS=address,undefined
+$ cmake --build build_fuzz --target bitcoind -j$(nproc)
 $ mkdir -p inputs/
-$ honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
+$ ./honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
       -E HFND_TCP_PORT=18444 -f inputs/ -- \
-          src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
+          build_fuzz/src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
                        -nodebuglogfile -bind=127.0.0.1:18444 -logthreadnames \
                        -debug
 ```
@@ -298,11 +319,9 @@ $ cd Eclipser
 $ git checkout v1.x
 $ make
 $ cd ..
-$ ./autogen.sh
-$ ./configure --enable-fuzz
-$ make
+$ cmake -B build_fuzz -DENABLE_FUZZ=ON
 $ mkdir -p outputs/
-$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -o outputs --src stdin
+$ FUZZ=bech32 dotnet ./Eclipser/build/Eclipser.dll fuzz -p build_fuzz/src/test/fuzz/fuzz -t 36000 -o outputs --src stdin
 ```
 
 This will perform 10 hours of fuzzing.
@@ -320,7 +339,7 @@ Fuzzing with Eclipser will likely be much more effective if using an existing co
 
 ```sh
 $ git clone https://github.com/bitcoin-core/qa-assets
-$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -i qa-assets/fuzz_seed_corpus/bech32 outputs --src stdin
+$ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p build_fuzz/src/test/fuzz/fuzz -t 36000 -i qa-assets/fuzz_seed_corpus/bech32 outputs --src stdin
 ```
 
 Note that fuzzing with Eclipser on certain targets (those that create 'full nodes', e.g. `process_message*`) will,

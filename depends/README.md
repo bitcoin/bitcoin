@@ -12,17 +12,13 @@ For example:
 
     make HOST=x86_64-w64-mingw32 -j4
 
-**Bitcoin Core's `configure` script by default will ignore the depends output.** In
+**When configuring Bitcoin Core, CMake by default will ignore the depends output.** In
 order for it to pick up libraries, tools, and settings from the depends build,
-you must set the `CONFIG_SITE` environment variable to point to a `config.site` settings file.
-Make sure that `CONFIG_SITE` is an absolute path.
-In the above example, a file named `depends/x86_64-w64-mingw32/share/config.site` will be
-created. To use it during compilation:
+you must specify the toolchain file.
+In the above example, a file named `depends/x86_64-w64-mingw32/toolchain.cmake` will be
+created. To use it during configuring Bitcoin Core:
 
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure
-
-The default install prefix when using `config.site` is `--prefix=depends/<host-platform-triplet>`,
-so depends build outputs will be installed in that location.
+    cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
 
 Common `host-platform-triplet`s for cross compilation are:
 
@@ -58,7 +54,7 @@ For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-ex
 
 #### For Win64 cross compilation
 
-- see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
+- see [build-windows-mingw.md](../doc/build-windows-mingw.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
 #### For linux (including i386, ARM) cross compilation
 
@@ -90,9 +86,13 @@ For linux S390X cross compilation:
 
     pkg install bash
 
+### Install the required dependencies: NetBSD
+
+    pkgin install bash gmake
+
 ### Install the required dependencies: OpenBSD
 
-    pkg_add bash gtar
+    pkg_add bash gmake gtar
 
 ### Dependency Options
 

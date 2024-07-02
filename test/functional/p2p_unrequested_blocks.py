@@ -296,4 +296,4 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.log.info("Successfully synced nodes 1 and 0")
 
 if __name__ == '__main__':
-    AcceptBlockTest().main()
+    AcceptBlockTest(__file__).main()

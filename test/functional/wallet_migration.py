@@ -1022,4 +1022,4 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_blank()
 
 if __name__ == '__main__':
-    WalletMigrationTest().main()
+    WalletMigrationTest(__file__).main()

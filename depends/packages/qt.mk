@@ -263,13 +263,14 @@ define $(package)_build_cmds
   $(MAKE)
 endef
 
+# TODO: Investigate whether specific targets can be used here to minimize the amount of files/components installed.
 define $(package)_stage_cmds
-  $(MAKE) -C qtbase/src INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_qt_libs))) && \
-  $(MAKE) -C qttools/src/linguist INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_linguist_tools))) && \
+  $(MAKE) -C qtbase INSTALL_ROOT=$($(package)_staging_dir) install && \
+  $(MAKE) -C qttools INSTALL_ROOT=$($(package)_staging_dir) install && \
   $(MAKE) -C qttranslations INSTALL_ROOT=$($(package)_staging_dir) install_subtargets
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf native/mkspecs/ native/lib/ lib/cmake/ && \
+  rm -rf doc/ native/lib/ && \
   rm -f lib/lib*.la
 endef

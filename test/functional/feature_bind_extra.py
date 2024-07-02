@@ -83,4 +83,4 @@ class BindExtraTest(BitcoinTestFramework):
             self.log.info(f"Stopped node {i}")
 
 if __name__ == '__main__':
-    BindExtraTest().main()
+    BindExtraTest(__file__).main()

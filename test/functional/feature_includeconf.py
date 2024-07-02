@@ -83,4 +83,4 @@ class IncludeConfTest(BitcoinTestFramework):
         assert subversion.endswith("main; relative; relative2)/")
 
 if __name__ == '__main__':
-    IncludeConfTest().main()
+    IncludeConfTest(__file__).main()

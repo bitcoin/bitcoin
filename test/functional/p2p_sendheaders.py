@@ -568,4 +568,4 @@ class SendHeadersTest(BitcoinTestFramework):
         assert "getdata" not in inv_node.last_message
 
 if __name__ == '__main__':
-    SendHeadersTest().main()
+    SendHeadersTest(__file__).main()

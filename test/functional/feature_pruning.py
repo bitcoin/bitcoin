@@ -495,4 +495,4 @@ class PruneTest(BitcoinTestFramework):
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})
 
 if __name__ == '__main__':
-    PruneTest().main()
+    PruneTest(__file__).main()

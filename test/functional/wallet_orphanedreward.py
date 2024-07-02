@@ -73,4 +73,4 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    OrphanedBlockRewardTest().main()
+    OrphanedBlockRewardTest(__file__).main()

@@ -60,21 +60,6 @@
 #include <QTranslator>
 #include <QWindow>
 
-#if defined(QT_STATICPLUGIN)
-#include <QtPlugin>
-#if defined(QT_QPA_PLATFORM_XCB)
-Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
-#elif defined(QT_QPA_PLATFORM_WINDOWS)
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
-Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin);
-#elif defined(QT_QPA_PLATFORM_COCOA)
-Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
-Q_IMPORT_PLUGIN(QMacStylePlugin);
-#elif defined(QT_QPA_PLATFORM_ANDROID)
-Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
-#endif
-#endif
-
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)

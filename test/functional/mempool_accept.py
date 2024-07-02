@@ -409,4 +409,4 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
 if __name__ == '__main__':
-    MempoolAcceptanceTest().main()
+    MempoolAcceptanceTest(__file__).main()

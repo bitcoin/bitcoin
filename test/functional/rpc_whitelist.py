@@ -93,4 +93,4 @@ class RPCWhitelistTest(BitcoinTestFramework):
         assert_equal(200, rpccall(self.nodes[0], self.strange_users[4], "getblockcount").status)
 
 if __name__ == "__main__":
-    RPCWhitelistTest().main()
+    RPCWhitelistTest(__file__).main()

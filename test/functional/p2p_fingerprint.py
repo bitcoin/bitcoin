@@ -130,4 +130,4 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PFingerprintTest().main()
+    P2PFingerprintTest(__file__).main()

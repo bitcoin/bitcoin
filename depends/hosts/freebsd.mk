@@ -28,4 +28,4 @@ x86_64_freebsd_CC=$(default_host_CC) -m64
 x86_64_freebsd_CXX=$(default_host_CXX) -m64
 endif
 
-freebsd_cmake_system=FreeBSD
+freebsd_cmake_system_name=FreeBSD

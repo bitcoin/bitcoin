@@ -86,4 +86,4 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             peer_txer.send_and_ping(msg_tx(tx))
 
 if __name__ == '__main__':
-    P2PIBDTxRelayTest().main()
+    P2PIBDTxRelayTest(__file__).main()

@@ -74,4 +74,4 @@ class TxPrivacyTest(BitcoinTestFramework):
         spy.wait_for_inv_match(CInv(MSG_WTX, tx2.calc_sha256(True)))
 
 if __name__ == '__main__':
-    TxPrivacyTest().main()
+    TxPrivacyTest(__file__).main()

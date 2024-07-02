@@ -1,0 +1,24 @@
+commit 5bd0b91a64b4acacb210d91ee297e775fdc58737
+Author: Hennadii Stepanov <32963518+hebasto@users.noreply.github.com>
+Date:   Wed Mar 20 14:37:26 2024 +0000
+
+    Fix Autotools-generated `libzmq.pc` file
+    
+    This change fixes cross-compiling for Windows with static linking.
+
+    See https://github.com/zeromq/libzmq/pull/4667.
+
+
+diff --git a/configure.ac b/configure.ac
+index 622f544d..bfea9499 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -365,7 +365,7 @@ case "${host_os}" in
+ 
+         if test "x$enable_static" = "xyes"; then
+             CPPFLAGS="-DZMQ_STATIC $CPPFLAGS"
+-            PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -liphlpapi"
++            PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -liphlpapi -lws2_32"
+         fi
+ 	# Set FD_SETSIZE to 16384
+ 	CPPFLAGS=" -DFD_SETSIZE=16384 $CPPFLAGS"

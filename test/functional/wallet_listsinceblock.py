@@ -505,4 +505,4 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    ListSinceBlockTest().main()
+    ListSinceBlockTest(__file__).main()

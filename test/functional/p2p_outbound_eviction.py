@@ -250,4 +250,4 @@ class P2POutEvict(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2POutEvict().main()
+    P2POutEvict(__file__).main()

@@ -32,4 +32,4 @@ class WalletRBFTest(BitcoinTestFramework):
         assert_raises_rpc_error(-6, "Fee estimation failed", lambda: self.nodes[0].sendmany("", {self.nodes[0].getnewaddress(): 1}))
 
 if __name__ == '__main__':
-    WalletRBFTest().main()
+    WalletRBFTest(__file__).main()

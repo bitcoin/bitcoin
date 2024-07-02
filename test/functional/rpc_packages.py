@@ -489,4 +489,4 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(node.getrawmempool(), [chained_txns_burn[0]["txid"]])
 
 if __name__ == "__main__":
-    RPCPackagesTest().main()
+    RPCPackagesTest(__file__).main()

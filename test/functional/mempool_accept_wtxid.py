@@ -125,4 +125,4 @@ class MempoolWtxidTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
 if __name__ == '__main__':
-    MempoolWtxidTest().main()
+    MempoolWtxidTest(__file__).main()

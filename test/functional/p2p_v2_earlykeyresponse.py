@@ -86,4 +86,4 @@ class P2PEarlyKey(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PEarlyKey().main()
+    P2PEarlyKey(__file__).main()

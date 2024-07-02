@@ -499,4 +499,4 @@ class Block:
     chain_tx: int
 
 if __name__ == '__main__':
-    AssumeutxoTest().main()
+    AssumeutxoTest(__file__).main()

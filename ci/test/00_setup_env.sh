@@ -61,8 +61,6 @@ export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
 export CCACHE_DIR=${CCACHE_DIR:-$BASE_SCRATCH_DIR/.ccache}
 # Folder where the build result is put (bin and lib).
 export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out}
-# Folder where the build is done (dist and out-of-tree build).
-export BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_SCRATCH_DIR/build}
 # The folder for previous release binaries.
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export PREVIOUS_RELEASES_DIR=${PREVIOUS_RELEASES_DIR:-$BASE_ROOT_DIR/prev_releases}

@@ -127,4 +127,4 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         p2p_conn_blocksonly.wait_until(lambda: test_for_cmpctblock(block2))
 
 if __name__ == '__main__':
-    P2PCompactBlocksBlocksOnly().main()
+    P2PCompactBlocksBlocksOnly(__file__).main()

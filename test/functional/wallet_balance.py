@@ -339,4 +339,4 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(tx_info['lastprocessedblock']['hash'], prev_hash)
 
 if __name__ == '__main__':
-    WalletTest().main()
+    WalletTest(__file__).main()

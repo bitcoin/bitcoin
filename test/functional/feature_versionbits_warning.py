@@ -100,4 +100,4 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         self.wait_until(lambda: self.versionbits_in_alert_file())
 
 if __name__ == '__main__':
-    VersionBitsWarningTest().main()
+    VersionBitsWarningTest(__file__).main()

@@ -61,4 +61,4 @@ class GetBlockFilterTest(BitcoinTestFramework):
                                     self.nodes[0].getblockfilter, genesis_hash, filter_type)
 
 if __name__ == '__main__':
-    GetBlockFilterTest().main()
+    GetBlockFilterTest(__file__).main()
