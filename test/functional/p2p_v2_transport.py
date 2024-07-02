@@ -63,7 +63,7 @@ class V2TransportTest(BitcoinTestFramework):
 
         # addnode rpc error when v2transport requested but not enabled
         ip_port = "127.0.0.1:{}".format(p2p_port(3))
-        assert_raises_rpc_error(-8, "Error: v2transport requested but not enabled (see -v2transport)", self.nodes[2].addnode, node=ip_port, command='add', v2transport=True)
+        assert_raises_rpc_error(-8, "Error: Adding v2transport connections requires -v2transport init flag to be set.", self.nodes[2].addnode, node=ip_port, command='add', v2transport=True)
 
         with self.nodes[2].assert_debug_log(expected_msgs=[],
                                             unexpected_msgs=[sending_handshake, downgrading_to_v1]):
