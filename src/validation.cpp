@@ -3054,7 +3054,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
             LogError("DisconnectTip(): DisconnectBlock %s failed\n", pindexDelete->GetBlockHash().ToString());
             return false;
         }
-        bool flushed = view.Flush();
+        bool flushed = view.Flush(/*reallocate_cache=*/false);
         assert(flushed);
     }
     LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n",
@@ -3192,7 +3192,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
                  Ticks<MillisecondsDouble>(time_3 - time_2),
                  Ticks<SecondsDouble>(time_connect_total),
                  Ticks<MillisecondsDouble>(time_connect_total) / num_blocks_total);
-        bool flushed = view.Flush();
+        bool flushed = view.Flush(/*reallocate_cache=*/false);
         assert(flushed);
     }
     const auto time_4{SteadyClock::now()};
@@ -4913,7 +4913,7 @@ bool Chainstate::ReplayBlocks()
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
-    cache.Flush();
+    cache.Flush(/*reallocate_cache=*/false);
     m_chainman.GetNotifications().progress(bilingual_str{}, 100, false);
     return true;
 }
