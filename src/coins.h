@@ -86,6 +86,9 @@ public:
     }
 };
 
+struct CCoinsCacheEntry;
+using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
+
 /**
  * A Coin in one level of the coins database caching hierarchy.
  *
@@ -103,8 +106,29 @@ public:
  */
 struct CCoinsCacheEntry
 {
+private:
+    /**
+     * These are used to create a doubly linked list of flagged entries.
+     * They are set in AddFlags and unset in ClearFlags.
+     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     *
+     * DIRTY entries are tracked so that only modified entries can be passed to
+     * the parent cache for batch writing. This is a performance optimization
+     * compared to giving all entries in the cache to the parent and having the
+     * parent scan for only modified entries.
+     *
+     * FRESH-but-not-DIRTY coins can not occur in practice, since that would
+     * mean a spent coin exists in the parent CCoinsView and not in the child
+     * CCoinsViewCache. Nevertheless, if a spent coin is retrieved from the
+     * parent cache, the FRESH-but-not-DIRTY coin will be tracked by the linked
+     * list and deleted when Sync or Flush is called on the CCoinsViewCache.
+     */
+    CCoinsCacheEntry* m_prev{nullptr};
+    CoinsCachePair* m_next{nullptr};
+    uint8_t m_flags{0};
+
+public:
     Coin coin; // The actual cached data.
-    unsigned char flags;
 
     enum Flags {
         /**
@@ -127,9 +151,50 @@ struct CCoinsCacheEntry
         FRESH = (1 << 1),
     };
 
-    CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
-    CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
+    //! Adding a flag also requires a self reference to the pair that contains
+    //! this entry in the CCoinsCache map and a reference to the head of the
+    //! flagged pair linked list.
+    inline void AddFlags(uint8_t flags, CoinsCachePair& self, CCoinsCacheEntry& head)
+    {
+        if (!m_flags && flags) {
+            m_prev = &head;
+            m_next = head.m_next;
+            if (m_next) m_next->second.m_prev = &self.second;
+            head.m_next = &self;
+        }
+        m_flags |= flags;
+    }
+    inline void ClearFlags()
+    {
+        if (m_flags) {
+            if (m_next) m_next->second.m_prev = m_prev;
+            m_prev->m_next = m_next;
+            m_prev = nullptr;
+            m_next = nullptr;
+        }
+        m_flags = 0;
+    }
+    inline uint8_t GetFlags() const { return m_flags; }
+    inline bool IsDirty() const { return m_flags & DIRTY; }
+    inline bool IsFresh() const { return m_flags & FRESH; }
+
+    //! Get the next entry in the flagged linked list, optionally removing the
+    //! current entry and clearing the flags.
+    inline CoinsCachePair* Next(bool clear_flags = false)
+    {
+        const auto ret{m_next};
+        if (clear_flags) {
+            ClearFlags();
+        }
+        return ret;
+    }
+
+    CCoinsCacheEntry() = default;
+    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)) {}
+    ~CCoinsCacheEntry()
+    {
+        ClearFlags();
+    }
 };
 
 /**
@@ -144,8 +209,8 @@ using CCoinsMap = std::unordered_map<COutPoint,
                                      CCoinsCacheEntry,
                                      SaltedOutpointHasher,
                                      std::equal_to<COutPoint>,
-                                     PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
-                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4>>;
+                                     PoolAllocator<CoinsCachePair,
+                                                   sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
@@ -191,8 +256,10 @@ public:
     virtual std::vector<uint256> GetHeadBlocks() const;
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
-    //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true);
+    //! The passed pairs are a linked list that can be modified if will_erase is true.
+    //! If will_erase is true, the coins will be erased by the caller afterwards,
+    //! so the coins can be moved out of the pairs instead of copied
+    virtual bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
@@ -218,7 +285,7 @@ public:
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
+    bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -237,6 +304,12 @@ protected:
      */
     mutable uint256 hashBlock;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
+    /**
+     * The head of the flagged entry linked list.
+     * Destroy it after cacheCoins, since any existing entries could still be
+     * flagged and reference the head in CCoinsCacheEntry's destructor
+     */
+    mutable CCoinsCacheEntry m_flagged_head;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
@@ -255,7 +328,7 @@ public:
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
+    bool BatchWrite(CoinsCachePair *pairs, const uint256 &hashBlock, bool will_erase = true) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }

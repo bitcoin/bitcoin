@@ -84,6 +84,7 @@ BITCOIN_TESTS =\
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
   test/coins_tests.cpp \
+  test/coinscachepair_tests.cpp \
   test/coinstatsindex_tests.cpp \
   test/common_url_tests.cpp \
   test/compilerbug_tests.cpp \
