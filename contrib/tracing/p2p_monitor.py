@@ -14,8 +14,9 @@
 # outbound P2P messages. The eBPF program submits the P2P messages to
 # this script via a BPF ring buffer.
 
-import sys
 import curses
+import os
+import sys
 from curses import wrapper, panel
 from bcc import BPF, USDT
 
@@ -115,10 +116,10 @@ class Peer:
             self.total_outbound_msgs += 1
 
 
-def main(bitcoind_path):
+def main(pid):
     peers = dict()
-
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+    print(f"Hooking into bitcoind with pid {pid}")
+    bitcoind_with_usdts = USDT(pid=int(pid))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
     bitcoind_with_usdts.enable_probe(
@@ -245,9 +246,14 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
                         (msg.msg_type, msg.size), curses.A_NORMAL)
 
 
+def running_as_root():
+    return os.getuid() == 0
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/bitcoind")
+    if len(sys.argv) != 2:
+        print("USAGE:", sys.argv[0], "<pid of bitcoind>")
         exit()
-    path = sys.argv[1]
-    main(path)
+    if not running_as_root():
+        print("You might not have the privileges required to hook into the tracepoints!")
+    pid = sys.argv[1]
+    main(pid)

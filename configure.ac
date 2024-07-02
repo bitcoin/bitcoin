@@ -1211,10 +1211,11 @@ if test "$use_usdt" != "no"; then
   AC_MSG_CHECKING([whether Userspace, Statically Defined Tracing tracepoints are supported])
   AC_COMPILE_IFELSE([
     AC_LANG_PROGRAM(
-      [#include <sys/sdt.h>],
-      [DTRACE_PROBE(context, event);
+      [#define SDT_USE_VARIADIC 1
+       #include <sys/sdt.h>],
+      [STAP_PROBEV(context, event);
        int a, b, c, d, e, f, g;
-       DTRACE_PROBE7(context, event, a, b, c, d, e, f, g);]
+       STAP_PROBEV(context, event, a, b, c, d, e, f, g);]
     )],
     [AC_MSG_RESULT([yes]); AC_DEFINE([ENABLE_TRACING], [1], [Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing])],
     [AC_MSG_RESULT([no]); use_usdt=no;]

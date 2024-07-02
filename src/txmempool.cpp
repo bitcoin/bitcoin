@@ -34,6 +34,9 @@
 #include <string_view>
 #include <utility>
 
+TRACEPOINT_SEMAPHORE(mempool, added);
+TRACEPOINT_SEMAPHORE(mempool, removed);
+
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
     AssertLockHeld(cs_main);
@@ -477,7 +480,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     txns_randomized.emplace_back(newit->GetSharedTx());
     newit->idx_randomized = txns_randomized.size() - 1;
 
-    TRACE3(mempool, added,
+    TRACEPOINT(mempool, added,
         entry.GetTx().GetHash().data(),
         entry.GetTxSize(),
         entry.GetFee()
@@ -497,7 +500,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         // notification.
         m_opts.signals->TransactionRemovedFromMempool(it->GetSharedTx(), reason, mempool_sequence);
     }
-    TRACE5(mempool, removed,
+    TRACEPOINT(mempool, removed,
         it->GetTx().GetHash().data(),
         RemovalReasonToString(reason).c_str(),
         it->GetTxSize(),
