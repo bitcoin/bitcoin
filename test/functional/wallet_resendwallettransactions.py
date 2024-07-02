@@ -116,7 +116,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             # send/bumpfee and re-adds it to the wallet (undoing the next
             # removeprunedfunds). So empty the scheduler queue:
             node.syncwithvalidationinterfacequeue()
-            node.removeprunedfunds(child_txid)
+            node.removeprunedfunds([child_txid])
             child_txid = bumped_txid
         entry_time = node.getmempoolentry(child_txid)["time"]
 

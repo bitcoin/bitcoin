@@ -81,6 +81,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         rawtxn3 = self.nodes[0].gettransaction(txnid3)['hex']
         proof3 = self.nodes[0].gettxoutproof([txnid3])
 
+        txnid4 = self.nodes[0].sendtoaddress(address2, 0.0125)
+        self.generate(self.nodes[0], 1)
+        rawtxn4 = self.nodes[0].gettransaction(txnid4)['hex']
+        proof4 = self.nodes[0].gettxoutproof([txnid4])
+
         self.sync_all()
 
         # Import with no affiliated address
@@ -94,7 +99,8 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         wwatch = self.nodes[1].get_wallet_rpc('wwatch')
         wwatch.importaddress(address=address2, rescan=False)
         wwatch.importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
-        assert [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
+        wwatch.importprunedfunds(rawtransaction=rawtxn4, txoutproof=proof4)
+        assert [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2 or tx['txid'] == txnid4]
 
         # Import with private key with no rescan
         w1 = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
@@ -120,13 +126,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], True)
 
         # Remove transactions
-        assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)
+        assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, [txnid1])
         assert not [tx for tx in w1.listtransactions(include_watchonly=True) if tx['txid'] == txnid1]
 
-        wwatch.removeprunedfunds(txnid2)
-        assert not [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
+        wwatch.removeprunedfunds([txnid2, txnid4])
+        assert not [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2 or tx['txid'] == txnid4]
 
-        w1.removeprunedfunds(txnid3)
+        w1.removeprunedfunds([txnid3])
         assert not [tx for tx in w1.listtransactions(include_watchonly=True) if tx['txid'] == txnid3]
 
         # Check various RPC parameter validation errors
