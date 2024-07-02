@@ -12,6 +12,7 @@
 #include <script/keyorigin.h>
 #include <script/miniscript.h>
 #include <script/script.h>
+#include <script/sigversion.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <uint256.h>

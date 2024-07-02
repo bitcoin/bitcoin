@@ -10,6 +10,7 @@
 #include <crypto/sha256.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/sigversion.h>
 #include <uint256.h>
 
 typedef std::vector<unsigned char> valtype;
@@ -58,6 +59,25 @@ static inline void popstack(std::vector<valtype>& stack)
     if (stack.empty())
         throw std::runtime_error("popstack(): stack empty");
     stack.pop_back();
+}
+
+static inline int64_t cast_signed64(uint64_t v)
+{
+    uint64_t int64_min = static_cast<uint64_t>(std::numeric_limits<int64_t>::min());
+    if (v >= int64_min)
+        return static_cast<int64_t>(v - int64_min) + std::numeric_limits<int64_t>::min();
+    return static_cast<int64_t>(v);
+}
+
+static inline int64_t read_le8_signed(const unsigned char* ptr)
+{
+    return cast_signed64(ReadLE64(ptr));
+}
+
+static inline void push8_le(std::vector<valtype>& stack, uint64_t v)
+{
+    uint64_t v_le = htole64_internal(v);
+    stack.emplace_back(reinterpret_cast<unsigned char*>(&v_le), reinterpret_cast<unsigned char*>(&v_le) + sizeof(v_le));
 }
 
 bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
@@ -395,6 +415,7 @@ static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::con
     case SigVersion::WITNESS_V0:
         return EvalChecksigPreTapscript(sig, pubkey, pbegincodehash, pend, flags, checker, sigversion, serror, success);
     case SigVersion::TAPSCRIPT:
+    case SigVersion::TAPSCRIPT_64BIT:
         return EvalChecksigTapscript(sig, pubkey, execdata, flags, checker, sigversion, serror, success);
     case SigVersion::TAPROOT:
         // Key path spending in Taproot has no script, so this is unreachable.
@@ -414,7 +435,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     static const valtype vchTrue(1, 1);
 
     // sigversion cannot be TAPROOT here, as it admits no script execution.
-    assert(sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPSCRIPT);
+    assert(sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPSCRIPT || sigversion == SigVersion::TAPSCRIPT_64BIT);
 
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -1212,6 +1233,159 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     }
                 }
                 break;
+                case OP_ADD64:
+                case OP_SUB64:
+                case OP_MUL64:
+                case OP_DIV64:
+                case OP_LESSTHAN64:
+                case OP_LESSTHANOREQUAL64:
+                case OP_GREATERTHAN64:
+                case OP_GREATERTHANOREQUAL64:
+                {
+                    // Opcodes only available post tapscript_64bit
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+
+                    if (stack.size() < 2)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    valtype& vcha = stacktop(-2);
+                    valtype& vchb = stacktop(-1);
+                    if (vchb.size() != 8 || vcha.size() != 8)
+                        return set_error(serror, SCRIPT_ERR_EXPECTED_8BYTES);
+
+                    int64_t b = read_le8_signed(vchb.data());
+                    int64_t a = read_le8_signed(vcha.data());
+
+                    switch(opcode)
+                    {
+                        case OP_ADD64:
+                            if ((a > 0 && b > std::numeric_limits<int64_t>::max() - a) ||
+                                (a < 0 && b < std::numeric_limits<int64_t>::min() - a))
+                                stack.push_back(vchFalse);
+                            else {
+                                popstack(stack);
+                                popstack(stack);
+                                push8_le(stack, a + b);
+                                stack.push_back(vchTrue);
+                            }
+                        break;
+                        case OP_SUB64:
+                            if ((b > 0 && a < std::numeric_limits<int64_t>::min() + b) ||
+                                (b < 0 && a > std::numeric_limits<int64_t>::max() + b))
+                                stack.push_back(vchFalse);
+                            else {
+                                popstack(stack);
+                                popstack(stack);
+                                push8_le(stack, a - b);
+                                stack.push_back(vchTrue);
+                            }
+                        break;
+                        case OP_MUL64:
+                            if ((a > 0 && b > 0 && a > std::numeric_limits<int64_t>::max() / b) ||
+                                (a > 0 && b < 0 && b < std::numeric_limits<int64_t>::min() / a) ||
+                                (a < 0 && b > 0 && a < std::numeric_limits<int64_t>::min() / b) ||
+                                (a < 0 && b < 0 && b < std::numeric_limits<int64_t>::max() / a))
+                                stack.push_back(vchFalse);
+                            else {
+                                popstack(stack);
+                                popstack(stack);
+                                push8_le(stack, a * b);
+                                stack.push_back(vchTrue);
+                            }
+                        break;
+                        case OP_DIV64:
+                        {
+                            if (b == 0 || (b == -1 && a == std::numeric_limits<int64_t>::min())) { stack.push_back(vchFalse); break; }
+                            int64_t r = a % b;
+                            int64_t q = a / b;
+                            if (r < 0 && b > 0)      { r += b; q-=1;} // ensures that 0<=r<|b|
+                            else if (r < 0 && b < 0) { r -= b; q+=1;} // ensures that 0<=r<|b|
+                            popstack(stack);
+                            popstack(stack);
+                            push8_le(stack, r);
+                            push8_le(stack, q);
+                            stack.push_back(vchTrue);
+                        }
+                        break;
+                        break;
+                        case OP_LESSTHAN64:            popstack(stack); popstack(stack); stack.push_back( (a <  b) ? vchTrue : vchFalse ); break;
+                        case OP_LESSTHANOREQUAL64:     popstack(stack); popstack(stack); stack.push_back( (a <= b) ? vchTrue : vchFalse ); break;
+                        case OP_GREATERTHAN64:         popstack(stack); popstack(stack); stack.push_back( (a >  b) ? vchTrue : vchFalse ); break;
+                        case OP_GREATERTHANOREQUAL64:  popstack(stack); popstack(stack); stack.push_back( (a >= b) ? vchTrue : vchFalse ); break;
+                        default:                       assert(!"invalid opcode"); break;
+                    }
+                }
+                break;
+                case OP_NEG64:
+                {
+                    // Opcodes only available post tapscript_64bit
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+
+                    if (stack.size() < 1)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    valtype& vcha = stacktop(-1);
+                    if (vcha.size() != 8)
+                        return set_error(serror, SCRIPT_ERR_EXPECTED_8BYTES);
+
+                    int64_t a = read_le8_signed(vcha.data());
+                    if (a == std::numeric_limits<int64_t>::min()) { stack.push_back(vchFalse); break; }
+
+                    popstack(stack);
+                    push8_le(stack, -a);
+                    stack.push_back(vchTrue);
+                }
+                break;
+
+                case OP_SCRIPTNUMTOLE64:
+                {
+                    // Opcodes only available post tapscript_64bit
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+
+                    if (stack.size() < 1)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    int64_t num = CScriptNum(stacktop(-1), fRequireMinimal).getint();
+                    popstack(stack);
+                    push8_le(stack, num);
+                }
+                break;
+                case OP_LE64TOSCRIPTNUM:
+                {
+                    // Opcodes only available post tapscript_64bit
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+
+                    if (stack.size() < 1)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    valtype& vchnum = stacktop(-1);
+                    if (vchnum.size() != 8)
+                        return set_error(serror, SCRIPT_ERR_EXPECTED_8BYTES);
+                    valtype vchscript_num = CScriptNum(read_le8_signed(vchnum.data())).getvch();
+                    if (vchscript_num.size() > CScriptNum::nDefaultMaxNumSize) {
+                        return set_error(serror, SCRIPT_ERR_ARITHMETIC64);
+                    } else {
+                        popstack(stack);
+                        stack.push_back(std::move(vchscript_num));
+                    }
+                }
+                break;
+                case OP_LE32TOLE64:
+                {
+                    // Opcodes only available post tapscript_64bit
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0 || sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT) return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+
+                    if (stack.size() < 1)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    valtype& vchnum = stacktop(-1);
+                    if (vchnum.size() != 4)
+                        return set_error(serror, SCRIPT_ERR_ARITHMETIC64);
+                    uint32_t num = ReadLE32(vchnum.data());
+                    popstack(stack);
+                    push8_le(stack, static_cast<int64_t>(num));
+                }
+                break;
 
                 default:
                     return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
@@ -1799,7 +1973,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
                 return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
             }
             // New opcodes will be listed here. May use a different sigversion to modify existing opcodes.
-            if (IsOpSuccess(opcode)) {
+            if (IsOpSuccess(opcode, sigversion)) {
                 if (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) {
                     return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
                 }
@@ -1937,6 +2111,13 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
                 execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
                 execdata.m_validation_weight_left_init = true;
                 return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);
+            }
+            if ((control[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT_64BIT) {
+                // Tapscript (leaf version 0x66)
+                exec_script = CScript(script.begin(), script.end());
+                execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
+                execdata.m_validation_weight_left_init = true;
+                return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT_64BIT, checker, execdata, serror);
             }
             if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
                 return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);

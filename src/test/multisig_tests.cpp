@@ -9,6 +9,7 @@
 #include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/sigversion.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <uint256.h>

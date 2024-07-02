@@ -31,6 +31,7 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <script/sigversion.h>
 #include <script/solver.h>
 #include <uint256.h>
 #include <undo.h>
@@ -566,7 +567,7 @@ static RPCHelpMan decodescript()
         for (CScript::const_iterator it{script.begin()}; it != script.end();) {
             opcodetype op;
             CHECK_NONFATAL(script.GetOp(it, op));
-            if (op == OP_CHECKSIGADD || IsOpSuccess(op)) {
+            if (op == OP_CHECKSIGADD || IsOpSuccess(op, SigVersion::TAPSCRIPT)) {
                 return false;
             }
         }

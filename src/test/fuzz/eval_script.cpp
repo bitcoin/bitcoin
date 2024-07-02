@@ -4,6 +4,7 @@
 
 #include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/sigversion.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
