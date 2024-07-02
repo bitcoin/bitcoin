@@ -344,6 +344,22 @@ void Sv2Connman::ProcessSv2Message(const Sv2NetMsg& sv2_net_msg, Sv2Client& clie
 
         break;
     }
+    case Sv2MsgType::REQUEST_TRANSACTION_DATA:
+    {
+        node::Sv2RequestTransactionDataMsg request_tx_data;
+
+        try {
+            ss >> request_tx_data;
+        } catch (const std::exception& e) {
+            LogPrintLevel(BCLog::SV2, BCLog::Level::Error, "Received invalid RequestTransactionData message from client id=%zu: %e\n",
+                          client.m_id, e.what());
+            return;
+        }
+
+        m_msgproc->RequestTransactionData(client, request_tx_data);
+
+        break;
+    }
     default: {
         uint8_t msg_type[1]{uint8_t(sv2_net_msg.m_msg_type)};
         LogPrintLevel(BCLog::SV2, BCLog::Level::Warning, "Received unknown message type 0x%s from client id=%zu\n",
