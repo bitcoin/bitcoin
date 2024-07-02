@@ -22,6 +22,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.miniwallet = MiniWallet(self.nodes[0])
 
         self.blocksonly_mode_tests()
+        self.blocksonly_peer_tests()
         self.blocks_relay_conn_tests()
 
     def blocksonly_mode_tests(self):
@@ -77,6 +78,34 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
         self.generate(self.nodes[0], 1)
+
+    # Tests with an outbound peer that sets txrelay to false (which they do if they are in blocksonly mode)
+    def blocksonly_peer_tests(self):
+        self.restart_node(0, ["-noblocksonly"])  # disables blocks only mode
+        self.log.info("Check that we sustain full-relay outbound connections to blocksonly peers when not at the full outbound limit")
+        blocksonly_peer = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, txrelay=False)
+        # Trigger CheckForStaleTipAndEvictPeers, which is scheduled every 45s (EXTRA_PEER_CHECK_INTERVAL)
+        self.nodes[0].mockscheduler(46)
+        blocksonly_peer.sync_with_ping()
+        blocksonly_peer.peer_disconnect()
+
+        self.log.info("Check that we evict full-relay outbound connections to blocksonly peers at the full outbound limit")
+        # Simulate the situation of being at the max limit of full-outbound connections by setting -maxconnections to a low value
+        self.restart_node(0, ["-noblocksonly", "-maxconnections=2"])
+        # Have one blocksonly peer that is not being disconnected
+        blocksonly_peer1 = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, txrelay=False)
+        blocksonly_peer2 = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=2, txrelay=False)
+        self.nodes[0].mockscheduler(46)
+        blocksonly_peer2.wait_for_disconnect()
+        blocksonly_peer1.sync_with_ping()
+        blocksonly_peer1.peer_disconnect()
+
+        self.log.info("Check that we don't evict full-relay outbound connections to blocksonly peers if we are blocksonly ourselves")
+        self.restart_node(0, ["-blocksonly", "-maxconnections=1"])
+        blocksonly_peer = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, txrelay=False)
+        self.nodes[0].mockscheduler(46)
+        blocksonly_peer.sync_with_ping()
+        blocksonly_peer.peer_disconnect()
 
     def blocks_relay_conn_tests(self):
         self.log.info('Tests with node in normal mode with block-relay-only connections')

@@ -1129,7 +1129,7 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     using NodeFn = std::function<void(CNode*)>;
-    void ForEachNode(const NodeFn& func)
+    void ForEachFullyConnectedNode(const NodeFn& func)
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
@@ -1138,7 +1138,7 @@ public:
         }
     };
 
-    void ForEachNode(const NodeFn& func) const
+    void ForEachFullyConnectedNode(const NodeFn& func) const
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
@@ -1180,7 +1180,8 @@ public:
     // return a value less than (num_outbound_connections - num_outbound_slots)
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
-    int GetExtraFullOutboundCount() const;
+    // Returns 0 if we are at the target, and a negative number if below.
+    int GetFullOutboundDelta() const;
     // Count the number of block-relay-only peers we have over our limit.
     int GetExtraBlockRelayCount() const;
 

@@ -2380,12 +2380,13 @@ int CConnman::GetFullOutboundConnCount() const
 }
 
 // Return the number of peers we have over our outbound connection limit
+// Returns 0 if we are at the limit, and a negative number if below.
 // Exclude peers that are marked for disconnect, or are going to be
 // disconnected soon (eg ADDR_FETCH and FEELER)
 // Also exclude peers that haven't finished initial connection handshake yet
 // (so that we don't decide we're over our desired connection limit, and then
 // evict some peer that has finished the handshake)
-int CConnman::GetExtraFullOutboundCount() const
+int CConnman::GetFullOutboundDelta() const
 {
     int full_outbound_peers = 0;
     {
@@ -2396,7 +2397,7 @@ int CConnman::GetExtraFullOutboundCount() const
             }
         }
     }
-    return std::max(full_outbound_peers - m_max_outbound_full_relay, 0);
+    return full_outbound_peers - m_max_outbound_full_relay;
 }
 
 int CConnman::GetExtraBlockRelayCount() const
