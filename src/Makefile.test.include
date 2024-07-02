@@ -152,6 +152,7 @@ BITCOIN_TESTS =\
   test/sock_tests.cpp \
   test/span_tests.cpp \
   test/streams_tests.cpp \
+  test/sv2_noise_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
   test/timeoffsets_tests.cpp \
@@ -388,6 +389,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/span.cpp \
  test/fuzz/string.cpp \
  test/fuzz/strprintf.cpp \
+ test/fuzz/sv2_noise.cpp \
  test/fuzz/system.cpp \
  test/fuzz/timeoffsets.cpp \
  test/fuzz/torcontrol.cpp \
