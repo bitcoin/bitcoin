@@ -237,7 +237,7 @@ bool BaseIndex::Commit()
         }
     }
     if (!ok) {
-        LogError("%s: Failed to commit latest %s state\n", __func__, GetName());
+        LogAlert("%s: Failed to commit latest %s state\n", __func__, GetName());
         return false;
     }
     return true;

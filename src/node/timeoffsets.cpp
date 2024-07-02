@@ -60,7 +60,7 @@ bool TimeOffsets::WarnIfOutOfSync() const
         "take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` "
         "RPC methods to get more info."
     ), Ticks<std::chrono::minutes>(WARN_THRESHOLD))};
-    LogWarning("%s\n", msg.original);
+    LogAlert("Warning: %s\n", msg.original);
     m_warnings.Set(node::Warning::CLOCK_OUT_OF_SYNC, msg);
     return true;
 }

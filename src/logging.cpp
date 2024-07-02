@@ -129,7 +129,7 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
 {
-    // Log messages at Info, Warning and Error level unconditionally, so that
+    // Log messages at Info and Alert levels unconditionally, so that
     // important troubleshooting information doesn't get lost.
     if (level >= BCLog::Level::Info) return true;
 
@@ -221,10 +221,8 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
         return "debug";
     case BCLog::Level::Info:
         return "info";
-    case BCLog::Level::Warning:
-        return "warning";
-    case BCLog::Level::Error:
-        return "error";
+    case BCLog::Level::Alert:
+        return "alert";
     }
     assert(false);
 }
@@ -244,10 +242,8 @@ static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
         return BCLog::Level::Debug;
     } else if (level_str == "info") {
         return BCLog::Level::Info;
-    } else if (level_str == "warning") {
-        return BCLog::Level::Warning;
-    } else if (level_str == "error") {
-        return BCLog::Level::Error;
+    } else if (level_str == "alert") {
+        return BCLog::Level::Alert;
     } else {
         return std::nullopt;
     }
