@@ -103,8 +103,9 @@ def finish_block(block, signet_solution, grind_cmd):
         block.solve()
     else:
         headhex = CBlockHeader.serialize(block).hex()
+        logging.debug("grinding headhex: %s", headhex)
         cmd = grind_cmd.split(" ") + [headhex]
-        newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
+        newheadhex = subprocess.run(cmd, capture_output=True, input=b"", check=True).stdout.strip()
         newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
         block.rehash()
@@ -314,11 +315,12 @@ def do_generate(args):
 
     ultimate_target = nbits_to_target(int(args.nbits,16))
 
+    retries = 0
     mined_blocks = 0
     bestheader = {"hash": None}
     lastheader = None
-    while max_blocks is None or mined_blocks < max_blocks:
 
+    while max_blocks is None or mined_blocks < max_blocks:
         # current status?
         bci = json.loads(args.bcli("getblockchaininfo"))
 
@@ -338,7 +340,7 @@ def do_generate(args):
         now = time.time()
         if args.set_block_time is not None:
             logging.debug("Setting start time to %d", args.set_block_time)
-            mine_time = args.set_block_time
+            mine_time = args.set_block_time + retries
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
@@ -350,7 +352,7 @@ def do_generate(args):
             is_mine = True
         else:
             time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson, args.max_interval)
-            mine_time = bestheader["time"] + time_delta
+            mine_time = bestheader["time"] + time_delta + retries
 
             is_mine = next_block_is_mine(bci["bestblockhash"], my_blocks)
 
@@ -406,16 +408,36 @@ def do_generate(args):
 
         # mine block
         logging.debug("Mining block delta=%s start=%s mine=%s", seconds_to_hms(mine_time-bestheader["time"]), mine_time, is_mine)
-        mined_blocks += 1
         psbt = generate_psbt(tmpl, reward_spk, blocktime=mine_time)
         input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
         psbt_signed = json.loads(args.bcli("-stdin", "walletprocesspsbt", input=input_stream))
+
         if not psbt_signed.get("complete",False):
             logging.debug("Generated PSBT: %s" % (psbt,))
             sys.stderr.write("PSBT signing failed\n")
             return 1
         block, signet_solution = do_decode_psbt(psbt_signed["psbt"])
-        block = finish_block(block, signet_solution, args.grind_cmd)
+
+        # finish_block() will call bitcoin-util to grind PoW. If the nonce field search space is exhausted,
+        # the subprocess will fail and thus the miner. In case of failure, increment the retries var,
+        # use it to create a new block header and try again.
+        try:
+            block = finish_block(block, signet_solution, args.grind_cmd)
+        except subprocess.CalledProcessError as e:
+            # Look for the return code and output message raised by bitcoin-util
+            if e.returncode == 1 and "Could not satisfy difficulty target" in e.stderr.decode("utf-8"):
+                logging.debug("grinder exhausted the nonce search space, retrying with new block header")
+                retries += 1
+                continue
+            else: # bitcoin-util raised another error, pass it along and let the user know
+                raise e
+        # capture keyboard interrupt so one can stop the miner with SIGINT (Ctrl-C)
+        except KeyboardInterrupt:
+            logging.debug("mining aborted by the user")
+            break
+        # Mining succeeded
+        mined_blocks += 1
+        retries = 0
 
         # submit block
         r = args.bcli("-stdin", "submitblock", input=block.serialize().hex().encode('utf8'))
