@@ -656,6 +656,84 @@ public:
     Info GetInfo() const noexcept override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex);
 };
 
+/**
+ * Network traffic (bytes and number of messages). Split by direction, network, connection type and message type.
+ */
+class NetStats
+{
+public:
+    /// Used to designate the direction of the recorded traffic.
+    enum Direction { SENT, RECV };
+
+    /// Number of elements in `Direction`.
+    static constexpr size_t NUM_DIRECTIONS{2};
+
+    struct BytesAndCount {
+        std::atomic_uint64_t bytes{0}; //!< Number of bytes transferred.
+        std::atomic_uint64_t count{0}; //!< Number of messages transferred.
+
+        BytesAndCount& operator+=(const BytesAndCount& toadd)
+        {
+            bytes += toadd.bytes;
+            count += toadd.count;
+            return *this;
+        }
+    };
+
+    NetStats();
+
+    /**
+     * Increment the number of messages transferred by `num_messages` and the number of bytes by `num_bytes`.
+     */
+    void Record(Direction direction,
+                Network net,
+                ConnectionType conn_type,
+                const std::string& msg_type,
+                size_t num_messages,
+                size_t num_bytes);
+
+    /**
+     * Call the provided function for each stat.
+     */
+    void ForEach(std::function<void(NetStats::Direction dir,
+                                    Network net,
+                                    ConnectionType con,
+                                    const std::string& msg,
+                                    const BytesAndCount& data)> func) const;
+
+private:
+    // The ...FromIndex() and ...ToIndex() methods below convert from/to
+    // indexes of `m_data[]` to the actual values they represent. For example,
+    // assuming MessageTypeToIndex("ping") == 15, then everything stored in
+    // m_data[i][j][k][15] is traffic from "ping" messages (for any i, j, k).
+
+    static constexpr size_t DirectionToIndex(Direction direction);
+    static constexpr Direction DirectionFromIndex(size_t index);
+
+    static constexpr size_t NetworkToIndex(Network net);
+    static constexpr Network NetworkFromIndex(size_t index);
+
+    static constexpr size_t ConnectionTypeToIndex(ConnectionType conn_type);
+    static constexpr ConnectionType ConnectionTypeFromIndex(size_t index);
+
+    size_t MessageTypeToIndex(const std::string& msg_type) const;
+    static std::string MessageTypeFromIndex(size_t index);
+
+    // Access like m_data[direction index][net index][conn type index][msg type index].bytes = 123;
+    // Arrays are used so that this can be accessed from multiple threads without a mutex protection.
+    std::array<std::array<std::array<std::array<BytesAndCount, ALL_NET_MESSAGE_TYPES.size() + 1>,
+                                     NUM_CONNECTION_TYPES>,
+                          NET_MAX>,
+               NUM_DIRECTIONS>
+        m_data;
+
+
+    using MsgTypeToIndex = std::unordered_map<std::string, size_t>;
+
+    /// Holds the index `i` in `m_data[][][][i]` of a given message type for quick lookup.
+    const MsgTypeToIndex m_msg_type_to_index;
+};
+
 struct CNodeOptions
 {
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
@@ -911,7 +989,8 @@ public:
      * @return  True if the peer should stay connected,
      *          False if the peer should be disconnected from.
      */
-    bool ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete) EXCLUSIVE_LOCKS_REQUIRED(!cs_vRecv);
+    bool ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete, NetStats& net_stats)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_vRecv);
 
     void SetCommonVersion(int greatest_common_version)
     {
@@ -1247,6 +1326,8 @@ public:
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
+    const NetStats& GetNetStats() const;
+
 private:
     struct ListenSocket {
     public:
@@ -1346,7 +1427,7 @@ private:
     NodeId GetNewNodeId();
 
     /** (Try to) send data from node's vSendMsg. Returns (bytes_sent, data_left). */
-    std::pair<size_t, bool> SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
+    std::pair<size_t, bool> SocketSendData(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
 
     void DumpAddresses();
 
@@ -1387,6 +1468,8 @@ private:
     mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};
     uint64_t nTotalBytesSent GUARDED_BY(m_total_bytes_sent_mutex) {0};
+
+    NetStats m_net_stats;
 
     // outbound limit & stats
     uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(m_total_bytes_sent_mutex) {0};

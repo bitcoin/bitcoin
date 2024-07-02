@@ -647,7 +647,7 @@ void CNode::CopyStats(CNodeStats& stats)
 }
 #undef X
 
-bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
+bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete, NetStats& net_stats)
 {
     complete = false;
     const auto time = GetTime<std::chrono::microseconds>();
@@ -669,6 +669,12 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
                 // Message deserialization failed. Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
                 mapRecvBytesPerMsgType.at(NET_MESSAGE_TYPE_OTHER) += msg.m_raw_message_size;
+                net_stats.Record(NetStats::RECV,
+                                 ConnectedThroughNetwork(),
+                                 m_conn_type,
+                                 NET_MESSAGE_TYPE_OTHER,
+                                 /*num_messages=*/1,
+                                 msg.m_raw_message_size);
                 continue;
             }
 
@@ -680,6 +686,12 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
             }
             assert(i != mapRecvBytesPerMsgType.end());
             i->second += msg.m_raw_message_size;
+            net_stats.Record(NetStats::RECV,
+                             ConnectedThroughNetwork(),
+                             m_conn_type,
+                             /*msg_type=*/i->first,
+                             /*num_messages=*/1,
+                             msg.m_raw_message_size);
 
             // push the message to the process queue,
             vRecvMsg.push_back(std::move(msg));
@@ -1568,7 +1580,7 @@ Transport::Info V2Transport::GetInfo() const noexcept
     return info;
 }
 
-std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
+std::pair<size_t, bool> CConnman::SocketSendData(CNode& node)
 {
     auto it = node.vSendMsg.begin();
     size_t nSentSize = 0;
@@ -1581,9 +1593,16 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // there is an existing message still being sent, or (for v2 transports) when the
             // handshake has not yet completed.
             size_t memusage = it->GetMemoryUsage();
+            const auto msg_type = it->m_type;
             if (node.m_transport->SetMessageToSend(*it)) {
                 // Update memory usage of send buffer (as *it will be deleted).
                 node.m_send_memusage -= memusage;
+                m_net_stats.Record(NetStats::SENT,
+                                   node.ConnectedThroughNetwork(),
+                                   node.m_conn_type,
+                                   msg_type,
+                                   /*num_messages=*/1,
+                                   /*num_bytes=*/0);
                 ++it;
             }
         }
@@ -1619,6 +1638,12 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // Update statistics per message type.
             if (!msg_type.empty()) { // don't report v2 handshake bytes for now
                 node.AccountForSentBytes(msg_type, nBytes);
+                m_net_stats.Record(NetStats::SENT,
+                                   node.ConnectedThroughNetwork(),
+                                   node.m_conn_type,
+                                   msg_type,
+                                   /*num_messages=*/0,
+                                   nBytes);
             }
             nSentSize += nBytes;
             if ((size_t)nBytes != data.size()) {
@@ -2109,7 +2134,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             if (nBytes > 0)
             {
                 bool notify = false;
-                if (!pnode->ReceiveMsgBytes({pchBuf, (size_t)nBytes}, notify)) {
+                if (!pnode->ReceiveMsgBytes({pchBuf, (size_t)nBytes}, notify, m_net_stats)) {
                     pnode->CloseSocketDisconnect();
                 }
                 RecordBytesRecv(nBytes);
@@ -3614,6 +3639,150 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     }
 
     nMaxOutboundTotalBytesSentInCycle += bytes;
+}
+
+NetStats::NetStats()
+    : m_msg_type_to_index{[]() {
+          MsgTypeToIndex m;
+          size_t i{0};
+          for (const auto& msg_type : ALL_NET_MESSAGE_TYPES) {
+              m[msg_type] = i++;
+          }
+          return m;
+      }()}
+{
+}
+
+void NetStats::Record(Direction direction,
+                      Network net,
+                      ConnectionType conn_type,
+                      const std::string& msg_type,
+                      size_t num_messages,
+                      size_t num_bytes)
+{
+    auto& d = m_data.at(DirectionToIndex(direction))
+                  .at(NetworkToIndex(net))
+                  .at(ConnectionTypeToIndex(conn_type))
+                  .at(MessageTypeToIndex(msg_type));
+    d.count += num_messages;
+    d.bytes += num_bytes;
+}
+
+void NetStats::ForEach(std::function<void(NetStats::Direction dir,
+                                          Network net,
+                                          ConnectionType con,
+                                          const std::string& msg,
+                                          const BytesAndCount& data)> func) const
+{
+    for (size_t dir_i = 0; dir_i < m_data.size(); ++dir_i) {
+        for (size_t net_i = 0; net_i < m_data[dir_i].size(); ++net_i) {
+            for (size_t con_i = 0; con_i < m_data[dir_i][net_i].size(); ++con_i) {
+                for (size_t msg_i = 0; msg_i < m_data[dir_i][net_i][con_i].size(); ++msg_i) {
+                    func(DirectionFromIndex(dir_i),
+                         NetworkFromIndex(net_i),
+                         ConnectionTypeFromIndex(con_i),
+                         MessageTypeFromIndex(msg_i),
+                         m_data[dir_i][net_i][con_i][msg_i]);
+                }
+            }
+        }
+    }
+}
+
+constexpr size_t NetStats::DirectionToIndex(Direction direction)
+{
+    switch (direction) {
+    case SENT: return 0;
+    case RECV: return 1;
+    }
+    assert(false);
+}
+
+constexpr NetStats::Direction NetStats::DirectionFromIndex(size_t index)
+{
+    switch (index) {
+    case 0: return SENT;
+    case 1: return RECV;
+    }
+    assert(false);
+}
+
+constexpr size_t NetStats::NetworkToIndex(Network net)
+{
+    switch (net) {
+    case NET_UNROUTABLE: return 0;
+    case NET_IPV4: return 1;
+    case NET_IPV6: return 2;
+    case NET_ONION: return 3;
+    case NET_I2P: return 4;
+    case NET_CJDNS: return 5;
+    case NET_INTERNAL: return 6;
+    case NET_MAX: assert(false);
+    }
+    assert(false);
+}
+
+constexpr Network NetStats::NetworkFromIndex(size_t index)
+{
+    switch (index) {
+    case 0: return NET_UNROUTABLE;
+    case 1: return NET_IPV4;
+    case 2: return NET_IPV6;
+    case 3: return NET_ONION;
+    case 4: return NET_I2P;
+    case 5: return NET_CJDNS;
+    case 6: return NET_INTERNAL;
+    }
+    assert(false);
+}
+
+constexpr size_t NetStats::ConnectionTypeToIndex(ConnectionType conn_type)
+{
+    switch (conn_type) {
+    case ConnectionType::INBOUND: return 0;
+    case ConnectionType::OUTBOUND_FULL_RELAY: return 1;
+    case ConnectionType::MANUAL: return 2;
+    case ConnectionType::FEELER: return 3;
+    case ConnectionType::BLOCK_RELAY: return 4;
+    case ConnectionType::ADDR_FETCH: return 5;
+    }
+    assert(false);
+}
+
+constexpr ConnectionType NetStats::ConnectionTypeFromIndex(size_t index)
+{
+    switch (index) {
+    case 0: return ConnectionType::INBOUND;
+    case 1: return ConnectionType::OUTBOUND_FULL_RELAY;
+    case 2: return ConnectionType::MANUAL;
+    case 3: return ConnectionType::FEELER;
+    case 4: return ConnectionType::BLOCK_RELAY;
+    case 5: return ConnectionType::ADDR_FETCH;
+    }
+    assert(false);
+}
+
+size_t NetStats::MessageTypeToIndex(const std::string& msg_type) const
+{
+    auto it = m_msg_type_to_index.find(msg_type);
+    if (it != m_msg_type_to_index.end()) {
+        return it->second;
+    }
+    // Unknown message (NET_MESSAGE_TYPE_OTHER), use the last entry in the array.
+    return ALL_NET_MESSAGE_TYPES.size();
+}
+
+std::string NetStats::MessageTypeFromIndex(size_t index)
+{
+    if (index == ALL_NET_MESSAGE_TYPES.size()) {
+        return NET_MESSAGE_TYPE_OTHER;
+    }
+    return ALL_NET_MESSAGE_TYPES.at(index);
+}
+
+const NetStats& CConnman::GetNetStats() const
+{
+    return m_net_stats;
 }
 
 uint64_t CConnman::GetMaxOutboundTarget() const

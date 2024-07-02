@@ -10,6 +10,7 @@ Tests correspond to code in rpc/net.cpp.
 from decimal import Decimal
 from itertools import product
 import platform
+import random
 import time
 
 import test_framework.messages
@@ -87,6 +88,7 @@ class NetTest(BitcoinTestFramework):
         self.test_sendmsgtopeer()
         self.test_getaddrmaninfo()
         self.test_getrawaddrman()
+        self.test_getnetmsgstats()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -198,6 +200,134 @@ class NetTest(BitcoinTestFramework):
             peer_after = lambda: next(p for p in self.nodes[0].getpeerinfo() if p['id'] == peer_before['id'])
             self.wait_until(lambda: peer_after()['bytesrecv_per_msg'].get('pong', 0) >= peer_before['bytesrecv_per_msg'].get('pong', 0) + ping_size, timeout=1)
             self.wait_until(lambda: peer_after()['bytessent_per_msg'].get('ping', 0) >= peer_before['bytessent_per_msg'].get('ping', 0) + ping_size, timeout=1)
+
+    def test_getnetmsgstats(self):
+        self.log.info("Test getnetmsgstats")
+
+        self.restart_node(0)
+        node0 = self.nodes[0]
+        self.connect_nodes(0, 1) # Generate some traffic.
+        # Wait for the initial messages to be sent/received (don't disconnect too early). "sendheaders" is the last one.
+        self.wait_until(lambda: "sendheaders" in node0.getnetmsgstats()["recv"]["not_publicly_routable"]["manual"])
+        self.wait_until(lambda: "sendheaders" in node0.getnetmsgstats()["sent"]["not_publicly_routable"]["manual"])
+        self.disconnect_nodes(0, 1) # Avoid random/unpredictable packets (e.g. ping) messing with the tests below.
+        assert_equal(len(node0.getpeerinfo()), 0)
+
+        # In v2 getnettotals counts also bytes that are not accounted at any message (the v2 handshake).
+        # Also the v2 handshake's size could vary.
+        if not self.options.v2transport:
+            self.log.info("Compare byte count getnetmsgstats vs getnettotals")
+            nettotals = self.nodes[0].getnettotals()
+            stats_net_con_msg = self.nodes[0].getnetmsgstats(aggregate_by=["network", "connection_type", "message_type"])
+            assert_equal(nettotals["totalbytessent"], stats_net_con_msg["sent"]["bytes"])
+            assert_equal(nettotals["totalbytesrecv"], stats_net_con_msg["recv"]["bytes"])
+
+        self.log.info(f"Test full (un-aggregated) output is as expected")
+        stats_full = node0.getnetmsgstats()
+        assert_equal(
+            stats_full,
+            {
+                "recv": {
+                    "not_publicly_routable": {
+                        "manual": {
+                            "addrv2": {"bytes": 63 if self.options.v2transport else 66, "count": 1},
+                            "feefilter": {"bytes": 29 if self.options.v2transport else 32, "count": 1},
+                            "getheaders": {"bytes": 666 if self.options.v2transport else 669, "count": 1},
+                            "headers": {"bytes": 103 if self.options.v2transport else 106, "count": 1},
+                            "ping": {"bytes": 29 if self.options.v2transport else 32, "count": 1},
+                            "pong": {"bytes": 29 if self.options.v2transport else 32, "count": 1},
+                            "sendaddrv2": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "sendcmpct": {"bytes": 30 if self.options.v2transport else 33, "count": 1},
+                            "sendheaders": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "verack": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "version": {"bytes": 147 if self.options.v2transport else 138, "count": 1},
+                            "wtxidrelay": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                        }
+                    }
+                },
+                "sent": {
+                    "not_publicly_routable": {
+                        "manual": {
+                            "feefilter": {"bytes": 29 if self.options.v2transport else 32, "count": 1},
+                            "getaddr": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "getheaders": {"bytes": 666 if self.options.v2transport else 669, "count": 1},
+                            "headers": {"bytes": 103 if self.options.v2transport else 106, "count": 1},
+                            "ping": {"bytes": 29 if self.options.v2transport else 32, "count": 1},
+                            "pong": {"bytes": 29 if self.options.v2transport else 32, "count": 1},
+                            "sendaddrv2": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "sendcmpct": {"bytes": 30 if self.options.v2transport else 33, "count": 1},
+                            "sendheaders": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "verack": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                            "version": {"bytes": 147 if self.options.v2transport else 138, "count": 1},
+                            "wtxidrelay": {"bytes": 33 if self.options.v2transport else 24, "count": 1},
+                        }
+                    }
+                }
+            }
+        )
+
+        self.log.info("Check that aggregation works correctly")
+
+        def sum_all(json):
+            if "bytes" in json:
+                return dict(bytes=json["bytes"], count=json["count"])
+
+            s = dict(bytes=0, count=0)
+            #print(f'S json={json}')
+            for k, v in json.items():
+                #print(f'S k={k}, v={v}')
+                #print(f'S diving into {v}')
+                sub = sum_all(v)
+                s["bytes"] += sub["bytes"]
+                s["count"] += sub["count"]
+            return s
+
+        stats_aggregated_by_bitcoind = node0.getnetmsgstats(aggregate_by=["direction", "network", "connection_type", "message_type"])
+        stats_aggregated_by_test = sum_all(stats_full)
+        assert_equal(stats_aggregated_by_bitcoind, stats_aggregated_by_test)
+        if not self.options.v2transport:
+            assert_equal(nettotals["totalbytessent"] + nettotals["totalbytesrecv"], stats_aggregated_by_test["bytes"])
+
+        for i in range(1, 16):
+            keywords = []
+            if i & 1:
+                keywords.append("direction")
+            if i & 2:
+                keywords.append("network")
+            if i & 4:
+                keywords.append("connection_type")
+            if i & 8:
+                keywords.append("message_type")
+            random.shuffle(keywords)
+            self.log.info(f"Test values add up correctly when aggregated by {keywords}")
+            assert_equal(stats_aggregated_by_test, sum_all(node0.getnetmsgstats(aggregate_by=keywords)))
+
+        def get_stats(node):
+            return node.getnetmsgstats(aggregate_by=["network", "connection_type"])
+
+        self.log.info("Test that message count and total number of bytes increment when a ping message is sent")
+        stats_before_connect = get_stats(node0)
+        node2 = node0.add_p2p_connection(P2PInterface())
+        assert_equal(len(node0.getpeerinfo()), 1)
+        # Wait for the initial PING (that is sent immediately after the connection is estabilshed) to go through.
+        self.wait_until(lambda: get_stats(node0)["sent"]["ping"]["count"] > stats_before_connect["sent"]["ping"]["count"])
+        stats_before_ping = get_stats(node0)
+        node0.ping()
+        self.wait_until(lambda: get_stats(node0)["sent"]["ping"]["count"] > stats_before_ping["sent"]["ping"]["count"])
+        self.wait_until(lambda: get_stats(node0)["sent"]["ping"]["bytes"] > stats_before_ping["sent"]["ping"]["bytes"])
+
+        self.log.info("Test that when a message is broken in two, the stats only update once the full message has been received")
+        ping_msg = node2.build_message(test_framework.messages.msg_ping(nonce=12345))
+        stats_before_ping = get_stats(node0)
+        # Send the message in two pieces.
+        cut_pos = 7 # Chosen at an arbitrary position within the header.
+        node2.send_raw_message(ping_msg[:cut_pos])
+        assert_equal(get_stats(node0)["recv"]["ping"], stats_before_ping["recv"]["ping"])
+        # Send the rest of the ping.
+        node2.send_raw_message(ping_msg[cut_pos:])
+        self.wait_until(lambda: get_stats(node0)["recv"]["ping"]["count"] == stats_before_ping["recv"]["ping"]["count"] + 1)
+
+        node2.peer_disconnect()
 
     def test_getnetworkinfo(self):
         self.log.info("Test getnetworkinfo")
