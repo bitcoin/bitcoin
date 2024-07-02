@@ -10,7 +10,6 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/util/xoroshiro128plusplus.h>
 #include <util/chaintype.h>
 
 #include <cassert>
@@ -104,7 +103,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
 
 namespace {
 
-template<typename R>
+template<RandomNumberGenerator R>
 void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDataProvider& provider)
 {
     // Simulation test with two Transport objects, which send messages to each other, with
@@ -165,8 +164,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // Determine size of message to send (limited to 75 kB for performance reasons).
         size_t size = provider.ConsumeIntegralInRange<uint32_t>(0, 75000);
         // Get payload of message from RNG.
-        msg.data.resize(size);
-        for (auto& v : msg.data) v = uint8_t(rng());
+        msg.data = rng.randbytes(size);
         // Return.
         return msg;
     };
@@ -337,7 +335,7 @@ std::unique_ptr<Transport> MakeV1Transport(NodeId nodeid) noexcept
     return std::make_unique<V1Transport>(nodeid);
 }
 
-template<typename RNG>
+template<RandomNumberGenerator RNG>
 std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& rng, FuzzedDataProvider& provider)
 {
     // Retrieve key
@@ -353,8 +351,7 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
     } else {
         // If it's longer, generate it from the RNG. This avoids having large amounts of
         // (hopefully) irrelevant data needing to be stored in the fuzzer data.
-        garb.resize(garb_len);
-        for (auto& v : garb) v = uint8_t(rng());
+        garb = rng.randbytes(garb_len);
     }
     // Retrieve entropy
     auto ent = provider.ConsumeBytes<std::byte>(32);
@@ -378,7 +375,7 @@ FUZZ_TARGET(p2p_transport_bidirectional, .init = initialize_p2p_transport_serial
 {
     // Test with two V1 transports talking to each other.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV1Transport(NodeId{0});
     auto t2 = MakeV1Transport(NodeId{1});
     if (!t1 || !t2) return;
@@ -389,7 +386,7 @@ FUZZ_TARGET(p2p_transport_bidirectional_v2, .init = initialize_p2p_transport_ser
 {
     // Test with two V2 transports talking to each other.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV2Transport(NodeId{0}, true, rng, provider);
     auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
     if (!t1 || !t2) return;
@@ -400,7 +397,7 @@ FUZZ_TARGET(p2p_transport_bidirectional_v1v2, .init = initialize_p2p_transport_s
 {
     // Test with a V1 initiator talking to a V2 responder.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV1Transport(NodeId{0});
     auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
     if (!t1 || !t2) return;

@@ -19,27 +19,13 @@
  */
 extern FastRandomContext g_insecure_rand_ctx;
 
-/**
- * Flag to make GetRand in random.h return the same number
- */
-extern bool g_mock_deterministic_tests;
-
 enum class SeedRand {
     ZEROS, //!< Seed with a compile time constant of zeros
-    SEED,  //!< Call the Seed() helper
+    SEED,  //!< Use (and report) random seed from environment, or a (truly) random one.
 };
 
-/** Seed the given random ctx or use the seed passed in via an environment var */
-void Seed(FastRandomContext& ctx);
-
-static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
-{
-    if (seed == SeedRand::ZEROS) {
-        g_insecure_rand_ctx = FastRandomContext(/*fDeterministic=*/true);
-    } else {
-        Seed(g_insecure_rand_ctx);
-    }
-}
+/** Seed the RNG for testing. This affects all randomness, except GetStrongRandBytes(). */
+void SeedRandomForTest(SeedRand seed = SeedRand::SEED);
 
 static inline uint32_t InsecureRand32()
 {

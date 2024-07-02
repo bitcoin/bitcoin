@@ -1273,11 +1273,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         node.addrman = std::move(*addrman);
     }
 
+    FastRandomContext rng;
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(args.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
-    node.connman = std::make_unique<CConnman>(GetRand<uint64_t>(),
-                                              GetRand<uint64_t>(),
+    node.connman = std::make_unique<CConnman>(rng.rand64(),
+                                              rng.rand64(),
                                               *node.addrman, *node.netgroupman, chainparams, args.GetBoolArg("-networkactive", true));
 
     assert(!node.fee_estimator);

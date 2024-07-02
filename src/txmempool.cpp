@@ -657,7 +657,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 {
     if (m_opts.check_ratio == 0) return;
 
-    if (GetRand(m_opts.check_ratio) >= 1) return;
+    if (FastRandomContext().randrange(m_opts.check_ratio) >= 1) return;
 
     AssertLockHeld(::cs_main);
     LOCK(cs);

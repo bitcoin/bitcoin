@@ -936,7 +936,7 @@ private:
      * accurately determine when we received the transaction (and potentially
      * determine the transaction's origin). */
     std::chrono::microseconds NextInvToInbounds(std::chrono::microseconds now,
-                                                std::chrono::seconds average_interval);
+                                                std::chrono::seconds average_interval) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
 
     // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
@@ -1244,7 +1244,7 @@ std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::micros
         // If this function were called from multiple threads simultaneously
         // it would possible that both update the next send variable, and return a different result to their caller.
         // This is not possible in practice as only the net processing thread invokes this function.
-        m_next_inv_to_inbounds = GetExponentialRand(now, average_interval);
+        m_next_inv_to_inbounds = now + m_rng.rand_exp_duration(average_interval);
     }
     return m_next_inv_to_inbounds;
 }
@@ -1698,7 +1698,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 
     // Schedule next run for 10-15 minutes in the future.
     // We add randomness on every cycle to avoid the possibility of P2P fingerprinting.
-    const std::chrono::milliseconds delta = 10min + GetRandMillis(5min);
+    const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
@@ -2050,7 +2050,7 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
 
     // schedule next run for 10-15 minutes in the future
-    const std::chrono::milliseconds delta = 10min + GetRandMillis(5min);
+    const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
@@ -2124,7 +2124,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
  */
 void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock)
 {
-    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(*pblock, GetRand<uint64_t>());
+    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(*pblock, FastRandomContext().rand64());
 
     LOCK(cs_main);
 
@@ -2522,7 +2522,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                 if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
                     MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
                 } else {
-                    CBlockHeaderAndShortTxIDs cmpctblock{*pblock, GetRand<uint64_t>()};
+                    CBlockHeaderAndShortTxIDs cmpctblock{*pblock, FastRandomContext().rand64()};
                     MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, cmpctblock);
                 }
             } else {
@@ -5617,7 +5617,7 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::mic
     if (pingSend) {
         uint64_t nonce;
         do {
-            nonce = GetRand<uint64_t>();
+            nonce = FastRandomContext().rand64();
         } while (nonce == 0);
         peer.m_ping_queued = false;
         peer.m_ping_start = now;
@@ -5654,13 +5654,13 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
             CAddress local_addr{*local_service, peer.m_our_services, Now<NodeSeconds>()};
             PushAddress(peer, local_addr);
         }
-        peer.m_next_local_addr_send = GetExponentialRand(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
+        peer.m_next_local_addr_send = current_time + m_rng.rand_exp_duration(AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
     }
 
     // We sent an `addr` message to this peer recently. Nothing more to do.
     if (current_time <= peer.m_next_addr_send) return;
 
-    peer.m_next_addr_send = GetExponentialRand(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
+    peer.m_next_addr_send = current_time + m_rng.rand_exp_duration(AVG_ADDRESS_BROADCAST_INTERVAL);
 
     if (!Assume(peer.m_addrs_to_send.size() <= MAX_ADDR_TO_SEND)) {
         // Should be impossible since we always check size before adding to
@@ -5747,13 +5747,13 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
             MakeAndPushMessage(pto, NetMsgType::FEEFILTER, filterToSend);
             peer.m_fee_filter_sent = filterToSend;
         }
-        peer.m_next_send_feefilter = GetExponentialRand(current_time, AVG_FEEFILTER_BROADCAST_INTERVAL);
+        peer.m_next_send_feefilter = current_time + m_rng.rand_exp_duration(AVG_FEEFILTER_BROADCAST_INTERVAL);
     }
     // If the fee filter has changed substantially and it's still more than MAX_FEEFILTER_CHANGE_DELAY
     // until scheduled broadcast, then move the broadcast to within MAX_FEEFILTER_CHANGE_DELAY.
     else if (current_time + MAX_FEEFILTER_CHANGE_DELAY < peer.m_next_send_feefilter &&
                 (currentFilter < 3 * peer.m_fee_filter_sent / 4 || currentFilter > 4 * peer.m_fee_filter_sent / 3)) {
-        peer.m_next_send_feefilter = current_time + GetRandomDuration<std::chrono::microseconds>(MAX_FEEFILTER_CHANGE_DELAY);
+        peer.m_next_send_feefilter = current_time + m_rng.randrange<std::chrono::microseconds>(MAX_FEEFILTER_CHANGE_DELAY);
     }
 }
 
@@ -5984,7 +5984,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         CBlock block;
                         const bool ret{m_chainman.m_blockman.ReadBlockFromDisk(block, *pBestIndex)};
                         assert(ret);
-                        CBlockHeaderAndShortTxIDs cmpctblock{block, GetRand<uint64_t>()};
+                        CBlockHeaderAndShortTxIDs cmpctblock{block, m_rng.rand64()};
                         MakeAndPushMessage(*pto, NetMsgType::CMPCTBLOCK, cmpctblock);
                     }
                     state.pindexBestHeaderSent = pBestIndex;
@@ -6059,7 +6059,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     if (pto->IsInboundConn()) {
                         tx_relay->m_next_inv_send_time = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
                     } else {
-                        tx_relay->m_next_inv_send_time = GetExponentialRand(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
+                        tx_relay->m_next_inv_send_time = current_time + m_rng.rand_exp_duration(OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
                     }
                 }
 
