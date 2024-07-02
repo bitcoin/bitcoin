@@ -6,7 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
-#include <policy/v3_policy.h>
+#include <policy/truc_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -320,7 +320,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         if (accepted) {
             Assert(added.size() == 1); // For now, no package acceptance
             Assert(tx == *added.begin());
-            CheckMempoolV3Invariants(tx_pool);
+            CheckMempoolTRUCInvariants(tx_pool);
         } else {
             // Do not consider rejected transaction removed
             removed.erase(tx);
@@ -413,7 +413,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         if (accepted) {
             txids.push_back(tx->GetHash());
-            CheckMempoolV3Invariants(tx_pool);
+            CheckMempoolTRUCInvariants(tx_pool);
         }
     }
     Finish(fuzzed_data_provider, tx_pool, chainstate);
