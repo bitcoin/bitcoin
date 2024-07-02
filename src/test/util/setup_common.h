@@ -13,6 +13,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <stdexcept>
+#include <test/util/net.h>
 #include <util/chaintype.h> // IWYU pragma: export
 #include <util/check.h>
 #include <util/fs.h>
@@ -94,6 +95,45 @@ struct TestingSetup : public ChainTestingSetup {
 struct RegTestingSetup : public TestingSetup {
     RegTestingSetup()
         : TestingSetup{ChainType::REGTEST} {}
+};
+
+/**
+ * TestingSetup + start connman at the beginning of each test and stop it when it ends.
+ * Changes `CreateSock()` to create `DynSock` sockets, so that the connman functions do not create
+ * a real socket and do not open real network connections. The mocked sockets' data can be
+ * controlled via the `m_sockets_pipes` member, available in each unit test.
+ * The connman is configured in such a way that it would try to open one p2p connection.
+ */
+struct NetTestingSetup : public TestingSetup {
+    explicit NetTestingSetup(ChainType chain_type = ChainType::REGTEST,
+                             const std::vector<const char*>& extra_args = {},
+                             const bool coins_db_in_memory = true,
+                             const bool block_tree_db_in_memory = true);
+
+    ~NetTestingSetup();
+
+    /**
+     * Thread safe FIFO of std::shared_ptr<DynSock::Pipes>.
+     * Used for pushing the pipes of newly created sockets (by CConnman threads) and
+     * getting and controlling them from tests.
+     */
+    class PipesFifo {
+    public:
+        /**
+         * Append a new pair of pipes to the list.
+         */
+        void PushBack(std::shared_ptr<DynSock::Pipes> pipes) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+        /**
+         * Remove the front of the list and return it.
+         */
+        std::shared_ptr<DynSock::Pipes> PopFront(bool wait = true) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    private:
+        Mutex m_mutex;
+        std::condition_variable m_cond;
+        std::list<std::shared_ptr<DynSock::Pipes>> m_list GUARDED_BY(m_mutex);
+    } m_sockets_pipes;
 };
 
 class CBlock;

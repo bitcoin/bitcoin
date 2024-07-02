@@ -115,6 +115,7 @@ BITCOIN_TESTS =\
   test/minisketch_tests.cpp \
   test/multisig_tests.cpp \
   test/net_peer_connection_tests.cpp \
+  test/net_msg_tests.cpp \
   test/net_peer_eviction_tests.cpp \
   test/net_tests.cpp \
   test/netbase_tests.cpp \
