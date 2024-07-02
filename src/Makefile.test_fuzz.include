@@ -24,3 +24,8 @@ libtest_fuzz_a_SOURCES = \
   test/fuzz/util/mempool.cpp \
   test/fuzz/util/net.cpp \
   $(TEST_FUZZ_H)
+
+if ENABLE_WALLET
+libtest_fuzz_a_SOURCES += \
+  test/fuzz/util/wallet.h
+endif # ENABLE_WALLET

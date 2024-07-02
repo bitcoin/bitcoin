@@ -212,7 +212,8 @@ FUZZ_WALLET_SRC = \
 if USE_SQLITE
 FUZZ_WALLET_SRC += \
  wallet/test/fuzz/notifications.cpp \
- wallet/test/fuzz/scriptpubkeyman.cpp
+ wallet/test/fuzz/scriptpubkeyman.cpp \
+ wallet/test/fuzz/spend.cpp
 endif # USE_SQLITE
 
 BITCOIN_TEST_SUITE += \
