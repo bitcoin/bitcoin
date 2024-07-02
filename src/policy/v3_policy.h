@@ -90,4 +90,24 @@ std::optional<std::string> PackageV3Checks(const CTransactionRef& ptx, int64_t v
                                            const Package& package,
                                            const CTxMemPool::setEntries& mempool_ancestors);
 
+/** Does context-less checks about a single transaction.
+ * If it has relay dust, it returns false if any are true:
+ *  - tx is not V3
+ *  - tx has non-0 fee
+    - tx has more than one dust output
+ * and sets relevant invalid state.
+ * Otherwise it returns true.
+ */
+bool CheckValidEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_fee, CAmount txfee, TxValidationState& state);
+
+/** Checks that all dust in package ends up spent by package. Assumes package is well-formed and sorted. */
+std::optional<uint256> CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate);
+
+/** Checks that individual transactions' ancestors have all their dust spent by this transaction.
+ *  Excluding reorgs, the ancestor set will be the direct parent only due to v3 restrictions.
+ */
+std::optional<std::string> CheckEphemeralSpends(const CTransactionRef& ptx,
+                                                const CTxMemPool::setEntries& ancestors,
+                                                CFeeRate dust_relay_feerate);
+
 #endif // BITCOIN_POLICY_V3_POLICY_H

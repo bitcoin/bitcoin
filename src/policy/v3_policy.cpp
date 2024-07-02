@@ -241,3 +241,94 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleV3Checks(const CTra
     }
     return std::nullopt;
 }
+
+bool CheckValidEphemeralTx(const CTransaction& tx, CFeeRate dust_relay_fee, CAmount txfee, TxValidationState& state)
+{
+    bool has_dust = false;
+    for (const CTxOut& txout : tx.vout) {
+        if (IsDust(txout, dust_relay_fee)) {
+            // We only allow a single dusty output
+            if (has_dust) {
+                return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "dust");
+            }
+            has_dust = true;
+         }
+    }
+
+    // No dust; it's complete standard already
+    if (!has_dust) return true;
+
+    // Makes spending checks inference simple via topology restrictions,
+    // can be relaxed if spending checks can be done easier in future.
+    if (tx.version != TRUC_VERSION) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "dust");
+    }
+
+    // We never want to give incentives to mine this alone
+    if (txfee != 0) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "dust");
+    }
+
+    return true;
+}
+
+std::optional<uint256> CheckEphemeralSpends(const Package& package, CFeeRate dust_relay_rate)
+{
+    assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+
+    // Package is topologically sorted, and PreChecks ensures that
+    // there is up to one dust output per tx. Simply check if
+    // any are left unspent in this package.
+    std::unordered_set<COutPoint, SaltedOutpointHasher> unspent_dust;
+    for (const auto& tx : package) {
+        for (uint32_t i=0; i<tx->vout.size(); i++) {
+            if (IsDust(tx->vout[i], dust_relay_rate)) {
+                unspent_dust.insert(COutPoint(tx->GetHash(), i));
+            }
+        }
+        for (const auto& tx_input : tx->vin) {
+            unspent_dust.erase(tx_input.prevout);
+        }
+    }
+
+    if (!unspent_dust.empty()) {
+        // Return something useful
+        return unspent_dust.begin()->hash;
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::string> CheckEphemeralSpends(const CTransactionRef& ptx,
+                                                const CTxMemPool::setEntries& ancestors,
+                                                CFeeRate dust_relay_feerate)
+{
+    /* Ephemeral anchors are disallowed already, no need to check */
+    if (ptx->version != TRUC_VERSION) {
+        return std::nullopt;
+    }
+
+    std::unordered_set<COutPoint, SaltedOutpointHasher> unspent_dust;
+
+    // In the case of TRUC transactions, only one ancestor will be allowed anyways,
+    // but if relaxed to non-TRUC, this would need to be re-worked to check
+    // parents only.
+    for (const auto& entry : ancestors) {
+        const auto& tx = entry->GetTx();
+        for (uint32_t i=0; i<tx.vout.size(); i++) {
+            if (IsDust(tx.vout[i], dust_relay_feerate)) {
+                unspent_dust.insert(COutPoint(tx.GetHash(), i));
+            }
+        }
+    }
+
+    for (const auto& input : ptx->vin) {
+        unspent_dust.erase(input.prevout);
+    }
+
+    if (!unspent_dust.empty()) {
+        return strprintf("tx does not spend all parent ephemeral anchors");
+    }
+
+    return std::nullopt;
+}
