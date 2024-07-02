@@ -150,10 +150,16 @@ static int AppInitRPC(int argc, char* argv[])
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "Usage:  bitcoin-cli [options] <command> [params]  Send command to " PACKAGE_NAME "\n"
-                "or:     bitcoin-cli [options] -named <command> [name=value]...  Send command to " PACKAGE_NAME " (with named arguments)\n"
-                "or:     bitcoin-cli [options] help                List commands\n"
-                "or:     bitcoin-cli [options] help <command>      Get help for a command\n";
+                "The bitcoin-cli utility provides a command line interface to interact with a " PACKAGE_NAME " RPC server.\n"
+                "\nIt can be used to query network information, manage wallets, create or broadcast transactions, and control the " PACKAGE_NAME " server.\n"
+                "\nUse the \"help\" command to list all commands. Use \"help <command>\" to show help for that command.\n"
+                "The -named option allows you to specify parameters using the key=value format, eliminating the need to pass unused positional parameters.\n"
+                "\n"
+                "Usage: bitcoin-cli [options] <command> [params]\n"
+                "or:    bitcoin-cli [options] -named <command> [name=value]...\n"
+                "or:    bitcoin-cli [options] help\n"
+                "or:    bitcoin-cli [options] help <command>\n"
+                "\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
