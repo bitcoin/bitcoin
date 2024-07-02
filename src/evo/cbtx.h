@@ -29,12 +29,10 @@ public:
 public:
     uint16_t nVersion{CURRENT_VERSION};
     int32_t nHeight{0};
-    uint256 merkleRootMNList;
-    uint256 merkleRootQuorums;
 
 public:
     SERIALIZE_METHODS(CCbTx, obj) {
-        READWRITE(obj.nVersion, obj.nHeight, obj.merkleRootMNList, obj.merkleRootQuorums);
+        READWRITE(obj.nVersion, obj.nHeight);
     }
 
     std::string ToString() const;
@@ -45,8 +43,6 @@ public:
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("height", nHeight);
-        obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
-        obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
     }
 };
 

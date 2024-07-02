@@ -352,7 +352,7 @@ TestChain100Setup::TestChain100Setup(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
             "2d29a46dc059cf2266f484afc0db7c1898ef444d64859926ca89bd0cd4bd6837"  ||
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "1434375060f59a913c5ff17621c69b120b1c7795c54cdb7c7d2542c0f3ca4050" );
+            "69bc8cf27a58c68fabb6f1e36e145f88c065b59402aa8ba179a512952b165ec3" );
     }
 }
 

@@ -12,7 +12,8 @@ Checks DIP3 for v19
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
-    p2p_port
+    p2p_port,
+    force_finish_mnsync
 )
 
 
@@ -31,9 +32,7 @@ class DIP3V19Test(DashTestFramework):
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
 
         for i in range(len(self.nodes)):
-            if i != 0:
-                self.connect_nodes(i, 0)
-
+            force_finish_mnsync(self.nodes[i])
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()

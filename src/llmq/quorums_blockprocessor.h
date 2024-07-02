@@ -29,8 +29,6 @@ private:
     std::map<uint256, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
     std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
 
-    mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 10> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
-
 public:
     CEvoDB<uint256, std::pair<CFinalCommitment, uint256>> m_commitment_evoDb;
     CEvoDB<uint32_t, int> m_inverse_height_evoDb;

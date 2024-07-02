@@ -18,8 +18,14 @@
 #include <net_processing.h>
 void CDSNotificationInterface::InitializeCurrentBlockTip(ChainstateManager& chainman)
 {
-    LOCK(cs_main);
-    UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman, chainman.IsInitialBlockDownload());
+    
+    {
+        LOCK(cs_main);
+        const CBlockIndex *pindex = chainman.ActiveChain().Tip();
+        UpdatedBlockTip(chainman.ActiveChain().Tip(), nullptr, chainman, chainman.IsInitialBlockDownload());
+        if(deterministicMNManager)
+            deterministicMNManager->UpdatedBlockTip(pindex);
+    }
 }
 
 
@@ -39,6 +45,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     if (fInitialDownload)
         return;
+    if(deterministicMNManager)
+        deterministicMNManager->UpdatedBlockTip(pindexNew);
     if(llmq::quorumManager)
         llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::quorumDKGSessionManager)

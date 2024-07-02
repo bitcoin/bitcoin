@@ -488,6 +488,7 @@ public:
     bool IsDIP3Enforced(int nHeight = -1) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool FlushCacheToDisk() EXCLUSIVE_LOCKS_REQUIRED(!cs_cleanup, !cs);
     void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs_cleanup, !cs);
+    void UpdatedBlockTip(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
     const CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };

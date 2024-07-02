@@ -66,6 +66,6 @@ bool CheckCbTx(const CCbTx &cbTx, const CBlockIndex* pindexPrev, TxValidationSta
 
 std::string CCbTx::ToString() const
 {
-    return strprintf("CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s)",
-        nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
+    return strprintf("CCbTx(nVersion=%d, nHeight=%d)",
+        nVersion, nHeight);
 }

@@ -145,7 +145,7 @@ bool CheckLLMQCommitment(node::BlockManager &blockman, const CTransaction& tx, c
     if (!tx.IsCoinBase()) {
         return FormatSyscoinErrorMessage(state, "bad-qctx-invalid", fJustCheck);
     }
-    if(pindexPrev->nHeight < (Params().GetConsensus().nNEVMStartBlock + 1)) {
+    if(pindexPrev->nHeight <= Params().GetConsensus().nRolluxStartBlock) {
         return true;
     }
     CFinalCommitmentTxPayload qcTx;

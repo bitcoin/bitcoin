@@ -563,8 +563,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
             }
 
             m_evoDb->EraseCache(blockHash);
+            tipIndex = pindex->pprev;
         }
-        tipIndex = pindex->pprev;
     }
 
     if (curList.HasChanges()) {
@@ -893,6 +893,10 @@ const CDeterministicMNList CDeterministicMNManager::GetListAtChainTip()
         return CDeterministicMNList();
     }
     return GetListForBlockInternal(tipIndex);
+}
+
+void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex) {
+    WITH_LOCK(cs, tipIndex = pindex;);
 }
 
 bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n)
