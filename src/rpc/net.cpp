@@ -415,7 +415,7 @@ static RPCHelpMan addconnection()
 
     const bool success = connman.AddConnection(address, conn_type, use_v2transport);
     if (!success) {
-        throw JSONRPCError(RPC_CLIENT_NODE_CAPACITY_REACHED, "Error: Already at capacity for specified connection type.");
+        throw JSONRPCError(RPC_CLIENT_PEER_NOT_CONNECTED, "Error: Unable to open connection");
     }
 
     UniValue info(UniValue::VOBJ);
