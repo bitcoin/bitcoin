@@ -22,8 +22,8 @@ using node::TransactionError;
 
 namespace {
 constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
-    TransactionError::MISSING_INPUTS,
-    TransactionError::ALREADY_IN_CHAIN,
+    TransactionError::INPUTS_MISSING_OR_SPENT,
+    TransactionError::ALREADY_IN_UTXO_SET,
     TransactionError::MEMPOOL_REJECTED,
     TransactionError::MEMPOOL_ERROR,
     TransactionError::MAX_FEE_EXCEEDED,

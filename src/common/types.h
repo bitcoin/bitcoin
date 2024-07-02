@@ -15,7 +15,7 @@
 
 namespace common {
 enum class PSBTError {
-    MISSING_INPUTS,
+    INPUTS_INVALID,
     SIGHASH_MISMATCH,
     EXTERNAL_SIGNER_NOT_FOUND,
     EXTERNAL_SIGNER_FAILED,

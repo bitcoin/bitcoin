@@ -43,7 +43,7 @@ static RPCHelpMan sendrawtransaction()
         "\nThe transaction will be sent unconditionally to all peers, so using sendrawtransaction\n"
         "for manual rebroadcast may degrade privacy by leaking the transaction's origin, as\n"
         "nodes will normally not rebroadcast non-wallet transactions already in their mempool.\n"
-        "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_CHAIN, may throw if the transaction cannot be added to the mempool.\n"
+        "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_UTXO_SET, may throw if the transaction cannot be added to the mempool.\n"
         "\nRelated RPCs: createrawtransaction, signrawtransactionwithkey\n",
         {
             {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},

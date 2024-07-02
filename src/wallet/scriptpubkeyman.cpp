@@ -652,7 +652,7 @@ std::optional<PSBTError> LegacyScriptPubKeyMan::FillPSBT(PartiallySignedTransact
         // Check non_witness_utxo has specified prevout
         if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return PSBTError::MISSING_INPUTS;
+                return PSBTError::INPUTS_INVALID;
             }
         } else if (input.witness_utxo.IsNull()) {
             // There's no UTXO so we can just skip this now
@@ -2513,7 +2513,7 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
             script = input.witness_utxo.scriptPubKey;
         } else if (input.non_witness_utxo) {
             if (txin.prevout.n >= input.non_witness_utxo->vout.size()) {
-                return PSBTError::MISSING_INPUTS;
+                return PSBTError::INPUTS_INVALID;
             }
             script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
         } else {
