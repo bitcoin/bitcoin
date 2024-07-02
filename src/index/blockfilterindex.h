@@ -82,6 +82,9 @@ public:
     /** Get a range of filter hashes between two heights on a chain. */
     bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
                                std::vector<uint256>& hashes_out) const;
+
+    /** Data needed in blocks in order for the index to be able to sync */
+    uint32_t NeededBlockData() const override {return (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO);};
 };
 
 /**

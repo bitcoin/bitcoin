@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_TXINDEX_H
 #define BITCOIN_INDEX_TXINDEX_H
 
+#include <chain.h>
 #include <index/base.h>
 
 static constexpr bool DEFAULT_TXINDEX{false};
@@ -43,6 +44,9 @@ public:
     /// @param[out]  tx  The transaction itself.
     /// @return  true if transaction is found, false otherwise
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
+
+    /// Data needed in blocks in order for the index to be able to sync
+    uint32_t NeededBlockData() const override {return BLOCK_HAVE_DATA;};
 };
 
 /// The global transaction index, used in GetTransaction. May be null.

@@ -594,12 +594,12 @@ bool BlockManager::IsBlockPruned(const CBlockIndex& block)
     return m_have_pruned && !(block.nStatus & BLOCK_HAVE_DATA) && (block.nTx > 0);
 }
 
-const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& upper_block, const CBlockIndex* lower_block)
+const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& upper_block, const CBlockIndex* lower_block, uint32_t status_mask)
 {
     AssertLockHeld(::cs_main);
     const CBlockIndex* last_block = &upper_block;
-    assert(last_block->nStatus & BLOCK_HAVE_DATA); // 'upper_block' must have data
-    while (last_block->pprev && (last_block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+    assert((last_block->nStatus & status_mask) == status_mask); // 'upper_block' must have data
+    while (last_block->pprev && ((last_block->pprev->nStatus & status_mask) == status_mask)) {
         if (lower_block) {
             // Return if we reached the lower_block
             if (last_block == lower_block) return lower_block;
@@ -610,13 +610,20 @@ const CBlockIndex* BlockManager::GetFirstStoredBlock(const CBlockIndex& upper_bl
         last_block = last_block->pprev;
     }
     assert(last_block != nullptr);
+    // In the special case that all blocks up to the Genesis block are not
+    // pruned, we return the Genesis block instead of block 1, even though
+    // it may be missing (e.g. undo) data, since it is properly handled as an
+    // exception everywhere.
+    if (last_block->nHeight == 1) {
+        return last_block->pprev;
+    }
     return last_block;
 }
 
-bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block)
+bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block, uint32_t status_mask)
 {
-    if (!(upper_block.nStatus & BLOCK_HAVE_DATA)) return false;
-    return GetFirstStoredBlock(upper_block, &lower_block) == &lower_block;
+    if (!(upper_block.nStatus & status_mask)) return false;
+    return GetFirstStoredBlock(upper_block, &lower_block, status_mask) == &lower_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the

@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_COINSTATSINDEX_H
 #define BITCOIN_INDEX_COINSTATSINDEX_H
 
+#include <chain.h>
 #include <crypto/muhash.h>
 #include <index/base.h>
 
@@ -59,6 +60,9 @@ public:
 
     // Look up stats for a specific block using CBlockIndex
     std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex& block_index) const;
+
+    // Data needed in blocks in order for the index to be able to sync
+    uint32_t NeededBlockData() const override {return (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO);};
 };
 
 /// The global UTXO set hash object.
