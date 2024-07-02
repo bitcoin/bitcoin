@@ -3899,7 +3899,7 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
     // Note: we disable labels for ranged descriptors
     if (!desc.descriptor->IsRange()) {
         auto script_pub_keys = spk_man->GetScriptPubKeys();
-        if (script_pub_keys.empty()) {
+        if (script_pub_keys.empty() && desc.descriptor->HasScripts()) {
             WalletLogPrintf("Could not generate scriptPubKeys (cache is empty)\n");
             return nullptr;
         }

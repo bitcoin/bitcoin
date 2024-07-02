@@ -1536,6 +1536,26 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
            }
         }
 
+        // If this is an unused(KEY) descriptor, check that the wallet doesn't already have other descriptors with this key
+        if (!parsed_desc->HasScripts()) {
+            if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import unused() to wallet without private keys enabled");
+            }
+            // Unused descriptors must contain a single key.
+            // Earlier checks will have enforced that this key is either a private key when private keys are enabled,
+            // or that this key is a public key when private keys are disabled.
+            // If we can retrieve the corresponding private key from the wallet, then this key is already in the wallet
+            // and we should not import it.
+            std::set<CPubKey> pubkeys;
+            std::set<CExtPubKey> extpubs;
+            parsed_desc->GetPubKeys(pubkeys, extpubs);
+            std::transform(extpubs.begin(), extpubs.end(), std::inserter(pubkeys, pubkeys.begin()), [](const CExtPubKey& xpub) { return xpub.pubkey; });
+            CHECK_NONFATAL(pubkeys.size() == 1);
+            if (wallet.GetKey(pubkeys.begin()->GetID())) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import an unused() descriptor when its private key is already in the wallet");
+            }
+        }
+
         WalletDescriptor w_desc(std::move(parsed_desc), timestamp, range_start, range_end, next_index);
 
         // Check if the wallet already contains the descriptor

@@ -659,4 +659,64 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckInferDescriptor("4104032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220ac", "pk(04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220)", {}, {{"04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220", ""}});
 }
 
+void CheckSingleUnparsable(const std::string& desc, const std::string& expected_error)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed = Parse(desc, keys, error);
+    BOOST_CHECK_MESSAGE(!parsed, desc);
+    BOOST_CHECK_EQUAL(error, expected_error);
+}
+
+void CheckUnused(const std::string& prv, const std::string& pub)
+{
+    FlatSigningProvider keys_priv, keys_pub;
+    std::string error;
+
+    std::unique_ptr<Descriptor> parse_priv;
+    std::unique_ptr<Descriptor> parse_pub;
+    parse_priv = Parse(prv, keys_priv, error);
+    parse_pub = Parse(pub, keys_pub, error);
+    BOOST_CHECK_MESSAGE(parse_priv, error);
+    BOOST_CHECK_MESSAGE(parse_pub, error);
+
+    BOOST_CHECK(parse_priv->GetOutputType() == std::nullopt);
+    BOOST_CHECK(parse_pub->GetOutputType() == std::nullopt);
+
+    // Check private keys are extracted from the private version but not the public one.
+    BOOST_CHECK(keys_priv.keys.size());
+    BOOST_CHECK(!keys_pub.keys.size());
+
+    // Check that both versions serialize back to the public version.
+    std::string pub1 = parse_priv->ToString();
+    std::string pub2 = parse_pub->ToString();
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, pub1), "Private ser: " + pub1 + " Public desc: " + pub);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, pub2), "Public ser: " + pub2 + " Public desc: " + pub);
+
+    // Check both only have one pubkey
+    std::set<CPubKey> prv_pubkeys;
+    std::set<CExtPubKey> prv_extpubs;
+    parse_pub->GetPubKeys(prv_pubkeys, prv_extpubs);
+    BOOST_CHECK_EQUAL(prv_pubkeys.size() + prv_extpubs.size(), 1);
+    std::set<CPubKey> pub_pubkeys;
+    std::set<CExtPubKey> pub_extpubs;
+    parse_pub->GetPubKeys(pub_pubkeys, pub_extpubs);
+    BOOST_CHECK_EQUAL(pub_pubkeys.size() + pub_extpubs.size(), 1);
+}
+
+// unused() descriptors don't produce scripts, so these need to be tested separately
+BOOST_AUTO_TEST_CASE(unused_descriptor_test)
+{
+    CheckUnparsable("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)", "unused(): only one key expected");
+    CheckUnparsable("wsh(unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "wsh(unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have unused at top level");
+    CheckUnparsable("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/*)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/*)", "unused(): key cannot be ranged");
+
+    // x-only keys cannot be used in unused()
+    CheckSingleUnparsable("unused(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "Pubkey 'a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd' is invalid");
+
+    CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)");
+    CheckUnused("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)");
+    CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0h/0h/1)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0h/0h/1)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
