@@ -13,6 +13,7 @@
 #include <test/util/xoroshiro128plusplus.h>
 #include <util/chaintype.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <limits>
@@ -187,12 +188,12 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // Compare with expected more.
         if (expect_more[side].has_value()) assert(!bytes.empty() == *expect_more[side]);
         // Verify consistency between the two results.
-        assert(bytes == bytes_next);
+        assert(std::ranges::equal(bytes, bytes_next));
         assert(msg_type == msg_type_next);
         if (more_nonext) assert(more_next);
         // Compare with previously reported output.
         assert(to_send[side].size() <= bytes.size());
-        assert(to_send[side] == Span{bytes}.first(to_send[side].size()));
+        assert(std::ranges::equal(to_send[side], Span{bytes}.first(to_send[side].size())));
         to_send[side].resize(bytes.size());
         std::copy(bytes.begin(), bytes.end(), to_send[side].begin());
         // Remember 'more' results.
@@ -280,7 +281,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
                 // The m_type must match what is expected.
                 assert(received.m_type == expected[side].front().m_type);
                 // The data must match what is expected.
-                assert(MakeByteSpan(received.m_recv) == MakeByteSpan(expected[side].front().data));
+                assert(std::ranges::equal(received.m_recv, MakeByteSpan(expected[side].front().data)));
                 expected[side].pop_front();
                 progress = true;
             }

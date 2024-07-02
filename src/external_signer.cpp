@@ -80,10 +80,10 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
     // Check if signer fingerprint matches any input master key fingerprint
     auto matches_signer_fingerprint = [&](const PSBTInput& input) {
         for (const auto& entry : input.hd_keypaths) {
-            if (parsed_m_fingerprint == MakeUCharSpan(entry.second.fingerprint)) return true;
+            if (std::ranges::equal(parsed_m_fingerprint, entry.second.fingerprint)) return true;
         }
         for (const auto& entry : input.m_tap_bip32_paths) {
-            if (parsed_m_fingerprint == MakeUCharSpan(entry.second.second.fingerprint)) return true;
+            if (std::ranges::equal(parsed_m_fingerprint, entry.second.second.fingerprint)) return true;
         }
         return false;
     };

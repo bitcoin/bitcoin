@@ -11,6 +11,7 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -62,9 +63,9 @@ void TestBIP324PacketVector(
     BOOST_CHECK(cipher);
 
     // Compare session variables.
-    BOOST_CHECK(Span{out_session_id} == cipher.GetSessionID());
-    BOOST_CHECK(Span{mid_send_garbage} == cipher.GetSendGarbageTerminator());
-    BOOST_CHECK(Span{mid_recv_garbage} == cipher.GetReceiveGarbageTerminator());
+    BOOST_CHECK(std::ranges::equal(out_session_id, cipher.GetSessionID()));
+    BOOST_CHECK(std::ranges::equal(mid_send_garbage, cipher.GetSendGarbageTerminator()));
+    BOOST_CHECK(std::ranges::equal(mid_recv_garbage, cipher.GetReceiveGarbageTerminator()));
 
     // Vector of encrypted empty messages, encrypted in order to seek to the right position.
     std::vector<std::vector<std::byte>> dummies(in_idx);
@@ -89,7 +90,7 @@ void TestBIP324PacketVector(
         BOOST_CHECK(out_ciphertext == ciphertext);
     } else {
         BOOST_CHECK(ciphertext.size() >= out_ciphertext_endswith.size());
-        BOOST_CHECK(Span{out_ciphertext_endswith} == Span{ciphertext}.last(out_ciphertext_endswith.size()));
+        BOOST_CHECK(std::ranges::equal(out_ciphertext_endswith, Span{ciphertext}.last(out_ciphertext_endswith.size())));
     }
 
     for (unsigned error = 0; error <= 12; ++error) {
@@ -109,9 +110,9 @@ void TestBIP324PacketVector(
         BOOST_CHECK(dec_cipher);
 
         // Compare session variables.
-        BOOST_CHECK((Span{out_session_id} == dec_cipher.GetSessionID()) == (error != 1));
-        BOOST_CHECK((Span{mid_send_garbage} == dec_cipher.GetSendGarbageTerminator()) == (error != 1));
-        BOOST_CHECK((Span{mid_recv_garbage} == dec_cipher.GetReceiveGarbageTerminator()) == (error != 1));
+        BOOST_CHECK(std::ranges::equal(out_session_id, dec_cipher.GetSessionID()) == (error != 1));
+        BOOST_CHECK(std::ranges::equal(mid_send_garbage, dec_cipher.GetSendGarbageTerminator()) == (error != 1));
+        BOOST_CHECK(std::ranges::equal(mid_recv_garbage, dec_cipher.GetReceiveGarbageTerminator()) == (error != 1));
 
         // Seek to the numbered packet.
         if (in_idx == 0 && error == 12) continue;

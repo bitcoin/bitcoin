@@ -5,6 +5,8 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include <string>
 
 using namespace std::literals;
@@ -24,7 +26,7 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
         BOOST_CHECK_EQUAL(strEnc, vstrOutNoPadding[i]);
         auto dec = DecodeBase32(vstrOut[i]);
         BOOST_REQUIRE(dec);
-        BOOST_CHECK_MESSAGE(MakeByteSpan(*dec) == MakeByteSpan(vstrIn[i]), vstrOut[i]);
+        BOOST_CHECK_MESSAGE(std::ranges::equal(*dec, vstrIn[i]), vstrOut[i]);
     }
 
     // Decoding strings with embedded NUL characters should fail

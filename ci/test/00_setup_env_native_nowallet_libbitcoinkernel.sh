@@ -10,6 +10,6 @@ export CONTAINER_NAME=ci_native_nowallet_libbitcoinkernel
 export CI_IMAGE_NAME_TAG="docker.io/ubuntu:22.04"
 # Use minimum supported python3.9 (or best-effort 3.10) and clang-15, see doc/dependencies.md
 export PACKAGES="python3-zmq clang-15 llvm-15 libc++abi-15-dev libc++-15-dev"
-export DEP_OPTS="NO_WALLET=1 CC=clang-15 CXX='clang++-15 -stdlib=libc++'"
+export DEP_OPTS="NO_WALLET=1 CC=clang-15 CXX='clang++-15 -stdlib=libstdc++'"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-reduce-exports --enable-experimental-util-chainstate --with-experimental-kernel-lib --enable-shared"
