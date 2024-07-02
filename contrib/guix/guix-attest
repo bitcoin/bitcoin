@@ -182,6 +182,18 @@ basenameify_SHA256SUMS() {
     sed -E 's@(^[[:xdigit:]]{64}[[:space:]]+).+/([^/]+$)@\1\2@'
 }
 
+# OpenPGP's message format (section 5.2.4. Computing Signatures) defines that
+# text should be canonicalized using CR LF (DOS style) newlines. While
+# detached signatures treat the input as binary data and work regardless,
+# implmenting the canonical newline format is necessary to attach the content
+# and signatures together in the same file.
+#
+# See https://www.rfc-editor.org/rfc/rfc4880.html#section-5.2.4
+#
+unix2dos() {
+    sed 's/$/\r/'
+}
+
 outsigdir="$GUIX_SIGS_REPO/$VERSION/$signer_name"
 mkdir -p "$outsigdir"
 (
@@ -195,6 +207,7 @@ mkdir -p "$outsigdir"
             | sort -u \
             | sort -k2 \
             | basenameify_SHA256SUMS \
+            | unix2dos \
                 > "$temp_noncodesigned"
         if [ -e noncodesigned.SHA256SUMS ]; then
             # The SHA256SUMS already exists, make sure it's exactly what we
@@ -223,6 +236,7 @@ mkdir -p "$outsigdir"
             | sort -u \
             | sort -k2 \
             | basenameify_SHA256SUMS \
+            | unix2dos \
                 > "$temp_all"
         if [ -e all.SHA256SUMS ]; then
             # The SHA256SUMS already exists, make sure it's exactly what we
