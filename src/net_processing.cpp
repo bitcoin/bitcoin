@@ -222,6 +222,9 @@ struct Peer {
     /** Services this peer offered to us. */
     std::atomic<ServiceFlags> m_their_services{NODE_NONE};
 
+    //! Whether this peer is an inbound connection
+    const bool m_is_inbound;
+
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
     /** Whether this peer should be disconnected and marked as discouraged (unless it has NetPermissionFlags::NoBan permission). */
@@ -389,9 +392,10 @@ struct Peer {
      * timestamp the peer sent in the version message. */
     std::atomic<std::chrono::seconds> m_time_offset{0s};
 
-    explicit Peer(NodeId id, ServiceFlags our_services)
+    explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound)
         : m_id{id}
         , m_our_services{our_services}
+        , m_is_inbound{is_inbound}
     {}
 
 private:
@@ -471,11 +475,6 @@ struct CNodeState {
 
     //! Time of last new block announcement
     int64_t m_last_block_announcement{0};
-
-    //! Whether this peer is an inbound connection
-    const bool m_is_inbound;
-
-    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
 };
 
 class PeerManagerImpl final : public PeerManager
@@ -971,7 +970,7 @@ private:
     bool IsBlockRequested(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Have we requested this block from an outbound peer */
-    bool IsBlockRequestedFromOutbound(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsBlockRequestedFromOutbound(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
 
     /** Remove this block from our tracked requested blocks. Called if:
      *  - the block has been received from a peer
@@ -1055,7 +1054,7 @@ private:
      * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
      * removing the first element if necessary.
      */
-    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
 
     /** Stack of nodes which we have set to announce using compact blocks */
     std::list<NodeId> lNodesAnnouncingHeaderAndIDs GUARDED_BY(cs_main);
@@ -1258,8 +1257,8 @@ bool PeerManagerImpl::IsBlockRequestedFromOutbound(const uint256& hash)
 {
     for (auto range = mapBlocksInFlight.equal_range(hash); range.first != range.second; range.first++) {
         auto [nodeid, block_it] = range.first->second;
-        CNodeState& nodestate = *Assert(State(nodeid));
-        if (!nodestate.m_is_inbound) return true;
+        PeerRef peer{GetPeerRef(nodeid)};
+        if (peer && !peer->m_is_inbound) return true;
     }
 
     return false;
@@ -1360,15 +1359,16 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
             lNodesAnnouncingHeaderAndIDs.push_back(nodeid);
             return;
         }
-        CNodeState *state = State(*it);
-        if (state != nullptr && !state->m_is_inbound) ++num_outbound_hb_peers;
+        PeerRef peer{GetPeerRef(*it)};
+        if (peer && !peer->m_is_inbound) ++num_outbound_hb_peers;
     }
-    if (nodestate->m_is_inbound) {
+    PeerRef peer{GetPeerRef(nodeid)};
+    if (peer && peer->m_is_inbound) {
         // If we're adding an inbound HB peer, make sure we're not removing
         // our last outbound HB peer in the process.
         if (lNodesAnnouncingHeaderAndIDs.size() >= 3 && num_outbound_hb_peers == 1) {
-            CNodeState *remove_node = State(lNodesAnnouncingHeaderAndIDs.front());
-            if (remove_node != nullptr && !remove_node->m_is_inbound) {
+            PeerRef remove_peer{GetPeerRef(lNodesAnnouncingHeaderAndIDs.front())};
+            if (remove_peer && !remove_peer->m_is_inbound) {
                 // Put the HB outbound peer in the second slot, so that it
                 // doesn't get removed.
                 std::swap(lNodesAnnouncingHeaderAndIDs.front(), *std::next(lNodesAnnouncingHeaderAndIDs.begin()));
@@ -1664,7 +1664,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
     NodeId nodeid = node.GetId();
     {
         LOCK(cs_main);
-        m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.IsInboundConn()));
+        m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple());
         assert(m_txrequest.Count(nodeid) == 0);
     }
 
@@ -1672,7 +1672,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
         our_services = static_cast<ServiceFlags>(our_services | NODE_BLOOM);
     }
 
-    PeerRef peer = std::make_shared<Peer>(nodeid, our_services);
+    PeerRef peer = std::make_shared<Peer>(nodeid, our_services, node.IsInboundConn());
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
@@ -1908,15 +1908,9 @@ void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
         break;
     case BlockValidationResult::BLOCK_CACHED_INVALID:
         {
-            LOCK(cs_main);
-            CNodeState *node_state = State(nodeid);
-            if (node_state == nullptr) {
-                break;
-            }
-
             // Discourage outbound (but not inbound) peers if on an invalid chain.
             // Exempt HB compact block peers. Manual connections are always protected from discouragement.
-            if (!via_compact_block && !node_state->m_is_inbound) {
+            if (peer && !via_compact_block && !peer->m_is_inbound) {
                 if (peer) Misbehaving(*peer, message);
                 return;
             }
