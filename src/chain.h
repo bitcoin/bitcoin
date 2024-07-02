@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -132,6 +133,8 @@ enum BlockStatus : uint32_t {
                                       //!< ancestors before they were validated, and unset when they were validated.
 };
 
+extern SharedMutex g_cs_blockindex_data;
+
 /** The block chain is a tree shaped structure starting with the
  * genesis block at the root, with each block potentially having multiple
  * candidates to be the next block. A blockindex may have multiple pprev pointing
@@ -153,13 +156,13 @@ public:
     int nHeight{0};
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile GUARDED_BY(::cs_main){0};
+    int nFile GUARDED_BY(g_cs_blockindex_data){-1};
 
     //! Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos GUARDED_BY(::cs_main){0};
+    unsigned int nDataPos GUARDED_BY(g_cs_blockindex_data){0};
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos GUARDED_BY(::cs_main){0};
+    unsigned int nUndoPos GUARDED_BY(g_cs_blockindex_data){0};
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
@@ -206,26 +209,42 @@ public:
     {
     }
 
+    void SetFileData(int file_num, int data_pos, int undo_pos);
+    void SetUndoPos(int undo_pos) {
+        LOCK(g_cs_blockindex_data);
+        nUndoPos = undo_pos;
+    }
+
+    int GetFileNum() const {
+        LOCK_SHARED(g_cs_blockindex_data);
+        return nFile;
+    }
+    int GetDataPos() const {
+        LOCK_SHARED(g_cs_blockindex_data);
+        return nDataPos;
+    }
+
+    FlatFilePos GetFilePos(bool is_undo) const
+    {
+        LOCK_SHARED(g_cs_blockindex_data);
+        FlatFilePos ret;
+        if (nFile >= 0) {
+            ret.nFile = nFile;
+            ret.nPos = is_undo ? nUndoPos : nDataPos;
+        }
+        return ret;
+    }
+
     FlatFilePos GetBlockPos() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        FlatFilePos ret;
-        if (nStatus & BLOCK_HAVE_DATA) {
-            ret.nFile = nFile;
-            ret.nPos = nDataPos;
-        }
-        return ret;
+        return nStatus & BLOCK_HAVE_DATA ? GetFilePos(/*is_undo=*/false) : FlatFilePos{};
     }
 
     FlatFilePos GetUndoPos() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        FlatFilePos ret;
-        if (nStatus & BLOCK_HAVE_UNDO) {
-            ret.nFile = nFile;
-            ret.nPos = nUndoPos;
-        }
-        return ret;
+        return nStatus & BLOCK_HAVE_UNDO ? GetFilePos(/*is_undo=*/true) : FlatFilePos{};
     }
 
     CBlockHeader GetBlockHeader() const
@@ -384,6 +403,7 @@ public:
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(obj.nStatus));
         READWRITE(VARINT(obj.nTx));
+        LOCK_SHARED(g_cs_blockindex_data);
         if (obj.nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO)) READWRITE(VARINT_MODE(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED));
         if (obj.nStatus & BLOCK_HAVE_DATA) READWRITE(VARINT(obj.nDataPos));
         if (obj.nStatus & BLOCK_HAVE_UNDO) READWRITE(VARINT(obj.nUndoPos));

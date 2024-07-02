@@ -117,6 +117,7 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
             if (pcursor->GetValue(diskindex)) {
                 // Construct block index object
                 CBlockIndex* pindexNew = insertBlockIndex(diskindex.ConstructBlockHash());
+                LOCK(g_cs_blockindex_data);
                 pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
@@ -241,12 +242,10 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
 
     for (auto& entry : m_block_index) {
         CBlockIndex* pindex = &entry.second;
-        if (pindex->nFile == fileNumber) {
+        if (pindex->GetFileNum() == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
             pindex->nStatus &= ~BLOCK_HAVE_UNDO;
-            pindex->nFile = 0;
-            pindex->nDataPos = 0;
-            pindex->nUndoPos = 0;
+            pindex->SetFileData(/*file_num=*/-1, /*data_pos=*/0, /*undo_pos=*/0);
             m_dirty_blockindex.insert(pindex);
 
             // Prune from m_blocks_unlinked -- any block we prune would have
@@ -521,9 +520,15 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
     std::set<int> setBlkDataFiles;
-    for (const auto& [_, block_index] : m_block_index) {
+    for (auto& [_, block_index] : m_block_index) {
         if (block_index.nStatus & BLOCK_HAVE_DATA) {
-            setBlkDataFiles.insert(block_index.nFile);
+            setBlkDataFiles.insert(block_index.GetFileNum());
+        } else {
+            // In case we don't have the block, the position must be -1.
+            // (applies to older clients that set 'nFile=0' during pruning)
+            if (block_index.GetFileNum() == 0) {
+                block_index.SetFileData(/*file_num=*/-1, /*data_pos=*/0, /*undo_pos=*/0);
+            }
         }
     }
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++) {
@@ -701,8 +706,10 @@ bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos
 
 bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& index) const
 {
-    const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
+    if (index.nHeight == 0) return false; // nothing to do
 
+    LOCK_SHARED(g_cs_blockindex_data); // keep lock until we finish reading data from disk
+    const FlatFilePos pos = index.GetFilePos(/*is_undo=*/true);
     if (pos.IsNull()) {
         LogError("%s: no undo data available\n", __func__);
         return false;
@@ -1015,7 +1022,7 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos _pos;
-        if (!FindUndoPos(state, block.nFile, _pos, ::GetSerializeSize(blockundo) + 40)) {
+        if (!FindUndoPos(state, block.GetFileNum(), _pos, ::GetSerializeSize(blockundo) + 40)) {
             LogError("ConnectBlock(): FindUndoPos failed\n");
             return false;
         }
@@ -1040,7 +1047,7 @@ bool BlockManager::WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValid
             cursor.undo_height = block.nHeight;
         }
         // update nUndoPos in block index
-        block.nUndoPos = _pos.nPos;
+        block.SetUndoPos(_pos.nPos);
         block.nStatus |= BLOCK_HAVE_UNDO;
         m_dirty_blockindex.insert(&block);
     }
@@ -1084,11 +1091,16 @@ bool BlockManager::ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos) cons
 
 bool BlockManager::ReadBlockFromDisk(CBlock& block, const CBlockIndex& index) const
 {
-    const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
+    FlatFilePos block_pos;
 
-    if (!ReadBlockFromDisk(block, block_pos)) {
-        return false;
+    {
+        LOCK_SHARED(g_cs_blockindex_data); // keep lock until we finish reading the block from disk
+        block_pos = index.GetFilePos(/*is_undo=*/false);
+        if (!ReadBlockFromDisk(block, block_pos)) {
+            return false;
+        }
     }
+
     if (block.GetHash() != index.GetBlockHash()) {
         LogError("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s\n",
                      index.ToString(), block_pos.ToString());

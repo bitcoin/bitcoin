@@ -55,6 +55,9 @@ static void BlockAssemblerAddPackageTxns(benchmark::Bench& bench)
     node::BlockAssembler::Options assembler_options;
     assembler_options.test_block_validity = false;
 
+    // Connect genesis block
+    assert(testing_setup->m_node.chainman->ActiveChainstate().LoadGenesisBlock());
+
     bench.run([&] {
         PrepareBlock(testing_setup->m_node, P2WSH_OP_TRUE, assembler_options);
     });

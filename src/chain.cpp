@@ -7,6 +7,8 @@
 #include <tinyformat.h>
 #include <util/time.h>
 
+SharedMutex g_cs_blockindex_data;
+
 std::string CBlockFileInfo::ToString() const
 {
     return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
@@ -16,6 +18,14 @@ std::string CBlockIndex::ToString() const
 {
     return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
                      pprev, nHeight, hashMerkleRoot.ToString(), GetBlockHash().ToString());
+}
+
+void CBlockIndex::SetFileData(int file_num, int data_pos, int undo_pos)
+{
+    LOCK(g_cs_blockindex_data);
+    nFile = file_num;
+    nDataPos = data_pos;
+    nUndoPos = undo_pos;
 }
 
 void CChain::SetTip(CBlockIndex& block)
