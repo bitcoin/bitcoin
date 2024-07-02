@@ -91,7 +91,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-12)
+(define base-gcc gcc-13)
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
 (define* (make-bitcoin-cross-toolchain target
@@ -515,21 +515,18 @@ inspecting signatures in Mach-O binaries.")
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
+           (list gcc-toolchain-13
                  zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 12 toolchain
-                 gcc-toolchain-12
-                 (list gcc-toolchain-12 "static")
+           (list gcc-toolchain-13
+                 (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list ;; Native GCC 11 toolchain
-                 gcc-toolchain-11
+           (list gcc-toolchain-13
                  clang-toolchain-18
                  lld-18
                  (make-lld-wrapper lld-18 #:lld-as-ld? #t)
