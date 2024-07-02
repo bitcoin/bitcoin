@@ -5,6 +5,8 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+#include <test/util/random.h>
+
 #include <string>
 
 using namespace std::literals;
@@ -29,9 +31,45 @@ BOOST_AUTO_TEST_CASE(base32_testvectors)
 
     // Decoding strings with embedded NUL characters should fail
     BOOST_CHECK(!DecodeBase32("invalid\0"s)); // correct size, invalid due to \0
-    BOOST_CHECK(DecodeBase32("AWSX3VPP"s)); // valid
+    BOOST_CHECK( DecodeBase32("AWSX3VPP"s)); // valid
     BOOST_CHECK(!DecodeBase32("AWSX3VPP\0invalid"s)); // correct size, invalid due to \0
     BOOST_CHECK(!DecodeBase32("AWSX3VPPinvalid"s)); // invalid size
+}
+
+BOOST_AUTO_TEST_CASE(base32_padding)
+{
+    // Is valid without padding
+    {
+        const std::vector<uint8_t> in{'f', 'o', 'o', 'b', 'a'};
+        const std::string out{"mzxw6ytb"};
+        BOOST_CHECK_EQUAL(EncodeBase32(in), out);
+    }
+
+    // Valid size
+    BOOST_CHECK(!DecodeBase32("========"s));
+    BOOST_CHECK(!DecodeBase32("a======="s));
+    BOOST_CHECK( DecodeBase32("aa======"s));
+    BOOST_CHECK(!DecodeBase32("aaa====="s));
+    BOOST_CHECK( DecodeBase32("aaaa===="s));
+    BOOST_CHECK( DecodeBase32("aaaaa==="s));
+    BOOST_CHECK(!DecodeBase32("aaaaaa=="s));
+    BOOST_CHECK( DecodeBase32("aaaaaaa="s));
+}
+
+BOOST_AUTO_TEST_CASE(base32_roundtrip) {
+    FastRandomContext rng;
+    for (int i = 0; i < 100; ++i) {
+        auto chars = rng.randbytes(rng.randrange(32));
+        std::string randomStr(chars.begin(), chars.end());
+        auto encoded = EncodeBase32(randomStr);
+
+        auto decodedOpt = DecodeBase32(encoded);
+        BOOST_REQUIRE_MESSAGE(decodedOpt, "Decoding failed for " + encoded);
+        auto decoded = *decodedOpt;
+
+        std::string decodedStr(decoded.begin(), decoded.end());
+        BOOST_CHECK_MESSAGE(randomStr == decodedStr, "Roundtrip mismatch: original=" + randomStr + ", roundtrip=" + decodedStr);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

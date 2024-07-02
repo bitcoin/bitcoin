@@ -5,6 +5,8 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+#include <test/util/random.h>
+
 #include <string>
 
 using namespace std::literals;
@@ -35,10 +37,42 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
     }
 
     // Decoding strings with embedded NUL characters should fail
-    BOOST_CHECK(!DecodeBase64("invalid\0"s));
-    BOOST_CHECK(DecodeBase64("nQB/pZw="s));
-    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"s));
-    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"s));
+    BOOST_CHECK(!DecodeBase64("invalid\0"s)); // correct size, invalid due to \0
+    BOOST_CHECK( DecodeBase64("nQB/pZw="s)); // valid
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"s)); // correct size, invalid due to \0
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"s)); // invalid size
+}
+
+BOOST_AUTO_TEST_CASE(base64_padding)
+{
+    // Is valid without padding
+    {
+        const std::vector<uint8_t> in{'f', 'o', 'o', 'b', 'a', 'r'};
+        const std::string out{"Zm9vYmFy"};
+        BOOST_CHECK_EQUAL(EncodeBase64(in), out);
+    }
+
+    // Valid size
+    BOOST_CHECK(!DecodeBase64("===="s));
+    BOOST_CHECK(!DecodeBase64("a==="s));
+    BOOST_CHECK( DecodeBase64("YQ=="s));
+    BOOST_CHECK( DecodeBase64("YWE="s));
+}
+
+BOOST_AUTO_TEST_CASE(base64_roundtrip) {
+    FastRandomContext rng;
+    for (int i = 0; i < 100; ++i) {
+        auto chars = rng.randbytes(rng.randrange(64));
+        std::string randomStr(chars.begin(), chars.end());
+        auto encoded = EncodeBase64(randomStr);
+
+        auto decodedOpt = DecodeBase64(encoded);
+        BOOST_REQUIRE_MESSAGE(decodedOpt, "Decoding failed for " + encoded);
+        auto decoded = *decodedOpt;
+
+        std::string decodedStr(decoded.begin(), decoded.end());
+        BOOST_CHECK_MESSAGE(randomStr == decodedStr, "Roundtrip mismatch: original=" + randomStr + ", roundtrip=" + decodedStr);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
