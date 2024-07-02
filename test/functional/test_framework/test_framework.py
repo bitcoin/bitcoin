@@ -35,6 +35,7 @@ from .util import (
     p2p_port,
     wait_until_helper_internal,
 )
+from .script import hash160
 
 
 class TestStatus(Enum):
@@ -540,10 +541,20 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 descriptors=self.options.descriptors,
                 v2transport=self.options.v2transport,
             )
+            if self.chain == "signet":
+                test_node_i.signet_chain = self.get_signet_chain(args)
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
                 # adjust conf for pre 17
                 test_node_i.replace_in_config([('[regtest]', '')])
+
+    def get_signet_chain(self, args):
+        for arg in args:
+            if arg.startswith('-signetchallenge'):
+                signetchallenge = arg.split('=')[1]
+                data_dir_suffix = hash160(bytes.fromhex(signetchallenge)).hex()[0:8]
+                return f"signet_{data_dir_suffix}"
+        return 'signet'
 
     def start_node(self, i, *args, **kwargs):
         """Start a bitcoind"""

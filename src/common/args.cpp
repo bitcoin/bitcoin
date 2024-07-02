@@ -5,6 +5,7 @@
 
 #include <common/args.h>
 
+#include <hash.h>
 #include <chainparamsbase.h>
 #include <common/settings.h>
 #include <logging.h>
@@ -277,6 +278,18 @@ fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value)
     return result.has_filename() ? result : result.parent_path();
 }
 
+fs::path ArgsManager::GetSignetDataDir() const
+{
+    const std::string base_data_dir = BaseParams().DataDir();
+    const std::string signet_challenge_str = GetArg("-signetchallenge", "");
+    if (!signet_challenge_str.empty()) {
+        std::vector<uint8_t> signet_challenge = ParseHex(signet_challenge_str);
+        const auto data_dir_suffix = HexStr(Hash160(signet_challenge)).substr(0, 8);
+        return fs::PathFromString(base_data_dir + "_" + data_dir_suffix);
+    }
+    return fs::PathFromString(base_data_dir);
+}
+
 fs::path ArgsManager::GetBlocksDirPath() const
 {
     LOCK(cs_args);
@@ -296,7 +309,12 @@ fs::path ArgsManager::GetBlocksDirPath() const
         path = GetDataDirBase();
     }
 
-    path /= fs::PathFromString(BaseParams().DataDir());
+    if (GetChainType() == ChainType::SIGNET) {
+        path /= GetSignetDataDir();
+    } else {
+        path /= fs::PathFromString(BaseParams().DataDir());
+    }
+
     path /= "blocks";
     fs::create_directories(path);
     return path;
@@ -322,7 +340,11 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
     }
 
     if (net_specific && !BaseParams().DataDir().empty()) {
-        path /= fs::PathFromString(BaseParams().DataDir());
+        if (GetChainType() == ChainType::SIGNET) {
+            path /= GetSignetDataDir();
+        } else {
+            path /= fs::PathFromString(BaseParams().DataDir());
+        }
     }
 
     return path;

@@ -96,7 +96,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(self.nodes[0].cli("-named", "echo", "arg0=0", "arg1=1", "arg2=2", "arg1=3").send_cli(), ['0', '3', '2'])
         assert_raises_rpc_error(-8, "Parameter args specified multiple times", self.nodes[0].cli("-named", "echo", "args=[0,1,2,3]", "4", "5", "6", ).send_cli)
 
-        user, password = get_auth_cookie(self.nodes[0].datadir_path, self.chain)
+        user, password = get_auth_cookie(self.nodes[0].datadir_path, self.nodes[0].get_chain())
 
         self.log.info("Test -stdinrpcpass option")
         assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input=password).getblockcount())
