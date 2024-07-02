@@ -303,6 +303,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/buffered_file.cpp \
  test/fuzz/chain.cpp \
  test/fuzz/checkqueue.cpp \
+ test/fuzz/cluster_linearize.cpp \
  test/fuzz/coins_view.cpp \
  test/fuzz/coinscache_sim.cpp \
  test/fuzz/connman.cpp \

@@ -25,6 +25,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/checkblock.cpp \
   bench/checkblockindex.cpp \
   bench/checkqueue.cpp \
+  bench/clusterlin.cpp \
   bench/crypto_hash.cpp \
   bench/data.cpp \
   bench/data.h \
