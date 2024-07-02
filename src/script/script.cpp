@@ -204,6 +204,15 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetSigOpCount(true);
 }
 
+bool CScript::IsPayToAnchor() const
+{
+    return (this->size() == 4 &&
+        (*this)[0] == OP_TRUE &&
+        (*this)[1] == 0x02 &&
+        (*this)[2] == 0x4e &&
+        (*this)[3] == 0x73);
+}
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:
