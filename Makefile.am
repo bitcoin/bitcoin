@@ -41,7 +41,8 @@ DIST_CONTRIB = \
 	       $(top_srcdir)/test/sanitizer_suppressions/ubsan \
 	       $(top_srcdir)/contrib/linearize/linearize-data.py \
 	       $(top_srcdir)/contrib/linearize/linearize-hashes.py \
-	       $(top_srcdir)/contrib/signet/miner
+	       $(top_srcdir)/contrib/signet/miner \
+	       $(top_srcdir)/contrib/utxo-tools/utxo_to_sqlite.py
 
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
