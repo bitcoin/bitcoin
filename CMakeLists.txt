@@ -210,6 +210,7 @@ try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 set(CMAKE_SKIP_BUILD_RPATH TRUE)
 set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 include(cmake/crc32c.cmake)
+include(cmake/leveldb.cmake)
 add_subdirectory(src)
 
 message("\n")
