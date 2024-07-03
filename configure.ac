@@ -619,13 +619,13 @@ AC_ARG_WITH([daemon],
 
 can_render_icons=yes
 AC_PATH_PROGS([RSVG_CONVERT],[rsvg-convert rsvg],no)
-AC_PATH_PROGS([IMAGEMAGICK_CONVERT],[convert],no)
+AC_PATH_PROGS([IMAGEMAGICK_CONVERT],[magick convert],no)
 AC_PATH_PROGS([PNG2ICNS],[png2icns],no)
 
 if test x$RSVG_CONVERT = xno; then
   can_render_icons='rsvg-convert'
 elif test x$IMAGEMAGICK_CONVERT = xno; then
-  can_render_icons='(ImageMagick) convert'
+  can_render_icons='ImageMagick'
 fi
 
 case $host in
@@ -683,7 +683,7 @@ case $host in
      AX_CHECK_COMPILE_FLAG([-Wa,-muse-unaligned-vector-move], [CORE_CXXFLAGS="$CORE_CXXFLAGS -Wa,-muse-unaligned-vector-move"], [], [$CXXFLAG_WERROR])
 
      AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
-     AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
+     AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [magick convert],convert)
      ;;
   *darwin*)
      if test x$PNG2ICNS = xno; then
