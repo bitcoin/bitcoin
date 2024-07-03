@@ -5459,21 +5459,11 @@ bool CWallet::IsLocked(bool fForMixing) const
 {
     if (!IsCrypted())
         return false;
-    bool result;
-    {
-        LOCK(cs_wallet);
-        result = vMasterKey.empty();
-    }
-    // fForMixing   fOnlyMixingAllowed  return
-    // ---------------------------------------
-    // true         true                result
-    // true         false               result
-    // false        true                true
-    // false        false               result
 
     if(!fForMixing && fOnlyMixingAllowed) return true;
 
-    return result;
+    LOCK(cs_wallet);
+    return vMasterKey.empty();
 }
 
 bool CWallet::Lock(bool fAllowMixing)
