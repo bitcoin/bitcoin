@@ -153,6 +153,9 @@ namespace BCLog {
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
+        Logger();
+        ~Logger();
+
         /** Send a string to the log output */
         void LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(!m_cs);

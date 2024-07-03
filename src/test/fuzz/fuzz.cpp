@@ -4,6 +4,7 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/util/check_globals.h>
@@ -110,6 +111,9 @@ void ResetCoverageCounters() {}
 
 static void initialize()
 {
+    // Initialize logger first because RNG startup uses it.
+    static BCLog::Logger g_logger;
+
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
