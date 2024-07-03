@@ -95,6 +95,8 @@ MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
 
+    BCLog::Logger logger;
+
     int exit_status;
     std::unique_ptr<interfaces::Init> init = interfaces::MakeWalletInit(argc, argv, exit_status);
     if (!init) {

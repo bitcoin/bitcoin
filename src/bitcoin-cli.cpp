@@ -14,6 +14,7 @@
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 #include <interfaces/rpc.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
@@ -1369,6 +1370,7 @@ static int CommandLineRPC(int argc, char *argv[])
 
 MAIN_FUNCTION
 {
+    BCLog::Logger logger;
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");

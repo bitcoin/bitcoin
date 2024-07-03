@@ -663,6 +663,7 @@ BOOST_AUTO_TEST_CASE(btck_context_tests)
 
 BOOST_AUTO_TEST_CASE(btck_block_header_tests)
 {
+    Logger logger{std::make_unique<TestLog>()};
     // Block header format: version(4) + prev_hash(32) + merkle_root(32) + timestamp(4) + bits(4) + nonce(4) = 80 bytes
     BlockHeader header_0{hex_string_to_byte_vec("00e07a26beaaeee2e71d7eb19279545edbaf15de0999983626ec00000000000000000000579cf78b65229bfb93f4a11463af2eaa5ad91780f27f5d147a423bea5f7e4cdf2a47e268b4dd01173a9662ee")};
     BOOST_CHECK_EQUAL(byte_span_to_hex_string_reversed(header_0.Hash().ToBytes()), "00000000000000000000325c7e14a4ee3b4fcb2343089a839287308a0ddbee4f");
@@ -696,6 +697,7 @@ BOOST_AUTO_TEST_CASE(btck_block_header_tests)
 
 BOOST_AUTO_TEST_CASE(btck_block)
 {
+    Logger logger{std::make_unique<TestLog>()};
     Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[0])};
     Block block_100{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[100])};
     CheckHandle(block, block_100);
@@ -914,6 +916,7 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
 
 BOOST_AUTO_TEST_CASE(btck_chainman_mainnet_tests)
 {
+    Logger logger{std::make_unique<TestLog>()};
     auto test_directory{TestDirectory{"mainnet_test_bitcoin_kernel"}};
     chainman_mainnet_validation_test(test_directory);
     chainman_reindex_test(test_directory);
@@ -937,6 +940,7 @@ BOOST_AUTO_TEST_CASE(btck_block_hash_tests)
 
 BOOST_AUTO_TEST_CASE(btck_block_tree_entry_tests)
 {
+    Logger logger{std::make_unique<TestLog>()};
     auto test_directory{TestDirectory{"block_tree_entry_test_bitcoin_kernel"}};
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::REGTEST)};
@@ -979,6 +983,7 @@ BOOST_AUTO_TEST_CASE(btck_block_tree_entry_tests)
 
 BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
 {
+    Logger logger{std::make_unique<TestLog>()};
     auto in_memory_test_directory{TestDirectory{"in-memory_test_bitcoin_kernel"}};
 
     auto notifications{std::make_shared<TestKernelNotifications>()};
@@ -1003,6 +1008,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
 
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 {
+    Logger logger{std::make_unique<TestLog>()};
     auto test_directory{TestDirectory{"regtest_test_bitcoin_kernel"}};
 
     auto notifications{std::make_shared<TestKernelNotifications>()};

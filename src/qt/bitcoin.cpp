@@ -479,6 +479,9 @@ static void SetupUIArgs(ArgsManager& argsman)
 
 int GuiMain(int argc, char* argv[])
 {
+    // Intentionally leaked! See BCLog::g_logger description for rationale.
+    new BCLog::Logger;
+
     std::unique_ptr<interfaces::Init> init = interfaces::MakeGuiInit(argc, argv);
 
     SetupEnvironment();
