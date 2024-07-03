@@ -146,8 +146,6 @@ bool BCLog::Logger::DefaultShrinkDebugFile() const
 }
 
 static const std::map<std::string, BCLog::LogFlags> LOG_CATEGORIES_BY_STR{
-    {"0", BCLog::NONE},
-    {"", BCLog::NONE},
     {"net", BCLog::NET},
     {"tor", BCLog::TOR},
     {"mempool", BCLog::MEMPOOL},
@@ -189,7 +187,6 @@ static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_
         std::unordered_map<BCLog::LogFlags, std::string> out;
         for (const auto& [k, v] : in) {
             switch (v) {
-            case BCLog::NONE: out.emplace(BCLog::NONE, ""); break;
             case BCLog::ALL: out.emplace(BCLog::ALL, "all"); break;
             default: out.emplace(v, k);
             }
