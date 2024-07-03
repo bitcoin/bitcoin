@@ -131,8 +131,8 @@ CQuorumManager::CQuorumManager(const DBParams& db_params_vvecs, const DBParams& 
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
     chainman(_chainman),
-    evoDb_vvec(db_params_vvecs, 10),
-    evoDb_sk(db_params_sk, 10)
+    evoDb_vvec(db_params_vvecs, 10000),
+    evoDb_sk(db_params_sk, 10000)
 {
     quorumThreadInterrupt.reset();
 }

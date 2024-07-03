@@ -116,25 +116,6 @@ static Consensus::LLMQParams llmq_test = {
         .recoveryMembers = 3,
 };
 
-static Consensus::LLMQParams llmq50_60 = {
-        .type = Consensus::LLMQ_50_60,
-        .name = "llmq_50_60",
-        .size = 50,
-        .minSize = 40,
-        .threshold = 30,
-
-        .dkgInterval = 60, // one DKG per hour
-        .dkgPhaseBlocks = 5,
-        .dkgMiningWindowStart = 25, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 45,
-        .dkgBadVotesThreshold = 40,
-
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
-
-        .keepOldConnections = 25,
-        .recoveryMembers = 25,
-};
-
 static Consensus::LLMQParams llmq400_60 = {
         .type = Consensus::LLMQ_400_60,
         .name = "llmq_400_60",
@@ -271,7 +252,6 @@ public:
         nMinSporkKeys = 2;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-       // consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
@@ -428,7 +408,6 @@ public:
         nMinSporkKeys = 2;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        //consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
