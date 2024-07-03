@@ -736,9 +736,7 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 ///@{
 
 /**
- * @brief Set some options for the logger. Currently, this changes global
- * settings and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Set some options for the logger.
  *
  * @param[in] logger  Non-null.
  * @param[in] options Sets formatting options of the log messages.
@@ -748,9 +746,7 @@ BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingConnection* logger, 
 /**
  * @brief Set the log level of the logger. This does not
  * enable the selected categories. Use @ref btck_logging_enable_category to
- * start logging from a specific, or all categories. Currently, this changes a global
- * setting and will override settings for all existing
- * @ref btck_LoggingConnection instances.
+ * start logging from a specific, or all categories.
  *
  * @param[in] logger   Non-null.
  * @param[in] category If btck_LogCategory_ALL is chosen, sets both the global fallback log level
@@ -764,9 +760,7 @@ BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingConnection* logger, 
 BITCOINKERNEL_API void btck_logging_set_level_category(btck_LoggingConnection* logger, btck_LogCategory category, btck_LogLevel level) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Enable a specific log category for the logger. Currently, this
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Enable a specific log category for the logger.
  *
  * @param[in] logger   Non-null.
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be enabled.
@@ -774,9 +768,7 @@ BITCOINKERNEL_API void btck_logging_set_level_category(btck_LoggingConnection* l
 BITCOINKERNEL_API void btck_logging_enable_category(btck_LoggingConnection* logger, btck_LogCategory category) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Disable a specific log category for the logger. Currently, this
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Disable a specific log category for the logger.
  *
  * @param[in] logger   Non-null.
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be disabled.
@@ -789,10 +781,6 @@ BITCOINKERNEL_API void btck_logging_disable_category(btck_LoggingConnection* log
  * handle can be passed to functions like @ref btck_logging_set_options to set
  * log options and @ref btck_context_options_set_logger to receive log messages
  * generated in a particular context.
- *
- * Currently, most log state is global, so log options applied to other streams
- * may effect this stream, and if there are multiple contexts, log messages from
- * other contexts may be received. These behaviors can be improved internally.
  *
  * @param[in] log_callback               Non-null, function through which messages will be logged.
  * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back

@@ -19,12 +19,12 @@
 #include <vector>
 
 namespace {
-const BasicTestingSetup* g_setup;
+BasicTestingSetup* g_setup;
 } // namespace
 
 void initialize_script_sigcache()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>();
     g_setup = testing_setup.get();
 }
 

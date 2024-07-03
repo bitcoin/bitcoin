@@ -660,6 +660,7 @@ BOOST_AUTO_TEST_CASE(btck_context_tests)
 
 BOOST_AUTO_TEST_CASE(btck_block)
 {
+    Logger logger{std::make_unique<TestLog>()};
     Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[0])};
     Block block_100{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[100])};
     CheckHandle(block, block_100);
