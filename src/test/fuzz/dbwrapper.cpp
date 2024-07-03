@@ -365,7 +365,13 @@ FUZZ_TARGET(dbwrapper_threaded, .init = initialize)
         /*allow_force_compact=*/true);
 }
 
-FUZZ_TARGET(dbwrapper_concurrent_reads, .init = initialize)
+static void cleanup_concurrent_reads()
+{
+    // Stop worker threads before logger is destroyed because they log when exiting.
+    g_read_pool.Stop();
+}
+
+FUZZ_TARGET(dbwrapper_concurrent_reads, .init = initialize, .cleanup = cleanup_concurrent_reads)
 {
     StartReadPoolIfNeeded();
     SeedRandomStateForTest(SeedRand::ZEROS);

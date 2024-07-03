@@ -418,11 +418,17 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_coins_view);
 }
 
+static void cleanup_coins_view()
+{
+    // Stop worker threads before logger is destroyed because they log when exiting.
+    g_thread_pool->Stop();
+}
+
 // Creates a CoinsViewOverlay and a MutationGuardCoinsViewCache as the base.
 // This allows us to exercise all methods on a CoinsViewOverlay, while also
 // ensuring that nothing can mutate the underlying cache until Flush or Sync is
 // called.
-FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
+FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view, .cleanup = cleanup_coins_view)
 {
     SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedCoinsCacheHasher
     StartPoolIfNeeded();
@@ -434,7 +440,7 @@ FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_cache);
 }
 
-FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view)
+FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view, .cleanup = cleanup_coins_view)
 {
     SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedCoinsCacheHasher
     StartPoolIfNeeded();

@@ -4,6 +4,7 @@
 
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -76,7 +77,7 @@ void TestInconsistentLockOrderDetected(MutexType& mutex1, MutexType& mutex2)
 }
 } // namespace
 
-BOOST_AUTO_TEST_SUITE(sync_tests)
+BOOST_FIXTURE_TEST_SUITE(sync_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 {
