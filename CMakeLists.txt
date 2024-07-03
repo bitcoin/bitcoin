@@ -211,6 +211,7 @@ set(CMAKE_SKIP_BUILD_RPATH TRUE)
 set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 include(cmake/crc32c.cmake)
 include(cmake/leveldb.cmake)
+include(cmake/minisketch.cmake)
 add_subdirectory(src)
 
 message("\n")
