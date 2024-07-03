@@ -263,6 +263,41 @@ target_link_libraries(core_interface INTERFACE
   Threads::Threads
 )
 
+add_library(sanitize_interface INTERFACE)
+target_link_libraries(core_interface INTERFACE sanitize_interface)
+if(SANITIZERS)
+  # First check if the compiler accepts flags. If an incompatible pair like
+  # -fsanitize=address,thread is used here, this check will fail. This will also
+  # fail if a bad argument is passed, e.g. -fsanitize=undfeined
+  try_append_cxx_flags("-fsanitize=${SANITIZERS}" TARGET sanitize_interface
+    RESULT_VAR cxx_supports_sanitizers
+    SKIP_LINK
+  )
+  if(NOT cxx_supports_sanitizers)
+    message(FATAL_ERROR "Compiler did not accept requested flags.")
+  endif()
+
+  # Some compilers (e.g. GCC) require additional libraries like libasan,
+  # libtsan, libubsan, etc. Make sure linking still works with the sanitize
+  # flag. This is a separate check so we can give a better error message when
+  # the sanitize flags are supported by the compiler but the actual sanitizer
+  # libs are missing.
+  try_append_linker_flag("-fsanitize=${SANITIZERS}" VAR SANITIZER_LDFLAGS
+    SOURCE "
+      #include <cstdint>
+      #include <cstddef>
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
+      __attribute__((weak)) // allow for libFuzzer linking
+      int main() { return 0; }
+    "
+    RESULT_VAR linker_supports_sanitizers
+  )
+  if(NOT linker_supports_sanitizers)
+    message(FATAL_ERROR "Linker did not accept requested flags, you are missing required libraries.")
+  endif()
+endif()
+target_link_options(sanitize_interface INTERFACE ${SANITIZER_LDFLAGS})
+
 include(AddBoostIfNeeded)
 add_boost_if_needed()
 
