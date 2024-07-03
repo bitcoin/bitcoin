@@ -57,8 +57,6 @@ using util::ImmediateTaskRunner;
 // library aren't required to export this symbol
 extern const std::function<std::string(const char*)> G_TRANSLATION_FUN{nullptr};
 
-static const kernel::Context btck_context_static{};
-
 namespace {
 
 bool is_valid_flag_combination(script_verify_flags flags)
@@ -226,10 +224,7 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
 }
 
 struct LoggingConnection {
-    // Reference to global log instance. This could be replaced with a
-    // per-connection instance (#30342) to give clients more granular control
-    // over logging.
-    BCLog::Logger& m_logger{LogInstance()};
+    BCLog::Logger m_logger;
     std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
     void* m_user_data;
     std::function<void(void* user_data)> m_deleter;
@@ -374,7 +369,7 @@ struct ContextOptions {
 class Context
 {
 public:
-    BCLog::Logger* m_logger;
+    BCLog::Logger& m_logger;
 
     std::unique_ptr<kernel::Context> m_context;
 
@@ -389,17 +384,12 @@ public:
     std::shared_ptr<KernelValidationInterface> m_validation_interface;
 
     Context(const ContextOptions* options, bool& sane)
-        : m_logger{options && options->m_logger ? options->m_logger : nullptr},
+          // Intentionally leaked! See BCLog::g_logger description for rationale.
+        : m_logger{*(options && options->m_logger ? options->m_logger : new BCLog::Logger)},
           m_context{std::make_unique<kernel::Context>()},
           m_interrupt{std::make_unique<util::SignalInterrupt>()}
     {
-        if (!m_logger) {
-            // For efficiency, disable logging globally instead of writing log
-            // messages to temporary buffer if no log callbacks are connected.
-            if (BCLog::Logger& logger{LogInstance()}; logger.NumConnections() == 0 && logger.Enabled()) {
-                logger.DisableLogging();
-            }
-        } else if (!m_logger->StartLogging()) {
+        if (!m_logger.StartLogging()) {
             throw std::runtime_error("Failed to start logging");
         }
 
