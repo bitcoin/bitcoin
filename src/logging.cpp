@@ -96,6 +96,18 @@ void BCLog::Logger::DisconnectTestLogger()
     m_print_callbacks.clear();
 }
 
+void BCLog::Logger::DisableLogging()
+{
+    {
+        StdLockGuard scoped_lock(m_cs);
+        assert(m_buffering);
+        assert(m_print_callbacks.empty());
+    }
+    m_print_to_file = false;
+    m_print_to_console = false;
+    StartLogging();
+}
+
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
     m_categories |= flag;

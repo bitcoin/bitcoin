@@ -157,6 +157,14 @@ namespace BCLog {
         /** Only for testing */
         void DisconnectTestLogger() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
+        /** Disable logging
+         * This offers a slight speedup and slightly smaller memory usage
+         * compared to leaving the logging system in its default state.
+         * Mostly intended for libbitcoin-kernel apps that don't want any logging.
+         * Should be used instead of StartLogging().
+         */
+        void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+
         void ShrinkDebugFile();
 
         std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
