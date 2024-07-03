@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 #include <common/args.h>
 #include <crypto/sha256.h>
+#include <logging.h>
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/string.h>
@@ -76,6 +77,7 @@ static std::vector<std::string> parseTestSetupArgs(const ArgsManager& argsman)
 
 int main(int argc, char** argv)
 {
+    BCLog::Logger logger;
     ArgsManager argsman;
     SetupBenchArgs(argsman);
     SHA256AutoDetect();

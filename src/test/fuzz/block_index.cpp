@@ -14,7 +14,7 @@
 
 namespace {
 
-const BasicTestingSetup* g_setup;
+BasicTestingSetup* g_setup;
 
 // Hardcoded block hash and nBits to make sure the blocks we store pass the pow check.
 uint256 g_block_hash;
@@ -46,7 +46,7 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider)
 
 void init_block_index()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>(ChainType::MAIN);
     g_setup = testing_setup.get();
     g_block_hash = Params().GenesisBlock().GetHash();
 }
