@@ -62,6 +62,11 @@ foreach(config IN LISTS CMAKE_BUILD_TYPE CMAKE_CONFIGURATION_TYPES)
   string(TOUPPER "${config}" config)
   set(CMAKE_C_FLAGS_${config} "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
 endforeach()
+# If the CFLAGS environment variable is defined during building depends
+# and configuring this build system, its content might be duplicated.
+if(DEFINED ENV{CFLAGS})
+  deduplicate_flags(CMAKE_C_FLAGS)
+endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 add_subdirectory(secp256k1)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
