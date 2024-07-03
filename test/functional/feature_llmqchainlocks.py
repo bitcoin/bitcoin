@@ -178,7 +178,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].reconsiderblock(good_tip)
         assert self.nodes[0].getbestblockhash() != good_tip
         good_cl = self.nodes[1].getbestblockhash()
-        good_tip = self.generatetoaddress(self.nodes[1], 5, node0_mining_addr, sync_fun=self.no_op)[-1]
+        good_tip = self.generatetoaddress(self.nodes[1], 5, node0_mining_addr)[-1]
         self.wait_for_chainlocked_block(self.nodes[0], good_cl)
         assert self.nodes[0].getbestblockhash() == good_tip
         found = False
