@@ -42,7 +42,7 @@
 
 int main(int argc, char* argv[])
 {
-    BCLog::Logger& logger{LogInstance()};
+    BCLog::Logger logger;
     // We do not enable logging for this app, so explicitly disable it.
     // To enable logging instead, replace with:
     //    logger.m_print_to_console = true;
