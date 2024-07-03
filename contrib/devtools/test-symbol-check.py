@@ -18,7 +18,7 @@ def call_symbol_check(cc: list[str], source, executable, options):
     # See the definitions for ac_link in autoconf's lib/autoconf/c.m4 file for
     # reference.
     env_flags: list[str] = []
-    for var in ['CFLAGS', 'CPPFLAGS', 'LDFLAGS']:
+    for var in ['CXXFLAGS', 'CPPFLAGS', 'LDFLAGS']:
         env_flags += filter(None, os.environ.get(var, '').split(' '))
 
     subprocess.run([*cc,source,'-o',executable] + env_flags + options, check=True)
@@ -29,13 +29,13 @@ def call_symbol_check(cc: list[str], source, executable, options):
 
 class TestSymbolChecks(unittest.TestCase):
     def test_ELF(self):
-        source = 'test1.c'
+        source = 'test1.cpp'
         executable = 'test1'
-        cc = determine_wellknown_cmd('CC', 'gcc')
+        cc = determine_wellknown_cmd('CXX', 'g++')
 
         # -lutil is part of the libc6 package so a safe bet that it's installed
         # it's also out of context enough that it's unlikely to ever become a real dependency
-        source = 'test2.c'
+        source = 'test2.cpp'
         executable = 'test2'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -53,7 +53,7 @@ class TestSymbolChecks(unittest.TestCase):
                     executable + ': failed LIBRARY_DEPENDENCIES'))
 
         # finally, check a simple conforming binary
-        source = 'test3.c'
+        source = 'test3.cpp'
         executable = 'test3'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -70,9 +70,9 @@ class TestSymbolChecks(unittest.TestCase):
                 (0, ''))
 
     def test_MACHO(self):
-        source = 'test1.c'
+        source = 'test1.cpp'
         executable = 'test1'
-        cc = determine_wellknown_cmd('CC', 'clang')
+        cc = determine_wellknown_cmd('CXX', 'clang++')
 
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -90,7 +90,7 @@ class TestSymbolChecks(unittest.TestCase):
             (1, 'libexpat.1.dylib is not in ALLOWED_LIBRARIES!\n' +
                 f'{executable}: failed DYNAMIC_LIBRARIES MIN_OS SDK'))
 
-        source = 'test2.c'
+        source = 'test2.cpp'
         executable = 'test2'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -106,7 +106,7 @@ class TestSymbolChecks(unittest.TestCase):
         self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics', '-Wl,-platform_version','-Wl,macos', '-Wl,11.4', '-Wl,11.4']),
                 (1, f'{executable}: failed MIN_OS SDK'))
 
-        source = 'test3.c'
+        source = 'test3.cpp'
         executable = 'test3'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -120,9 +120,9 @@ class TestSymbolChecks(unittest.TestCase):
                 (1, f'{executable}: failed SDK'))
 
     def test_PE(self):
-        source = 'test1.c'
+        source = 'test1.cpp'
         executable = 'test1.exe'
-        cc = determine_wellknown_cmd('CC', 'x86_64-w64-mingw32-gcc')
+        cc = determine_wellknown_cmd('CXX', 'x86_64-w64-mingw32-g++')
 
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -139,7 +139,7 @@ class TestSymbolChecks(unittest.TestCase):
             (1, 'pdh.dll is not in ALLOWED_LIBRARIES!\n' +
                  executable + ': failed DYNAMIC_LIBRARIES'))
 
-        source = 'test2.c'
+        source = 'test2.cpp'
         executable = 'test2.exe'
 
         with open(source, 'w', encoding="utf8") as f:
@@ -153,7 +153,7 @@ class TestSymbolChecks(unittest.TestCase):
         self.assertEqual(call_symbol_check(cc, source, executable, ['-Wl,--major-subsystem-version', '-Wl,9', '-Wl,--minor-subsystem-version', '-Wl,9']),
             (1, executable + ': failed SUBSYSTEM_VERSION'))
 
-        source = 'test3.c'
+        source = 'test3.cpp'
         executable = 'test3.exe'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''

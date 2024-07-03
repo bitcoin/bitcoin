@@ -34,7 +34,7 @@ def env_flags() -> list[str]:
     # See the definitions for ac_link in autoconf's lib/autoconf/c.m4 file for
     # reference.
     flags: list[str] = []
-    for var in ['CFLAGS', 'CPPFLAGS', 'LDFLAGS']:
+    for var in ['CXXFLAGS', 'CPPFLAGS', 'LDFLAGS']:
         flags += filter(None, os.environ.get(var, '').split(' '))
     return flags
 
@@ -52,9 +52,9 @@ def get_arch(cc, source, executable):
 
 class TestSecurityChecks(unittest.TestCase):
     def test_ELF(self):
-        source = 'test1.c'
+        source = 'test1.cpp'
         executable = 'test1'
-        cc = determine_wellknown_cmd('CC', 'gcc')
+        cc = determine_wellknown_cmd('CXX', 'g++')
         write_testcode(source)
         arch = get_arch(cc, source, executable)
 
@@ -90,9 +90,9 @@ class TestSecurityChecks(unittest.TestCase):
         clean_files(source, executable)
 
     def test_PE(self):
-        source = 'test1.c'
+        source = 'test1.cpp'
         executable = 'test1.exe'
-        cc = determine_wellknown_cmd('CC', 'x86_64-w64-mingw32-gcc')
+        cc = determine_wellknown_cmd('CXX', 'x86_64-w64-mingw32-g++')
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--disable-nxcompat','-Wl,--disable-reloc-section','-Wl,--disable-dynamicbase','-Wl,--disable-high-entropy-va','-no-pie','-fno-PIE','-fno-stack-protector']),
@@ -113,9 +113,9 @@ class TestSecurityChecks(unittest.TestCase):
         clean_files(source, executable)
 
     def test_MACHO(self):
-        source = 'test1.c'
+        source = 'test1.cpp'
         executable = 'test1'
-        cc = determine_wellknown_cmd('CC', 'clang')
+        cc = determine_wellknown_cmd('CXX', 'clang++')
         write_testcode(source)
         arch = get_arch(cc, source, executable)
 
