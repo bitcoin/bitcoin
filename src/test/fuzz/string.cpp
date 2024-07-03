@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -101,7 +101,6 @@ FUZZ_TARGET(string)
     (void)TrimString(random_string_1, random_string_2);
     (void)UrlDecode(random_string_1);
     (void)ContainsNoNUL(random_string_1);
-    (void)_(random_string_1.c_str());
     try {
         throw scriptnum_error{random_string_1};
     } catch (const std::runtime_error&) {
