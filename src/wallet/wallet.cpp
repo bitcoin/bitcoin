@@ -4129,6 +4129,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     std::unique_ptr<WalletBatch> watchonly_batch;
     if (data.watchonly_wallet) {
         watchonly_batch = std::make_unique<WalletBatch>(data.watchonly_wallet->GetDatabase());
+        if (!watchonly_batch->TxnBegin()) return util::Error{strprintf(_("Error: database transaction cannot be executed for wallet %s"), data.watchonly_wallet->GetName())};
         // Copy the next tx order pos to the watchonly wallet
         LOCK(data.watchonly_wallet->cs_wallet);
         data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
@@ -4138,9 +4139,12 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
         }
     }
+    std::unique_ptr<WalletBatch> solvables_batch;
     if (data.solvable_wallet) {
+        solvables_batch = std::make_unique<WalletBatch>(data.solvable_wallet->GetDatabase());
+        if (!solvables_batch->TxnBegin()) return util::Error{strprintf(_("Error: database transaction cannot be executed for wallet %s"), data.solvable_wallet->GetName())};
         // Write the best block locator to avoid rescanning on reload
-        if (!WalletBatch(data.solvable_wallet->GetDatabase()).WriteBestBlock(best_block_locator)) {
+        if (!solvables_batch->WriteBestBlock(best_block_locator)) {
             return util::Error{_("Error: Unable to write solvable wallet best block locator record")};
         }
     }
@@ -4175,7 +4179,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
     }
-    watchonly_batch.reset(); // Flush
+
     // Do the removes
     if (txids_to_delete.size() > 0) {
         if (auto res = RemoveTxs(local_wallet_batch, txids_to_delete); !res) {
@@ -4185,15 +4189,8 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // Pair external wallets with their corresponding db handler
     std::vector<std::pair<std::shared_ptr<CWallet>, std::unique_ptr<WalletBatch>>> wallets_vec;
-    for (const auto& ext_wallet : {data.watchonly_wallet, data.solvable_wallet}) {
-        if (!ext_wallet) continue;
-
-        std::unique_ptr<WalletBatch> batch = std::make_unique<WalletBatch>(ext_wallet->GetDatabase());
-        if (!batch->TxnBegin()) {
-            return util::Error{strprintf(_("Error: database transaction cannot be executed for wallet %s"), ext_wallet->GetName())};
-        }
-        wallets_vec.emplace_back(ext_wallet, std::move(batch));
-    }
+    if (data.watchonly_wallet) wallets_vec.emplace_back(data.watchonly_wallet, std::move(watchonly_batch));
+    if (data.solvable_wallet) wallets_vec.emplace_back(data.solvable_wallet, std::move(solvables_batch));
 
     // Write address book entry to disk
     auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
@@ -4247,7 +4244,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // Persist external wallets address book entries
     for (auto& [wallet, batch] : wallets_vec) {
         if (!batch->TxnCommit()) {
-            return util::Error{strprintf(_("Error: address book copy failed for wallet %s"), wallet->GetName())};
+            return util::Error{strprintf(_("Error: Unable to write data to disk for wallet %s"), wallet->GetName())};
         }
     }
 
