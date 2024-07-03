@@ -235,19 +235,16 @@ static RPCHelpMan settestparams()
     return RPCHelpMan{"settestparams",
         "\nSet test setting. Used in testing only.\n",
         {
-            {"setting", RPCArg::Type::STR, RPCArg::Optional::NO, "DIP3 setting"}
+            {"setting", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Test setting"}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("settestparams", "\"1\"")
-            + HelpExampleRpc("settestparams", "\"1\"")
+            HelpExampleCli("settestparams", "false")
+            + HelpExampleRpc("settestparams", "true")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-        bool fTestSetting = false;
-        if(request.params[0].get_str() == "1") {
-            fTestSetting = true;
-        }
+        fTestSetting = request.params[0].get_bool();
         return "success";
 },
     };

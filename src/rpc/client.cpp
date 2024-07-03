@@ -313,6 +313,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listnevmblobdata", 1, "from" },
     { "listnevmblobdata", 2, "options" },
     { "getnevmblobdata", 1, "getdata" },
+    { "settestparams", 0, "setting" },
     { "syscoincreaterawnevmblob", 2, "conf_target" },
     { "syscoincreaterawnevmblob", 4, "fee_rate"},
     { "syscoincreatenevmblob", 1, "overwrite_existing" },

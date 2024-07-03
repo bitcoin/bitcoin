@@ -127,13 +127,13 @@ class LLMQChainLocksTest(DashTestFramework):
         prevActiveChainlock = self.nodes[0].getchainlocks()["active_chainlock"]["blockhash"]
         # set flag create and accept invalid blocks
         for i in range(len(self.nodes)):
-            self.nodes[i].settestparams("1")
+            self.nodes[i].settestparams(True)
         cl = self.generate(self.nodes[0], 10)[-6]
         bad_tip = self.nodes[0].getbestblockhash()
         self.wait_for_chainlocked_block_all_nodes(cl, timeout=30)
         # clear the invalid flag
         for i in range(len(self.nodes)):
-            self.nodes[i].settestparams("0")
+            self.nodes[i].settestparams(False)
         # should set chainlock to previous one due to invalid block getting locked
         for i in range(len(self.nodes)):
             self.nodes[i].invalidateblock(good_tip)
