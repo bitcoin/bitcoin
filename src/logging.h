@@ -127,17 +127,18 @@ namespace BCLog {
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level);
+        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+            EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const
+        bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
         }
 
         /** Connect a slot to the print signal and return the connection */
-        std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun)
+        std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.push_back(std::move(fun));
@@ -145,30 +146,30 @@ namespace BCLog {
         }
 
         /** Delete a connection */
-        void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it)
+        void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.erase(it);
         }
 
         /** Start logging (and flush all buffered messages) */
-        bool StartLogging();
+        bool StartLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Only for testing */
-        void DisconnectTestLogger();
+        void DisconnectTestLogger() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         void ShrinkDebugFile();
 
-        std::unordered_map<LogFlags, Level> CategoryLevels() const
+        std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             return m_category_log_levels;
         }
-        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels)
+        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_category_log_levels = levels;
         }
-        bool SetCategoryLogLevel(const std::string& category_str, const std::string& level_str);
+        bool SetCategoryLogLevel(const std::string& category_str, const std::string& level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         Level LogLevel() const { return m_log_level.load(); }
         void SetLogLevel(Level level) { m_log_level = level; }
@@ -182,7 +183,7 @@ namespace BCLog {
         bool DisableCategory(const std::string& str);
 
         bool WillLogCategory(LogFlags category) const;
-        bool WillLogCategoryLevel(LogFlags category, Level level) const;
+        bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;
