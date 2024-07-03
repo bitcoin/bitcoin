@@ -7,6 +7,7 @@
 
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <kernel/mempool_limits.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <util/hasher.h>
