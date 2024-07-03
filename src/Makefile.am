@@ -1128,26 +1128,26 @@ if CAN_RENDER_ICONS
 
 qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
 	@$(MKDIR_P) $(@D)
-	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
+	$(AM_V_GEN) $(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
 
 # NOTE: ImageMagick will never convert transparent PNGs to 8-bit ICOs, but GIF is fine
 qt/res/rendered_icons/bitcoin%d8.gif: qt/res/rendered_icons/bitcoin%.png
-	$(IMAGEMAGICK_CONVERT) $^ -colors 256 -channel A -threshold '50%' $@
+	$(AM_V_GEN) $(IMAGEMAGICK_CONVERT) $^ -colors 256 -channel A -threshold '50%' $@
 
 qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
-	$(PNG2ICNS) $@ $^
+	$(AM_V_GEN) $(PNG2ICNS) $@ $^
 
 qt/res/rendered_icons/bitcoin.ico: qt/res/rendered_icons/bitcoin32d8.gif $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 64 48 32 20 16)
-	$(IMAGEMAGICK_CONVERT) $^ $@
+	$(AM_V_GEN) $(IMAGEMAGICK_CONVERT) $^ $@
 
 qt/res/rendered_icons/bitcoin_testnet.ico: qt/res/rendered_icons/bitcoin.ico
-	$(IMAGEMAGICK_CONVERT) $^ -modulate 100,87,9 $@
+	$(AM_V_GEN) $(IMAGEMAGICK_CONVERT) $^ -modulate 100,87,9 $@
 
 qt/res/rendered_icons/nsis-wizard.bmp: qt/res/rendered_icons/bitcoin290.png
-	$(IMAGEMAGICK_CONVERT) $^ -crop 164x290+62+0 -border 0x12 -strip BMP3:$@
+	$(AM_V_GEN) $(IMAGEMAGICK_CONVERT) $^ -crop 164x290+62+0 -border 0x12 -strip BMP3:$@
 
 qt/res/rendered_icons/nsis-header.bmp: qt/res/src/nsis-header.svg
-	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 57 -p 57 | $(IMAGEMAGICK_CONVERT) - -background white -alpha remove BMP3:$@
+	$(AM_V_GEN) sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 57 -p 57 | $(IMAGEMAGICK_CONVERT) - -background white -alpha remove BMP3:$@
 
 endif
 
