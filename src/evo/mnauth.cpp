@@ -164,7 +164,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
                         pnode->fDisconnect = true;
                     }
                 }
-            } else {
+            } else if (!fRegTest) {
                 LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
                         mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
                 pnode->fDisconnect = true;
