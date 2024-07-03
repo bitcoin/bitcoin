@@ -3747,25 +3747,17 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
     return *out;
 }
 
-void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
+void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
-
-    // Create single batch txn
-    WalletBatch batch(GetDatabase());
-    if (!batch.TxnBegin()) throw std::runtime_error("Error: cannot create db transaction for descriptors setup");
-
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
             SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal);
         }
     }
-
-    // Ensure information is committed to disk
-    if (!batch.TxnCommit()) throw std::runtime_error("Error: cannot commit db transaction for descriptors setup");
 }
 
-void CWallet::SetupOwnDescriptorScriptPubKeyMans()
+void CWallet::SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch)
 {
     AssertLockHeld(cs_wallet);
     assert(!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
@@ -3778,7 +3770,7 @@ void CWallet::SetupOwnDescriptorScriptPubKeyMans()
     CExtKey master_key;
     master_key.SetSeed(seed_key);
 
-    SetupDescriptorScriptPubKeyMans(master_key);
+    SetupDescriptorScriptPubKeyMans(batch, master_key);
 }
 
 void CWallet::SetupDescriptorScriptPubKeyMans()
@@ -3786,7 +3778,10 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
     AssertLockHeld(cs_wallet);
 
     if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        SetupOwnDescriptorScriptPubKeyMans();
+        if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"setup descriptors", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet){
+            SetupOwnDescriptorScriptPubKeyMans(batch);
+            return true;
+        })) throw std::runtime_error("Error: cannot process db transaction for descriptors setup");
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
 
@@ -4113,12 +4108,13 @@ util::Result<void> CWallet::ApplyMigrationData(MigrationData& data)
     // Setup new descriptors
     SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     if (!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        WalletBatch local_wallet_batch(GetDatabase());
         // Use the existing master key if we have it
         if (data.master_key.key.IsValid()) {
-            SetupDescriptorScriptPubKeyMans(data.master_key);
+            SetupDescriptorScriptPubKeyMans(local_wallet_batch, data.master_key);
         } else {
             // Setup with a new seed if we don't.
-            SetupOwnDescriptorScriptPubKeyMans();
+            SetupOwnDescriptorScriptPubKeyMans(local_wallet_batch);
         }
     }
 
