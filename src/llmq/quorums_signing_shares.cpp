@@ -1285,8 +1285,8 @@ void CSigSharesManager::Cleanup()
 
     // Find quorums which became inactive
     for (auto it = quorums.begin(); it != quorums.end(); ) {
-        if (CLLMQUtils::IsQuorumActive(0, it->first)) {
-            it->second = quorumManager->GetQuorum(0, it->first);
+        if (CLLMQUtils::IsQuorumActive(Params().GetConsensus().llmqTypeChainLocks, it->first)) {
+            it->second = quorumManager->GetQuorum(Params().GetConsensus().llmqTypeChainLocks, it->first);
             ++it;
         } else {
             it = quorums.erase(it);
