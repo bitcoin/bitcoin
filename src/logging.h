@@ -79,6 +79,7 @@ namespace BCLog {
         Error,
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
+    constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
 
     class Logger
     {
@@ -88,6 +89,9 @@ namespace BCLog {
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+        size_t m_max_buffer_memusage GUARDED_BY(m_cs){DEFAULT_MAX_LOG_BUFFER};
+        size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
+        size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -110,6 +114,10 @@ namespace BCLog {
 
         /** Slots that connect to the print signal */
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+
+        /** Send a string to the log output (internal) */
+        void LogPrintStr_(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+            EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
     public:
         bool m_print_to_console = false;

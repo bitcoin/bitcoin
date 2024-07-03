@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
+#include <memusage.h>
 #include <util/fs.h>
 #include <util/string.h>
 #include <util/threadnames.h>
@@ -71,6 +72,9 @@ bool BCLog::Logger::StartLogging()
 
     // dump buffered messages from before we opened the log
     m_buffering = false;
+    if (m_buffer_lines_discarded > 0) {
+        LogPrintStr_(strprintf("Early logging buffer overflowed, %d log lines discarded.\n", m_buffer_lines_discarded), __func__, __FILE__, __LINE__, BCLog::ALL, Level::Info);
+    }
     while (!m_msgs_before_open.empty()) {
         const std::string& s = m_msgs_before_open.front();
 
@@ -82,6 +86,7 @@ bool BCLog::Logger::StartLogging()
 
         m_msgs_before_open.pop_front();
     }
+    m_cur_buffer_memusage = 0;
     if (m_print_to_console) fflush(stdout);
 
     return true;
@@ -94,6 +99,11 @@ void BCLog::Logger::DisconnectTestLogger()
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
     m_print_callbacks.clear();
+    m_max_buffer_memusage = DEFAULT_MAX_LOG_BUFFER;
+    m_cur_buffer_memusage = 0;
+    m_buffer_lines_discarded = 0;
+    m_msgs_before_open.clear();
+
 }
 
 void BCLog::Logger::DisableLogging()
@@ -362,9 +372,19 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
     return s;
 }
 
+static size_t MemUsage(const std::string& str)
+{
+    return str.size() + memusage::MallocUsage(sizeof(memusage::list_node<std::string>));
+}
+
 void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
+    return LogPrintStr_(str, logging_function, source_file, source_line, category, level);
+}
+
+void BCLog::Logger::LogPrintStr_(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+{
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_started_new_line) {
@@ -387,6 +407,17 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     if (m_buffering) {
         // buffer if we haven't started logging yet
         m_msgs_before_open.push_back(str_prefixed);
+
+        m_cur_buffer_memusage += MemUsage(str_prefixed);
+        while (m_cur_buffer_memusage > m_max_buffer_memusage) {
+            if (m_msgs_before_open.empty()) {
+                m_cur_buffer_memusage = 0;
+                break;
+            }
+            m_cur_buffer_memusage -= MemUsage(m_msgs_before_open.front());
+            m_msgs_before_open.pop_front();
+            ++m_buffer_lines_discarded;
+        }
         return;
     }
 
