@@ -15,10 +15,10 @@ from utils import determine_wellknown_cmd
 def write_testcode(filename):
     with open(filename, 'w', encoding="utf8") as f:
         f.write('''
-    #include <stdio.h>
+    #include <cstdio>
     int main()
     {
-        printf("the quick brown fox jumps over the lazy god\\n");
+        std::printf("the quick brown fox jumps over the lazy god\\n");
         return 0;
     }
     ''')

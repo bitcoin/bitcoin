@@ -57,11 +57,11 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test3'
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
-                #include <stdio.h>
+                #include <cstdio>
 
                 int main()
                 {
-                    printf("42");
+                    std::printf("42");
                     return 0;
                 }
         ''')
