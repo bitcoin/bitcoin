@@ -500,6 +500,18 @@ static RPCHelpMan quorum_sign()
     };
 }
 
+static bool VerifyRecoveredSigLatestQuorums(const Consensus::LLMQParams& llmq_params, const CChain& active_chain, const llmq::CQuorumManager& qman,
+                                            int signHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
+{
+    // First check against the current active set, if it fails check against the last active set
+    for (int signOffset : {0, llmq_params.dkgInterval}) {
+        if (llmq::VerifyRecoveredSig(llmq_params.type, active_chain, qman, signHeight, id, msgHash, sig, signOffset) == llmq::VerifyRecSigStatus::Valid) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static RPCHelpMan quorum_verify()
 {
     return RPCHelpMan{"quorum verify",
@@ -545,10 +557,7 @@ static RPCHelpMan quorum_verify()
         if (!request.params[5].isNull()) {
             signHeight = ParseInt32V(request.params[5], "signHeight");
         }
-        // First check against the current active set, if it fails check against the last active set
-        int signOffset{llmq_params_opt->dkgInterval};
-        return llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, msgHash, sig, 0) ||
-               llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, msgHash, sig, signOffset);
+        return VerifyRecoveredSigLatestQuorums(*llmq_params_opt, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, msgHash, sig);
     }
 
     uint256 quorumHash(ParseHashV(request.params[4], "quorumHash"));
@@ -958,7 +967,7 @@ static RPCHelpMan verifychainlock()
     }
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    return llmq_ctx.clhandler->VerifyChainLock(llmq::CChainLockSig(nBlockHeight, nBlockHash, sig));
+    return llmq_ctx.clhandler->VerifyChainLock(llmq::CChainLockSig(nBlockHeight, nBlockHash, sig)) == llmq::VerifyRecSigStatus::Valid;
 },
     };
 }
@@ -1030,12 +1039,9 @@ static RPCHelpMan verifyislock()
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
     auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
-    // First check against the current active set, if it fails check against the last active set
     const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     CHECK_NONFATAL(llmq_params_opt.has_value());
-    const int signOffset{llmq_params_opt->dkgInterval};
-    return llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, txid, sig, 0) ||
-           llmq::VerifyRecoveredSig(llmqType, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, txid, sig, signOffset);
+    return VerifyRecoveredSigLatestQuorums(*llmq_params_opt, chainman.ActiveChain(), *llmq_ctx.qman, signHeight, id, txid, sig);
 },
     };
 }
@@ -1060,7 +1066,8 @@ static RPCHelpMan submitchainlock()
     if (nBlockHeight <= 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }
-    const LLMQContext& llmq_ctx = EnsureLLMQContext(EnsureAnyNodeContext(request.context));
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
     const int32_t bestCLHeight = llmq_ctx.clhandler->GetBestChainLock().getHeight();
     if (nBlockHeight <= bestCLHeight) return bestCLHeight;
 
@@ -1070,8 +1077,15 @@ static RPCHelpMan submitchainlock()
     }
 
 
-    auto clsig = llmq::CChainLockSig(nBlockHeight, nBlockHash, sig);
-    if (!llmq_ctx.clhandler->VerifyChainLock(clsig)) {
+    const auto clsig{llmq::CChainLockSig(nBlockHeight, nBlockHash, sig)};
+    const llmq::VerifyRecSigStatus ret{llmq_ctx.clhandler->VerifyChainLock(clsig)};
+    if (ret == llmq::VerifyRecSigStatus::NoQuorum) {
+        LOCK(cs_main);
+        const ChainstateManager& chainman = EnsureChainman(node);
+        const CBlockIndex* pIndex{chainman.ActiveChain().Tip()};
+        throw JSONRPCError(RPC_MISC_ERROR, strprintf("No quorum found. Current tip height: %d hash: %s\n", pIndex->nHeight, pIndex->GetBlockHash().ToString()));
+    }
+    if (ret != llmq::VerifyRecSigStatus::Valid) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature");
     }
 
