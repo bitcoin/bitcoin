@@ -34,6 +34,11 @@ class Span;
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
 
+    void SetMsgProc(NetEventsInterface* msgproc)
+    {
+        m_msgproc = msgproc;
+    }
+
     void SetPeerConnectTimeout(std::chrono::seconds timeout)
     {
         m_peer_connect_timeout = timeout;
