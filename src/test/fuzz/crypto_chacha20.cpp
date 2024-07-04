@@ -3,10 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/chacha20.h>
+#include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/util/xoroshiro128plusplus.h>
 
 #include <array>
 #include <cstddef>
@@ -53,7 +53,7 @@ namespace
     once for a large block at once, and then the same data in chunks, comparing
     the outcome.
 
-    If UseCrypt, seeded Xoroshiro128++ output is used as input to Crypt().
+    If UseCrypt, seeded InsecureRandomContext output is used as input to Crypt().
     If not, Keystream() is used directly, or sequences of 0x00 are encrypted.
 */
 template<bool UseCrypt>
@@ -78,25 +78,11 @@ void ChaCha20SplitFuzz(FuzzedDataProvider& provider)
     data1.resize(total_bytes);
     data2.resize(total_bytes);
 
-    // If using Crypt(), initialize data1 and data2 with the same Xoroshiro128++ based
+    // If using Crypt(), initialize data1 and data2 with the same InsecureRandomContext based
     // stream.
     if constexpr (UseCrypt) {
-        uint64_t seed = provider.ConsumeIntegral<uint64_t>();
-        XoRoShiRo128PlusPlus rng(seed);
-        uint64_t bytes = 0;
-        while (bytes < (total_bytes & ~uint64_t{7})) {
-            uint64_t val = rng();
-            WriteLE64(UCharCast(data1.data() + bytes), val);
-            WriteLE64(UCharCast(data2.data() + bytes), val);
-            bytes += 8;
-        }
-        if (bytes < total_bytes) {
-            std::byte valbytes[8];
-            uint64_t val = rng();
-            WriteLE64(UCharCast(valbytes), val);
-            std::copy(valbytes, valbytes + (total_bytes - bytes), data1.data() + bytes);
-            std::copy(valbytes, valbytes + (total_bytes - bytes), data2.data() + bytes);
-        }
+        InsecureRandomContext(provider.ConsumeIntegral<uint64_t>()).fillrand(data1);
+        std::copy(data1.begin(), data1.end(), data2.begin());
     }
 
     // Whether UseCrypt is used or not, the two byte arrays must match.

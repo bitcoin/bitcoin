@@ -9,8 +9,8 @@
 #include <vector>
 
 ByteVectorHash::ByteVectorHash() :
-    m_k0(GetRand<uint64_t>()),
-    m_k1(GetRand<uint64_t>())
+    m_k0(FastRandomContext().rand64()),
+    m_k1(FastRandomContext().rand64())
 {
 }
 

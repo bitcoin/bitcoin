@@ -23,8 +23,7 @@ TEST_UTIL_H = \
   test/util/str.h \
   test/util/transaction_utils.h \
   test/util/txmempool.h \
-  test/util/validation.h \
-  test/util/xoroshiro128plusplus.h
+  test/util/validation.h
 
 if ENABLE_WALLET
 TEST_UTIL_H += wallet/test/util.h
