@@ -141,8 +141,6 @@ static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
 static constexpr bool DEFAULT_REST_ENABLE{false};
 static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 
-static CDSNotificationInterface* pdsNotificationInterface = nullptr;
-
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
 // accessing block files don't count towards the fd_set size limit
@@ -369,11 +367,11 @@ void PrepareShutdown(NodeContext& node)
     }
 #endif
 
-    if (pdsNotificationInterface) {
-        UnregisterValidationInterface(pdsNotificationInterface);
-        delete pdsNotificationInterface;
-        pdsNotificationInterface = nullptr;
+    if (g_ds_notification_interface) {
+        UnregisterValidationInterface(g_ds_notification_interface.get());
+        g_ds_notification_interface.reset();
     }
+
     if (node.mn_activeman) {
         UnregisterValidationInterface(node.mn_activeman.get());
         node.mn_activeman.reset();
@@ -2147,10 +2145,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                      node.cj_ctx, node.llmq_ctx, ignores_incoming_txs);
     RegisterValidationInterface(node.peerman.get());
 
-    pdsNotificationInterface = new CDSNotificationInterface(
+    g_ds_notification_interface = std::make_unique<CDSNotificationInterface>(
         *node.connman, *node.mn_sync, *node.govman, *node.peerman, chainman, node.mn_activeman.get(), node.dmnman, node.llmq_ctx, node.cj_ctx
     );
-    RegisterValidationInterface(pdsNotificationInterface);
+    RegisterValidationInterface(g_ds_notification_interface.get());
 
     // ********************************************************* Step 7c: Setup CoinJoin
 
@@ -2327,7 +2325,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
-        ThreadImport(chainman, *node.dmnman, *pdsNotificationInterface, vImportFiles, node.mn_activeman.get(), args);
+        ThreadImport(chainman, *node.dmnman, *g_ds_notification_interface, vImportFiles, node.mn_activeman.get(), args);
     });
 
     // Wait for genesis block to be processed

@@ -60,4 +60,6 @@ private:
     const std::unique_ptr<CJContext>& m_cj_ctx;
 };
 
+extern std::unique_ptr<CDSNotificationInterface> g_ds_notification_interface;
+
 #endif // BITCOIN_DSNOTIFICATIONINTERFACE_H
