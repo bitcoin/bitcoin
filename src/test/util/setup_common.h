@@ -52,6 +52,8 @@ struct TestOpts {
     std::vector<const char*> extra_args{};
     bool coins_db_in_memory{true};
     bool block_tree_db_in_memory{true};
+    bool setup_net{true};
+    bool setup_validation_interface{true};
 };
 
 /** Basic testing setup.
