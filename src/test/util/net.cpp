@@ -28,7 +28,8 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
 
     peerman.InitializeNode(node, local_services);
-    FlushSendBuffer(node); // Drop the version message added by InitializeNode.
+    peerman.SendMessages(&node);
+    FlushSendBuffer(node); // Drop the version message added by SendMessages.
 
     CSerializedNetMsg msg_version{
         NetMsg::Make(NetMsgType::VERSION,
