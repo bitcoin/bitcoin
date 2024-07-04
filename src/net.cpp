@@ -3063,7 +3063,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         LOCK(m_nodes_mutex);
         // should be in the list now if connection was opened
         CNode* pnode = FindNode(connectToDmn->pdmnState->addr);
-        if(!pnode || !pnode->fDisconnect) {
+        if(!pnode) {
             LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToStringAddrPort());
             // Will take a few consequent failed attempts to PoSe-punish a MN.
             if (mmetaman.GetMetaInfo(connectToDmn->proTxHash)->OutboundFailedTooManyTimes()) {

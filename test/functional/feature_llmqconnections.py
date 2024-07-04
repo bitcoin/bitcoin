@@ -32,7 +32,6 @@ class LLMQConnections(DashTestFramework):
 
     def run_test(self):
         self.sync_blocks(self.nodes, timeout=60*5)
-        self.confirm_mns()
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
@@ -99,7 +98,7 @@ class LLMQConnections(DashTestFramework):
 
         # Also re-connect non-masternode connections
         for i in range(1, len(self.nodes)):
-            self.connect_nodes(self.nodes[i].index, 0)
+            self.connect_nodes(self.nodes[i].index, 0, wait_for_connect=False)
             self.nodes[i].ping()
         # wait for ping/pong so that we can be sure that spork propagation works
         time.sleep(1) # needed to make sure we don't check before the ping is actually sent (fPingQueued might be true but SendMessages still not called)

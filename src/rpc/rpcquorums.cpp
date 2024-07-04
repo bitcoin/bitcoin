@@ -576,16 +576,20 @@ static RPCHelpMan quorum_dkgsimerror()
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    std::string type = request.params[0].get_str();
+    std::string type_str = request.params[0].get_str();
     double rate = request.params[1].get_real();
-
+    
     if (rate < 0 || rate > 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 1");
     }
-
-    llmq::SetSimulatedDKGErrorRate(type, rate);
-
-    return UniValue();
+    
+    if (const llmq::DKGError::type type = llmq::DKGError::from_string(type_str);
+            type == llmq::DKGError::type::_COUNT) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid type. See DKGError class implementation");
+    } else {
+        llmq::SetSimulatedDKGErrorRate(type, rate);
+        return UniValue();
+    }
 },
     };
 } 

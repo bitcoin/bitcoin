@@ -1080,19 +1080,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.llmq_threshold = 2
         self.disable_autoconnect = False
 
-    def confirm_mns(self):
-        while True:
-            diff = self.nodes[0].protx_diff(self.nodes[0].getblockhash(1), self.nodes[0].getblockhash(self.nodes[0].getblockcount()))
-            found_unconfirmed = False
-            for mn in diff["mnList"]:
-                if int(mn["confirmedHash"], 16) == 0:
-                    found_unconfirmed = True
-                    break
-            if not found_unconfirmed:
-                break
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-        self.sync_blocks()
-
     def bump_scheduler(self, t, nodes=None):
         bump_node_times(nodes or self.nodes, t)
 

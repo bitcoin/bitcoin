@@ -6,7 +6,7 @@ import time
 
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
-  wait_until_helper,
+  wait_until_helper_internal,
 )
 '''
 multikeysporks.py
@@ -61,7 +61,7 @@ class MultiKeySporkTest(DashTestFramework):
         # connect nodes at start
         for i in range(0, 5):
             for j in range(i, 5):
-                self.connect_nodes(i, j)
+                self.connect_nodes(i, j, wait_for_connect=False)
 
     def get_test_spork_value(self, node, spork_name):
         time.sleep(0.1)
@@ -100,7 +100,7 @@ class MultiKeySporkTest(DashTestFramework):
         time.sleep(5)
         # now spork state is changed
         for node in self.nodes:
-            wait_until_helper(lambda: self.get_test_spork_value(node, spork_name) == 1, sleep=0.1, timeout=10)
+            wait_until_helper_internal(lambda: self.get_test_spork_value(node, spork_name) == 1, timeout=10)
 
         # restart with no extra args to trigger CheckAndRemove, should reset the spork back to its default
         self.restart_node(0)
@@ -113,7 +113,7 @@ class MultiKeySporkTest(DashTestFramework):
         for i in range(1, 5):
             self.connect_nodes(0, i)
 
-        wait_until_helper(lambda: self.get_test_spork_value(self.nodes[0], spork_name) == 1, sleep=0.1, timeout=10)
+        wait_until_helper_internal(lambda: self.get_test_spork_value(self.nodes[0], spork_name) == 1, timeout=10)
 
         self.bump_mocktime(1)
         # now set the spork again with other signers to test
@@ -122,7 +122,7 @@ class MultiKeySporkTest(DashTestFramework):
         self.nodes[3].spork(spork_name, final_value)
         self.nodes[4].spork(spork_name, final_value)
         for node in self.nodes:
-            wait_until_helper(lambda: self.get_test_spork_value(node, spork_name) == final_value, sleep=0.1, timeout=10)
+            wait_until_helper_internal(lambda: self.get_test_spork_value(node, spork_name) == final_value, timeout=10)
 
     def run_test(self):
         self.test_spork('SPORK_TEST', 2)

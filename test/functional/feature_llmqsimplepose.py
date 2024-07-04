@@ -31,7 +31,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def run_test(self):
         self.sync_blocks(self.nodes, timeout=60*5)
-        self.confirm_mns()
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
@@ -47,6 +46,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
+        self.bump_mocktime(60)
+        self.generate(self.nodes[0], 1)
         self.wait_for_sporks_same()
 
         self.reset_probe_timeouts()
@@ -88,7 +89,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo:
             if mn2 is not mn:
-                self.connect_nodes(mn.node.index, mn2.node.index)
+                self.connect_nodes(mn.node.index, mn2.node.index, wait_for_connect=False)
         self.reset_probe_timeouts()
         return False, False
 
@@ -96,10 +97,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
         self.connect_nodes(mn.node.index, 0)
-        # Make sure the to-be-banned node is still connected well via outbound connections
-        for mn2 in self.mninfo:
-            if mn2 is not mn:
-                self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False, True
 
@@ -154,7 +151,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime)])
                 else:
                     mn.node.setnetworkactive(True)
-            self.connect_nodes(mn.node.index, 0)
+                self.connect_nodes(mn.node.index, 0)
         self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
@@ -163,7 +160,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
-            self.connect_nodes(mn.node.index, 0)
+            self.connect_nodes(mn.node.index, 0, wait_for_connect=False)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe

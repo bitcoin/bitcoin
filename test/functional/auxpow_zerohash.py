@@ -27,7 +27,7 @@ from test_framework.p2p import (
 )
 from test_framework.util import (
   assert_equal,
-  wait_until_helper,
+  wait_until_helper_internal,
 )
 
 from test_framework.auxpow_testing import computeAuxpow
@@ -48,7 +48,7 @@ class P2PBlockGetter (P2PInterface):
     self.block = None
     inv = CInv (t=2, h=int (blkHash, 16))
     self.send_message (msg_getdata (inv=[inv]))
-    wait_until_helper (lambda: self.block is not None)
+    wait_until_helper_internal (lambda: self.block is not None)
     return self.block
 
 
