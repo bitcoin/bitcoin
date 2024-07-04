@@ -562,7 +562,6 @@ bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
                 prevList = GetListForBlockInternal(pindex->pprev);
             }
 
-            m_evoDb->EraseCache(blockHash);
             tipIndex = pindex->pprev;
         }
     }
