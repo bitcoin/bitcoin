@@ -268,7 +268,7 @@ bool KeyMan::SetupGeneration(bool force)
     }
 
     SetHDSeed(GenerateNewSeed());
-    if (!NewSubAddressPool() || !NewSubAddressPool(-1)) {
+    if (!NewSubAddressPool() || !NewSubAddressPool(-1) || !NewSubAddressPool(-2)) {
         return false;
     }
     return true;
@@ -514,7 +514,7 @@ bulletproofs::AmountRecoveryResult<Arith> KeyMan::RecoverOutputs(const std::vect
     for (size_t i = 0; i < outs.size(); i++) {
         CTxOut out = outs[i];
         auto nonce = CalculateNonce(out.blsctData.blindingKey, viewKey.GetScalar());
-        bulletproofs::RangeProof<Arith> proof = out.blsctData.rangeProof;
+        bulletproofs::RangeProofWithSeed<Arith> proof = {out.blsctData.rangeProof, out.tokenId};
         reqs.push_back(bulletproofs::AmountRecoveryRequest<Arith>::of(proof, nonce));
     }
 
@@ -772,8 +772,8 @@ bool KeyMan::GetSubAddressFromPool(const int64_t& account, CKeyID& result, SubAd
     SubAddressPool keypool;
 
     ReserveSubAddressFromPool(account, nIndex, keypool);
-    id = SubAddressIdentifier{account, (nIndex > -1 ? static_cast<uint64_t>(nIndex) : 0)};
-    if (nIndex == -1) {
+    id = SubAddressIdentifier{account, (account > -1 ? static_cast<uint64_t>(nIndex) : 0)};
+    if (nIndex <= -1) {
         if (m_storage.IsLocked()) return false;
         SubAddress subAddress = GenerateNewSubAddress(account, id);
         result = subAddress.GetKeys().GetID();

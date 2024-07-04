@@ -13,6 +13,13 @@ uint256 CBlockHeader::GetHash() const
     return (HashWriter{} << *this).GetHash();
 }
 
+uint256 CBlock::GetHashWithoutPoSProof() const
+{
+    HashWriter ss;
+    ss << nVersion << hashPrevBlock << hashMerkleRoot << nTime << nBits << nNonce << TX_NO_WITNESS(vtx);
+    return ss.GetHash();
+}
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;

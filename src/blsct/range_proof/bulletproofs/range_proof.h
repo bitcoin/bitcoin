@@ -27,6 +27,10 @@ struct RangeProof: public range_proof::ProofBase<T> {
     using Scalar = typename T::Scalar;
     using Points = Elements<Point>;
 
+    RangeProof(){};
+
+    // RangeProof<T>(const RangeProof<T>& proof) : Vs(proof.Vs, proof.Ls, proof.Rs), A(proof.A), S(proof.S), T1(proof.T1), T2(proof.T2), mu(proof.mu), tau_x(proof.tau_x), a(proof.a), b(proof.b), t_hat(proof.t_hat){};
+
     // intermediate values used to derive random values later
     Point A;
     Point S;
@@ -40,9 +44,6 @@ struct RangeProof: public range_proof::ProofBase<T> {
     Scalar b;     // result of inner product argument
     Scalar t_hat; // inner product of l and r
 
-    // seed to derive generators
-    typename GeneratorDeriver<T>::Seed seed;
-
     bool operator==(const RangeProof<T>& other) const;
     bool operator!=(const RangeProof<T>& other) const;
 
@@ -50,13 +51,6 @@ struct RangeProof: public range_proof::ProofBase<T> {
     void Serialize(Stream& s) const
     {
         range_proof::ProofBase<T>::Serialize(s);
-
-        if (std::holds_alternative<TokenId>(seed)) {
-            auto token_id = std::get<TokenId>(seed);
-            ::Serialize(s, token_id);
-        } else {
-            throw new std::runtime_error("Only TokenId seed can be serialized");
-        }
         ::Serialize(s, A);
         ::Serialize(s, S);
         ::Serialize(s, T1);
@@ -72,12 +66,6 @@ struct RangeProof: public range_proof::ProofBase<T> {
     void Unserialize(Stream& s)
     {
         range_proof::ProofBase<T>::Unserialize(s);
-
-        // expect to unserialize RangeProof w/ TokenId only
-        TokenId token_id;
-        ::Unserialize(s, token_id);
-        seed = token_id;
-
         ::Unserialize(s, A);
         ::Unserialize(s, S);
         ::Unserialize(s, T1);
@@ -88,6 +76,26 @@ struct RangeProof: public range_proof::ProofBase<T> {
         ::Unserialize(s, b);
         ::Unserialize(s, t_hat);
     }
+};
+
+template <typename T>
+struct RangeProofWithSeed : public RangeProof<T> {
+    RangeProofWithSeed(const RangeProof<T>& proof, const typename GeneratorDeriver<T>::Seed& seed, const typename T::Scalar& min_value) : RangeProof<T>(proof), seed(seed), min_value(min_value){};
+
+    RangeProofWithSeed(const RangeProof<T>& proof, const typename GeneratorDeriver<T>::Seed& seed) : RangeProof<T>(proof), seed(seed), min_value(0){};
+
+    RangeProofWithSeed(const RangeProof<T>& proof) : RangeProof<T>(proof), seed(TokenId()), min_value(0){};
+
+    RangeProofWithSeed(){};
+
+    bool operator==(const RangeProofWithSeed<T>& other) const;
+    bool operator!=(const RangeProofWithSeed<T>& other) const;
+
+    // seed to derive generators
+    typename GeneratorDeriver<T>::Seed seed;
+
+    // min value for proof verification
+    typename T::Scalar min_value;
 };
 
 } // namespace bulletproofs

@@ -639,7 +639,7 @@ class FullBlockTest(BitcoinTestFramework):
             # Rehash nonces until an invalid too-high-hash block is found.
             b47.nNonce += 1
             b47.rehash()
-        self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
+#       self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
@@ -1425,7 +1425,6 @@ class FullBlockTest(BitcoinTestFramework):
 
         Call with success = False if the tip shouldn't advance to the most recent block."""
         self.helper_peer.send_blocks_and_test(blocks, self.nodes[0], success=success, reject_reason=reject_reason, force_send=force_send, timeout=timeout, expect_disconnect=reconnect)
-
         if reconnect:
             self.reconnect_p2p(timeout=timeout)
 

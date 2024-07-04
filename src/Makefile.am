@@ -126,6 +126,10 @@ if BUILD_BITCOIN_CLI
   bin_PROGRAMS += navcoin-cli
 endif
 
+if BUILD_NAVCOIN_STAKER
+  bin_PROGRAMS += navcoin-staker
+endif
+
 if BUILD_BITCOIN_TX
   bin_PROGRAMS += navcoin-tx
 endif
@@ -168,6 +172,10 @@ BLSCT_H = \
   blsct/private_key.h \
   blsct/public_key.h \
   blsct/public_keys.h \
+  blsct/pos/helpers.h \
+  blsct/pos/pos.h \
+  blsct/pos/proof.h \
+  blsct/pos/proof_logic.h \
   blsct/range_proof/bulletproofs/amount_recovery_request.h \
   blsct/range_proof/bulletproofs/amount_recovery_result.h \
   blsct/range_proof/bulletproofs/range_proof.h \
@@ -212,6 +220,10 @@ BLSCT_CPP = \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
   blsct/external_api/blsct.cpp \
+  blsct/pos/helpers.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof_logic.cpp \
+  blsct/pos/proof.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
@@ -510,6 +522,44 @@ libbitcoin_node_a_SOURCES = \
   bip324.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
+  blsct/arith/mcl/mcl_g1point.cpp \
+  blsct/arith/mcl/mcl_scalar.cpp \
+  blsct/arith/elements.cpp \
+  blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/building_block/lazy_points.cpp \
+  blsct/building_block/weighted_inner_prod_arg.cpp \
+  blsct/common.cpp \
+  blsct/double_public_key.cpp \
+  blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof.cpp \
+  blsct/pos/proof_logic.cpp \
+  blsct/private_key.cpp \
+  blsct/public_key.cpp \
+  blsct/public_keys.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_request.cpp \
+  blsct/range_proof/bulletproofs_plus/amount_recovery_result.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof_with_transcript.cpp \
+  blsct/range_proof/bulletproofs_plus/util.cpp \
+  blsct/range_proof/common.cpp \
+  blsct/range_proof/generators.cpp \
+  blsct/range_proof/msg_amt_cipher.cpp \
+  blsct/range_proof/proof_base.cpp \
+  blsct/set_mem_proof/set_mem_proof.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
+  blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/wallet/verification.cpp \
+  blsct/signature.cpp \
   blsct/wallet/verification.cpp \
   chain.cpp \
   chainparams.cpp \
@@ -636,6 +686,10 @@ libbitcoin_wallet_a_SOURCES = \
   blsct/common.cpp \
   blsct/double_public_key.cpp \
   blsct/eip_2333/bls12_381_keygen.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof.cpp \
+  blsct/pos/proof_logic.cpp \
+  blsct/pos/helpers.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \
@@ -804,12 +858,28 @@ libbitcoin_consensus_a_SOURCES = \
   blsct/arith/mcl/mcl_g1point.cpp \
   blsct/arith/mcl/mcl_scalar.cpp \
   blsct/building_block/generator_deriver.cpp \
+  blsct/building_block/g_h_gi_hi_zero_verifier.cpp \
+  blsct/building_block/imp_inner_prod_arg.cpp \
+  blsct/building_block/lazy_point.cpp \
+  blsct/building_block/lazy_points.cpp \
+  blsct/building_block/weighted_inner_prod_arg.cpp \
   blsct/common.cpp \
   blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs/range_proof_logic.cpp \
+  blsct/range_proof/bulletproofs/range_proof_with_transcript.cpp \
   blsct/range_proof/bulletproofs_plus/range_proof.cpp \
   blsct/range_proof/common.cpp \
   blsct/range_proof/generators.cpp \
   blsct/range_proof/proof_base.cpp \
+  blsct/range_proof/msg_amt_cipher.cpp \
+  blsct/range_proof/bulletproofs/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/range_proof.cpp \
+  blsct/range_proof/bulletproofs_plus/util.cpp \
+  blsct/set_mem_proof/set_mem_proof.cpp \
+  blsct/set_mem_proof/set_mem_proof_setup.cpp \
+  blsct/set_mem_proof/set_mem_proof_prover.cpp \
+  blsct/pos/helpers.cpp \
+  blsct/pos/proof.cpp \
   blsct/signature.cpp \
   consensus/amount.h \
   consensus/merkle.cpp \
@@ -1051,6 +1121,29 @@ navcoin_cli_LDADD = \
 navcoin_cli_LDADD += $(EVENT_LIBS)
 #
 
+# navcoin-staker binary #
+navcoin_staker_SOURCES = navcoin-staker.cpp
+navcoin_staker_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+navcoin_staker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navcoin_staker_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+if TARGET_WINDOWS
+navcoin_staker_SOURCES += navcoin-staker-res.rc
+endif
+
+navcoin_staker_LDADD = \
+  $(LIBBITCOIN_CLI) \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBLS) \
+  $(LIBMCL)
+
+navcoin_staker_LDADD += $(EVENT_LIBS)
+#
+
 # navcoin-tx binary #
 navcoin_tx_SOURCES = bitcoin-tx.cpp
 navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
@@ -1165,6 +1258,10 @@ libnavcoinkernel_la_SOURCES = \
   blsct/building_block/weighted_inner_prod_arg.cpp \
   blsct/common.cpp \
   blsct/double_public_key.cpp \
+  blsct/pos/helpers.cpp \
+  blsct/pos/pos.cpp \
+  blsct/pos/proof_logic.cpp \
+  blsct/pos/proof.cpp \
   blsct/private_key.cpp \
   blsct/public_key.cpp \
   blsct/public_keys.cpp \

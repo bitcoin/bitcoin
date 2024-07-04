@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(parse_script)
         {"0x17", "17"},
         {"'17'", "023137"},
         {"ELSE", "67"},
-        {"NOP10", "b9"},
+        {"OP_STAKED_COMMITMENT", "b9"},
     };
     std::string all_in;
     std::string all_out;

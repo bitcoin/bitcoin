@@ -8,6 +8,7 @@
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/common.h>
 
 namespace bulletproofs {
 
@@ -27,12 +28,12 @@ struct AmountRecoveryRequest
     Points Rs;
     Scalar mu;
     Scalar tau_x;
-    Point nonce;
+    typename range_proof::GammaSeed<T> nonce;
+    Scalar min_value;
 
     static AmountRecoveryRequest<T> of(
-        RangeProof<T>& proof,
-        Point& nonce
-    );
+        const RangeProofWithSeed<T>& proof,
+        const range_proof::GammaSeed<T>& nonce);
 };
 
 } // namespace bulletproofs

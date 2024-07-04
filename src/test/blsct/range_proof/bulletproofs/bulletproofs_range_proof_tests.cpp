@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(test_different_seed_type)
     TokenId token_id(uint256(1));
     blsct::Message msg { 2 };
 
-    bulletproofs::RangeProof<T> p;
+    bulletproofs::RangeProofWithSeed<T> p;
     p.seed = token_id;
     p.Vs = Vs;
     p.A = A;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_different_seed_type)
     p.b = b;
     p.t_hat = t_hat;
 
-    bulletproofs::RangeProof<T> q;
+    bulletproofs::RangeProofWithSeed<T> q;
     p.seed = msg;
     q.Vs = Vs;
     q.A = A;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(test_message_equal)
     blsct::Message msg_1 { 1 };
     blsct::Message msg_2 { 2 };
 
-    bulletproofs::RangeProof<T> p;
+    bulletproofs::RangeProofWithSeed<T> p;
     p.seed = msg_1;
     p.Vs = Vs;
     p.A = A;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(test_message_equal)
     p.b = b;
     p.t_hat = t_hat;
 
-    bulletproofs::RangeProof<T> q;
+    bulletproofs::RangeProofWithSeed<T> q;
     p.seed = msg_2;
     q.Vs = Vs;
     q.A = A;
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(test_token_id_equal)
         Scalar t_hat(6);
         TokenId token_id(uint256(6));
 
-        bulletproofs::RangeProof<T> p;
+        bulletproofs::RangeProofWithSeed<T> p;
         p.seed = token_id;
         p.Vs = Vs;
         p.A = A;
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(test_token_id_equal)
         p.b = b;
         p.t_hat = t_hat;
 
-        bulletproofs::RangeProof<T> q;
+        bulletproofs::RangeProofWithSeed<T> q;
         p.seed = token_id;
         q.Vs = Vs;
         q.A = g;
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(test_token_id_equal)
         TokenId token_id_1(uint256(1));
         TokenId token_id_2(uint256(2));
 
-        bulletproofs::RangeProof<T> p;
+        bulletproofs::RangeProofWithSeed<T> p;
         p.seed = token_id_1;
         p.Vs = Vs;
         p.A = A;
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(test_token_id_equal)
         p.b = b;
         p.t_hat = t_hat;
 
-        bulletproofs::RangeProof<T> q;
+        bulletproofs::RangeProofWithSeed<T> q;
         p.seed = token_id_2;
         q.Vs = Vs;
         q.A = A;
@@ -280,8 +280,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser_token_id)
     Scalar t_hat(6);
     TokenId token_id(uint256(123));
 
-    bulletproofs::RangeProof<T> p;
-    p.seed = token_id;
+    bulletproofs::RangeProofWithSeed<T> p;
     p.Vs = Vs;
     p.A = A;
     p.S = S;
@@ -298,7 +297,7 @@ BOOST_AUTO_TEST_CASE(test_de_ser_token_id)
     DataStream st{};
     p.Serialize(st);
 
-    bulletproofs::RangeProof<T> q;
+    bulletproofs::RangeProofWithSeed<T> q;
     q.Unserialize(st);
 
     BOOST_CHECK(p == q);

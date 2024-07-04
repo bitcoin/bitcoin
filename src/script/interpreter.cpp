@@ -515,6 +515,7 @@ bool EvalScript(std::vector<std::vector<unsigned char>>& stack, const CScript& s
                 // Control
                 //
                 case OP_NOP:
+                case OP_STAKED_COMMITMENT:
                     break;
 
                 case OP_CHECKLOCKTIMEVERIFY: {
@@ -594,8 +595,7 @@ bool EvalScript(std::vector<std::vector<unsigned char>>& stack, const CScript& s
                 case OP_NOP6:
                 case OP_NOP7:
                 case OP_NOP8:
-                case OP_NOP9:
-                case OP_NOP10: {
+                case OP_NOP9: {
                     if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
                         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS);
                 } break;

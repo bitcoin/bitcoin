@@ -218,9 +218,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
     blsct::PrivateKey viewKey, spendKey, tokenKey;
     blsct::DoublePublicKey dest;
 
-    DatabaseOptions options;
-    options.create_flags |= WALLET_FLAG_BLSCT;
-
     auto get_db = [](std::vector<std::unique_ptr<WalletDatabase>>& dbs) {
         std::unique_ptr<WalletDatabase> db = std::move(dbs.back());
         dbs.pop_back();
@@ -230,6 +227,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
     { // Context setup.
         // Create and encrypt blsct wallet
         std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", CreateMockableWalletDatabase()));
+        wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
         LOCK(wallet->cs_wallet);
         auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
         BOOST_CHECK(blsct_km->SetupGeneration(true));

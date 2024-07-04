@@ -13,7 +13,7 @@
 class ArgsManager;
 
 /**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and navcoind)
+ * CBaseChainParams defines the base parameters (shared between navcoin-cli and navcoind)
  * of a given instance of the Bitcoin system.
  */
 class CBaseChainParams

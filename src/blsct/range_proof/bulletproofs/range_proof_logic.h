@@ -7,11 +7,11 @@
 
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
-#include <blsct/range_proof/common.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_request.h>
 #include <blsct/range_proof/bulletproofs/amount_recovery_result.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs/range_proof_with_transcript.h>
+#include <blsct/range_proof/common.h>
 #include <blsct/range_proof/recovered_data.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -36,25 +36,23 @@ public:
     using Points = Elements<Point>;
 
     RangeProof<T> Prove(
-        Scalars& vs,
-        Point& nonce,
+        Scalars vs,
+        const range_proof::GammaSeed<T>& nonce,
         const std::vector<uint8_t>& message,
-        const Seed& seed
-    ) const;
+        const Seed& seed,
+        const Scalar& minValue = 0) const;
 
     bool Verify(
-        const std::vector<RangeProof<T>>& proofs
-    ) const;
+        const std::vector<RangeProofWithSeed<T>>& proofs) const;
 
     AmountRecoveryResult<T> RecoverAmounts(
-        const std::vector<AmountRecoveryRequest<T>>& reqs
-    ) const;
+        const std::vector<AmountRecoveryRequest<T>>& reqs) const;
 
 private:
-    bool VerifyProofs(
+    bool
+    VerifyProofs(
         const std::vector<RangeProofWithTranscript<T>>& proof_transcripts,
-        const size_t& max_mn
-    ) const;
+        const size_t& max_mn) const;
 
     range_proof::Common<T> m_common;
 };

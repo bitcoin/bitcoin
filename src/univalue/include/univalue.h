@@ -119,6 +119,7 @@ public:
     bool get_bool() const;
     const std::string& get_str() const;
     double get_real() const;
+    uint64_t get_uint64() const;
     const UniValue& get_obj() const;
     const UniValue& get_array() const;
 

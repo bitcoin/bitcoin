@@ -2297,6 +2297,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, co
         break;
     }
     case OutputType::BLSCT:
+    case OutputType::BLSCT_STAKE:
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN or BLSCT OutputType,
         // so if we get to this point something is wrong

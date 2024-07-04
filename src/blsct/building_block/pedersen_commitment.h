@@ -17,7 +17,7 @@ public:
         const typename T::Scalar& m,
         const typename T::Scalar& f
     ) const {
-        return m_h * m + m_g * f;
+        return m_g * m + m_h * f;
     }
 
 private:

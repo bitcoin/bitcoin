@@ -18,10 +18,8 @@ BOOST_AUTO_TEST_SUITE(blsct_keyman_tests)
 // TODO: Make sure that WALLET_FLAG_BLSCT is set for the mockable wallet
 BOOST_FIXTURE_TEST_CASE(wallet_test, TestingSetup)
 {
-    wallet::DatabaseOptions options;
-    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
-
     auto wallet = std::make_unique<wallet::CWallet>(m_node.chain.get(), "", wallet::CreateMockableWalletDatabase());
+    wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();

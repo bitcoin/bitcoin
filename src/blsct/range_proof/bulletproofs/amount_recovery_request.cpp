@@ -13,7 +13,7 @@
 namespace bulletproofs {
 
 template <typename T>
-AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, typename T::Point& nonce)
+AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(const RangeProofWithSeed<T>& proof, const range_proof::GammaSeed<T>& nonce)
 {
     auto proof_with_transcript = RangeProofWithTranscript<T>::Build(proof);
 
@@ -27,11 +27,11 @@ AmountRecoveryRequest<T> AmountRecoveryRequest<T>::of(RangeProof<T>& proof, type
         proof.Rs,
         proof.mu,
         proof.tau_x,
-        nonce
-    };
+        nonce,
+        0};
     return req;
 }
-template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(RangeProof<Mcl>&, Mcl::Point&);
+template AmountRecoveryRequest<Mcl> AmountRecoveryRequest<Mcl>::of(const RangeProofWithSeed<Mcl>&, const range_proof::GammaSeed<Mcl>&);
 
 } // namespace bulletproofs
 

@@ -294,6 +294,7 @@ struct CBLSCTRecipient {
     std::string sMemo;
     blsct::SubAddress destination;
     bool fSubtractFeeFromAmount;
+    bool fStakeCommitment;
 };
 
 class WalletRescanReserver; // forward declarations for ScanForWalletTransactions/RescanFromTime

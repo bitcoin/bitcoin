@@ -10,6 +10,7 @@
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/private_key.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
+#include <blsct/range_proof/generators.h>
 #include <blsct/signature.h>
 #include <consensus/amount.h>
 #include <ctokens/tokenid.h>
@@ -17,8 +18,8 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <util/transaction_identifier.h> // IWYU pragma: export
 #include <util/moneystr.h>
+#include <util/transaction_identifier.h> // IWYU pragma: export
 
 #include <cstddef>
 #include <cstdint>
@@ -290,7 +291,37 @@ public:
         return blsctData.rangeProof.Vs.Size() > 0;
     }
 
-    friend bool operator==(const CTxOut& a, const CTxOut& b)
+    bool IsStakedCommitment() const
+    {
+        bulletproofs::RangeProofWithSeed<Mcl> dummy;
+
+        return GetStakedCommitmentRangeProof(dummy);
+    }
+
+    bool GetStakedCommitmentRangeProof(bulletproofs::RangeProofWithSeed<Mcl>& rangeProof) const
+    {
+        if (!IsBLSCT())
+            return false;
+        if (scriptPubKey.size() <= 7) return false;
+        if (blsctData.rangeProof.Vs.Size() == 0)
+            return false;
+        if (!tokenId.IsNull())
+            return false;
+        if (!(*(scriptPubKey.begin()) == OP_STAKED_COMMITMENT && *(scriptPubKey.begin() + 1) == OP_PUSHDATA2 && *(scriptPubKey.end() - 1) == OP_TRUE))
+            return false;
+        try {
+            auto commitment = std::vector<unsigned char>(scriptPubKey.begin() + 4, scriptPubKey.end());
+
+            DataStream s(MakeByteSpan(commitment));
+            s >> rangeProof;
+        } catch (...) {
+            return false;
+        }
+        return true;
+    }
+
+    friend bool
+    operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey &&

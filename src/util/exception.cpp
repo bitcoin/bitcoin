@@ -25,6 +25,7 @@ static std::string FormatException(const std::exception* pex, std::string_view t
 #else
     const char* pszModule = "bitcoin";
 #endif
+
     if (pex)
         return strprintf(
             "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, thread_name);

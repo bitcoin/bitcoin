@@ -19,7 +19,7 @@ class RangeProofWithTranscript
 
 public:
     RangeProofWithTranscript(
-        const RangeProof<T>& proof,
+        const RangeProofWithSeed<T>& proof,
         const Scalar& x,
         const Scalar& y,
         const Scalar& z,
@@ -32,9 +32,9 @@ public:
         num_input_values_power_2(num_input_values_power_2),
         concat_input_values_in_bits(concat_input_values_in_bits) {}
 
-    static RangeProofWithTranscript<T> Build(const RangeProof<T>& proof);
+    static RangeProofWithTranscript<T> Build(const RangeProofWithSeed<T>& proof);
 
-    const RangeProof<T> proof;
+    const RangeProofWithSeed<T> proof;
 
     // transcript
     const Scalar x;  // x used in the main prove procedure

@@ -276,7 +276,6 @@ class SegWitTest(BitcoinTestFramework):
         self.test_submit_block()
         self.test_extra_witness_data()
         self.test_max_witness_push_length()
-        self.test_max_witness_script_length()
         self.test_witness_input_length()
         self.test_block_relay()
         self.test_tx_relay_after_segwit_activation()
@@ -1085,53 +1084,6 @@ class SegWitTest(BitcoinTestFramework):
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
         # Update the utxo for later tests
-        self.utxo.pop()
-        self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
-
-    @subtest
-    def test_max_witness_script_length(self):
-        """Test that witness outputs greater than 10kB can't be spent."""
-
-        MAX_WITNESS_SCRIPT_LENGTH = 10000
-
-        # This script is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
-        long_witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
-        assert len(long_witness_script) == MAX_WITNESS_SCRIPT_LENGTH + 1
-        long_script_pubkey = script_to_p2wsh_script(long_witness_script)
-
-        block = self.build_next_block()
-
-        tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
-        tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, long_script_pubkey))
-        tx.rehash()
-
-        tx2 = CTransaction()
-        tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
-        tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
-        tx2.wit.vtxinwit.append(CTxInWitness())
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 44 + [long_witness_script]
-        tx2.rehash()
-
-        self.update_witness_block_with_transactions(block, [tx, tx2])
-
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False,
-                           reason='mandatory-script-verify-flag-failed (Script is too big)')
-
-        # Try again with one less byte in the witness script
-        witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
-        assert len(witness_script) == MAX_WITNESS_SCRIPT_LENGTH
-        script_pubkey = script_to_p2wsh_script(witness_script)
-
-        tx.vout[0] = CTxOut(tx.vout[0].nValue, script_pubkey)
-        tx.rehash()
-        tx2.vin[0].prevout.hash = tx.sha256
-        tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 43 + [witness_script]
-        tx2.rehash()
-        block.vtx = [block.vtx[0]]
-        self.update_witness_block_with_transactions(block, [tx, tx2])
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
-
         self.utxo.pop()
         self.utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 

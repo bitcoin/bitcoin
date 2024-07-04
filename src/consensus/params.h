@@ -76,6 +76,7 @@ struct Params {
     uint256 hashGenesisBlock;
     int nSubsidyHalvingInterval;
     CAmount nBLSCTBlockReward;
+    CAmount nBLSCTFirstBlockReward;
     /**
      * Hashes of blocks that
      * - are known to be consensus valid, and
@@ -99,8 +100,7 @@ struct Params {
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and segwit activations. */
     int MinBIP9WarningHeight;
-    /** Whether BLSCT is activated */
-    bool fBLSCT;
+
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -115,11 +115,23 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
+    /** Proof of stake parameters */
+    uint256 posLimit;
+    int64_t nPosTargetSpacing;
+    int64_t nPosTargetTimespan;
+    bool fPosNoRetargeting;
+    unsigned int nModifierInterval;
+    CAmount nPePoSMinStakeAmount;
+    int nLastPOWHeight;
+    /** Whether BLSCT is activated */
+    bool fBLSCT;
+
     std::chrono::seconds PowTargetSpacing() const
     {
         return std::chrono::seconds{nPowTargetSpacing};
     }
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t DifficultyAdjustmentIntervalPos() const { return nPosTargetTimespan / nPosTargetSpacing; }
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */

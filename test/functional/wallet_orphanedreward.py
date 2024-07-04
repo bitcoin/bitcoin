@@ -47,6 +47,7 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         # We expect the descendants of orphaned rewards to no longer be considered
         assert_equal(self.nodes[1].getbalances()["mine"], {
           "trusted": 10,
+          'staked_commitment_balance': 0,
           "untrusted_pending": 0,
           "immature": 0,
         })

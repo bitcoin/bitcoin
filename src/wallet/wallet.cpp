@@ -279,7 +279,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
         }
 
         // Legacy wallets are being deprecated, warn if the loaded wallet is legacy
-        if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && !wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
             warnings.push_back(_("Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet."));
         }
 
@@ -437,18 +437,39 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
                 status = DatabaseStatus::FAILED_ENCRYPT;
                 return nullptr;
             }
-
+        }
+    }
+    {
+        if (!create_blank) {
+            LOCK(wallet->cs_wallet);
             // Set a seed for the wallet
-            {
-                LOCK(wallet->cs_wallet);
-                if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
-                    wallet->SetupBLSCTKeyMan();
-                    {
-                        auto blsct_man = wallet->GetBLSCTKeyMan();
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_BLSCT)) {
+                wallet->SetupBLSCTKeyMan();
+                {
+                    auto blsct_man = wallet->GetBLSCTKeyMan();
 
-                        if (blsct_man) {
-                            if (!blsct_man->SetupGeneration()) {
-                                error = Untranslated("Unable to generate initial blsct keys");
+                    if (blsct_man) {
+                        if (!blsct_man->SetupGeneration()) {
+                            error = Untranslated("Unable to generate initial blsct keys");
+                            status = DatabaseStatus::FAILED_CREATE;
+                            return nullptr;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            if (!create_blank) {
+                {
+                    LOCK(wallet->cs_wallet);
+
+                    if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                        wallet->SetupDescriptorScriptPubKeyMans();
+                    } else {
+                        for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
+                            if (!spk_man->SetupGeneration()) {
+                                error = Untranslated("Unable to generate initial keys");
                                 status = DatabaseStatus::FAILED_CREATE;
                                 return nullptr;
                             }
@@ -456,23 +477,12 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
                     }
                 }
 
-                if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                    wallet->SetupDescriptorScriptPubKeyMans();
-                } else {
-                    for (auto spk_man : wallet->GetActiveScriptPubKeyMans()) {
-                        if (!spk_man->SetupGeneration()) {
-                            error = Untranslated("Unable to generate initial keys");
-                            status = DatabaseStatus::FAILED_CREATE;
-                            return nullptr;
-                        }
-                    }
-                }
+                // Relock the wallet
+                wallet->Lock();
             }
-
-            // Relock the wallet
-            wallet->Lock();
         }
     }
+
 
     NotifyWalletLoaded(context, wallet);
     AddWallet(context, wallet);
@@ -482,7 +492,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
     UpdateWalletSetting(*context.chain, name, load_on_start, warnings);
 
     // Legacy wallets are being deprecated, warn if a newly created wallet is legacy
-    if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
+    if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTORS) && !(wallet_creation_flags & WALLET_FLAG_BLSCT)) {
         warnings.push_back(_("Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future."));
     }
 
@@ -1596,7 +1606,11 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
     if (txout.IsBLSCT()) {
         auto blsct_man = GetBLSCTKeyMan();
         if (blsct_man) {
-            return blsct_man->IsMine(txout) ? ISMINE_SPENDABLE_BLSCT : ISMINE_NO;
+            bool mine = blsct_man->IsMine(txout);
+            if (mine) {
+                return txout.IsStakedCommitment() ? ISMINE_STAKED_COMMITMENT_BLSCT : ISMINE_SPENDABLE_BLSCT;
+            }
+            return ISMINE_NO;
         }
     }
     return IsMine(txout.scriptPubKey);
@@ -2335,7 +2349,13 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 
     std::string err_string;
     if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, true)) {
-        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        if (tx->IsBLSCT())
+            AbandonTransaction(tx->GetHash());
+
+        WalletLogPrintf("CommitTransaction(): Transaction broadcast failed, %s\n", err_string);
+
+        if (tx->IsBLSCT())
+            throw std::runtime_error(std::string(__func__) + ": Transaction broadcast failed: " + err_string);
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
 }
@@ -2508,13 +2528,14 @@ util::Result<CTxDestination> CWallet::GetNewDestination(const OutputType type, c
 
     util::Result<CTxDestination> op_dest = CTxDestination{CNoDestination{}};
 
-    if (type == OutputType::BLSCT) {
+    if (type == OutputType::BLSCT || type == OutputType::BLSCT_STAKE) {
         auto blsct_man = GetBLSCTKeyMan();
         if (!blsct_man) {
             return util::Error{strprintf(_("Error: No %s addresses available."), FormatOutputType(type))};
         }
 
-        op_dest = blsct_man->GetNewDestination(m_current_account);
+        auto account = type == OutputType::BLSCT_STAKE ? -2 : m_current_account;
+        op_dest = blsct_man->GetNewDestination(account);
         if (op_dest) {
             SetAddressBook(*op_dest, label, AddressPurpose::RECEIVE);
         }
@@ -3652,7 +3673,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const CExtKey& master_key)
 
     for (bool internal : {false, true}) {
         for (OutputType t : OUTPUT_TYPES) {
-            if (t == OutputType::BLSCT) continue;
+            if (t == OutputType::BLSCT || t == OutputType::BLSCT_STAKE) continue;
             auto spk_manager = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, m_keypool_size));
             if (IsCrypted()) {
                 if (IsLocked()) {
@@ -3686,7 +3707,6 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         // Get the extended key
         CExtKey master_key;
         master_key.SetSeed(seed_key);
-
         SetupDescriptorScriptPubKeyMans(master_key);
     } else {
         ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();

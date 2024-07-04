@@ -17,10 +17,8 @@ BOOST_AUTO_TEST_SUITE(blsct_txfactory_tests)
 
 BOOST_FIXTURE_TEST_CASE(ismine_test, TestingSetup)
 {
-    wallet::DatabaseOptions options;
-    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
-
     auto wallet = std::make_unique<wallet::CWallet>(m_node.chain.get(), "", wallet::CreateMockableWalletDatabase());
+    wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
@@ -50,10 +48,8 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     SeedInsecureRand(SeedRand::ZEROS);
     CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
 
-    wallet::DatabaseOptions options;
-    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
-
     wallet::CWallet* wallet(new wallet::CWallet(m_node.chain.get(), "", wallet::CreateMockableWalletDatabase()));
+    wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
@@ -70,6 +66,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     coin.out = out.out;
 
     auto tx = blsct::TxFactory(blsct_km);
+    TxValidationState tx_state;
 
     {
         CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
@@ -86,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(createtransaction_test, TestingSetup)
     auto finalTx = tx.BuildTx();
 
     BOOST_CHECK(finalTx.has_value());
-    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache, tx_state));
 
     bool fFoundChange = false;
 
@@ -112,10 +109,8 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     SeedInsecureRand(SeedRand::ZEROS);
     CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
 
-    wallet::DatabaseOptions options;
-    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
-
     auto wallet = std::make_unique<wallet::CWallet>(m_node.chain.get(), "", wallet::CreateMockableWalletDatabase());
+    wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
@@ -146,9 +141,10 @@ BOOST_FIXTURE_TEST_CASE(addinput_test, TestingSetup)
     tx.AddOutput(recvAddress, 900 * COIN, "test");
 
     auto finalTx = tx.BuildTx();
+    TxValidationState tx_state;
 
     BOOST_CHECK(finalTx.has_value());
-    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache, tx_state));
 
     bool fFoundChange = false;
 

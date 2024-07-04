@@ -53,6 +53,12 @@ def assert_template(node, block, expect, rehash=True):
 class MiningTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.extra_args = [[
+            "--maxtipage=999999999999",
+        ],
+        [
+            "--maxtipage=999999999999",
+        ]]
         self.setup_clean_chain = True
         self.supports_cli = False
 

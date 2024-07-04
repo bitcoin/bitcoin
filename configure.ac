@@ -32,6 +32,7 @@ fi
 NAVCOIN_DAEMON_NAME=navcoind
 NAVCOIN_TEST_NAME=test_navcoin
 NAVCOIN_CLI_NAME=navcoin-cli
+NAVCOIN_STAKER_NAME=navcoin-staker
 NAVCOIN_TX_NAME=navcoin-tx
 NAVCOIN_UTIL_NAME=navcoin-util
 NAVCOIN_CHAINSTATE_NAME=navcoin-chainstate
@@ -595,6 +596,12 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 fi
 
 CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
+
+AC_ARG_ENABLE([staker],
+  [AS_HELP_STRING([--enable-staker],
+  [build navcoin-staker])],
+  [build_navcoin_staker=$enableval],
+  [build_navcoin_staker=yes])
 
 # We need to have have BLS_ETH=1 for bls and mcl libs
 CORE_CPPFLAGS="$CORE_CPPFLAGS -DBLS_ETH=1"
@@ -1279,6 +1286,7 @@ if test "$enable_fuzz" = "yes"; then
   build_bitcoin_tx=no
   build_bitcoin_util=no
   build_bitcoin_chainstate=no
+  build_navcoin_staker=no
   build_bitcoin_wallet=no
   build_navcoind=no
   build_bitcoin_libs=no
@@ -1300,6 +1308,7 @@ if test "$enable_build_libblsct_only" = "yes"; then
   build_bitcoin_tx=no
   build_bitcoin_util=no
   build_bitcoin_chainstate=no
+  build_navcoin_staker=no
   build_bitcoin_wallet=no
   build_navcoind=no
   build_bitcoin_libs=no
@@ -1626,6 +1635,10 @@ AC_MSG_CHECKING([whether to build navcoind])
 AM_CONDITIONAL([BUILD_BITCOIND], [test $build_navcoind = "yes"])
 AC_MSG_RESULT($build_navcoind)
 
+AC_MSG_CHECKING([whether to build navcoin-staker])
+AM_CONDITIONAL([BUILD_NAVCOIN_STAKER], [test $build_navcoin_staker = "yes"])
+AC_MSG_RESULT($build_navcoin_staker)
+
 AC_MSG_CHECKING([whether to build bitcoin-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test $build_bitcoin_cli = "yes"])
 AC_MSG_RESULT($build_bitcoin_cli)
@@ -1811,6 +1824,7 @@ AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 AC_SUBST(NAVCOIN_DAEMON_NAME)
 AC_SUBST(NAVCOIN_TEST_NAME)
+AC_SUBST(NAVCOIN_STAKER_NAME)
 AC_SUBST(NAVCOIN_CLI_NAME)
 AC_SUBST(NAVCOIN_TX_NAME)
 AC_SUBST(NAVCOIN_UTIL_NAME)

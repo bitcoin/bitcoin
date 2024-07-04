@@ -5,6 +5,7 @@
 
 #include <node/miner.h>
 
+#include <blsct/pos/pos.h>
 #include <blsct/wallet/txfactory.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -40,7 +41,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks) {
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+        pblock->nBits = consensusParams.fBLSCT ? blsct::GetNextTargetRequired(pindexPrev, pblock, consensusParams) : GetNextWorkRequired(pindexPrev, pblock, consensusParams);
     }
 
     return nNewTime - nOldTime;
@@ -186,7 +187,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 }
 
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const blsct::SubAddress& destination, CAmount nReward, const std::vector<CMutableTransaction>& txns)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTBlock(const blsct::SubAddress& destination, CAmount nReward, const std::vector<CMutableTransaction>& txns, const bool& fPos)
 {
     const auto time_start{SteadyClock::now()};
 
@@ -210,6 +211,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
     nHeight = pindexPrev->nHeight + 1;
 
     pblock->nVersion = m_chainstate.m_chainman.m_versionbitscache.ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
+
+    if (fPos)
+        pblock->nVersion |= CBlockHeader::VERSION_BIT_POS;
+
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand()) {
@@ -275,7 +280,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
     // Fill in header
     pblock->hashPrevBlock = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+    pblock->nBits = fPos ? blsct::GetNextTargetRequired(pindexPrev, pblock, chainparams.GetConsensus()) : GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+
     pblock->nNonce = 0;
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
@@ -286,7 +292,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTPOWBlock(const bls
     }
     const auto time_2{SteadyClock::now()};
 
-    LogPrint(BCLog::BENCH, "CreateNewBLSCTPOWBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
+    LogPrint(BCLog::BENCH, "CreateNewBLSCTBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
              Ticks<MillisecondsDouble>(time_1 - time_start), nPackagesSelected, nDescendantsUpdated,
              Ticks<MillisecondsDouble>(time_2 - time_1),
              Ticks<MillisecondsDouble>(time_2 - time_start));

@@ -49,6 +49,7 @@ Point GeneratorDeriver<Point>::Derive(
 
     auto vec_hash = std::vector<uint8_t>(hash.begin(), hash.end());
     auto ret = Point::MapToPoint(vec_hash);
+
     if (ret.IsZero()) {
         throw std::runtime_error(strprintf(
             "%s: Generated G1Point is the point at infinity. Try changing parameters", __func__));

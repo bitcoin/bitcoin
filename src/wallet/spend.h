@@ -81,6 +81,8 @@ struct CoinFilterParams {
     bool skip_locked{true};
     // Only include BLSCT outputs
     bool only_blsct{false};
+    // Include BLSCT Staked Commitment outputs
+    bool include_staked_commitment{false};
     // By default, use native nav
     TokenId token_id{TokenId()};
 };

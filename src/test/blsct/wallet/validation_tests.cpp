@@ -20,10 +20,8 @@ BOOST_FIXTURE_TEST_CASE(validation_test, TestingSetup)
     SeedInsecureRand(SeedRand::ZEROS);
     CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
 
-    wallet::DatabaseOptions options;
-    options.create_flags |= wallet::WALLET_FLAG_BLSCT;
-
     auto wallet = std::make_unique<wallet::CWallet>(m_node.chain.get(), "", wallet::CreateMockableWalletDatabase());
+    wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
@@ -54,9 +52,10 @@ BOOST_FIXTURE_TEST_CASE(validation_test, TestingSetup)
     tx.AddOutput(recvAddress, 900 * COIN, "test");
 
     auto finalTx = tx.BuildTx();
+    TxValidationState tx_state;
 
     BOOST_CHECK(finalTx.has_value());
-    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(finalTx.value()), coins_view_cache, tx_state));
 }
 
 BOOST_FIXTURE_TEST_CASE(validation_reward_test, TestingSetup)
@@ -65,13 +64,14 @@ BOOST_FIXTURE_TEST_CASE(validation_reward_test, TestingSetup)
     CCoinsViewCache coins_view_cache{&base, /*deterministic=*/true};
 
     CMutableTransaction tx;
+    TxValidationState tx_state;
 
     auto out = blsct::CreateOutput(blsct::DoublePublicKey(), 900 * COIN, " Reward ");
     tx.vout.push_back(out.out);
     tx.txSig = out.GetSignature();
 
-    BOOST_CHECK(!blsct::VerifyTx(CTransaction(tx), coins_view_cache));
-    BOOST_CHECK(blsct::VerifyTx(CTransaction(tx), coins_view_cache, 900 * COIN));
+    BOOST_CHECK(!blsct::VerifyTx(CTransaction(tx), coins_view_cache, tx_state));
+    BOOST_CHECK(blsct::VerifyTx(CTransaction(tx), coins_view_cache, tx_state, 900 * COIN));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

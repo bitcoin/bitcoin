@@ -52,6 +52,7 @@ static RPCHelpMan getwalletinfo()
                 {RPCResult::Type::NUM, "walletversion", "the wallet version"},
                 {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
                 {RPCResult::Type::STR_AMOUNT, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
+                {RPCResult::Type::STR_AMOUNT, "staked_commitment_balance", "DEPRECATED. Identical to getbalances().mine.staked_commitment_balance"},
                 {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
                 {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
                 {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
@@ -95,6 +96,7 @@ static RPCHelpMan getwalletinfo()
             obj.pushKV("walletversion", pwallet->GetVersion());
             obj.pushKV("format", pwallet->GetDatabase().Format());
             obj.pushKV("balance", ValueFromAmount(bal.m_mine_trusted));
+            obj.pushKV("staked_commitment_balance", ValueFromAmount(bal.m_mine_staked_commitment));
             obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
             obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
             obj.pushKV("txcount", (int)pwallet->mapWallet.size());
@@ -408,6 +410,7 @@ static RPCHelpMan createwallet()
 
             if (!request.params[8].isNull() && request.params[8].get_bool()) {
                 flags |= WALLET_FLAG_BLSCT;
+                flags &= ~WALLET_FLAG_DESCRIPTORS;
             }
 
             DatabaseOptions options;
@@ -847,6 +850,7 @@ RPCHelpMan lockunspent();
 RPCHelpMan listlockunspent();
 RPCHelpMan getbalances();
 RPCHelpMan listunspent();
+RPCHelpMan liststakedcommitments();
 
 // encryption
 RPCHelpMan walletpassphrase();
@@ -859,6 +863,8 @@ RPCHelpMan sendtoaddress();
 RPCHelpMan sendtoblsctaddress();
 RPCHelpMan sendmany();
 RPCHelpMan settxfee();
+RPCHelpMan stakelock();
+RPCHelpMan stakeunlock();
 RPCHelpMan fundrawtransaction();
 RPCHelpMan bumpfee();
 RPCHelpMan psbtbumpfee();
@@ -922,6 +928,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &listreceivedbyaddress},
         {"wallet", &listreceivedbylabel},
         {"wallet", &listsinceblock},
+        {"wallet", &liststakedcommitments},
         {"wallet", &listtransactions},
         {"wallet", &listunspent},
         {"wallet", &listwalletdir},
@@ -944,6 +951,8 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &signrawtransactionwithwallet},
         {"wallet", &simulaterawtransaction},
         {"wallet", &sendall},
+        {"wallet", &stakelock},
+        {"wallet", &stakeunlock},
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},

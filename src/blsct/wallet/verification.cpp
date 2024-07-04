@@ -2,24 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <blsct/wallet/verification.h>
-#include <util/strencodings.h>
 #include <blsct/arith/mcl/mcl.h>
+#include <blsct/pos/pos.h>
 #include <blsct/public_keys.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
 #include <blsct/range_proof/bulletproofs/range_proof_logic.h>
 #include <blsct/range_proof/generators.h>
+#include <blsct/wallet/verification.h>
+#include <util/strencodings.h>
 
 namespace blsct {
-bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount& blockReward)
+bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, TxValidationState& state, const CAmount& blockReward, const CAmount& minStake)
 {
     if (!view.HaveInputs(tx)) {
-        return false;
+        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-inputs-unknown");
     }
 
     range_proof::GeneratorsFactory<Mcl> gf;
     bulletproofs::RangeProofLogic<Mcl> rp;
-    std::vector<bulletproofs::RangeProof<Mcl>> vProofs;
+    std::vector<bulletproofs::RangeProofWithSeed<Mcl>> vProofs;
     std::vector<Message> vMessages;
     std::vector<PublicKey> vPubKeys;
     MclG1Point balanceKey;
@@ -34,7 +35,7 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
             Coin coin;
 
             if (!view.GetCoin(in.prevout, coin)) {
-                return false;
+                return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-input-unknown");
             }
 
             vPubKeys.emplace_back(coin.out.blsctData.spendingKey);
@@ -45,20 +46,33 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     }
 
     CAmount nFee = 0;
+    bulletproofs::RangeProofWithSeed<Mcl> stakedCommitmentRangeProof;
 
     for (auto& out : tx.vout) {
         if (out.IsBLSCT()) {
-            vPubKeys.emplace_back(out.blsctData.ephemeralKey);
+            bulletproofs::RangeProofWithSeed<Mcl> proof{out.blsctData.rangeProof, out.tokenId};
             auto out_hash = out.GetHash();
+
+            vPubKeys.emplace_back(out.blsctData.ephemeralKey);
             vMessages.emplace_back(out_hash.begin(), out_hash.end());
-            vProofs.emplace_back(out.blsctData.rangeProof);
+            vProofs.emplace_back(proof);
+
             balanceKey = balanceKey - out.blsctData.rangeProof.Vs[0];
+
+            if (out.GetStakedCommitmentRangeProof(stakedCommitmentRangeProof)) {
+                stakedCommitmentRangeProof.Vs.Clear();
+                stakedCommitmentRangeProof.Vs.Add(out.blsctData.rangeProof.Vs[0]);
+
+                proof = bulletproofs::RangeProofWithSeed<Mcl>{stakedCommitmentRangeProof, TokenId(), minStake};
+
+                vProofs.push_back(proof);
+            }
         } else {
             if (!out.scriptPubKey.IsUnspendable() && out.nValue > 0) {
-                return false;
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "spendable-output-with-public-value");
             }
             if (nFee > 0 || !MoneyRange(out.nValue)) {
-                return false;
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "more-than-one-fee-output");
             }
             if (out.nValue == 0) continue;
             nFee = out.nValue;
@@ -70,7 +84,16 @@ bool VerifyTx(const CTransaction& tx, const CCoinsViewCache& view, const CAmount
     vMessages.emplace_back(blsct::Common::BLSCTBALANCE);
     vPubKeys.emplace_back(balanceKey);
 
-    return PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true) &&
-           rp.Verify(vProofs);
+    auto sigCheck = PublicKeys{vPubKeys}.VerifyBatch(vMessages, tx.txSig, true);
+
+    if (!sigCheck)
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-signature-check");
+
+    auto rpCheck = rp.Verify(vProofs);
+
+    if (!rpCheck)
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "failed-rangeproof-check");
+
+    return true;
 }
 } // namespace blsct
