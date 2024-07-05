@@ -55,16 +55,6 @@ void BenchRandom_randrange(benchmark::Bench& bench, RNG&& rng) noexcept
 }
 
 template<int RANGE, typename RNG>
-void BenchRandom_Shuffle(benchmark::Bench& bench, RNG&& rng) noexcept
-{
-    uint64_t data[RANGE];
-    std::iota(std::begin(data), std::end(data), uint64_t(0));
-    bench.batch(RANGE).unit("number").run([&] {
-        Shuffle(std::begin(data), std::end(data), rng);
-    });
-}
-
-template<int RANGE, typename RNG>
 void BenchRandom_stdshuffle(benchmark::Bench& bench, RNG&& rng) noexcept
 {
     uint64_t data[RANGE];
@@ -81,7 +71,6 @@ void FastRandom_randbits(benchmark::Bench& bench) { BenchRandom_randbits(bench, 
 void FastRandom_randrange100(benchmark::Bench& bench) { BenchRandom_randrange<100>(bench, FastRandomContext(true)); }
 void FastRandom_randrange1000(benchmark::Bench& bench) { BenchRandom_randrange<1000>(bench, FastRandomContext(true)); }
 void FastRandom_randrange1000000(benchmark::Bench& bench) { BenchRandom_randrange<1000000>(bench, FastRandomContext(true)); }
-void FastRandom_Shuffle100(benchmark::Bench& bench) { BenchRandom_Shuffle<100>(bench, FastRandomContext(true)); }
 void FastRandom_stdshuffle100(benchmark::Bench& bench) { BenchRandom_stdshuffle<100>(bench, FastRandomContext(true)); }
 
 void InsecureRandom_rand64(benchmark::Bench& bench) { BenchRandom_rand64(bench, InsecureRandomContext(251438)); }
@@ -91,7 +80,6 @@ void InsecureRandom_randbits(benchmark::Bench& bench) { BenchRandom_randbits(ben
 void InsecureRandom_randrange100(benchmark::Bench& bench) { BenchRandom_randrange<100>(bench, InsecureRandomContext(251438)); }
 void InsecureRandom_randrange1000(benchmark::Bench& bench) { BenchRandom_randrange<1000>(bench, InsecureRandomContext(251438)); }
 void InsecureRandom_randrange1000000(benchmark::Bench& bench) { BenchRandom_randrange<1000000>(bench, InsecureRandomContext(251438)); }
-void InsecureRandom_Shuffle100(benchmark::Bench& bench) { BenchRandom_Shuffle<100>(bench, InsecureRandomContext(251438)); }
 void InsecureRandom_stdshuffle100(benchmark::Bench& bench) { BenchRandom_stdshuffle<100>(bench, InsecureRandomContext(251438)); }
 
 } // namespace
@@ -103,7 +91,6 @@ BENCHMARK(FastRandom_randbits, benchmark::PriorityLevel::HIGH);
 BENCHMARK(FastRandom_randrange100, benchmark::PriorityLevel::HIGH);
 BENCHMARK(FastRandom_randrange1000, benchmark::PriorityLevel::HIGH);
 BENCHMARK(FastRandom_randrange1000000, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_Shuffle100, benchmark::PriorityLevel::HIGH);
 BENCHMARK(FastRandom_stdshuffle100, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(InsecureRandom_rand64, benchmark::PriorityLevel::HIGH);
@@ -113,5 +100,4 @@ BENCHMARK(InsecureRandom_randbits, benchmark::PriorityLevel::HIGH);
 BENCHMARK(InsecureRandom_randrange100, benchmark::PriorityLevel::HIGH);
 BENCHMARK(InsecureRandom_randrange1000, benchmark::PriorityLevel::HIGH);
 BENCHMARK(InsecureRandom_randrange1000000, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_Shuffle100, benchmark::PriorityLevel::HIGH);
 BENCHMARK(InsecureRandom_stdshuffle100, benchmark::PriorityLevel::HIGH);

@@ -3339,7 +3339,7 @@ std::optional<PeerManagerImpl::PackageToValidate> PeerManagerImpl::Find1P1CPacka
     // Create a random permutation of the indices.
     std::vector<size_t> tx_indices(cpfp_candidates_different_peer.size());
     std::iota(tx_indices.begin(), tx_indices.end(), 0);
-    Shuffle(tx_indices.begin(), tx_indices.end(), m_rng);
+    std::shuffle(tx_indices.begin(), tx_indices.end(), m_rng);
 
     for (const auto index : tx_indices) {
         // If we already tried a package and failed for any reason, the combined hash was
@@ -4106,7 +4106,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const bool rate_limited = !pfrom.HasPermission(NetPermissionFlags::Addr);
         uint64_t num_proc = 0;
         uint64_t num_rate_limit = 0;
-        Shuffle(vAddr.begin(), vAddr.end(), m_rng);
+        std::shuffle(vAddr.begin(), vAddr.end(), m_rng);
         for (CAddress& addr : vAddr)
         {
             if (interruptMsgProc)

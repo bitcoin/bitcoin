@@ -206,10 +206,6 @@ BOOST_AUTO_TEST_CASE(stdrandom_test)
         for (int j = 1; j <= 10; ++j) {
             BOOST_CHECK(std::find(test.begin(), test.end(), j) != test.end());
         }
-        Shuffle(test.begin(), test.end(), ctx);
-        for (int j = 1; j <= 10; ++j) {
-            BOOST_CHECK(std::find(test.begin(), test.end(), j) != test.end());
-        }
     }
 }
 
@@ -220,7 +216,7 @@ BOOST_AUTO_TEST_CASE(shuffle_stat_test)
     uint32_t counts[5 * 5 * 5 * 5 * 5] = {0};
     for (int i = 0; i < 12000; ++i) {
         int data[5] = {0, 1, 2, 3, 4};
-        Shuffle(std::begin(data), std::end(data), ctx);
+        std::shuffle(std::begin(data), std::end(data), ctx);
         int pos = data[0] + data[1] * 5 + data[2] * 25 + data[3] * 125 + data[4] * 625;
         ++counts[pos];
     }
