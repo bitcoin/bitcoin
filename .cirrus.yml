@@ -67,7 +67,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
-  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'navcoin/navcoin' && $CIRRUS_PR != ""
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'nav-io/navio-core' && $CIRRUS_PR != ""
 
 task:
   name: 'lint'
@@ -195,13 +195,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_libblsct_only.sh"
 
 task:
-  name: 'no wallet, libnavcoinkernel'
+  name: 'no wallet, libnaviokernel'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
       type: small
   env:
-    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libnavcoinkernel.sh"
+    FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libnaviokernel.sh"
 
 task:
   name: 'macOS-cross, no tests'
