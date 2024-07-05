@@ -2814,7 +2814,7 @@ static RPCHelpMan loadtxoutset()
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-    fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(request.params[0].get_str()))};
+    const fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string>("path")))};
 
     FILE* file{fsbridge::fopen(path, "rb")};
     AutoFile afile{file};
