@@ -1662,7 +1662,7 @@ BOOST_AUTO_TEST_CASE(message_verify)
     BOOST_CHECK_EQUAL(
         MessageVerify(
             "15CRxFdyRpGZLW9w8HnHvVduizdL5jKNbs",
-            "IK63OA2lFDytfg8rKLJPjVyR4hgHxE2hoLDHm2AWSAb7RR+zfPoqFBKiWmaposhdopwotk6sjvzagkbjqQ/r4kA=",
+            "HwLT3I4xgQaSZDhjg3QHTYp149isz26W2vDjURdBDlmECI1PiMOQDs9LgrtPYuyXZTBconIyD0/qQbZvkarYMtw=",
             "Trust me"),
         MessageVerificationResult::OK);
 }
