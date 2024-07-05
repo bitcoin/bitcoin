@@ -2,6 +2,7 @@
 
 *.exe
 *.pdb
+src/bench/bench_navio
 src/navio
 src/naviod
 src/navio-cli
