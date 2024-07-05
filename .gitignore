@@ -2,18 +2,18 @@
 
 *.exe
 *.pdb
-src/navcoin
-src/navcoind
-src/navcoin-cli
-src/navcoin-gui
-src/navcoin-node
-src/navcoin-staker
-src/navcoin-tx
-src/navcoin-util
-src/navcoin-chainstate
-src/navcoin-wallet
+src/navio
+src/naviod
+src/navio-cli
+src/navio-gui
+src/navio-node
+src/navio-staker
+src/navio-tx
+src/navio-util
+src/navio-chainstate
+src/navio-wallet
 src/test/fuzz/fuzz
-src/test/test_navcoin
+src/test/test_navio
 
 # autoreconf
 Makefile.in
@@ -122,7 +122,7 @@ test/.mypy_cache/
 
 /doc/doxygen/
 
-libnavcoinconsensus.pc
+libnavioconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation

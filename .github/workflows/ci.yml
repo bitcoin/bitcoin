@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Bitcoin Core developers
+# Copyright (c) 2024 The Navio Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,7 +76,7 @@ jobs:
     runs-on: macos-13
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'navio-core/gui' || github.event_name == 'pull_request'
 
     timeout-minutes: 120
 
@@ -127,7 +127,7 @@ jobs:
     runs-on: windows-2022
 
     # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    if: github.repository != 'navio-core/gui' || github.event_name == 'pull_request'
 
     env:
       CCACHE_MAXSIZE: '200M'
@@ -219,10 +219,10 @@ jobs:
           key: ${{ github.job }}-ccache-${{ github.run_id }}
 
       - name: Run unit tests
-        run: src\test_navcoin.exe -l test_suite
+        run: src\test_navio.exe -l test_suite
 
       - name: Run benchmarks
-        run: src\bench_navcoin.exe -sanity-check
+        run: src\bench_navio.exe -sanity-check
 
       - name: Run util tests
         run: py -3 test\util\test_runner.py
