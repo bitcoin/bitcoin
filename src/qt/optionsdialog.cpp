@@ -64,7 +64,7 @@ void OptionsDialog::FixTabOrder(QWidget * const o)
     prevwidget = o;
 }
 
-void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text, QLayout *horizontalLayout)
+void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text, QBoxLayout *horizontalLayout)
 {
     QWidget * const parent = o->parentWidget();
     const QStringList text_parts = text.split("%s");
@@ -90,9 +90,7 @@ void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o,
 
     horizontalLayout->addWidget(labelAfter);
 
-    QSpacerItem * const horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-    horizontalLayout->addItem(horizontalSpacer);
+    horizontalLayout->addStretch(1);
 
     layout->addLayout(horizontalLayout);
 
