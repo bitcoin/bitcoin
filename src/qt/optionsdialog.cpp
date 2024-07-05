@@ -34,6 +34,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nOptionsDialogWindow", this->size(), this);
 
+    ui->verticalLayout->setStretchFactor(ui->tabWidget, 1);
+
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
