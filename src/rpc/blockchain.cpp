@@ -2833,7 +2833,7 @@ static RPCHelpMan loadtxoutset()
 
     auto activation_result{chainman.ActivateSnapshot(afile, metadata, false)};
     if (!activation_result) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf(_("Unable to load UTXO snapshot: %s\n"), util::ErrorString(activation_result)).original);
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
     }
 
     UniValue result(UniValue::VOBJ);
