@@ -32,7 +32,7 @@
 #include <QTimer>
 
 OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
-    : QDialog(parent, GUIUtil::dialog_flags),
+    : QDialog(parent, GUIUtil::dialog_flags | Qt::WindowMaximizeButtonHint),
       ui(new Ui::OptionsDialog)
 {
     ui->setupUi(this);
