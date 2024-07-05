@@ -31,7 +31,6 @@ class CDKGPendingMessages;
 class CDKGContribution
 {
 public:
-    uint8_t llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     BLSVerificationVectorPtr vvec;
@@ -42,7 +41,6 @@ public:
     template<typename Stream>
     inline void SerializeWithoutSig(Stream& s) const
     {
-        s << llmqType;
         s << quorumHash;
         s << proTxHash;
         s << *vvec;
@@ -60,7 +58,6 @@ public:
         std::vector<CBLSPublicKey> tmp1;
         CBLSIESMultiRecipientObjects<CBLSSecretKey> tmp2;
 
-        s >> llmqType;
         s >> quorumHash;
         s >> proTxHash;
         s >> tmp1;
@@ -83,7 +80,6 @@ public:
 class CDKGComplaint
 {
 public:
-    uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<bool> badMembers;
@@ -92,13 +88,12 @@ public:
 
 public:
     CDKGComplaint() = default;
-    explicit CDKGComplaint(const Consensus::LLMQParams& params) :
-            badMembers((size_t)params.size), complainForMembers((size_t)params.size) {};
+    explicit CDKGComplaint(const size_t &paramSize) :
+            badMembers(paramSize), complainForMembers(paramSize) {};
 
     SERIALIZE_METHODS(CDKGComplaint, obj)
     {
         READWRITE(
-                obj.llmqType,
                 obj.quorumHash,
                 obj.proTxHash,
                 DYNBITSET(obj.badMembers),
@@ -118,7 +113,6 @@ public:
 class CDKGJustification
 {
 public:
-    uint8_t llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     struct Contribution {
@@ -135,7 +129,7 @@ public:
 public:
     SERIALIZE_METHODS(CDKGJustification, obj)
     {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
+        READWRITE(obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
     }
 
     [[nodiscard]] uint256 GetSignHash() const
@@ -153,7 +147,6 @@ public:
 class CDKGPrematureCommitment
 {
 public:
-    uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<bool> validMembers;
@@ -166,8 +159,8 @@ public:
 
 public:
     CDKGPrematureCommitment() = default;
-    explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params) :
-            validMembers((size_t)params.size) {};
+    explicit CDKGPrematureCommitment(const size_t& paramSize) :
+            validMembers(paramSize) {};
 
     [[nodiscard]] int CountValidMembers() const
     {
@@ -178,7 +171,6 @@ public:
     SERIALIZE_METHODS(CDKGPrematureCommitment, obj)
     {
         READWRITE(
-                obj.llmqType,
                 obj.quorumHash,
                 obj.proTxHash,
                 DYNBITSET(obj.validMembers),
@@ -191,7 +183,7 @@ public:
 
     [[nodiscard]] uint256 GetSignHash() const
     {
-        return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+        return CLLMQUtils::BuildCommitmentHash( quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
     }
 };
 
@@ -264,7 +256,6 @@ class CDKGSession
     friend class CConnman;
 
 private:
-    const Consensus::LLMQParams &params;
 
     CBLSWorker& blsWorker;
     CBLSWorkerCache cache;
@@ -307,8 +298,8 @@ private:
     std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
+    CDKGSession(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+        blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
 
     bool Init(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 

@@ -106,7 +106,6 @@ private:
     mutable RecursiveMutex cs;
     std::atomic<bool> stopRequested{false};
 
-    const Consensus::LLMQParams& params;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     ChainstateManager& chainman;
@@ -125,7 +124,7 @@ private:
     std::string m_threadName;
     PeerManager& peerman;
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, PeerManager& peerman, ChainstateManager& _chainman);
+    CDKGSessionHandler(CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, PeerManager& peerman, ChainstateManager& _chainman);
     ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);

@@ -1357,7 +1357,6 @@ class CFinalCommitment:
 
     def set_null(self):
         self.nVersion = 0
-        self.llmqType = 0
         self.quorumHash = 0
         self.signers = []
         self.validMembers = []
@@ -1368,7 +1367,6 @@ class CFinalCommitment:
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<H", f.read(2))[0]
-        self.llmqType = struct.unpack("<B", f.read(1))[0]
         self.quorumHash = deser_uint256(f)
         self.signers = deser_dyn_bitset(f, False)
         self.validMembers = deser_dyn_bitset(f, False)
@@ -1380,7 +1378,6 @@ class CFinalCommitment:
     def serialize(self):
         r = b""
         r += struct.pack("<H", self.nVersion)
-        r += struct.pack("<B", self.llmqType)
         r += ser_uint256(self.quorumHash)
         r += ser_dyn_bitset(self.signers, False)
         r += ser_dyn_bitset(self.validMembers, False)
@@ -1392,7 +1389,6 @@ class CFinalCommitment:
 
 class CSigShare:
     def __init__(self):
-        self.llmqType = 0
         self.quorumHash = 0
         self.quorumMember = 0
         self.id = 0
@@ -1400,7 +1396,6 @@ class CSigShare:
         self.sigShare = b'\\x0' * 96
 
     def deserialize(self, f):
-        self.llmqType = struct.unpack("<B", f.read(1))[0]
         self.quorumHash = deser_uint256(f)
         self.quorumMember = struct.unpack("<H", f.read(2))[0]
         self.id = deser_uint256(f)
@@ -1409,7 +1404,6 @@ class CSigShare:
 
     def serialize(self):
         r = b""
-        r += struct.pack("<B", self.llmqType)
         r += ser_uint256(self.quorumHash)
         r += struct.pack("<H", self.quorumMember)
         r += ser_uint256(self.id)
@@ -2076,7 +2070,7 @@ class msg_getmnlistd():
     def __repr__(self):
         return "msg_getmnlistd(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
-QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
+QuorumId = namedtuple('QuorumId', ['quorumHash'])
 
 class msg_qsendrecsigs():
     __slots__ = ()

@@ -51,7 +51,7 @@ class DIP3Test(SyscoinTestFramework):
 
     def run_test(self):
         if self.is_wallet_compiled():
-            self.nodes[0].createwallet(self.default_wallet_name)
+            self.nodes[0].createwallet(self.default_wallet_name, descriptors=False)
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100:
             self.generatetoaddress(self.nodes[0], 10, self.nodes[0].getnewaddress()) # generate enough for collaterals
@@ -374,8 +374,6 @@ class DIP3Test(SyscoinTestFramework):
         bt = node.getblocktemplate({'rules': ['segwit']})
         height = bt['height']
         tip_hash = bt['previousblockhash']
-
-        tip_block = node.getblock(tip_hash, 2)["tx"][0]
 
         coinbasevalue = 50 * COIN
         halvings = int(height / 150)  # regtest

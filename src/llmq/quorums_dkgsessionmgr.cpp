@@ -31,122 +31,22 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& blsWorker, CConnman &_connman
         .cache_bytes = static_cast<size_t>(1 << 20),
         .memory_only = unitTests,
         .wipe_data = fWipe});
-    MigrateDKG();
-    if(Params().GetConsensus().llmqs.empty()) {
-        return;
-    }
-    const auto &llmq = GetLLMQParams(fRegTest? Consensus::LLMQ_TEST: Consensus::LLMQ_400_60);
-    dkgSessionHandlers.emplace(std::piecewise_construct,
-            std::forward_as_tuple(llmq.type),
-            std::forward_as_tuple(llmq, blsWorker, *this, peerman, _chainman));
-    
-}
-
-void CDKGSessionManager::MigrateDKG()
-{
-    if (!db->IsEmpty()) return;
-
-    LogPrint(BCLog::LLMQ, "CDKGSessionManager::%d -- start\n", __func__);
-
-    CDBBatch batch(*db);
-    auto oldDb = std::make_unique<CDBWrapper>(DBParams{
-        .path = gArgs.GetDataDirNet() / "llmq",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = false,
-        .wipe_data = false});
-    std::unique_ptr<CDBIterator> pcursor(oldDb->NewIterator());
-
-    auto start_vvec = std::make_tuple(DB_VVEC, (uint8_t)0, uint256(), uint256());
-    pcursor->Seek(start_vvec);
-
-    while (pcursor->Valid()) {
-        decltype(start_vvec) k;
-        std::vector<CBLSPublicKey> v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != DB_VVEC) {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_contrib = std::make_tuple(DB_SKCONTRIB, (uint8_t)0, uint256(), uint256());
-    pcursor->Seek(start_contrib);
-
-    while (pcursor->Valid()) {
-        decltype(start_contrib) k;
-        CBLSSecretKey v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != DB_SKCONTRIB) {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_enc_contrib = std::make_tuple(DB_ENC_CONTRIB, (uint8_t)0, uint256(), uint256());
-    pcursor->Seek(start_enc_contrib);
-
-    while (pcursor->Valid()) {
-        decltype(start_enc_contrib) k;
-        CBLSIESMultiRecipientObjects<CBLSSecretKey> v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != DB_ENC_CONTRIB) {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    db->WriteBatch(batch);
-    pcursor.reset();
-    oldDb.reset();
-
-    LogPrint(BCLog::LLMQ, "CDKGSessionManager::%d -- done\n", __func__);
+    dkgSessionHandler = std::make_unique<CDKGSessionHandler>(
+        blsWorker, 
+        *this, 
+        _peerman, 
+        _chainman
+    );
 }
 
 void CDKGSessionManager::StartThreads()
 {
-    for (auto& it : dkgSessionHandlers) {
-        it.second.StartThread();
-    }
+    dkgSessionHandler->StartThread();
 }
 
 void CDKGSessionManager::StopThreads()
 {
-    for (auto& it : dkgSessionHandlers) {
-        it.second.StopThread();
-    }
+    dkgSessionHandler->StopThread();
 }
 
 void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
@@ -160,9 +60,8 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     if (!IsQuorumDKGEnabled())
         return;
 
-    for (auto& qt : dkgSessionHandlers) {
-        qt.second.UpdatedBlockTip(pindexNew);
-    }
+    dkgSessionHandler->UpdatedBlockTip(pindexNew);
+    
 }
 
 void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
@@ -189,15 +88,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         return;
     }
 
-    // peek into the message and see which uint8_t it is. First byte of all messages is always the uint8_t
-    uint8_t llmqType = static_cast<uint8_t>(*vRecv.begin());
-    if (!dkgSessionHandlers.count(llmqType)) {
-        if(peer)
-            peerman.Misbehaving(*peer, 100, "DKG session invalid LLMQ type");
-        return;
-    }
-
-    dkgSessionHandlers.at(llmqType).ProcessMessage(pfrom, strCommand, vRecv);
+    dkgSessionHandler->ProcessMessage(pfrom, strCommand, vRecv);
 }
 
 bool CDKGSessionManager::AlreadyHave(const uint256& hash) const
@@ -205,16 +96,15 @@ bool CDKGSessionManager::AlreadyHave(const uint256& hash) const
     if (!IsQuorumDKGEnabled())
         return false;
     
-    for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
-        LOCK(dkgType.cs);   
-        if (dkgType.pendingContributions.HasSeen(hash)
-            || dkgType.pendingComplaints.HasSeen(hash)
-            || dkgType.pendingJustifications.HasSeen(hash)
-            || dkgType.pendingPrematureCommitments.HasSeen(hash)) {
-            return true;
-        }
+    
+    LOCK(dkgSessionHandler->cs);   
+    if (dkgSessionHandler->pendingContributions.HasSeen(hash)
+        || dkgSessionHandler->pendingComplaints.HasSeen(hash)
+        || dkgSessionHandler->pendingJustifications.HasSeen(hash)
+        || dkgSessionHandler->pendingPrematureCommitments.HasSeen(hash)) {
+        return true;
     }
+    
     return false;
 }
 
@@ -223,18 +113,16 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
     if (!IsQuorumDKGEnabled())
         return false;
 
-    for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
-        LOCK(dkgType.cs);
-        if (dkgType.phase < QuorumPhase_Initialized || dkgType.phase > QuorumPhase_Contribute) {
-            continue;
-        }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->contributions.find(hash);
-        if (it != dkgType.curSession->contributions.end()) {
-            ret = it->second;
-            return true;
-        }
+    
+    LOCK(dkgSessionHandler->cs);
+    if (dkgSessionHandler->phase < QuorumPhase_Initialized || dkgSessionHandler->phase > QuorumPhase_Contribute) {
+        return false;
+    }
+    LOCK(dkgSessionHandler->curSession->invCs);
+    auto it = dkgSessionHandler->curSession->contributions.find(hash);
+    if (it != dkgSessionHandler->curSession->contributions.end()) {
+        ret = it->second;
+        return true;
     }
     return false;
 }
@@ -244,18 +132,16 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
     if (!IsQuorumDKGEnabled())
         return false;
 
-    for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
-        LOCK(dkgType.cs);
-        if (dkgType.phase < QuorumPhase_Contribute || dkgType.phase > QuorumPhase_Complain) {
-            continue;
-        }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->complaints.find(hash);
-        if (it != dkgType.curSession->complaints.end()) {
-            ret = it->second;
-            return true;
-        }
+    
+    LOCK(dkgSessionHandler->cs);
+    if (dkgSessionHandler->phase < QuorumPhase_Contribute || dkgSessionHandler->phase > QuorumPhase_Complain) {
+        return false;
+    }
+    LOCK(dkgSessionHandler->curSession->invCs);
+    auto it = dkgSessionHandler->curSession->complaints.find(hash);
+    if (it != dkgSessionHandler->curSession->complaints.end()) {
+        ret = it->second;
+        return true;
     }
     return false;
 }
@@ -265,18 +151,16 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
     if (!IsQuorumDKGEnabled())
         return false;
 
-    for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
-        LOCK(dkgType.cs);
-        if (dkgType.phase < QuorumPhase_Complain || dkgType.phase > QuorumPhase_Justify) {
-            continue;
-        }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->justifications.find(hash);
-        if (it != dkgType.curSession->justifications.end()) {
-            ret = it->second;
-            return true;
-        }
+    
+    LOCK(dkgSessionHandler->cs);
+    if (dkgSessionHandler->phase < QuorumPhase_Complain || dkgSessionHandler->phase > QuorumPhase_Justify) {
+        return false;
+    }
+    LOCK(dkgSessionHandler->curSession->invCs);
+    auto it = dkgSessionHandler->curSession->justifications.find(hash);
+    if (it != dkgSessionHandler->curSession->justifications.end()) {
+        ret = it->second;
+        return true;
     }
     return false;
 }
@@ -286,39 +170,39 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
     if (!IsQuorumDKGEnabled())
         return false;
 
-    for (const auto& p : dkgSessionHandlers) {
-        auto& dkgType = p.second;
-        LOCK(dkgType.cs);
-        if (dkgType.phase < QuorumPhase_Justify || dkgType.phase > QuorumPhase_Commit) {
-            continue;
-        }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->prematureCommitments.find(hash);
-        if (it != dkgType.curSession->prematureCommitments.end() && dkgType.curSession->validCommitments.count(hash)) {
-            ret = it->second;
-            return true;
-        }
+
+    
+    LOCK(dkgSessionHandler->cs);
+    if (dkgSessionHandler->phase < QuorumPhase_Justify || dkgSessionHandler->phase > QuorumPhase_Commit) {
+        return false;
     }
+    LOCK(dkgSessionHandler->curSession->invCs);
+    auto it = dkgSessionHandler->curSession->prematureCommitments.find(hash);
+    if (it != dkgSessionHandler->curSession->prematureCommitments.end() && dkgSessionHandler->curSession->validCommitments.count(hash)) {
+        ret = it->second;
+        return true;
+    }
+
     return false;
 }
 
-void CDKGSessionManager::WriteVerifiedVvecContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec)
+void CDKGSessionManager::WriteVerifiedVvecContribution(const uint256& hashQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec)
 {
-    db->Write(std::make_tuple(DB_VVEC, llmqType, hashQuorum, proTxHash), *vvec);
+    db->Write(std::make_tuple(DB_VVEC, hashQuorum, proTxHash), *vvec);
 }
 
-void CDKGSessionManager::WriteVerifiedSkContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution)
+void CDKGSessionManager::WriteVerifiedSkContribution(const uint256& hashQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution)
 {
-    db->Write(std::make_tuple(DB_SKCONTRIB, llmqType, hashQuorum, proTxHash), skContribution);
+    db->Write(std::make_tuple(DB_SKCONTRIB, hashQuorum, proTxHash), skContribution);
 }
-void CDKGSessionManager::WriteEncryptedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions)
+void CDKGSessionManager::WriteEncryptedContributions(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions)
 {
-    db->Write(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), contributions);
+    db->Write(std::make_tuple(DB_ENC_CONTRIB, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), contributions);
 }
-bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
+bool CDKGSessionManager::GetVerifiedContributions(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
-    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(pQuorumBaseBlockIndex);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -329,15 +213,15 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
     for (size_t i = 0; i < members.size(); i++) {
         if (validMembers[i]) {
             const uint256& proTxHash = members[i]->proTxHash;
-            ContributionsCacheKey cacheKey = {llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash};
+            ContributionsCacheKey cacheKey = {pQuorumBaseBlockIndex->GetBlockHash(), proTxHash};
             auto it = contributionsCache.find(cacheKey);
             if (it == contributionsCache.end()) {
                 auto vvecPtr = std::make_shared<std::vector<CBLSPublicKey>>();
                 CBLSSecretKey skContribution;
-                if (!db->Read(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), *vvecPtr)) {
+                if (!db->Read(std::make_tuple(DB_VVEC, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), *vvecPtr)) {
                     return false;
                 }
-                db->Read(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), skContribution);
+                db->Read(std::make_tuple(DB_SKCONTRIB, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), skContribution);
 
                 it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()), vvecPtr, skContribution}).first;
             }
@@ -350,9 +234,9 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
     return true;
 }
 
-bool CDKGSessionManager::GetEncryptedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
+bool CDKGSessionManager::GetEncryptedContributions(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
 {
-    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(pQuorumBaseBlockIndex);
 
     vecRet.clear();
     vecRet.reserve(members.size());
@@ -371,7 +255,7 @@ bool CDKGSessionManager::GetEncryptedContributions(uint8_t llmqType, const CBloc
     for (size_t i = 0; i < members.size(); i++) {
         if (validMembers[i]) {
             CBLSIESMultiRecipientObjects<CBLSSecretKey> encryptedContributions;
-            if (!db->Read(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), members[i]->proTxHash), encryptedContributions)) {
+            if (!db->Read(std::make_tuple(DB_ENC_CONTRIB, pQuorumBaseBlockIndex->GetBlockHash(), members[i]->proTxHash), encryptedContributions)) {
                 return false;
             }
             vecRet.emplace_back(encryptedContributions.Get(nRequestedMemberIdx));
@@ -401,38 +285,36 @@ void CDKGSessionManager::CleanupOldContributions(ChainstateManager& chainstate) 
 
     const auto prefixes = {DB_VVEC, DB_SKCONTRIB, DB_ENC_CONTRIB};
 
-    for (const auto& params : Params().GetConsensus().llmqs) {
-        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, params.second.type);
+    LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries\n", __func__);
+    auto &params = Params().GetConsensus().llmqTypeChainLocks;
+    CDBBatch batch(*db);
+    size_t cnt_old{0}, cnt_all{0};
+    for (const auto& prefix : prefixes) {
+        std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
+        auto start = std::make_tuple(prefix, uint256(), uint256());
+        decltype(start) k;
 
-        CDBBatch batch(*db);
-        size_t cnt_old{0}, cnt_all{0};
-        for (const auto& prefix : prefixes) {
-            std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
-            auto start = std::make_tuple(prefix, params.second.type, uint256(), uint256());
-            decltype(start) k;
-
-            pcursor->Seek(start);
-            LOCK(cs_main);
-            while (pcursor->Valid()) {
-                if (!pcursor->GetKey(k) || std::get<0>(k) != prefix || std::get<1>(k) != params.second.type) {
-                    break;
-                }
-                cnt_all++;
-                const CBlockIndex* pindexQuorum = chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
-                if (pindexQuorum == nullptr || chainstate.ActiveHeight() - pindexQuorum->nHeight > params.second.max_store_depth()) {
-                    // not found or too old
-                    batch.Erase(k);
-                    cnt_old++;
-                }
-                pcursor->Next();
+        pcursor->Seek(start);
+        LOCK(cs_main);
+        while (pcursor->Valid()) {
+            if (!pcursor->GetKey(k) || std::get<0>(k) != prefix) {
+                break;
             }
-            pcursor.reset();
+            cnt_all++;
+            const CBlockIndex* pindexQuorum = chainstate.m_blockman.LookupBlockIndex(std::get<2>(k));
+            if (pindexQuorum == nullptr || chainstate.ActiveHeight() - pindexQuorum->nHeight > params.max_store_depth()) {
+                // not found or too old
+                batch.Erase(k);
+                cnt_old++;
+            }
+            pcursor->Next();
         }
-        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries for llmq type %d\n", __func__, cnt_all, uint8_t(params.second.type));
-        if (cnt_old > 0) {
-            db->WriteBatch(batch);
-            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries for llmq type %d\n", __func__, cnt_old, uint8_t(params.second.type));
-        }
+        pcursor.reset();
+    }
+    LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries\n", __func__, cnt_all);
+    if (cnt_old > 0) {
+        db->WriteBatch(batch);
+        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries\n", __func__, cnt_old);
     }
 }
 

@@ -48,7 +48,6 @@ public:
 class CDKGDebugSessionStatus
 {
 public:
-    uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     uint32_t quorumHeight{0};
     uint8_t phase{0};
@@ -80,7 +79,7 @@ class CDKGDebugStatus
 public:
     int64_t nTime{0};
 
-    std::map<uint8_t, CDKGDebugSessionStatus> sessions;
+    CDKGDebugSessionStatus session;
 
 public:
     UniValue ToJson(ChainstateManager &chainman, int detailLevel) const;
@@ -96,11 +95,11 @@ public:
 
     void GetLocalDebugStatus(CDKGDebugStatus& ret) const;
 
-    void ResetLocalSessionStatus(uint8_t llmqType);
-    void InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, uint32_t quorumHeight);
+    void ResetLocalSessionStatus();
+    void InitLocalSessionStatus(const uint256& quorumHash, uint32_t quorumHeight);
 
-    void UpdateLocalSessionStatus(uint8_t llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
-    void UpdateLocalMemberStatus(uint8_t llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);
+    void UpdateLocalSessionStatus(std::function<bool(CDKGDebugSessionStatus& status)>&& func);
+    void UpdateLocalMemberStatus(size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);
 };
 
 extern CDKGDebugManager* quorumDKGDebugManager;

@@ -186,8 +186,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
     if (it2 == bestChainLockShares.end()) {
         return false;
     }
-    const auto& consensus = Params().GetConsensus();
-    const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
+    const auto& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
     const size_t& threshold = llmqParams.signingActiveQuorumCount / 2 + 1;
 
     std::vector<CBLSSignature> sigs;
@@ -228,8 +227,7 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
 bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret)
 {
     const auto& consensus = Params().GetConsensus();
-    const auto& llmqType = consensus.llmqTypeChainLocks;
-    const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
+    const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
 
 
@@ -242,7 +240,7 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
         return false;
     }
     bool fHaveSigner{std::count(clsig.signers.begin(), clsig.signers.end(), true) > 0};
-    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount);
+    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
 
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         const CQuorumCPtr& quorum = quorums_scanned[i];
@@ -256,16 +254,16 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
         if (fHaveSigner && !clsig.signers[i]) {
             continue;
         }
-        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, clsig.blockHash);
+        uint256 signHash = CLLMQUtils::BuildSignHash(quorum->qc->quorumHash, requestId, clsig.blockHash);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, signHash=%s\n",
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
 
         if (clsig.sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
-            if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(llmqType, requestId)) {
+            if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(requestId)) {
                 // We can reconstruct the CRecoveredSig from the clsig and pass it to the signing manager, which
                 // avoids unnecessary double-verification of the signature. We can do this here because we just
                 // verified the sig.
-                auto rs = std::make_shared<CRecoveredSig>(llmqType, quorum->qc->quorumHash, requestId, clsig.blockHash, clsig.sig);
+                auto rs = std::make_shared<CRecoveredSig>(quorum->qc->quorumHash, requestId, clsig.blockHash, clsig.sig);
                 quorumSigningManager->PushReconstructedRecoveredSig(rs);
             }
             ret = std::make_pair(i, quorum);
@@ -281,8 +279,7 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
 bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan)
 {
     const auto& consensus = Params().GetConsensus();
-    const auto& llmqType = consensus.llmqTypeChainLocks;
-    const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
+    const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
 
     std::vector<uint256> hashes;
@@ -296,7 +293,7 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         // not enough signers
         return false;
     }
-    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount);
+    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
 
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         const CQuorumCPtr& quorum = quorums_scanned[i];
@@ -308,7 +305,7 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         }
         quorumPublicKeys.emplace_back(quorum->qc->quorumPublicKey);
         uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc->quorumHash));
-        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, clsig.blockHash);
+        uint256 signHash = CLLMQUtils::BuildSignHash(quorum->qc->quorumHash, requestId, clsig.blockHash);
         hashes.emplace_back(signHash);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, signHash=%s\n",
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
@@ -440,8 +437,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         return;
     }
     const auto& consensus = Params().GetConsensus();
-    const auto& llmqType = consensus.llmqTypeChainLocks;
-    const auto& llmqParams = consensus.llmqs.at(llmqType);
+    const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
     size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
     if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
@@ -710,11 +706,10 @@ void CChainLocksHandler::TrySignChainTip()
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), nHeight);
     const auto& consensus = Params().GetConsensus();
-    const auto& llmqType = consensus.llmqTypeChainLocks;
-    const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
+    const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
     
-    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount);
+    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindex, signingActiveQuorumCount);
     std::map<CQuorumCPtr, CChainLockSigCPtr> mapSharesAtTip;
     {
         LOCK(cs);
@@ -791,7 +786,7 @@ void CChainLocksHandler::TrySignChainTip()
             }
             mapSignedRequestIds.emplace(requestId, heightHashKP);
         }
-        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, msgHash, quorum->qc->quorumHash);
+        quorumSigningManager->AsyncSignIfMember(requestId, msgHash, quorum->qc->quorumHash);
     }
     if (!fMemberOfSomeQuorum || signingState.GetAttempt() >= (int)quorums_scanned.size()) {
         // not a member or tried too many times, nothing to do

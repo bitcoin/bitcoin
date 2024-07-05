@@ -33,11 +33,11 @@ const CBlockIndex* CLLMQUtils::V19ActivationIndex(const CBlockIndex* pindex)
     }
     return pindex->GetAncestor(Params().GetConsensus().nV19StartBlock);
 }
-std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex)
+std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const CBlockIndex* pQuorumBaseBlockIndex)
 {
     static RecursiveMutex cs_members;
     static unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher, 10> mapQuorumMembers;
-
+    const Consensus::LLMQParams& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
     std::vector<CDeterministicMNCPtr> quorumMembers;
     {
         LOCK(cs_members);
@@ -47,17 +47,16 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(const Consensu
     }
 
     auto allMns = deterministicMNManager->GetListForBlock(pQuorumBaseBlockIndex);
-    auto modifier = ::SerializeHash(std::make_pair(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()));
+    auto modifier = pQuorumBaseBlockIndex->GetBlockHash();
     quorumMembers = allMns.CalculateQuorum(llmqParams.size, modifier);
     LOCK(cs_members);
     mapQuorumMembers.insert(pQuorumBaseBlockIndex->GetBlockHash(), quorumMembers);
     return quorumMembers;
 }
 
-uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
+uint256 CLLMQUtils::BuildCommitmentHash(const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
 {
     CHashWriter hw(SER_GETHASH, 0);
-    hw << llmqType;
     hw << blockHash;
     hw << DYNBITSET(validMembers);
     hw << pubKey;
@@ -65,35 +64,34 @@ uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHa
     return hw.GetHash();
 }
 
-uint256 CLLMQUtils::BuildSignHash(uint8_t llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
+uint256 CLLMQUtils::BuildSignHash(const uint256& quorumHash, const uint256& id, const uint256& msgHash)
 {
     CHashWriter h(SER_GETHASH, 0);
-    h << llmqType;
     h << quorumHash;
     h << id;
     h << msgHash;
     return h.GetHash();
 }
 
-static bool EvalSpork(uint8_t llmqType, int64_t spork_value)
+static bool EvalSpork(int64_t spork_value)
 {
     if (spork_value == 0) {
         return true;
     }
-    if (spork_value == 1 && llmqType != Consensus::LLMQ_400_60) {
+    if (spork_value == 1) {
         return true;
     }
     return false;
 }
 
-bool CLLMQUtils::IsAllMembersConnectedEnabled(uint8_t llmqType)
+bool CLLMQUtils::IsAllMembersConnectedEnabled()
 {
-    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
+    return EvalSpork(sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
 }
 
-bool CLLMQUtils::IsQuorumPoseEnabled(uint8_t llmqType)
+bool CLLMQUtils::IsQuorumPoseEnabled()
 {
-    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE));
+    return EvalSpork(sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE));
 }
 
 uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
@@ -118,10 +116,10 @@ uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, c
     return proTxHash2;
 }
 
-std::set<uint256> CLLMQUtils::GetQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
+std::set<uint256> CLLMQUtils::GetQuorumConnections(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
 {
-    if (IsAllMembersConnectedEnabled(llmqParams.type)) {
-        auto mns = GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
+    if (IsAllMembersConnectedEnabled()) {
+        auto mns = GetAllQuorumMembers(pQuorumBaseBlockIndex);
         std::set<uint256> result;
 
         for (const auto& dmn : mns) {
@@ -138,13 +136,13 @@ std::set<uint256> CLLMQUtils::GetQuorumConnections(const Consensus::LLMQParams& 
         }
         return result;
     } else {
-        return GetQuorumRelayMembers(llmqParams, pQuorumBaseBlockIndex, forMember, onlyOutbound);
+        return GetQuorumRelayMembers(pQuorumBaseBlockIndex, forMember, onlyOutbound);
     }
 }
 
-std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256 &forMember, bool onlyOutbound)
+std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(const CBlockIndex* pQuorumBaseBlockIndex, const uint256 &forMember, bool onlyOutbound)
 {
-    auto mns = GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
+    auto mns = GetAllQuorumMembers(pQuorumBaseBlockIndex);
     std::set<uint256> result;
 
     auto calcOutbound = [&](size_t i, const uint256 &proTxHash) {
@@ -186,7 +184,7 @@ std::set<uint256> CLLMQUtils::GetQuorumRelayMembers(const Consensus::LLMQParams&
     return result;
 }
 
-std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, size_t memberCount, size_t connectionCount)
+std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(const CBlockIndex* pQuorumBaseBlockIndex, size_t memberCount, size_t connectionCount)
 {
     static uint256 qwatchConnectionSeed;
     static std::atomic<bool> qwatchConnectionSeedGenerated{false};
@@ -206,9 +204,9 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(uint8_t llmqType,
     return result;
 }
 
-bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman)
+bool CLLMQUtils::EnsureQuorumConnections(const CBlockIndex *pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman)
 {
-    auto members = GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
+    auto members = GetAllQuorumMembers(pQuorumBaseBlockIndex);
     bool isMember = std::find_if(members.begin(), members.end(), [&](const auto& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
 
     if (!isMember && !CLLMQUtils::IsWatchQuorumsEnabled()) {
@@ -218,17 +216,17 @@ bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams
     std::set<uint256> connections;
     std::set<uint256> relayMembers;
     if (isMember) {
-        connections = CLLMQUtils::GetQuorumConnections(llmqParams, pQuorumBaseBlockIndex, myProTxHash, true);
-        relayMembers = CLLMQUtils::GetQuorumRelayMembers(llmqParams, pQuorumBaseBlockIndex, myProTxHash, true);
+        connections = CLLMQUtils::GetQuorumConnections(pQuorumBaseBlockIndex, myProTxHash, true);
+        relayMembers = CLLMQUtils::GetQuorumRelayMembers(pQuorumBaseBlockIndex, myProTxHash, true);
     } else {
-        auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqParams.type, pQuorumBaseBlockIndex, members.size(), 1);
+        auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(pQuorumBaseBlockIndex, members.size(), 1);
         for (auto idx : cindexes) {
             connections.emplace(members[idx]->proTxHash);
         }
         relayMembers = connections;
     }
     if (!connections.empty()) {
-        if (!connman.HasMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
+        if (!connman.HasMasternodeQuorumNodes(pQuorumBaseBlockIndex->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ, BCLog::Level::Debug)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
             std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:", __func__, pQuorumBaseBlockIndex->GetBlockHash().ToString());
             for (auto& c : connections) {
@@ -241,10 +239,10 @@ bool CLLMQUtils::EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams
             }
             LogPrint(BCLog::NET, "%s\n", debugMsg.c_str());
         }
-        connman.SetMasternodeQuorumNodes(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), connections);
+        connman.SetMasternodeQuorumNodes(pQuorumBaseBlockIndex->GetBlockHash(), connections);
     }
     if (!relayMembers.empty()) {
-        connman.SetMasternodeQuorumRelayMembers(llmqParams.type, pQuorumBaseBlockIndex->GetBlockHash(), relayMembers);
+        connman.SetMasternodeQuorumRelayMembers(pQuorumBaseBlockIndex->GetBlockHash(), relayMembers);
     }
     return true;
 }
@@ -255,13 +253,13 @@ bool CLLMQUtils::IsWatchQuorumsEnabled()
     return fIsWatchQuroumsEnabled;
 }
 
-void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pQuorumBaseBlockIndex, const uint256 &myProTxHash, CConnman& connman)
+void CLLMQUtils::AddQuorumProbeConnections(const CBlockIndex *pQuorumBaseBlockIndex, const uint256 &myProTxHash, CConnman& connman)
 {
-    if (!CLLMQUtils::IsQuorumPoseEnabled(llmqParams.type)) {
+    if (!CLLMQUtils::IsQuorumPoseEnabled()) {
         return;
     }
 
-    auto members = GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
+    auto members = GetAllQuorumMembers(pQuorumBaseBlockIndex);
     auto curTime = TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime());
 
     std::set<uint256> probeConnections;
@@ -295,42 +293,14 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
     }
 }
 
-bool CLLMQUtils::IsQuorumActive(uint8_t llmqType, const uint256& quorumHash)
+bool CLLMQUtils::IsQuorumActive(const uint256& quorumHash)
 {
-    if(!Params().GetConsensus().llmqs.count(llmqType)) {
-        return false;
-    }
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
+    auto& params = Params().GetConsensus().llmqTypeChainLocks;
 
     // sig shares and recovered sigs are only accepted from recent/active quorums
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
-    auto quorums = quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1);
+    auto quorums = quorumManager->ScanQuorums((int)params.signingActiveQuorumCount + 1);
     return ranges::any_of(quorums, [&quorumHash](const auto& q){ return q->qc->quorumHash == quorumHash; });
-}
-const Consensus::LLMQParams& GetLLMQParams(uint8_t llmqType)
-{
-    if(!Params().GetConsensus().llmqs.count(llmqType)) {
-        static Consensus::LLMQParams llmq_test = {
-            .type = Consensus::LLMQ_TEST,
-            .name = "llmq_test",
-            .size = 3,
-            .minSize = 2,
-            .threshold = 2,
-
-            .dkgInterval = 24, // one DKG per hour
-            .dkgPhaseBlocks = 2,
-            .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-            .dkgMiningWindowEnd = 18,
-            .dkgBadVotesThreshold = 2,
-
-            .signingActiveQuorumCount = 4, // just a few ones to allow easier testing
-
-            .keepOldConnections = 5,
-            .recoveryMembers = 3,
-        };
-        return llmq_test;
-    }
-    return Params().GetConsensus().llmqs.at(llmqType);
 }
 } // namespace llmq

@@ -274,13 +274,13 @@ class LLMQChainLocksTest(DashTestFramework):
         height = self.nodes[0].getblockcount() + height_offset
         fake_block = create_block(0xff, create_coinbase(height))
         # create a fake clsig for that block
-        quorum_hash = self.nodes[0].quorum_list(1)["llmq_test"][0]
+        quorum_hash = self.nodes[0].quorum_list(1)["quorums"][0]
         request_id_buf = ser_string(b"clsig") + struct.pack("<I", height)
         request_id_buf += bytes.fromhex(quorum_hash)[::-1]
         request_id = hash256(request_id_buf)[::-1].hex()
-        quorum_hash = self.nodes[0].quorum_list(1)["llmq_test"][0]
+        quorum_hash = self.nodes[0].quorum_list(1)["quorums"][0]
         for mn in self.mninfo:
-            mn.node.quorum_sign(100, request_id, fake_block.hash, quorum_hash)
+            mn.node.quorum_sign(request_id, fake_block.hash, quorum_hash)
         rec_sig = self.get_recovered_sig(request_id, fake_block.hash)
         assert_equal(rec_sig, False)
 

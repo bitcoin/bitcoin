@@ -23,16 +23,14 @@ class CDKGSessionManager
 
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};
-    std::map<uint8_t, CDKGSessionHandler> dkgSessionHandlers;
+    std::unique_ptr<CDKGSessionHandler> dkgSessionHandler{nullptr};
 
     mutable RecursiveMutex contributionsCacheCs;
     struct ContributionsCacheKey {
-        uint8_t llmqType;
         uint256 quorumHash;
         uint256 proTxHash;
         bool operator<(const ContributionsCacheKey& r) const
         {
-            if (llmqType != r.llmqType) return llmqType < r.llmqType;
             if (quorumHash != r.quorumHash) return quorumHash < r.quorumHash;
             return proTxHash < r.proTxHash;
         }
@@ -63,16 +61,15 @@ public:
     bool GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const;
 
     // Verified contributions are written while in the DKG
-    void WriteVerifiedVvecContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
-    void WriteVerifiedSkContribution(uint8_t llmqType, const uint256& hashQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution);
-    bool GetVerifiedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const;
+    void WriteVerifiedVvecContribution(const uint256& hashQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
+    void WriteVerifiedSkContribution(const uint256& hashQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution);
+    bool GetVerifiedContributions(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, std::vector<CBLSSecretKey>& skContributionsRet) const;
     /// Write encrypted (unverified) DKG contributions for the member with the given proTxHash to the llmqDb
-    void WriteEncryptedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions);
+    void WriteEncryptedContributions(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions);
     /// Read encrypted (unverified) DKG contributions for the member with the given proTxHash from the llmqDb
-    bool GetEncryptedContributions(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const;
+    bool GetEncryptedContributions(const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const;
     void CleanupOldContributions(ChainstateManager& chainstate) const;
 private:
-    void MigrateDKG();
     void CleanupCache() const;
 };
 

@@ -18,7 +18,7 @@ UniValue CDKGDebugSessionStatus::ToJson(ChainstateManager &chainman, int detailL
 {
     UniValue ret(UniValue::VOBJ);
 
-    if (!Params().GetConsensus().llmqs.count(llmqType) || quorumHash.IsNull()) {
+    if (quorumHash.IsNull()) {
         return ret;
     }
 
@@ -26,11 +26,10 @@ UniValue CDKGDebugSessionStatus::ToJson(ChainstateManager &chainman, int detailL
     if (detailLevel == 2) {
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
-            dmnMembers = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pindex);
+            dmnMembers = CLLMQUtils::GetAllQuorumMembers(pindex);
         }
     }
 
-    ret.pushKV("llmqType", llmqType);
     ret.pushKV("quorumHash", quorumHash.ToString());
     ret.pushKV("quorumHeight", (int)quorumHeight);
     ret.pushKV("phase", (int)phase);
@@ -117,19 +116,12 @@ UniValue CDKGDebugStatus::ToJson(ChainstateManager &chainman, int detailLevel) c
     ret.pushKV("timeStr", DurationToDHMS(nTime));
 
     UniValue sessionsArrJson(UniValue::VARR);
-    for (const auto& p : sessions) {
-        if (!Params().GetConsensus().llmqs.count(p.first)) {
-            continue;
-        }
-        const auto& params = Params().GetConsensus().llmqs.at(p.first);
+    if(!session.quorumHash.IsNull()) {
         UniValue s(UniValue::VOBJ);
-        s.pushKV("llmqType", params.name);
-        s.pushKV("status", p.second.ToJson(chainman,  detailLevel));
+        s.pushKV("status", session.ToJson(chainman, detailLevel));
         sessionsArrJson.push_back(s);
     }
-
     ret.pushKV("session", sessionsArrJson);
-
     return ret;
 }
 
@@ -139,62 +131,45 @@ void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret) const
     ret = localStatus;
 }
 
-void CDKGDebugManager::ResetLocalSessionStatus(uint8_t llmqType)
+void CDKGDebugManager::ResetLocalSessionStatus()
 {
     LOCK(cs);
-
-    auto it = localStatus.sessions.find(llmqType);
-    if (it == localStatus.sessions.end()) {
-        return;
-    }
-
-    localStatus.sessions.erase(it);
+    localStatus.session = CDKGDebugSessionStatus();
     localStatus.nTime = GetTime();
 }
 
-void CDKGDebugManager::InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, uint32_t quorumHeight)
+void CDKGDebugManager::InitLocalSessionStatus(const uint256& quorumHash, uint32_t quorumHeight)
 {
     LOCK(cs);
-
-    auto it = localStatus.sessions.find(llmqParams.type);
-    if (it == localStatus.sessions.end()) {
-        it = localStatus.sessions.emplace(llmqParams.type, CDKGDebugSessionStatus()).first;
+    if(localStatus.session.quorumHash.IsNull()) {
+        localStatus.session = CDKGDebugSessionStatus();
     }
-
-    auto& session = it->second;
-    session.llmqType = llmqParams.type;
-    session.quorumHash = quorumHash;
-    session.quorumHeight = quorumHeight;
-    session.phase = 0;
-    session.statusBitset = 0;
-    session.members.clear();
-    session.members.resize((size_t)llmqParams.size);
+    localStatus.session.quorumHash = quorumHash;
+    localStatus.session.quorumHeight = quorumHeight;
+    localStatus.session.phase = 0;
+    localStatus.session.statusBitset = 0;
+    localStatus.session.members.clear();
+    localStatus.session.members.resize((size_t)Params().GetConsensus().llmqTypeChainLocks.size);
 }
 
-void CDKGDebugManager::UpdateLocalSessionStatus(uint8_t llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func)
+void CDKGDebugManager::UpdateLocalSessionStatus(std::function<bool(CDKGDebugSessionStatus& status)>&& func)
 {
     LOCK(cs);
-
-    auto it = localStatus.sessions.find(llmqType);
-    if (it == localStatus.sessions.end()) {
+    if(localStatus.session.quorumHash.IsNull()) {
         return;
     }
-
-    if (func(it->second)) {
+    if (func(localStatus.session)) {
         localStatus.nTime = GetTime();
     }
 }
 
-void CDKGDebugManager::UpdateLocalMemberStatus(uint8_t llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func)
+void CDKGDebugManager::UpdateLocalMemberStatus(size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func)
 {
     LOCK(cs);
-
-    auto it = localStatus.sessions.find(llmqType);
-    if (it == localStatus.sessions.end()) {
+    if(localStatus.session.quorumHash.IsNull()) {
         return;
     }
-
-    if (func(it->second.members.at(memberIdx))) {
+    if (func(localStatus.session.members.at(memberIdx))) {
         localStatus.nTime = GetTime();
     }
 }

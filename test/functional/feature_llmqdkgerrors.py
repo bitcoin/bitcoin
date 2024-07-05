@@ -79,7 +79,7 @@ class LLMQDKGErrors(DashTestFramework):
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
     def assert_member_valid(self, quorumHash, proTxHash, expectedValid):
-        q = self.nodes[0].quorum_info(100, quorumHash, True)
+        q = self.nodes[0].quorum_info(quorumHash, True)
         for m in q['members']:
             if m['proTxHash'] == proTxHash:
                 if expectedValid:

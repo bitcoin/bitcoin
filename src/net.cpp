@@ -3848,7 +3848,7 @@ bool CConnman::AddPendingMasternode(const uint256& proTxHash)
     return true;
 }
 
-void CConnman::SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
+void CConnman::SetMasternodeQuorumNodes(const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
     auto it = masternodeQuorumNodes.emplace(quorumHash, proTxHashes);
@@ -3857,7 +3857,7 @@ void CConnman::SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
     }
 }
 
-void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
+void CConnman::SetMasternodeQuorumRelayMembers(const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     {
         LOCK(cs_vPendingMasternodes);
@@ -3891,14 +3891,14 @@ void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& 
     });
 }
 
-bool CConnman::HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
+bool CConnman::HasMasternodeQuorumNodes(const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
     return masternodeQuorumNodes.count(quorumHash);
 }
 
 
-std::set<uint256> CConnman::GetMasternodeQuorums(uint8_t llmqType)
+std::set<uint256> CConnman::GetMasternodeQuorums()
 {
     LOCK(cs_vPendingMasternodes);
     std::set<uint256> result;
@@ -3931,7 +3931,7 @@ void CConnman::GetMasternodeQuorumNodes(const uint256& quorumHash, std::set<Node
     }
 }
 
-void CConnman::RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
+void CConnman::RemoveMasternodeQuorumNodes(const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
     masternodeQuorumNodes.erase(quorumHash);

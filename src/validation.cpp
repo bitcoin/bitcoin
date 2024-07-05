@@ -2792,8 +2792,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     fScriptChecks = fScriptChecks && RolluxContext; 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(m_blockman, block, pindex, state, view, fJustCheck, fScriptChecks, m_chainman.IsInitialBlockDownload())) {
-        LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
-                     pindex->GetBlockHash().ToString(), state.ToString());
+        printf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
+                     pindex->GetBlockHash().ToString().c_str(), state.ToString().c_str());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
 
@@ -3184,6 +3184,7 @@ static void AppendWarning(bilingual_str& res, const bilingual_str& warn)
 }
 
 static void UpdateTipLog(
+    const ChainstateManager& chainman,
     const CCoinsViewCache& coins_tip,
     const CBlockIndex* tip,
     const CChainParams& params,
@@ -3193,7 +3194,9 @@ static void UpdateTipLog(
 {
 
     AssertLockHeld(::cs_main);
-    LogPrintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
+    constexpr int BACKGROUND_LOG_INTERVAL = 2000;
+    
+    const auto& msg = strprintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
         prefix, func_name,
         tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
         log(tip->nChainWork.getdouble()) / log(2.0), (unsigned long)tip->nChainTx,
@@ -3202,6 +3205,16 @@ static void UpdateTipLog(
         coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
         coins_tip.GetCacheSize(),
         !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
+    // SYSCOIN only log some blocks if IBD unless in debug mode to avoid log growing too fast
+    if(chainman.IsInitialBlockDownload()) {
+        if (tip->nHeight % BACKGROUND_LOG_INTERVAL != 0) {
+            LogPrintLevel(BCLog::VALIDATION, BCLog::Level::Debug, "%s\n", msg);
+        } else {
+            LogPrintf("%s",msg);
+        }
+    } else {
+        LogPrintf("%s",msg);
+    }
 }
 
 void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
@@ -3216,7 +3229,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
         // Only log every so often so that we don't bury log messages at the tip.
         constexpr int BACKGROUND_LOG_INTERVAL = 2000;
         if (pindexNew->nHeight % BACKGROUND_LOG_INTERVAL == 0) {
-            UpdateTipLog(coins_tip, pindexNew, params, __func__, "[background validation] ", "");
+            UpdateTipLog(m_chainman, coins_tip, pindexNew, params, __func__, "[background validation] ", "");
         }
         return;
     }
@@ -3248,7 +3261,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
             }
         }
     }
-    UpdateTipLog(coins_tip, pindexNew, params, __func__, "", warning_messages.original);
+    UpdateTipLog(m_chainman, coins_tip, pindexNew, params, __func__, "", warning_messages.original);
 }
 
 /** Disconnect m_chain's tip.

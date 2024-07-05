@@ -44,6 +44,9 @@ public:
         obj.pushKV("version", (int)nVersion);
         obj.pushKV("height", nHeight);
     }
+    bool IsNull() const {
+        return nHeight == 0;
+    }
 };
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

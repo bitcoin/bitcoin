@@ -30,7 +30,6 @@ CSigningManager* quorumSigningManager;
 UniValue CRecoveredSig::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("llmqType", (int)llmqType);
     ret.pushKV("quorumHash", quorumHash.ToString());
     ret.pushKV("id", id.ToString());
     ret.pushKV("msgHash", msgHash.ToString());
@@ -46,205 +45,15 @@ CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory, bool fWipe)
         .cache_bytes = static_cast<size_t>(8 << 20),
         .memory_only = fMemory,
         .wipe_data = fWipe});
-    MigrateRecoveredSigs();
 }
 
-void CRecoveredSigsDb::MigrateRecoveredSigs()
+bool CRecoveredSigsDb::HasRecoveredSig(const uint256& id, const uint256& msgHash) const
 {
-    if (!db->IsEmpty()) return;
-
-    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- start\n", __func__);
-
-    CDBBatch batch(*db);
-    auto oldDb = std::make_unique<CDBWrapper>(DBParams{
-        .path = gArgs.GetDataDirNet() / "llmq",
-        .cache_bytes = static_cast<size_t>(8 << 20),
-        .memory_only = false,
-        .wipe_data = false});
-    std::unique_ptr<CDBIterator> pcursor(oldDb->NewIterator());
-
-    auto start_h = std::make_tuple(std::string("rs_h"), uint256());
-    pcursor->Seek(start_h);
-
-    while (pcursor->Valid()) {
-        decltype(start_h) k;
-        std::pair<uint8_t, uint256> v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_h") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_r1 = std::make_tuple(std::string("rs_r"), (uint8_t)0, uint256());
-    pcursor->Seek(start_r1);
-
-    while (pcursor->Valid()) {
-        decltype(start_r1) k;
-        CRecoveredSig v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_r") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_r2 = std::make_tuple(std::string("rs_r"), (uint32_t)0, uint256(), uint256());
-    pcursor->Seek(start_r2);
-
-    while (pcursor->Valid()) {
-        decltype(start_r2) k;
-        uint32_t v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_r") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_s = std::make_tuple(std::string("rs_s"), uint256());
-    pcursor->Seek(start_s);
-
-    while (pcursor->Valid()) {
-        decltype(start_s) k;
-        uint8_t v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_s") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_t = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
-    pcursor->Seek(start_t);
-
-    while (pcursor->Valid()) {
-        decltype(start_t) k;
-        uint8_t v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_t") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_v = std::make_tuple(std::string("rs_v"), (uint8_t)0, uint256());
-    pcursor->Seek(start_v);
-
-    while (pcursor->Valid()) {
-        decltype(start_v) k;
-        uint256 v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_v") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    auto start_vt = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (uint8_t)0, uint256());
-    pcursor->Seek(start_vt);
-
-    while (pcursor->Valid()) {
-        decltype(start_vt) k;
-        uint8_t v;
-
-        if (!pcursor->GetKey(k) || std::get<0>(k) != "rs_vt") {
-            break;
-        }
-        if (!pcursor->GetValue(v)) {
-            break;
-        }
-
-        batch.Write(k, v);
-
-        if (batch.SizeEstimate() >= (1 << 24)) {
-            db->WriteBatch(batch);
-            batch.Clear();
-        }
-
-        pcursor->Next();
-    }
-
-    db->WriteBatch(batch);
-    pcursor.reset();
-    oldDb.reset();
-
-    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- done\n", __func__);
-}
-
-bool CRecoveredSigsDb::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
-{
-    auto k = std::make_tuple(std::string("rs_r"), llmqType, id, msgHash);
+    auto k = std::make_tuple(std::string("rs_r"), id, msgHash);
     return db->Exists(k);
 }
 
-bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id) const
+bool CRecoveredSigsDb::HasRecoveredSigForId(const uint256& id) const
 {
     auto cacheKey = id;
     bool ret;
@@ -256,7 +65,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForId(uint8_t llmqType, const uint256& id)
     }
 
 
-    auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
+    auto k = std::make_tuple(std::string("rs_r"), id);
     ret = db->Exists(k);
 
     LOCK(cs);
@@ -300,26 +109,26 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash) const
     return ret;
 }
 
-bool CRecoveredSigsDb::ReadRecoveredSig(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const
+bool CRecoveredSigsDb::ReadRecoveredSig(const uint256& id, CRecoveredSig& ret) const
 {
-    auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
+    auto k = std::make_tuple(std::string("rs_r"), id);
     return db->Read(k, ret);
 }
 
 bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const
 {
     auto k1 = std::make_tuple(std::string("rs_h"), hash);
-    std::pair<uint8_t, uint256> k2;
+    uint256 k2;
     if (!db->Read(k1, k2)) {
         return false;
     }
 
-    return ReadRecoveredSig(k2.first, k2.second, ret);
+    return ReadRecoveredSig(k2, ret);
 }
 
-bool CRecoveredSigsDb::GetRecoveredSigById(uint8_t llmqType, const uint256& id, CRecoveredSig& ret) const
+bool CRecoveredSigsDb::GetRecoveredSigById(const uint256& id, CRecoveredSig& ret) const
 {
-    return ReadRecoveredSig(llmqType, id, ret);
+    return ReadRecoveredSig( id, ret);
 }
 
 void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
@@ -330,15 +139,15 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
 
     // we put these close to each other to leverage leveldb's key compaction
     // this way, the second key can be used for fast HasRecoveredSig checks while the first key stores the recSig
-    auto k1 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id);
-    auto k2 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id, recSig.msgHash);
+    auto k1 = std::make_tuple(std::string("rs_r"), recSig.id);
+    auto k2 = std::make_tuple(std::string("rs_r"), recSig.id, recSig.msgHash);
     batch.Write(k1, recSig);
     // this key is also used to store the current time, so that we can easily get to the "rs_t" key when we have the id
     batch.Write(k2, curTime);
 
     // store by object hash
     auto k3 = std::make_tuple(std::string("rs_h"), recSig.GetHash());
-    batch.Write(k3, std::make_pair(recSig.llmqType, recSig.id));
+    batch.Write(k3, recSig.id);
 
     // store by signHash
     auto signHash = CLLMQUtils::BuildSignHash(recSig);
@@ -346,7 +155,7 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
     batch.Write(k4, (uint8_t)1);
 
     // store by current time. Allows fast cleanup of old recSigs
-    auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t)htobe32(curTime), recSig.llmqType, recSig.id);
+    auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t)htobe32(curTime), recSig.id);
     batch.Write(k5, (uint8_t)1);
 
     db->WriteBatch(batch);
@@ -359,19 +168,19 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
     }
 }
 
-void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey)
+void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, const uint256& id, bool deleteHashKey, bool deleteTimeKey)
 {
     AssertLockHeld(cs);
 
     CRecoveredSig recSig;
-    if (!ReadRecoveredSig(llmqType, id, recSig)) {
+    if (!ReadRecoveredSig( id, recSig)) {
         return;
     }
 
     auto signHash = CLLMQUtils::BuildSignHash(recSig);
 
-    auto k1 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id);
-    auto k2 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id, recSig.msgHash);
+    auto k1 = std::make_tuple(std::string("rs_r"), recSig.id);
+    auto k2 = std::make_tuple(std::string("rs_r"), recSig.id, recSig.msgHash);
     auto k3 = std::make_tuple(std::string("rs_h"), recSig.GetHash());
     auto k4 = std::make_tuple(std::string("rs_s"), signHash);
     batch.Erase(k1);
@@ -385,7 +194,7 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, con
         uint32_t writeTime;
         // TODO remove the size() == sizeof(uint32_t) in a future version (when we stop supporting upgrades from < 0.14.1)
         if (db->Read(k2, writeTime)) {
-            auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t) htobe32(writeTime), recSig.llmqType, recSig.id);
+            auto k5 = std::make_tuple(std::string("rs_t"), (uint32_t) htobe32(writeTime), recSig.id);
             batch.Erase(k5);
         }
     }
@@ -398,21 +207,21 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, uint8_t llmqType, con
 }
 
 // Completely remove any traces of the recovered sig
-void CRecoveredSigsDb::RemoveRecoveredSig(uint8_t llmqType, const uint256& id)
+void CRecoveredSigsDb::RemoveRecoveredSig(const uint256& id)
 {
     AssertLockHeld(cs);
     CDBBatch batch(*db);
-    RemoveRecoveredSig(batch, llmqType, id, true, true);
+    RemoveRecoveredSig(batch, id, true, true);
     db->WriteBatch(batch);
 }
 
 // Remove the recovered sig itself and all keys required to get from id -> recSig
 // This will leave the byHash key in-place so that HasRecoveredSigForHash still returns true
-void CRecoveredSigsDb::TruncateRecoveredSig(uint8_t llmqType, const uint256& id)
+void CRecoveredSigsDb::TruncateRecoveredSig(const uint256& id)
 {
     LOCK(cs);
     CDBBatch batch(*db);
-    RemoveRecoveredSig(batch, llmqType, id, false, false);
+    RemoveRecoveredSig(batch, id, false, false);
     db->WriteBatch(batch);
 }
 
@@ -420,11 +229,11 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 {
     std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
 
-    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
+    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, uint256());
     uint32_t endTime = (uint32_t)(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) - maxAge);
     pcursor->Seek(start);
 
-    std::vector<std::pair<uint8_t, uint256>> toDelete;
+    std::vector<uint256> toDelete;
     std::vector<decltype(start)> toDelete2;
 
     while (pcursor->Valid()) {
@@ -437,7 +246,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
             break;
         }
 
-        toDelete.emplace_back(std::get<2>(k), std::get<3>(k));
+        toDelete.emplace_back(std::get<2>(k));
         toDelete2.emplace_back(k);
 
         pcursor->Next();
@@ -452,7 +261,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
     {
         LOCK(cs);
         for (const auto& e : toDelete) {
-            RemoveRecoveredSig(batch, e.first, e.second, true, false);
+            RemoveRecoveredSig(batch, e, true, false);
 
             if (batch.SizeEstimate() >= (1 << 24)) {
                 db->WriteBatch(batch);
@@ -470,22 +279,22 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
     LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, toDelete.size());
 }
 
-bool CRecoveredSigsDb::HasVotedOnId(uint8_t llmqType, const uint256& id) const
+bool CRecoveredSigsDb::HasVotedOnId(const uint256& id) const
 {
-    auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), id);
     return db->Exists(k);
 }
 
-bool CRecoveredSigsDb::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const
+bool CRecoveredSigsDb::GetVoteForId(const uint256& id, uint256& msgHashRet) const
 {
-    auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), id);
     return db->Read(k, msgHashRet);
 }
 
-void CRecoveredSigsDb::WriteVoteForId(uint8_t llmqType, const uint256& id, const uint256& msgHash)
+void CRecoveredSigsDb::WriteVoteForId(const uint256& id, const uint256& msgHash)
 {
-    auto k1 = std::make_tuple(std::string("rs_v"), llmqType, id);
-    auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime())), llmqType, id);
+    auto k1 = std::make_tuple(std::string("rs_v"), id);
+    auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime())), id);
 
     CDBBatch batch(*db);
     batch.Write(k1, msgHash);
@@ -498,7 +307,7 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 {
     std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
 
-    auto start = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (uint8_t)0, uint256());
+    auto start = std::make_tuple(std::string("rs_vt"), (uint32_t)0, uint256());
     uint32_t endTime = (uint32_t)(TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) - maxAge);
     pcursor->Seek(start);
 
@@ -514,11 +323,10 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
             break;
         }
 
-        uint8_t llmqType = std::get<2>(k);
-        const uint256& id = std::get<3>(k);
+        const uint256& id = std::get<2>(k);
 
         batch.Erase(k);
-        batch.Erase(std::make_tuple(std::string("rs_v"), llmqType, id));
+        batch.Erase(std::make_tuple(std::string("rs_v"), id));
 
         cnt++;
 
@@ -562,7 +370,7 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     if (!db.GetRecoveredSigByHash(hash, ret)) {
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(ret.llmqType, ret.quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(ret.quorumHash)) {
         // we don't want to propagate sigs from inactive quorums
         return false;
     }
@@ -633,20 +441,14 @@ bool CSigningManager::PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, b
 {
     retBan = false;
 
-    auto llmqType = recoveredSig.llmqType;
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        retBan = true;
-        return false;
-    }
-
-    CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, recoveredSig.quorumHash);
+    CQuorumCPtr quorum = quorumManager->GetQuorum(recoveredSig.quorumHash);
 
     if (!quorum) {
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found\n", __func__,
                   recoveredSig.quorumHash.ToString());
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(quorum->qc->quorumHash)) {
         return false;
     }
 
@@ -694,16 +496,15 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
         for (auto it = v.begin(); it != v.end();) {
             const auto& recSig = *it;
 
-            uint8_t llmqType = recSig->llmqType;
             if (!retQuorums.count(recSig->quorumHash)) {
-                CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, recSig->quorumHash);
+                CQuorumCPtr quorum = quorumManager->GetQuorum(recSig->quorumHash);
                 if (!quorum) {
                     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found, node=%d\n", __func__,
                               recSig->quorumHash.ToString(), nodeId);
                     it = v.erase(it);
                     continue;
                 }
-                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
+                if (!CLLMQUtils::IsQuorumActive(quorum->qc->quorumHash)) {
                     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
                               recSig->quorumHash.ToString(), nodeId);
                     it = v.erase(it);
@@ -798,7 +599,6 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 // signature must be verified already
 void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
 {
-    auto llmqType = recoveredSig->llmqType;
     const uint256& hash = recoveredSig->GetHash();
     CInv inv(MSG_QUORUM_RECOVERED_SIG, hash);
     {
@@ -852,9 +652,9 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
 
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- valid recSig. signHash=%s, id=%s, msgHash=%s\n", __func__,
                 signHash.ToString(), recoveredSig->id.ToString(), recoveredSig->msgHash.ToString());
-        if (db.HasRecoveredSigForId(llmqType, recoveredSig->id)) {
+        if (db.HasRecoveredSigForId(recoveredSig->id)) {
             CRecoveredSig otherRecoveredSig;
-            if (db.GetRecoveredSigById(llmqType, recoveredSig->id, otherRecoveredSig)) {
+            if (db.GetRecoveredSigById(recoveredSig->id, otherRecoveredSig)) {
                 auto otherSignHash = CLLMQUtils::BuildSignHash(otherRecoveredSig);
                 if (signHash != otherSignHash) {
                     // this should really not happen, as each masternode is participating in only one vote,
@@ -918,9 +718,9 @@ void CSigningManager::PushReconstructedRecoveredSig(const std::shared_ptr<const 
     pendingReconstructedRecoveredSigs.emplace(std::piecewise_construct, std::forward_as_tuple(recoveredSig->GetHash()), std::forward_as_tuple(recoveredSig));
 }
 
-void CSigningManager::TruncateRecoveredSig(uint8_t llmqType, const uint256& id)
+void CSigningManager::TruncateRecoveredSig(const uint256& id)
 {
-    db.TruncateRecoveredSig(llmqType, id);
+    db.TruncateRecoveredSig(id);
 }
 void CSigningManager::Clear()
 {
@@ -956,7 +756,7 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
     recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
-bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
+bool CSigningManager::AsyncSignIfMember(const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
 {
     if (!fMasternodeMode || WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash.IsNull())) {
         return false;
@@ -968,9 +768,9 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
         // This gives a slight risk of not getting enough shares to recover a signature
         // But at least it shouldn't be possible to get conflicting recovered signatures
         // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-        quorum = SelectQuorumForSigning(chainman, llmqType, id);
+        quorum = SelectQuorumForSigning(chainman, id);
     } else {
-        quorum = quorumManager->GetQuorum(llmqType, quorumHash);
+        quorum = quorumManager->GetQuorum(quorumHash);
     }
 
     if (!quorum) {
@@ -984,10 +784,10 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
     {
         LOCK(cs);
 
-        bool hasVoted = db.HasVotedOnId(llmqType, id);
+        bool hasVoted = db.HasVotedOnId( id);
         if (hasVoted) {
             uint256 prevMsgHash;
-            db.GetVoteForId(llmqType, id, prevMsgHash);
+            db.GetVoteForId( id, prevMsgHash);
             if (msgHash != prevMsgHash) {
                 LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
                         id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
@@ -1002,32 +802,32 @@ bool CSigningManager::AsyncSignIfMember(uint8_t llmqType, const uint256& id, con
             }
         }
 
-        if (db.HasRecoveredSigForId(llmqType, id)) {
+        if (db.HasRecoveredSigForId( id)) {
             // no need to sign it if we already have a recovered sig
             return true;
         }
         if (!hasVoted) {
-            db.WriteVoteForId(llmqType, id, msgHash);
+            db.WriteVoteForId( id, msgHash);
         }
     }
     
     if (allowReSign) {
         // make us re-announce all known shares (other nodes might have run into a timeout)
-        quorumSigSharesManager->ForceReAnnouncement(quorum, llmqType, id, msgHash);
+        quorumSigSharesManager->ForceReAnnouncement(quorum, id, msgHash);
     }
     quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
 
     return true;
 }
 
-bool CSigningManager::HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
+bool CSigningManager::HasRecoveredSig(const uint256& id, const uint256& msgHash) const
 {
-    return db.HasRecoveredSig(llmqType, id, msgHash);
+    return db.HasRecoveredSig( id, msgHash);
 }
 
-bool CSigningManager::HasRecoveredSigForId(uint8_t llmqType, const uint256& id) const
+bool CSigningManager::HasRecoveredSigForId(const uint256& id) const
 {
-    return db.HasRecoveredSigForId(llmqType, id);
+    return db.HasRecoveredSigForId( id);
 }
 
 bool CSigningManager::HasRecoveredSigForSession(const uint256& signHash) const
@@ -1035,22 +835,22 @@ bool CSigningManager::HasRecoveredSigForSession(const uint256& signHash) const
     return db.HasRecoveredSigForSession(signHash);
 }
 
-bool CSigningManager::GetRecoveredSigForId(uint8_t llmqType, const uint256& id, llmq::CRecoveredSig& retRecSig) const
+bool CSigningManager::GetRecoveredSigForId(const uint256& id, llmq::CRecoveredSig& retRecSig) const
 {
-    if (!db.GetRecoveredSigById(llmqType, id, retRecSig)) {
+    if (!db.GetRecoveredSigById( id, retRecSig)) {
         return false;
     }
     return true;
 }
 
-bool CSigningManager::IsConflicting(uint8_t llmqType, const uint256& id, const uint256& msgHash) const
+bool CSigningManager::IsConflicting(const uint256& id, const uint256& msgHash) const
 {
-    if (!db.HasRecoveredSigForId(llmqType, id)) {
+    if (!db.HasRecoveredSigForId( id)) {
         // no recovered sig present, so no conflict
         return false;
     }
 
-    if (!db.HasRecoveredSig(llmqType, id, msgHash)) {
+    if (!db.HasRecoveredSig( id, msgHash)) {
         // recovered sig is present, but not for the given msgHash. That's a conflict!
         return true;
     }
@@ -1059,22 +859,19 @@ bool CSigningManager::IsConflicting(uint8_t llmqType, const uint256& id, const u
     return false;
 }
 
-bool CSigningManager::HasVotedOnId(uint8_t llmqType, const uint256& id) const
+bool CSigningManager::HasVotedOnId(const uint256& id) const
 {
-    return db.HasVotedOnId(llmqType, id);
+    return db.HasVotedOnId( id);
 }
 
-bool CSigningManager::GetVoteForId(uint8_t llmqType, const uint256& id, uint256& msgHashRet) const
+bool CSigningManager::GetVoteForId(const uint256& id, uint256& msgHashRet) const
 {
-    return db.GetVoteForId(llmqType, id, msgHashRet);
+    return db.GetVoteForId( id, msgHashRet);
 }
 
-CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman, uint8_t llmqType, const uint256& selectionHash, int signHeight, int signOffset)
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman, const uint256& selectionHash, int signHeight, int signOffset)
 {
-    if(!Params().GetConsensus().llmqs.count(llmqType)) {
-        return {};
-    }
-    auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
+    const auto& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
     size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
     CBlockIndex* pindexStart;
     {
@@ -1088,7 +885,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman,
         }
         pindexStart = chainman.ActiveChain()[startBlockHeight];
     }
-    auto quorums = quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
+    auto quorums = quorumManager->ScanQuorums( pindexStart, poolSize);
     if (quorums.empty()) {
         return nullptr;
     }
@@ -1096,7 +893,6 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman,
     scores.reserve(quorums.size());
     for (size_t i = 0; i < quorums.size(); i++) {
         CHashWriter h(SER_NETWORK, 0);
-        h << llmqType;
         h << quorums[i]->qc->quorumHash;
         h << selectionHash;
         scores.emplace_back(h.GetHash(), i);
@@ -1105,14 +901,14 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(ChainstateManager& chainman,
     return quorums[scores.front().second];
 }
 
-bool CSigningManager::VerifyRecoveredSig(ChainstateManager& chainman, uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
+bool CSigningManager::VerifyRecoveredSig(ChainstateManager& chainman, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
 {
-    auto quorum = SelectQuorumForSigning(chainman, llmqType, id, signedAtHeight, signOffset);
+    auto quorum = SelectQuorumForSigning(chainman, id, signedAtHeight, signOffset);
     if (!quorum) {
         return false;
     }
 
-    uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    uint256 signHash = CLLMQUtils::BuildSignHash( quorum->qc->quorumHash, id, msgHash);
     return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
 }
 

@@ -199,7 +199,6 @@ static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
                 {RPCResult::Type::OBJ, "commitment", /*optional=*/true, "Commitment Object",
                 { 
                     {RPCResult::Type::NUM, "version", "Version"},
-                    {RPCResult::Type::NUM, "llmqType", "LLMQ Type"},
                     {RPCResult::Type::STR, "quorumHash", "Quorum Hash"},
                     {RPCResult::Type::STR, "signersCount", "Signers Count"},
                     {RPCResult::Type::STR_HEX, "signers", "Signers"},

@@ -43,19 +43,19 @@ public:
     void AddMineableCommitment(const CFinalCommitment& fqc);
     bool HasMineableCommitment(const uint256& hash) const;
     bool GetMineableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret);
-    bool GetMinableCommitment(uint8_t llmqType, int nHeight, CFinalCommitment& ret) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool GetMinableCommitment(int nHeight, CFinalCommitment& ret) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    bool HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash) const;
-    CFinalCommitmentPtr GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash) const;
+    bool HasMinedCommitment(const uint256& quorumHash) const;
+    CFinalCommitmentPtr GetMinedCommitment(const uint256& quorumHash, uint256& retMinedBlockHash) const;
 
-    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount);
+    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(const CBlockIndex* pindex, size_t maxCount);
     bool FlushCacheToDisk();
 private:
-    static bool GetCommitmentsFromBlock(const CBlock& block, const uint32_t& nHeight, std::map<uint8_t, CFinalCommitment>& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    static bool GetCommitmentsFromBlock(const CBlock& block, const uint32_t& nHeight, CFinalCommitment& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck, bool fBLSChecks) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    static bool IsMiningPhase(uint8_t llmqType, int nHeight);
-    bool IsCommitmentRequired(uint8_t llmqType, int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    static uint256 GetQuorumBlockHash(ChainstateManager& chainman, uint8_t llmqType, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    static bool IsMiningPhase(int nHeight);
+    bool IsCommitmentRequired(int nHeight) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    static uint256 GetQuorumBlockHash(ChainstateManager& chainman, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 extern CQuorumBlockProcessor* quorumBlockProcessor;

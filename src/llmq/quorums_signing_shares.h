@@ -32,7 +32,6 @@ constexpr uint32_t UNINITIALIZED_SESSION_ID{std::numeric_limits<uint32_t>::max()
 class CSigShare
 {
 public:
-    uint8_t llmqType;
     uint256 quorumHash;
     uint16_t quorumMember;
     uint256 id;
@@ -55,7 +54,6 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s << llmqType;
         s << quorumHash;
         s << quorumMember;
         s << id;
@@ -66,7 +64,6 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        s >> llmqType;
         s >> quorumHash;
         s >> quorumMember;
         s >> id;
@@ -83,12 +80,11 @@ class CSigSesAnn
 {
 public:
     uint32_t sessionId{UNINITIALIZED_SESSION_ID};
-    uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     uint256 id;
     uint256 msgHash;
     SERIALIZE_METHODS(CSigSesAnn, obj) {
-        READWRITE(VARINT(obj.sessionId), obj.llmqType, obj.quorumHash,
+        READWRITE(VARINT(obj.sessionId), obj.quorumHash,
         obj.id, obj.msgHash);
     }
 
@@ -282,7 +278,6 @@ public:
     // Used to avoid holding locks too long
     struct SessionInfo
     {
-        uint8_t llmqType;
         uint256 quorumHash;
         uint256 id;
         uint256 msgHash;
@@ -295,7 +290,6 @@ public:
         uint32_t recvSessionId{UNINITIALIZED_SESSION_ID};
         uint32_t sendSessionId{UNINITIALIZED_SESSION_ID};
 
-        uint8_t llmqType;
         uint256 quorumHash;
         uint256 id;
         uint256 msgHash;
@@ -401,7 +395,7 @@ public:
 
     void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
     CSigShare CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash) const;
-    void ForceReAnnouncement(const CQuorumCPtr& quorum, uint8_t llmqType, const uint256& id, const uint256& msgHash);
+    void ForceReAnnouncement(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
@@ -415,7 +409,7 @@ private:
     bool ProcessMessageBatchedSigShares(const CNode* pfrom, const CBatchedSigShares& batchedSigShares);
     void ProcessMessageSigShare(NodeId fromId, const CSigShare& sigShare);
 
-    static bool VerifySigSharesInv(uint8_t llmqType, const CSigSharesInv& inv);
+    static bool VerifySigSharesInv(const CSigSharesInv& inv);
     static bool PreVerifyBatchedSigShares(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,

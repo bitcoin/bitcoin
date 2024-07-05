@@ -1350,13 +1350,13 @@ public:
     std::vector<AddedNodeInfo> GetAddedNodeInfo() const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     // SYSCOIN
     bool AddPendingMasternode(const uint256& proTxHash);
-    void SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
-    void SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
-    bool HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
-    std::set<uint256> GetMasternodeQuorums(uint8_t llmqType);
+    void SetMasternodeQuorumRelayMembers(const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    void SetMasternodeQuorumNodes(const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    bool HasMasternodeQuorumNodes(const uint256& quorumHash);
+    std::set<uint256> GetMasternodeQuorums();
     // also returns QWATCH nodes
     void GetMasternodeQuorumNodes(const uint256& quorumHash, std::set<NodeId> &result) const;
-    void RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
+    void RemoveMasternodeQuorumNodes(const uint256& quorumHash);
     bool IsMasternodeQuorumNode(const CNode* pnode);
     bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);

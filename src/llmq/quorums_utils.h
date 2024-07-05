@@ -32,28 +32,28 @@ public:
     static bool IsV19Active(const int nHeight);
     static const CBlockIndex* V19ActivationIndex(const CBlockIndex* pindex);
     // includes members which failed DKG
-    static std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pindexQuorum);
-    static uint256 BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
-    static uint256 BuildSignHash(uint8_t llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
+    static std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(const CBlockIndex* pindexQuorum);
+    static uint256 BuildCommitmentHash(const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash);
+    static uint256 BuildSignHash(const uint256& quorumHash, const uint256& id, const uint256& msgHash);
 
     // works for sig shares and recovered sigs
     template<typename T>
     static uint256 BuildSignHash(const T& s)
     {
-        return BuildSignHash(s.llmqType, s.quorumHash, s.id, s.msgHash);
+        return BuildSignHash(s.quorumHash, s.id, s.msgHash);
     }
 
-    static bool IsAllMembersConnectedEnabled(uint8_t llmqType);
-    static bool IsQuorumPoseEnabled(uint8_t llmqType);
+    static bool IsAllMembersConnectedEnabled();
+    static bool IsQuorumPoseEnabled();
     static uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
-    static std::set<uint256> GetQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
-    static std::set<uint256> GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
-    static std::set<size_t> CalcDeterministicWatchConnections(uint8_t llmqType, const CBlockIndex *pQuorumBaseBlockIndex, size_t memberCount, size_t connectionCount);
+    static std::set<uint256> GetQuorumConnections(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
+    static std::set<uint256> GetQuorumRelayMembers(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
+    static std::set<size_t> CalcDeterministicWatchConnections(const CBlockIndex *pQuorumBaseBlockIndex, size_t memberCount, size_t connectionCount);
 
-    static bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman);
-    static void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman);
+    static bool EnsureQuorumConnections(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman);
+    static void AddQuorumProbeConnections(const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman);
 
-    static bool IsQuorumActive(uint8_t llmqType, const uint256& quorumHash);
+    static bool IsQuorumActive(const uint256& quorumHash);
     /// Returns the state of `-watchquorums`
     static bool IsWatchQuorumsEnabled();
     template<typename NodesContainer, typename Continue, typename Callback>
@@ -94,7 +94,6 @@ public:
         return HexStr(vBytes);
     }
 };
-const Consensus::LLMQParams& GetLLMQParams(uint8_t llmqType);
 
 } // namespace llmq
 

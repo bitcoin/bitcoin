@@ -47,16 +47,13 @@ static RPCHelpMan quorum_list()
     CBlockIndex* pindexTip = WITH_LOCK(cs_main, return node.chainman->ActiveTip());
     UniValue ret(UniValue::VOBJ);
 
-    for (auto& p : Params().GetConsensus().llmqs) {
-        UniValue v(UniValue::VARR);
-        auto quorums = llmq::quorumManager->ScanQuorums(p.first, pindexTip, count > -1 ? count : p.second.signingActiveQuorumCount);
-        for (auto& q : quorums) {
-            v.push_back(q->qc->quorumHash.ToString());
-        }
-
-        ret.pushKV(p.second.name, v);
+    UniValue v(UniValue::VARR);
+    auto quorums = llmq::quorumManager->ScanQuorums(pindexTip, count > -1 ? count : Params().GetConsensus().llmqTypeChainLocks.signingActiveQuorumCount);
+    for (auto& q : quorums) {
+        v.push_back(q->qc->quorumHash.ToString());
     }
 
+    ret.pushKV("quorums", v);
 
     return ret;
 },
@@ -68,7 +65,6 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
     UniValue ret(UniValue::VOBJ);
 
     ret.pushKV("height", quorum->m_quorum_base_block_index->nHeight);
-    ret.pushKV("type", quorum->params.name);
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
 
@@ -105,30 +101,24 @@ static RPCHelpMan quorum_info()
     return RPCHelpMan{"quorum_info",
         "\nReturn information about a quorum\n",
         {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},      
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash of quorum.\n"},      
             {"includeSkShare", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include secret key share in output.\n"},                 
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_info", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_info", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_info", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_info", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
 
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
-
-    uint256 quorumHash = ParseHashV(request.params[1], "quorumHash");
+    uint256 quorumHash = ParseHashV(request.params[0], "quorumHash");
     bool includeSkShare = false;
-    if (!request.params[2].isNull()) {
-        includeSkShare = request.params[2].get_bool();
+    if (!request.params[1].isNull()) {
+        includeSkShare = request.params[1].get_bool();
     }
 
-    auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+    auto quorum = llmq::quorumManager->GetQuorum(quorumHash);
     if (!quorum) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
@@ -174,53 +164,50 @@ static RPCHelpMan quorum_dkgstatus()
     UniValue quorumArrConnections(UniValue::VARR);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    const auto& params = Params().GetConsensus().llmqTypeChainLocks;
+    UniValue obj(UniValue::VOBJ);
+    if (fMasternodeMode) {
+        const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
+        if(!pQuorumBaseBlockIndex)
+            return ret;
+        obj.pushKV("pQuorumBaseBlockIndex", pQuorumBaseBlockIndex->nHeight);
+        obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
+        obj.pushKV("pindexTip", pindexTip->nHeight);
 
-    for (const auto& p : Params().GetConsensus().llmqs) {
-        auto& params = p.second;
-        UniValue obj(UniValue::VOBJ);
-        obj.pushKV("llmqType", std::string(params.name));
-        if (fMasternodeMode) {
-            const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return node.chainman->ActiveChain()[tipHeight - (tipHeight % params.dkgInterval)]);
-            if(!pQuorumBaseBlockIndex)
-                continue;
-            obj.pushKV("pQuorumBaseBlockIndex", pQuorumBaseBlockIndex->nHeight);
-            obj.pushKV("quorumHash", pQuorumBaseBlockIndex->GetBlockHash().ToString());
-            obj.pushKV("pindexTip", pindexTip->nHeight);
-
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params, pQuorumBaseBlockIndex, proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params, pQuorumBaseBlockIndex, proTxHash, true);
-            std::map<uint256, CAddress> foundConnections;
-            node.connman->ForEachNode([&](CNode* pnode) {
-                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
-                if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
-                    foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
-                }
-            });
-            UniValue arr(UniValue::VARR);
-            for (auto& ec : allConnections) {
-                obj.pushKV("proTxHash", ec.ToString());
-                if (foundConnections.count(ec)) {
-                    obj.pushKV("connected", true);
-                    obj.pushKV("address", foundConnections[ec].ToStringAddr());
-                } else {
-                    obj.pushKV("connected", false);
-                }
-                obj.pushKV("outbound", outboundConnections.count(ec) != 0);
-                arr.push_back(obj);
+        auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(pQuorumBaseBlockIndex, proTxHash, false);
+        auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(pQuorumBaseBlockIndex, proTxHash, true);
+        std::map<uint256, CAddress> foundConnections;
+        node.connman->ForEachNode([&](CNode* pnode) {
+            auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+            if (!verifiedProRegTxHash.IsNull() && allConnections.count(verifiedProRegTxHash)) {
+                foundConnections.emplace(verifiedProRegTxHash, pnode->addr);
             }
-            obj.pushKV("quorumConnections", arr);
+        });
+        UniValue arr(UniValue::VARR);
+        for (auto& ec : allConnections) {
+            obj.pushKV("proTxHash", ec.ToString());
+            if (foundConnections.count(ec)) {
+                obj.pushKV("connected", true);
+                obj.pushKV("address", foundConnections[ec].ToStringAddr());
+            } else {
+                obj.pushKV("connected", false);
+            }
+            obj.pushKV("outbound", outboundConnections.count(ec) != 0);
+            arr.push_back(obj);
         }
-        quorumArrConnections.push_back(obj);
-        LOCK(cs_main);
-        llmq::CFinalCommitment fqc;
-        if (llmq::quorumBlockProcessor->GetMinableCommitment(params.type, tipHeight, fqc)) {
-            if(!fqc.IsNull()) {
-                UniValue obj(UniValue::VOBJ);
-                fqc.ToJson(obj);
-                minableCommitments.push_back(obj);
-            }
+        obj.pushKV("quorumConnections", arr);
+    }
+    quorumArrConnections.push_back(obj);
+    LOCK(cs_main);
+    llmq::CFinalCommitment fqc;
+    if (llmq::quorumBlockProcessor->GetMinableCommitment(tipHeight, fqc)) {
+        if(!fqc.IsNull()) {
+            UniValue obj(UniValue::VOBJ);
+            fqc.ToJson(obj);
+            minableCommitments.push_back(obj);
         }
     }
+    
 
     ret.pushKV("minableCommitments", minableCommitments);
     ret.pushKV("quorumConnections", quorumArrConnections);
@@ -269,20 +256,18 @@ static RPCHelpMan quorum_memberof()
 
     UniValue result(UniValue::VARR);
 
-    for (const auto& p : Params().GetConsensus().llmqs) {
-        auto& params = p.second;
-        size_t count = params.signingActiveQuorumCount;
-        if (scanQuorumsCount != -1) {
-            count = (size_t)scanQuorumsCount;
-        }
-        auto quorums = llmq::quorumManager->ScanQuorums(params.type, count);
-        for (auto& quorum : quorums) {
-            if (quorum->IsMember(dmn->proTxHash)) {
-                auto json = BuildQuorumInfo(quorum, false, false);
-                json.pushKV("isValidMember", quorum->IsValidMember(dmn->proTxHash));
-                json.pushKV("memberIndex", quorum->GetMemberIndex(dmn->proTxHash));
-                result.push_back(json);
-            }
+    auto& params = Params().GetConsensus().llmqTypeChainLocks;
+    size_t count = params.signingActiveQuorumCount;
+    if (scanQuorumsCount != -1) {
+        count = (size_t)scanQuorumsCount;
+    }
+    auto quorums = llmq::quorumManager->ScanQuorums(count);
+    for (auto& quorum : quorums) {
+        if (quorum->IsMember(dmn->proTxHash)) {
+            auto json = BuildQuorumInfo(quorum, false, false);
+            json.pushKV("isValidMember", quorum->IsValidMember(dmn->proTxHash));
+            json.pushKV("memberIndex", quorum->GetMemberIndex(dmn->proTxHash));
+            result.push_back(json);
         }
     }
 
@@ -297,7 +282,6 @@ static RPCHelpMan quorum_sign()
     return RPCHelpMan{"quorum_sign",
         "\nThreshold-sign a message.\n",
         {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"}, 
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The quorum identifier.\n"},
@@ -305,36 +289,32 @@ static RPCHelpMan quorum_sign()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_sign", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_sign", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_sign", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_sign", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     node::NodeContext& node = EnsureAnyNodeContext(request.context);
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
 
-    uint256 id = ParseHashV(request.params[1], "id");
-    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
+    uint256 id = ParseHashV(request.params[0], "id");
+    uint256 msgHash = ParseHashV(request.params[1], "msgHash");
     uint256 quorumHash;
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty()) {
-        quorumHash = ParseHashV(request.params[3], "quorumHash");
+    if (!request.params[2].isNull() && !request.params[2].get_str().empty()) {
+        quorumHash = ParseHashV(request.params[2], "quorumHash");
     }
     bool fSubmit{true};
-    if (!request.params[4].isNull()) {
-        fSubmit = request.params[4].get_bool();
+    if (!request.params[3].isNull()) {
+        fSubmit = request.params[3].get_bool();
     }
     if (fSubmit) {
-        return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
+        return llmq::quorumSigningManager->AsyncSignIfMember( id, msgHash, quorumHash);
     } else {
         llmq::CQuorumCPtr pQuorum;
 
         if (quorumHash.IsNull()) {
-            pQuorum = llmq::quorumSigningManager->SelectQuorumForSigning(*node.chainman, llmqType, id);
+            pQuorum = llmq::quorumSigningManager->SelectQuorumForSigning(*node.chainman, id);
         } else {
-            pQuorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+            pQuorum = llmq::quorumManager->GetQuorum( quorumHash);
         }
 
         if (pQuorum == nullptr) {
@@ -348,7 +328,6 @@ static RPCHelpMan quorum_sign()
         }
 
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("llmqType", llmqType);
         obj.pushKV("quorumHash", sigShare.quorumHash.ToString());
         obj.pushKV("quorumMember", sigShare.quorumMember);
         obj.pushKV("id", id.ToString());
@@ -366,26 +345,21 @@ static RPCHelpMan quorum_hasrecsig()
 {
     return RPCHelpMan{"quorum_hasrecsig",
         "\nTest if a valid recovered signature is present.\n",
-        {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
+        { 
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},                  
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_hasrecsig", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_hasrecsig", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_hasrecsig", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_hasrecsig", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
 
-    uint256 id = ParseHashV(request.params[1], "id");
-    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
-    return llmq::quorumSigningManager->HasRecoveredSig(llmqType, id, msgHash);
+    uint256 id = ParseHashV(request.params[0], "id");
+    uint256 msgHash = ParseHashV(request.params[1], "msgHash");
+    return llmq::quorumSigningManager->HasRecoveredSig( id, msgHash);
 },
     };
 } 
@@ -394,8 +368,7 @@ static RPCHelpMan quorum_verify()
 {
     return RPCHelpMan{"quorum_verify",
         "\nTest if a quorum signature is valid for a request id and a message hash.\n",
-        {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
+        { 
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},   
             {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Quorum signature to verify.\n"},
@@ -404,39 +377,35 @@ static RPCHelpMan quorum_verify()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_verify", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_verify", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_verify", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_verify", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     node::NodeContext& node = EnsureAnyNodeContext(request.context);
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
 
-    uint256 id = ParseHashV(request.params[1], "id");
-    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
+    uint256 id = ParseHashV(request.params[0], "id");
+    uint256 msgHash = ParseHashV(request.params[1], "msgHash");
     CBLSSignature sig;
-    if (!sig.SetHexStr(request.params[3].get_str())) {
+    if (!sig.SetHexStr(request.params[2].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
-    if (request.params[4].isNull() || (request.params[4].get_str().empty() && !request.params[5].isNull())) {
+    if (request.params[3].isNull() || (request.params[3].get_str().empty() && !request.params[4].isNull())) {
         int signHeight{-1};
-        if (!request.params[5].isNull()) {
-            signHeight = request.params[5].getInt<int>();
+        if (!request.params[4].isNull()) {
+            signHeight = request.params[4].getInt<int>();
         }
         // First check against the current active set, if it fails check against the last active set
-        int signOffset{Params().GetConsensus().llmqs.at(llmqType).dkgInterval};
-        return llmq::quorumSigningManager->VerifyRecoveredSig(*node.chainman, llmqType, signHeight, id, msgHash, sig, 0) ||
-                llmq::quorumSigningManager->VerifyRecoveredSig(*node.chainman, llmqType, signHeight, id, msgHash, sig, signOffset);
+        int signOffset{Params().GetConsensus().llmqTypeChainLocks.dkgInterval};
+        return llmq::quorumSigningManager->VerifyRecoveredSig(*node.chainman, signHeight, id, msgHash, sig, 0) ||
+                llmq::quorumSigningManager->VerifyRecoveredSig(*node.chainman, signHeight, id, msgHash, sig, signOffset);
     } else {
-        uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
-        llmq::CQuorumCPtr quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+        uint256 quorumHash = ParseHashV(request.params[3], "quorumHash");
+        llmq::CQuorumCPtr quorum = llmq::quorumManager->GetQuorum( quorumHash);
         if (!quorum) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
         }
-        uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+        uint256 signHash = llmq::CLLMQUtils::BuildSignHash( quorum->qc->quorumHash, id, msgHash);
         return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
     }
 },
@@ -448,27 +417,22 @@ static RPCHelpMan quorum_getrecsig()
     return RPCHelpMan{"quorum_getrecsig",
         "\nGet a recovered signature.\n",
         {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},                  
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_getrecsig", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_getrecsig", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_getrecsig", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_getrecsig", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
 
-    uint256 id = ParseHashV(request.params[1], "id");
-    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
+    uint256 id = ParseHashV(request.params[0], "id");
+    uint256 msgHash = ParseHashV(request.params[1], "msgHash");
 
     llmq::CRecoveredSig recSig;
-    if (!llmq::quorumSigningManager->GetRecoveredSigForId(llmqType, id, recSig)) {
+    if (!llmq::quorumSigningManager->GetRecoveredSigForId( id, recSig)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
     }
     if (recSig.msgHash != msgHash) {
@@ -484,27 +448,22 @@ static RPCHelpMan quorum_isconflicting()
     return RPCHelpMan{"quorum_isconflicting",
         "\nTest if a conflict exists.\n",
         {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},                  
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_isconflicting", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_isconflicting", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_isconflicting", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_isconflicting", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
 
-    uint256 id = ParseHashV(request.params[1], "id");
-    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
+    uint256 id = ParseHashV(request.params[0], "id");
+    uint256 msgHash = ParseHashV(request.params[1], "msgHash");
 
 
-    return llmq::quorumSigningManager->IsConflicting(llmqType, id, msgHash);
+    return llmq::quorumSigningManager->IsConflicting(id, msgHash);
 },
     };
 } 
@@ -513,35 +472,31 @@ static RPCHelpMan quorum_selectquorum()
 {
     return RPCHelpMan{"quorum_selectquorum",
         "\nReturns the quorum that would/should sign a request.\n",
-        {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
+        { 
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},                    
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-                HelpExampleCli("quorum_selectquorum", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
-            + HelpExampleRpc("quorum_selectquorum", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                HelpExampleCli("quorum_selectquorum", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_selectquorum", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     node::NodeContext& node = EnsureAnyNodeContext(request.context);
-    uint8_t llmqType = (uint8_t)request.params[0].getInt<int>();
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
 
-    uint256 id = ParseHashV(request.params[1], "id");
+    uint256 id = ParseHashV(request.params[0], "id");
 
     UniValue ret(UniValue::VOBJ);
 
-    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(*node.chainman, llmqType, id);
+    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(*node.chainman, id);
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
 
     UniValue recoveryMembers(UniValue::VARR);
-    for (int i = 0; i < quorum->params.recoveryMembers; i++) {
+    const auto& params = Params().GetConsensus().llmqTypeChainLocks;
+    for (int i = 0; i < params.recoveryMembers; i++) {
         auto dmn = llmq::quorumSigSharesManager->SelectMemberForRecovery(quorum, id, i);
         recoveryMembers.push_back(dmn->proTxHash.ToString());
     }
@@ -578,7 +533,7 @@ static RPCHelpMan quorum_dkgsimerror()
 {
     std::string type_str = request.params[0].get_str();
     double rate = request.params[1].get_real();
-    
+
     if (rate < 0 || rate > 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 1");
     }

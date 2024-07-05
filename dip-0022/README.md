@@ -85,7 +85,7 @@ each `blockHeight`.
 The message hash is always the hash of the signed block.
 
 The sign hash for the BLS signature is calculated as
-`SHA256(llmqType, quorumHash, requestId, blockHash)`, where `llmqType` and
+`SHA256( quorumHash, requestId, blockHash)`, where `llmqType` and
 `quorumHash` are taken from the corresponding LLMQ.
 
 The request id for each LLMQ is calculated as

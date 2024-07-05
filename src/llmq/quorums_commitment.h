@@ -29,8 +29,6 @@ public:
     static constexpr uint16_t BASIC_BLS_NON_INDEXED_QUORUM_VERSION = 3;
 
     uint16_t nVersion{LEGACY_BLS_NON_INDEXED_QUORUM_VERSION};
-
-    uint8_t llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
     std::vector<bool> signers;
     std::vector<bool> validMembers;
@@ -43,7 +41,7 @@ public:
 
 public:
     CFinalCommitment() = default;
-    CFinalCommitment(const Consensus::LLMQParams& params, const uint256& _quorumHash);
+    CFinalCommitment(const uint256& _quorumHash);
 
     int CountSigners() const
     {
@@ -56,7 +54,7 @@ public:
 
     bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
-    bool VerifySizes(const Consensus::LLMQParams& params) const;
+    bool VerifySizes() const;
     [[nodiscard]] static constexpr uint16_t GetVersion(const bool is_basic_scheme_active)
     {
         return is_basic_scheme_active ? BASIC_BLS_NON_INDEXED_QUORUM_VERSION : LEGACY_BLS_NON_INDEXED_QUORUM_VERSION;
@@ -67,7 +65,6 @@ public:
     {
         READWRITE(
                 obj.nVersion,
-                obj.llmqType,
                 obj.quorumHash
         );
         READWRITE(
@@ -99,7 +96,6 @@ public:
     {
         obj.setObject();
         obj.pushKV("version", (int)nVersion);
-        obj.pushKV("llmqType", (int)llmqType);
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("signersCount", CountSigners());
         obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
@@ -117,25 +113,20 @@ class CFinalCommitmentTxPayload
 {
 public:
     CCbTx cbTx;
-    std::vector<CFinalCommitment> commitments;
+    CFinalCommitment commitment;
 
 public:
     SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj) {
-        READWRITE(obj.cbTx, obj.commitments);
+        READWRITE(obj.cbTx, obj.commitment);
     }   
 
     void ToJson(UniValue& obj) const
     {
-        obj.setObject();
-        UniValue commitmentsArr(UniValue::VARR);
-        for (const auto& commitment : commitments) {
-            UniValue qcObj;
-            commitment.ToJson(qcObj);
-            commitmentsArr.push_back(qcObj);
-        }
-        obj.pushKV("commitments", commitmentsArr);
+        UniValue qcObj;
+        commitment.ToJson(qcObj);
+        obj.pushKV("commitment", qcObj);
     }
-    inline bool IsNull() const {return commitments.empty();}
+    inline bool IsNull() const {return cbTx.IsNull() && commitment.IsNull();}
 };
 
 bool CheckLLMQCommitment(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)  EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

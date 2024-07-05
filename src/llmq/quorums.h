@@ -52,7 +52,6 @@ class CQuorum
 {
     friend class CQuorumManager;
 public:
-    const Consensus::LLMQParams& params;
     CFinalCommitmentPtr qc;
     const CBlockIndex* m_quorum_base_block_index{nullptr};
     uint256 minedBlockHash;
@@ -69,7 +68,7 @@ private:
     CBLSSecretKey skShare GUARDED_BY(cs);
 
 public:
-    CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
+    CQuorum(CBLSWorker& _blsWorker);
     ~CQuorum() = default;
     void Init(CFinalCommitmentPtr _qc, const CBlockIndex* _pQuorumBaseBlockIndex, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
@@ -118,23 +117,23 @@ public:
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
 
-    static bool HasQuorum(uint8_t llmqType, const uint256& quorumHash);
+    static bool HasQuorum(const uint256& quorumHash);
 
     // all these methods will lock cs_main for a short period of time
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash);
-    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, size_t nCountRequested);
+    CQuorumCPtr GetQuorum(const uint256& quorumHash);
+    std::vector<CQuorumCPtr> ScanQuorums(size_t nCountRequested);
 
     // this one is cs_main-free
-    std::vector<CQuorumCPtr> ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested);
+    std::vector<CQuorumCPtr> ScanQuorums(const CBlockIndex* pindexStart, size_t nCountRequested);
     bool FlushCacheToDisk();
 private:
     // all private methods here are cs_main-free
-    void EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex *pindexNew);
+    void EnsureQuorumConnections(const CBlockIndex *pindexNew);
 
-    CQuorumPtr BuildQuorumFromCommitment(uint8_t llmqType, const CBlockIndex* pQuorumBaseBlockIndex);
+    CQuorumPtr BuildQuorumFromCommitment(const CBlockIndex* pQuorumBaseBlockIndex);
     bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, const std::shared_ptr<CQuorum>& quorum) const;
 
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex);
+    CQuorumCPtr GetQuorum(const CBlockIndex* pindex);
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
     void CleanupOldQuorumData(const CBlockIndex* pIndex);
 };

@@ -200,9 +200,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         llmq::CFinalCommitmentTxPayload qc;
         // create commitment payload if quorum commitment is needed
         llmq::CFinalCommitment commitment;
-        if (llmq::quorumBlockProcessor->GetMinableCommitment(chainparams.GetConsensus().llmqTypeChainLocks, nHeight, commitment)) {
+        if (llmq::quorumBlockProcessor->GetMinableCommitment(nHeight, qc.commitment)) {
             coinbaseTx.nVersion = SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT;
-            qc.commitments.push_back(commitment);
             qc.cbTx = cbTx;
             ds << qc;
         }

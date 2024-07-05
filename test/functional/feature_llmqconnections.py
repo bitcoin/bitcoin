@@ -92,7 +92,7 @@ class LLMQConnections(DashTestFramework):
         self.bump_mocktime(60)
 
         self.log.info("verify that all masternodes re-connected")
-        for q in self.nodes[0].quorum_list()['llmq_test']:
+        for q in self.nodes[0].quorum_list()['quorums']:
             for mn in self.get_quorum_masternodes(q):
                 self.wait_for_mnauth(mn.node, expected_connection_count)
 

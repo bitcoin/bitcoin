@@ -17,11 +17,10 @@
 namespace llmq
 {
 
-CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const uint256& _quorumHash) :
-        llmqType(params.type),
+CFinalCommitment::CFinalCommitment(const uint256& _quorumHash) :
         quorumHash(_quorumHash),
-        signers(params.size),
-        validMembers(params.size)
+        signers(Params().GetConsensus().llmqTypeChainLocks.size),
+        validMembers(Params().GetConsensus().llmqTypeChainLocks.size)
 {
 }
 
@@ -38,13 +37,9 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         LogPrintfFinalCommitment("q[%s] invalid nVersion=%d expectednVersion\n", quorumHash.ToString(), nVersion, expected_nversion);
         return false;
     }
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
-        return false;
-    }
-    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
+    const auto& params = Params().GetConsensus().llmqTypeChainLocks;
 
-    if (!VerifySizes(params)) {
+    if (!VerifySizes()) {
         return false;
     }
 
@@ -72,7 +67,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         LogPrintfFinalCommitment("invalid vvecSig\n");
         return false;
     }
-    auto members = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(pQuorumBaseBlockIndex);
 
     for (size_t i = members.size(); i < (size_t)params.size; i++) {
         if (validMembers[i]) {
@@ -87,7 +82,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
 
     // sigs are only checked when the block is processed
     if (checkSigs) {
-        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
 
         std::vector<CBLSPublicKey> memberPubKeys;
         for (size_t i = 0; i < members.size(); i++) {
@@ -113,21 +108,16 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
 
 bool CFinalCommitment::VerifyNull() const
 {
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
-        LogPrintfFinalCommitment("invalid llmqType=%d\n", llmqType);
-        return false;
-    }
-    const auto& params = Params().GetConsensus().llmqs.at(llmqType);
-
-    if (!IsNull() || !VerifySizes(params)) {
+    if (!IsNull() || !VerifySizes()) {
         return false;
     }
 
     return true;
 }
 
-bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
+bool CFinalCommitment::VerifySizes() const
 {
+    const Consensus::LLMQParams& params = Params().GetConsensus().llmqTypeChainLocks;
     if (signers.size() != (size_t)params.size) {
         LogPrintfFinalCommitment("invalid signers.size=%d\n", signers.size());
         return false;
@@ -156,34 +146,26 @@ bool CheckLLMQCommitment(node::BlockManager &blockman, const CTransaction& tx, c
     if (!CheckCbTx(qcTx.cbTx, pindexPrev, state, fJustCheck)) {
         return FormatSyscoinErrorMessage(state, "bad-qc-cbtx", fJustCheck);
     }
-    for(const auto& commitment: qcTx.commitments) {
-        const CBlockIndex* pQuorumBaseBlockIndex = blockman.LookupBlockIndex(commitment.quorumHash);
-        if(!pQuorumBaseBlockIndex) {
-            return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
-        }
-        if (pQuorumBaseBlockIndex != pindexPrev->GetAncestor(pQuorumBaseBlockIndex->nHeight)) {
-            // not part of active chain
-            return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
-        }
-        if (!Params().GetConsensus().llmqs.count(commitment.llmqType)) {
-            return FormatSyscoinErrorMessage(state, "bad-qc-missing", fJustCheck);
-        }
-        if(!fRegTest) {
-            if(commitment.llmqType != Consensus::LLMQ_400_60) {
-                return FormatSyscoinErrorMessage(state, "bad-qc-type", fJustCheck);
-            }
-        }
 
-        if (commitment.IsNull()) {
-            if (!commitment.VerifyNull()) {
-                return FormatSyscoinErrorMessage(state, "bad-qc-invalid-null", fJustCheck);
-            }
-            return true;
-        }
-        if (!commitment.Verify(pQuorumBaseBlockIndex, false)) {
-            return FormatSyscoinErrorMessage(state, "bad-qc-invalid", fJustCheck);
-        }
+    const CBlockIndex* pQuorumBaseBlockIndex = blockman.LookupBlockIndex(qcTx.commitment.quorumHash);
+    if(!pQuorumBaseBlockIndex) {
+        return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
     }
+    if (pQuorumBaseBlockIndex != pindexPrev->GetAncestor(pQuorumBaseBlockIndex->nHeight)) {
+        // not part of active chain
+        return FormatSyscoinErrorMessage(state, "bad-qc-quorum-hash", fJustCheck);
+    }
+
+    if (qcTx.commitment.IsNull()) {
+        if (!qcTx.commitment.VerifyNull()) {
+            return FormatSyscoinErrorMessage(state, "bad-qc-invalid-null", fJustCheck);
+        }
+        return true;
+    }
+    if (!qcTx.commitment.Verify(pQuorumBaseBlockIndex, false)) {
+        return FormatSyscoinErrorMessage(state, "bad-qc-invalid", fJustCheck);
+    }
+    
 
     return true;
 }

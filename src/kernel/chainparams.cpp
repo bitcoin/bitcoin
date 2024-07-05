@@ -90,7 +90,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
-    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
+    auto& params = consensus.llmqTypeChainLocks;
     params.size = size;
     params.minSize = threshold;
     params.threshold = threshold;
@@ -98,7 +98,6 @@ void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
 }
 // this one is for testing only
 static Consensus::LLMQParams llmq_test = {
-        .type = Consensus::LLMQ_TEST,
         .name = "llmq_test",
         .size = 3,
         .minSize = 2,
@@ -117,7 +116,6 @@ static Consensus::LLMQParams llmq_test = {
 };
 
 static Consensus::LLMQParams llmq400_60 = {
-        .type = Consensus::LLMQ_400_60,
         .name = "llmq_400_60",
         .size = 400,
         .minSize = 300,
@@ -251,8 +249,7 @@ public:
         vSporkAddresses = {"sys1qx0zzzjag402apkw4kn8unr0qa0k3pv3258v4sr", "sys1qk2kq7hhp58ycaevzzu5hugh7flxs7qcg8rjjlh", "sys1qm4ka204x3mn46sk6ussrex8um87qkj0r5xakyg"};
         nMinSporkKeys = 2;
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
+        consensus.llmqTypeChainLocks = llmq400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         m_is_mockable_chain = false;
@@ -407,8 +404,7 @@ public:
         vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX", "tsys1qgmafz3mqa7glqy92r549w8qmq5535uc2e8ahjm", "tsys1q68gu0fhcchr27w08sjdxwt3rtgwef0nyh9zwk0"};
         nMinSporkKeys = 2;
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
+        consensus.llmqTypeChainLocks = llmq400_60;
         nLLMQConnectionRetryTimeout = 60;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         m_is_mockable_chain = false;
@@ -661,8 +657,7 @@ public:
         vSporkAddresses = {"mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"};
         nMinSporkKeys = 1;
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
+        consensus.llmqTypeChainLocks = llmq_test;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
