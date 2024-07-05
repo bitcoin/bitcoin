@@ -19,8 +19,8 @@ What is Navio?
 Navio is an experimental digital currency that enables privacy-enhanced payments to
 anyone, anywhere in the world. Navio uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Navio Core is the name of open source
-software which enables the use of this currency.
+out collectively by the network using a private proof of stake protocol. Navio
+Core is the name of open source software which enables the use of this currency.
 
 License
 -------
