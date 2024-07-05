@@ -130,7 +130,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_navcoind_tracepoints()
+        self.skip_if_no_naviod_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 

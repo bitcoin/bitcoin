@@ -240,7 +240,7 @@ def from_binary(cls, stream):
     return obj
 
 
-# Objects that map to navcoind objects, which can be serialized/deserialized
+# Objects that map to naviod objects, which can be serialized/deserialized
 
 
 class CAddress:
@@ -419,7 +419,7 @@ class CBlockLocator:
 
     def serialize(self):
         r = b""
-        r += struct.pack("<i", 0)  # Navcoin Core ignores version field. Set it to 0.
+        r += struct.pack("<i", 0)  # Navio Core ignores version field. Set it to 0.
         r += ser_uint256_vector(self.vHave)
         return r
 
@@ -778,7 +778,7 @@ class CTransaction:
         if len(self.vin) == 0:
             flags = struct.unpack("<B", f.read(1))[0]
             # Not sure why flags can't be zero, but this
-            # matches the implementation in navcoind
+            # matches the implementation in naviod
             if (flags != 0):
                 self.vin = deser_vector(f, CTxIn)
                 self.vout = deser_vector(f, CTxOut)
@@ -1334,7 +1334,7 @@ class msg_version:
         self.nStartingHeight = struct.unpack("<i", f.read(4))[0]
 
         # Relay field is optional for version 70001 onwards
-        # But, unconditionally check it to match behaviour in navcoind
+        # But, unconditionally check it to match behaviour in naviod
         try:
             self.relay = struct.unpack("<b", f.read(1))[0]
         except struct.error:
@@ -1733,7 +1733,7 @@ class msg_headers:
         self.headers = headers if headers is not None else []
 
     def deserialize(self, f):
-        # comment in navcoind indicates these should be deserialized as blocks
+        # comment in naviod indicates these should be deserialized as blocks
         blocks = deser_vector(f, CBlock)
         for x in blocks:
             self.headers.append(CBlockHeader(x))

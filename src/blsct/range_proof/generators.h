@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2022 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H
-#define NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H
+#ifndef NAVIO_BLSCT_RANGE_PROOF_GENERATORS_H
+#define NAVIO_BLSCT_RANGE_PROOF_GENERATORS_H
 
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/generator_deriver.h>
@@ -84,4 +84,4 @@ private:
 
 }
 
-#endif // NAVCOIN_BLSCT_RANGE_PROOF_GENERATORS_H
+#endif // NAVIO_BLSCT_RANGE_PROOF_GENERATORS_H

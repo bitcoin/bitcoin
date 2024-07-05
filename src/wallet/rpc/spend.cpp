@@ -799,7 +799,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 CTxDestination dest = DecodeDestination(change_address_str);
 
                 if (!IsValidDestination(dest)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid navcoin address");
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid navio address");
                 }
 
                 coinControl.destChange = dest;

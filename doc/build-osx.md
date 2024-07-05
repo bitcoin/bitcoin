@@ -2,7 +2,7 @@
 
 **Updated for MacOS [11.2](https://www.apple.com/macos/big-sur/)**
 
-This guide describes how to build navcoind, command-line utilities, and GUI on macOS
+This guide describes how to build naviod, command-line utilities, and GUI on macOS
 
 ## Preparation
 
@@ -65,7 +65,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 #### Wallet Dependencies
 
-It is not necessary to build wallet functionality to run `navcoind` or  `navcoin-qt`.
+It is not necessary to build wallet functionality to run `naviod` or  `navio-qt`.
 
 ###### Descriptor Wallet Support
 
@@ -231,10 +231,10 @@ make deploy
 
 ## Running Bitcoin Core
 
-Bitcoin Core should now be available at `./src/navcoind`.
-If you compiled support for the GUI, it should be available at `./src/qt/navcoin-qt`.
+Bitcoin Core should now be available at `./src/naviod`.
+If you compiled support for the GUI, it should be available at `./src/qt/navio-qt`.
 
-The first time you run `navcoind` or `navcoin-qt`, it will start downloading the blockchain.
+The first time you run `naviod` or `navio-qt`, it will start downloading the blockchain.
 This process could take many hours, or even days on slower than average systems.
 
 By default, blockchain and wallet data files will be stored in:
@@ -248,9 +248,9 @@ Before running, you may create an empty configuration file:
 ```shell
 mkdir -p "/Users/${USER}/Library/Application Support/Bitcoin"
 
-touch "/Users/${USER}/Library/Application Support/Bitcoin/navcoin.conf"
+touch "/Users/${USER}/Library/Application Support/Bitcoin/navio.conf"
 
-chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/navcoin.conf"
+chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/navio.conf"
 ```
 
 You can monitor the download process by looking at the debug.log file:
@@ -262,8 +262,8 @@ tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
 ## Other commands:
 
 ```shell
-./src/navcoind -daemon      # Starts the bitcoin daemon.
-./src/navcoin-cli --help    # Outputs a list of command-line options.
-./src/navcoin-cli help      # Outputs a list of RPC commands when the daemon is running.
-./src/qt/navcoin-qt -server # Starts the navcoin-qt server mode, allows navcoin-cli control
+./src/naviod -daemon      # Starts the bitcoin daemon.
+./src/navio-cli --help    # Outputs a list of command-line options.
+./src/navio-cli help      # Outputs a list of RPC commands when the daemon is running.
+./src/qt/navio-qt -server # Starts the navio-qt server mode, allows navio-cli control
 ```

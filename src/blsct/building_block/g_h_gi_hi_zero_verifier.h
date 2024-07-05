@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
-#define NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
+#ifndef NAVIO_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
+#define NAVIO_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
 
 #include <blsct/arith/elements.h>
 #include <blsct/building_block/lazy_points.h>
@@ -40,5 +40,5 @@ private:
     LazyPoints<T> m_points;
 };
 
-#endif // NAVCOIN_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
+#endif // NAVIO_BLSCT_BUILDING_BLOCK_G_H_GI_HI_ZERO_VERIFIER_H
 

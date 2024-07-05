@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_GENERATOR_DERIVER_H
-#define NAVCOIN_BLSCT_GENERATOR_DERIVER_H
+#ifndef NAVIO_BLSCT_GENERATOR_DERIVER_H
+#define NAVIO_BLSCT_GENERATOR_DERIVER_H
 
 #include <ctokens/tokenid.h>
 #include <optional>
@@ -30,5 +30,5 @@ private:
     const std::string salt_str;
 };
 
-#endif // NAVCOIN_BLSCT_GENERATOR_DERIVER_H
+#endif // NAVIO_BLSCT_GENERATOR_DERIVER_H
 

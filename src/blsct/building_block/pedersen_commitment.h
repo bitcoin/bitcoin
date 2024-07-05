@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_BUILDING_BLOCK_PEDERSEN_COMMITMENT_H
-#define NAVCOIN_BLSCT_BUILDING_BLOCK_PEDERSEN_COMMITMENT_H
+#ifndef NAVIO_BLSCT_BUILDING_BLOCK_PEDERSEN_COMMITMENT_H
+#define NAVIO_BLSCT_BUILDING_BLOCK_PEDERSEN_COMMITMENT_H
 
 template <typename T>
 class PedersenCommitment {
@@ -25,4 +25,4 @@ private:
     const typename T::Point m_h;
 };
 
-#endif // NAVCOIN_BLSCT_BUILDING_BLOCK_PEDERSEN_COMMITMENT_H
+#endif // NAVIO_BLSCT_BUILDING_BLOCK_PEDERSEN_COMMITMENT_H

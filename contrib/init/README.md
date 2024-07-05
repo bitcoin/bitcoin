@@ -1,11 +1,11 @@
 Sample configuration files for:
 ```
-systemd: navcoind.service
-Upstart: navcoind.conf
-OpenRC:  navcoind.openrc
-         navcoind.openrcconf
-CentOS:  navcoind.init
-macOS:   org.bitcoin.navcoind.plist
+systemd: naviod.service
+Upstart: naviod.conf
+OpenRC:  naviod.openrc
+         naviod.openrcconf
+CentOS:  naviod.init
+macOS:   org.bitcoin.naviod.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

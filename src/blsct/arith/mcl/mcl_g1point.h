@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2022 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H
-#define NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H
+#ifndef NAVIO_BLSCT_ARITH_MCL_MCL_G1POINT_H
+#define NAVIO_BLSCT_ARITH_MCL_MCL_G1POINT_H
 
 #define BLS_ETH 1
 
@@ -85,4 +85,4 @@ public:
     static constexpr int SERIALIZATION_SIZE = 384 / 8;
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_G1POINT_H
+#endif // NAVIO_BLSCT_ARITH_MCL_MCL_G1POINT_H

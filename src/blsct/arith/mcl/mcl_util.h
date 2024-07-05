@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_UTIL_H
-#define NAVCOIN_BLSCT_ARITH_MCL_MCL_UTIL_H
+#ifndef NAVIO_BLSCT_ARITH_MCL_MCL_UTIL_H
+#define NAVIO_BLSCT_ARITH_MCL_MCL_UTIL_H
 
 #define BLS_ETH 1
 
@@ -30,4 +30,4 @@ struct MclUtil {
     }
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_UTIL_H
+#endif // NAVIO_BLSCT_ARITH_MCL_MCL_UTIL_H

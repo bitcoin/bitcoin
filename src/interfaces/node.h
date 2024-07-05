@@ -65,7 +65,7 @@ public:
     virtual std::string getName() = 0;
 };
 
-//! Top-level interface for a bitcoin node (navcoind process).
+//! Top-level interface for a bitcoin node (naviod process).
 class Node
 {
 public:
@@ -105,7 +105,7 @@ public:
     //! would be ignored because it is also specified in the command line.
     virtual bool isSettingIgnored(const std::string& name) = 0;
 
-    //! Return setting value from <datadir>/settings.json or navcoin.conf.
+    //! Return setting value from <datadir>/settings.json or navio.conf.
     virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.

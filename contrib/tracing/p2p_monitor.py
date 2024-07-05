@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-""" Interactive navcoind P2P network traffic monitor utilizing USDT and the
+""" Interactive naviod P2P network traffic monitor utilizing USDT and the
     net:inbound_message and net:outbound_message tracepoints. """
 
 # This script demonstrates what USDT for Bitcoin Core can enable. It uses BCC
@@ -115,17 +115,17 @@ class Peer:
             self.total_outbound_msgs += 1
 
 
-def main(navcoind_path):
+def main(naviod_path):
     peers = dict()
 
-    navcoind_with_usdts = USDT(path=str(navcoind_path))
+    naviod_with_usdts = USDT(path=str(naviod_path))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
-    navcoind_with_usdts.enable_probe(
+    naviod_with_usdts.enable_probe(
         probe="inbound_message", fn_name="trace_inbound_message")
-    navcoind_with_usdts.enable_probe(
+    naviod_with_usdts.enable_probe(
         probe="outbound_message", fn_name="trace_outbound_message")
-    bpf = BPF(text=program, usdt_contexts=[navcoind_with_usdts])
+    bpf = BPF(text=program, usdt_contexts=[naviod_with_usdts])
 
     # BCC: perf buffer handle function for inbound_messages
     def handle_inbound(_, data, size):
@@ -247,7 +247,7 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/navcoind")
+        print("USAGE:", sys.argv[0], "path/to/naviod")
         exit()
     path = sys.argv[1]
     main(path)

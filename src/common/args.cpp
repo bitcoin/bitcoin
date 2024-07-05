@@ -35,7 +35,7 @@
 #include <utility>
 #include <variant>
 
-const char * const BITCOIN_CONF_FILENAME = "navcoin.conf";
+const char * const BITCOIN_CONF_FILENAME = "navio.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
 
 ArgsManager gArgs;
@@ -685,12 +685,12 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
 
 fs::path GetDefaultDataDir()
 {
-    // Windows: C:\Users\Username\AppData\Roaming\Navcoin
-    // macOS: ~/Library/Application Support/Navcoin
-    // Unix-like: ~/.navcoin
+    // Windows: C:\Users\Username\AppData\Roaming\Navio
+    // macOS: ~/Library/Application Support/Navio
+    // Unix-like: ~/.navio
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Navcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Navio";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -700,10 +700,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // macOS
-    return pathRet / "Library/Application Support/Navcoin";
+    return pathRet / "Library/Application Support/Navio";
 #else
     // Unix-like
-    return pathRet / ".navcoin";
+    return pathRet / ".navio";
 #endif
 #endif
 }

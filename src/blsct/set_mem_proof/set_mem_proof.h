@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
-#define NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
+#ifndef NAVIO_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
+#define NAVIO_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
 
 #include <blsct/arith/elements.h>
 #include <streams.h>
@@ -105,4 +105,4 @@ struct SetMemProof {
     };
 };
 
-#endif // NAVCOIN_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H
+#endif // NAVIO_BLSCT_SET_MEM_PROOF_SET_MEM_PROOF_H

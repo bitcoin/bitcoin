@@ -31,8 +31,8 @@ class ConfArgsTest(BitcoinTestFramework):
         self.log.info('Test config file parser')
         self.stop_node(0)
 
-        # Check that startup fails if conf= is set in navcoin.conf or in an included conf file
-        bad_conf_file_path = self.nodes[0].datadir_path / "navcoin_bad.conf"
+        # Check that startup fails if conf= is set in navio.conf or in an included conf file
+        bad_conf_file_path = self.nodes[0].datadir_path / "navio_bad.conf"
         util.write_config(bad_conf_file_path, n=0, chain='', extra_config=f'conf=some.conf\n')
         conf_in_config_file_err = 'Error: Error reading configuration file: conf cannot be set in the configuration file; use includeconf= if you want to include additional config files'
         self.nodes[0].assert_start_raises_init_error(
@@ -40,7 +40,7 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg=conf_in_config_file_err,
         )
         inc_conf_file_path = self.nodes[0].datadir_path / 'include.conf'
-        with open(self.nodes[0].datadir_path / 'navcoin.conf', 'a', encoding='utf-8') as conf:
+        with open(self.nodes[0].datadir_path / 'navio.conf', 'a', encoding='utf-8') as conf:
             conf.write(f'includeconf={inc_conf_file_path}\n')
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('conf=some.conf\n')
@@ -75,7 +75,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 conf.write("wallet=foo\n")
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: Config setting for -wallet only applied on {self.chain} network when in [{self.chain}] section.')
 
-        main_conf_file_path = self.nodes[0].datadir_path / "navcoin_main.conf"
+        main_conf_file_path = self.nodes[0].datadir_path / "navio_main.conf"
         util.write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('acceptnonstdtxn=1\n')
@@ -98,7 +98,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
 
         inc_conf_file2_path = self.nodes[0].datadir_path / 'include2.conf'
-        with open(self.nodes[0].datadir_path / 'navcoin.conf', 'a', encoding='utf-8') as conf:
+        with open(self.nodes[0].datadir_path / 'navio.conf', 'a', encoding='utf-8') as conf:
             conf.write(f'includeconf={inc_conf_file2_path}\n')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
@@ -122,15 +122,15 @@ class ConfArgsTest(BitcoinTestFramework):
         self.log.info('Test that correct configuration path is changed when configuration file changes the datadir')
 
         # Create a temporary directory that will be treated as the default data
-        # directory by navcoind.
+        # directory by naviod.
         env, default_datadir = util.get_temp_default_datadir(Path(self.options.tmpdir, "test_config_file_log"))
         default_datadir.mkdir(parents=True)
 
-        # Write a navcoin.conf file in the default data directory containing a
+        # Write a navio.conf file in the default data directory containing a
         # datadir= line pointing at the node datadir.
         node = self.nodes[0]
-        conf_text = node.navcoinconf.read_text()
-        conf_path = default_datadir / "navcoin.conf"
+        conf_text = node.navioconf.read_text()
+        conf_path = default_datadir / "navio.conf"
         conf_path.write_text(f"datadir={node.datadir_path}\n{conf_text}")
 
         # Drop the node -datadir= argument during this test, because if it is
@@ -140,7 +140,7 @@ class ConfArgsTest(BitcoinTestFramework):
         node.args = [arg for arg in node.args if not arg.startswith("-datadir=")]
 
         # Check that correct configuration file path is actually logged
-        # (conf_path, not node.navcoinconf)
+        # (conf_path, not node.navioconf)
         with self.nodes[0].assert_debug_log(expected_msgs=[f"Config file: {conf_path}"]):
             self.start_node(0, ["-allowignoredconf"], env=env)
             self.stop_node(0)
@@ -320,20 +320,20 @@ class ConfArgsTest(BitcoinTestFramework):
                 self.restart_node(0, extra_args=[connect_arg, '-seednode=fakeaddress2'])
 
     def test_ignored_conf(self):
-        self.log.info('Test error is triggered when the datadir in use contains a navcoin.conf file that would be ignored '
+        self.log.info('Test error is triggered when the datadir in use contains a navio.conf file that would be ignored '
                       'because a conflicting -conf file argument is passed.')
         node = self.nodes[0]
         with tempfile.NamedTemporaryFile(dir=self.options.tmpdir, mode="wt", delete=False) as temp_conf:
             temp_conf.write(f"datadir={node.datadir_path}\n")
         node.assert_start_raises_init_error([f"-conf={temp_conf.name}"], re.escape(
-            f'Error: Data directory "{node.datadir_path}" contains a "navcoin.conf" file which is ignored, because a '
+            f'Error: Data directory "{node.datadir_path}" contains a "navio.conf" file which is ignored, because a '
             f'different configuration file "{temp_conf.name}" from command line argument "-conf={temp_conf.name}" '
             f'is being used instead.') + r"[\s\S]*", match=ErrorMatch.FULL_REGEX)
 
         # Test that passing a redundant -conf command line argument pointing to
-        # the same navcoin.conf that would be loaded anyway does not trigger an
+        # the same navio.conf that would be loaded anyway does not trigger an
         # error.
-        self.start_node(0, [f'-conf={node.datadir_path}/navcoin.conf'])
+        self.start_node(0, [f'-conf={node.datadir_path}/navio.conf'])
         self.stop_node(0)
 
     def test_ignored_default_conf(self):
@@ -342,20 +342,20 @@ class ConfArgsTest(BitcoinTestFramework):
         if platform.system() == "Windows":
             return
 
-        self.log.info('Test error is triggered when navcoin.conf in the default data directory sets another datadir '
-                      'and it contains a different navcoin.conf file that would be ignored')
+        self.log.info('Test error is triggered when navio.conf in the default data directory sets another datadir '
+                      'and it contains a different navio.conf file that would be ignored')
 
         # Create a temporary directory that will be treated as the default data
-        # directory by navcoind.
+        # directory by naviod.
         env, default_datadir = util.get_temp_default_datadir(Path(self.options.tmpdir, "home"))
         default_datadir.mkdir(parents=True)
 
-        # Write a navcoin.conf file in the default data directory containing a
+        # Write a navio.conf file in the default data directory containing a
         # datadir= line pointing at the node datadir. This will trigger a
         # startup error because the node datadir contains a different
-        # navcoin.conf that would be ignored.
+        # navio.conf that would be ignored.
         node = self.nodes[0]
-        (default_datadir / "navcoin.conf").write_text(f"datadir={node.datadir_path}\n")
+        (default_datadir / "navio.conf").write_text(f"datadir={node.datadir_path}\n")
 
         # Drop the node -datadir= argument during this test, because if it is
         # specified it would take precedence over the datadir setting in the
@@ -363,14 +363,14 @@ class ConfArgsTest(BitcoinTestFramework):
         node_args = node.args
         node.args = [arg for arg in node.args if not arg.startswith("-datadir=")]
         node.assert_start_raises_init_error([], re.escape(
-            f'Error: Data directory "{node.datadir_path}" contains a "navcoin.conf" file which is ignored, because a '
-            f'different configuration file "{default_datadir}/navcoin.conf" from data directory "{default_datadir}" '
+            f'Error: Data directory "{node.datadir_path}" contains a "navio.conf" file which is ignored, because a '
+            f'different configuration file "{default_datadir}/navio.conf" from data directory "{default_datadir}" '
             f'is being used instead.') + r"[\s\S]*", env=env, match=ErrorMatch.FULL_REGEX)
         node.args = node_args
 
     def test_acceptstalefeeestimates_arg_support(self):
         self.log.info("Test -acceptstalefeeestimates option support")
-        conf_file = self.nodes[0].datadir_path / "navcoin.conf"
+        conf_file = self.nodes[0].datadir_path / "navio.conf"
         for chain, chain_name in {("main", ""), ("test", "testnet3"), ("signet", "signet")}:
             util.write_config(conf_file, n=0, chain=chain_name, extra_config='acceptstalefeeestimates=1\n')
             self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: acceptstalefeeestimates is not supported on {chain} chain.')
@@ -402,7 +402,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error([f'-datadir={new_data_dir}'], f'Error: Specified data directory "{new_data_dir}" does not exist.')
 
         # Check that using non-existent datadir in conf file fails
-        conf_file = default_data_dir / "navcoin.conf"
+        conf_file = default_data_dir / "navio.conf"
 
         # datadir needs to be set before [chain] section
         with open(conf_file, encoding='utf8') as f:
@@ -414,7 +414,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error([f'-conf={conf_file}'], f'Error: Error reading configuration file: specified data directory "{new_data_dir}" does not exist.')
 
         # Check that an explicitly specified config file that cannot be opened fails
-        none_existent_conf_file = default_data_dir / "none_existent_navcoin.conf"
+        none_existent_conf_file = default_data_dir / "none_existent_navio.conf"
         self.nodes[0].assert_start_raises_init_error(['-conf=' + f'{none_existent_conf_file}'], 'Error: Error reading configuration file: specified config file "' + f'{none_existent_conf_file}' + '" could not be opened.')
 
         # Create the directory and ensure the config file now works

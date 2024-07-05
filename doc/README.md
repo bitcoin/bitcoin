@@ -15,12 +15,12 @@ The following are some helpful notes on how to run Bitcoin Core on your native p
 
 Unpack the files into a directory and run:
 
-- `bin/navcoin-qt` (GUI) or
-- `bin/navcoind` (headless)
+- `bin/navio-qt` (GUI) or
+- `bin/naviod` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run navcoin-qt.exe.
+Unpack the files into a directory, and then run navio-qt.exe.
 
 ### macOS
 
@@ -71,7 +71,7 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
-- [navcoin.conf Configuration File](bitcoin-conf.md)
+- [navio.conf Configuration File](bitcoin-conf.md)
 - [CJDNS Support](cjdns.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)

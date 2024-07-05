@@ -42,10 +42,10 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libnavcoinconsensus.la
+LIBBITCOINCONSENSUS=libnavioconsensus.la
 endif
 if BUILD_BITCOIN_KERNEL_LIB
-LIBBITCOINKERNEL=libnavcoinkernel.la
+LIBBITCOINKERNEL=libnaviokernel.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -115,37 +115,37 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_ZMQ)
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += navcoind
+  bin_PROGRAMS += naviod
 endif
 
 if BUILD_BITCOIN_NODE
-  bin_PROGRAMS += navcoin-node
+  bin_PROGRAMS += navio-node
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += navcoin-cli
+  bin_PROGRAMS += navio-cli
 endif
 
-if BUILD_NAVCOIN_STAKER
-  bin_PROGRAMS += navcoin-staker
+if BUILD_NAVIO_STAKER
+  bin_PROGRAMS += navio-staker
 endif
 
 if BUILD_BITCOIN_TX
-  bin_PROGRAMS += navcoin-tx
+  bin_PROGRAMS += navio-tx
 endif
 
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
-  bin_PROGRAMS += navcoin-wallet
+  bin_PROGRAMS += navio-wallet
 endif
 endif
 
 if BUILD_BITCOIN_UTIL
-  bin_PROGRAMS += navcoin-util
+  bin_PROGRAMS += navio-util
 endif
 
 if BUILD_BITCOIN_CHAINSTATE
-  bin_PROGRAMS += navcoin-chainstate
+  bin_PROGRAMS += navio-chainstate
 endif
 
 BLSCT_H = \
@@ -250,7 +250,7 @@ BLSCT_CPP = \
 
 
 .PHONY: FORCE check-symbols check-security
-# navcoin core #
+# navio core #
 BITCOIN_CORE_H = \
   addrdb.h \
   addresstype.h \
@@ -896,7 +896,7 @@ libbitcoin_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  script/navcoinconsensus.cpp \
+  script/navioconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
@@ -1063,17 +1063,17 @@ libbitcoin_cli_a_SOURCES = \
 nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# navcoind & navcoin-node binaries #
-navcoin_daemon_sources = navcoind.cpp
-navcoin_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-navcoin_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
-navcoin_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# naviod & navio-node binaries #
+navio_daemon_sources = naviod.cpp
+navio_bin_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+navio_bin_cxxflags = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navio_bin_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_daemon_sources += navcoind-res.rc
+navio_daemon_sources += naviod-res.rc
 endif
 
-navcoin_bin_ldadd = \
+navio_bin_ldadd = \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -1087,51 +1087,51 @@ navcoin_bin_ldadd = \
   $(LIBMCL) \
   $(LIBSECP256K1)
 
-navcoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
+navio_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
-navcoind_SOURCES = $(navcoin_daemon_sources) init/navcoind.cpp
-navcoind_CPPFLAGS = $(navcoin_bin_cppflags)
-navcoind_CXXFLAGS = $(navcoin_bin_cxxflags)
-navcoind_LDFLAGS = $(navcoin_bin_ldflags)
-navcoind_LDADD = $(LIBBITCOIN_NODE) $(navcoin_bin_ldadd)
+naviod_SOURCES = $(navio_daemon_sources) init/naviod.cpp
+naviod_CPPFLAGS = $(navio_bin_cppflags)
+naviod_CXXFLAGS = $(navio_bin_cxxflags)
+naviod_LDFLAGS = $(navio_bin_ldflags)
+naviod_LDADD = $(LIBBITCOIN_NODE) $(navio_bin_ldadd)
 
-navcoin_node_SOURCES = $(navcoin_daemon_sources) init/bitcoin-node.cpp
-navcoin_node_CPPFLAGS = $(navcoin_bin_cppflags)
-navcoin_node_CXXFLAGS = $(navcoin_bin_cxxflags)
-navcoin_node_LDFLAGS = $(navcoin_bin_ldflags)
-navcoin_node_LDADD = $(LIBBITCOIN_NODE) $(navcoin_bin_ldadd) $(LIBBITCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
+navio_node_SOURCES = $(navio_daemon_sources) init/bitcoin-node.cpp
+navio_node_CPPFLAGS = $(navio_bin_cppflags)
+navio_node_CXXFLAGS = $(navio_bin_cxxflags)
+navio_node_LDFLAGS = $(navio_bin_ldflags)
+navio_node_LDADD = $(LIBBITCOIN_NODE) $(navio_bin_ldadd) $(LIBBITCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
-# navcoin-cli binary #
-navcoin_cli_SOURCES = bitcoin-cli.cpp
-navcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-navcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-navcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navio-cli binary #
+navio_cli_SOURCES = bitcoin-cli.cpp
+navio_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+navio_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navio_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_cli_SOURCES += bitcoin-cli-res.rc
+navio_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-navcoin_cli_LDADD = \
+navio_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-navcoin_cli_LDADD += $(EVENT_LIBS)
+navio_cli_LDADD += $(EVENT_LIBS)
 #
 
-# navcoin-staker binary #
-navcoin_staker_SOURCES = navcoin-staker.cpp
-navcoin_staker_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-navcoin_staker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-navcoin_staker_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navio-staker binary #
+navio_staker_SOURCES = navio-staker.cpp
+navio_staker_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+navio_staker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navio_staker_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_staker_SOURCES += navcoin-staker-res.rc
+navio_staker_SOURCES += navio-staker-res.rc
 endif
 
-navcoin_staker_LDADD = \
+navio_staker_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
@@ -1141,20 +1141,20 @@ navcoin_staker_LDADD = \
   $(LIBBLS) \
   $(LIBMCL)
 
-navcoin_staker_LDADD += $(EVENT_LIBS)
+navio_staker_LDADD += $(EVENT_LIBS)
 #
 
-# navcoin-tx binary #
-navcoin_tx_SOURCES = bitcoin-tx.cpp
-navcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
-navcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-navcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navio-tx binary #
+navio_tx_SOURCES = bitcoin-tx.cpp
+navio_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+navio_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navio_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_tx_SOURCES += bitcoin-tx-res.rc
+navio_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-navcoin_tx_LDADD = \
+navio_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -1165,13 +1165,13 @@ navcoin_tx_LDADD = \
   $(LIBSECP256K1)
 #
 
-# navcoin-wallet binary #
-navcoin_wallet_SOURCES = bitcoin-wallet.cpp
-navcoin_wallet_SOURCES += init/bitcoin-wallet.cpp
-navcoin_wallet_CPPFLAGS = $(navcoin_bin_cppflags)
-navcoin_wallet_CXXFLAGS = $(navcoin_bin_cxxflags)
-navcoin_wallet_LDFLAGS = $(navcoin_bin_ldflags)
-navcoin_wallet_LDADD = \
+# navio-wallet binary #
+navio_wallet_SOURCES = bitcoin-wallet.cpp
+navio_wallet_SOURCES += init/bitcoin-wallet.cpp
+navio_wallet_CPPFLAGS = $(navio_bin_cppflags)
+navio_wallet_CXXFLAGS = $(navio_bin_cxxflags)
+navio_wallet_LDFLAGS = $(navio_bin_ldflags)
+navio_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -1186,21 +1186,21 @@ navcoin_wallet_LDADD = \
   $(SQLITE_LIBS)
 
 if TARGET_WINDOWS
-navcoin_wallet_SOURCES += bitcoin-wallet-res.rc
+navio_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 #
 
-# navcoin-util binary #
-navcoin_util_SOURCES = bitcoin-util.cpp
-navcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
-navcoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-navcoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+# navio-util binary #
+navio_util_SOURCES = bitcoin-util.cpp
+navio_util_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+navio_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navio_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
-navcoin_util_SOURCES += bitcoin-util-res.rc
+navio_util_SOURCES += bitcoin-util-res.rc
 endif
 
-navcoin_util_LDADD = \
+navio_util_LDADD = \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBUNIVALUE) \
@@ -1212,39 +1212,39 @@ navcoin_util_LDADD = \
 #
 
 # bitcoin-chainstate binary #
-navcoin_chainstate_SOURCES = bitcoin-chainstate.cpp
-navcoin_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
-navcoin_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+navio_chainstate_SOURCES = bitcoin-chainstate.cpp
+navio_chainstate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS)
+navio_chainstate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-navcoin_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS) $(LIBTOOL_APP_LDFLAGS) -static
-navcoin_chainstate_LDADD = $(LIBBITCOINKERNEL)
+navio_chainstate_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(PTHREAD_FLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+navio_chainstate_LDADD = $(LIBBITCOINKERNEL)
 
 # libtool is unable to calculate this indirect dependency, presumably because it's a subproject.
-# libsecp256k1 only needs to be linked in when libnavcoinkernel is static.
-navcoin_chainstate_LDADD += $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
+# libsecp256k1 only needs to be linked in when libnaviokernel is static.
+navio_chainstate_LDADD += $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
 #
 
-# navcoinkernel library #
+# naviokernel library #
 if BUILD_BITCOIN_KERNEL_LIB
 lib_LTLIBRARIES += $(LIBBITCOINKERNEL)
 
-libnavcoinkernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
-libnavcoinkernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
-libnavcoinkernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+libnaviokernel_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(PTHREAD_FLAGS)
+libnaviokernel_la_LIBADD = $(LIBBITCOIN_CRYPTO) $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(LIBBLS) $(LIBMCL)
+libnaviokernel_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
-# libnavcoinkernel requires default symbol visibility, explicitly specify that
+# libnaviokernel requires default symbol visibility, explicitly specify that
 # here so that things still work even when user configures with
 #   --enable-reduce-exports
 #
 # Note this is a quick hack that will be removed as we incrementally define what
 # to export from the library.
-libnavcoinkernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
+libnaviokernel_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -fvisibility=default
 
-# TODO: libnavcoinkernel is a work in progress consensus engine library, as more
+# TODO: libnaviokernel is a work in progress consensus engine library, as more
 #       and more modules are decoupled from the consensus engine, this list will
 #       shrink to only those which are absolutely necessary.
-libnavcoinkernel_la_SOURCES = \
-  kernel/navcoinkernel.cpp \
+libnaviokernel_la_SOURCES = \
+  kernel/naviokernel.cpp \
   arith_uint256.cpp \
   blockfilter.cpp \
   blsct/arith/mcl/mcl_g1point.cpp \
@@ -1364,24 +1364,24 @@ libnavcoinkernel_la_SOURCES = \
 
 # Required for obj/build.h to be generated first.
 # More details: https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html
-libnavcoinkernel_la-clientversion.l$(OBJEXT): obj/build.h
+libnaviokernel_la-clientversion.l$(OBJEXT): obj/build.h
 endif # BUILD_BITCOIN_KERNEL_LIB
 #
 
-# navcoinconsensus library #
+# navioconsensus library #
 if BUILD_BITCOIN_LIBS
 lib_LTLIBRARIES += $(LIBBITCOINCONSENSUS)
 
-include_HEADERS = script/navcoinconsensus.h
-libnavcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+include_HEADERS = script/navioconsensus.h
+libnavioconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
-libnavcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libnavcoinconsensus_la_LIBADD = \
+libnavioconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libnavioconsensus_la_LIBADD = \
   $(LIBBLS) \
   $(LIBMCL) \
   $(LIBSECP256K1)
-libnavcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL
-libnavcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnavioconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BLS_INCLUDES) -DBUILD_BITCOIN_INTERNAL
+libnavioconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #

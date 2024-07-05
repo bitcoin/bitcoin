@@ -1,10 +1,10 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
-#ifndef NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
-#define NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
+#ifndef NAVIO_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
+#define NAVIO_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
 
 #define BLS_ETH 1
 
@@ -43,5 +43,5 @@ private:
     static std::array<uint8_t,DigestSize> parent_SK_to_lamport_PK(const MclScalar& parent_SK, const uint32_t& index);
 };
 
-#endif  // NAVCOIN_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
+#endif  // NAVIO_BLSCT_EIP_2333_BLS12_381_KEYGEN_H
 

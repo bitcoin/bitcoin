@@ -2,7 +2,7 @@
 
 **Updated for OpenBSD [7.3](https://www.openbsd.org/73.html)**
 
-This guide describes how to build navcoind, command-line utilities, and GUI on OpenBSD.
+This guide describes how to build naviod, command-line utilities, and GUI on OpenBSD.
 
 ## Preparation
 
@@ -27,7 +27,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 
 #### Wallet Dependencies
 
-It is not necessary to build wallet functionality to run either `navcoind` or `navcoin-qt`.
+It is not necessary to build wallet functionality to run either `naviod` or `navio-qt`.
 
 ###### Descriptor Wallet Support
 

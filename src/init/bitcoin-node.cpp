@@ -16,7 +16,7 @@
 
 namespace init {
 namespace {
-const char* EXE_NAME = "navcoin-node";
+const char* EXE_NAME = "navio-node";
 
 class BitcoinNodeInit : public interfaces::Init
 {
@@ -46,7 +46,7 @@ namespace interfaces {
 std::unique_ptr<Init> MakeNodeInit(node::NodeContext& node, int argc, char* argv[], int& exit_status)
 {
     auto init = std::make_unique<init::BitcoinNodeInit>(node, argc > 0 ? argv[0] : "");
-    // Check if navcoin-node is being invoked as an IPC server. If so, then
+    // Check if navio-node is being invoked as an IPC server. If so, then
     // bypass normal execution and just respond to requests over the IPC
     // channel and return null.
     if (init->m_ipc->startSpawnedProcess(argc, argv, exit_status)) {

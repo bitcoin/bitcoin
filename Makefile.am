@@ -16,15 +16,15 @@ endif
 
 if BUILD_BITCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libnavcoinconsensus.pc
+pkgconfig_DATA = libnavioconsensus.pc
 endif
 
-BITCOIND_BIN=$(top_builddir)/src/$(NAVCOIN_DAEMON_NAME)$(EXEEXT)
-BITCOIN_TEST_BIN=$(top_builddir)/src/test/$(NAVCOIN_TEST_NAME)$(EXEEXT)
-BITCOIN_CLI_BIN=$(top_builddir)/src/$(NAVCOIN_CLI_NAME)$(EXEEXT)
-NAVCOIN_TX_BIN=$(top_builddir)/src/$(NAVCOIN_TX_NAME)$(EXEEXT)
-BITCOIN_UTIL_BIN=$(top_builddir)/src/$(NAVCOIN_UTIL_NAME)$(EXEEXT)
-BITCOIN_WALLET_BIN=$(top_builddir)/src/$(NAVCOIN_WALLET_TOOL_NAME)$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/$(NAVIO_DAEMON_NAME)$(EXEEXT)
+BITCOIN_TEST_BIN=$(top_builddir)/src/test/$(NAVIO_TEST_NAME)$(EXEEXT)
+BITCOIN_CLI_BIN=$(top_builddir)/src/$(NAVIO_CLI_NAME)$(EXEEXT)
+NAVIO_TX_BIN=$(top_builddir)/src/$(NAVIO_TX_NAME)$(EXEEXT)
+BITCOIN_UTIL_BIN=$(top_builddir)/src/$(NAVIO_UTIL_NAME)$(EXEEXT)
+BITCOIN_WALLET_BIN=$(top_builddir)/src/$(NAVIO_WALLET_TOOL_NAME)$(EXEEXT)
 BITCOIN_NODE_BIN=$(top_builddir)/src/$(BITCOIN_MP_NODE_NAME)$(EXEEXT)
 
 empty :=
@@ -61,7 +61,7 @@ $(BITCOIND_BIN): FORCE
 $(BITCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
-$(NAVCOIN_TX_BIN): FORCE
+$(NAVIO_TX_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 $(BITCOIN_UTIL_BIN): FORCE
@@ -111,7 +111,7 @@ fuzz_filtered.info: fuzz.info
 
 test_bitcoin.info: baseline_filtered.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_navcoin -o $@
+	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_navio -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
 test_bitcoin_filtered.info: test_bitcoin.info
@@ -164,7 +164,7 @@ EXTRA_DIST += \
 
 EXTRA_DIST += \
     test/util/test_runner.py \
-    test/util/data/navcoin-util-test.json \
+    test/util/data/navio-util-test.json \
     test/util/data/blanktxv1.hex \
     test/util/data/blanktxv1.json \
     test/util/data/blanktxv2.hex \

@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_WALLET_HELPERS_H
-#define NAVCOIN_BLSCT_WALLET_HELPERS_H
+#ifndef NAVIO_BLSCT_WALLET_HELPERS_H
+#define NAVIO_BLSCT_WALLET_HELPERS_H
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/public_key.h>
@@ -26,4 +26,4 @@ MclScalar FromTransactionToSpendKey(const MclScalar& seed);
 MclScalar GenRandomSeed();
 } // namespace blsct
 
-#endif // NAVCOIN_BLSCT_WALLET_HELPERS_H
+#endif // NAVIO_BLSCT_WALLET_HELPERS_H

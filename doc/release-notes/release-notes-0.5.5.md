@@ -1,7 +1,7 @@
-navcoind and Bitcoin-Qt version 0.5.5 are now available for download at:
+naviod and Bitcoin-Qt version 0.5.5 are now available for download at:
 Windows: installer | zip (sig)
 Source: tar.gz
-navcoind and Bitcoin-Qt version 0.6.0.7 are also tagged in git, but it is recommended to upgrade to 0.6.1.
+naviod and Bitcoin-Qt version 0.6.0.7 are also tagged in git, but it is recommended to upgrade to 0.6.1.
 
 These are bugfix-only releases.
 

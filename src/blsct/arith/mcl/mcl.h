@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2022 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 // inspired by https://github.com/b-g-goodell/research-lab/blob/master/source-code/StringCT-java/src/how/monero/hodl/bulletproof/Bulletproof.java
 // and https://github.com/monero-project/monero/blob/master/src/ringct/bulletproofs.cc
 
-#ifndef NAVCOIN_BLSCT_ARITH_MCL_MCL_H
-#define NAVCOIN_BLSCT_ARITH_MCL_MCL_H
+#ifndef NAVIO_BLSCT_ARITH_MCL_MCL_H
+#define NAVIO_BLSCT_ARITH_MCL_MCL_H
 
 #include <blsct/arith/mcl/mcl_g1point.h>
 #include <blsct/arith/mcl/mcl_scalar.h>
@@ -23,4 +23,4 @@ struct Mcl {
     using Util = MclUtil;
 };
 
-#endif // NAVCOIN_BLSCT_ARITH_MCL_MCL_H
+#endif // NAVIO_BLSCT_ARITH_MCL_MCL_H

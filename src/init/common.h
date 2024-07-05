@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 //! @file
-//! @brief Common init functions shared by navcoin-node, navcoin-wallet, etc.
+//! @brief Common init functions shared by navio-node, navio-wallet, etc.
 
 #ifndef BITCOIN_INIT_COMMON_H
 #define BITCOIN_INIT_COMMON_H

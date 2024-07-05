@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2022 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
-#define NAVCOIN_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
+#ifndef NAVIO_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
+#define NAVIO_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
 
 template <typename T>
 struct LazyPoint {
@@ -16,4 +16,4 @@ struct LazyPoint {
     const Scalar m_exp;
 };
 
-#endif // NAVCOIN_BLSCT_BUILDING_BLOCK_LAZY_POINT_H
+#endif // NAVIO_BLSCT_BUILDING_BLOCK_LAZY_POINT_H

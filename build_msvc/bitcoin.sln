@@ -4,7 +4,7 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_consensus", "libbitcoin_consensus\libbitcoin_consensus.vcxproj", "{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoind", "navcoind\navcoind.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "naviod", "naviod\naviod.vcxproj", "{D4513DDF-6013-44DC-ADCC-12EAF6D1F038}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_util", "libbitcoin_util\libbitcoin_util.vcxproj", "{B53A5535-EE9D-4C6F-9A26-F79EE3BC3754}"
 EndProject
@@ -20,19 +20,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_wallet", "libbit
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_zmq", "libbitcoin_zmq\libbitcoin_zmq.vcxproj", "{792D487F-F14C-49FC-A9DE-3FC150F31C3F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_navcoin", "test_navcoin\test_navcoin.vcxproj", "{A56B73DB-D46D-4882-8374-1FE3FFA08F07}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_navio", "test_navio\test_navio.vcxproj", "{A56B73DB-D46D-4882-8374-1FE3FFA08F07}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_cli", "libbitcoin_cli\libbitcoin_cli.vcxproj", "{0667528C-D734-4009-ADF9-C0D6C4A5A5A6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-cli", "navcoin-cli\navcoin-cli.vcxproj", "{0B2D7431-F876-4A58-87BF-F748338CD3BF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navio-cli", "navio-cli\navio-cli.vcxproj", "{0B2D7431-F876-4A58-87BF-F748338CD3BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_navcoin", "bench_navcoin\bench_navcoin.vcxproj", "{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_navio", "bench_navio\bench_navio.vcxproj", "{1125654E-E1B2-4431-8B5C-62EA9A2FEECB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-tx", "navcoin-tx\navcoin-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navio-tx", "navio-tx\navio-tx.vcxproj", "{D3022AF6-AD33-4CE3-B358-87CB6A1B29CF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-util", "navcoin-util\navcoin-util.vcxproj", "{57A04EC9-542A-4E40-83D0-AC3BE1F36805}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navio-util", "navio-util\navio-util.vcxproj", "{57A04EC9-542A-4E40-83D0-AC3BE1F36805}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navcoin-wallet", "navcoin-wallet\navcoin-wallet.vcxproj", "{84DE8790-EDE3-4483-81AC-C32F15E861F4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "navio-wallet", "navio-wallet\navio-wallet.vcxproj", "{84DE8790-EDE3-4483-81AC-C32F15E861F4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin_wallet_tool", "libbitcoin_wallet_tool\libbitcoin_wallet_tool.vcxproj", "{F91AC55E-6F5E-4C58-9AC5-B40DB7DEEF93}"
 EndProject

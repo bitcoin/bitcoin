@@ -11,7 +11,7 @@ When using a hardware wallet, consult the manufacturer website for (alternative)
 Start Bitcoin Core:
 
 ```sh
-$ navcoind -signer=../HWI/hwi.py
+$ naviod -signer=../HWI/hwi.py
 ```
 
 ### Device setup
@@ -23,7 +23,7 @@ Follow the hardware manufacturers instructions for the initial device setup, as 
 Get a list of signing devices / services:
 
 ```
-$ navcoin-cli enumeratesigners
+$ navio-cli enumeratesigners
 {
   "signers": [
     {
@@ -37,7 +37,7 @@ The master key fingerprint is used to identify a device.
 Create a wallet, this automatically imports the public keys:
 
 ```sh
-$ navcoin-cli createwallet "hww" true true "" true true true
+$ navio-cli createwallet "hww" true true "" true true true
 ```
 
 ### Verify an address
@@ -45,8 +45,8 @@ $ navcoin-cli createwallet "hww" true true "" true true true
 Display an address on the device:
 
 ```sh
-$ navcoin-cli -rpcwallet=<wallet> getnewaddress
-$ navcoin-cli -rpcwallet=<wallet> walletdisplayaddress <address>
+$ navio-cli -rpcwallet=<wallet> getnewaddress
+$ navio-cli -rpcwallet=<wallet> walletdisplayaddress <address>
 ```
 
 Replace `<address>` with the result of `getnewaddress`.
@@ -56,7 +56,7 @@ Replace `<address>` with the result of `getnewaddress`.
 Under the hood this uses a [Partially Signed Bitcoin Transaction](psbt.md).
 
 ```sh
-$ navcoin-cli -rpcwallet=<wallet> sendtoaddress <address> <amount>
+$ navio-cli -rpcwallet=<wallet> sendtoaddress <address> <amount>
 ```
 
 This prompts your hardware wallet to sign, and fail if it's not connected. If successful

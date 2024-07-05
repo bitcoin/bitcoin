@@ -153,7 +153,7 @@ static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "navcoind.pid";
+static const char* BITCOIN_PID_FILENAME = "naviod.pid";
 /**
  * True if this process has created a PID file.
  * Used to determine whether we should remove the PID file on shutdown.
@@ -1505,7 +1505,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         // This is defined and set here instead of inline in validation.h to avoid a hard
         // dependency between validation and index/base, since the latter is not in
-        // libnavcoinkernel.
+        // libnaviokernel.
         chainman.restart_indexes = [&node]() {
             LogPrintf("[snapshot] restarting indexes\n");
 

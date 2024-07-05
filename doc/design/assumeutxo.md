@@ -1,6 +1,6 @@
 # assumeutxo
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating navcoind
+Assumeutxo is a feature that allows fast bootstrapping of a validating naviod
 instance.
 
 ## Loading a snapshot
@@ -86,7 +86,7 @@ data.
 
 `ChainstateManager` manages a single Chainstate object, for which
 `m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
-considered active. This is the "traditional" mode of operation for navcoind.
+considered active. This is the "traditional" mode of operation for naviod.
 
 |    |    |
 | ---------- | ----------- |
@@ -156,7 +156,7 @@ background chainstate's UTXO set contents and ensure it matches the compiled val
 
 The background chainstate data lingers on disk until the program is restarted.
 
-### Navcoind restarts sometime after snapshot validation has completed
+### Naviod restarts sometime after snapshot validation has completed
 
 After a shutdown and subsequent restart, `LoadChainstate()` cleans up the background
 chainstate with `ValidatedSnapshotCleanup()`, which renames the `chainstate_snapshot`

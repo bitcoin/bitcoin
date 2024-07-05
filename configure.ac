@@ -7,7 +7,7 @@ define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2024)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Bitcoin Core]])
-AC_INIT([Navcoin Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/navcoin/navcoin/issues],[navcoin],[https://navcoin.org/])
+AC_INIT([Navio Core],m4_join([.], _CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MINOR, _CLIENT_VERSION_BUILD)m4_if(_CLIENT_VERSION_RC, [0], [], [rc]_CLIENT_VERSION_RC),[https://github.com/nav-io/navio-core/issues],[navio],[https://navio.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -29,16 +29,16 @@ if test -n "$PKG_CONFIG_LIBDIR"; then
   PKG_CONFIG="env PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR $PKG_CONFIG"
 fi
 
-NAVCOIN_DAEMON_NAME=navcoind
-NAVCOIN_TEST_NAME=test_navcoin
-NAVCOIN_CLI_NAME=navcoin-cli
-NAVCOIN_STAKER_NAME=navcoin-staker
-NAVCOIN_TX_NAME=navcoin-tx
-NAVCOIN_UTIL_NAME=navcoin-util
-NAVCOIN_CHAINSTATE_NAME=navcoin-chainstate
-NAVCOIN_WALLET_TOOL_NAME=navcoin-wallet
+NAVIO_DAEMON_NAME=naviod
+NAVIO_TEST_NAME=test_navio
+NAVIO_CLI_NAME=navio-cli
+NAVIO_STAKER_NAME=navio-staker
+NAVIO_TX_NAME=navio-tx
+NAVIO_UTIL_NAME=navio-util
+NAVIO_CHAINSTATE_NAME=navio-chainstate
+NAVIO_WALLET_TOOL_NAME=navio-wallet
 dnl Multi Process
-BITCOIN_MP_NODE_NAME=navcoin-node
+BITCOIN_MP_NODE_NAME=navio-node
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 dnl This is also the default as-of libtool 2.4.7
@@ -211,7 +211,7 @@ AC_ARG_ENABLE([ccache],
 
 dnl Suppress warnings from external headers (e.g. Boost).
 dnl May be useful if warnings from external headers clutter the build output
-dnl too much, so that it becomes difficult to spot Navcoin Core warnings
+dnl too much, so that it becomes difficult to spot Navio Core warnings
 dnl or if they cause a build failure with --enable-werror.
 AC_ARG_ENABLE([suppress-external-warnings],
   [AS_HELP_STRING([--disable-suppress-external-warnings],
@@ -267,7 +267,7 @@ AC_ARG_WITH([mpgen],
 
 AC_ARG_ENABLE([multiprocess],
   [AS_HELP_STRING([--enable-multiprocess],
-  [build multiprocess navcoin-node, and navcoin-wallet executables in addition to monolithic navcoind executable. Requires libmultiprocess library. Experimental (default is no)])],
+  [build multiprocess navio-node, and navio-wallet executables in addition to monolithic naviod executable. Requires libmultiprocess library. Experimental (default is no)])],
   [enable_multiprocess=$enableval],
   [enable_multiprocess=no])
 
@@ -599,46 +599,46 @@ CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
 AC_ARG_ENABLE([staker],
   [AS_HELP_STRING([--enable-staker],
-  [build navcoin-staker])],
-  [build_navcoin_staker=$enableval],
-  [build_navcoin_staker=yes])
+  [build navio-staker])],
+  [build_navio_staker=$enableval],
+  [build_navio_staker=yes])
 
 # We need to have have BLS_ETH=1 for bls and mcl libs
 CORE_CPPFLAGS="$CORE_CPPFLAGS -DBLS_ETH=1"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build navcoin-cli navcoin-tx navcoin-util navcoin-wallet (default=yes)])],
+  [build navio-cli navio-tx navio-util navio-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
 AC_ARG_ENABLE([util-cli],
   [AS_HELP_STRING([--enable-util-cli],
-  [build navcoin-cli])],
+  [build navio-cli])],
   [build_bitcoin_cli=$enableval],
   [build_bitcoin_cli=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-tx],
   [AS_HELP_STRING([--enable-util-tx],
-  [build navcoin-tx])],
+  [build navio-tx])],
   [build_bitcoin_tx=$enableval],
   [build_bitcoin_tx=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
-  [build navcoin-wallet])],
+  [build navio-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-util],
   [AS_HELP_STRING([--enable-util-util],
-  [build navcoin-util])],
+  [build navio-util])],
   [build_bitcoin_util=$enableval],
   [build_bitcoin_util=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([experimental-util-chainstate],
   [AS_HELP_STRING([--enable-experimental-util-chainstate],
-  [build experimental navcoin-chainstate executable (default=no)])],
+  [build experimental navio-chainstate executable (default=no)])],
   [build_bitcoin_chainstate=$enableval],
   [build_bitcoin_chainstate=no])
 
@@ -650,15 +650,15 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([experimental-kernel-lib],
   [AS_HELP_STRING([--with-experimental-kernel-lib],
-  [build experimental navcoinkernel library (default is to build if we're building libraries and the experimental build-chainstate executable)])],
+  [build experimental naviokernel library (default is to build if we're building libraries and the experimental build-chainstate executable)])],
   [build_experimental_kernel_lib=$withval],
   [build_experimental_kernel_lib=auto])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build navcoind daemon (default=yes)])],
-  [build_navcoind=$withval],
-  [build_navcoind=yes])
+  [build naviod daemon (default=yes)])],
+  [build_naviod=$withval],
+  [build_naviod=yes])
 
 case $host in
   *mingw*)
@@ -987,7 +987,7 @@ AC_CHECK_DECLS([getifaddrs, freeifaddrs],[CHECK_SOCKET],,
     #include <ifaddrs.h>]
 )
 
-dnl These are used for daemonization in navcoind
+dnl These are used for daemonization in naviod
 AC_CHECK_DECLS([fork])
 AC_CHECK_DECLS([setsid])
 
@@ -1286,9 +1286,9 @@ if test "$enable_fuzz" = "yes"; then
   build_bitcoin_tx=no
   build_bitcoin_util=no
   build_bitcoin_chainstate=no
-  build_navcoin_staker=no
+  build_navio_staker=no
   build_bitcoin_wallet=no
-  build_navcoind=no
+  build_naviod=no
   build_bitcoin_libs=no
   use_bench=no
   use_tests=no
@@ -1308,9 +1308,9 @@ if test "$enable_build_libblsct_only" = "yes"; then
   build_bitcoin_tx=no
   build_bitcoin_util=no
   build_bitcoin_chainstate=no
-  build_navcoin_staker=no
+  build_navio_staker=no
   build_bitcoin_wallet=no
-  build_navcoind=no
+  build_naviod=no
   build_bitcoin_libs=no
   use_bench=no
   use_tests=no
@@ -1392,7 +1392,7 @@ if test "$use_usdt" != "no"; then
 fi
 AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 
-if test "$build_navcoind$use_bench$use_tests" = "nonono"; then
+if test "$build_naviod$use_bench$use_tests" = "nonono"; then
   use_upnp=no
   use_natpmp=no
   use_zmq=no
@@ -1442,7 +1442,7 @@ if test "$use_natpmp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_navcoind$use_tests$use_bench$enable_fuzz_binary" = "nononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_naviod$use_tests$use_bench$enable_fuzz_binary" = "nononononononono"; then
   use_boost=no
 else
   use_boost=yes
@@ -1453,7 +1453,7 @@ if test "$use_boost" = "yes"; then
   dnl Check for Boost headers
   AX_BOOST_BASE([1.73.0],[],[AC_MSG_ERROR([Boost is not available!])])
   if test "$want_boost" = "no"; then
-    AC_MSG_ERROR([only libnavcoinconsensus can be built without Boost])
+    AC_MSG_ERROR([only libnavioconsensus can be built without Boost])
   fi
 
   dnl we don't use multi_index serialization
@@ -1541,7 +1541,7 @@ fi
 dnl libevent check
 
 use_libevent=no
-if test "$build_bitcoin_cli$build_navcoind$enable_fuzz_binary$use_tests$use_bench" != "nonononono"; then
+if test "$build_bitcoin_cli$build_naviod$enable_fuzz_binary$use_tests$use_bench" != "nonononono"; then
   PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
   if test "$TARGET_OS" != "windows"; then
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
@@ -1631,13 +1631,13 @@ if test "$build_multiprocess" != "no"; then
   AC_SUBST(MPGEN_PREFIX)
 fi
 
-AC_MSG_CHECKING([whether to build navcoind])
-AM_CONDITIONAL([BUILD_BITCOIND], [test $build_navcoind = "yes"])
-AC_MSG_RESULT($build_navcoind)
+AC_MSG_CHECKING([whether to build naviod])
+AM_CONDITIONAL([BUILD_BITCOIND], [test $build_naviod = "yes"])
+AC_MSG_RESULT($build_naviod)
 
-AC_MSG_CHECKING([whether to build navcoin-staker])
-AM_CONDITIONAL([BUILD_NAVCOIN_STAKER], [test $build_navcoin_staker = "yes"])
-AC_MSG_RESULT($build_navcoin_staker)
+AC_MSG_CHECKING([whether to build navio-staker])
+AM_CONDITIONAL([BUILD_NAVIO_STAKER], [test $build_navio_staker = "yes"])
+AC_MSG_RESULT($build_navio_staker)
 
 AC_MSG_CHECKING([whether to build bitcoin-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test $build_bitcoin_cli = "yes"])
@@ -1658,7 +1658,7 @@ AC_MSG_RESULT($build_bitcoin_util)
 AC_MSG_CHECKING([whether to build experimental bitcoin-chainstate])
 if test "$build_bitcoin_chainstate" = "yes"; then
   if test "$build_experimental_kernel_lib" = "no"; then
-    AC_MSG_ERROR([experimental bitcoin-chainstate cannot be built without the experimental navcoinkernel library. Use --with-experimental-kernel-lib]);
+    AC_MSG_ERROR([experimental bitcoin-chainstate cannot be built without the experimental naviokernel library. Use --with-experimental-kernel-lib]);
   fi
 fi
 AM_CONDITIONAL([BUILD_BITCOIN_CHAINSTATE], [test $build_bitcoin_chainstate = "yes"])
@@ -1669,7 +1669,7 @@ AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test $build_bitcoin_libs = "yes"])
 
 if test "$build_bitcoin_libs" = "yes"; then
   AC_DEFINE([HAVE_CONSENSUS_LIB], [1], [Define this symbol if the consensus lib has been built])
-  AC_CONFIG_FILES([libnavcoinconsensus.pc:libnavcoinconsensus.pc.in])
+  AC_CONFIG_FILES([libnavioconsensus.pc:libnavioconsensus.pc.in])
 fi
 
 AM_CONDITIONAL([BUILD_BITCOIN_KERNEL_LIB], [test "$build_experimental_kernel_lib" != "no" && ( test "$build_experimental_kernel_lib" = "yes" || test "$build_bitcoin_chainstate" = "yes" )])
@@ -1751,7 +1751,7 @@ else
   fi
 fi
 
-AC_MSG_CHECKING([whether to build test_navcoin])
+AC_MSG_CHECKING([whether to build test_navio])
 if test "$use_tests" = "yes"; then
   if test "$enable_fuzz" = "yes"; then
     AC_MSG_RESULT([no, because fuzzing is enabled])
@@ -1771,7 +1771,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoin_libs$build_navcoind$enable_fuzz_binary$use_bench$use_tests$enable_build_libblsct_only" = "nononononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoin_libs$build_naviod$enable_fuzz_binary$use_bench$use_tests$enable_build_libblsct_only" = "nononononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
 
@@ -1822,14 +1822,14 @@ AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
-AC_SUBST(NAVCOIN_DAEMON_NAME)
-AC_SUBST(NAVCOIN_TEST_NAME)
-AC_SUBST(NAVCOIN_STAKER_NAME)
-AC_SUBST(NAVCOIN_CLI_NAME)
-AC_SUBST(NAVCOIN_TX_NAME)
-AC_SUBST(NAVCOIN_UTIL_NAME)
-AC_SUBST(NAVCOIN_CHAINSTATE_NAME)
-AC_SUBST(NAVCOIN_WALLET_TOOL_NAME)
+AC_SUBST(NAVIO_DAEMON_NAME)
+AC_SUBST(NAVIO_TEST_NAME)
+AC_SUBST(NAVIO_STAKER_NAME)
+AC_SUBST(NAVIO_CLI_NAME)
+AC_SUBST(NAVIO_TX_NAME)
+AC_SUBST(NAVIO_UTIL_NAME)
+AC_SUBST(NAVIO_CHAINSTATE_NAME)
+AC_SUBST(NAVIO_WALLET_TOOL_NAME)
 AC_SUBST(BITCOIN_MP_NODE_NAME)
 
 AC_SUBST(RELDFLAGS)
@@ -1934,7 +1934,7 @@ echo "  with zmq        = $use_zmq"
 if test $enable_fuzz = "no"; then
     echo "  with test       = $use_tests"
 else
-    echo "  with test       = not building test_navcoin because fuzzing is enabled"
+    echo "  with test       = not building test_navio because fuzzing is enabled"
 fi
 echo "  with fuzz binary = $enable_fuzz_binary"
 echo "  with bench      = $use_bench"

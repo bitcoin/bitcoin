@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2022 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_RANGE_PROOF_SETUP_H
-#define NAVCOIN_BLSCT_RANGE_PROOF_SETUP_H
+#ifndef NAVIO_BLSCT_RANGE_PROOF_SETUP_H
+#define NAVIO_BLSCT_RANGE_PROOF_SETUP_H
 
 #include <cstddef>
 #include <cmath>
@@ -34,4 +34,4 @@ public:
 
 } // namespace range_proof
 
-#endif // NAVCOIN_BLSCT_RANGE_PROOF_SETUP_H
+#endif // NAVIO_BLSCT_RANGE_PROOF_SETUP_H

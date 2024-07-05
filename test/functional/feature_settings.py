@@ -21,7 +21,7 @@ class SettingsTest(BitcoinTestFramework):
     def run_test(self):
         node, = self.nodes
         settings = node.chain_path / "settings.json"
-        conf = node.datadir_path / "navcoin.conf"
+        conf = node.datadir_path / "navio.conf"
 
         # Assert empty settings file was created
         self.stop_node(0)

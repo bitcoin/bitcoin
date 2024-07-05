@@ -132,15 +132,15 @@ def print_message(event, inbound):
           )
 
 
-def main(navcoind_path):
-    navcoind_with_usdts = USDT(path=str(navcoind_path))
+def main(naviod_path):
+    naviod_with_usdts = USDT(path=str(naviod_path))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
-    navcoind_with_usdts.enable_probe(
+    naviod_with_usdts.enable_probe(
         probe="inbound_message", fn_name="trace_inbound_message")
-    navcoind_with_usdts.enable_probe(
+    naviod_with_usdts.enable_probe(
         probe="outbound_message", fn_name="trace_outbound_message")
-    bpf = BPF(text=program, usdt_contexts=[navcoind_with_usdts])
+    bpf = BPF(text=program, usdt_contexts=[naviod_with_usdts])
 
     # BCC: perf buffer handle function for inbound_messages
     def handle_inbound(_, data, size):
@@ -177,7 +177,7 @@ def main(navcoind_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/navcoind")
+        print("USAGE:", sys.argv[0], "path/to/naviod")
         exit()
     path = sys.argv[1]
     main(path)

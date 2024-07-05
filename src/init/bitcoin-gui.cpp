@@ -16,7 +16,7 @@
 
 namespace init {
 namespace {
-const char* EXE_NAME = "navcoin-gui";
+const char* EXE_NAME = "navio-gui";
 
 class BitcoinGuiInit : public interfaces::Init
 {

@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test external signer.
 
-Verify that a navcoind node can use an external signer command
+Verify that a naviod node can use an external signer command
 See also rpc_signer.py for tests without wallet context.
 """
 import os

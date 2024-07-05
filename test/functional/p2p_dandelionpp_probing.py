@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2018 Bradley Denby
-# Copyright (c) 2023-2023 The Navcoin Core developers
+# Copyright (c) 2023-2023 The Navio Core developers
 # Distributed under the MIT software license. See the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """

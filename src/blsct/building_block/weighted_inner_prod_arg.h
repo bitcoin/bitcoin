@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Navcoin developers
+// Copyright (c) 2023 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_BULDING_BLOCK_WEIGHTED_INNER_PROD_ARG_H
-#define NAVCOIN_BLSCT_BULDING_BLOCK_WEIGHTED_INNER_PROD_ARG_H
+#ifndef NAVIO_BLSCT_BULDING_BLOCK_WEIGHTED_INNER_PROD_ARG_H
+#define NAVIO_BLSCT_BULDING_BLOCK_WEIGHTED_INNER_PROD_ARG_H
 
 #include <blsct/arith/mcl/mcl.h>
 #include <blsct/arith/elements.h>
@@ -70,4 +70,4 @@ struct WeightedInnerProdArg {
     );
 };
 
-#endif  // NAVCOIN_BLSCT_BULDING_BLOCK_WEIGHTED_INNER_PROD_ARG_H
+#endif  // NAVIO_BLSCT_BULDING_BLOCK_WEIGHTED_INNER_PROD_ARG_H

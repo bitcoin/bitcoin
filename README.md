@@ -1,39 +1,39 @@
-Navcoin Core integration/staging tree
+Navio Core integration/staging tree
 =====================================
 
-Navcoin Core is a fork of [Bitcoin Core](https://github.com/bitcoin/bitcoin). This
-repository hosts the source code for the next version of Navcoin Core, which is *not
+Navio Core is a fork of [Bitcoin Core](https://github.com/bitcoin/bitcoin). This
+repository hosts the source code for the next version of Navio Core, which is *not
 ready for production yet*.
 
-https://navcoin.org
+https://navio.org
 
-For an immediately usable, binary version of the Navcoin Core software, see
-https://navcoin.org/get-started.
+For an immediately usable, binary version of the Navio Core software, see
+https://navio.org/get-started.
 
-Further information about Navcoin Core is available in the [doc folder](/doc),
-the [wiki](https://github.com/navcoin/navcoin/wiki) and the [documentation website](https://doc.nav.community).
+Further information about Navio Core is available in the [doc folder](/doc),
+the [wiki](https://github.com/nav-io/navio-core/wiki) and the [documentation website](https://doc.nav.community).
 
-What is Navcoin?
+What is Navio?
 ----------------
 
-Navcoin is an experimental digital currency that enables privacy-enhanced payments to
-anyone, anywhere in the world. Navcoin uses peer-to-peer technology to operate
+Navio is an experimental digital currency that enables privacy-enhanced payments to
+anyone, anywhere in the world. Navio uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Navcoin Core is the name of open source
+out collectively by the network. Navio Core is the name of open source
 software which enables the use of this currency.
 
 License
 -------
 
-Navcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Navio Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/navocin/navcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Navcoin Core.
+completely stable. [Tags](https://github.com/navocin/navio/tags) are created
+regularly from release branches to indicate new official, stable release versions of Navio Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
@@ -71,7 +71,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Navcoin Core's Transifex page](https://www.transifex.com/navcoin/navcoin/).
+[Navio Core's Transifex page](https://www.transifex.com/navio/navio/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.

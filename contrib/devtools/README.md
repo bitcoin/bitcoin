@@ -100,11 +100,11 @@ options, as all its configuration is set at the top of the file. It runs many ti
 pypy3 contrib/devtools/headerssync-params.py
 ```
 
-gen-navcoin-conf.sh
+gen-navio-conf.sh
 ===================
 
-Generates a navcoin.conf file in `share/examples/` by parsing the output from `navcoind --help`. This script is run during the
-release process to include a navcoin.conf with the release binaries and can also be run by users to generate a file locally.
+Generates a navio.conf file in `share/examples/` by parsing the output from `naviod --help`. This script is run during the
+release process to include a navio.conf with the release binaries and can also be run by users to generate a file locally.
 When generating a file as part of the release process, make sure to commit the changes after running the script.
 
 With in-tree builds this tool can be run from any directory within the
@@ -112,7 +112,7 @@ repository. To use this tool with out-of-tree builds set `BUILDDIR`. For
 example:
 
 ```bash
-BUILDDIR=$PWD/build contrib/devtools/gen-navcoin-conf.sh
+BUILDDIR=$PWD/build contrib/devtools/gen-navio-conf.sh
 ```
 
 security-check.py and test-security-check.py
@@ -139,10 +139,10 @@ If no errors occur the return value will be 0 and the output will be empty.
 
 If there are any errors the return value will be 1 and output like this will be printed:
 
-    .../64/test_navcoin: symbol memcpy from unsupported version GLIBC_2.14
-    .../64/test_navcoin: symbol __fdelt_chk from unsupported version GLIBC_2.15
-    .../64/test_navcoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
-    .../64/test_navcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
+    .../64/test_navio: symbol memcpy from unsupported version GLIBC_2.14
+    .../64/test_navio: symbol __fdelt_chk from unsupported version GLIBC_2.15
+    .../64/test_navio: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
+    .../64/test_navio: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
 
 circular-dependencies.py
 ========================

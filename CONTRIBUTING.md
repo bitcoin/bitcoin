@@ -1,12 +1,12 @@
-Contributing to Navcoin Core
+Contributing to Navio Core
 ============================
 
-The Navcoin Core project operates an open contributor model where anyone is
+The Navio Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
 
-First, in terms of structure, there is no particular concept of "Navcoin Core
+First, in terms of structure, there is no particular concept of "Navio Core
 developers" in the sense of privileged people. Open source often naturally
 revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
@@ -24,15 +24,15 @@ as a new contributor. It also will teach you much more about the code and
 process than opening pull requests. Please refer to the [peer review](#peer-review)
 section below.
 
-Before you start contributing, familiarize yourself with the Navcoin Core build
+Before you start contributing, familiarize yourself with the Navio Core build
 system and tests. Refer to the documentation in the repository on how to build
-Navcoin Core and how to run the unit tests, functional tests, and fuzz tests.
+Navio Core and how to run the unit tests, functional tests, and fuzz tests.
 
 There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
-[good first issue](https://github.com/navcoin/navcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+[good first issue](https://github.com/nav-io/navio-core/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 list or changes that are
-[up for grabs](https://github.com/navcoin/navcoin/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
+[up for grabs](https://github.com/nav-io/navio-core/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
 Some of them might no longer be applicable. So if you are interested, but
 unsure, you might want to leave a comment on the issue first.
 
@@ -52,7 +52,7 @@ and is also an effective way to request assistance if and when you need it.
 Communication Channels
 ----------------------
 
-Most communication about Navcoin Core development happens on Discord, in the
+Most communication about Navio Core development happens on Discord, in the
 `#development` channel. You can join the server using [this link](https://discord.gg/y4Vu9jw).
 
 Discussion about codebase improvements happens in GitHub issues and pull
@@ -72,7 +72,7 @@ To contribute a patch, the workflow is as follows:
   1. Create topic branch
   1. Commit patches
 
-For issues or pull requests, the https://github.com/navcoin/navcoin repository should be used.
+For issues or pull requests, the https://github.com/nav-io/navio-core repository should be used.
 
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be followed.
@@ -140,13 +140,13 @@ mailing list discussions).
 The description for a new pull request should not contain any `@` mentions. The
 PR description will be included in the commit message when the PR is merged and
 any users mentioned in the description will be annoyingly notified each time a
-fork of Navcoin Core copies the merge. Instead, make any username mentions in a
+fork of Navio Core copies the merge. Instead, make any username mentions in a
 subsequent comment to the PR.
 
 ### Translation changes
 
 Note that translations should not be submitted as pull requests. Please see
-[Translation Process](https://github.com/navcoin/navcoin/blob/master/doc/translation_process.md)
+[Translation Process](https://github.com/nav-io/navio-core/blob/master/doc/translation_process.md)
 for more information on helping with translations.
 
 ### Work in Progress Changes and Requests for Comments
@@ -259,11 +259,11 @@ workload on reviewing.
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Navcoin Core project (and related
-projects such as libsecp256k1), and is not to be confused with overall Navcoin
+The following applies to code changes to the Navio Core project (and related
+projects such as libsecp256k1), and is not to be confused with overall Navio
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Navcoin Core rests with the project merge
+Whether a pull request is merged into Navio Core rests with the project merge
 maintainers.
 
 Maintainers will take into consideration if a patch is in line with the general
@@ -282,7 +282,7 @@ In general, all pull requests must:
     demonstrating the bug and also proving the fix. This helps prevent regression.
   - Change relevant comments and documentation when behaviour of code changes.
 
-Patches that change Navcoin consensus rules are considerably more involved than
+Patches that change Navio consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
 extensive discussions. While each case will
 be different, one should be prepared to expend more time and effort than for
@@ -343,7 +343,7 @@ higher in terms of discussion and peer review requirements, keeping in mind that
 mistakes could be very costly to the wider community. This includes refactoring
 of consensus-critical code.
 
-Where a patch set proposes to change the Navcoin consensus, it must have been
+Where a patch set proposes to change the Navio consensus, it must have been
 discussed extensively on the community, be accompanied by a widely
 discussed documentation and have a generally widely perceived technical consensus of being
 a worthwhile change based on the judgement of the maintainers.

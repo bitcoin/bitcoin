@@ -244,7 +244,7 @@ def build_release(tag, args) -> int:
         # Move binaries, so they're in the same place as in the
         # release download
         Path('bin').mkdir(exist_ok=True)
-        files = ['navcoind', 'navcoin-cli', 'navcoin-tx']
+        files = ['naviod', 'navio-cli', 'navio-tx']
         for f in files:
             Path('src/'+f).rename('bin/'+f)
     return 0

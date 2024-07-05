@@ -23,7 +23,7 @@ class Ipc;
 //! and get access to other interfaces (Node, Chain, Wallet, etc).
 //!
 //! There is a different Init interface implementation for each process
-//! (navcoin-gui, navcoin-node, navcoin-wallet, navcoind, navcoin-qt) and each
+//! (navio-gui, navio-node, navio-wallet, naviod, navio-qt) and each
 //! implementation can implement the make methods for interfaces it supports.
 //! The default make methods all return null.
 class Init

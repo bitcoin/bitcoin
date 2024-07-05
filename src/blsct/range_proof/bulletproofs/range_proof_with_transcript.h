@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Navcoin developers
+// Copyright (c) 2022 The Navio developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
-#define NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
+#ifndef NAVIO_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
+#define NAVIO_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
 
 #include <blsct/arith/elements.h>
 #include <blsct/range_proof/bulletproofs/range_proof.h>
@@ -50,4 +50,4 @@ public:
 
 } // namespace bulletproofs
 
-#endif // NAVCOIN_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H
+#endif // NAVIO_BLSCT_ARITH_RANGE_PROOF_BULLETPROOFS_RANGE_PROOF_WITH_TRANSCRIPT_H

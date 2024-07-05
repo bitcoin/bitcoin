@@ -114,16 +114,16 @@ int trace_replaced(struct pt_regs *ctx) {
 """
 
 
-def main(navcoind_path):
-    navcoind_with_usdts = USDT(path=str(navcoind_path))
+def main(naviod_path):
+    naviod_with_usdts = USDT(path=str(naviod_path))
 
     # attaching the trace functions defined in the BPF program
     # to the tracepoints
-    navcoind_with_usdts.enable_probe(probe="mempool:added", fn_name="trace_added")
-    navcoind_with_usdts.enable_probe(probe="mempool:removed", fn_name="trace_removed")
-    navcoind_with_usdts.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
-    navcoind_with_usdts.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
-    bpf = BPF(text=PROGRAM, usdt_contexts=[navcoind_with_usdts])
+    naviod_with_usdts.enable_probe(probe="mempool:added", fn_name="trace_added")
+    naviod_with_usdts.enable_probe(probe="mempool:removed", fn_name="trace_removed")
+    naviod_with_usdts.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
+    naviod_with_usdts.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
+    bpf = BPF(text=PROGRAM, usdt_contexts=[naviod_with_usdts])
 
     events = []
 
@@ -365,7 +365,7 @@ class Dashboard:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("USAGE: ", sys.argv[0], "path/to/navcoind")
+        print("USAGE: ", sys.argv[0], "path/to/naviod")
         exit(1)
 
     path = sys.argv[1]
