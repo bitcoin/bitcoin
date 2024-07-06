@@ -45,6 +45,8 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QRadioButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QSpacerItem>
 #include <QString>
 #include <QStringList>
@@ -52,6 +54,36 @@
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
+
+ModScrollArea::ModScrollArea()
+{
+    setWidgetResizable(true);
+    setFrameShape(QFrame::NoFrame);
+    setObjectName(QStringLiteral("scroll"));
+    setStyleSheet("QScrollArea#scroll, QScrollArea#scroll > QWidget > QWidget { background: transparent; } QScrollArea#scroll > QWidget > QScrollBar { background: palette(base); }");
+}
+
+ModScrollArea *ModScrollArea::fromWidget(QWidget * const parent, QWidget * const o)
+{
+    auto * const scroll = new ModScrollArea;
+    scroll->setWidget(o);
+    return scroll;
+}
+
+QSize ModScrollArea::minimumSizeHint() const
+{
+    auto w = widget()->minimumSizeHint().width();
+    w += verticalScrollBar()->sizeHint().width();
+    const auto h = fontMetrics().height() * 2;
+    return QSize(w, h);
+}
+
+QSize ModScrollArea::sizeHint() const
+{
+    QSize sz = widget()->sizeHint();
+    sz.rwidth() += verticalScrollBar()->sizeHint().width();
+    return sz;
+}
 
 void OptionsDialog::FixTabOrder(QWidget * const o)
 {
@@ -290,7 +322,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 
     QWidget * const tabFilters = new QWidget();
     auto& groupBox_Spamfiltering = tabFilters;
-    ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), tabFilters, tr("Spam &filtering"));
+    ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), ModScrollArea::fromWidget(this, groupBox_Spamfiltering), tr("Spam &filtering"));
     QVBoxLayout * const verticalLayout_Spamfiltering = new QVBoxLayout(groupBox_Spamfiltering);
 
     rejectunknownscripts = new QCheckBox(groupBox_Spamfiltering);
@@ -461,7 +493,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     });
 
 
-    verticalLayout_Spamfiltering->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    verticalLayout_Spamfiltering->addStretch(1);
 
     /* Mining tab */
 
@@ -593,6 +625,8 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->qrFont->setVisible(false);
     ui->qrFont_preview->setVisible(false);
 #endif
+
+    adjustSize();
 
     GUIUtil::handleCloseWindowShortcut(this);
     updateThemeColors();
