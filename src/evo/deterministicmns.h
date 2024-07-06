@@ -280,7 +280,7 @@ public:
      * @param proTxHash
      * @param penalty
      */
-    void PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs);
+    void PoSePunish(const uint256& proTxHash, int penalty);
 
     void DecreaseScores();
     /**
@@ -475,8 +475,8 @@ public:
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& state, const CCoinsViewCache& view,
-                               CDeterministicMNList& mnListRet, CDeterministicMNList& mnOldListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs);
+                               CDeterministicMNList& mnListRet, CDeterministicMNList& mnOldListRet, const llmq::CFinalCommitmentTxPayload *qcIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList, const std::vector<CDeterministicMNCPtr> &toDecrease);
 
     const CDeterministicMNList GetListForBlock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);

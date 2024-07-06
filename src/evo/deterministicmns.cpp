@@ -275,7 +275,7 @@ int CDeterministicMNList::CalcPenalty(int percent) const
     return (CalcMaxPoSePenalty() * percent) / 100;
 }
 
-void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs)
+void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty)
 {
     assert(penalty > 0);
 
@@ -290,17 +290,16 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
     newState->nPoSePenalty += penalty;
     newState->nPoSePenalty = std::min(maxPenalty, newState->nPoSePenalty);
 
-    if (debugLogs) {
-        LogPrintf("CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
-                  __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
-    }
+
+    LogPrint(BCLog::MNLIST, "CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
+                __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
+    
 
     if (newState->nPoSePenalty >= maxPenalty && !newState->IsBanned()) {
         newState->BanIfNotBanned(nHeight);
-        if (debugLogs) {
-            LogPrintf("CDeterministicMNList::%s -- banned MN %s at height %d\n",
-                      __func__, proTxHash.ToString(), nHeight);
-        }
+        LogPrint(BCLog::MNLIST, "CDeterministicMNList::%s -- banned MN %s at height %d\n",
+                    __func__, proTxHash.ToString(), nHeight);
+    
     }
     UpdateMN(proTxHash, newState);
 }
@@ -512,7 +511,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     int nHeight = pindex->nHeight;
     try {
 
-        if (!BuildNewListFromBlock(block, pindex->pprev, _state, view, newList, oldList, true)) {
+        if (!BuildNewListFromBlock(block, pindex->pprev, _state, view, newList, oldList)) {
             // pass the state returned by the function above
             return false;
         }
@@ -535,7 +534,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         }
        
     } catch (const std::exception& e) {
-        LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
+        LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");
     }
     if(!ibd) {
@@ -575,7 +574,7 @@ bool CDeterministicMNManager::UndoBlock(const CBlockIndex* pindex)
     return true;
 }
 
-bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, CDeterministicMNList& oldList, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn)
+bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, CDeterministicMNList& oldList, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
 
     int nHeight = pindexPrev->nHeight + 1;
@@ -647,7 +646,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                     return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-quorum-hash");
                 }
 
-                HandleQuorumCommitment(qc.commitment, quorumIndex, newList, debugLogs);
+                HandleQuorumCommitment(qc.commitment, quorumIndex, newList);
             }
             
         }
@@ -686,10 +685,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                     // In that case the new ProRegTx will replace the old one. This means the old one is removed
                     // and the new one is added like a completely fresh one, which is also at the bottom of the payment list
                     newList.RemoveMN(replacedDmn->proTxHash);
-                    if (debugLogs) {
-                        LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                        LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                                 __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
-                    }
                 }
 
                 if (newList.HasUniqueProperty(proTx.addr)) {
@@ -716,10 +713,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 dmn->pdmnState = dmnState;
 
                 newList.AddMN(dmn);
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
+                LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
                         __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
-                }
                 break;
             } 
             case(SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE): {
@@ -744,17 +739,13 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                     // only revive when all keys are set
                     if (newState->pubKeyOperator.Get().IsValid() && !newState->keyIDVoting.IsNull() && !newState->keyIDOwner.IsNull()) {
                         newState->Revive(nHeight);
-                        if (debugLogs) {
-                            LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
+                        LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s revived at height %d\n",
                                 __func__, proTx.proTxHash.ToString(), nHeight);
-                        }
                     }
                 }
                 newList.UpdateMN(proTx.proTxHash, newState);
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
                         __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
-                }
                 break;
             } 
             case(SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR): {
@@ -780,10 +771,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 newState->scriptPayout = proTx.scriptPayout;
                 newList.UpdateMN(proTx.proTxHash, newState);
 
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
+                LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
                         __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
-                }
                 break;
             } 
             case(SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE): {
@@ -801,10 +790,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 newState->BanIfNotBanned(nHeight);
                 newState->nRevocationReason = proTx.nReason;
                 newList.UpdateMN(proTx.proTxHash, newState);
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
+                LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
                         __func__, proTx.proTxHash.ToString(), nHeight, proTx.ToString());
-                }
                 break; 
             }
         }
@@ -819,10 +806,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             auto dmn = newList.GetMNByCollateral(in.prevout);
             if (dmn && dmn->collateralOutpoint == in.prevout) {
                 newList.RemoveMN(dmn->proTxHash);
-                if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                               __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
-                }
             }
         }
     }
@@ -839,7 +824,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     return true;
 }
 
-void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList, bool debugLogs)
+void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const CBlockIndex* pQuorumBaseBlockIndex, CDeterministicMNList& mnList)
 {
     // The commitment has already been validated at this point, so it's safe to use members of it
     auto members = llmq::CLLMQUtils::GetAllQuorumMembers(pQuorumBaseBlockIndex);
@@ -853,7 +838,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
             // The idea is to immediately ban a MN when it fails 2 DKG sessions with only a few blocks in-between
             // If there were enough blocks between failures, the MN has a chance to recover as he reduces his penalty by 1 every block
             // If it however fails 3 times in the timespan of a single payment cycle, it should definitely get banned
-            mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66), debugLogs);
+            mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66));
         }
     }
 }
@@ -880,7 +865,7 @@ const CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(cons
         m_initial_snapshot_index = pindex;
         snapshot = CDeterministicMNList(pindex->GetBlockHash(), pindex->nHeight, 0);
         m_evoDb->WriteCache(pindex->GetBlockHash(), snapshot);
-        LogPrintf("CDeterministicMNManager::%s -- initial snapshot. blockHash=%s nHeight=%d\n", __func__,
+        LogPrint(BCLog::MNLIST, "CDeterministicMNManager::%s -- initial snapshot. blockHash=%s nHeight=%d\n", __func__,
                     snapshot.GetBlockHash().ToString(), snapshot.GetHeight());
         return snapshot;
     }
@@ -945,7 +930,7 @@ void CDeterministicMNManager::DoMaintenance() {
         m_evoDb = std::make_unique<CEvoDB<uint256, CDeterministicMNList>>(db_params, LIST_CACHE_SIZE);
         // Restore the caches from the copies
         m_evoDb->RestoreCaches(mapCacheCopy, eraseCacheCopy);
-        LogPrintf("DMN Database successfully wiped and recreated.\n");
+        LogPrint(BCLog::MNLIST, "DMN Database successfully wiped and recreated.\n");
     }
     did_cleanup = loc_to_cleanup;
 }
