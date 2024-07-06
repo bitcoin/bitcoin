@@ -294,7 +294,9 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         return false;
     }
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
-
+    if(quorums_scanned.empty()) {
+        return false;
+    }
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         const CQuorumCPtr& quorum = quorums_scanned[i];
         if (quorum == nullptr) {
