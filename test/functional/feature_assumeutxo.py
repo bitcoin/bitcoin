@@ -11,16 +11,9 @@ The assumeutxo value generated and used here is committed to in
 
 ## Possible test improvements
 
-Interesting test cases could be loading an assumeutxo snapshot file with:
-
-- TODO: Valid snapshot file, but referencing a snapshot block that turns out to be
-      invalid, or has an invalid parent
-
 Interesting starting states could be loading a snapshot when the current chain tip is:
 
-- TODO: An ancestor of snapshot block
 - TODO: The snapshot block
-- TODO: A descendant of the snapshot block
 
 """
 from shutil import rmtree
@@ -358,6 +351,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_snapshot_not_on_most_work_chain(dump_output['path'])
 
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
+        # This node's tip is on an ancestor block of the snapshot, which should
+        # be the normal case
         loaded = n1.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
