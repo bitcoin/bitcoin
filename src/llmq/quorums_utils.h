@@ -14,7 +14,6 @@
 #include <sync.h>
 #include <dbwrapper.h>
 #include <chainparams.h>
-#include <versionbits.h>
 #include <util/strencodings.h>
 
 class CBlockIndex;
