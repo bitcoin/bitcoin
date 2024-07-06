@@ -14,6 +14,7 @@
 #include <flatfile.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
+#include <index/locationsindex.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -362,6 +363,92 @@ static bool rest_block_extended(const std::any& context, HTTPRequest* req, const
 static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
 {
     return rest_block(context, req, strURIPart, TxVerbosity::SHOW_TXID);
+}
+
+
+static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+{
+    if (!CheckWarmup(req)) return false;
+
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
+
+    // request is sent over URI scheme /rest/txfromblock/blockhash-index
+    std::vector<std::string_view> uriParts{util::Split<std::string_view>(param, '-')};
+    if (uriParts.size() != 2) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Invalid URI format: %s", param));
+    }
+
+    std::optional<uint256> block_hash{uint256::FromHex(uriParts[0])};
+    if (!block_hash) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Invalid hash: %s", uriParts[0]));
+    }
+
+    const std::optional<size_t> parsed_index{ToIntegral<size_t>(uriParts[1])};
+    if (!parsed_index.has_value()) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Transaction index is invalid: %s", uriParts[1]));
+    }
+    const size_t index = *parsed_index;
+    {
+        ChainstateManager* maybe_chainman = GetChainman(context, req);
+        if (!maybe_chainman) return false;
+        ChainstateManager& chainman = *maybe_chainman;
+
+        LOCK(cs_main);
+        const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*block_hash)};
+        if (pindex == nullptr) {
+            return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not found", uriParts[0]));
+        }
+        if (pindex->nHeight > 0 && !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
+            return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not validated", uriParts[0]));
+        }
+        if (index >= pindex->nTx) {
+            return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block %s has only %d transactions", uriParts[0], pindex->nTx));
+        }
+    }
+
+    const LocationsIndex* locations_index = g_locations_index.get();
+    if (!locations_index) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Locations index is not enabled");
+    }
+
+    if (!locations_index->BlockUntilSyncedToCurrentChain()) {
+        RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Locations index is still syncing");
+    }
+
+    std::vector<uint8_t> out;
+    if (!locations_index->ReadRawTransaction(*block_hash, index, out)) {
+        return RESTERR(req, HTTP_NOT_FOUND, strprintf("Failed to read transaction #%d from block %s", index, (*block_hash).ToString()));
+    }
+
+    switch (rf) {
+    case RESTResponseFormat::BINARY: {
+        req->WriteHeader("Content-Type", "application/octet-stream");
+        req->WriteReply(HTTP_OK, std::as_bytes(std::span{out}));
+        return true;
+    }
+    case RESTResponseFormat::HEX: {
+        std::string strHex = HexStr(out) + "\n";
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, strHex);
+        return true;
+    }
+    case RESTResponseFormat::JSON: {
+        CTransactionRef tx;
+        DataStream ssTx(out);
+        ssTx >> TX_WITH_WITNESS(tx);
+
+        UniValue objTx(UniValue::VOBJ);
+        TxToUniv(*tx, /*block_hash=*/{}, /*entry=*/objTx);
+        std::string strJSON = objTx.write() + "\n";
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, strJSON);
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
 }
 
 static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
@@ -1010,6 +1097,7 @@ static const struct {
     bool (*handler)(const std::any& context, HTTPRequest* req, const std::string& strReq);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
+      {"/rest/txfromblock/", rest_tx_from_block},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
       {"/rest/blockfilter/", rest_block_filter},

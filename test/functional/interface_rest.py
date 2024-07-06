@@ -51,7 +51,7 @@ def filter_output_indices_by_value(vouts, value):
 class RESTTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-rest", "-blockfilterindex=1"], []]
+        self.extra_args = [["-rest", "-blockfilterindex=1", "-locationsindex=1"], []]
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.supports_cli = False
@@ -296,10 +296,8 @@ class RESTTest (BitcoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        expected_filter = {
-            'basic block filter index': {'synced': True, 'best_block_height': 208},
-        }
-        self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
+        expected_index_info = {'synced': True, 'best_block_height': 208}
+        self.wait_until(lambda: self.nodes[0].getindexinfo()['basic block filter index'] == expected_index_info)
         json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
         json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 5})
@@ -441,6 +439,25 @@ class RESTTest (BitcoinTestFramework):
 
         resp = self.test_rest_request(f"/deploymentinfo/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+
+        self.log.info("Test the /txfromblock URI")
+        block_count = self.nodes[0].getblockcount()
+        expected_index_info = {'synced': True, 'best_block_height': block_count}
+        self.wait_until(lambda: self.nodes[0].getindexinfo()['locationsindex'] == expected_index_info)
+        for height in range(0, block_count + 1):
+            blockhash = self.nodes[0].getblockhash(height)
+            block = self.nodes[0].getblock(blockhash, 2)
+            txs = block["tx"]
+            self.log.debug("Checking block: %s (%d txs)", blockhash, len(txs))
+            for i, tx in enumerate(txs):
+                self.log.debug("Checking tx #%d: %s", i, tx["txid"])
+                tx_bytes = self.test_rest_request(f"/txfromblock/{blockhash}-{i}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+                assert tx_bytes.hex() == tx["hex"]
+                tx_hex = self.test_rest_request(f"/txfromblock/{blockhash}-{i}", req_type=ReqType.HEX, ret_type=RetType.BYTES).decode().strip()
+                assert tx_hex == tx["hex"]
+                tx_json = self.test_rest_request(f"/txfromblock/{blockhash}-{i}", req_type=ReqType.JSON, ret_type=RetType.JSON)
+                assert tx_json["txid"] == tx["txid"]
+                assert tx_json["hex"] == tx["hex"]
 
 if __name__ == '__main__':
     RESTTest(__file__).main()
