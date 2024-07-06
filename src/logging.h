@@ -69,16 +69,17 @@ namespace BCLog {
         SPORK       = (1 << 28),
         SYS         = (1 << 29),
         CHAINLOCKS  = (1 << 30),
-        I2P         = (uint64_t)(1ULL << 31),
-        IPC         = (uint64_t)(1ULL << 32),
+        MNLIST      = (uint64_t)(1ULL << 31),
+        I2P         = (uint64_t)(1ULL << 32),
+        IPC         = (uint64_t)(1ULL << 33),
 #ifdef DEBUG_LOCKCONTENTION
-        LOCK        = (uint64_t)(1ULL << 33),
+        LOCK        = (uint64_t)(1ULL << 34),
 #endif
-        UTIL        = (uint64_t)(1ULL << 34),
-        BLOCKSTORAGE  = (uint64_t)(1ULL << 35),
-        TXRECONCILIATION = (uint64_t)(1ULL << 36),
-        SCAN        = (uint64_t)(1ULL << 37),
-        TXPACKAGES  = (uint64_t)(1ULL << 38),
+        UTIL        = (uint64_t)(1ULL << 35),
+        BLOCKSTORAGE  = (uint64_t)(1ULL << 36),
+        TXRECONCILIATION = (uint64_t)(1ULL << 37),
+        SCAN        = (uint64_t)(1ULL << 38),
+        TXPACKAGES  = (uint64_t)(1ULL << 39),
         ALL         = ~(uint64_t)0,
     };
     enum class Level {

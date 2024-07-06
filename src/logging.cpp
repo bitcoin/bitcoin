@@ -181,6 +181,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LLMQ_DKG, "llmq-dkg"},
     {BCLog::LLMQ_SIGS, "llmq-sigs"},
     {BCLog::MNPAYMENTS, "mnpayments"},
+    {BCLog::MNLIST, "mnlist"},
     {BCLog::MNSYNC, "mnsync"},
     {BCLog::SPORK, "spork"},
     {BCLog::SYS, "syscoin"},
