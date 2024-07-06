@@ -6,6 +6,7 @@
 #define BITCOIN_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QScrollArea>
 #include <QValidator>
 
 class BitcoinAmountField;
@@ -25,6 +26,19 @@ class QString;
 class QValueComboBox;
 class QWidget;
 QT_END_NAMESPACE
+
+/** QScrollArea, but returning reasonable size hints.
+ */
+class ModScrollArea : public QScrollArea {
+    Q_OBJECT
+
+public:
+    ModScrollArea();
+    static ModScrollArea *fromWidget(QWidget *parent, QWidget *o);
+
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
+};
 
 namespace Ui {
 class OptionsDialog;
