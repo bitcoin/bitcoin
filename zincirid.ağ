@@ -1,0 +1,15 @@
+{
+  ...
+  "parent": {
+   "type" : "L2",
+   "chain": "eip155-1",
+   "bridges": [ {"url":"https://bridge.litecoin.io"} ]
+  }
+}
+$ ./gradlew run
+
+BUILD SUCCESSFUL in 7s
+9 actionable tasks: 9 executed
+npx prettier --write _data/*/*.json
+litecoin.network
+Wagmi uyumlu zincir yapılandırmaları[export-0xfa1db6794de6e994b60741decae0567946992181 (1).csv](https://github.com/user-attachments/files/16117735/export-0xfa1db6794de6e994b60741decae0567946992181.1.csv)
