@@ -427,42 +427,27 @@ static RPCHelpMan quorum_memberof()
     };
 }
 
-static RPCHelpMan quorum_sign()
-{
-    return RPCHelpMan{"quorum sign",
-        "Threshold-sign a message\n",
-        {
-            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
-            {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
-            {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
-            {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
-            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true. "
-                                                                "Returns an object containing the signature share if this is false."},
-        },
-        RPCResults{},
-        RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+static UniValue quorum_sign_helper(const JSONRPCRequest& request, Consensus::LLMQType llmqType)
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
     const auto llmq_params_opt = Params().GetLLMQ(llmqType);
     if (!llmq_params_opt.has_value()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    const uint256 id(ParseHashV(request.params[1], "id"));
-    const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
+    const uint256 id(ParseHashV(request.params[0], "id"));
+    const uint256 msgHash(ParseHashV(request.params[1], "msgHash"));
 
     uint256 quorumHash;
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty()) {
-        quorumHash = ParseHashV(request.params[3], "quorumHash");
+    if (!request.params[2].isNull() && !request.params[2].get_str().empty()) {
+        quorumHash = ParseHashV(request.params[2], "quorumHash");
     }
     bool fSubmit{true};
-    if (!request.params[4].isNull()) {
-        fSubmit = ParseBoolV(request.params[4], "submit");
+    if (!request.params[3].isNull()) {
+        fSubmit = ParseBoolV(request.params[3], "submit");
     }
     if (fSubmit) {
         return llmq_ctx.sigman->AsyncSignIfMember(llmqType, *llmq_ctx.shareman, id, msgHash, quorumHash);
@@ -496,6 +481,53 @@ static RPCHelpMan quorum_sign()
 
         return obj;
     }
+}
+
+static RPCHelpMan quorum_sign()
+{
+    return RPCHelpMan{"quorum sign",
+        "Threshold-sign a message\n",
+        {
+            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type."},
+            {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+            {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+            {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
+            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true. "
+                                                                "Returns an object containing the signature share if this is false."},
+        },
+        RPCResults{},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(ParseInt32V(request.params[0], "llmqType"))};
+
+    JSONRPCRequest new_request{request};
+    new_request.params.setArray();
+    for (unsigned int i = 1; i < request.params.size(); ++i) {
+        new_request.params.push_back(request.params[i]);
+    }
+    return quorum_sign_helper(new_request, llmqType);
+},
+    };
+}
+
+static RPCHelpMan quorum_platformsign()
+{
+    return RPCHelpMan{"quorum platformsign",
+        "Threshold-sign a message. It signs messages only for platform quorums\n",
+        {
+            {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id."},
+            {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash."},
+            {"quorumHash", RPCArg::Type::STR_HEX, /* default */ "", "The quorum identifier."},
+            {"submit", RPCArg::Type::BOOL, /* default */ "true", "Submits the signature share to the network if this is true. "
+                                                                "Returns an object containing the signature share if this is false."},
+        },
+        RPCResults{},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const Consensus::LLMQType llmqType{Params().GetConsensus().llmqTypePlatform};
+    return quorum_sign_helper(request, llmqType);
 },
     };
 }
@@ -1096,6 +1128,7 @@ static const CRPCCommand commands[] =
     { "evo",                "quorum", "dkgstatus",    &quorum_dkgstatus,       {"detail_level"}  },
     { "evo",                "quorum", "memberof",     &quorum_memberof,        {"proTxHash", "scanQuorumsCount"}  },
     { "evo",                "quorum", "sign",         &quorum_sign,            {"llmqType", "id", "msgHash", "quorumHash", "submit"}  },
+    { "evo",                "quorum", "platformsign", &quorum_platformsign,    {"id", "msgHash", "quorumHash", "submit"}  },
     { "evo",                "quorum", "verify",       &quorum_verify,          {"llmqType", "id", "msgHash", "signature", "quorumHash", "signHeight"}  },
     { "evo",                "quorum", "hasrecsig",    &quorum_hasrecsig,       {"llmqType", "id", "msgHash"}  },
     { "evo",                "quorum", "getrecsig",    &quorum_getrecsig,       {"llmqType", "id", "msgHash"}  },
