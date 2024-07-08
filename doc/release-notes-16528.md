@@ -35,6 +35,7 @@ Descriptor Wallet should be created.
 
 Without those options being set, a Legacy Wallet will be created instead.
 
+
 #### `IsMine` Semantics
 
 `IsMine` refers to the function used to determine whether a script belongs to the wallet.
@@ -117,3 +118,4 @@ descriptors with private keys for now as explained earlier.
 ## RPC changes
  - `createwallet` has changed list of arguments: `createwallet "wallet_name" ( disable_private_keys blank "passphrase" avoid_reuse descriptors load_on_startup )`
 `load_on_startup` used to be an argument 5 but now has a number 6.
+ - `createwallet` requires specifying the `load_on_startup` flag when creating descriptor wallets due to breaking changes in v21.

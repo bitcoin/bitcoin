@@ -704,6 +704,8 @@ class RPCOverloadWrapper():
     def createwallet(self, wallet_name, disable_private_keys=None, blank=None, passphrase='', avoid_reuse=None, descriptors=None, load_on_startup=None):
         if descriptors is None:
             descriptors = self.descriptors
+        if descriptors is not None and load_on_startup is None:
+            load_on_startup = False
         return self.__getattr__('createwallet')(wallet_name, disable_private_keys, blank, passphrase, avoid_reuse, descriptors, load_on_startup)
 
     def importprivkey(self, privkey, label=None, rescan=None):
