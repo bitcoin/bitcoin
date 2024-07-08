@@ -661,7 +661,7 @@ static RPCHelpMan getblocktemplate()
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
     LOCK(cs_main);
-    uint256 tip{CHECK_NONFATAL(miner.getTipHash()).value()};
+    uint256 tip{CHECK_NONFATAL(miner.getTip()).value().hash};
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -776,7 +776,7 @@ static RPCHelpMan getblocktemplate()
         }
         ENTER_CRITICAL_SECTION(cs_main);
 
-        tip = CHECK_NONFATAL(miner.getTipHash()).value();
+        tip = CHECK_NONFATAL(miner.getTip()).value().hash;
 
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");

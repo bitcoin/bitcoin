@@ -17,6 +17,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
+#include <interfaces/types.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/context.h>
@@ -67,6 +68,7 @@
 
 #include <boost/signals2/signal.hpp>
 
+using interfaces::BlockRef;
 using interfaces::BlockTemplate;
 using interfaces::BlockTip;
 using interfaces::Chain;
@@ -925,12 +927,12 @@ public:
         return chainman().IsInitialBlockDownload();
     }
 
-    std::optional<uint256> getTipHash() override
+    std::optional<BlockRef> getTip() override
     {
         LOCK(::cs_main);
         CBlockIndex* tip{chainman().ActiveChain().Tip()};
         if (!tip) return {};
-        return tip->GetBlockHash();
+        return BlockRef{tip->GetBlockHash(), tip->nHeight};
     }
 
     bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
