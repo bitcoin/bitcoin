@@ -167,7 +167,8 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
     Assume(m_to_be_replaced.empty());
     Assume(m_requested_outpoints_by_txid.empty());
     Assume(m_bump_fees.empty());
-    Assume(m_inclusion_order.empty());
+    Assume(m_linearize_result.inclusion_order.empty());
+    Assume(m_linearize_result.packages.empty());
     SanityCheck();
 }
 
@@ -261,6 +262,7 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
             break;
         }
 
+        m_linearize_result.packages.emplace_back(ancestor_package_fee, static_cast<int32_t>(ancestor_package_size));
         // Calculate ancestors on the fly. This lookup should be fairly cheap, and ancestor sets
         // change at every iteration, so this is more efficient than maintaining a cache.
         std::set<MockEntryMap::iterator, IteratorComparator> ancestors;
@@ -283,7 +285,7 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         }
         // Track the order in which transactions were selected.
         for (const auto& ancestor : ancestors) {
-            m_inclusion_order.emplace(ancestor->first, sequence_num);
+            m_linearize_result.inclusion_order.emplace(ancestor->first, sequence_num);
         }
         DeleteAncestorPackage(ancestors);
         SanityCheck();
@@ -295,16 +297,16 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         Assume(m_in_block.empty() || m_total_fees >= target_feerate->GetFee(m_total_vsize));
     }
     Assume(m_in_block.empty() || sequence_num > 0);
-    Assume(m_in_block.size() == m_inclusion_order.size());
+    Assume(m_in_block.size() == m_linearize_result.inclusion_order.size());
     // Do not try to continue building the block template with a different feerate.
     m_ready_to_calculate = false;
 }
 
 
-std::map<Txid, uint32_t> MiniMiner::Linearize()
+LinearizationResult MiniMiner::Linearize()
 {
     BuildMockTemplate(std::nullopt);
-    return m_inclusion_order;
+    return m_linearize_result;
 }
 
 std::map<COutPoint, CAmount> MiniMiner::CalculateBumpFees(const CFeeRate& target_feerate)
