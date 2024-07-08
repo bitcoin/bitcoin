@@ -90,6 +90,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
+        self._test_waitforblock() # also tests waitfornewblock
         self._test_waitforblockheight()
         self._test_getblock()
         self._test_getdeploymentinfo()
@@ -506,6 +507,38 @@ class BlockchainTest(BitcoinTestFramework):
         self.nodes[0].wait_until_stopped()
         self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 7)
+
+    def _test_waitforblock(self):
+        self.log.info("Test waitforblock and waitfornewblock")
+        node = self.nodes[0]
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+        current_hash = node.getblock(node.getbestblockhash())['hash']
+
+        self.log.debug("Roll the chain back a few blocks and then reconsider it")
+        rollback_height = current_height - 100
+        rollback_hash = node.getblockhash(rollback_height)
+        rollback_header = node.getblockheader(rollback_hash)
+
+        node.invalidateblock(rollback_hash)
+        assert_equal(node.getblockcount(), rollback_height - 1)
+
+        self.log.debug("waitforblock should return the same block after its timeout")
+        assert_equal(node.waitforblock(blockhash=current_hash, timeout=1)['hash'], rollback_header['previousblockhash'])
+
+        node.reconsiderblock(rollback_hash)
+        # The chain has probably already been restored by the time reconsiderblock returns,
+        # but poll anyway.
+        self.wait_until(lambda: node.waitforblock(blockhash=current_hash, timeout=100)['hash'] == current_hash)
+
+        # roll back again
+        node.invalidateblock(rollback_hash)
+        assert_equal(node.getblockcount(), rollback_height - 1)
+
+        node.reconsiderblock(rollback_hash)
+        # The chain has probably already been restored by the time reconsiderblock returns,
+        # but poll anyway.
+        self.wait_until(lambda: node.waitfornewblock(timeout=100)['hash'] == current_hash)
 
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
