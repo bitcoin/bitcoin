@@ -72,6 +72,9 @@
 #include <services/nevmconsensus.h>
 #include <stdexcept>
 #include <llmq/quorums_blockprocessor.h>
+#include <spork.h>
+#include <netfulfilledman.h>
+#include <masternode/masternodemeta.h>
 
 using kernel::BlockTreeDB;
 using kernel::ValidationCacheSizes;
@@ -172,6 +175,9 @@ BasicTestingSetup::~BasicTestingSetup()
     pnevmdatadb.reset();
     governance.reset();
     deterministicMNManager.reset();
+    netfulfilledman.reset();
+    sporkManager.reset();
+    mmetaman.reset();
     SetMockTime(0s); // Reset mocktime for following tests
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);

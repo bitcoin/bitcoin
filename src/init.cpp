@@ -130,6 +130,9 @@
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
+#include <spork.h>
+#include <netfulfilledman.h>
+#include <masternode/masternodemeta.h>
 #include <llmq/quorums_dkgsessionmgr.h>
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
@@ -370,6 +373,10 @@ void Shutdown(NodeContext& node)
         pnevmdatadb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
+        netfulfilledman.reset();
+        sporkManager.reset();
+        mmetaman.reset();
+
     }
     for (const auto& client : node.chain_clients) {
         client->stop();
