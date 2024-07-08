@@ -119,6 +119,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         if(bReturn) {
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), hash);
+            return;
         }
 
        if (!qc.Verify(pQuorumBaseBlockIndex, true)) {
@@ -313,7 +314,6 @@ bool CQuorumBlockProcessor::IsCommitmentRequired(int nHeight) const
 
     // did we already mine a non-null commitment for this session?
     bool hasMinedCommitment = !quorumHash.IsNull() && HasMinedCommitment(quorumHash);
-
     return isMiningPhase && !hasMinedCommitment;
 }
 
@@ -377,26 +377,29 @@ bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const
 
 void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
 {
-    bool relay = false;
-    uint256 commitmentHash = ::SerializeHash(fqc);
+    const uint256 commitmentHash = ::SerializeHash(fqc);
 
-    {
+    const bool relay = [&]() {
         LOCK(minableCommitmentsCs);
-        auto ins = minableCommitmentsByQuorum.emplace(fqc.quorumHash, commitmentHash);
-        if (ins.second) {
-            minableCommitments.emplace(commitmentHash, fqc);
-            relay = true;
+
+        auto k = fqc.quorumHash;
+        auto [itInserted, successfullyInserted] = minableCommitmentsByQuorum.try_emplace(k, commitmentHash);
+        if (successfullyInserted) {
+            minableCommitments.try_emplace(commitmentHash, fqc);
+            return true;
         } else {
-            const auto& oldFqc = minableCommitments.at(ins.first->second);
+            auto& insertedQuorumHash = itInserted->second;
+            const auto& oldFqc = minableCommitments.at(insertedQuorumHash);
             if (fqc.CountSigners() > oldFqc.CountSigners()) {
                 // new commitment has more signers, so override the known one
-                ins.first->second = commitmentHash;
-                minableCommitments.erase(ins.first->second);
-                minableCommitments.emplace(commitmentHash, fqc);
-                relay = true;
+                insertedQuorumHash = commitmentHash;
+                minableCommitments.erase(insertedQuorumHash);
+                minableCommitments.try_emplace(commitmentHash, fqc);
+                return true;
             }
         }
-    }
+        return false;
+    }();
 
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
