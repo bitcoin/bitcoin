@@ -1343,38 +1343,41 @@ class DashTestFramework(SyscoinTestFramework):
             return all(node.spork('show') == sporks for node in self.nodes)
         wait_until_helper_internal(check_sporks_same, timeout=timeout)
 
-    def wait_for_quorum_connections(self, quorum_hash, expected_connections, nodes, timeout = 60, wait_proc=None):
+    def wait_for_quorum_connections(self, quorum_hash, expected_connections, mninfos, timeout = 60, wait_proc=None):
         def check_quorum_connections():
-            all_ok = True
-            for node in nodes:
-                s = node.quorum_dkgstatus()
-                if "session" not in s:
-                    continue
-                s = s["session"]
-                mn_ok = True
-                for qs in s:
-                    if "quorumConnections" not in qs:
-                        continue
-                    qconnections = qs["quorumConnections"]
-                    if qconnections["quorumHash"] != quorum_hash:
-                        mn_ok = False
-                        continue
-                    cnt = 0
-                    for c in qconnections["quorumConnections"]:
-                        if c["connected"]:
-                            cnt += 1
-                    if cnt < expected_connections:
-                        mn_ok = False
-                        break
-                    break
-                if not mn_ok:
-                    all_ok = False
-                    break
-            if not all_ok and wait_proc is not None:
-                wait_proc()
-            return all_ok
-        wait_until_helper_internal(check_quorum_connections, timeout=timeout)
+            def ret():
+                if wait_proc is not None:
+                    wait_proc()
+                return False
 
+            for mn in mninfos:
+                s = mn.node.quorum_dkgstatus()
+                for qs in s["session"]:
+                    if qs["status"]["quorumHash"] != quorum_hash:
+                        continue
+                    for qc in s["quorumConnections"]:
+                        if "quorumConnections" not in qc:
+                            continue
+                        if qc["quorumHash"] != quorum_hash:
+                            continue
+                        if len(qc["quorumConnections"]) == 0:
+                            continue
+                        cnt = 0
+                        for c in qc["quorumConnections"]:
+                            if c["connected"]:
+                                cnt += 1
+                        if cnt < expected_connections:
+                            return ret()
+                        return True
+                    # a session with no matching connections - not ok
+                    return ret()
+                # a node with no sessions - ok
+                pass
+            # no sessions at all - not ok
+            return ret()
+
+        wait_until_helper_internal(check_quorum_connections, timeout=timeout)
+        
     def wait_for_masternode_probes(self, mninfos, timeout = 60, wait_proc=None):
         def check_probes():
             def ret():
@@ -1409,64 +1412,50 @@ class DashTestFramework(SyscoinTestFramework):
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, timeout=60):
         def check_dkg_session():
-            all_ok = True
-            member_count = 0
             if wait_proc is not None:
                 wait_proc()
+            member_count = 0
             for mn in mninfos:
                 s = mn.node.quorum_dkgstatus()["session"]
-                mn_ok = True
                 for qs in s:
                     qstatus = qs["status"]
                     if "quorumHash" not in qstatus or qstatus["quorumHash"] != quorum_hash:
                         continue
-                    member_count += 1
-                    if "phase" not in qstatus:
-                        mn_ok = False
-                        break
                     if qstatus["phase"] != phase:
-                        mn_ok = False
-                        break
+                        return False
                     if check_received_messages is not None:
                         if qstatus[check_received_messages] < check_received_messages_count:
-                            mn_ok = False
-                            break
+                            return False
+                    member_count += 1
                     break
-                if not mn_ok:
-                    all_ok = False
-                    break
-            if all_ok and member_count != expected_member_count:
-                return False
-            return all_ok
+            return member_count >= expected_member_count
+
         wait_until_helper_internal(check_dkg_session, timeout=timeout)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, wait_proc=None, timeout=60):
         def check_dkg_comitments():
-            time.sleep(2)
-            all_ok = True
             if wait_proc is not None:
                 wait_proc()
             for node in nodes:
                 s = node.quorum_dkgstatus()
                 if "minableCommitments" not in s:
-                    all_ok = False
-                    break
+                    return False
                 commits = s["minableCommitments"]
                 c_ok = False
+                self.log.info(f'commits {commits}')
                 for c in commits:
                     if c["quorumHash"] != quorum_hash:
                         continue
                     c_ok = True
                     break
                 if not c_ok:
-                    all_ok = False
-                    break
-            return all_ok
-        wait_until_helper_internal(check_dkg_comitments, timeout=timeout)
+                    return False
+            return True
 
+        wait_until_helper_internal(check_dkg_comitments, timeout=timeout)
+        
     def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60):
         def wait_func():
-            self.log.info("quorums: " + str(self.nodes[0].quorum_list()))
             if quorum_hash in self.nodes[0].quorum_list()["quorums"]:
                 return True
             self.bump_mocktime(2, nodes=nodes)
@@ -1518,7 +1507,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Expected quorum_hash:"+str(q))
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func)
-        self.wait_for_quorum_connections(q, expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.wait_for_quorum_connections(q, expected_connections, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         if spork23_active:
             self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
 

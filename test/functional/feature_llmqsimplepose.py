@@ -42,7 +42,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Now lets isolate MNs one by one and verify that punishment/banning happens
         self.test_banning(self.isolate_mn, 1)
 
-        self.repair_masternodes(True)
+        self.repair_masternodes(False)
 
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
@@ -124,6 +124,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 for i in range(5):
                     self.reset_probe_timeouts()
                     self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=0, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
+                    assert not self.check_banned(mn)
             self.reset_probe_timeouts()
             self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
             self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
@@ -151,7 +152,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime)])
                 else:
                     mn.node.setnetworkactive(True)
-                self.connect_nodes(mn.node.index, 0)
+                self.connect_nodes(mn.node.index, 0, wait_for_connect=False)
         self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
