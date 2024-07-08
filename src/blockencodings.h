@@ -59,7 +59,7 @@ public:
     uint256 blockhash;
     std::vector<CTransactionRef> txn;
 
-    BlockTransactions() {}
+    BlockTransactions() = default;
     explicit BlockTransactions(const BlockTransactionsRequest& req) :
         blockhash(req.blockhash), txn(req.indexes.size()) {}
 
@@ -109,7 +109,7 @@ public:
     /**
      * Dummy for deserialization
      */
-    CBlockHeaderAndShortTxIDs() {}
+    CBlockHeaderAndShortTxIDs() = default;
 
     /**
      * @param[in]  nonce  This should be randomly generated, and is used for the siphash secret key

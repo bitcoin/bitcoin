@@ -27,7 +27,7 @@ struct CMutableTransaction;
 /** Interface for signature creators. */
 class BaseSignatureCreator {
 public:
-    virtual ~BaseSignatureCreator() {}
+    virtual ~BaseSignatureCreator() = default;
     virtual const BaseSignatureChecker& Checker() const =0;
 
     /** Create a singular (non-script) signature. */
@@ -89,7 +89,7 @@ struct SignatureData {
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> ripemd160_preimages; ///< Mapping from a RIPEMD160 hash to its preimage provided to solve a Script
     std::map<std::vector<uint8_t>, std::vector<uint8_t>> hash160_preimages; ///< Mapping from a HASH160 hash to its preimage provided to solve a Script
 
-    SignatureData() {}
+    SignatureData() = default;
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
     void MergeSignatureData(SignatureData sigdata);
 };

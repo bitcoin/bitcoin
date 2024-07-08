@@ -18,7 +18,7 @@ struct FlatFilePos
 
     SERIALIZE_METHODS(FlatFilePos, obj) { READWRITE(VARINT_MODE(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED), VARINT(obj.nPos)); }
 
-    FlatFilePos() {}
+    FlatFilePos() = default;
 
     FlatFilePos(int nFileIn, unsigned int nPosIn) :
         nFile(nFileIn),

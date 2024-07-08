@@ -156,7 +156,7 @@ class HTTPClosure
 {
 public:
     virtual void operator()() = 0;
-    virtual ~HTTPClosure() {}
+    virtual ~HTTPClosure() = default;
 };
 
 /** Event class. This can be used either as a cross-thread trigger or as a timer.

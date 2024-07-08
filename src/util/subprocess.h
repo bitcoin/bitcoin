@@ -678,7 +678,7 @@ struct error
 class Buffer
 {
 public:
-  Buffer() {}
+  Buffer() = default;
   explicit Buffer(size_t cap) { buf.resize(cap); }
   void add_cap(size_t cap) { buf.resize(cap); }
 

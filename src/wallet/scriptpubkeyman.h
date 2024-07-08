@@ -178,7 +178,7 @@ protected:
 
 public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
-    virtual ~ScriptPubKeyMan() {};
+    virtual ~ScriptPubKeyMan() = default;
     virtual util::Result<CTxDestination> GetNewDestination(const OutputType type) { return util::Error{Untranslated("Not supported")}; }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
 
