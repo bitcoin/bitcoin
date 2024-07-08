@@ -50,10 +50,7 @@ class NetTest(DashTestFramework):
         self.wallet.generate(1)
         # Get out of IBD for the getpeerinfo tests.
         self.nodes[0].generate(101)
-        # Wait for one ping/pong to finish so that we can be sure that there is no chatter between nodes for some time
-        # Especially the exchange of messages like getheaders and friends causes test failures here
-        self.nodes[0].ping()
-        self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[0].getpeerinfo()]))
+
         # By default, the test framework sets up an addnode connection from
         # node 1 --> node0. By connecting node0 --> node 1, we're left with
         # the two nodes being connected both ways.
@@ -173,8 +170,7 @@ class NetTest(DashTestFramework):
         # Connect nodes both ways.
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
-        self.nodes[1].ping()
-        self.wait_until(lambda: all(['pingtime' in n for n in self.nodes[1].getpeerinfo()]))
+
         assert_equal(self.nodes[1].getnetworkinfo()['connections'], 2)
         assert_equal(self.nodes[1].getnetworkinfo()['connections_in'], 1)
         assert_equal(self.nodes[1].getnetworkinfo()['connections_out'], 1)
