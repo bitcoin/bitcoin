@@ -897,7 +897,18 @@ private:
      *
      * Memory used: 1.3 MB
      */
-    CRollingBloomFilter m_recent_rejects GUARDED_BY(m_tx_download_mutex){120'000, 0.000'001};
+    std::unique_ptr<CRollingBloomFilter> m_recent_rejects GUARDED_BY(m_tx_download_mutex){nullptr};
+
+    CRollingBloomFilter& RecentRejectsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
+    {
+        AssertLockHeld(m_tx_download_mutex);
+
+        if (!m_recent_rejects) {
+            m_recent_rejects = std::make_unique<CRollingBloomFilter>(120'000, 0.000'001);
+        }
+
+        return *m_recent_rejects;
+    }
 
     /**
      * Filter for:
@@ -2080,7 +2091,7 @@ void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
         // If the chain tip has changed, previously rejected transactions might now be valid, e.g. due
         // to a timelock. Reset the rejection filters to give those transactions another chance if we
         // see them again.
-        m_recent_rejects.reset();
+        RecentRejectsFilter().reset();
         m_recent_rejects_reconsiderable.reset();
     }
 }
@@ -2304,7 +2315,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconside
 
     if (m_recent_confirmed_transactions.contains(hash)) return true;
 
-    return m_recent_rejects.contains(hash) || m_mempool.exists(gtxid);
+    return RecentRejectsFilter().contains(hash) || m_mempool.exists(gtxid);
 }
 
 bool PeerManagerImpl::AlreadyHaveBlock(const uint256& block_hash)
@@ -3197,7 +3208,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
             // submit it as part of a package later.
             m_recent_rejects_reconsiderable.insert(ptx->GetWitnessHash().ToUint256());
         } else {
-            m_recent_rejects.insert(ptx->GetWitnessHash().ToUint256());
+            RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
         m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
@@ -3211,7 +3222,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
         // We only add the txid if it differs from the wtxid, to avoid wasting entries in the
         // rolling bloom filter.
         if (state.GetResult() == TxValidationResult::TX_INPUTS_NOT_STANDARD && ptx->HasWitness()) {
-            m_recent_rejects.insert(ptx->GetHash().ToUint256());
+            RecentRejectsFilter().insert(ptx->GetHash().ToUint256());
             m_txrequest.ForgetTxHash(ptx->GetHash());
         }
         if (maybe_add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
@@ -4609,7 +4620,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // submit 1p1c packages. However, fail immediately if any are in m_recent_rejects.
             std::optional<uint256> rejected_parent_reconsiderable;
             for (const uint256& parent_txid : unique_parents) {
-                if (m_recent_rejects.contains(parent_txid)) {
+                if (RecentRejectsFilter().contains(parent_txid)) {
                     fRejectedParents = true;
                     break;
                 } else if (m_recent_rejects_reconsiderable.contains(parent_txid) && !m_mempool.exists(GenTxid::Txid(parent_txid))) {
@@ -4658,8 +4669,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // regardless of what witness is provided, we will not accept
                 // this, so we don't need to allow for redownload of this txid
                 // from any of our non-wtxidrelay peers.
-                m_recent_rejects.insert(tx.GetHash().ToUint256());
-                m_recent_rejects.insert(tx.GetWitnessHash().ToUint256());
+                RecentRejectsFilter().insert(tx.GetHash().ToUint256());
+                RecentRejectsFilter().insert(tx.GetWitnessHash().ToUint256());
                 m_txrequest.ForgetTxHash(tx.GetHash());
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             }
