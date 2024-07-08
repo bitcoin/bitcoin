@@ -156,11 +156,12 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         return;
     }
     EnsureQuorumConnections(pindexNew);
-    CleanupOldQuorumData(pindexNew);
+    //CleanupOldQuorumData(pindexNew);
 }
 
 void CQuorumManager::EnsureQuorumConnections(const CBlockIndex* pindexNew)
 {
+    if (!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) return;
     const Consensus::LLMQParams& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
     auto lastQuorums = ScanQuorums(pindexNew, (size_t)llmqParams.keepOldConnections);
 
@@ -269,7 +270,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(size_t nCountRequested)
 
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(const CBlockIndex* pindexStart, size_t nCountRequested)
 {
-    if (pindexStart == nullptr || nCountRequested == 0 /*|| !utils::IsQuorumTypeEnabled( *this, pindexStart)*/) {
+    if (pindexStart == nullptr || nCountRequested == 0) {
         return {};
     }
 
@@ -385,9 +386,11 @@ static void DataCleanupHelper(CEvoDB<uint256, std::vector<CBLSPublicKey>>& evoDb
     for (const auto& prefix : skip_list) {
         evoDb_vvec.EraseCache(prefix);
         evoDb_sk.EraseCache(prefix);
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- %s removed %d\n", __func__, skip_list.size());
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s removed %d\n", __func__, skip_list.size());
     }
 }
+
+
 
 void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex)
 {
@@ -397,7 +400,7 @@ void CQuorumManager::CleanupOldQuorumData(const CBlockIndex* pIndex)
 
     std::set<uint256> dbKeys;
 
-    LogPrint(BCLog::LLMQ, "CQuorumManager::%d -- start\n", __func__);
+    LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- start\n", __func__);
 
 
     const auto vecQuorums = ScanQuorums(pIndex, Params().GetConsensus().llmqTypeChainLocks.keepOldConnections);
