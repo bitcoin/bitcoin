@@ -66,7 +66,6 @@ class MiningTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         assert_equal(VERSIONBITS_TOP_BITS + (1 << VERSIONBITS_DEPLOYMENT_TESTDUMMY_BIT), self.nodes[0].getblocktemplate()['version'])
         self.restart_node(0)
-        # TODO: replace with connect_nodes_bi
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 0)
 
