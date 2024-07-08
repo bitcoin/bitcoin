@@ -930,7 +930,18 @@ private:
      *
      * Parameters are picked to be the same as m_recent_rejects, with the same rationale.
      */
-    CRollingBloomFilter m_recent_rejects_reconsiderable GUARDED_BY(m_tx_download_mutex){120'000, 0.000'001};
+    std::unique_ptr<CRollingBloomFilter> m_recent_rejects_reconsiderable GUARDED_BY(m_tx_download_mutex){nullptr};
+
+    CRollingBloomFilter& RecentRejectsReconsiderableFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
+    {
+        AssertLockHeld(m_tx_download_mutex);
+
+        if (!m_recent_rejects_reconsiderable) {
+            m_recent_rejects_reconsiderable = std::make_unique<CRollingBloomFilter>(120'000, 0.000'001);
+        }
+
+        return *m_recent_rejects_reconsiderable;
+    }
 
     /*
      * Filter for transactions that have been recently confirmed.
@@ -2092,7 +2103,7 @@ void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
         // to a timelock. Reset the rejection filters to give those transactions another chance if we
         // see them again.
         RecentRejectsFilter().reset();
-        m_recent_rejects_reconsiderable.reset();
+        RecentRejectsReconsiderableFilter().reset();
     }
 }
 
@@ -2311,7 +2322,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconside
         if (m_orphanage.HaveTx(Wtxid::FromUint256(hash))) return true;
     }
 
-    if (include_reconsiderable && m_recent_rejects_reconsiderable.contains(hash)) return true;
+    if (include_reconsiderable && RecentRejectsReconsiderableFilter().contains(hash)) return true;
 
     if (m_recent_confirmed_transactions.contains(hash)) return true;
 
@@ -3206,7 +3217,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
             // If the result is TX_RECONSIDERABLE, add it to m_recent_rejects_reconsiderable
             // because we should not download or submit this transaction by itself again, but may
             // submit it as part of a package later.
-            m_recent_rejects_reconsiderable.insert(ptx->GetWitnessHash().ToUint256());
+            RecentRejectsReconsiderableFilter().insert(ptx->GetWitnessHash().ToUint256());
         } else {
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
@@ -3277,7 +3288,7 @@ void PeerManagerImpl::ProcessPackageResult(const PackageToValidate& package_to_v
     const auto& senders = package_to_validate.m_senders;
 
     if (package_result.m_state.IsInvalid()) {
-        m_recent_rejects_reconsiderable.insert(GetPackageHash(package));
+        RecentRejectsReconsiderableFilter().insert(GetPackageHash(package));
     }
     // We currently only expect to process 1-parent-1-child packages. Remove if this changes.
     if (!Assume(package.size() == 2)) return;
@@ -3331,7 +3342,7 @@ std::optional<PeerManagerImpl::PackageToValidate> PeerManagerImpl::Find1P1CPacka
 
     const auto& parent_wtxid{ptx->GetWitnessHash()};
 
-    Assume(m_recent_rejects_reconsiderable.contains(parent_wtxid.ToUint256()));
+    Assume(RecentRejectsReconsiderableFilter().contains(parent_wtxid.ToUint256()));
 
     // Prefer children from this peer. This helps prevent censorship attempts in which an attacker
     // sends lots of fake children for the parent, and we (unluckily) keep selecting the fake
@@ -3343,7 +3354,7 @@ std::optional<PeerManagerImpl::PackageToValidate> PeerManagerImpl::Find1P1CPacka
     // most recent) one efficiently.
     for (const auto& child : cpfp_candidates_same_peer) {
         Package maybe_cpfp_package{ptx, child};
-        if (!m_recent_rejects_reconsiderable.contains(GetPackageHash(maybe_cpfp_package))) {
+        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package))) {
             return PeerManagerImpl::PackageToValidate{ptx, child, nodeid, nodeid};
         }
     }
@@ -3370,7 +3381,7 @@ std::optional<PeerManagerImpl::PackageToValidate> PeerManagerImpl::Find1P1CPacka
         // cached in m_recent_rejects_reconsiderable.
         const auto [child_tx, child_sender] = cpfp_candidates_different_peer.at(index);
         Package maybe_cpfp_package{ptx, child_tx};
-        if (!m_recent_rejects_reconsiderable.contains(GetPackageHash(maybe_cpfp_package))) {
+        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package))) {
             return PeerManagerImpl::PackageToValidate{ptx, child_tx, nodeid, child_sender};
         }
     }
@@ -4562,7 +4573,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
             }
 
-            if (m_recent_rejects_reconsiderable.contains(wtxid)) {
+            if (RecentRejectsReconsiderableFilter().contains(wtxid)) {
                 // When a transaction is already in m_recent_rejects_reconsiderable, we shouldn't submit
                 // it by itself again. However, look for a matching child in the orphanage, as it is
                 // possible that they succeed as a package.
@@ -4623,7 +4634,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 if (RecentRejectsFilter().contains(parent_txid)) {
                     fRejectedParents = true;
                     break;
-                } else if (m_recent_rejects_reconsiderable.contains(parent_txid) && !m_mempool.exists(GenTxid::Txid(parent_txid))) {
+                } else if (RecentRejectsReconsiderableFilter().contains(parent_txid) && !m_mempool.exists(GenTxid::Txid(parent_txid))) {
                     // More than 1 parent in m_recent_rejects_reconsiderable: 1p1c will not be
                     // sufficient to accept this package, so just give up here.
                     if (rejected_parent_reconsiderable.has_value()) {
