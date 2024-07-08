@@ -8,13 +8,6 @@ to a hash that has been compiled into bitcoind.
 
 The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
-
-## Possible test improvements
-
-Interesting starting states could be loading a snapshot when the current chain tip is:
-
-- TODO: The snapshot block
-
 """
 from shutil import rmtree
 
@@ -195,7 +188,6 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_snapshot_with_less_work(self, dump_output_path):
         self.log.info("Test bitcoind should fail when snapshot has less accumulated work than this node.")
         node = self.nodes[0]
-        assert_equal(node.getblockcount(), FINAL_HEIGHT)
         with node.assert_debug_log(expected_msgs=["[snapshot] activation failed - work does not exceed active chainstate"]):
             assert_raises_rpc_error(-32603, "Unable to load UTXO snapshot", node.loadtxoutset, dump_output_path)
 
@@ -308,6 +300,11 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info(f"Creating a UTXO snapshot at height {SNAPSHOT_BASE_HEIGHT}")
         dump_output = n0.dumptxoutset('utxos.dat')
+
+        self.log.info("Test loading snapshot when the node tip is on the same block as the snapshot")
+        assert_equal(n0.getblockcount(), SNAPSHOT_BASE_HEIGHT)
+        assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+        self.test_snapshot_with_less_work(dump_output['path'])
 
         self.log.info("Test loading snapshot when headers are not synced")
         self.test_headers_not_synced(dump_output['path'])
