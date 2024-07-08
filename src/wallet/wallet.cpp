@@ -2757,21 +2757,34 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     return ptx->vout[n];
 }
 
-void CWallet::InitCoinJoinSalt()
+const uint256& CWallet::GetCoinJoinSalt()
 {
-    // Avoid fetching it multiple times
+    if (nCoinJoinSalt.IsNull()) {
+        InitCJSaltFromDb();
+    }
+    return nCoinJoinSalt;
+}
+
+void CWallet::InitCJSaltFromDb()
+{
     assert(nCoinJoinSalt.IsNull());
 
     WalletBatch batch(GetDatabase());
     if (!batch.ReadCoinJoinSalt(nCoinJoinSalt) && batch.ReadCoinJoinSalt(nCoinJoinSalt, true)) {
+        // Migrate salt stored with legacy key
         batch.WriteCoinJoinSalt(nCoinJoinSalt);
     }
+}
 
-    while (nCoinJoinSalt.IsNull()) {
-        // We never generated/saved it
-        nCoinJoinSalt = GetRandHash();
-        batch.WriteCoinJoinSalt(nCoinJoinSalt);
+bool CWallet::SetCoinJoinSalt(const uint256& cj_salt)
+{
+    WalletBatch batch(GetDatabase());
+    // Only store new salt in CWallet if database write is successful
+    if (batch.WriteCoinJoinSalt(cj_salt)) {
+        nCoinJoinSalt = cj_salt;
+        return true;
     }
+    return false;
 }
 
 struct CompareByPriority
@@ -3942,10 +3955,13 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         }
     }
 
-    InitCoinJoinSalt();
-
     if (nLoadWalletRet != DBErrors::LOAD_OK)
         return nLoadWalletRet;
+
+    /* If the CoinJoin salt is not set, try to set a new random hash as the salt */
+    if (GetCoinJoinSalt().IsNull() && !SetCoinJoinSalt(GetRandHash())) {
+        return DBErrors::LOAD_FAIL;
+    }
 
     return DBErrors::LOAD_OK;
 }
