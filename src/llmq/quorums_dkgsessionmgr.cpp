@@ -41,6 +41,10 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& blsWorker, CConnman &_connman
 
 void CDKGSessionManager::StartThreads()
 {
+    if (!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) {
+        // Regular nodes do not care about any DKG internals, bail out
+        return;
+    }
     dkgSessionHandler->StartThread();
 }
 

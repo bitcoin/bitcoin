@@ -206,6 +206,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(const CBlockIndex
 
 bool CLLMQUtils::EnsureQuorumConnections(const CBlockIndex *pQuorumBaseBlockIndex, const uint256& myProTxHash, CConnman& connman)
 {
+    if (!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) return false;
     auto members = GetAllQuorumMembers(pQuorumBaseBlockIndex);
     bool isMember = std::find_if(members.begin(), members.end(), [&](const auto& dmn) { return dmn->proTxHash == myProTxHash; }) != members.end();
 
