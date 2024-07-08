@@ -958,7 +958,18 @@ private:
      * transaction per day that would be inadvertently ignored (which is the
      * same probability that we have in the reject filter).
      */
-    CRollingBloomFilter m_recent_confirmed_transactions GUARDED_BY(m_tx_download_mutex){48'000, 0.000'001};
+    std::unique_ptr<CRollingBloomFilter> m_recent_confirmed_transactions GUARDED_BY(m_tx_download_mutex){nullptr};
+
+    CRollingBloomFilter& RecentConfirmedTransactionsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
+    {
+        AssertLockHeld(m_tx_download_mutex);
+
+        if (!m_recent_confirmed_transactions) {
+            m_recent_confirmed_transactions = std::make_unique<CRollingBloomFilter>(48'000, 0.000'001);
+        }
+
+        return *m_recent_confirmed_transactions;
+    }
 
     /**
      * For sending `inv`s to inbound peers, we use a single (exponentially
@@ -2141,9 +2152,9 @@ void PeerManagerImpl::BlockConnected(
     m_orphanage.EraseForBlock(*pblock);
 
     for (const auto& ptx : pblock->vtx) {
-        m_recent_confirmed_transactions.insert(ptx->GetHash().ToUint256());
+        RecentConfirmedTransactionsFilter().insert(ptx->GetHash().ToUint256());
         if (ptx->HasWitness()) {
-            m_recent_confirmed_transactions.insert(ptx->GetWitnessHash().ToUint256());
+            RecentConfirmedTransactionsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
         m_txrequest.ForgetTxHash(ptx->GetHash());
         m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
@@ -2161,7 +2172,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
     // presumably the most common case of relaying a confirmed transaction
     // should be just after a new block containing it is found.
     LOCK(m_tx_download_mutex);
-    m_recent_confirmed_transactions.reset();
+    RecentConfirmedTransactionsFilter().reset();
 }
 
 /**
@@ -2324,7 +2335,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_reconside
 
     if (include_reconsiderable && RecentRejectsReconsiderableFilter().contains(hash)) return true;
 
-    if (m_recent_confirmed_transactions.contains(hash)) return true;
+    if (RecentConfirmedTransactionsFilter().contains(hash)) return true;
 
     return RecentRejectsFilter().contains(hash) || m_mempool.exists(gtxid);
 }
