@@ -23,8 +23,8 @@ class EnvTestingSetup : public BasicTestingSetup
 {
 public:
     explicit EnvTestingSetup(const ChainType chainType = ChainType::MAIN,
-                             const std::vector<const char*>& extra_args = {})
-        : BasicTestingSetup{chainType, extra_args},
+                             TestOpts opts = {})
+        : BasicTestingSetup{chainType, opts},
           m_prev_log_level{LogInstance().LogLevel()},
           m_create_sock_orig{CreateSock}
     {
