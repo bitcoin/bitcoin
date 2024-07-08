@@ -936,6 +936,25 @@ public:
         return tip->GetBlockHash();
     }
 
+    std::pair<uint256, int> waitTipChanged(MillisecondsDouble timeout) override
+    {
+        uint256 previous_hash{WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip()->GetBlockHash();)};
+
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        {
+            WAIT_LOCK(g_best_block_mutex, lock);
+            while (!chainman().m_interrupt && std::chrono::steady_clock::now() < deadline) {
+                auto check_time = std::chrono::steady_clock::now() + std::min(timeout, MillisecondsDouble(1000));
+                g_best_block_cv.wait_until(lock, check_time);
+                if (g_best_block != previous_hash) break;
+                // Obtaining the height here using chainman().ActiveChain().Tip()->nHeight
+                // would result in a deadlock, because UpdateTip requires holding cs_main.
+            }
+        }
+        LOCK(::cs_main);
+        return std::make_pair(chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight);
+    }
+
     bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
     {
         return chainman().ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
