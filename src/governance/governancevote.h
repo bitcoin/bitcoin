@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,14 +6,15 @@
 #define SYSCOIN_GOVERNANCE_GOVERNANCEVOTE_H
 
 #include <primitives/transaction.h>
+#include <uint256.h>
 
-class CGovernanceVote;
+class CActiveMasternodeManager;
 class CBLSPublicKey;
-class CBLSSecretKey;
-class PeerManager;
+class CDeterministicMNList;
+class CGovernanceVote;
 class CKey;
 class CKeyID;
-class CBlockIndex;
+class PeerManager;
 
 // INTENTION OF MASTERNODES REGARDING ITEM
 enum vote_outcome_enum_t {
@@ -100,10 +101,10 @@ public:
 
     bool Sign(const CKey& key, const CKeyID& keyID);
     bool CheckSignature(const CKeyID& keyID) const;
-    bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBlockIndex* pindex, const CBLSPublicKey& pubKey) const;
-    bool IsValid(const CBlockIndex* pindex, bool useVotingKey) const;
-    void Relay(PeerManager& peerman) const;
+    bool Sign();
+    bool CheckSignature(const CBLSPublicKey& pubKey) const;
+    bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
+    void Relay(PeerManager& peerman, const CDeterministicMNList& tip_mn_list) const;
 
     const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
 
@@ -117,30 +118,14 @@ public:
     uint256 GetSignatureHash() const;
 
     std::string ToString() const;
-    template<typename Stream>
-    void Serialize(Stream& s) const
+
+    SERIALIZE_METHODS(CGovernanceVote, obj)
     {
-        s << masternodeOutpoint;
-        s << nParentHash;
-        s << nVoteOutcome;
-        s << nVoteSignal;
-        s << nTime;
+        READWRITE(obj.masternodeOutpoint, obj.nParentHash, obj.nVoteOutcome, obj.nVoteSignal, obj.nTime);
         if (!(s.GetType() & SER_GETHASH)) {
-            s << vchSig;
-        }      
-    }
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        s >> masternodeOutpoint;
-        s >> nParentHash;
-        s >> nVoteOutcome;
-        s >> nVoteSignal;
-        s >> nTime;
-        if (!(s.GetType() & SER_GETHASH)) {
-            s >> vchSig;
-        } 
-        UpdateHash();
+            READWRITE(obj.vchSig);
+        }
+        SER_READ(obj, obj.UpdateHash());
     }
 };
 

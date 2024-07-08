@@ -107,6 +107,7 @@ SYSCOIN_TESTS =\
   test/flatfile_tests.cpp \
   test/fs_tests.cpp \
   test/getarg_tests.cpp \
+  test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
   test/headers_sync_chainwork_tests.cpp \
   test/httpserver_tests.cpp \

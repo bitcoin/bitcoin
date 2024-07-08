@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,14 +6,17 @@
 #define SYSCOIN_MASTERNODE_MASTERNODEMETA_H
 
 #include <serialize.h>
+#include <sync.h>
+#include <uint256.h>
 
 #include <univalue.h>
 
 #include <atomic>
-#include <uint256.h>
-#include <sync.h>
+#include <memory>
 
 class CConnman;
+template<typename T>
+class CFlatDB;
 
 static constexpr int MASTERNODE_MAX_FAILED_OUTBOUND_ATTEMPTS{5};
 
@@ -45,9 +48,17 @@ public:
         lastOutboundSuccess(ref.lastOutboundSuccess.load())
     {
     }
-    SERIALIZE_METHODS(CMasternodeMetaInfo, obj) {
+
+    SERIALIZE_METHODS(CMasternodeMetaInfo, obj)
+    {
         LOCK(obj.cs);
-        READWRITE(obj.proTxHash, obj.mapGovernanceObjectsVotedOn, obj.outboundAttemptCount, obj.lastOutboundAttempt, obj.lastOutboundSuccess);
+        READWRITE(
+                obj.proTxHash,
+                obj.mapGovernanceObjectsVotedOn,
+                obj.outboundAttemptCount,
+                obj.lastOutboundAttempt,
+                obj.lastOutboundSuccess
+                );
     }
 
     UniValue ToJson() const;
@@ -59,6 +70,7 @@ public:
     void AddGovernanceVote(const uint256& nGovernanceObjectHash);
 
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
+
     bool OutboundFailedTooManyTimes() const { return outboundAttemptCount > MASTERNODE_MAX_FAILED_OUTBOUND_ATTEMPTS; }
     void SetLastOutboundAttempt(int64_t t) { lastOutboundAttempt = t; ++outboundAttemptCount; }
     int64_t GetLastOutboundAttempt() const { return lastOutboundAttempt; }
@@ -67,65 +79,81 @@ public:
 };
 using CMasternodeMetaInfoPtr = std::shared_ptr<CMasternodeMetaInfo>;
 
-class CMasternodeMetaMan
+class MasternodeMetaStore
 {
-private:
+protected:
     static const std::string SERIALIZATION_VERSION_STRING;
 
     mutable RecursiveMutex cs;
-
     std::map<uint256, CMasternodeMetaInfoPtr> metaInfos GUARDED_BY(cs);
-    std::vector<uint256> vecDirtyGovernanceObjectHashes GUARDED_BY(cs);
 
 public:
     template<typename Stream>
-    void Serialize(Stream& s) const
+    void Serialize(Stream &s) const
     {
         LOCK(cs);
-        std::string strVersion;
-        strVersion = SERIALIZATION_VERSION_STRING;
-        s << strVersion;
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
-        tmpMetaInfo.reserve(metaInfos.size());
-        for (auto& p : metaInfos) {
+        for (const auto& p : metaInfos) {
             tmpMetaInfo.emplace_back(*p.second);
         }
-        s << tmpMetaInfo;
+        s << SERIALIZATION_VERSION_STRING << tmpMetaInfo;
     }
+
     template<typename Stream>
-    void Unserialize(Stream& s)
+    void Unserialize(Stream &s)
     {
-        LOCK(cs);
-        
-        std::string strVersion;
         Clear();
+
+        LOCK(cs);
+        std::string strVersion;
         s >> strVersion;
-        if (strVersion != SERIALIZATION_VERSION_STRING)
+        if (strVersion != SERIALIZATION_VERSION_STRING) {
             return;
+        }
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
         s >> tmpMetaInfo;
         metaInfos.clear();
         for (auto& mm : tmpMetaInfo) {
-            const auto& mmHash = mm.GetProTxHash();
-            metaInfos.emplace(mmHash, std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
+            metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
         }
     }
 
+    void Clear()
+    {
+        LOCK(cs);
+
+        metaInfos.clear();
+    }
+
+    std::string ToString() const;
+};
+
+class CMasternodeMetaMan : public MasternodeMetaStore
+{
+private:
+    using db_type = CFlatDB<MasternodeMetaStore>;
+
+private:
+    const std::unique_ptr<db_type> m_db;
+    bool is_valid{false};
+
+    std::vector<uint256> vecDirtyGovernanceObjectHashes GUARDED_BY(cs);
+
 public:
+    explicit CMasternodeMetaMan();
+    ~CMasternodeMetaMan();
+
+    bool LoadCache(bool load_cache);
+
+    bool IsValid() const { return is_valid; }
+
     CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
 
     bool AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash);
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
 
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
-
-    void Clear();
-    // Needed to avoid errors in flat-database.h
-    void CheckAndRemove() const {};
-
-    std::string ToString() const;
 };
 
-extern CMasternodeMetaMan mmetaman;
-
+extern std::unique_ptr<CMasternodeMetaMan> mmetaman;
 #endif // SYSCOIN_MASTERNODE_MASTERNODEMETA_H

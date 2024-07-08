@@ -29,7 +29,6 @@ class UniValue;
 class CBlockIndex;
 class TxValidationState;
 class ChainstateManager;
-extern RecursiveMutex cs_main;
 namespace llmq
 {
     class CFinalCommitmentTxPayload;

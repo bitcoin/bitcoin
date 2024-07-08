@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H
@@ -9,41 +9,17 @@
 #include <threadsafety.h>
 #include <uint256.h>
 #include <addresstype.h>
+#include <kernel/cs_main.h>
+
 class CTxOut;
 class CTransaction;
+
 class CSuperblock;
-class CGovernanceTriggerManager;
 class CSuperblockManager;
 
 using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
-// DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
-extern CGovernanceTriggerManager triggerman;
-
-/**
-*   Trigger Manager
-*
-*   - Track governance objects which are triggers
-*   - After triggers are activated and executed, they can be removed
-*/
-
-class CGovernanceTriggerManager
-{
-    friend class CSuperblockManager;
-    friend class CGovernanceManager;
-
-private:
-
-    std::map<uint256, CSuperblock_sptr> mapTrigger;
-
-    std::vector<CSuperblock_sptr> GetActiveTriggers() EXCLUSIVE_LOCKS_REQUIRED(governance->cs);
-    bool AddNewTrigger(uint256 nHash);
-    void CleanAndRemove();
-
-public:
-    CGovernanceTriggerManager() :
-        mapTrigger() {}
-};
+CAmount ParsePaymentAmount(const std::string& strAmount);
 
 /**
 *   Superblock Manager
@@ -61,6 +37,7 @@ public:
 
     static bool GetSuperblockPayments(int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet);
     static void ExecuteBestSuperblock(int nBlockHeight);
+
     static bool IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward);
 };
 
@@ -77,14 +54,17 @@ private:
 public:
     CScript script;
     CAmount nAmount;
+    uint256 proposalHash;
 
     CGovernancePayment() :
         fValid(false),
         script(),
-        nAmount(0)
+        nAmount(0),
+        proposalHash(0)
     {
     }
-    CGovernancePayment(const CTxDestination& destIn, const CAmount &nAmountIn);
+
+    CGovernancePayment(const CTxDestination& destIn, CAmount nAmountIn, const uint256& proposalHash);
 
     bool IsValid() const { return fValid; }
 };
@@ -113,24 +93,27 @@ private:
     uint256 nGovObjHash;
 
     int nBlockHeight;
-    int nStatus;
+    SeenObjectStatus nStatus;
     std::vector<CGovernancePayment> vecPayments;
 
-    void ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts);
+    void ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts, const std::string& strProposalHashes);
 
 public:
     CSuperblock();
+    CSuperblock(int nBlockHeight, std::vector<CGovernancePayment> vecPayments);
     explicit CSuperblock(uint256& nHash);
 
     static bool IsValidBlockHeight(int nBlockHeight);
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
     static CAmount GetPaymentsLimit(int nBlockHeight);
 
-    int GetStatus() const { return nStatus; }
-    void SetStatus(int nStatusIn) { nStatus = nStatusIn; }
+    SeenObjectStatus GetStatus() const { return nStatus; }
+    void SetStatus(SeenObjectStatus nStatusIn) { nStatus = nStatusIn; }
+
+    std::string GetHexStrData() const;
 
     // TELL THE ENGINE WE EXECUTED THIS EVENT
-    void SetExecuted() { nStatus = SEEN_OBJECT_EXECUTED; }
+    void SetExecuted() { nStatus = SeenObjectStatus::Executed; }
 
     CGovernanceObject* GetGovernanceObject() EXCLUSIVE_LOCKS_REQUIRED(governance->cs);
 
@@ -139,12 +122,14 @@ public:
         return nBlockHeight;
     }
 
-    int CountPayments() { return (int)vecPayments.size(); }
+    int CountPayments() const { return (int)vecPayments.size(); }
     bool GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet);
     CAmount GetPaymentsTotalAmount();
 
     bool IsValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward);
     bool IsExpired() const;
+
+    std::vector<uint256> GetProposalHashes() const;
 };
 
 #endif // SYSCOIN_GOVERNANCE_GOVERNANCECLASSES_H

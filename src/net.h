@@ -1307,9 +1307,6 @@ public:
         ForEachNode(FullyConnectedOnly, func);
     }
 
-    void CopyNodeVector(std::vector<CNode*>& vecNodesCopy);
-    void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
-
     // Addrman functions
     /**
      * Return all or many randomly selected addresses, optionally by network.
@@ -1769,7 +1766,7 @@ private:
      * unexpectedly use too much memory.
      */
     static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
-
+    public:
     /**
      * RAII helper to atomically create a copy of `m_nodes` and add a reference
      * to each of the nodes. The nodes are released when this object is destroyed.
@@ -1777,17 +1774,22 @@ private:
     class NodesSnapshot
     {
     public:
-        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
+        explicit NodesSnapshot(const CConnman& connman, std::function<bool(const CNode* pnode)> filter, bool shuffle = false)
         {
             {
                 LOCK(connman.m_nodes_mutex);
-                m_nodes_copy = connman.m_nodes;
-                for (auto& node : m_nodes_copy) {
+                m_nodes_copy.reserve(connman.m_nodes.size());
+
+                for (auto& node : connman.m_nodes) {
+                    if (!filter(node))
+                        continue;
                     node->AddRef();
+                    m_nodes_copy.push_back(node);
                 }
-            }
-            if (shuffle) {
-                Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
+
+                if (shuffle) {
+                    Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
+                }
             }
         }
 

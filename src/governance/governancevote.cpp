@@ -1,18 +1,21 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2024 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governancevote.h>
+
 #include <bls/bls.h>
+#include <chainparams.h>
 #include <key.h>
+#include <masternode/activemasternode.h>
 #include <masternode/masternodesync.h>
 #include <messagesigner.h>
-#include <net.h>
+#include <net_processing.h>
+#include <util/string.h>
+#include <validation.h>
 #include <timedata.h>
 #include <evo/deterministicmns.h>
-#include <net_processing.h>
-#include <llmq/quorums_utils.h>
-#include <logging.h>
+
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
     static const std::map<vote_outcome_enum_t, std::string> mapOutcomeString = {
@@ -114,15 +117,15 @@ std::string CGovernanceVote::ToString() const
     return ostr.str();
 }
 
-void CGovernanceVote::Relay(PeerManager& peerman) const
+void CGovernanceVote::Relay(PeerManager& peerman, const CDeterministicMNList& tip_mn_list) const
 {
     // Do not relay until fully synced
     if (!masternodeSync.IsSynced()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::Relay -- won't relay until fully synced\n");
         return;
     }
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+
+    auto dmn = tip_mn_list.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         return;
     }
@@ -156,8 +159,7 @@ uint256 CGovernanceVote::GetSignatureHash() const
 
 bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 {
-
-    uint256 signatureHash = GetSignatureHash();
+    const uint256 &signatureHash = GetSignatureHash();
 
     if (!CHashSigner::SignHash(signatureHash, key, vchSig)) {
         LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
@@ -165,9 +167,10 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
     }
 
     if (!CHashSigner::VerifyHash(signatureHash, keyID, vchSig)) {
-        LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed, error\n");
+        LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed\n");
         return false;
     }
+
 
     return true;
 }
@@ -175,35 +178,36 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
     if (!CHashSigner::VerifyHash(GetSignatureHash(), keyID, vchSig)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed\n");
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyHash() failed\n");
         return false;
     }
-    
+ 
+
     return true;
 }
 
-bool CGovernanceVote::Sign(const CBLSSecretKey& key)
+bool CGovernanceVote::Sign()
 {
-    CBLSSignature sig = key.Sign(GetSignatureHash());
+    CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(GetSignatureHash(), false);
     if (!sig.IsValid()) {
         return false;
     }
-    vchSig = sig.ToByteVector();
+    vchSig = sig.ToByteVector(false);
     return true;
 }
 
-bool CGovernanceVote::CheckSignature(const CBlockIndex* pindexIn, const CBLSPublicKey& pubKey) const
+bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
     CBLSSignature sig;
-    sig.SetByteVector(vchSig);
-    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
+    sig.SetByteVector(vchSig, false);
+    if (!sig.VerifyInsecure(pubKey, GetSignatureHash(), false)) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
     return true;
 }
 
-bool CGovernanceVote::IsValid(const CBlockIndex* pindex, bool useVotingKey) const
+bool CGovernanceVote::IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const
 {
     if (nTime > TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + (60 * 60)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, TicksSinceEpoch<std::chrono::seconds>(GetAdjustedTime()) + (60 * 60));
@@ -221,8 +225,8 @@ bool CGovernanceVote::IsValid(const CBlockIndex* pindex, bool useVotingKey) cons
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+
+    auto dmn = tip_mn_list.GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
@@ -231,7 +235,7 @@ bool CGovernanceVote::IsValid(const CBlockIndex* pindex, bool useVotingKey) cons
     if (useVotingKey) {
         return CheckSignature(dmn->pdmnState->keyIDVoting);
     } else {
-        return CheckSignature(pindex, dmn->pdmnState->pubKeyOperator.Get());
+        return CheckSignature(dmn->pdmnState->pubKeyOperator.Get());
     }
 }
 

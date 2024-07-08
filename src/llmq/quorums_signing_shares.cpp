@@ -230,7 +230,7 @@ void CSigSharesManager::ProcessMessage(const CNode* pfrom, const std::string& st
         return;
     }
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED) && strCommand == NetMsgType::QSIGSHARE) {
+    if (sporkManager->IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED) && strCommand == NetMsgType::QSIGSHARE) {
         std::vector<CSigShare> receivedSigShares;
         vRecv >> receivedSigShares;
 
@@ -969,9 +969,19 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::unordered_map<uint256, NodeId, StaticSaltedHasher> &proTxToNode)
+void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes)
 {
     AssertLockHeld(cs);
+
+    std::unordered_map<uint256, CNode*, StaticSaltedHasher> proTxToNode;
+    for (const auto& pnode : vNodes) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (verifiedProRegTxHash.IsNull()) {
+            continue;
+        }
+        proTxToNode.try_emplace(verifiedProRegTxHash, pnode);
+    }
+
     auto curTime = GetTime<std::chrono::milliseconds>().count();
     const auto& params = Params().GetConsensus().llmqTypeChainLocks;
     for (auto& [_, signedSession] : signedSessions) {
@@ -998,7 +1008,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
                 continue;
             }
 
-            auto& m = sigSharesToSend[it->second];
+            auto& m = sigSharesToSend[it->second->GetId()];
             m.emplace_back(signedSession.sigShare);
         }
     }
@@ -1083,22 +1093,13 @@ bool CSigSharesManager::SendMessages()
         return session->sendSessionId;
     };
 
-    std::vector<CNode*> vNodesCopy;
-    connman.CopyNodeVector(vNodesCopy);
-    std::unordered_map<uint256, NodeId, StaticSaltedHasher> proTxToNode;
-    for (const auto& pnode : vNodesCopy) {
-        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
-        if (verifiedProRegTxHash.IsNull()) {
-            continue;
-        }
-        proTxToNode.emplace(verifiedProRegTxHash, pnode->GetId());
-    }
+    const CConnman::NodesSnapshot snap{connman, /* filter = */ FullyConnectedOnly};
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
         CollectSigSharesToSend(sigShareBatchesToSend);
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
-        CollectSigSharesToSendConcentrated(sigSharesToSend, proTxToNode);
+        CollectSigSharesToSendConcentrated(sigSharesToSend, snap.Nodes());
 
         for (auto& [nodeId, sigShareMap] : sigSharesToRequest) {
             for (auto& [hash, sigShareInv] : sigShareMap) {
@@ -1119,7 +1120,7 @@ bool CSigSharesManager::SendMessages()
 
     bool didSend = false;
 
-    for (CNode* pnode : vNodesCopy) {
+    for (CNode* pnode : snap.Nodes()) {
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
         if (const auto it1 = sigSessionAnnouncements.find(pnode->GetId()); it1 != sigSessionAnnouncements.end()) {
@@ -1221,9 +1222,6 @@ bool CSigSharesManager::SendMessages()
             }
         }
     }
-
-    // looped through all nodes, release them
-    connman.ReleaseNodeVector(vNodesCopy);
 
     return didSend;
 }

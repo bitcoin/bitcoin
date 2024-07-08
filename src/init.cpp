@@ -127,7 +127,6 @@
 #include <netfulfilledman.h>
 #include <services/nevmconsensus.h>
 #include <key_io.h>
-#include <flatdatabase.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
@@ -309,23 +308,6 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
     node.addrman.reset();
     node.netgroupman.reset();
-    // SYSCOIN
-    std::string status;
-    if (!RPCIsInWarmup(&status)) {
-        // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
-        CMasternodeMetaMan tmpMetaMan;
-        flatdb1.Dump(mmetaman, tmpMetaMan);
-        CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
-        CNetFulfilledRequestManager tmpFulfillman;
-        flatdb4.Dump(netfulfilledman, tmpFulfillman);
-        CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
-        CSporkManager tmpSporkMan;
-        flatdb6.Dump(sporkManager, tmpSporkMan);
-        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-        CGovernanceManager govMan(*node.chainman);
-        flatdb3.Dump(*governance, govMan);
-    }
 
     if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
         DumpMempool(*node.mempool, MempoolPath(*node.args));
@@ -1311,30 +1293,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
         activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
     }
-    std::vector<std::string> vSporkAddresses;
-    if (args.IsArgSet("-sporkaddr")) {
-        vSporkAddresses = args.GetArgs("-sporkaddr");
-    // if HRP is overridden don't bother setting spork addresses as they will be wrong format
-    } else if(!args.IsArgSet("-hrp")){
-        vSporkAddresses = Params().SporkAddresses();
-    }
-    for (const auto& address: vSporkAddresses) {
-        if (!sporkManager.SetSporkAddress(address)) {
-            return InitError(_("Invalid spork address specified with -sporkaddr"));
-        }
-    }
 
-    int minsporkkeys = args.GetIntArg("-minsporkkeys", Params().MinSporkKeys());
-    if (!args.IsArgSet("-hrp") && !sporkManager.SetMinSporkKeys(minsporkkeys)) {
-        return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
-    }
-
-
-    if (args.IsArgSet("-sporkkey")) { // spork priv key
-        if (!sporkManager.SetPrivKey(args.GetArg("-sporkkey", ""))) {
-            return InitError(_("Unable to sign spork message, wrong key?"));
-        }
-    }
 
     assert(!node.scheduler);
     node.scheduler = std::make_unique<CScheduler>();
@@ -1654,15 +1613,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // ********************************************************* Step 7: load block chain
     if(fRegTest) {
         nMNCollateralRequired = args.GetIntArg("-mncollateral", DEFAULT_MN_COLLATERAL_REQUIRED)*COIN;
-    }
-
-    std::string strDBName;
-
-    strDBName = "sporks.dat";
-    uiInterface.InitMessage(_("Loading sporks cache...").translated);
-    CFlatDB<CSporkManager> flatdb6(strDBName, "magicSporkCache");
-    if (!flatdb6.Load(sporkManager)) {
-        return InitError(strprintf(_("Failed to load sporks cache from %s\n"), fs::PathToString((gArgs.GetDataDirNet() / fs::u8path(strDBName)))));
     }
 
     ChainstateManager::Options chainman_opts{
@@ -2036,57 +1986,57 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // SYSCOIN ********************************************************* Step 11b: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
+    std::vector<std::string> vSporkAddresses;
+    if (args.IsArgSet("-sporkaddr")) {
+        vSporkAddresses = args.GetArgs("-sporkaddr");
+    // if HRP is overridden don't bother setting spork addresses as they will be wrong format
+    } else if(!args.IsArgSet("-hrp")){
+        vSporkAddresses = Params().SporkAddresses();
+    }
+    for (const auto& address: vSporkAddresses) {
+        if (!sporkManager->SetSporkAddress(address)) {
+            return InitError(_("Invalid spork address specified with -sporkaddr"));
+        }
+    }
+    int minsporkkeys = args.GetIntArg("-minsporkkeys", Params().MinSporkKeys());
+    if (!args.IsArgSet("-hrp") && !sporkManager->SetMinSporkKeys(minsporkkeys)) {
+        return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
+    }
+
+
+    if (args.IsArgSet("-sporkkey")) { // spork priv key
+        if (!sporkManager->SetPrivKey(args.GetArg("-sporkkey", ""))) {
+            return InitError(_("Unable to sign spork message, wrong key?"));
+        }
+    }
     bool fLoadCacheFiles = !(fReindex || fReindexChainState);
-    const fs::path &pathDB = gArgs.GetDataDirNet();
-
-    strDBName = "mncache.dat";
-    uiInterface.InitMessage(_("Loading masternode cache...").translated);
-    CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
-    if (fLoadCacheFiles) {
-        if(!flatdb1.Load(mmetaman)) {
-            return InitError(strprintf(_("Failed to load masternode cache from %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
-        }
-    } else {
-        CMasternodeMetaMan mmetamanTmp, mmetamanTmp1;
-        if(!flatdb1.Dump(mmetamanTmp, mmetamanTmp1)) {
-            return InitError(strprintf(_("Failed to clear masternode cache at %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
-        }
+    uiInterface.InitMessage(_("Loading caches...").translated);
+    if (!sporkManager->LoadCache()) {
+        return InitError(Untranslated("Failed to load sporks cache\n"));
     }
-
-    strDBName = "governance.dat";
-    uiInterface.InitMessage(_("Loading governance cache...").translated);
-    CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-    if (fLoadCacheFiles) {
-        if(!flatdb3.Load(*governance)) {
-            return InitError(strprintf(_("Failed to load governance cache from %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
+    if (!netfulfilledman->LoadCache(fLoadCacheFiles)) {
+        if (fLoadCacheFiles) {
+            return InitError(Untranslated("Failed to load fulfilled requests cache"));
         }
-        governance->InitOnLoad();
-    } else {
-        CGovernanceManager governanceTmp(*node.chainman);
-        CGovernanceManager governanceTmp1(*node.chainman);
-        if(!flatdb3.Dump(governanceTmp, governanceTmp1)) {
-            return InitError(strprintf(_("Failed to clear governance cache at %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
-        }
+        return InitError(Untranslated("Failed to clear fulfilled requests cache"));
     }
-
-    strDBName = "netfulfilled.dat";
-    uiInterface.InitMessage(_("Loading fulfilled requests cache...").translated);
-    CFlatDB<CNetFulfilledRequestManager> flatdb4(strDBName, "magicFulfilledCache");
-    if (fLoadCacheFiles) {
-        if(!flatdb4.Load(netfulfilledman)) {
-            return InitError(strprintf(_("Failed to load fulfilled requests cache from %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
+    if (!mmetaman->LoadCache(fLoadCacheFiles)) {
+        if (fLoadCacheFiles) {
+            return InitError(Untranslated("Failed to load masternode cache"));
         }
-    } else {
-        CNetFulfilledRequestManager netfulfilledmanTmp, netfulfilledmanTmp1;
-        if(!flatdb4.Dump(netfulfilledmanTmp, netfulfilledmanTmp1)) {
-            return InitError(strprintf(_("Failed to clear fulfilled requests cache at %s\n"), fs::PathToString((pathDB / fs::u8path(strDBName)))));
+        return InitError(Untranslated("Failed to clear masternode cache"));
+    }
+    if (!governance->LoadCache(fLoadCacheFiles)) {
+        if (fLoadCacheFiles) {
+            return InitError(Untranslated("Failed to load governance cache"));
         }
+        return InitError(Untranslated("Failed to clear governance cache"));
     }
     if (ShutdownRequested()) {
         return false;
     }
 
-    node.scheduler->scheduleEvery([&] { netfulfilledman.DoMaintenance(); }, std::chrono::seconds{1});
+    node.scheduler->scheduleEvery([&] { netfulfilledman->DoMaintenance(); }, std::chrono::seconds{1});
     node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{MASTERNODE_SYNC_TICK_SECONDS});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});

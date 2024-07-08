@@ -150,7 +150,8 @@ public:
         consensus.nSeniorityHeight2 = consensus.nSeniorityHeight1*2.5;
         consensus.nSeniorityLevel2 = 1.0;
         consensus.nSuperblockStartBlock = 1;
-        consensus.nSuperblockCycle = 17520;
+        consensus.nSuperblockCycle = 17520; // ~(60*24*30)/2.5
+        consensus.nSuperblockMaturityWindow = 1728; // ~(60*24*3)/2.5, ~3 days before actual Superblock is emitted
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
@@ -312,6 +313,7 @@ public:
         consensus.nSeniorityLevel2 = 1.0;
         consensus.nSuperblockStartBlock = 1;
         consensus.nSuperblockCycle = 60;
+        consensus.nSuperblockMaturityWindow = 20;
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
@@ -562,6 +564,7 @@ public:
         consensus.nSeniorityLevel2 = 1.0;
         consensus.nSuperblockStartBlock = 1;
         consensus.nSuperblockCycle = 10;
+        consensus.nSuperblockMaturityWindow = 5;
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 100;
         consensus.nMasternodeMinimumConfirmations = 1;

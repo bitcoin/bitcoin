@@ -1,17 +1,18 @@
-// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_FLATDATABASE_H
 #define SYSCOIN_FLATDATABASE_H
 
-#include <chainparams.h>
 #include <clientversion.h>
+#include <chainparams.h>
 #include <util/fs.h>
 #include <hash.h>
 #include <streams.h>
-
-/** 
+#include <common/args.h>
+#include <logging.h>
+/**
 *   Generic Dumping and Loading
 *   ---------------------------
 */
@@ -35,7 +36,7 @@ private:
     std::string strFilename;
     std::string strMagicMessage;
 
-    bool Write(const T& objToSave)
+    bool CoreWrite(const T& objToSave)
     {
         // LOCK(objToSave.cs);
 
@@ -50,10 +51,10 @@ private:
         ssObj << hash;
 
         // open output file, and associate with CAutoFile
-        FILE *file = fopen(fs::PathToString(pathDB).c_str(), "wb");
+        FILE *file = fopen(pathDB.u8string().c_str(), "wb");
         CAutoFile fileout(file, CLIENT_VERSION);
         if (fileout.IsNull())
-            return error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
+            return error("%s: Failed to open file %s", __func__, pathDB.u8string());
 
         // Write and commit header, data
         try {
@@ -70,17 +71,17 @@ private:
         return true;
     }
 
-    ReadResult Read(T& objToLoad, bool fDryRun = false)
+    ReadResult CoreRead(T& objToLoad)
     {
         //LOCK(objToLoad.cs);
 
         int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         // open input file, and associate with CAutoFile
-        FILE *file = fopen(fs::PathToString(pathDB).c_str(), "rb");
+        FILE *file = fopen(pathDB.u8string().c_str(), "rb");
         CAutoFile filein(file, CLIENT_VERSION);
         if (filein.IsNull())
         {
-            error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
+            error("%s: Failed to open file %s", __func__, pathDB.u8string());
             return FileError;
         }
 
@@ -116,6 +117,7 @@ private:
         }
 
 
+        MessageStartChars pchMsgTmp;
         std::string strMagicMessageTmp;
         try {
             // de-serialize file header (file specific magic message) and ..
@@ -127,15 +129,18 @@ private:
                 error("%s: Invalid magic message", __func__);
                 return IncorrectMagicMessage;
             }
-            
-            HashVerifier verifier{ssObj};
+
+
             // de-serialize file header (network specific magic number) and ..
-            MessageStartChars pchMsgTmp;
-            verifier >> pchMsgTmp;
+            ssObj >> pchMsgTmp;
+
             // ... verify the network matches ours
-            if (pchMsgTmp != Params().MessageStart()) {
-                throw std::runtime_error{"Invalid network magic number"};
+            if (pchMsgTmp != Params().MessageStart())
+            {
+                error("%s: Invalid network magic number", __func__);
+                return IncorrectMagicNumber;
             }
+
             // de-serialize data into T object
             ssObj >> objToLoad;
         }
@@ -147,28 +152,13 @@ private:
 
         LogPrintf("Loaded info from %s  %dms\n", strFilename, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
-        if(!fDryRun) {
-            LogPrintf("%s: Cleaning....\n", __func__);
-            objToLoad.CheckAndRemove();
-            LogPrintf("     %s\n", objToLoad.ToString());
-        }
 
         return Ok;
     }
 
-
-public:
-    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
+    bool Read(T& objToLoad)
     {
-        pathDB = gArgs.GetDataDirNet() / fs::u8path(strFilenameIn);
-        strFilename = strFilenameIn;
-        strMagicMessage = strMagicMessageIn;
-    }
-
-    bool Load(T& objToLoad)
-    {
-        LogPrintf("Reading info from %s...\n", strFilename);
-        ReadResult readResult = Read(objToLoad);
+        ReadResult readResult = CoreRead(objToLoad);
         if (readResult == FileError)
             LogPrintf("Missing file %s, will try to recreate\n", strFilename);
         else if (readResult != Ok)
@@ -187,35 +177,34 @@ public:
         return true;
     }
 
-    bool Dump(T& objToSave, T &tmpObjToLoad)
+public:
+    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
     {
+        pathDB = gArgs.GetDataDirNet() / fs::u8path(strFilenameIn);
+        strFilename = strFilenameIn;
+        strMagicMessage = strMagicMessageIn;
+    }
+
+    bool Load(T& objToLoad)
+    {
+        LogPrintf("Reading info from %s...\n", strFilename);
+        return Read(objToLoad);
+    }
+
+    bool Store(T& objToSave)
+    {
+        LogPrintf("Verifying %s format...\n", strFilename);
+        T tmpObjToLoad;
+        if (!Read(tmpObjToLoad)) return false;
+
         int64_t nStart = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
 
-        LogPrintf("Verifying %s format...\n", strFilename);
-        ReadResult readResult = Read(tmpObjToLoad, true);
-
-        // there was an error and it was not an error on file opening => do not proceed
-        if (readResult == FileError)
-            LogPrintf("Missing file %s, will try to recreate\n", strFilename);
-        else if (readResult != Ok)
-        {
-            LogPrintf("Error reading %s: ", strFilename);
-            if(readResult == IncorrectFormat)
-                LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-            else
-            {
-                LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
-                return false;
-            }
-        }
-
         LogPrintf("Writing info to %s...\n", strFilename);
-        Write(objToSave);
+        CoreWrite(objToSave);
         LogPrintf("%s dump finished  %dms\n", strFilename, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nStart);
 
         return true;
     }
-
 };
 
 

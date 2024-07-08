@@ -53,7 +53,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     if(llmq::chainLocksHandler)
         llmq::chainLocksHandler->UpdatedBlockTip(pindexNew, fInitialDownload);
-    if (governance) governance->UpdatedBlockTip(pindexNew, peerman);
+    if (governance && governance->IsValid()) governance->UpdatedBlockTip(pindexNew, connman, peerman);
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
@@ -61,7 +61,7 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
     if(ShutdownRequested())
         return;
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff, connman);
-    if(governance) {
-        governance->UpdateCachesAndClean();
+    if(governance && governance->IsValid()) {
+        governance->CheckAndRemove();
     }
 }

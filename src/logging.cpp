@@ -297,6 +297,8 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "mnpayments";
     case BCLog::LogFlags::MNSYNC:
         return "mnsync";
+    case BCLog::LogFlags::MNLIST:
+        return "mnlist";
     case BCLog::LogFlags::SYS:
         return "syscoin";
     case BCLog::LogFlags::SPORK:

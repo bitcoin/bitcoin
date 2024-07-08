@@ -109,7 +109,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "gobject_deserialize",
     "gobject_check",
     "gobject_get",
-    "gobject_vote_conf",
     "gobject_list",
     "gobject_diff",
     "voteraw",

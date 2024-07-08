@@ -133,6 +133,7 @@ SYSCOIN_CORE_H = \
   dsnotificationinterface.h \
   governance/governance.h \
   governance/governanceclasses.h \
+  governance/governancecommon.h \
   governance/governanceexceptions.h \
   governance/governanceobject.h \
   governance/governancevalidators.h \
@@ -472,7 +473,9 @@ libsyscoin_node_a_SOURCES = \
   dsnotificationinterface.cpp \
   governance/governance.cpp \
   governance/governanceclasses.cpp \
+  governance/governancecommon.cpp \
   governance/governanceobject.cpp \
+  governance/governanceexceptions.cpp \
   governance/governancevalidators.cpp \
   governance/governancevote.cpp \
   governance/governancevotedb.cpp \

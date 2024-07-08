@@ -1092,7 +1092,7 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, int de
             o.pushKV("wallet", walletObj);
         }
 
-        auto metaInfo = mmetaman.GetMetaInfo(dmn.proTxHash);
+        auto metaInfo = mmetaman->GetMetaInfo(dmn.proTxHash);
         o.pushKV("metaInfo", metaInfo->ToJson());
     }
 

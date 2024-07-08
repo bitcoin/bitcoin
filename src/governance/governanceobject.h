@@ -1,32 +1,34 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2023 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_GOVERNANCE_GOVERNANCEOBJECT_H
 #define SYSCOIN_GOVERNANCE_GOVERNANCEOBJECT_H
 
-#include <logging.h>
+#include <governance/governancecommon.h>
 #include <governance/governanceexceptions.h>
 #include <governance/governancevote.h>
 #include <governance/governancevotedb.h>
-#include <threadsafety.h>
+#include <sync.h>
 
 #include <univalue.h>
 #include <kernel/cs_main.h>
 
-class CBLSSecretKey;
+class CActiveMasternodeManager;
 class CBLSPublicKey;
-class CNode;
+class CDeterministicMNList;
 class CGovernanceManager;
-class CGovernanceTriggerManager;
 class CGovernanceObject;
 class CGovernanceVote;
+class CMasternodeMetaMan;
+class CMasternodeSync;
+class CNode;
+class PeerManager;
 class ChainstateManager;
+
+
 static constexpr double GOVERNANCE_FILTER_FP_RATE = 0.001;
 
-static constexpr int GOVERNANCE_OBJECT_UNKNOWN = 0;
-static constexpr int GOVERNANCE_OBJECT_PROPOSAL = 1;
-static constexpr int GOVERNANCE_OBJECT_TRIGGER = 2;
 
 static constexpr CAmount GOVERNANCE_PROPOSAL_FEE_TX = (150.0 * COIN);
 
@@ -35,12 +37,15 @@ static constexpr int64_t GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS = 1;
 static constexpr int64_t GOVERNANCE_UPDATE_MIN = 60 * 60;
 static constexpr int64_t GOVERNANCE_DELETION_DELAY = 10 * 60;
 static constexpr int64_t GOVERNANCE_ORPHAN_EXPIRATION_TIME = 10 * 60;
+static constexpr int64_t GOVERNANCE_FUDGE_WINDOW = 60 * 60 * 2;
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
-static constexpr int SEEN_OBJECT_IS_VALID = 0;
-static constexpr int SEEN_OBJECT_ERROR_INVALID = 1;
-static constexpr int SEEN_OBJECT_EXECUTED = 3; //used for triggers
-static constexpr int SEEN_OBJECT_UNKNOWN = 4;  // the default
+enum class SeenObjectStatus {
+    Valid = 0,
+    ErrorInvalid,
+    Executed,
+    Unknown
+};
 
 using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 
@@ -60,23 +65,13 @@ struct vote_instance_t {
         nCreationTime(nCreationTimeIn)
     {
     }
-    template<typename Stream>
-    void Serialize(Stream& s) const
+
+    SERIALIZE_METHODS(vote_instance_t, obj)
     {
-        int nOutcome = int(eOutcome);
-        s << nOutcome;
-        s << nTime;
-        s << nCreationTime;
-   
-    }
-    template<typename Stream>
-    void Unserialize(Stream& s)
-    {
-        int nOutcome = int(eOutcome);
-        s >> nOutcome;
-        s >> nTime;
-        s >> nCreationTime;
-        eOutcome = vote_outcome_enum_t(nOutcome);
+        int nOutcome;
+        SER_WRITE(obj, nOutcome = int(obj.eOutcome));
+        READWRITE(nOutcome, obj.nTime, obj.nCreationTime);
+        SER_READ(obj, obj.eOutcome = vote_outcome_enum_t(nOutcome));
     }
 };
 
@@ -84,7 +79,9 @@ using vote_instance_m_t = std::map<int, vote_instance_t>;
 
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
-    SERIALIZE_METHODS(vote_rec_t, obj) {
+
+    SERIALIZE_METHODS(vote_rec_t, obj)
+    {
         READWRITE(obj.mapInstances);
     }
 };
@@ -103,30 +100,11 @@ private:
     /// critical section to protect the inner data structures
     mutable RecursiveMutex cs;
 
-    /// Object typecode
-    int nObjectType;
-
-    /// parent object, 0 is root
-    uint256 nHashParent;
-
-    /// object revision in the system
-    int nRevision;
-
-    /// time this object was created
-    int64_t nTime;
+    Governance::Object m_obj;
 
     /// time this object was marked for deletion
     int64_t nDeletionTime;
 
-    /// fee-tx
-    uint256 nCollateralHash;
-
-    /// Data field - can be used for anything
-    std::vector<unsigned char> vchData;
-
-    /// Masternode info for signed objects
-    COutPoint masternodeOutpoint;
-    std::vector<unsigned char> vchSig;
 
     /// is valid by blockchain
     bool fCachedLocalValidity;
@@ -170,9 +148,14 @@ public:
 
     // Public Getter methods
 
+    const Governance::Object& Object() const
+    {
+        return m_obj;
+    }
+
     int64_t GetCreationTime() const
     {
-        return nTime;
+        return m_obj.time;
     }
 
     int64_t GetDeletionTime() const
@@ -182,17 +165,17 @@ public:
 
     int GetObjectType() const
     {
-        return nObjectType;
+        return m_obj.type.GetValue();
     }
 
     const uint256& GetCollateralHash() const
     {
-        return nCollateralHash;
+        return m_obj.collateralHash;
     }
 
     const COutPoint& GetMasternodeOutpoint() const
     {
-        return masternodeOutpoint;
+        return m_obj.masternodeOutpoint;
     }
 
     bool IsSetCachedFunding() const
@@ -238,23 +221,23 @@ public:
     // Signature related functions
 
     void SetMasternodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBlockIndex* pindex, const CBLSPublicKey& pubKey) const;
+    bool Sign();
+    bool CheckSignature(const CBLSPublicKey& pubKey) const;
 
     uint256 GetSignatureHash() const;
 
     // CORE OBJECT FUNCTIONS
 
-    bool IsValidLocally(ChainstateManager &chainman, std::string& strError, bool fCheckCollateral) const;
+    bool IsValidLocally(ChainstateManager &chainman,const CDeterministicMNList& tip_mn_list, std::string& strError, bool fCheckCollateral) const;
 
-    bool IsValidLocally(ChainstateManager &chainman, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const;
+    bool IsValidLocally(ChainstateManager &chainman,const CDeterministicMNList& tip_mn_list, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const;
 
     /// Check the collateral transaction for the budget proposal/finalized budget
     bool IsCollateralValid(ChainstateManager &chainman, std::string& strError, bool& fMissingConfirmations) const;
 
-    void UpdateLocalValidity(ChainstateManager &chainman);
+    void UpdateLocalValidity(ChainstateManager &chainman, const CDeterministicMNList& tip_mn_list);
 
-    void UpdateSentinelVariables();
+    void UpdateSentinelVariables(const CDeterministicMNList& tip_mn_list);
 
     void PrepareDeletion(int64_t nDeletionTime_)
     {
@@ -266,11 +249,12 @@ public:
 
     CAmount GetMinCollateralFee() const;
 
-    UniValue GetJSONObject();
+    UniValue GetJSONObject() const;
 
-    void Relay(PeerManager& peerman);
+    void Relay(PeerManager& peerman) const;
 
     uint256 GetHash() const;
+    uint256 GetDataHash() const;
 
     // GET VOTE COUNT FOR SIGNAL
 
@@ -283,42 +267,43 @@ public:
     int GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const;
 
     bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const;
-    UniValue ToJson() const;
-    
+
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
     std::string GetDataAsHexString() const;
     std::string GetDataAsPlainString() const;
 
     // SERIALIZER
-    SERIALIZE_METHODS(CGovernanceObject, obj) {
-        READWRITE(obj.nHashParent, obj.nRevision, obj.nTime, obj.nCollateralHash, 
-        obj.vchData, obj.nObjectType, obj.masternodeOutpoint);
-        if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(obj.vchSig);
-        }
+
+    SERIALIZE_METHODS(CGovernanceObject, obj)
+    {
+        // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
+        READWRITE(obj.m_obj);
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
             READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
         }
+
+        // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
     }
+
+    UniValue ToJson() const;
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
     void LoadData();
-    void GetData(UniValue& objResult);
+    void GetData(UniValue& objResult) const;
 
-    bool ProcessVote(const CBlockIndex *pindex, CNode* pfrom,
-        const CGovernanceVote& vote,
-        CGovernanceException& exception);
+    bool ProcessVote(const CDeterministicMNList& tip_mn_list,
+                     const CGovernanceVote& vote, CGovernanceException& exception);
 
     /// Called when MN's which have voted on this object have been removed
-    void ClearMasternodeVotes();
+    void ClearMasternodeVotes(const CDeterministicMNList& tip_mn_list);
 
     // Revalidate all votes from this MN and delete them if validation fails.
     // This is the case for DIP3 MNs that changed voting or operator keys and
     // also for MNs that were removed from the list completely.
     // Returns deleted vote hashes.
-    std::set<uint256> RemoveInvalidVotes(const CBlockIndex *pindex, const COutPoint& mnOutpoint);
+    std::set<uint256> RemoveInvalidVotes(const CDeterministicMNList& tip_mn_list, const COutPoint& mnOutpoint);
 };
 
 

@@ -25,7 +25,9 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 #include <governance/governance.h>
-
+#include <netfulfilledman.h>
+#include <spork.h>
+#include <masternode/masternodemeta.h>
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -54,6 +56,12 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     deterministicMNManager.reset(new CDeterministicMNManager(evoDmnDbParams));
     governance.reset();
     governance.reset(new CGovernanceManager(chainman));
+    sporkManager.reset();
+    sporkManager.reset(new CSporkManager());
+    netfulfilledman.reset();
+    netfulfilledman.reset(new CNetFulfilledRequestManager());
+    mmetaman.reset();
+    mmetaman.reset(new CMasternodeMetaMan());
     auto quorumCommitmentDB = DBParams{
         .path = chainman.m_options.datadir / "evodb_qc",
         .cache_bytes = static_cast<size_t>(cache_sizes.evo_qc_db),
@@ -243,6 +251,12 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         deterministicMNManager.reset(new CDeterministicMNManager(evoDmnDbParams));
         governance.reset();
         governance.reset(new CGovernanceManager(chainman));
+        sporkManager.reset();
+        sporkManager.reset(new CSporkManager());
+        netfulfilledman.reset();
+        netfulfilledman.reset(new CNetFulfilledRequestManager());
+        mmetaman.reset();
+        mmetaman.reset(new CMasternodeMetaMan());
         auto quorumCommitmentDB = DBParams{
         .path = chainman.m_options.datadir / "evodb_qc",
         .cache_bytes = static_cast<size_t>(cache_sizes.evo_qc_db),

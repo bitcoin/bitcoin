@@ -1,10 +1,11 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governancevotedb.h>
 
 CGovernanceObjectVoteFile::CGovernanceObjectVoteFile() :
+    nMemoryVotes(0),
     listVotes(),
     mapVoteIndex()
 {
@@ -67,7 +68,7 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpo
     }
 }
 
-std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const CBlockIndex *pindex, const COutPoint& outpointMasternode, bool fProposal)
+std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const CDeterministicMNList& tip_mn_list, const COutPoint& outpointMasternode, bool fProposal)
 {
     std::set<uint256> removedVotes;
 
@@ -75,7 +76,7 @@ std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const CBlockInde
     while (it != listVotes.end()) {
         if (it->GetMasternodeOutpoint() == outpointMasternode) {
             bool useVotingKey = fProposal && (it->GetSignal() == VOTE_SIGNAL_FUNDING);
-            if (!it->IsValid(pindex, useVotingKey)) {
+            if (!it->IsValid(tip_mn_list, useVotingKey)) {
                 removedVotes.emplace(it->GetHash());
                 --nMemoryVotes;
                 mapVoteIndex.erase(it->GetHash());
@@ -113,7 +114,7 @@ void CGovernanceObjectVoteFile::RebuildIndex()
     nMemoryVotes = 0;
     auto it = listVotes.begin();
     while (it != listVotes.end()) {
-        CGovernanceVote& vote = *it;
+        const CGovernanceVote& vote = *it;
         const uint256 &nHash = vote.GetHash();
         if (mapVoteIndex.find(nHash) == mapVoteIndex.end()) {
             mapVoteIndex[nHash] = it;

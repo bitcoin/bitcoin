@@ -14,6 +14,7 @@
 #include <rpc/server_util.h>
 #include <wallet/rpc/wallet.h>
 #include <util/result.h>
+#include <governance/governance.h>
 using namespace wallet;
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
@@ -58,13 +59,13 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceException exception;
-        if (governance->ProcessVoteAndRelay(vote, exception, connman, peerman)) {
+        if (governance->ProcessVoteAndRelay(vote, mnList, exception, connman, peerman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
             nFailed++;
             statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", exception.GetMessageStr());
+            statusObj.pushKV("errorMessage", exception.GetMessage());
         }
 
         resultsObj.pushKV(proTxHash.ToString(), statusObj);
@@ -177,7 +178,7 @@ static RPCHelpMan gobject_prepare()
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-        CProposalValidator validator(strDataHex, false);
+        CProposalValidator validator(strDataHex);
         if (!validator.Validate()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
         }
@@ -190,7 +191,7 @@ static RPCHelpMan gobject_prepare()
     LOCK(pwallet->cs_wallet);
 
     std::string strError;
-    if (!govobj.IsValidLocally(*node.chainman, strError, false))
+    if (!govobj.IsValidLocally(*node.chainman, deterministicMNManager->GetListAtChainTip(), strError, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
 
     // If specified, spend this outpoint as the proposal fee

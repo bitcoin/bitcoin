@@ -125,7 +125,7 @@ static RPCHelpMan spork()
         int64_t nValue = request.params[1].getInt<int64_t>();;
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *node.peerman)){
+        if(sporkManager->UpdateSpork(nSporkID, nValue, *node.peerman)){
             return "success";
         }
     } else {
@@ -133,13 +133,13 @@ static RPCHelpMan spork()
         if (strCommand == "show") {
             UniValue ret(UniValue::VOBJ);
             for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(std::string(sporkDef.name), sporkManager.GetSporkValue(sporkDef.sporkId));
+                ret.pushKV(std::string(sporkDef.name), sporkManager->GetSporkValue(sporkDef.sporkId));
             }
             return ret;
         } else if(strCommand == "active"){
             UniValue ret(UniValue::VOBJ);
             for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(std::string(sporkDef.name), sporkManager.IsSporkActive(sporkDef.sporkId));
+                ret.pushKV(std::string(sporkDef.name), sporkManager->IsSporkActive(sporkDef.sporkId));
             }
             return ret;
         }

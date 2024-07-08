@@ -13,6 +13,7 @@
 #include <shutdown.h>
 #include <util/translation.h>
 #include <timedata.h>
+#include <net.h>
 class CMasternodeSync;
 CMasternodeSync masternodeSync;
 
@@ -71,7 +72,7 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
 
             connman.ForEachNode(AllNodes, [](CNode* pnode) {
-                netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
+                netfulfilledman->AddFulfilledRequest(pnode->addr, "full-sync");
             });
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Sync has finished\n");
 
@@ -130,12 +131,11 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
     }
 
     nTimeLastProcess = GetTime();
-    std::vector<CNode*> vNodesCopy;
-    connman.CopyNodeVector(vNodesCopy);
+    const CConnman::NodesSnapshot snap{connman, /* filter = */ FullyConnectedOnly};
+
     // gradually request the rest of the votes after sync finished
     if(IsSynced()) {
-        governance->RequestGovernanceObjectVotes(vNodesCopy, connman, peerman);
-        connman.ReleaseNodeVector(vNodesCopy);
+        governance->RequestGovernanceObjectVotes(snap.Nodes(), connman, peerman);
         return;
     }
 
@@ -145,7 +145,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, nTriedPeerCount, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
-    for (auto& pnode : vNodesCopy)
+    for (auto& pnode : snap.Nodes())
     {
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
@@ -164,19 +164,18 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                 SendGovernanceSyncRequest(pnode, connman);
                 SwitchToNextAsset(connman);
             }
-            connman.ReleaseNodeVector(vNodesCopy);
             return;
         }
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
-            if ((pnode->HasPermission(NetPermissionFlags::NoBan) || pnode->IsManualConn()) && !netfulfilledman.HasFulfilledRequest(pnode->addr, strAllow)) {
-                netfulfilledman.RemoveAllFulfilledRequests(pnode->addr);
-                netfulfilledman.AddFulfilledRequest(pnode->addr, strAllow);
+            if ((pnode->HasPermission(NetPermissionFlags::NoBan) || pnode->IsManualConn()) && !netfulfilledman->HasFulfilledRequest(pnode->addr, strAllow)) {
+                netfulfilledman->RemoveAllFulfilledRequests(pnode->addr);
+                netfulfilledman->AddFulfilledRequest(pnode->addr, strAllow);
                 LogPrintf("CMasternodeSync::ProcessTick -- skipping mnsync restrictions for peer=%d\n", pnode->GetId());
             }
 
-            if(netfulfilledman.HasFulfilledRequest(pnode->addr, "full-sync")) {
+            if(netfulfilledman->HasFulfilledRequest(pnode->addr, "full-sync")) {
                 // We already fully synced from this node recently,
                 // disconnect to free this connection slot for another peer.
                 pnode->fDisconnect = true;
@@ -186,16 +185,16 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
             // SPORK : ALWAYS ASK FOR SPORKS AS WE SYNC
 
-            if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "spork-sync")) {
+            if(!netfulfilledman->HasFulfilledRequest(pnode->addr, "spork-sync")) {
                 // always get sporks first, only request once from each peer
-                netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
+                netfulfilledman->AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS));
                 LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- requesting sporks from peer=%d\n", nTick, nMode, pnode->GetId());
             }
 
             if (nMode == MASTERNODE_SYNC_BLOCKCHAIN) {
-                int64_t nTimeSyncTimeout = vNodesCopy.size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
+                int64_t nTimeSyncTimeout = snap.Nodes().size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
                 if (ReachedBestHeader() && (GetTime() - GetTimeLastBumped() > nTimeSyncTimeout)) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
@@ -210,10 +209,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
                     
                     // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
-                    for (auto pNodeTmp : vNodesCopy) {
-                        bool fRequestedEarlier = netfulfilledman.HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                    for (auto pNodeTmp : snap.Nodes()) {
+                        bool fRequestedEarlier = netfulfilledman->HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                         if (pNodeTmp->nVersion >= PROTOCOL_VERSION && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
-                            netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                            netfulfilledman->AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                             connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
                             LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                         }
@@ -234,17 +233,16 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                         // it's kind of ok to skip this for now, hopefully we'll catch up later?
                     }
                     SwitchToNextAsset(connman);
-                    connman.ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
                 // only request obj sync once from each peer
-                if(netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
+                if(netfulfilledman->HasFulfilledRequest(pnode->addr, "governance-sync")) {
                     // will request votes on per-obj basis from each node in a separate loop below
                     // to avoid deadlocks here
                     continue;
                 }
-                netfulfilledman.AddFulfilledRequest(pnode->addr, "governance-sync");
+                netfulfilledman->AddFulfilledRequest(pnode->addr, "governance-sync");
 
                 nTriedPeerCount++;
 
@@ -257,14 +255,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
 
     if (nCurrentAsset != MASTERNODE_SYNC_GOVERNANCE) {
-        // looped through all nodes and not syncing governance yet/already, release them
-        connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
 
     // request votes on per-obj basis from each node
-    for (auto& pnode : vNodesCopy) {
-        if(!netfulfilledman.HasFulfilledRequest(pnode->addr, "governance-sync")) {
+    for (auto& pnode : snap.Nodes()) {
+        if(!netfulfilledman->HasFulfilledRequest(pnode->addr, "governance-sync")) {
             continue; // to early for this node
         }
         int nObjsLeftToAsk = governance->RequestGovernanceObjectVotes(pnode, connman, peerman);
@@ -290,16 +286,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                 // reset nTimeNoObjectsLeft to be able to use the same condition on resync
                 nTimeNoObjectsLeft = 0;
                 SwitchToNextAsset(connman);
-                connman.ReleaseNodeVector(vNodesCopy);
                 return;
             }
             nLastTick = nTick;
             nLastVotes = governance->GetVoteCount();
         }
     }
-
-    // looped through all nodes, release them
-    connman.ReleaseNodeVector(vNodesCopy);
 }
 
 void CMasternodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)

@@ -36,7 +36,7 @@ UniValue BuildDMNListEntry(const node::NodeContext& node, const CDeterministicMN
         confirmations = *node.chain->getHeight() - coin.nHeight;
     }
     o.pushKV("confirmations", confirmations);
-    auto metaInfo = mmetaman.GetMetaInfo(dmn.proTxHash);
+    auto metaInfo = mmetaman->GetMetaInfo(dmn.proTxHash);
     o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;

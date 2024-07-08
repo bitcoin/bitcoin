@@ -86,12 +86,12 @@ static bool EvalSpork(int64_t spork_value)
 
 bool CLLMQUtils::IsAllMembersConnectedEnabled()
 {
-    return EvalSpork(sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
+    return EvalSpork(sporkManager->GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
 }
 
 bool CLLMQUtils::IsQuorumPoseEnabled()
 {
-    return EvalSpork(sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE));
+    return EvalSpork(sporkManager->GetSporkValue(SPORK_23_QUORUM_POSE));
 }
 
 uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
@@ -267,7 +267,7 @@ void CLLMQUtils::AddQuorumProbeConnections(const CBlockIndex *pQuorumBaseBlockIn
         if (dmn->proTxHash == myProTxHash) {
             continue;
         }
-        auto lastOutbound = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundSuccess();
+        auto lastOutbound = mmetaman->GetMetaInfo(dmn->proTxHash)->GetLastOutboundSuccess();
         // re-probe after 10 minutes so that the "good connection" check in the DKG doesn't fail just because we're on
         // the brink of timeout
         if (curTime - lastOutbound > 10 * 60) {

@@ -7,7 +7,6 @@
 #include <serialize.h>
 
 #include <util/ranges.h>
-#include <util/system.h>
 
 #include <memory>
 #include <utility>

@@ -2018,7 +2018,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
     {
     case MSG_SPORK:
     {
-        return sporkManager.GetSporkByHash(hash).has_value();
+        return sporkManager->GetSporkByHash(hash).has_value();
     }
     case MSG_GOVERNANCE_OBJECT:
     case MSG_GOVERNANCE_OBJECT_VOTE:
@@ -2387,7 +2387,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             bool push = false;
             switch(inv.type) {
                 case(MSG_SPORK): {
-                    if (auto opt_spork = sporkManager.GetSporkByHash(inv.hash)) {
+                    if (auto opt_spork = sporkManager->GetSporkByHash(inv.hash)) {
                         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, *opt_spork));
                         push = true;
                     }
@@ -5166,7 +5166,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     //probably one the extensions
     if(msg_type == NetMsgType::SPORK || msg_type == NetMsgType::GETSPORKS) {
-        sporkManager.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
+        sporkManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::SYNCSTATUSCOUNT) {
         masternodeSync.ProcessMessage(&pfrom, msg_type, vRecv);

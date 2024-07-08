@@ -260,8 +260,8 @@ void FuncDIP3Protx(TestChain100Setup& setup)
 {
     CKey sporkKey;
     sporkKey.MakeNewKey(true);
-    sporkManager.SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
-    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
+    sporkManager->SetSporkAddress(EncodeDestination(PKHash(sporkKey.GetPubKey())));
+    sporkManager->SetPrivKey(EncodeSecret(sporkKey));
 
     auto utxos = BuildSimpleUTXOVec(setup.m_coinbase_txns);
 
