@@ -254,7 +254,7 @@ RPCHelpMan addmultisigaddress()
                 }
             }
 
-            OutputType output_type = pwallet->m_default_address_type;
+            OutputType output_type = pwallet->IsWalletFlagSet(WALLET_FLAG_BLSCT) ? OutputType::BLSCT : pwallet->m_default_address_type;
             if (!request.params[3].isNull()) {
                 std::optional<OutputType> parsed = ParseOutputType(request.params[3].get_str());
                 if (!parsed) {
