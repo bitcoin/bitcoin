@@ -21,10 +21,10 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Bitcoin Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The Navio Core developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "Bitcoin Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Navio Core"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR $
@@ -122,7 +122,7 @@
 #define PACKAGE_STRING $
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://navio.org/"
+#define PACKAGE_URL "https://nav.io/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION $

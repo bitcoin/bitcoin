@@ -82,12 +82,12 @@ $ FUZZ=address_deserialize_v2 src/test/fuzz/fuzz -runs=1 fuzz_seed_corpus/addres
 
 ## Fuzzing corpora
 
-The project's collection of seed corpora is found in the [`navio/qa-assets`](https://github.com/navio/qa-assets) repo.
+The project's collection of seed corpora is found in the [`nav-io/qa-assets`](https://github.com/nav-io/qa-assets) repo.
 
-To fuzz `process_message` using the [`navio/qa-assets`](https://github.com/navio/qa-assets) seed corpus:
+To fuzz `process_message` using the [`nav-io/qa-assets`](https://github.com/nav-io/qa-assets) seed corpus:
 
 ```sh
-$ git clone https://github.com/navio/qa-assets
+$ git clone https://github.com/nav-io/qa-assets
 $ FUZZ=process_message src/test/fuzz/fuzz qa-assets/fuzz_seed_corpus/process_message/
 INFO: Seed: 1346407872
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),
@@ -101,7 +101,7 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 
 ## Run without sanitizers for increased throughput
 
-Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` is good for finding bugs. However, the very slow execution even under libFuzzer will limit the ability to find new coverage. A good approach is to perform occasional long runs without the additional bug-detectors (configure `--with-sanitizers=fuzzer`) and then merge new inputs into a corpus as described in the qa-assets repo (https://github.com/navio/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).  Patience is useful; even with improved throughput, libFuzzer may need days and 10s of millions of executions to reach deep/hard targets.
+Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` is good for finding bugs. However, the very slow execution even under libFuzzer will limit the ability to find new coverage. A good approach is to perform occasional long runs without the additional bug-detectors (configure `--with-sanitizers=fuzzer`) and then merge new inputs into a corpus as described in the qa-assets repo (https://github.com/nav-io/qa-assets/blob/main/.github/PULL_REQUEST_TEMPLATE.md).  Patience is useful; even with improved throughput, libFuzzer may need days and 10s of millions of executions to reach deep/hard targets.
 
 ## Reproduce a fuzzer crash reported by the CI
 
@@ -117,9 +117,9 @@ Fuzzing on a harness compiled with `--with-sanitizers=address,fuzzer,undefined` 
 
 ## Submit improved coverage
 
-If you find coverage increasing inputs when fuzzing you are highly encouraged to submit them for inclusion in the [`navio/qa-assets`](https://github.com/navio/qa-assets) repo.
+If you find coverage increasing inputs when fuzzing you are highly encouraged to submit them for inclusion in the [`nav-io/qa-assets`](https://github.com/nav-io/qa-assets) repo.
 
-Every single pull request submitted against the Bitcoin Core repo is automatically tested against all inputs in the [`navio/qa-assets`](https://github.com/navio/qa-assets) repo. Contributing new coverage increasing inputs is an easy way to help make Bitcoin Core more robust.
+Every single pull request submitted against the Bitcoin Core repo is automatically tested against all inputs in the [`nav-io/qa-assets`](https://github.com/nav-io/qa-assets) repo. Contributing new coverage increasing inputs is an easy way to help make Bitcoin Core more robust.
 
 ## macOS hints for libFuzzer
 
@@ -324,7 +324,7 @@ be decoded in the same way.
 Fuzzing with Eclipser will likely be much more effective if using an existing corpus:
 
 ```sh
-$ git clone https://github.com/navio/qa-assets
+$ git clone https://github.com/nav-io/qa-assets
 $ FUZZ=bech32 dotnet Eclipser/build/Eclipser.dll fuzz -p src/test/fuzz/fuzz -t 36000 -i qa-assets/fuzz_seed_corpus/bech32 outputs --src stdin
 ```
 

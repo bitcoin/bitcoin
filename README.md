@@ -5,10 +5,10 @@ Navio Core is a fork of [Bitcoin Core](https://github.com/bitcoin/bitcoin). This
 repository hosts the source code for the next version of Navio Core, which is *not
 ready for production yet*.
 
-https://navio.org
+https://nav.io
 
 For an immediately usable, binary version of the Navio Core software, see
-https://navio.org/get-started.
+https://nav.io/get-started.
 
 Further information about Navio Core is available in the [doc folder](/doc),
 the [wiki](https://github.com/nav-io/navio-core/wiki) and the [documentation website](https://doc.nav.community).
@@ -19,8 +19,8 @@ What is Navio?
 Navio is an experimental digital currency that enables privacy-enhanced payments to
 anyone, anywhere in the world. Navio uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Navio Core is the name of open source
-software which enables the use of this currency.
+out collectively by the network using a private proof of stake protocol. Navio
+Core is the name of open source software which enables the use of this currency.
 
 License
 -------
