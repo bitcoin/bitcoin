@@ -275,7 +275,7 @@ void RPCNotifyBlockChange(const CBlockIndex* pindex)
 static RPCHelpMan waitfornewblock()
 {
     return RPCHelpMan{"waitfornewblock",
-                "\nWaits for a specific new block and returns useful info about it.\n"
+                "\nWaits for any new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n",
                 {
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
