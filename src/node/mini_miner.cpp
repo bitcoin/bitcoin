@@ -174,7 +174,7 @@ MiniMiner::MiniMiner(const std::vector<MiniMinerMempoolEntry>& manual_entries,
     SanityCheck();
 }
 
-// Compare by min(ancestor feerate, individual feerate), then iterator
+// Compare by min(ancestor feerate, individual feerate), then txid
 //
 // Under the ancestor-based mining approach, high-feerate children can pay for parents, but high-feerate
 // parents do not incentive inclusion of their children. Therefore the mining algorithm only considers
@@ -183,21 +183,13 @@ struct AncestorFeerateComparator
 {
     template<typename I>
     bool operator()(const I& a, const I& b) const {
-        auto min_feerate = [](const MiniMinerMempoolEntry& e) -> CFeeRate {
-            const CAmount ancestor_fee{e.GetModFeesWithAncestors()};
-            const int64_t ancestor_size{e.GetSizeWithAncestors()};
-            const CAmount tx_fee{e.GetModifiedFee()};
-            const int64_t tx_size{e.GetTxSize()};
-            // Comparing ancestor feerate with individual feerate:
-            //     ancestor_fee / ancestor_size <= tx_fee / tx_size
-            // Avoid division and possible loss of precision by
-            // multiplying both sides by the sizes:
-            return ancestor_fee * tx_size < tx_fee * ancestor_size ?
-                       CFeeRate(ancestor_fee, ancestor_size) :
-                       CFeeRate(tx_fee, tx_size);
+        auto min_feerate = [](const MiniMinerMempoolEntry& e) -> FeeFrac {
+            FeeFrac self_feerate(e.GetModifiedFee(), e.GetTxSize());
+            FeeFrac ancestor_feerate(e.GetModFeesWithAncestors(), e.GetSizeWithAncestors());
+            return std::min(ancestor_feerate, self_feerate);
         };
-        CFeeRate a_feerate{min_feerate(a->second)};
-        CFeeRate b_feerate{min_feerate(b->second)};
+        FeeFrac a_feerate{min_feerate(a->second)};
+        FeeFrac b_feerate{min_feerate(b->second)};
         if (a_feerate != b_feerate) {
             return a_feerate > b_feerate;
         }
