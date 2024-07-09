@@ -44,7 +44,7 @@ RPCHelpMan getnewaddress()
             // Parse the label first so we don't generate a key if there's an error
             const std::string label{LabelFromValue(request.params[0])};
 
-            OutputType output_type = pwallet->m_default_address_type;
+            OutputType output_type = pwallet->IsWalletFlagSet(WALLET_FLAG_BLSCT) ? OutputType::BLSCT : pwallet->m_default_address_type;
             if (!request.params[1].isNull()) {
                 std::optional<OutputType> parsed = ParseOutputType(request.params[1].get_str());
                 if (!parsed) {
