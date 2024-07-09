@@ -10,7 +10,6 @@
 #include <validationinterface.h>
 #include <consensus/params.h>
 #include <saltedhasher.h>
-#include <unordered_lru_cache.h>
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
@@ -97,11 +96,8 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
     ChainstateManager& chainman;
-    mutable RecursiveMutex cs_map_quorums;
-    mutable RecursiveMutex cs_scan_quorums;
-    mutable unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher, 10> mapQuorumsCache GUARDED_BY(cs_map_quorums);
-    mutable unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher, 10> scanQuorumsCache GUARDED_BY(cs_scan_quorums);
-
+    mutable RecursiveMutex cs_quorums;
+    mutable std::vector<CQuorumCPtr> vecQuorumsCache GUARDED_BY(cs_quorums);
     mutable ctpl::thread_pool workerPool;
     mutable CThreadInterrupt quorumThreadInterrupt;
 
@@ -127,6 +123,7 @@ public:
     std::vector<CQuorumCPtr> ScanQuorums(const CBlockIndex* pindexStart, size_t nCountRequested);
     bool FlushCacheToDisk();
 private:
+    std::vector<CQuorumCPtr>::iterator FindQuorumByHash(const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs_quorums);
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(const CBlockIndex *pindexNew);
 

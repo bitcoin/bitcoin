@@ -8,7 +8,6 @@
 #include <llmq/quorums_utils.h>
 #include <evo/evodb.h>
 #include <unordered_map>
-#include <unordered_lru_cache.h>
 #include <saltedhasher.h>
 #include <kernel/cs_main.h>
 class CNode;
@@ -31,9 +30,7 @@ private:
 
 public:
     CEvoDB<uint256, std::pair<CFinalCommitment, uint256>> m_commitment_evoDb;
-    CEvoDB<uint32_t, int> m_inverse_height_evoDb;
-    explicit CQuorumBlockProcessor(const DBParams& db_commitment_params, const DBParams& db_inverse_height_params, PeerManager &_peerman, ChainstateManager& _chainman);
-
+    explicit CQuorumBlockProcessor(const DBParams& db_commitment_params, PeerManager &_peerman, ChainstateManager& _chainman);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman);
 
@@ -48,7 +45,6 @@ public:
     bool HasMinedCommitment(const uint256& quorumHash) const;
     CFinalCommitmentPtr GetMinedCommitment(const uint256& quorumHash, uint256& retMinedBlockHash) const;
 
-    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(const CBlockIndex* pindex, size_t maxCount);
     bool FlushCacheToDisk();
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const uint32_t& nHeight, CFinalCommitment& ret, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

@@ -33,7 +33,6 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     sizes.evo_dmn_db = 1024 * 1024 * 64;
     sizes.evo_poda_db = 1024 * 1024 * 128;
     sizes.evo_qc_db = 1024 * 1024 * 64;
-    sizes.evo_qih_db = 1024 * 1024 * 32;
     sizes.evo_qvvecs_db = 1024 * 1024 * 64;
     sizes.evo_qsk_db = 1024 * 1024 * 32;
     return sizes;

@@ -21,12 +21,12 @@ namespace llmq
 CBLSWorker* blsWorker;
 
 
-void InitLLMQSystem(const DBParams& quorumCommitmentDB, const DBParams& quorumInverseHeightDB, const DBParams& quorumVectorDB, const DBParams& quorumSkDB, bool unitTests, CConnman& connman, BanMan& banman, PeerManager& peerman, ChainstateManager& chainman, bool fWipe)
+void InitLLMQSystem(const DBParams& quorumCommitmentDB, const DBParams& quorumVectorDB, const DBParams& quorumSkDB, bool unitTests, CConnman& connman, BanMan& banman, PeerManager& peerman, ChainstateManager& chainman, bool fWipe)
 {
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(quorumCommitmentDB, quorumInverseHeightDB, peerman, chainman);
+    quorumBlockProcessor = new CQuorumBlockProcessor(quorumCommitmentDB, peerman, chainman);
     quorumDKGSessionManager = new CDKGSessionManager(*blsWorker, connman, peerman, chainman, unitTests, fWipe);
     quorumManager = new CQuorumManager(quorumVectorDB, quorumSkDB, *blsWorker, *quorumDKGSessionManager, chainman);
     quorumSigSharesManager = new CSigSharesManager(connman, banman, peerman);

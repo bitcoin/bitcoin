@@ -20,7 +20,6 @@ struct CacheSizes {
     // SYSCOIN
     int64_t evo_dmn_db;
     int64_t evo_qc_db;
-    int64_t evo_qih_db;
     int64_t evo_qvvecs_db;
     int64_t evo_qsk_db;
     int64_t evo_poda_db;

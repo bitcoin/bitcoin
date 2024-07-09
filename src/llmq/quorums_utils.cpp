@@ -19,6 +19,7 @@
 #include <util/ranges.h>
 #include <common/args.h>
 #include <logging.h>
+#include <unordered_lru_cache.h>
 namespace llmq
 {
 bool CLLMQUtils::IsV19Active(const int nHeight)

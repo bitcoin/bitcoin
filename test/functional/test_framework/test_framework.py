@@ -1442,7 +1442,6 @@ class DashTestFramework(SyscoinTestFramework):
                     return False
                 commits = s["minableCommitments"]
                 c_ok = False
-                self.log.info(f'commits {commits}')
                 for c in commits:
                     if c["quorumHash"] != quorum_hash:
                         continue
