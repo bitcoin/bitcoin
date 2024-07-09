@@ -61,8 +61,6 @@ static CBlock CreateBLSCTGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t 
         ++genesis.nNonce;
     }
 
-    std::cout << "nonce " << genesis.nNonce << "\n";
-
     return genesis;
 }
 
@@ -291,7 +289,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
         consensus.nBLSCTFirstBlockReward = 75000000 * COIN;
         consensus.nModifierInterval = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = false;
+        consensus.fPowNoRetargeting = true;
         consensus.fPosNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016;       // nPowTargetTimespan / nPowTargetSpacing
