@@ -502,7 +502,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex);
 
     /** Implement NetEventsInterface */
-    void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void InitializeNode(const CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex);
     bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
@@ -1566,7 +1566,7 @@ void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_s
     if (state) state->m_last_block_announcement = time_in_seconds;
 }
 
-void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services)
+void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_services)
 {
     NodeId nodeid = node.GetId();
     {
