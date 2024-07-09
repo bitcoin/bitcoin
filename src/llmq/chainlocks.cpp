@@ -19,6 +19,7 @@
 #include <txmempool.h>
 #include <util/thread.h>
 #include <util/time.h>
+#include <util/underlying.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -130,8 +131,8 @@ PeerMsgRet CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq
         }
     }
 
-    if (!VerifyChainLock(clsig)) {
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+    if (const auto ret = VerifyChainLock(clsig); ret != VerifyRecSigStatus::Valid) {
+        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), status=%d peer=%d\n", __func__, clsig.ToString(), ToUnderlying(ret), from);
         if (from != -1) {
             return tl::unexpected{10};
         }
@@ -551,10 +552,12 @@ bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash) con
     return InternalHasChainLock(nHeight, blockHash);
 }
 
-bool CChainLocksHandler::VerifyChainLock(const CChainLockSig& clsig) const
+
+VerifyRecSigStatus CChainLocksHandler::VerifyChainLock(const CChainLockSig& clsig) const
 {
     const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
     const uint256 nRequestId = ::SerializeHash(std::make_pair(llmq::CLSIG_REQUESTID_PREFIX, clsig.getHeight()));
+
     return llmq::VerifyRecoveredSig(llmqType, m_chainstate.m_chain, qman, clsig.getHeight(), nRequestId, clsig.getBlockHash(), clsig.getSig());
 }
 
