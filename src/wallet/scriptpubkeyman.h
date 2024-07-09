@@ -40,7 +40,7 @@ public:
     virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr) = 0;
     virtual const CKeyingMaterial& GetEncryptionKey() const = 0;
     virtual bool HasEncryptionKeys() const = 0;
-    virtual bool IsLocked(bool fForMixing = false) const = 0;
+    virtual bool IsLocked(bool fForMixing) const = 0;
 
     // for LegacyScriptPubKeyMan::TopUpInner needs:
     virtual void UpdateProgress(const std::string&, int) = 0;
