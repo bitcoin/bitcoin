@@ -75,7 +75,7 @@ extract_symbols() {
     local temp_dir="$1"
     for lib in "${!LIBS[@]}"; do
         for lib_path in ${LIBS[$lib]}; do
-            nm -o "$lib_path" | grep ' T ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_exports.txt"
+            nm -o "$lib_path" | grep ' T \| W ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_exports.txt"
             nm -o "$lib_path" | grep ' U ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_imports.txt"
             awk '{print $1}' "${temp_dir}/${lib}_exports.txt" | sort -u > "${temp_dir}/${lib}_exported_symbols.txt"
             awk '{print $1}' "${temp_dir}/${lib}_imports.txt" | sort -u > "${temp_dir}/${lib}_imported_symbols.txt"
