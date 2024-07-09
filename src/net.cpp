@@ -415,7 +415,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     if (pszDest) {
         std::vector<CService> resolved{Lookup(pszDest, default_port, fNameLookup && !HaveNameProxy(), 256)};
         if (!resolved.empty()) {
-            Shuffle(resolved.begin(), resolved.end(), FastRandomContext());
+            std::shuffle(resolved.begin(), resolved.end(), FastRandomContext());
             // If the connection is made by name, it can be the case that the name resolves to more than one address.
             // We don't want to connect any more of them if we are already connected to one
             for (const auto& r : resolved) {
@@ -2212,7 +2212,7 @@ void CConnman::ThreadDNSAddressSeed()
 
     FastRandomContext rng;
     std::vector<std::string> seeds = m_params.DNSSeeds();
-    Shuffle(seeds.begin(), seeds.end(), rng);
+    std::shuffle(seeds.begin(), seeds.end(), rng);
     int seeds_right_now = 0; // Number of seeds left before testing if we have enough connections
 
     if (gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED)) {
@@ -2439,7 +2439,7 @@ bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 {
     std::array<Network, 5> nets{NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS};
-    Shuffle(nets.begin(), nets.end(), FastRandomContext());
+    std::shuffle(nets.begin(), nets.end(), FastRandomContext());
 
     LOCK(m_nodes_mutex);
     for (const auto net : nets) {

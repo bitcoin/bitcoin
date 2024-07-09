@@ -1625,7 +1625,7 @@ private:
                 }
             }
             if (shuffle) {
-                Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
+                std::shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
             }
         }
 

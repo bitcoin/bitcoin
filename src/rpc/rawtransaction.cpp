@@ -1790,8 +1790,8 @@ static RPCHelpMan joinpsbts()
     std::iota(output_indices.begin(), output_indices.end(), 0);
 
     // Shuffle input and output indices lists
-    Shuffle(input_indices.begin(), input_indices.end(), FastRandomContext());
-    Shuffle(output_indices.begin(), output_indices.end(), FastRandomContext());
+    std::shuffle(input_indices.begin(), input_indices.end(), FastRandomContext());
+    std::shuffle(output_indices.begin(), output_indices.end(), FastRandomContext());
 
     PartiallySignedTransaction shuffled_psbt;
     shuffled_psbt.tx = CMutableTransaction();

@@ -549,7 +549,7 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
     std::vector<size_t> indexes;
     indexes.resize(utxo_pool.size());
     std::iota(indexes.begin(), indexes.end(), 0);
-    Shuffle(indexes.begin(), indexes.end(), rng);
+    std::shuffle(indexes.begin(), indexes.end(), rng);
 
     CAmount selected_eff_value = 0;
     int weight = 0;
@@ -659,7 +659,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     std::vector<OutputGroup> applicable_groups;
     CAmount nTotalLower = 0;
 
-    Shuffle(groups.begin(), groups.end(), rng);
+    std::shuffle(groups.begin(), groups.end(), rng);
 
     for (const OutputGroup& group : groups) {
         if (group.GetSelectionAmount() == nTargetValue) {
@@ -927,7 +927,7 @@ const std::set<std::shared_ptr<COutput>>& SelectionResult::GetInputSet() const
 std::vector<std::shared_ptr<COutput>> SelectionResult::GetShuffledInputVector() const
 {
     std::vector<std::shared_ptr<COutput>> coins(m_selected_inputs.begin(), m_selected_inputs.end());
-    Shuffle(coins.begin(), coins.end(), FastRandomContext());
+    std::shuffle(coins.begin(), coins.end(), FastRandomContext());
     return coins;
 }
 
