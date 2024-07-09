@@ -1169,7 +1169,7 @@ CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, con
     }
 }
 
-bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain, const CQuorumManager& qman,
+VerifyRecSigStatus VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain, const CQuorumManager& qman,
                         int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig,
                         const int signOffset)
 {
@@ -1177,10 +1177,11 @@ bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain
     assert(llmq_params_opt.has_value());
     auto quorum = SelectQuorumForSigning(llmq_params_opt.value(), active_chain, qman, id, signedAtHeight, signOffset);
     if (!quorum) {
-        return false;
+        return VerifyRecSigStatus::NoQuorum;
     }
 
     uint256 signHash = BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
-    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+    const bool ret = sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+    return ret ? VerifyRecSigStatus::Valid : VerifyRecSigStatus::Invalid;
 }
 } // namespace llmq

@@ -578,6 +578,30 @@ PeerMsgRet CSigningManager::ProcessMessage(const CNode& pfrom, const std::string
     return {};
 }
 
+static bool PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CRecoveredSig& recoveredSig, bool& retBan)
+{
+    retBan = false;
+
+    auto llmqType = recoveredSig.getLlmqType();
+    if (!Params().GetLLMQ(llmqType).has_value()) {
+        retBan = true;
+        return false;
+    }
+
+    CQuorumCPtr quorum = quorum_manager.GetQuorum(llmqType, recoveredSig.getQuorumHash());
+
+    if (!quorum) {
+        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found\n", __func__,
+                  recoveredSig.getQuorumHash().ToString());
+        return false;
+    }
+    if (!IsQuorumActive(llmqType, quorum_manager, quorum->qc->quorumHash)) {
+        return false;
+    }
+
+    return true;
+}
+
 PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
 {
     {
@@ -612,30 +636,6 @@ PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const
 
     pendingRecoveredSigs[pfrom.GetId()].emplace_back(recoveredSig);
     return {};
-}
-
-bool CSigningManager::PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CRecoveredSig& recoveredSig, bool& retBan)
-{
-    retBan = false;
-
-    auto llmqType = recoveredSig.getLlmqType();
-    if (!Params().GetLLMQ(llmqType).has_value()) {
-        retBan = true;
-        return false;
-    }
-
-    CQuorumCPtr quorum = quorum_manager.GetQuorum(llmqType, recoveredSig.getQuorumHash());
-
-    if (!quorum) {
-        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found\n", __func__,
-                  recoveredSig.getQuorumHash().ToString());
-        return false;
-    }
-    if (!IsQuorumActive(llmqType, quorum_manager, quorum->qc->quorumHash)) {
-        return false;
-    }
-
-    return true;
 }
 
 void CSigningManager::CollectPendingRecoveredSigsToVerify(
