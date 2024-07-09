@@ -70,7 +70,7 @@ static RPCHelpMan coinjoin()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        ChainstateManager& chainman = EnsureChainman(node);
+        const ChainstateManager& chainman = EnsureChainman(node);
         CTxMemPool& mempool = EnsureMemPool(node);
         CConnman& connman = EnsureConnman(node);
         bool result = cj_clientman->DoAutomaticDenominating(chainman.ActiveChainstate(), connman, mempool);

@@ -67,7 +67,7 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman, CDeterministicMNManager&
                 if (pnode->IsInboundConn()) {
                     return;
                 }
-            } else if (GetTime<std::chrono::seconds>() - pnode->m_connected < 5s) {
+            } else if (GetTime<std::chrono::seconds>() - pnode->m_connected < PROBE_WAIT_INTERVAL) {
                 // non-verified, give it some time to verify itself
                 return;
             } else if (pnode->qwatch) {
