@@ -39,28 +39,33 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
 {
     if (chainman.m_interrupt) return Interrupted{};
 
+    util::Result<InterruptResult, ChainstateLoadError> result;
+
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
     // block file from disk.
     // Note that it also sets m_blockfiles_indexed based on the disk flag!
     if (!chainman.LoadBlockIndex()) {
         if (chainman.m_interrupt) {
-            return Interrupted{};
+            result.update(Interrupted{});
         } else {
-            return {util::Error{_("Error loading block database")}, ChainstateLoadError::FAILURE};
+            result.update({util::Error{_("Error loading block database")}, ChainstateLoadError::FAILURE});
         }
+        return result;
     }
 
     if (!chainman.BlockIndex().empty() &&
             !chainman.m_blockman.LookupBlockIndex(chainman.GetConsensus().hashGenesisBlock)) {
         // If the loaded chain has a wrong genesis, bail out immediately
         // (we're likely using a testnet datadir, or the other way around).
-        return {util::Error{_("Incorrect or no genesis block found. Wrong datadir for network?")}, ChainstateLoadError::FAILURE_INCOMPATIBLE_DB};
+        result.update({util::Error{_("Incorrect or no genesis block found. Wrong datadir for network?")}, ChainstateLoadError::FAILURE_INCOMPATIBLE_DB});
+        return result;
     }
 
     // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
     // in the past, but is now trying to run unpruned.
     if (chainman.m_blockman.m_have_pruned && !options.prune) {
-        return {util::Error{_("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain")}, ChainstateLoadError::FAILURE};
+        result.update({util::Error{_("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain")}, ChainstateLoadError::FAILURE});
+        return result;
     }
 
     // At this point blocktree args are consistent with what's on disk.
@@ -68,7 +73,8 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
     // (otherwise we use the one already on disk).
     // This is called again in ImportBlocks after the reindex completes.
     if (chainman.m_blockman.m_blockfiles_indexed && !chainman.ActiveChainstate().LoadGenesisBlock()) {
-        return {util::Error{_("Error initializing block database")}, ChainstateLoadError::FAILURE};
+        result.update({util::Error{_("Error initializing block database")}, ChainstateLoadError::FAILURE});
+        return result;
     }
 
     auto is_coinsview_empty = [&](Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
@@ -108,15 +114,17 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
         // Refuse to load unsupported database format.
         // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
         if (chainstate->CoinsDB().NeedsUpgrade()) {
-            return {util::Error{_("Unsupported chainstate database format found. "
+            result.update({util::Error{_("Unsupported chainstate database format found. "
                                          "Please restart with -reindex-chainstate. This will "
                                          "rebuild the chainstate database.")},
-                                       ChainstateLoadError::FAILURE_INCOMPATIBLE_DB};
+                                       ChainstateLoadError::FAILURE_INCOMPATIBLE_DB});
+            return result;
         }
 
         // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
         if (!chainstate->ReplayBlocks()) {
-            return {util::Error{_("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.")}, ChainstateLoadError::FAILURE};
+            result.update({util::Error{_("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.")}, ChainstateLoadError::FAILURE});
+            return result;
         }
 
         // The on-disk coinsdb is now in a good state, create the cache
@@ -126,7 +134,8 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
         if (!is_coinsview_empty(*chainstate)) {
             // LoadChainTip initializes the chain based on CoinsTip()'s best block
             if (!chainstate->LoadChainTip()) {
-                return {util::Error{_("Error initializing block database")}, ChainstateLoadError::FAILURE};
+                result.update({util::Error{_("Error initializing block database")}, ChainstateLoadError::FAILURE});
+                return result;
             }
             assert(chainstate->m_chain.Tip() != nullptr);
         }
@@ -135,8 +144,9 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
     const auto& chainstates{chainman.m_chainstates};
     if (std::any_of(chainstates.begin(), chainstates.end(),
                     [](const auto& cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
-        return {util::Error{strprintf(_("Witness data for blocks after height %d requires validation. Please restart with -reindex."),
-                                      chainman.GetConsensus().SegwitHeight)}, ChainstateLoadError::FAILURE};
+        result.update({util::Error{strprintf(_("Witness data for blocks after height %d requires validation. Please restart with -reindex."),
+                                             chainman.GetConsensus().SegwitHeight)}, ChainstateLoadError::FAILURE});
+        return result;
     };
 
     // Now that chainstates are loaded and we're able to flush to
@@ -144,7 +154,7 @@ static util::Result<InterruptResult, ChainstateLoadError> CompleteChainstateInit
     // on the condition of each chainstate.
     chainman.MaybeRebalanceCaches();
 
-    return {};
+    return result;
 }
 
 util::Result<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
