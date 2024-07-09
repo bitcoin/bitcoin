@@ -41,13 +41,39 @@ FUZZ_TARGET(utxo_snapshot, .init = initialize_chain)
 
     {
         AutoFile outfile{fsbridge::fopen(snapshot_path, "wb")};
-        const auto file_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
-        outfile << Span{file_data};
+        // Metadata
+        if (fuzzed_data_provider.ConsumeBool()) {
+            std::vector<uint8_t> metadata{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
+            outfile << Span{metadata};
+        } else {
+            DataStream data_stream{};
+            auto msg_start = chainman.GetParams().MessageStart();
+            int base_blockheight{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 2 * COINBASE_MATURITY)};
+            uint256 base_blockhash{g_chain->at(base_blockheight - 1)->GetHash()};
+            uint64_t m_coins_count{fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(1, 3 * COINBASE_MATURITY)};
+            SnapshotMetadata metadata{msg_start, base_blockhash, base_blockheight, m_coins_count};
+            outfile << metadata;
+        }
+        // Coins
+        if (fuzzed_data_provider.ConsumeBool()) {
+            std::vector<uint8_t> file_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
+            outfile << Span{file_data};
+        } else {
+            int height{0};
+            for (const auto& block : *g_chain) {
+                auto coinbase{block->vtx.at(0)};
+                outfile << coinbase->GetHash();
+                WriteCompactSize(outfile, 1); // number of coins for the hash
+                WriteCompactSize(outfile, 0); // index of coin
+                outfile << Coin(coinbase->vout[0], height, /*fCoinBaseIn=*/1);
+                height++;
+            }
+        }
     }
 
     const auto ActivateFuzzedSnapshot{[&] {
         AutoFile infile{fsbridge::fopen(snapshot_path, "rb")};
-        auto msg_start = Params().MessageStart();
+        auto msg_start = chainman.GetParams().MessageStart();
         SnapshotMetadata metadata{msg_start};
         try {
             infile >> metadata;
@@ -73,16 +99,20 @@ FUZZ_TARGET(utxo_snapshot, .init = initialize_chain)
         Assert(*chainman.ActiveChainstate().m_from_snapshot_blockhash ==
                *chainman.SnapshotBlockhash());
         const auto& coinscache{chainman.ActiveChainstate().CoinsTip()};
-        int64_t chain_tx{};
         for (const auto& block : *g_chain) {
             Assert(coinscache.HaveCoin(COutPoint{block->vtx.at(0)->GetHash(), 0}));
             const auto* index{chainman.m_blockman.LookupBlockIndex(block->GetHash())};
-            const auto num_tx{Assert(index)->nTx};
-            Assert(num_tx == 1);
-            chain_tx += num_tx;
+            Assert(index);
+            Assert(index->nTx == 0);
+            if (index->nHeight == chainman.GetSnapshotBaseHeight()) {
+                auto params{chainman.GetParams().AssumeutxoForHeight(index->nHeight)};
+                Assert(params.has_value());
+                Assert(params.value().nChainTx == index->nChainTx);
+            } else {
+                Assert(index->nChainTx == 0);
+            }
         }
         Assert(g_chain->size() == coinscache.GetCacheSize());
-        Assert(chain_tx == chainman.ActiveTip()->nChainTx);
     } else {
         Assert(!chainman.SnapshotBlockhash());
         Assert(!chainman.ActiveChainstate().m_from_snapshot_blockhash);
