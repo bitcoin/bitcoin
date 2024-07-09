@@ -31,6 +31,9 @@ from shutil import rmtree
 
 from dataclasses import dataclass
 from test_framework.messages import tx_from_hex
+from test_framework.p2p import (
+    P2PInterface
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -46,6 +49,16 @@ START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
 FINAL_HEIGHT = 399
 COMPLETE_IDX = {'synced': True, 'best_block_height': FINAL_HEIGHT}
+
+
+class VersionTracker(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.version = None
+
+    def on_version(self, message):
+        self.version = message
+        super().on_version(message)
 
 
 class AssumeutxoTest(BitcoinTestFramework):
@@ -357,6 +370,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(snapshot['validated'], False)
 
         assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+
+        self.log.info("Check node version message after loading the snapshot")
+        conn = n1.add_p2p_connection(VersionTracker())
+        conn.wait_until(lambda: conn.version is not None)
+        conn.peer_disconnect()
+        # Expect to obtain the snapshot base height
+        assert_equal(conn.version.nStartingHeight, SNAPSHOT_BASE_HEIGHT)
 
         self.log.info("Submit a stale block that forked off the chain before the snapshot")
         # Normally a block like this would not be downloaded, but if it is

@@ -2836,6 +2836,10 @@ static RPCHelpMan loadtxoutset()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
     }
 
+    // Update peer manager best block
+    const auto& tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
+    node.peerman->SetBestBlock(tip->nHeight, std::chrono::seconds{tip->GetBlockTime()});
+
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_loaded", metadata.m_coins_count);
     result.pushKV("tip_hash", metadata.m_base_blockhash.ToString());
