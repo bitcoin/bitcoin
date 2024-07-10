@@ -1093,7 +1093,7 @@ public:
     //! - Wait for our headers chain to include the base block of the snapshot.
     //! - "Fast forward" the tip of the new chainstate to the base of the snapshot.
     //! - Construct the new Chainstate and add it to m_chainstates.
-    [[nodiscard]] kernel::FlushResult<CBlockIndex*> ActivateSnapshot(
+    [[nodiscard]] kernel::FlushResult<CBlockIndex*, kernel::AbortFailure> ActivateSnapshot(
         AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
     //! Try to validate an assumeutxo snapshot by using a validated historical
@@ -1104,7 +1104,7 @@ public:
     //! whether the hash matches. The INVALID case should not happen in practice
     //! because the software should refuse to load unrecognized snapshots, but
     //! if it does happen, it is a fatal error.
-    SnapshotCompletionResult MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] SnapshotCompletionResult MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs, kernel::FlushResult<void, kernel::AbortFailure>& result) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Return current chainstate targeting the most-work, network tip.
     Chainstate& CurrentChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
@@ -1324,7 +1324,7 @@ public:
     //! directories are moved or deleted.
     //!
     //! @sa node/chainstate:LoadChainstate()
-    bool ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Result<void, kernel::AbortFailure> ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get range of historical blocks to download.
     std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
