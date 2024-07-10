@@ -158,6 +158,44 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
     return ret & todo;
 }
 
+/** Given a dependency graph, construct any valid linearization for it, reading from a SpanReader. */
+template<typename BS>
+std::vector<ClusterIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanReader& reader)
+{
+    std::vector<ClusterIndex> linearization;
+    TestBitSet todo = TestBitSet::Fill(depgraph.TxCount());
+    // In every iteration one topologically-valid transaction is appended to linearization.
+    while (todo.Any()) {
+        // Compute the set of transactions with no not-yet-included ancestors.
+        TestBitSet potential_next;
+        for (auto j : todo) {
+            if ((depgraph.Ancestors(j) & todo) == TestBitSet::Singleton(j)) {
+                potential_next.Set(j);
+            }
+        }
+        // There must always be one (otherwise there is a cycle in the graph).
+        assert(potential_next.Any());
+        // Read a number from reader, and interpret it as index into potential_next.
+        uint64_t idx{0};
+        try {
+            reader >> VARINT(idx);
+        } catch (const std::ios_base::failure&) {}
+        idx %= potential_next.Count();
+        // Find out which transaction that corresponds to.
+        for (auto j : potential_next) {
+            if (idx == 0) {
+                // When found, add it to linearization and remove it from todo.
+                linearization.push_back(j);
+                assert(todo[j]);
+                todo.Reset(j);
+                break;
+            }
+            --idx;
+        }
+    }
+    return linearization;
+}
+
 } // namespace
 
 FUZZ_TARGET(clusterlin_add_dependency)
@@ -229,6 +267,48 @@ FUZZ_TARGET(clusterlin_depgraph_serialization)
 
     // Verify the graph is a DAG.
     assert(IsAcyclic(depgraph));
+}
+
+FUZZ_TARGET(clusterlin_chunking)
+{
+    // Verify the correctness of the ChunkLinearization function.
+
+    // Construct a graph by deserializing.
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+
+    // Read a valid linearization for depgraph.
+    auto linearization = ReadLinearization(depgraph, reader);
+
+    // Invoke the chunking function.
+    auto chunking = ChunkLinearization(depgraph, linearization);
+
+    // Verify that chunk feerates are monotonically non-increasing.
+    for (size_t i = 1; i < chunking.size(); ++i) {
+        assert(!(chunking[i] >> chunking[i - 1]));
+    }
+
+    // Naively recompute the chunks (each is the highest-feerate prefix of what remains).
+    auto todo = TestBitSet::Fill(depgraph.TxCount());
+    for (const auto& chunk_feerate : chunking) {
+        assert(todo.Any());
+        SetInfo<TestBitSet> accumulator, best;
+        for (ClusterIndex idx : linearization) {
+            if (todo[idx]) {
+                accumulator |= SetInfo(depgraph, idx);
+                if (best.feerate.IsEmpty() || accumulator.feerate >> best.feerate) {
+                    best = accumulator;
+                }
+            }
+        }
+        assert(chunk_feerate == best.feerate);
+        assert(best.transactions.IsSubsetOf(todo));
+        todo -= best.transactions;
+    }
+    assert(todo.None());
 }
 
 FUZZ_TARGET(clusterlin_ancestor_finder)

@@ -184,9 +184,22 @@ struct SetInfo
     /** Construct a SetInfo for a specified set and feerate. */
     SetInfo(const SetType& txn, const FeeFrac& fr) noexcept : transactions(txn), feerate(fr) {}
 
+    /** Construct a SetInfo for a given transaction in a depgraph. */
+    explicit SetInfo(const DepGraph<SetType>& depgraph, ClusterIndex pos) noexcept :
+        transactions(SetType::Singleton(pos)), feerate(depgraph.FeeRate(pos)) {}
+
     /** Construct a SetInfo for a set of transactions in a depgraph. */
     explicit SetInfo(const DepGraph<SetType>& depgraph, const SetType& txn) noexcept :
         transactions(txn), feerate(depgraph.FeeRate(txn)) {}
+
+    /** Add the transactions of other to this SetInfo (no overlap allowed). */
+    SetInfo& operator|=(const SetInfo& other) noexcept
+    {
+        Assume(!transactions.Overlaps(other.transactions));
+        transactions |= other.transactions;
+        feerate += other.feerate;
+        return *this;
+    }
 
     /** Construct a new SetInfo equal to this, with more transactions added (which may overlap
      *  with the existing transactions in the SetInfo). */
@@ -198,6 +211,25 @@ struct SetInfo
     /** Permit equality testing. */
     friend bool operator==(const SetInfo&, const SetInfo&) noexcept = default;
 };
+
+/** Compute the feerates of the chunks of linearization. */
+template<typename SetType>
+std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization) noexcept
+{
+    std::vector<FeeFrac> ret;
+    for (ClusterIndex i : linearization) {
+        /** The new chunk to be added, initially a singleton. */
+        auto new_chunk = depgraph.FeeRate(i);
+        // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
+        while (!ret.empty() && new_chunk >> ret.back()) {
+            new_chunk += ret.back();
+            ret.pop_back();
+        }
+        // Actually move that new chunk into the chunking.
+        ret.push_back(std::move(new_chunk));
+    }
+    return ret;
+}
 
 /** Class encapsulating the state needed to find the best remaining ancestor set.
  *
