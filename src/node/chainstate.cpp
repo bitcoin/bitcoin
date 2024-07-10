@@ -212,7 +212,10 @@ FlushResult<InterruptResult, ChainstateLoadError> LoadChainstate(ChainstateManag
     // snapshot is actually validated? Because this entails unusual
     // filesystem operations to move leveldb data directories around, and that seems
     // too risky to do in the middle of normal runtime.
-    auto snapshot_completion = chainman.MaybeCompleteSnapshotValidation();
+    FlushResult<void, AbortFailure> snapshot_result;
+    auto snapshot_completion = chainman.MaybeCompleteSnapshotValidation(snapshot_result);
+    // Ignore failure value, do not treat flush error as failure.
+    snapshot_result >> result;
 
     if (snapshot_completion == SnapshotCompletionResult::SKIPPED) {
         // do nothing; expected case
