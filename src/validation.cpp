@@ -3158,7 +3158,11 @@ bool Chainstate::ConnectTip(
     // will be true and this->setBlockIndexCandidates will not have additional
     // blocks.
     Chainstate& current_cs{m_chainman.CurrentChainstate()};
-    m_chainman.MaybeValidateSnapshot(*this, current_cs);
+    FlushResult<void, AbortFailure> snapshot_result;
+    // Snapshot validation failure does not prevent connecting the block; only flush
+    // messages from the snapshot validation are propagated to the caller via result.
+    (void)m_chainman.MaybeValidateSnapshot(*this, current_cs, snapshot_result);
+    snapshot_result >> result;
 
     connected_blocks.emplace_back(pindexNew, std::move(block_to_connect));
     return true;
@@ -5671,12 +5675,12 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return destroyed && !fs::exists(db_path);
 }
 
-FlushResult<CBlockIndex*> ChainstateManager::ActivateSnapshot(
+FlushResult<CBlockIndex*, AbortFailure> ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
         bool in_memory)
 {
-    FlushResult<CBlockIndex*> result;
+    FlushResult<CBlockIndex*, AbortFailure> result;
     uint256 base_blockhash = metadata.m_base_blockhash;
 
     CBlockIndex* snapshot_start_block{};
@@ -5782,8 +5786,10 @@ FlushResult<CBlockIndex*> ChainstateManager::ActivateSnapshot(
             snapshot_chainstate.reset();
             bool removed = DeleteCoinsDBFromDisk(*snapshot_datadir, /*is_snapshot=*/true);
             if (!removed) {
-                GetNotifications().fatalError(strprintf(_("Failed to remove snapshot chainstate dir (%s). "
-                    "Manually remove it before restarting.\n"), fs::PathToString(*snapshot_datadir)));
+                auto error{strprintf(_("Failed to remove snapshot chainstate dir (%s). "
+                    "Manually remove it before restarting.\n"), fs::PathToString(*snapshot_datadir))};
+                GetNotifications().fatalError(error);
+                result.update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
             }
         }
     };
@@ -6065,9 +6071,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 // ActivateBestChain, on a separate thread that should not require cs_main to
 // hash, because the UTXO set is only hashed after the historical chainstate
 // reaches its target block and is no longer changing.
-SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs)
+SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs, FlushResult<void, AbortFailure>& result)
 {
-    FlushResult<> result; // TODO Return this result!
     AssertLockHeld(cs_main);
 
     // If the snapshot does not need to be validated...
@@ -6117,10 +6122,12 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
         }
 
         GetNotifications().fatalError(user_error);
+        result.update({util::Error{std::move(user_error)}, AbortFailure{.fatal = true}});
     };
 
     CCoinsViewDB& validated_coins_db = validated_cs.CoinsDB();
-    // Ignore failure value, do not treat flush error as failure.
+    // Propagate flush messages to result, but do not treat a flush failure as a
+    // snapshot validation failure.
     validated_cs.ForceFlushStateToDisk() >> result;
 
     const auto& maybe_au_data = m_options.chainparams.AssumeutxoForHeight(validated_cs.m_chain.Height());
@@ -6174,7 +6181,8 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
 
     unvalidated_cs.m_assumeutxo = Assumeutxo::VALIDATED;
     validated_cs.m_target_utxohash = AssumeutxoHash{validated_cs_stats->hashSerialized};
-    // Ignore failure value, do not treat flush error as failure.
+    // Propagate flush messages to result, but do not treat a flush failure as a
+    // snapshot validation failure.
     this->MaybeRebalanceCaches() >> result;
 
     return SnapshotCompletionResult::SUCCESS;
@@ -6389,12 +6397,14 @@ std::optional<int> ChainstateManager::BlocksAheadOfTip() const
     return std::nullopt;
 }
 
-bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs)
+util::Result<void, AbortFailure> ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs)
 {
     AssertLockHeld(::cs_main);
+    util::Result<void, AbortFailure> result;
     if (unvalidated_cs.m_assumeutxo != Assumeutxo::VALIDATED) {
         // No need to clean up.
-        return false;
+        result.update(util::Error{});
+        return result;
     }
 
     const fs::path validated_path{validated_cs.StoragePath()};
@@ -6413,16 +6423,18 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chain
     LogInfo("[snapshot] deleting background chainstate directory (now unnecessary) (%s)",
               fs::PathToString(validated_path));
 
-    auto rename_failed_abort = [this](
+    auto rename_failed_abort = [&](
                                    fs::path p_old,
                                    fs::path p_new,
                                    const fs::filesystem_error& err) {
         LogError("[snapshot] Error renaming path (%s) -> (%s): %s\n",
                   fs::PathToString(p_old), fs::PathToString(p_new), err.what());
-        GetNotifications().fatalError(strprintf(_(
+        auto error{strprintf(_(
             "Rename of '%s' -> '%s' failed. "
             "Cannot clean up the background chainstate leveldb directory."),
-            fs::PathToString(p_old), fs::PathToString(p_new)));
+            fs::PathToString(p_old), fs::PathToString(p_new))};
+        GetNotifications().fatalError(error);
+        result.update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
     };
 
     try {
@@ -6453,7 +6465,7 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chain
         LogInfo("[snapshot] deleted background chainstate directory (%s)",
                 fs::PathToString(validated_path));
     }
-    return true;
+    return result;
 }
 
 std::pair<int, int> Chainstate::GetPruneRange(int last_height_can_prune) const
