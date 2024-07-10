@@ -41,6 +41,7 @@
 #include <ranges>
 #include <unordered_map>
 
+using kernel::AbortFailure;
 using kernel::FlushResult;
 using kernel::FlushStatus;
 
@@ -815,9 +816,9 @@ fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
     return m_block_file_seq.FileName(pos);
 }
 
-FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime)
+FlushResult<FlatFilePos, AbortFailure> BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime)
 {
-    FlushResult<> result; // TODO Return this result!
+    FlushResult<FlatFilePos, AbortFailure> result;
     LOCK(cs_LastBlockFile);
 
     const BlockfileType chain_type = BlockfileTypeForHeight(nHeight);
@@ -897,15 +898,18 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
     bool out_of_space;
     size_t bytes_allocated = m_block_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        m_opts.notifications.fatalError(_("Disk space is too low!"));
-        return {};
+        auto error{_("Disk space is too low!")};
+        m_opts.notifications.fatalError(error);
+        result.Update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
+        return result;
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
         m_check_for_pruning = true;
     }
 
     m_dirty_fileinfo.insert(nFile);
-    return pos;
+    result.Update(pos);
+    return result;
 }
 
 void BlockManager::UpdateBlockInfo(const CBlock& block, unsigned int nHeight, const FlatFilePos& pos)
@@ -930,7 +934,7 @@ void BlockManager::UpdateBlockInfo(const CBlock& block, unsigned int nHeight, co
     m_dirty_fileinfo.insert(nFile);
 }
 
-bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
+util::Result<void, AbortFailure> BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
 {
     pos.nFile = nFile;
 
@@ -943,18 +947,20 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     bool out_of_space;
     size_t bytes_allocated = m_undo_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
-        return FatalError(m_opts.notifications, state, _("Disk space is too low!"));
+        auto error{_("Disk space is too low!")};
+        FatalError(m_opts.notifications, state, error);
+        return {util::Error{std::move(error)}, AbortFailure{.fatal = true}};
     }
     if (bytes_allocated != 0 && IsPruneMode()) {
         m_check_for_pruning = true;
     }
 
-    return true;
+    return {};
 }
 
-bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+FlushResult<void, AbortFailure> BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
 {
-    FlushResult<> result; // TODO Return this result!
+    FlushResult<void, AbortFailure> result;
     AssertLockHeld(::cs_main);
     const BlockfileType type = BlockfileTypeForHeight(block.nHeight);
     auto& cursor = *Assert(WITH_LOCK(cs_LastBlockFile, return m_blockfile_cursors[type]));
@@ -963,15 +969,20 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
         const unsigned int blockundo_size{static_cast<unsigned int>(GetSerializeSize(blockundo))};
-        if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
-            LogError("FindUndoPos failed");
-            return false;
+        if (!(FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD) >> result)) {
+            auto error{Untranslated("FindUndoPos failed")};
+            LogError("%s", error.original);
+            result.Update(util::Error{std::move(error)});
+            return result;
         }
         // Open history file to append
         AutoFile fileout{OpenUndoFile(pos)};
         if (fileout.IsNull()) {
             LogError("OpenUndoFile failed");
-            return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
+            auto error{_("Failed to write undo data.")};
+            FatalError(m_opts.notifications, state, error);
+            result.Update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
+            return result;
         }
 
         // Write index header
@@ -1011,7 +1022,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         m_dirty_blockindex.insert(&block);
     }
 
-    return true;
+    return result;
 }
 
 bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
@@ -1107,27 +1118,31 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
     return true;
 }
 
-FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
+FlushResult<FlatFilePos, AbortFailure> BlockManager::WriteBlock(const CBlock& block, int nHeight)
 {
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
-    FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
-    if (pos.IsNull()) {
-        LogError("FindNextBlockPos failed");
-        return FlatFilePos();
+    auto result{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
+    if (!result || result->IsNull()) {
+        auto error{Untranslated("FindNextBlockPos failed")};
+        LogError("%s", error.original);
+        result.Update(util::Error{std::move(error)});
+        return result;
     }
-    AutoFile fileout{OpenBlockFile(pos)};
+    AutoFile fileout{OpenBlockFile(*result)};
     if (fileout.IsNull()) {
         LogError("OpenBlockFile failed");
-        m_opts.notifications.fatalError(_("Failed to write block."));
-        return FlatFilePos();
+        auto error{_("Failed to write block.")};
+        m_opts.notifications.fatalError(error);
+        result.Update({util::Error{std::move(error)}, AbortFailure{.fatal = true}});
+        return result;
     }
 
     // Write index header
     fileout << GetParams().MessageStart() << block_size;
     // Write block
-    pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
+    result->nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
     fileout << TX_WITH_WITNESS(block);
-    return pos;
+    return result;
 }
 
 static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
