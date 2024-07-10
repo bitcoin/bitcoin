@@ -59,33 +59,20 @@ class TestSecurityChecks(unittest.TestCase):
         arch = get_arch(cxx, source, executable)
 
         if arch == lief.ARCHITECTURES.X86:
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-zexecstack','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE NX RELRO CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-znorelro','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed RELRO CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,noseparate-code']),
-                    (1, executable+': failed separate_code CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full']),
-                    (0, ''))
+            pass_flags = ['-Wl,-znoexecstack', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE', '-Wl,-z,separate-code', '-fcf-protection=full']
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-zexecstack']), (1, executable + ': failed NX'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-no-pie','-fno-PIE']), (1, executable + ': failed PIE'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-znorelro']), (1, executable + ': failed RELRO'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-z,noseparate-code']), (1, executable + ': failed SEPARATE_CODE'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-fcf-protection=none']), (1, executable + ': failed CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags), (0, ''))
         else:
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-zexecstack','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE NX RELRO'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-znorelro','-no-pie','-fno-PIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed PIE RELRO'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-znorelro','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (1, executable+': failed RELRO'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,noseparate-code']),
-                    (1, executable+': failed separate_code'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-znoexecstack','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code']),
-                    (0, ''))
+            pass_flags = ['-Wl,-znoexecstack', '-Wl,-zrelro', '-Wl,-z,now', '-pie', '-fPIE', '-Wl,-z,separate-code']
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-zexecstack']), (1, executable + ': failed NX'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-no-pie','-fno-PIE']), (1, executable + ': failed PIE'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-znorelro']), (1, executable + ': failed RELRO'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-z,noseparate-code']), (1, executable + ': failed SEPARATE_CODE'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags), (0, ''))
 
         clean_files(source, executable)
 
