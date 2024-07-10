@@ -167,9 +167,9 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields (STORAGE_HEADER_BYTES).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
+    [[nodiscard]] kernel::FlushResult<FlatFilePos, kernel::AbortFailure> FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime);
     [[nodiscard]] kernel::FlushResult<> FlushChainstateBlockFile(int tip_height);
-    bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
+    [[nodiscard]] util::Result<void, kernel::AbortFailure> FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
@@ -325,7 +325,7 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
 
-    bool WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+    [[nodiscard]] kernel::FlushResult<void, kernel::AbortFailure> WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk and update block file statistics.
@@ -336,7 +336,7 @@ public:
      * @returns in case of success, the position to which the block was written to
      *          in case of an error, an empty FlatFilePos
      */
-    FlatFilePos WriteBlock(const CBlock& block, int nHeight);
+    [[nodiscard]] kernel::FlushResult<FlatFilePos, kernel::AbortFailure> WriteBlock(const CBlock& block, int nHeight);
 
     /** Update blockfile info while processing a block during reindex. The block must be available on disk.
      *
