@@ -310,22 +310,30 @@ class LinearizationChunking
     /** The depgraph this linearization is for. */
     const DepGraph<SetType>& m_depgraph;
 
-    /** The linearization we started from. */
+    /** The linearization we started from, possibly with removed prefix stripped. */
     Span<const ClusterIndex> m_linearization;
 
     /** Chunk sets and their feerates, of what remains of the linearization. */
     std::vector<SetInfo<SetType>> m_chunks;
 
+    /** How large a prefix of m_chunks corresponds to removed transactions. */
+    ClusterIndex m_chunks_skip{0};
+
     /** Which transactions remain in the linearization. */
     SetType m_todo;
 
-    /** Fill the m_chunks variable. */
+    /** Fill the m_chunks variable, and remove the done prefix of m_linearization. */
     void BuildChunks() noexcept
     {
         // Caller must clear m_chunks.
         Assume(m_chunks.empty());
 
-        // Iterate over the entries in m_linearization. This is effectively the same
+        // Chop off the initial part of m_linearization that is already done.
+        while (!m_linearization.empty() && !m_todo[m_linearization.front()]) {
+            m_linearization = m_linearization.subspan(1);
+        }
+
+        // Iterate over the remaining entries in m_linearization. This is effectively the same
         // algorithm as ChunkLinearization, but supports skipping parts of the linearization and
         // keeps track of the sets themselves instead of just their feerates.
         for (auto idx : m_linearization) {
@@ -355,13 +363,13 @@ public:
     }
 
     /** Determine how many chunks remain in the linearization. */
-    ClusterIndex NumChunksLeft() const noexcept { return m_chunks.size(); }
+    ClusterIndex NumChunksLeft() const noexcept { return m_chunks.size() - m_chunks_skip; }
 
     /** Access a chunk. Chunk 0 is the highest-feerate prefix of what remains. */
     const SetInfo<SetType>& GetChunk(ClusterIndex n) const noexcept
     {
-        Assume(n < m_chunks.size());
-        return m_chunks[n];
+        Assume(n + m_chunks_skip < m_chunks.size());
+        return m_chunks[n + m_chunks_skip];
     }
 
     /** Remove some subset of transactions from the linearization. */
@@ -370,9 +378,21 @@ public:
         Assume(subset.Any());
         Assume(subset.IsSubsetOf(m_todo));
         m_todo -= subset;
-        // Rechunk what remains of m_linearization.
-        m_chunks.clear();
-        BuildChunks();
+        if (GetChunk(0).transactions == subset) {
+            // If the newly done transactions exactly match the first chunk of the remainder of
+            // the linearization, we do not need to rechunk; just remember to skip one
+            // additional chunk.
+            ++m_chunks_skip;
+            // With subset marked done, some prefix of m_linearization will be done now. How long
+            // that prefix is depends on how many done elements were interspersed with subset,
+            // but at least as many transactions as there are in subset.
+            m_linearization = m_linearization.subspan(subset.Count());
+        } else {
+            // Otherwise rechunk what remains of m_linearization.
+            m_chunks.clear();
+            m_chunks_skip = 0;
+            BuildChunks();
+        }
     }
 
     /** Find the shortest intersection between subset and the prefixes of remaining chunks
