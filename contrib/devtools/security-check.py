@@ -163,7 +163,7 @@ def check_MACHO_FIXUP_CHAINS(binary) -> bool:
     '''
     return binary.has_dyld_chained_fixups
 
-def check_MACHO_Canary(binary) -> bool:
+def check_MACHO_CANARY(binary) -> bool:
     '''
     Check for use of stack canary
     '''
@@ -182,7 +182,7 @@ def check_NX(binary) -> bool:
     '''
     return binary.has_nx
 
-def check_MACHO_control_flow(binary) -> bool:
+def check_MACHO_CONTROL_FLOW(binary) -> bool:
     '''
     Check for control flow instrumentation
     '''
@@ -192,7 +192,7 @@ def check_MACHO_control_flow(binary) -> bool:
         return True
     return False
 
-def check_MACHO_branch_protection(binary) -> bool:
+def check_MACHO_BRANCH_PROTECTION(binary) -> bool:
     '''
     Check for branch protection instrumentation
     '''
@@ -222,7 +222,7 @@ BASE_PE = [
 
 BASE_MACHO = [
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('Canary', check_MACHO_Canary),
+    ('CANARY', check_MACHO_CANARY),
     ('FIXUP_CHAINS', check_MACHO_FIXUP_CHAINS),
 ]
 
@@ -240,8 +240,8 @@ CHECKS = {
     lief.EXE_FORMATS.MACHO: {
         lief.ARCHITECTURES.X86: BASE_MACHO + [('PIE', check_PIE),
                                               ('NX', check_NX),
-                                              ('CONTROL_FLOW', check_MACHO_control_flow)],
-        lief.ARCHITECTURES.ARM64: BASE_MACHO + [('BRANCH_PROTECTION', check_MACHO_branch_protection)],
+                                              ('CONTROL_FLOW', check_MACHO_CONTROL_FLOW)],
+        lief.ARCHITECTURES.ARM64: BASE_MACHO + [('BRANCH_PROTECTION', check_MACHO_BRANCH_PROTECTION)],
     }
 }
 

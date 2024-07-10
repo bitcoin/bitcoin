@@ -120,27 +120,21 @@ class TestSecurityChecks(unittest.TestCase):
         arch = get_arch(cxx, source, executable)
 
         if arch == lief.ARCHITECTURES.X86:
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-no_fixup_chains']),
-                (1, executable+': failed NOUNDEFS Canary FIXUP_CHAINS PIE CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-fixup_chains']),
-                (1, executable+': failed NOUNDEFS Canary CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-flat_namespace','-fstack-protector-all', '-Wl,-fixup_chains']),
-                (1, executable+': failed NOUNDEFS CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-fstack-protector-all', '-Wl,-fixup_chains']),
-                (1, executable+': failed CONTROL_FLOW'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-fstack-protector-all', '-fcf-protection=full', '-Wl,-fixup_chains']),
-                (0, ''))
+            pass_flags = ['-Wl,-pie', '-fstack-protector-all', '-fcf-protection=full', '-Wl,-fixup_chains']
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-no_pie', '-Wl,-no_fixup_chains']), (1, executable+': failed FIXUP_CHAINS PIE')) # -fixup_chains is incompatible with -no_pie
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-no_fixup_chains']), (1, executable + ': failed FIXUP_CHAINS'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-fno-stack-protector']), (1, executable + ': failed CANARY'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-flat_namespace']), (1, executable + ': failed NOUNDEFS'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-fcf-protection=none']), (1, executable + ': failed CONTROL_FLOW'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags), (0, ''))
         else:
-            # arm64 darwin doesn't support non-PIE binaries, control flow or executable stacks
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-no_fixup_chains']),
-                (1, executable+': failed NOUNDEFS Canary FIXUP_CHAINS BRANCH_PROTECTION'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-flat_namespace','-fno-stack-protector', '-Wl,-fixup_chains', '-mbranch-protection=bti']),
-                (1, executable+': failed NOUNDEFS Canary'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-Wl,-flat_namespace','-fstack-protector-all', '-Wl,-fixup_chains', '-mbranch-protection=bti']),
-                (1, executable+': failed NOUNDEFS'))
-            self.assertEqual(call_security_check(cxx, source, executable, ['-fstack-protector-all', '-Wl,-fixup_chains', '-mbranch-protection=bti']),
-                (0, ''))
-
+            # arm64 darwin doesn't support non-PIE binaries or executable stacks
+            pass_flags = ['-fstack-protector-all', '-Wl,-fixup_chains', '-mbranch-protection=bti']
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-mbranch-protection=none']), (1, executable + ': failed BRANCH_PROTECTION'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-no_fixup_chains']), (1, executable + ': failed FIXUP_CHAINS'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-fno-stack-protector']), (1, executable + ': failed CANARY'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags + ['-Wl,-flat_namespace']), (1, executable + ': failed NOUNDEFS'))
+            self.assertEqual(call_security_check(cxx, source, executable, pass_flags), (0, ''))
 
         clean_files(source, executable)
 
