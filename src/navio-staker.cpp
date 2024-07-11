@@ -75,6 +75,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     SetupChainParamsBaseOptions(argsman);
+    argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-debuglogfile=<file|false>", strprintf("Specify log file. Set to false to disable logging to file (default: %s)", DEFAULT_LOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-printtoconsole", "Prints debug to stdout", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -435,11 +436,37 @@ static std::string coinbase_dest;
 static bool mustUnlockWallet = false;
 static arith_uint256 currentDifficulty;
 
+util::Result<void> SetLoggingCategories(const ArgsManager& args)
+{
+    if (args.IsArgSet("-debug")) {
+        // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
+        const std::vector<std::string> categories = args.GetArgs("-debug");
+
+        if (std::none_of(categories.begin(), categories.end(),
+                         [](std::string cat) { return cat == "0" || cat == "none"; })) {
+            for (const auto& cat : categories) {
+                if (!LogInstance().EnableCategory(cat)) {
+                    return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
+                }
+            }
+        }
+    }
+
+    // Now remove the logging categories which were explicitly excluded
+    for (const std::string& cat : args.GetArgs("-debugexclude")) {
+        if (!LogInstance().DisableCategory(cat)) {
+            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
+        }
+    }
+    return {};
+}
+
 void Setup()
 {
     LogInstance().m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
     LogInstance().m_file_path = AbsPathForConfigVal(gArgs, gArgs.GetPathArg("-debuglogfile", DEFAULT_LOGFILE));
     LogInstance().m_print_to_console = gArgs.GetBoolArg("-printtoconsole", true);
+    SetLoggingCategories(gArgs);
 
     if (gArgs.GetBoolArg("-stdinrpcpass", false)) {
         NO_STDIN_ECHO();
