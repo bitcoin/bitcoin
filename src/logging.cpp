@@ -148,43 +148,44 @@ struct CLogCategoryDesc {
 };
 
 const CLogCategoryDesc LogCategories[] =
-{
-    {BCLog::NONE, "0"},
-    {BCLog::NONE, ""},
-    {BCLog::NET, "net"},
-    {BCLog::TOR, "tor"},
-    {BCLog::MEMPOOL, "mempool"},
-    {BCLog::HTTP, "http"},
-    {BCLog::BENCH, "bench"},
-    {BCLog::ZMQ, "zmq"},
-    {BCLog::WALLETDB, "walletdb"},
-    {BCLog::RPC, "rpc"},
-    {BCLog::ESTIMATEFEE, "estimatefee"},
-    {BCLog::ADDRMAN, "addrman"},
-    {BCLog::SELECTCOINS, "selectcoins"},
-    {BCLog::REINDEX, "reindex"},
-    {BCLog::CMPCTBLOCK, "cmpctblock"},
-    {BCLog::RAND, "rand"},
-    {BCLog::PRUNE, "prune"},
-    {BCLog::PROXY, "proxy"},
-    {BCLog::MEMPOOLREJ, "mempoolrej"},
-    {BCLog::LIBEVENT, "libevent"},
-    {BCLog::COINDB, "coindb"},
-    {BCLog::LEVELDB, "leveldb"},
-    {BCLog::VALIDATION, "validation"},
-    {BCLog::I2P, "i2p"},
-    {BCLog::IPC, "ipc"},
+    {
+        {BCLog::NONE, "0"},
+        {BCLog::NONE, ""},
+        {BCLog::NET, "net"},
+        {BCLog::TOR, "tor"},
+        {BCLog::MEMPOOL, "mempool"},
+        {BCLog::HTTP, "http"},
+        {BCLog::BENCH, "bench"},
+        {BCLog::ZMQ, "zmq"},
+        {BCLog::WALLETDB, "walletdb"},
+        {BCLog::RPC, "rpc"},
+        {BCLog::ESTIMATEFEE, "estimatefee"},
+        {BCLog::ADDRMAN, "addrman"},
+        {BCLog::SELECTCOINS, "selectcoins"},
+        {BCLog::REINDEX, "reindex"},
+        {BCLog::CMPCTBLOCK, "cmpctblock"},
+        {BCLog::RAND, "rand"},
+        {BCLog::PRUNE, "prune"},
+        {BCLog::PROXY, "proxy"},
+        {BCLog::MEMPOOLREJ, "mempoolrej"},
+        {BCLog::LIBEVENT, "libevent"},
+        {BCLog::COINDB, "coindb"},
+        {BCLog::LEVELDB, "leveldb"},
+        {BCLog::VALIDATION, "validation"},
+        {BCLog::I2P, "i2p"},
+        {BCLog::IPC, "ipc"},
 #ifdef DEBUG_LOCKCONTENTION
-    {BCLog::LOCK, "lock"},
+        {BCLog::LOCK, "lock"},
 #endif
-    {BCLog::UTIL, "util"},
-    {BCLog::BLOCKSTORAGE, "blockstorage"},
-    {BCLog::TXRECONCILIATION, "txreconciliation"},
-    {BCLog::SCAN, "scan"},
-    {BCLog::DANDELION, "dandelion"},
-    {BCLog::TXPACKAGES, "txpackages"},
-    {BCLog::ALL, "1"},
-    {BCLog::ALL, "all"},
+        {BCLog::UTIL, "util"},
+        {BCLog::BLOCKSTORAGE, "blockstorage"},
+        {BCLog::TXRECONCILIATION, "txreconciliation"},
+        {BCLog::SCAN, "scan"},
+        {BCLog::DANDELION, "dandelion"},
+        {BCLog::TXPACKAGES, "txpackages"},
+        {BCLog::POPS, "pops"},
+        {BCLog::ALL, "1"},
+        {BCLog::ALL, "all"},
 };
 
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
@@ -287,6 +288,8 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
         return "dandelion";
     case BCLog::LogFlags::TXPACKAGES:
         return "txpackages";
+    case BCLog::LogFlags::POPS:
+        return "pops";
     case BCLog::LogFlags::ALL:
         return "all";
     }

@@ -53,16 +53,19 @@ ProofOfStake::ProofOfStake(const Points& staked_commitments, const Scalar& eta_f
     rangeProof.Vs.Clear();
 }
 
-bool ProofOfStake::Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint32_t& prev_time, const uint64_t& stake_modifier, const uint32_t& time, const unsigned int& next_target) const
+ProofOfStake::VerificationResult ProofOfStake::Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint32_t& prev_time, const uint64_t& stake_modifier, const uint32_t& time, const unsigned int& next_target) const
 {
     return Verify(staked_commitments, eta_fiat_shamir, eta_phi, CalculateKernelHash(prev_time, stake_modifier, setMemProof.phi, time), next_target);
 }
 
-bool ProofOfStake::Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint256& kernel_hash, const unsigned int& next_target) const
+ProofOfStake::VerificationResult ProofOfStake::Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint256& kernel_hash, const unsigned int& next_target) const
 {
     auto setup = SetMemProofSetup<Arith>::Get();
 
     auto setmemres = SetProver::Verify(setup, staked_commitments, eta_fiat_shamir, eta_phi, setMemProof);
+
+    if (!setmemres)
+        return ProofOfStake::SM_INVALID;
 
     // std::cout << __func__ << ": Verifying Setmem proof with"
     //           << "\n\t staked_commitments=" << staked_commitments.GetString()
@@ -73,7 +76,10 @@ bool ProofOfStake::Verify(const Points& staked_commitments, const Scalar& eta_fi
 
     auto kernelhashres = ProofOfStake::VerifyKernelHash(rangeProof, kernel_hash, next_target, eta_phi, setMemProof.phi);
 
-    return setmemres && kernelhashres;
+    if (!kernelhashres)
+        return ProofOfStake::RP_INVALID;
+
+    return ProofOfStake::VALID;
 }
 
 bool ProofOfStake::VerifyKernelHash(const RangeProof& range_proof, const uint256& kernel_hash, const unsigned int& next_target, const blsct::Message& eta_phi, const Point& phi)

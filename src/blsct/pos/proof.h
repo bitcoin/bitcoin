@@ -35,8 +35,33 @@ public:
 
     ProofOfStake(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const Scalar& m, const Scalar& f, const uint32_t& prev_time, const uint64_t& stake_modifier, const uint32_t& time, const unsigned int& next_target);
 
-    bool Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint256& kernelHash, const unsigned int& posTarget) const;
-    bool Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint32_t& prev_time, const uint64_t& stake_modifier, const uint32_t& time, const unsigned int& next_target) const;
+    enum VerificationResult : uint32_t {
+        NONE = 0,
+        VALID = 1,
+        RP_INVALID = 2,
+        SM_INVALID = 3,
+    };
+
+    static std::string VerificationResultToString(const VerificationResult& res)
+    {
+        switch (res) {
+        case VALID:
+            return "Valid";
+            break;
+        case RP_INVALID:
+            return "Invalid Range Proof";
+            break;
+        case SM_INVALID:
+            return "Invalid Set Membership Proof";
+            break;
+        default:
+            return "None";
+        }
+    }
+
+    VerificationResult
+    Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint256& kernelHash, const unsigned int& posTarget) const;
+    VerificationResult Verify(const Points& staked_commitments, const Scalar& eta_fiat_shamir, const blsct::Message& eta_phi, const uint32_t& prev_time, const uint64_t& stake_modifier, const uint32_t& time, const unsigned int& next_target) const;
 
     static bool VerifyKernelHash(const RangeProof& range_proof, const uint256& kernel_hash, const unsigned int& next_target, const blsct::Message& eta_phi, const Point& phi);
     static bool VerifyKernelHash(const RangeProof& range_proof, const uint256& min_value, const blsct::Message& eta_phi, const Point& phi);

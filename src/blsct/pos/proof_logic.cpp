@@ -4,6 +4,8 @@
 
 #include <blsct/pos/pos.h>
 #include <blsct/pos/proof_logic.h>
+#include <logging.h>
+#include <util/strencodings.h>
 
 using Arith = Mcl;
 using Point = Arith::Point;
@@ -19,6 +21,9 @@ ProofOfStake ProofOfStakeLogic::Create(const CCoinsViewCache& cache, const Scala
     auto eta_phi = blsct::CalculateSetMemProofGeneratorSeed(pindexPrev);
 
     auto next_target = blsct::GetNextTargetRequired(pindexPrev, &block, params);
+
+    LogPrint(BCLog::POPS, "Creating PoPS:\n    Eta fiat shamir: %s\n   Eta phi: %s\n   Next Target: %d\n   Staked Commitments:%s\n", HexStr(eta_fiat_shamir), HexStr(eta_phi), next_target, staked_commitments.GetString());
+
     return ProofOfStake(staked_commitments, eta_fiat_shamir, eta_phi, m, f, pindexPrev->nTime, pindexPrev->nStakeModifier, block.nTime, next_target);
 }
 
@@ -27,6 +32,7 @@ bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex* 
     auto staked_commitments = cache.GetStakedCommitments().GetElements();
 
     if (staked_commitments.Size() < 2) {
+        LogPrint(BCLog::POPS, "PoPS rejected. Staked commitments size is %d\n", staked_commitments.Size());
         return false;
     }
 
@@ -36,8 +42,12 @@ bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex* 
     auto kernel_hash = blsct::CalculateKernelHash(pindexPrev, block);
     auto next_target = blsct::GetNextTargetRequired(pindexPrev, &block, params);
 
+    LogPrint(BCLog::POPS, "Verifying PoPS:\n   Eta fiat shamir: %s\n   Eta phi: %s\n   Kernel Hash: %s\n   Next Target: %d\n   Staked Commitments:%s\n", HexStr(eta_fiat_shamir), HexStr(eta_phi), kernel_hash.ToString(), next_target, staked_commitments.GetString());
+
     auto res = block.posProof.Verify(staked_commitments, eta_fiat_shamir, eta_phi, kernel_hash, next_target);
 
-    return res;
+    LogPrint(BCLog::POPS, "Result: %s\n", VerificationResultToString(res));
+
+    return res == blsct::ProofOfStake::VerificationResult::VALID;
 }
 } // namespace blsct
