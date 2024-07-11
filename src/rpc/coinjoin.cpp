@@ -137,7 +137,7 @@ static RPCHelpMan getcoinjoininfo()
                                     {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
                                 }},
                             }},
-                            {RPCResult::Type::NUM, "keys_left", "How many new keys are left since last automatic backup"},
+                            {RPCResult::Type::NUM, "keys_left", /* optional */ true, "How many new keys are left since last automatic backup (if applicable)"},
                             {RPCResult::Type::STR, "warnings", "Warnings if any"},
                         }},
                     RPCResult{"for masternodes",
@@ -177,9 +177,14 @@ static RPCHelpMan getcoinjoininfo()
     CHECK_NONFATAL(manager != nullptr);
     manager->GetJsonInfo(obj);
 
-    obj.pushKV("keys_left",     wallet->nKeysLeftSinceAutoBackup);
-    obj.pushKV("warnings",      wallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING
-                                        ? "WARNING: keypool is almost depleted!" : "");
+    std::string warning_msg{""};
+    if (wallet->IsLegacy()) {
+        obj.pushKV("keys_left", wallet->nKeysLeftSinceAutoBackup);
+        if (wallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING) {
+            warning_msg = "WARNING: keypool is almost depleted!";
+        }
+    }
+    obj.pushKV("warnings", warning_msg);
 #endif // ENABLE_WALLET
 
     return obj;
