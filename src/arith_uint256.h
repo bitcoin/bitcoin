@@ -43,8 +43,10 @@ public:
 
     base_uint& operator=(const base_uint& b)
     {
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = b.pn[i];
+        if (this != &b) {
+            for (int i = 0; i < WIDTH; i++)
+                pn[i] = b.pn[i];
+        }
         return *this;
     }
 
