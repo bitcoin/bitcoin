@@ -72,7 +72,36 @@ static std::vector<std::vector<std::string>> g_rpcauth;
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
+extern std::vector<std::string> g_external_usernames;
+class RpcHttpRequest
+{
+public:
+    HTTPRequest* m_req;
+    int64_t m_startTime;
+    int m_status{0};
+    std::string user;
+    std::string command;
+
+    RpcHttpRequest(HTTPRequest* req) :
+        m_req{req},
+        m_startTime{GetTimeMicros()}
+    {}
+
+    ~RpcHttpRequest()
+    {
+        const bool is_external = find(g_external_usernames.begin(), g_external_usernames.end(), user) != g_external_usernames.end();
+        LogPrint(BCLog::BENCHMARK, "HTTP RPC request handled: user=%s command=%s external=%s status=%d elapsed_time_ms=%d\n", user, command, is_external, m_status, (GetTimeMicros() - m_startTime) / 1000);
+    }
+
+    bool send_reply(int status, const std::string& response = "")
+    {
+        m_status = status;
+        m_req->WriteReply(status, response);
+        return m_status == HTTP_OK;
+    }
+};
+
+static bool JSONErrorReply(RpcHttpRequest& rpcRequest, const UniValue& objError, const UniValue& id)
 {
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
@@ -88,8 +117,8 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
 
     std::string strReply = JSONRPCReply(NullUniValue, objError, id);
 
-    req->WriteHeader("Content-Type", "application/json");
-    req->WriteReply(nStatus, strReply);
+    rpcRequest.m_req->WriteHeader("Content-Type", "application/json");
+    return rpcRequest.send_reply(nStatus, strReply);
 }
 
 //This function checks username and password against -rpcauth
@@ -146,24 +175,25 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req, bool external = false)
+static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req)
 {
+    RpcHttpRequest rpcRequest(req);
+
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
-        req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
-        return false;
+        return rpcRequest.send_reply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
     }
     // Check authorization
     std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
     if (!authHeader.first) {
         req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
-        return false;
+        return rpcRequest.send_reply(HTTP_UNAUTHORIZED);
     }
 
     JSONRPCRequest jreq(context);
+
     jreq.peerAddr = req->GetPeer().ToString();
-    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
+    if (!RPCAuthorized(authHeader.second, rpcRequest.user)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
 
         /* Deter brute-forcing
@@ -172,9 +202,9 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req, bool e
         UninterruptibleSleep(std::chrono::milliseconds{250});
 
         req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
-        return false;
+        return rpcRequest.send_reply(HTTP_UNAUTHORIZED);
     }
+    jreq.authUser = rpcRequest.user;
 
     try {
         // Parse request
@@ -189,16 +219,16 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req, bool e
         bool user_has_whitelist = g_rpc_whitelist.count(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
             LogPrintf("RPC User %s not allowed to call any methods\n", jreq.authUser);
-            req->WriteReply(HTTP_FORBIDDEN);
-            return false;
+            return rpcRequest.send_reply(HTTP_FORBIDDEN);
 
         // singleton request
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
+            rpcRequest.command = jreq.strMethod;
+
             if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
                 LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
-                req->WriteReply(HTTP_FORBIDDEN);
-                return false;
+                return rpcRequest.send_reply(HTTP_FORBIDDEN);
             }
             UniValue result = tableRPC.execute(jreq);
 
@@ -217,8 +247,7 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req, bool e
                         std::string strMethod = find_value(request, "method").get_str();
                         if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
                             LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
-                            req->WriteReply(HTTP_FORBIDDEN);
-                            return false;
+                            return rpcRequest.send_reply(HTTP_FORBIDDEN);
                         }
                     }
                 }
@@ -229,15 +258,13 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req, bool e
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
 
         req->WriteHeader("Content-Type", "application/json");
-        req->WriteReply(HTTP_OK, strReply);
+        return rpcRequest.send_reply(HTTP_OK, strReply);
     } catch (const UniValue& objError) {
-        JSONErrorReply(req, objError, jreq.id);
-        return false;
+        return JSONErrorReply(rpcRequest, objError, jreq.id);
     } catch (const std::exception& e) {
-        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
-        return false;
+        return JSONErrorReply(rpcRequest, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
     }
-    return true;
+    assert(false);
 }
 
 static bool InitRPCAuthentication()
