@@ -21,12 +21,8 @@ $(package)_config_opts_i686_android=address-model=32
 $(package)_config_opts_aarch64_android=address-model=64
 $(package)_config_opts_x86_64_android=address-model=64
 $(package)_config_opts_armv7a_android=address-model=32
-unary_function=unary_function
 ifneq (,$(findstring clang,$($(package)_cxx)))
 $(package)_toolset_$(host_os)=clang
-ifeq ($(build_os),darwin)
-unary_function=__unary_function
-endif
 else
 $(package)_toolset_$(host_os)=gcc
 endif
@@ -39,9 +35,7 @@ $(package)_cxxflags_android=-fPIC
 $(package)_cxxflags_x86_64=-fcf-protection=full
 endef
 
-# Fix missing unary_function in clang15 on macos, can be removed after upgrading to 1.81
 define $(package)_preprocess_cmds
-  sed -i.old "s/unary_function/$(unary_function)/" boost/container_hash/hash.hpp && \
   echo "using $($(package)_toolset_$(host_os)) : : $($(package)_cxx) : <cflags>\"$($(package)_cflags)\" <cxxflags>\"$($(package)_cxxflags)\" <compileflags>\"$($(package)_cppflags)\" <linkflags>\"$($(package)_ldflags)\" <archiver>\"$($(package)_ar)\" <striper>\"$(host_STRIP)\"  <ranlib>\"$(host_RANLIB)\" <rc>\"$(host_WINDRES)\" : ;" > user-config.jam
 endef
 
