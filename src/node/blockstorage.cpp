@@ -703,15 +703,10 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
 {
     const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
 
-    if (pos.IsNull()) {
-        LogError("%s: no undo data available\n", __func__);
-        return false;
-    }
-
     // Open history file to read
     AutoFile filein{OpenUndoFile(pos, true)};
     if (filein.IsNull()) {
-        LogError("%s: OpenUndoFile failed\n", __func__);
+        LogError("%s: OpenUndoFile failed for %s\n", __func__, pos.ToString());
         return false;
     }
 
@@ -723,13 +718,13 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
         verifier >> blockundo;
         filein >> hashChecksum;
     } catch (const std::exception& e) {
-        LogError("%s: Deserialize or I/O error - %s\n", __func__, e.what());
+        LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
         return false;
     }
 
     // Verify checksum
     if (hashChecksum != verifier.GetHash()) {
-        LogError("%s: Checksum mismatch\n", __func__);
+        LogError("%s: Checksum mismatch at %s\n", __func__, pos.ToString());
         return false;
     }
 
