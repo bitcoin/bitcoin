@@ -225,6 +225,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getnodeaddresses", 0, "count"},
     { "addpeeraddress", 1, "port"},
     { "stop", 0, "wait" },
+    { "verifychainlock", 2, "blockHeight" },
+    { "verifyislock", 3, "maxHeight" },
+    { "submitchainlock", 2, "blockHeight" },
+    { "mnauth", 0, "nodeId" },
 };
 // clang-format on
 

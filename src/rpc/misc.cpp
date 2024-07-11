@@ -617,7 +617,7 @@ static RPCHelpMan mnauth()
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
 
-    int nodeId = ParseInt64V(request.params[0], "nodeId");
+    int64_t nodeId = request.params[0].get_int64();
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
