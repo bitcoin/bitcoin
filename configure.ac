@@ -1458,6 +1458,12 @@ AX_BOOST_BASE([1.64.0],[],[AC_MSG_ERROR([Boost is not available!])])
 if test x$want_boost = xno; then
     AC_MSG_ERROR([[only libdashconsensus can be built without boost]])
 fi
+
+dnl Prevent use of std::unary_function, which was removed in C++17,
+dnl and will generate warnings with newer compilers.
+dnl See: https://github.com/boostorg/container_hash/issues/22.
+BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"
+
 AX_BOOST_FILESYSTEM
 
 dnl Opt-in to Boost Process
@@ -1471,11 +1477,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
 fi
 
 if test x$suppress_external_warnings != xno; then
-    dnl Prevent use of std::unary_function, which was removed in C++17,
-    dnl and will generate warnings with newer compilers.
-    dnl See: https://github.com/boostorg/container_hash/issues/22.
-    BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"
-
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
 fi
 
