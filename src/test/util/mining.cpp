@@ -7,12 +7,7 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <evo/evodb.h>
-#include <governance/governance.h>
 #include <key_io.h>
-#include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
-#include <llmq/context.h>
-#include <llmq/instantsend.h>
 #include <miner.h>
 #include <node/context.h>
 #include <pow.h>

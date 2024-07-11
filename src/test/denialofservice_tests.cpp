@@ -6,8 +6,6 @@
 
 #include <banman.h>
 #include <chainparams.h>
-#include <evo/deterministicmns.h>
-#include <llmq/context.h>
 #include <net.h>
 #include <net_processing.h>
 #include <pubkey.h>
@@ -20,7 +18,6 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
-#include <governance/governance.h>
 
 #include <array>
 #include <stdint.h>

@@ -15,18 +15,12 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
-#include <spork.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
-#include <governance/governance.h>
-#include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
-#include <llmq/context.h>
-#include <llmq/instantsend.h>
 #include <masternode/payments.h>
 #include <util/enumerate.h>
 #include <util/irange.h>

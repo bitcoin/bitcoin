@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <evo/evodb.h>
-#include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <sync.h>
