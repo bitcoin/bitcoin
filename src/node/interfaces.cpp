@@ -883,11 +883,24 @@ public:
         return TestBlockValidity(state, chainman().GetParams(), chainman().ActiveChainstate(), block, tip, /*fCheckPOW=*/false, check_merkle_root);
     }
 
-    std::unique_ptr<CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool) override
+    std::unique_ptr<CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool,
+                                                   size_t coinbase_max_additional_weight,
+                                                   size_t coinbase_output_max_additional_sigops) override
     {
         BlockAssembler::Options options;
         ApplyArgsManOptions(gArgs, options);
 
+        Assume(coinbase_max_additional_weight <= DEFAULT_BLOCK_MAX_WEIGHT);
+        options.coinbase_max_additional_weight = coinbase_max_additional_weight;
+
+        Assume(options.coinbase_output_max_additional_sigops <= MAX_BLOCK_SIGOPS_COST);
+        options.coinbase_output_max_additional_sigops = coinbase_output_max_additional_sigops;
+
+        // The BlockAssembler constructor calls ClampOptions which clamps
+        // nBlockMaxWeight between coinbase_output_max_additional_size and
+        // DEFAULT_BLOCK_MAX_WEIGHT.
+        // In other words, coinbase (reserved) outputs can safely exceed
+        // -blockmaxweight, but the rest of the block template will be empty.
         return BlockAssembler{chainman().ActiveChainstate(), use_mempool ? context()->mempool.get() : nullptr, options}.CreateNewBlock(script_pub_key);
     }
 

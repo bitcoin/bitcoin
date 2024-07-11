@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <uint256.h>
+#include <util/mining.h>
 
 namespace node {
 struct CBlockTemplate;
@@ -42,9 +43,13 @@ public:
      *
      * @param[in] script_pub_key the coinbase output
      * @param[in] use_mempool set false to omit mempool transactions
+     * @param[in] coinbase_max_additional_weight maximum additional weight which the pool will add to the coinbase transaction
+     * @param[in] coinbase_output_max_additional_sigops maximum additional sigops which the pool will add in coinbase transaction outputs
      * @returns a block template
      */
-    virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true) = 0;
+    virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true,
+                                                                 size_t coinbase_max_additional_weight = DEFAULT_COINBASE_MAX_ADDITIONAL_WEIGHT,
+                                                                 size_t coinbase_output_max_additional_sigops = DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS) = 0;
 
     /**
      * Processes new block. A valid new block is automatically relayed to peers.
