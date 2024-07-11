@@ -255,7 +255,7 @@ struct OutputGroup
     /** Total weight of the UTXOs in this group. */
     int m_weight{0};
 
-    OutputGroup() {}
+    OutputGroup() = default;
     OutputGroup(const CoinSelectionParams& params) :
         m_long_term_feerate(params.m_long_term_feerate),
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)

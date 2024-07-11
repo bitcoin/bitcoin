@@ -35,7 +35,7 @@ bool IsInterrupted(const T& result)
 class Notifications
 {
 public:
-    virtual ~Notifications(){};
+    virtual ~Notifications() = default;
 
     [[nodiscard]] virtual InterruptResult blockTip(SynchronizationState state, CBlockIndex& index) { return {}; }
     virtual void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) {}

@@ -19,7 +19,7 @@ public:
     int64_t nCreateTime{0};
     int64_t nBanUntil{0};
 
-    CBanEntry() {}
+    CBanEntry() = default;
 
     explicit CBanEntry(int64_t nCreateTimeIn)
         : nCreateTime{nCreateTimeIn} {}

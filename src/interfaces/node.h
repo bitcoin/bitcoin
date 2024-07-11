@@ -59,7 +59,7 @@ struct BlockAndHeaderTipInfo
 class ExternalSigner
 {
 public:
-    virtual ~ExternalSigner() {};
+    virtual ~ExternalSigner() = default;
 
     //! Get signer display name
     virtual std::string getName() = 0;
@@ -69,7 +69,7 @@ public:
 class Node
 {
 public:
-    virtual ~Node() {}
+    virtual ~Node() = default;
 
     //! Init logging.
     virtual void initLogging() = 0;

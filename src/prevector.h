@@ -242,7 +242,7 @@ public:
         fill(item_ptr(0), first, last);
     }
 
-    prevector() {}
+    prevector() = default;
 
     explicit prevector(size_type n) {
         resize(n);

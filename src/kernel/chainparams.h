@@ -163,7 +163,7 @@ public:
     static std::unique_ptr<const CChainParams> TestNet();
 
 protected:
-    CChainParams() {}
+    CChainParams() = default;
 
     Consensus::Params consensus;
     MessageStartChars pchMessageStart;

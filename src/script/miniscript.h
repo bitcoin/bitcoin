@@ -305,7 +305,7 @@ struct InputStack {
     //! Data elements.
     std::vector<std::vector<unsigned char>> stack;
     //! Construct an empty stack (valid).
-    InputStack() {}
+    InputStack() = default;
     //! Construct a valid single-element stack (with an element up to 75 bytes).
     InputStack(std::vector<unsigned char> in) : size(in.size() + 1), stack(Vector(std::move(in))) {}
     //! Change availability
