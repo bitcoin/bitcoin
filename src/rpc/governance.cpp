@@ -1081,6 +1081,6 @@ static const CRPCCommand commands[] =
 };
 // clang-format on
     for (const auto& command : commands) {
-        t.appendCommand(command.name, command.subname, &command);
+        t.appendCommand(command.name, &command);
     }
 }

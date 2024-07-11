@@ -85,7 +85,7 @@ void RPCServer::OnStopped(std::function<void ()> slot)
     g_rpcSignals.Stopped.connect(slot);
 }
 
-std::string CRPCTable::help(const std::string& strCommand, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const
+std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
     std::string category;
@@ -93,7 +93,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
 
     for (const auto& entry : mapCommands)
-        vCommands.push_back(make_pair(entry.second.front()->category + entry.first.first + entry.first.second, entry.second.front()));
+        vCommands.push_back(make_pair(entry.second.front()->category + entry.first, entry.second.front()));
     sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq = helpreq;
@@ -107,14 +107,16 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
 
-        if (strSubCommand != pcmd->subname) continue;
+        const auto pos_separator{strMethod.find(' ')};
+        const bool is_composite{pos_separator != std::string::npos};
+        if (strCommand.empty() && is_composite) continue;
 
         jreq.strMethod = strMethod;
         try
         {
-            if (!strSubCommand.empty()) {
+            if (is_composite) {
                 jreq.params.setArray();
-                jreq.params.push_back(strSubCommand);
+                jreq.params.push_back(strCommand.substr(pos_separator + 1));
             }
             UniValue unused_result;
             if (setDone.insert(pcmd->unique_id).second)
@@ -180,14 +182,14 @@ static RPCHelpMan help()
         strCommand = jsonRequest.params[0].get_str();
     }
     if (jsonRequest.params.size() > 1) {
-        strSubCommand = jsonRequest.params[1].get_str();
+        strCommand += " " + jsonRequest.params[1].get_str();
     }
     if (strCommand == "dump_all_command_conversions") {
         // Used for testing only, undocumented
         return tableRPC.dumpArgMap();
     }
 
-    return tableRPC.help(strCommand, strSubCommand, jsonRequest);
+    return tableRPC.help(strCommand, jsonRequest);
 },
     };
 }
@@ -305,19 +307,14 @@ CRPCTable::CRPCTable()
 
 void CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
 {
-    appendCommand(name, "", pcmd);
-}
-
-void CRPCTable::appendCommand(const std::string& name, const std::string& subname, const CRPCCommand* pcmd)
-{
     CHECK_NONFATAL(!IsRPCRunning()); // Only add commands before rpc is running
 
-    mapCommands[std::make_pair(name, subname)].push_back(pcmd);
+    mapCommands[name].push_back(pcmd);
 }
 
-bool CRPCTable::removeCommand(const std::string& name, const std::string& subname, const CRPCCommand* pcmd)
+bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
 {
-    auto it = mapCommands.find(std::make_pair(name, subname));
+    auto it = mapCommands.find(name);
     if (it != mapCommands.end()) {
         auto new_end = std::remove(it->second.begin(), it->second.end(), pcmd);
         if (it->second.end() != new_end) {
@@ -516,16 +513,18 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
             throw JSONRPCError(RPC_IN_WARMUP, rpcWarmupStatus);
     }
 
+    auto it = mapCommands.end();
+
     std::string subcommand;
     if (request.params.size() > 0 && request.params[0].isStr()) {
         subcommand = request.params[0].get_str();
+        it = mapCommands.find(request.strMethod + " " + subcommand);
     }
 
     // Find method
-    auto it = mapCommands.find(std::make_pair(request.strMethod, subcommand));
-    if (it == mapCommands.end() && !subcommand.empty()) {
-        subcommand = "";
-        it = mapCommands.find(std::make_pair(request.strMethod, subcommand));
+    if (it == mapCommands.end()) {
+        it = mapCommands.find(request.strMethod);
+        subcommand.clear();
     }
     if (it != mapCommands.end()) {
         UniValue result;
@@ -546,7 +545,6 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
     if (node.mn_activeman && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
         // replace this with structured binding in c++20
         std::string command_name = command.name;
-        if (!command.subname.empty()) command_name += " " + command.subname;
         const auto& it = mapPlatformRestrictions.equal_range(command_name);
         const auto& allowed_begin = it.first;
         const auto& allowed_end = it.second;
@@ -621,9 +619,9 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
     }
 }
 
-std::vector<std::pair<std::string, std::string>> CRPCTable::listCommands() const
+std::vector<std::string> CRPCTable::listCommands() const
 {
-    std::vector<std::pair<std::string, std::string>> commandList;
+    std::vector<std::string> commandList;
     for (const auto& i : mapCommands) commandList.emplace_back(i.first);
     return commandList;
 }
@@ -633,7 +631,7 @@ UniValue CRPCTable::dumpArgMap() const
     UniValue ret{UniValue::VARR};
     for (const auto& cmd : mapCommands) {
         // TODO: implement mapping argument to type for composite commands
-        if (!cmd.first.second.empty()) continue;
+        if (cmd.first.find(' ') != std::string::npos) continue;
         for (const auto& c : cmd.second) {
             const auto help = RpcMethodFnType(c->unique_id)();
             help.AppendArgMap(ret);
