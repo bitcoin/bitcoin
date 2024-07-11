@@ -632,6 +632,8 @@ UniValue CRPCTable::dumpArgMap() const
 {
     UniValue ret{UniValue::VARR};
     for (const auto& cmd : mapCommands) {
+        // TODO: implement mapping argument to type for composite commands
+        if (!cmd.first.second.empty()) continue;
         for (const auto& c : cmd.second) {
             const auto help = RpcMethodFnType(c->unique_id)();
             help.AppendArgMap(ret);
