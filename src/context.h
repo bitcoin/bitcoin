@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CONTEXT_H
 #define BITCOIN_CONTEXT_H
 
+#include <functional>
 #include <variant>
-#include <optional>
 
 class ChainstateManager;
 class CTxMemPool;
@@ -15,7 +15,7 @@ struct LLMQContext;
 struct NodeContext;
 struct WalletContext;
 
-using CoreContext = std::variant<std::nullopt_t,
+using CoreContext = std::variant<std::monostate,
                                  std::reference_wrapper<NodeContext>,
                                  std::reference_wrapper<WalletContext>,
                                  std::reference_wrapper<CTxMemPool>,

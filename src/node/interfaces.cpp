@@ -67,6 +67,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <variant>
 
 using interfaces::BlockTip;
 using interfaces::Chain;
@@ -584,11 +585,11 @@ public:
         if (context) {
             m_context_ref = *context;
         } else {
-            m_context_ref = std::nullopt;
+            m_context_ref = std::monostate{};
         }
     }
     NodeContext* m_context{nullptr};
-    CoreContext m_context_ref{std::nullopt};
+    CoreContext m_context_ref;
 };
 
 bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<RecursiveMutex>& lock, const CChain& active)
