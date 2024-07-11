@@ -801,14 +801,14 @@ std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& ch
     // If the chain tip is pruned, everything is pruned.
     if (!((chain_tip->nStatus & BLOCK_HAVE_MASK) == BLOCK_HAVE_MASK)) return chain_tip->nHeight;
 
-    const auto& first_unpruned{*Assert(blockman.GetFirstBlock(*chain_tip, /*status_mask=*/BLOCK_HAVE_MASK, first_block))};
+    const auto& first_unpruned{*CHECK_NONFATAL(blockman.GetFirstBlock(*chain_tip, /*status_mask=*/BLOCK_HAVE_MASK, first_block))};
     if (&first_unpruned == first_block) {
         // All blocks between first_block and chain_tip have data, so nothing is pruned.
         return std::nullopt;
     }
 
     // Block before the first unpruned block is the last pruned block.
-    return Assert(first_unpruned.pprev)->nHeight;
+    return CHECK_NONFATAL(first_unpruned.pprev)->nHeight;
 }
 
 static RPCHelpMan pruneblockchain()
