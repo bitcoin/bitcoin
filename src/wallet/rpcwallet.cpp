@@ -110,7 +110,7 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
     }
 
     std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
-    if (wallets.size() == 1 || (request.fHelp && wallets.size() > 0)) {
+    if (wallets.size() == 1) {
         return wallets[0];
     }
 
