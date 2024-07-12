@@ -767,7 +767,7 @@ std::optional<CBlock> GetBlockProposal(const std::unique_ptr<BaseRequestHandler>
 
     auto valid = blsct::ProofOfStake(proposal.posProof).Verify(staked_elements, eta_fiat_shamir, eta_phi, blsct::CalculateKernelHash(prev_time, modifier, proposal.posProof.setMemProof.phi, proposal.nTime), next_target);
 
-    if (valid) return proposal;
+    if (valid == blsct::ProofOfStake::VALID) return proposal;
 
     return std::nullopt;
 }
