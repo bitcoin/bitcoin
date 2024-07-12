@@ -1408,7 +1408,7 @@ public:
     //! Returns all unique ScriptPubKeyMans
     std::set<ScriptPubKeyMan*> GetAllScriptPubKeyMans() const;
 
-    //! Get the ScriptPubKeyMan for the given OutputType and internal/external chain.
+    //! Get the ScriptPubKeyMan for internal/external chain.
     ScriptPubKeyMan* GetScriptPubKeyMan(bool internal) const;
 
     //! Get the ScriptPubKeyMan for a script
@@ -1472,7 +1472,6 @@ public:
 
     //! Remove specified ScriptPubKeyMan from set of active SPK managers. Writes the change to the wallet file.
     //! @param[in] id The unique id for the ScriptPubKeyMan
-    //! @param[in] type The OutputType this ScriptPubKeyMan provides addresses for
     //! @param[in] internal Whether this ScriptPubKeyMan provides change addresses
     void DeactivateScriptPubKeyMan(uint256 id, bool internal);
 

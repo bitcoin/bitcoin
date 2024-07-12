@@ -19,7 +19,6 @@ class SigningProvider;
  * Sign a transaction with the given keystore and previous transactions
  *
  * @param  mtx           The transaction to-be-signed
- * @param  prevTxsUnival Array of previous txns outputs that tx depends on but may not yet be in the block chain
  * @param  keystore      Temporary keystore containing signing keys
  * @param  coins         Map of unspent outputs
  * @param  hashType      The signature hash type
@@ -31,7 +30,7 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
 /**
   * Parse a prevtxs UniValue array and get the map of coins from it
   *
-  * @param  prevTxs       Array of previous txns outputs that tx depends on but may not yet be in the block chain
+  * @param  prevTxsUnival Array of previous txns outputs that tx depends on but may not yet be in the block chain
   * @param  keystore      A pointer to the temprorary keystore if there is one
   * @param  coins         Map of unspent outputs - coins in mempool and current chain UTXO set, may be extended by previous txns outputs after call
   */
