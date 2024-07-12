@@ -67,6 +67,7 @@
 
 #include <boost/signals2/signal.hpp>
 
+using interfaces::BlockTemplate;
 using interfaces::BlockTip;
 using interfaces::Chain;
 using interfaces::FoundBlock;
@@ -837,6 +838,35 @@ public:
     NodeContext& m_node;
 };
 
+class BlockTemplateImpl : public BlockTemplate
+{
+public:
+    explicit BlockTemplateImpl(std::unique_ptr<CBlockTemplate> block_template) : m_block_template(std::move(block_template)) {}
+
+    std::unique_ptr<CBlockTemplate> m_block_template;
+
+    CBlock getBlock() override
+    {
+        return m_block_template->block;
+    }
+
+    std::vector<CAmount> getTxFees() override
+    {
+        return m_block_template->vTxFees;
+    }
+
+    std::vector<int64_t> getTxSigops() override
+    {
+        return m_block_template->vTxSigOpsCost;
+    }
+
+    std::vector<unsigned char> getCoinbaseCommitment() override
+    {
+        return m_block_template->vchCoinbaseCommitment;
+    }
+
+};
+
 class MinerImpl : public Mining
 {
 public:
@@ -883,7 +913,7 @@ public:
         return TestBlockValidity(state, chainman().GetParams(), chainman().ActiveChainstate(), block, tip, /*fCheckPOW=*/false, check_merkle_root);
     }
 
-    std::unique_ptr<CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool,
+    std::unique_ptr<BlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool,
                                                    size_t coinbase_max_additional_weight,
                                                    size_t coinbase_output_max_additional_sigops) override
     {
@@ -901,7 +931,7 @@ public:
         // DEFAULT_BLOCK_MAX_WEIGHT.
         // In other words, coinbase (reserved) outputs can safely exceed
         // -blockmaxweight, but the rest of the block template will be empty.
-        return BlockAssembler{chainman().ActiveChainstate(), use_mempool ? context()->mempool.get() : nullptr, options}.CreateNewBlock(script_pub_key);
+        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), use_mempool ? context()->mempool.get() : nullptr, options}.CreateNewBlock(script_pub_key));
     }
 
     NodeContext* context() override { return &m_node; }

@@ -21,9 +21,22 @@ class CScript;
 
 namespace interfaces {
 
+//! Block template interface
+class BlockTemplate
+{
+public:
+    virtual ~BlockTemplate() = default;
+
+    virtual CBlock getBlock() = 0;
+
+    virtual std::vector<CAmount> getTxFees() = 0;
+    virtual std::vector<int64_t> getTxSigops() = 0;
+
+    virtual std::vector<unsigned char> getCoinbaseCommitment() = 0;
+};
+
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
 //! ability to create block templates.
-
 class Mining
 {
 public:
@@ -45,9 +58,9 @@ public:
      * @param[in] use_mempool set false to omit mempool transactions
      * @param[in] coinbase_max_additional_weight maximum additional weight which the pool will add to the coinbase transaction
      * @param[in] coinbase_output_max_additional_sigops maximum additional sigops which the pool will add in coinbase transaction outputs
-     * @returns a block template
+     * @returns a block template interface
      */
-    virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true,
+    virtual std::unique_ptr<BlockTemplate> createNewBlock(const CScript& script_pub_key, bool use_mempool = true,
                                                                  size_t coinbase_max_additional_weight = DEFAULT_COINBASE_MAX_ADDITIONAL_WEIGHT,
                                                                  size_t coinbase_output_max_additional_sigops = DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS) = 0;
 
