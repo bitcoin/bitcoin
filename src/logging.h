@@ -121,7 +121,7 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<uint32_t> m_categories{0};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const std::string& source_file, int source_line, const std::string& logging_function, const std::string& threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
@@ -129,7 +129,7 @@ namespace BCLog {
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
 
         /** Send a string to the log output (internal) */
-        void LogPrintStr_(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+        void LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
     public:
@@ -148,7 +148,7 @@ namespace BCLog {
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+        void LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
@@ -198,18 +198,18 @@ namespace BCLog {
             StdLockGuard scoped_lock(m_cs);
             m_category_log_levels = levels;
         }
-        bool SetCategoryLogLevel(const std::string& category_str, const std::string& level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         Level LogLevel() const { return m_log_level.load(); }
         void SetLogLevel(Level level) { m_log_level = level; }
-        bool SetLogLevel(const std::string& level);
+        bool SetLogLevel(std::string_view level);
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
 
         void EnableCategory(LogFlags flag);
-        bool EnableCategory(const std::string& str);
+        bool EnableCategory(std::string_view str);
         void DisableCategory(LogFlags flag);
-        bool DisableCategory(const std::string& str);
+        bool DisableCategory(std::string_view str);
 
         bool WillLogCategory(LogFlags category) const;
         bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
@@ -242,14 +242,14 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 }
 
 /** Return true if str parses as a log category and set the flag */
-bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
+bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 // Be conservative when using functions that
 // unconditionally log to debug.log! It should not be the case that an inbound
 // peer can fill up a user's disk with debug.log entries.
 
 template <typename... Args>
-static inline void LogPrintf_(const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
+static inline void LogPrintf_(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;

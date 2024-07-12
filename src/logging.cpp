@@ -15,8 +15,7 @@
 #include <optional>
 
 using util::Join;
-using util::RemovePrefix;
-using util::ToString;
+using util::RemovePrefixView;
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
@@ -44,7 +43,7 @@ BCLog::Logger& LogInstance()
 
 bool fLogIPs = DEFAULT_LOGIPS;
 
-static int FileWriteStr(const std::string &str, FILE *fp)
+static int FileWriteStr(std::string_view str, FILE *fp)
 {
     return fwrite(str.data(), 1, str.size(), fp);
 }
@@ -124,7 +123,7 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
     m_categories |= flag;
 }
 
-bool BCLog::Logger::EnableCategory(const std::string& str)
+bool BCLog::Logger::EnableCategory(std::string_view str)
 {
     BCLog::LogFlags flag;
     if (!GetLogCategory(flag, str)) return false;
@@ -137,7 +136,7 @@ void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
     m_categories &= ~flag;
 }
 
-bool BCLog::Logger::DisableCategory(const std::string& str)
+bool BCLog::Logger::DisableCategory(std::string_view str)
 {
     BCLog::LogFlags flag;
     if (!GetLogCategory(flag, str)) return false;
@@ -168,7 +167,7 @@ bool BCLog::Logger::DefaultShrinkDebugFile() const
     return m_categories == BCLog::NONE;
 }
 
-static const std::map<std::string, BCLog::LogFlags> LOG_CATEGORIES_BY_STR{
+static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
     {"0", BCLog::NONE},
     {"", BCLog::NONE},
     {"net", BCLog::NET},
@@ -208,7 +207,7 @@ static const std::map<std::string, BCLog::LogFlags> LOG_CATEGORIES_BY_STR{
 
 static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_FLAG{
     // Swap keys and values from LOG_CATEGORIES_BY_STR.
-    [](const std::map<std::string, BCLog::LogFlags>& in) {
+    [](const auto& in) {
         std::unordered_map<BCLog::LogFlags, std::string> out;
         for (const auto& [k, v] : in) {
             switch (v) {
@@ -221,7 +220,7 @@ static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_
     }(LOG_CATEGORIES_BY_STR)
 };
 
-bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
+bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
 {
     if (str.empty()) {
         flag = BCLog::ALL;
@@ -259,7 +258,7 @@ std::string LogCategoryToStr(BCLog::LogFlags category)
     return it->second;
 }
 
-static std::optional<BCLog::Level> GetLogLevel(const std::string& level_str)
+static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
 {
     if (level_str == "trace") {
         return BCLog::Level::Trace;
@@ -328,7 +327,7 @@ namespace BCLog {
      * It escapes instead of removes them to still allow for troubleshooting
      * issues where they accidentally end up in strings.
      */
-    std::string LogEscapeMessage(const std::string& str) {
+    std::string LogEscapeMessage(std::string_view str) {
         std::string ret;
         for (char ch_in : str) {
             uint8_t ch = (uint8_t)ch_in;
@@ -373,28 +372,28 @@ static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
     return buflog.str.size() + buflog.logging_function.size() + buflog.source_file.size() + buflog.threadname.size() + memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
 }
 
-void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, const std::string& source_file, int source_line, const std::string& logging_function, const std::string& threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
+void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
 {
     str.insert(0, GetLogPrefix(category, level));
 
     if (m_log_sourcelocations) {
-        str.insert(0, "[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] [" + logging_function + "] ");
+        str.insert(0, strprintf("[%s:%d] [%s] ", RemovePrefixView(source_file, "./"), source_line, logging_function));
     }
 
     if (m_log_threadnames) {
-        str.insert(0, "[" + (threadname.empty() ? "unknown" : threadname) + "] ");
+        str.insert(0, strprintf("[%s] ", (threadname.empty() ? "unknown" : threadname)));
     }
 
     str.insert(0, LogTimestampStr(now, mocktime));
 }
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+void BCLog::Logger::LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
     return LogPrintStr_(str, logging_function, source_file, source_line, category, level);
 }
 
-void BCLog::Logger::LogPrintStr_(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
 {
     std::string str_prefixed = LogEscapeMessage(str);
 
@@ -418,8 +417,8 @@ void BCLog::Logger::LogPrintStr_(const std::string& str, const std::string& logg
                 .now=SystemClock::now(),
                 .mocktime=GetMockTime(),
                 .str=str_prefixed,
-                .logging_function=logging_function,
-                .source_file=source_file,
+                .logging_function=std::string(logging_function),
+                .source_file=std::string(source_file),
                 .threadname=util::ThreadGetInternalName(),
                 .source_line=source_line,
                 .category=category,
@@ -512,7 +511,7 @@ void BCLog::Logger::ShrinkDebugFile()
         fclose(file);
 }
 
-bool BCLog::Logger::SetLogLevel(const std::string& level_str)
+bool BCLog::Logger::SetLogLevel(std::string_view level_str)
 {
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
@@ -520,7 +519,7 @@ bool BCLog::Logger::SetLogLevel(const std::string& level_str)
     return true;
 }
 
-bool BCLog::Logger::SetCategoryLogLevel(const std::string& category_str, const std::string& level_str)
+bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
 {
     BCLog::LogFlags flag;
     if (!GetLogCategory(flag, category_str)) return false;
