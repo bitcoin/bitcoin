@@ -33,6 +33,7 @@ public:
     virtual std::vector<int64_t> getTxSigops() = 0;
 
     virtual std::vector<unsigned char> getCoinbaseCommitment() = 0;
+    virtual std::vector<uint256> getCoinbaseMerklePath() = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
