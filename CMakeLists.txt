@@ -65,6 +65,8 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 # Configurable options
 #=============================
 # When adding a new option, end the <help_text> with a full stop for consistency.
+option(BUILD_DAEMON "Build bitcoind executable." ON)
+
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
 set(configure_warnings)
@@ -188,6 +190,13 @@ target_link_libraries(core_interface INTERFACE
   Threads::Threads
 )
 
+include(AddBoostIfNeeded)
+add_boost_if_needed()
+
+if(BUILD_DAEMON)
+  find_package(Libevent 2.1.8 MODULE REQUIRED)
+endif()
+
 include(cmake/introspection.cmake)
 
 include(cmake/ccache.cmake)
@@ -217,6 +226,9 @@ add_subdirectory(src)
 message("\n")
 message("Configure summary")
 message("=================")
+message("Executables:")
+message("  bitcoind ............................ ${BUILD_DAEMON}")
+message("")
 message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}, ${CMAKE_CXX_COMPILER}")
 include(FlagsSummary)
 flags_summary()
