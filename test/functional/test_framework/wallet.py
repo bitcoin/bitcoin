@@ -107,7 +107,7 @@ class MiniWallet:
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
         assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
-            assert_equal(len(tx_hex) // 2, vsize)
+            assert_equal(len(tx_hex) // 2, vsize) # 1 byte = 2 character
             assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'hex': tx_hex, 'tx': tx}
 
