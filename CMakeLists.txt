@@ -209,6 +209,7 @@ try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 # - https://github.com/bitcoin/bitcoin/pull/30312#issuecomment-2191235833
 set(CMAKE_SKIP_BUILD_RPATH TRUE)
 set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+include(cmake/crc32c.cmake)
 add_subdirectory(src)
 
 message("\n")
