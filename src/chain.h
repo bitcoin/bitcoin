@@ -314,8 +314,7 @@ public:
     {
         AssertLockHeld(::cs_main);
         nStakeModifier = nModifier;
-        if (fGeneratedStakeModifier)
-            nStatus |= BLOCK_STAKE_MODIFIER;
+        nStatus |= BLOCK_STAKE_MODIFIER;
     }
 
     bool GeneratedStakeModifier() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
