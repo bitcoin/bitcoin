@@ -5622,7 +5622,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         std::vector<CInv> vInv;
         {
-            LOCK2(m_mempool.cs, peer->m_block_inv_mutex);
+            LOCK(peer->m_block_inv_mutex);
 
             size_t reserve = INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000;
             if (!pto->IsBlockOnlyConn()) {
