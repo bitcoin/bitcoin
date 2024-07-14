@@ -121,7 +121,7 @@ public Q_SLOTS:
     /** Set number of blocks and last block date shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
-    void setMempoolSize(long numberOfTxs, size_t dynUsage);
+    void setMempoolSize(long numberOfTxs, size_t dynUsage, size_t maxUsage);
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */
