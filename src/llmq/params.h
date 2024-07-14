@@ -115,13 +115,13 @@ struct LLMQParams {
     int recoveryMembers;
 public:
 
-    [[ nodiscard ]] constexpr int max_cycles(int quorums_count) const
+    [[nodiscard]] constexpr int max_cycles(int quorums_count) const
     {
         return useRotation ? quorums_count / signingActiveQuorumCount : quorums_count;
     }
 
     // For how many blocks recent DKG info should be kept
-    [[ nodiscard ]] constexpr int max_store_depth() const
+    [[nodiscard]] constexpr int max_store_depth() const
     {
         return max_cycles(keepOldKeys) * dkgInterval;
     }
