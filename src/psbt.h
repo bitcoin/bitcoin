@@ -225,7 +225,7 @@ struct PSBTInput
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
-    PSBTInput() {}
+    PSBTInput() = default;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -726,7 +726,7 @@ struct PSBTOutput
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTOutput& output);
-    PSBTOutput() {}
+    PSBTOutput() = default;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -967,7 +967,7 @@ struct PartiallySignedTransaction
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
-    PartiallySignedTransaction() {}
+    PartiallySignedTransaction() = default;
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
     /**
      * Finds the UTXO for a given input index
@@ -1177,8 +1177,13 @@ struct PartiallySignedTransaction
             inputs.push_back(input);
 
             // Make sure the non-witness utxo matches the outpoint
-            if (input.non_witness_utxo && input.non_witness_utxo->GetHash() != tx->vin[i].prevout.hash) {
-                throw std::ios_base::failure("Non-witness UTXO does not match outpoint hash");
+            if (input.non_witness_utxo) {
+                if (input.non_witness_utxo->GetHash() != tx->vin[i].prevout.hash) {
+                    throw std::ios_base::failure("Non-witness UTXO does not match outpoint hash");
+                }
+                if (tx->vin[i].prevout.n >= input.non_witness_utxo->vout.size()) {
+                    throw std::ios_base::failure("Input specifies output index that does not exist");
+                }
             }
             ++i;
         }

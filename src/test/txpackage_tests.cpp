@@ -303,7 +303,7 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
 
         // The parents can be in any order.
         FastRandomContext rng;
-        Shuffle(package.begin(), package.end(), rng);
+        std::shuffle(package.begin(), package.end(), rng);
         package.push_back(MakeTransactionRef(child));
 
         PackageValidationState state;

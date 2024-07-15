@@ -66,7 +66,7 @@ public:
         READWRITE(VARINT(obj.nTimeLast));
     }
 
-    CBlockFileInfo() {}
+    CBlockFileInfo() = default;
 
     std::string ToString() const;
 

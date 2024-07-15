@@ -65,6 +65,10 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -S /msan/llvm-project/runtimes
 
   ninja -C /msan/cxx_build/ "-j$( nproc )"  # Use nproc, because MAKEJOBS is the default in docker image builds
+
+  # Clear no longer needed source folder
+  du -sh /msan/llvm-project
+  rm -rf /msan/llvm-project
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then

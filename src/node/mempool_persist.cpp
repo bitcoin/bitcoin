@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <kernel/mempool_persist.h>
+#include <node/mempool_persist.h>
 
 #include <clientversion.h>
 #include <consensus/amount.h>
@@ -33,7 +33,7 @@
 
 using fsbridge::FopenFn;
 
-namespace kernel {
+namespace node {
 
 static const uint64_t MEMPOOL_DUMP_VERSION_NO_XOR_KEY{1};
 static const uint64_t MEMPOOL_DUMP_VERSION{2};
@@ -218,4 +218,4 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
     return true;
 }
 
-} // namespace kernel
+} // namespace node

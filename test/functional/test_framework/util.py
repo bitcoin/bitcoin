@@ -14,6 +14,7 @@ import logging
 import os
 import pathlib
 import platform
+import random
 import re
 import time
 
@@ -245,6 +246,12 @@ def ceildiv(a, b):
     assert isinstance(a, int)
     assert isinstance(b, int)
     return -(-a // b)
+
+
+def random_bitflip(data):
+    data = list(data)
+    data[random.randrange(len(data))] ^= (1 << (random.randrange(8)))
+    return bytes(data)
 
 
 def get_fee(tx_size, feerate_btc_kvb):

@@ -26,7 +26,7 @@ namespace interfaces {
 class Mining
 {
 public:
-    virtual ~Mining() {}
+    virtual ~Mining() = default;
 
     //! If this chain is exclusively used for testing
     virtual bool isTestChain() = 0;

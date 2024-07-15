@@ -31,7 +31,7 @@ bool IsProtected(int num_peers,
     for (NodeEvictionCandidate& candidate : candidates) {
         candidate_setup_fn(candidate);
     }
-    Shuffle(candidates.begin(), candidates.end(), random_context);
+    std::shuffle(candidates.begin(), candidates.end(), random_context);
 
     const size_t size{candidates.size()};
     const size_t expected{size - size / 2}; // Expect half the candidates will be protected.
@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
 // Returns true if any of the node ids in node_ids are selected for eviction.
 bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
 {
-    Shuffle(candidates.begin(), candidates.end(), random_context);
+    std::shuffle(candidates.begin(), candidates.end(), random_context);
     const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
     if (!evicted_node_id) {
         return false;

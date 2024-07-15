@@ -150,7 +150,7 @@ std::optional<std::vector<std::tuple<int, std::vector<unsigned char>, int>>> Inf
 class SigningProvider
 {
 public:
-    virtual ~SigningProvider() {}
+    virtual ~SigningProvider() = default;
     virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
     virtual bool HaveCScript(const CScriptID &scriptid) const { return false; }
     virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }

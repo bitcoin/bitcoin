@@ -88,6 +88,10 @@ class P2PHandshakeTest(BitcoinTestFramework):
         with node.assert_debug_log([f"feeler connection completed"]):
             self.add_outbound_connection(node, "feeler", NODE_NONE, wait_for_disconnect=True)
 
+        # TODO: re-add test introduced in commit 5d2fb14bafe4e80c0a482d99e5ebde07c477f000
+        # ("test: p2p: check that connecting to ourself leads to disconnect") once
+        # the race condition causing issue #30368 is fixed
+
 
 if __name__ == '__main__':
     P2PHandshakeTest().main()

@@ -20,7 +20,7 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
 
     TestingSetup test_setup{
         ChainType::REGTEST,
-        extra_args,
+        {.extra_args = extra_args},
     };
 
     bench.run([&] { log(); });

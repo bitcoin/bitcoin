@@ -9,6 +9,7 @@
 
 #include <arith_uint256.h>
 #include <dbwrapper.h>
+#include <script/sigcache.h>
 #include <txdb.h>
 #include <uint256.h>
 #include <util/time.h>
@@ -48,6 +49,8 @@ struct ChainstateManagerOpts {
     ValidationSignals* signals{nullptr};
     //! Number of script check worker threads. Zero means no parallel verification.
     int worker_threads_num{0};
+    size_t script_execution_cache_bytes{DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES};
+    size_t signature_cache_bytes{DEFAULT_SIGNATURE_CACHE_BYTES};
 };
 
 } // namespace kernel

@@ -97,7 +97,7 @@ private:
 
 public:
     /* The empty set. */
-    MuHash3072() noexcept {};
+    MuHash3072() noexcept = default;
 
     /* A singleton with variable sized data in it. */
     explicit MuHash3072(Span<const unsigned char> in) noexcept;

@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <random.h>
 #include <span.h>
 #include <test/fuzz/util.h>
-#include <test/util/xoroshiro128plusplus.h>
 #include <util/bitset.h>
 
 #include <bitset>
@@ -29,7 +29,7 @@ void TestType(FuzzBufferType buffer)
      *  bitsets and their simulations do not matter for the purpose of detecting edge cases, thus
      *  these are taken from a deterministically-seeded RNG instead. To provide some level of
      *  variation however, pick the seed based on the buffer size and size of the chosen bitset. */
-    XoRoShiRo128PlusPlus rng(buffer.size() + 0x10000 * S::Size());
+    InsecureRandomContext rng(buffer.size() + 0x10000 * S::Size());
 
     using Sim = std::bitset<S::Size()>;
     // Up to 4 real BitSets (initially 2).
@@ -124,7 +124,7 @@ void TestType(FuzzBufferType buffer)
                 sim[dest].reset();
                 real[dest] = S{};
                 for (unsigned i = 0; i < S::Size(); ++i) {
-                    if (rng() & 1) {
+                    if (rng.randbool()) {
                         sim[dest][i] = true;
                         real[dest].Set(i);
                     }
@@ -132,9 +132,9 @@ void TestType(FuzzBufferType buffer)
                 break;
             } else if (dest < sim.size() && command-- == 0) {
                 /* Assign initializer list. */
-                unsigned r1 = rng() % S::Size();
-                unsigned r2 = rng() % S::Size();
-                unsigned r3 = rng() % S::Size();
+                unsigned r1 = rng.randrange(S::Size());
+                unsigned r2 = rng.randrange(S::Size());
+                unsigned r3 = rng.randrange(S::Size());
                 compare_fn(dest);
                 sim[dest].reset();
                 real[dest] = {r1, r2, r3};
@@ -166,8 +166,8 @@ void TestType(FuzzBufferType buffer)
                 break;
             } else if (sim.size() < 4 && command-- == 0) {
                 /* Construct with initializer list. */
-                unsigned r1 = rng() % S::Size();
-                unsigned r2 = rng() % S::Size();
+                unsigned r1 = rng.randrange(S::Size());
+                unsigned r2 = rng.randrange(S::Size());
                 sim.emplace_back();
                 sim.back().set(r1);
                 sim.back().set(r2);

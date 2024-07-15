@@ -59,7 +59,7 @@ struct BlockAndHeaderTipInfo
 class ExternalSigner
 {
 public:
-    virtual ~ExternalSigner() {};
+    virtual ~ExternalSigner() = default;
 
     //! Get signer display name
     virtual std::string getName() = 0;
@@ -69,7 +69,7 @@ public:
 class Node
 {
 public:
-    virtual ~Node() {}
+    virtual ~Node() = default;
 
     //! Init logging.
     virtual void initLogging() = 0;
@@ -161,6 +161,9 @@ public:
 
     //! Get mempool dynamic usage.
     virtual size_t getMempoolDynamicUsage() = 0;
+
+    //! Get mempool maximum memory usage.
+    virtual size_t getMempoolMaxUsage() = 0;
 
     //! Get header tip height and time.
     virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;

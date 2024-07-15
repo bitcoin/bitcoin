@@ -113,8 +113,8 @@ class PriorityComputer {
     const uint64_t m_k0, m_k1;
 public:
     explicit PriorityComputer(bool deterministic) :
-        m_k0{deterministic ? 0 : GetRand(0xFFFFFFFFFFFFFFFF)},
-        m_k1{deterministic ? 0 : GetRand(0xFFFFFFFFFFFFFFFF)} {}
+        m_k0{deterministic ? 0 : FastRandomContext().rand64()},
+        m_k1{deterministic ? 0 : FastRandomContext().rand64()} {}
 
     Priority operator()(const uint256& txhash, NodeId peer, bool preferred) const
     {

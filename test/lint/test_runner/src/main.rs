@@ -410,6 +410,7 @@ fn lint_markdown() -> LintResult {
         "--offline",
         "--ignore-path",
         md_ignore_path_str.as_str(),
+        "--gitignore",
         "--root-dir",
         ".",
     ])
@@ -419,11 +420,6 @@ fn lint_markdown() -> LintResult {
         Ok(output) if output.status.success() => Ok(()),
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            let filtered_stderr: String = stderr // Filter out this annoying trailing line
-                .lines()
-                .filter(|&line| line != "The following links could not be resolved:")
-                .collect::<Vec<&str>>()
-                .join("\n");
             Err(format!(
                 r#"
 One or more markdown links are broken.
@@ -433,7 +429,7 @@ Relative links are preferred (but not required) as jumping to file works nativel
 Markdown link errors found:
 {}
                 "#,
-                filtered_stderr
+                stderr
             ))
         }
         Err(e) if e.kind() == ErrorKind::NotFound => {

@@ -392,7 +392,7 @@ void BuildBigPriorityTest(Scenario& scenario, int peers)
 
     // Determine the announcement order randomly.
     std::vector<NodeId> announce_order = request_order;
-    Shuffle(announce_order.begin(), announce_order.end(), g_insecure_rand_ctx);
+    std::shuffle(announce_order.begin(), announce_order.end(), g_insecure_rand_ctx);
 
     // Find a gtxid whose txhash prioritization is consistent with the required ordering within pref_peers and
     // within npref_peers.
@@ -697,7 +697,7 @@ void TestInterleavedScenarios()
         builders.emplace_back([](Scenario& scenario){ BuildWeirdRequestsTest(scenario); });
     }
     // Randomly shuffle all those functions.
-    Shuffle(builders.begin(), builders.end(), g_insecure_rand_ctx);
+    std::shuffle(builders.begin(), builders.end(), g_insecure_rand_ctx);
 
     Runner runner;
     auto starttime = RandomTime1y();

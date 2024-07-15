@@ -58,7 +58,13 @@ jobs:
           # and the ^ prefix is used to exclude these parents and all their
           # ancestors from the rev-list output as described in:
           # https://git-scm.com/docs/git-rev-list
-          echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD ^$(git rev-list -n1 --merges HEAD)^@ | head -1)" >> "$GITHUB_ENV"
+          MERGE_BASE=$(git rev-list -n1 --merges HEAD)
+          EXCLUDE_MERGE_BASE_ANCESTORS=
+          # MERGE_BASE can be empty due to limited fetch-depth
+          if test -n "$MERGE_BASE"; then
+            EXCLUDE_MERGE_BASE_ANCESTORS=^${MERGE_BASE}^@
+          fi
+          echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD $EXCLUDE_MERGE_BASE_ANCESTORS | head -1)" >> "$GITHUB_ENV"
       - run: |
           sudo apt-get update
           sudo apt-get install clang ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev qtbase5-dev qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y

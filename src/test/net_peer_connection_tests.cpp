@@ -31,7 +31,7 @@
 
 struct LogIPsTestingSetup : public TestingSetup {
     LogIPsTestingSetup()
-        : TestingSetup{ChainType::MAIN, /*extra_args=*/{"-logips"}} {}
+        : TestingSetup{ChainType::MAIN, {.extra_args = {"-logips"}}} {}
 };
 
 BOOST_FIXTURE_TEST_SUITE(net_peer_connection_tests, LogIPsTestingSetup)

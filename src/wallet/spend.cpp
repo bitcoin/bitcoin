@@ -226,7 +226,7 @@ void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher
 void CoinsResult::Shuffle(FastRandomContext& rng_fast)
 {
     for (auto& it : coins) {
-        ::Shuffle(it.second.begin(), it.second.end(), rng_fast);
+        std::shuffle(it.second.begin(), it.second.end(), rng_fast);
     }
 }
 

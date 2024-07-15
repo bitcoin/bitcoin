@@ -167,9 +167,10 @@ struct SnapshotTestSetup : TestChain100Setup {
     // destructive filesystem operations.
     SnapshotTestSetup() : TestChain100Setup{
                               {},
-                              {},
-                              /*coins_db_in_memory=*/false,
-                              /*block_tree_db_in_memory=*/false,
+                              {
+                                  .coins_db_in_memory = false,
+                                  .block_tree_db_in_memory = false,
+                              },
                           }
     {
     }

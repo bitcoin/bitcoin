@@ -48,6 +48,12 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
 
 static constexpr CAmount CENT{1000000};
 
+struct TestOpts {
+    std::vector<const char*> extra_args{};
+    bool coins_db_in_memory{true};
+    bool block_tree_db_in_memory{true};
+};
+
 /** Basic testing setup.
  * This just configures logging, data dir and chain parameters.
  */
@@ -55,7 +61,7 @@ struct BasicTestingSetup {
     util::SignalInterrupt m_interrupt;
     node::NodeContext m_node; // keep as first member to be destructed last
 
-    explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~BasicTestingSetup();
 
     fs::path m_path_root;
@@ -73,7 +79,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
     bool m_coins_db_in_memory{true};
     bool m_block_tree_db_in_memory{true};
 
-    explicit ChainTestingSetup(const ChainType chainType = ChainType::MAIN, const std::vector<const char*>& extra_args = {});
+    explicit ChainTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~ChainTestingSetup();
 
     // Supplies a chainstate, if one is needed
@@ -85,9 +91,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
 struct TestingSetup : public ChainTestingSetup {
     explicit TestingSetup(
         const ChainType chainType = ChainType::MAIN,
-        const std::vector<const char*>& extra_args = {},
-        const bool coins_db_in_memory = true,
-        const bool block_tree_db_in_memory = true);
+        TestOpts = {});
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
@@ -106,9 +110,7 @@ class CScript;
 struct TestChain100Setup : public TestingSetup {
     TestChain100Setup(
         const ChainType chain_type = ChainType::REGTEST,
-        const std::vector<const char*>& extra_args = {},
-        const bool coins_db_in_memory = true,
-        const bool block_tree_db_in_memory = true);
+        TestOpts = {});
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -220,16 +222,16 @@ struct TestChain100Setup : public TestingSetup {
  * be used in "hot loops", for example fuzzing or benchmarking.
  */
 template <class T = const BasicTestingSetup>
-std::unique_ptr<T> MakeNoLogFileContext(const ChainType chain_type = ChainType::REGTEST, const std::vector<const char*>& extra_args = {})
+std::unique_ptr<T> MakeNoLogFileContext(const ChainType chain_type = ChainType::REGTEST, TestOpts opts = {})
 {
-    const std::vector<const char*> arguments = Cat(
+    opts.extra_args = Cat(
         {
             "-nodebuglogfile",
             "-nodebug",
         },
-        extra_args);
+        opts.extra_args);
 
-    return std::make_unique<T>(chain_type, arguments);
+    return std::make_unique<T>(chain_type, opts);
 }
 
 CBlock getBlock13b8a();

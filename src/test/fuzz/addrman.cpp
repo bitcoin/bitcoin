@@ -124,7 +124,7 @@ public:
     explicit AddrManDeterministic(const NetGroupManager& netgroupman, FuzzedDataProvider& fuzzed_data_provider)
         : AddrMan(netgroupman, /*deterministic=*/true, GetCheckRatio())
     {
-        WITH_LOCK(m_impl->cs, m_impl->insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
+        WITH_LOCK(m_impl->cs, m_impl->insecure_rand.Reseed(ConsumeUInt256(fuzzed_data_provider)));
     }
 
     /**

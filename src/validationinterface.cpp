@@ -95,7 +95,7 @@ public:
 ValidationSignals::ValidationSignals(std::unique_ptr<util::TaskRunnerInterface> task_runner)
     : m_internals{std::make_unique<ValidationSignalsImpl>(std::move(task_runner))} {}
 
-ValidationSignals::~ValidationSignals() {}
+ValidationSignals::~ValidationSignals() = default;
 
 void ValidationSignals::FlushBackgroundCallbacks()
 {

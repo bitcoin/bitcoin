@@ -6,6 +6,7 @@
 
 #include <netaddress.h>
 #include <netbase.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -72,8 +73,8 @@ auto& FuzzTargets()
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, FuzzTargetOptions opts)
 {
-    const auto it_ins{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after clang-16 */ {std::move(target), std::move(opts)})};
-    Assert(it_ins.second);
+    const auto [it, ins]{FuzzTargets().try_emplace(name, FuzzTarget /* temporary can be dropped after Apple-Clang-16 ? */ {std::move(target), std::move(opts)})};
+    Assert(ins);
 }
 
 static std::string_view g_fuzz_target;
@@ -101,6 +102,12 @@ void ResetCoverageCounters() {}
 
 void initialize()
 {
+    // By default, make the RNG deterministic with a fixed seed. This will affect all
+    // randomness during the fuzz test, except:
+    // - GetStrongRandBytes(), which is used for the creation of private key material.
+    // - Creating a BasicTestingSetup or derived class will switch to a random seed.
+    SeedRandomForTest(SeedRand::ZEROS);
+
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
     // Individual tests can override this by pointing CreateSock to a mocked alternative.
     CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { std::terminate(); };

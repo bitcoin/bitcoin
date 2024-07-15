@@ -188,9 +188,9 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     auto mock_template_txids = mini_miner.GetMockTemplateTxids();
     // MiniMiner doesn't add a coinbase tx.
     assert(mock_template_txids.count(blocktemplate->block.vtx[0]->GetHash()) == 0);
-    mock_template_txids.emplace(blocktemplate->block.vtx[0]->GetHash());
-    assert(mock_template_txids.size() <= blocktemplate->block.vtx.size());
-    assert(mock_template_txids.size() >= blocktemplate->block.vtx.size());
+    auto [iter, new_entry] = mock_template_txids.emplace(blocktemplate->block.vtx[0]->GetHash());
+    assert(new_entry);
+
     assert(mock_template_txids.size() == blocktemplate->block.vtx.size());
     for (const auto& tx : blocktemplate->block.vtx) {
         assert(mock_template_txids.count(tx->GetHash()));
