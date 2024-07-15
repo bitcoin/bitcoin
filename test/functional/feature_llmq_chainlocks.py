@@ -84,11 +84,14 @@ class LLMQChainLocksTest(DashTestFramework):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(h))
             assert block['chainlock']
 
-        # Update spork to SPORK_19_CHAINLOCKS_ENABLED and test its behaviour
+        self.log.info(f"Test submitchainlock for too high block")
+        assert_raises_rpc_error(-1, f"No quorum found. Current tip height: {self.nodes[1].getblockcount()}", self.nodes[1].submitchainlock, '0000000000000000000000000000000000000000000000000000000000000000', 'a5c69505b5744524c9ed6551d8a57dc520728ea013496f46baa8a73df96bfd3c86e474396d747a4af11aaef10b17dbe80498b6a2fe81938fe917a3fedf651361bfe5367c800d23d3125820e6ee5b42189f0043be94ce27e73ea13620c9ef6064', self.nodes[1].getblockcount() + 300)
+
+        self.log.info("Update spork to SPORK_19_CHAINLOCKS_ENABLED and test its behaviour")
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 1)
         self.wait_for_sporks_same()
 
-        # Generate new blocks and verify that they are not chainlocked
+        self.log.info("Generate new blocks and verify that they are not chainlocked")
         previous_block_hash = self.nodes[0].getbestblockhash()
         for _ in range(2):
             block_hash = self.nodes[0].generate(1)[0]

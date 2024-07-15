@@ -36,6 +36,13 @@ using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 namespace llmq
 {
+enum class VerifyRecSigStatus
+{
+    NoQuorum,
+    Invalid,
+    Valid,
+};
+
 class CDKGSessionManager;
 class CQuorumBlockProcessor;
 
@@ -298,9 +305,9 @@ CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, con
                                    const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);
 
 // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
-bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain, const CQuorumManager& qman,
-                        int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig,
-                        int signOffset = SIGN_HEIGHT_OFFSET);
+VerifyRecSigStatus VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain& active_chain, const CQuorumManager& qman,
+                                      int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig,
+                                      int signOffset = SIGN_HEIGHT_OFFSET);
 } // namespace llmq
 
 template<typename T> struct SaltedHasherImpl;

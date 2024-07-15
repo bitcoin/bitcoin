@@ -331,7 +331,7 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(WalletBatch &batch, const CScrip
 void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
 {
     LOCK(cs_KeyStore); // mapKeyMetadata
-    if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA) || !IsHDEnabled()) {
+    if (m_storage.IsLocked(false) || m_storage.IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA) || !IsHDEnabled()) {
         return;
     }
 
@@ -1901,7 +1901,7 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
 std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
 {
     AssertLockHeld(cs_desc_man);
-    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked(true)) {
         KeyMap keys;
         for (auto key_pair : m_map_crypted_keys) {
             const CPubKey& pubkey = key_pair.second.first;
@@ -2014,7 +2014,7 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
     }
 
     if (m_storage.HasEncryptionKeys()) {
-        if (m_storage.IsLocked()) {
+        if (m_storage.IsLocked(true)) {
             return false;
         }
 
@@ -2423,7 +2423,7 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out) const
 void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
 {
     LOCK(cs_desc_man);
-    if (m_storage.IsLocked() || m_storage.IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
+    if (m_storage.IsLocked(false) || m_storage.IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
         return;
     }
 

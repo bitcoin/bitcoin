@@ -119,7 +119,7 @@ class AssetLocksTest(DashTestFramework):
         unlock_tx.calc_sha256()
         msgHash = format(unlock_tx.sha256, '064x')
 
-        recsig = self.get_recovered_sig(request_id, msgHash, llmq_type=llmq_type_test)
+        recsig = self.get_recovered_sig(request_id, msgHash, llmq_type=llmq_type_test, use_platformsign=True)
 
         unlockTx_payload.quorumSig = bytearray.fromhex(recsig["sig"])
         unlock_tx.vExtraPayload = unlockTx_payload.serialize()

@@ -154,8 +154,8 @@ static struct evhttp* eventHTTP = nullptr;
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
-//! List of 'external' RPC users
-static std::vector<std::string> g_external_usernames;
+//! List of 'external' RPC users (global variable, used by httprpc)
+std::vector<std::string> g_external_usernames;
 //! Handlers for (sub)paths
 static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets

@@ -9,6 +9,7 @@
 
 #include <crypto/common.h>
 #include <llmq/signing.h>
+#include <llmq/quorums.h>
 #include <net.h>
 #include <net_types.h>
 #include <primitives/block.h>
@@ -114,7 +115,7 @@ public:
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool VerifyChainLock(const CChainLockSig& clsig) const;
+    VerifyRecSigStatus VerifyChainLock(const CChainLockSig& clsig) const;
 
     bool IsTxSafeForMining(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 

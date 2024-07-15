@@ -3032,6 +3032,9 @@ static RPCHelpMan createwallet()
 #ifndef USE_SQLITE
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
 #endif
+        if (request.params[6].isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "The createwallet RPC requires specifying the 'load_on_startup' flag when creating descriptor wallets. Dash Core v21 introduced this requirement due to breaking changes in the createwallet RPC.");
+        }
         flags |= WALLET_FLAG_DESCRIPTORS;
         warnings.emplace_back(Untranslated("Wallet is an experimental descriptor wallet"));
     }

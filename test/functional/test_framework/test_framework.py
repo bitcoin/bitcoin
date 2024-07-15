@@ -2033,13 +2033,16 @@ class DashTestFramework(BitcoinTestFramework):
             return True
         wait_until_helper(check_recovered_sig, timeout=timeout, sleep=1)
 
-    def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100):
+    def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, use_platformsign=False):
         # Note: recsigs aren't relayed to regular nodes by default,
         # make sure to pick a mn as a node to query for recsigs.
         try:
             quorumHash = self.mninfo[0].node.quorum("selectquorum", llmq_type, rec_sig_id)["quorumHash"]
             for mn in self.mninfo:
-                mn.node.quorum("sign", llmq_type, rec_sig_id, rec_sig_msg_hash, quorumHash)
+                if use_platformsign:
+                    mn.node.quorum("platformsign", rec_sig_id, rec_sig_msg_hash, quorumHash)
+                else:
+                    mn.node.quorum("sign", llmq_type, rec_sig_id, rec_sig_msg_hash, quorumHash)
             self.wait_for_recovered_sig(rec_sig_id, rec_sig_msg_hash, llmq_type, 10)
             return self.mninfo[0].node.quorum("getrecsig", llmq_type, rec_sig_id, rec_sig_msg_hash)
         except JSONRPCException as e:
