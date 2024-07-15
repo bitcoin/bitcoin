@@ -32,6 +32,7 @@ interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     getCoinbaseCommitment @5 (context: Proxy.Context) -> (result: Data);
     getWitnessCommitmentIndex @6 (context: Proxy.Context) -> (result: Int32);
     getCoinbaseMerklePath @7 (context: Proxy.Context) -> (result: List(Data));
+    submitSolution@8 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
 }
 
 struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {

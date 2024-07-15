@@ -871,7 +871,7 @@ public:
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
-    explicit BlockTemplateImpl(std::unique_ptr<CBlockTemplate> block_template) : m_block_template(std::move(block_template))
+    explicit BlockTemplateImpl(std::unique_ptr<CBlockTemplate> block_template, NodeContext& node) : m_block_template(std::move(block_template)), m_node(node)
     {
         assert(m_block_template);
     }
@@ -916,7 +916,32 @@ public:
         return BlockMerkleBranch(m_block_template->block);
     }
 
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CMutableTransaction coinbase) override
+    {
+        CBlock block{m_block_template->block};
+
+        auto cb = MakeTransactionRef(std::move(coinbase));
+
+        if (block.vtx.size() == 0) {
+            block.vtx.push_back(cb);
+        } else {
+            block.vtx[0] = cb;
+        }
+
+        block.nVersion = version;
+        block.nTime = timestamp;
+        block.nNonce = nonce;
+
+        block.hashMerkleRoot = BlockMerkleRoot(block);
+
+        auto block_ptr = std::make_shared<const CBlock>(block);
+        return chainman().ProcessNewBlock(block_ptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
+    }
+
     const std::unique_ptr<CBlockTemplate> m_block_template;
+
+    ChainstateManager& chainman() { return *Assert(m_node.chainman); }
+    NodeContext& m_node;
 };
 
 class MinerImpl : public Mining
@@ -990,7 +1015,7 @@ public:
     {
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(script_pub_key));
+        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(script_pub_key), m_node);
     }
 
     NodeContext* context() override { return &m_node; }
