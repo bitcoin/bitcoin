@@ -4,6 +4,9 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <ranges>
+#include <stack>
+
 void MockedDescriptorConverter::Init() {
     // The data to use as a private key or a seed for an xprv.
     std::array<std::byte, 32> key_data{std::byte{1}};
@@ -82,5 +85,61 @@ bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth)
             if (++depth > max_depth) return true;
         }
     }
+    return false;
+}
+
+bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs, const size_t max_nested_subs)
+{
+    // We use a stack because there may be many nested sub-frags.
+    std::stack<int> counts;
+    for (const auto& ch: buff) {
+        // The fuzzer may generate an input with a ton of parentheses. Rule out pathological cases.
+        if (counts.size() > max_nested_subs) return true;
+
+        if (ch == '(') {
+            // A new fragment was opened, create a new sub-count for it and start as one since any fragment with
+            // parentheses has at least one sub.
+            counts.push(1);
+        } else if (ch == ',' && !counts.empty()) {
+            // When encountering a comma, account for an additional sub in the last opened fragment. If it exceeds the
+            // limit, bail.
+            if (++counts.top() > max_subs) return true;
+        } else if (ch == ')' && !counts.empty()) {
+            // Fragment closed! Drop its sub count and resume to counting the number of subs for its parent.
+            counts.pop();
+        }
+    }
+    return false;
+}
+
+bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers)
+{
+    // The number of nested wrappers. Nested wrappers are always characters which follow each other so we don't have to
+    // use a stack as we do above when counting the number of sub-fragments.
+    std::optional<int> count;
+
+    // We want to detect nested wrappers. A wrapper is a character prepended to a fragment, separated by a colon. There
+    // may be more than one wrapper, in which case the colon is not repeated. For instance `jjjjj:pk()`.  To count
+    // wrappers we iterate in reverse and use the colon to detect the end of a wrapper expression and count how many
+    // characters there are since the beginning of the expression. We stop counting when we encounter a character
+    // indicating the beginning of a new expression.
+    for (const auto ch: buff | std::views::reverse) {
+        // A colon, start counting.
+        if (ch == ':') {
+            // The colon itself is not a wrapper so we start at 0.
+            count = 0;
+        } else if (count) {
+            // If we are counting wrappers, stop when we crossed the beginning of the wrapper expression. Otherwise keep
+            // counting and bail if we reached the limit.
+            // A wrapper may only ever occur as the first sub of a descriptor/miniscript expression ('('), as the
+            // first Taproot leaf in a pair ('{') or as the nth sub in each case (',').
+            if (ch == ',' || ch == '(' || ch == '{') {
+                count.reset();
+            } else if (++*count > max_wrappers) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
