@@ -6,10 +6,21 @@
 #define BITCOIN_COMMON_SV2_MESSAGES_H
 
 #include <net.h> // for CSerializedNetMsg and CNetMessage
+#include <consensus/validation.h>
+#include <cstdint>
+#include <primitives/transaction.h>
+#include <script/script.h>
 #include <span.h>
 #include <streams.h>
 #include <string>
+#include <vector>
+#include <uint256.h>
 #include <util/check.h>
+
+class CBlock;
+struct CMutableTransaction;
+class CTxOut;
+class ArithToUint256;
 
 namespace node {
 /**
@@ -21,7 +32,85 @@ using u24_t = uint8_t[3];
  * All the stratum v2 message types handled by the template provider.
  */
 enum class Sv2MsgType : uint8_t {
+    SETUP_CONNECTION = 0x00,
+    SETUP_CONNECTION_SUCCESS = 0x01,
+    SETUP_CONNECTION_ERROR = 0x02,
     COINBASE_OUTPUT_DATA_SIZE = 0x70,
+};
+
+struct Sv2SetupConnectionMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::SETUP_CONNECTION;
+
+    /**
+     * Specifies the subprotocol for the new connection. It will always be TemplateDistribution
+     * (0x02).
+     */
+    uint8_t m_protocol;
+
+    /**
+     * The minimum protocol version the client supports (currently must be 2).
+     */
+    uint16_t m_min_version;
+
+    /**
+     * The maximum protocol version the client supports (currently must be 2).
+     */
+    uint16_t m_max_version;
+
+    /**
+     * Flags indicating optional protocol features the client supports. Each protocol
+     * from the protocol field has its own values/flags.
+     */
+    uint32_t m_flags;
+
+    /**
+     * ASCII text indicating the hostname or IP address.
+     */
+    std::string m_endpoint_host;
+
+    /**
+     * Connecting port value.
+     */
+    uint16_t m_endpoint_port;
+
+    /**
+     * Vendor name of the connecting device.
+     */
+    std::string m_vendor;
+
+    /**
+     * Hardware version of the connecting device.
+     */
+    std::string m_hardware_version;
+
+    /**
+     * Firmware of the connecting device.
+     */
+    std::string m_firmware;
+
+    /**
+     * Unique identifier of the device as defined by the vendor.
+     */
+    std::string m_device_id;
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_protocol
+          >> m_min_version
+          >> m_max_version
+          >> m_flags
+          >> m_endpoint_host
+          >> m_endpoint_port
+          >> m_vendor
+          >> m_hardware_version
+          >> m_firmware
+          >> m_device_id;
+    }
 };
 
 /**
@@ -52,6 +141,68 @@ struct Sv2CoinbaseOutputDataSizeMsg
     void Unserialize(Stream& s)
     {
         s >> m_coinbase_output_max_additional_size;
+    }
+};
+
+/**
+ * Response to the SetupConnection message if the server accepts the connection.
+ * The client is required to verify the set of feature flags that the server
+ * supports and act accordingly.
+ */
+struct Sv2SetupConnectionSuccessMsg
+{
+    /**
+     * The default message type value for this Stratum V2 message.
+     */
+    static constexpr auto m_msg_type = Sv2MsgType::SETUP_CONNECTION_SUCCESS;
+
+    /**
+     * Selected version proposed by the connecting node that the upstream node supports.
+     * This version will be used on the connection for the rest of its life.
+     */
+    uint16_t m_used_version;
+
+    /**
+     * Flags indicating optional protocol features the server supports. Each protocol
+     * from protocol field has its own values/flags.
+     */
+    uint32_t m_flags;
+
+    explicit Sv2SetupConnectionSuccessMsg(uint16_t used_version, uint32_t flags) : m_used_version{used_version}, m_flags{flags} {};
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_used_version
+          << m_flags;
+    }
+};
+
+/**
+ * Response to the SetupConnection message if the server rejects the connection.
+ */
+struct Sv2SetupConnectionErrorMsg
+{
+    static constexpr auto m_msg_type = Sv2MsgType::SETUP_CONNECTION_ERROR;
+
+    /**
+     * Flags indicating optional protocol features the server supports. Each protocol
+     * from protocol field has its own values/flags.
+     */
+    uint32_t m_flags;
+
+    /**
+     * Human-readable error codes.
+     */
+    std::string m_error_code;
+
+    explicit Sv2SetupConnectionErrorMsg(uint32_t flags, std::string&& error_code) : m_flags{flags}, m_error_code{std::move(error_code)} {};
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_flags
+          << m_error_code;
     }
 };
 
