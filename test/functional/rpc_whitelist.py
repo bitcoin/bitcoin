@@ -12,7 +12,9 @@ from test_framework.util import (
     assert_equal,
     str_to_b64str
 )
+import json
 import http.client
+import re
 import urllib.parse
 
 def rpccall(node, user, method):
@@ -20,7 +22,17 @@ def rpccall(node, user, method):
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user[0], user[3]))}
     conn = http.client.HTTPConnection(url.hostname, url.port)
     conn.connect()
-    conn.request('POST', '/', '{"method": "' + method + '"}', headers)
+
+    # composite commands are presented without space in whitelist
+    # but space can't be ommitted when using CLI/http rpc
+    # for sack of test, substitute missing space for quorum composite command
+    params = []
+    if re.match(r"^quorum[^ ]", method):
+        params = [method[6:]]
+        method = "quorum"
+    query = {"method" : method, "params" : params}
+
+    conn.request('POST', '/', json.dumps(query), headers)
     resp = conn.getresponse()
     conn.close()
     return resp
@@ -39,7 +51,8 @@ class RPCWhitelistTest(BitcoinTestFramework):
         # 3 => Password Plaintext
         self.users = [
             ["user1", "50358aa884c841648e0700b073c32b2e$b73e95fff0748cc0b517859d2ca47d9bac1aa78231f3e48fa9222b612bd2083e", "getbestblockhash,getblockcount,", "12345"],
-            ["user2", "8650ba41296f62092377a38547f361de$4620db7ba063ef4e2f7249853e9f3c5c3592a9619a759e3e6f1c63f2e22f1d21", "getblockcount", "54321"]
+            ["user2", "8650ba41296f62092377a38547f361de$4620db7ba063ef4e2f7249853e9f3c5c3592a9619a759e3e6f1c63f2e22f1d21", "getblockcount", "54321"],
+            ["platform-user", "8650ba41296f62092377a38547f361de$4620db7ba063ef4e2f7249853e9f3c5c3592a9619a759e3e6f1c63f2e22f1d21", "getblockcount,quorumlist", "54321"],
         ]
         # For exceptions
         self.strange_users = [
@@ -55,7 +68,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
             ["strangedude5", "d12c6e962d47a454f962eb41225e6ec8$2dd39635b155536d3c1a2e95d05feff87d5ba55f2d5ff975e6e997a836b717c9", ":getblockcount,getblockcount", "s7R4nG3R7H1nGZ"]
         ]
         # These commands shouldn't be allowed for any user to test failures
-        self.never_allowed = ["getnetworkinfo"]
+        self.never_allowed = ["getnetworkinfo", "quorum sign"]
         with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "dash.conf"), 'a', encoding='utf8') as f:
             f.write("\nrpcwhitelistdefault=0\n")
             for user in self.users:
