@@ -184,6 +184,28 @@ schnorr_example_LDFLAGS += -lbcrypt
 endif
 TESTS += schnorr_example
 endif
+if ENABLE_MODULE_ELLSWIFT
+noinst_PROGRAMS += ellswift_example
+ellswift_example_SOURCES = examples/ellswift.c
+ellswift_example_CPPFLAGS = -I$(top_srcdir)/include -DSECP256K1_STATIC
+ellswift_example_LDADD = libsecp256k1.la
+ellswift_example_LDFLAGS = -static
+if BUILD_WINDOWS
+ellswift_example_LDFLAGS += -lbcrypt
+endif
+TESTS += ellswift_example
+endif
+if ENABLE_MODULE_SILENTPAYMENTS
+noinst_PROGRAMS += silentpayments_example
+silentpayments_example_SOURCES = examples/silentpayments.c
+silentpayments_example_CPPFLAGS = -I$(top_srcdir)/include -DSECP256K1_STATIC
+silentpayments_example_LDADD = libsecp256k1.la
+silentpayments_example_LDFLAGS = -static
+if BUILD_WINDOWS
+silentpayments_example_LDFLAGS += -lbcrypt
+endif
+TESTS += silentpayments_example
+endif
 endif
 
 ### Precomputed tables
@@ -226,10 +248,15 @@ maintainer-clean-local: clean-precomp
 ### Pregenerated test vectors
 ### (see the comments in the previous section for detailed rationale)
 TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
+TESTVECTORS += src/modules/silentpayments/vectors.h
 
 src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
 	mkdir -p $(@D)
 	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+
+src/modules/silentpayments/vectors.h:
+	mkdir -p $(@D)
+	python3 $(top_srcdir)/tools/tests_silentpayments_generate.py $(top_srcdir)/src/modules/silentpayments/bip352_send_and_receive_test_vectors.json > $@
 
 testvectors: $(TESTVECTORS)
 
@@ -272,4 +299,8 @@ endif
 
 if ENABLE_MODULE_ELLSWIFT
 include src/modules/ellswift/Makefile.am.include
+endif
+
+if ENABLE_MODULE_SILENTPAYMENTS
+include src/modules/silentpayments/Makefile.am.include
 endif

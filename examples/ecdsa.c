@@ -128,7 +128,7 @@ int main(void) {
 
     /* It's best practice to try to clear secrets from memory after using them.
      * This is done because some bugs can allow an attacker to leak memory, for
-     * example through "out of bounds" array access (see Heartbleed), Or the OS
+     * example through "out of bounds" array access (see Heartbleed), or the OS
      * swapping them to disk. Hence, we overwrite the secret key buffer with zeros.
      *
      * Here we are preventing these writes from being optimized out, as any good compiler

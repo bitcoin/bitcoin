@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+#### Added
+ - Added usage example for an ElligatorSwift key exchange.
+
 ## [0.5.0] - 2024-05-06
 
 #### Added
