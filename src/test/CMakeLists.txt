@@ -178,6 +178,7 @@ if(WITH_SV2)
   PRIVATE
     sv2_noise_tests.cpp
     sv2_transport_tests.cpp
+    sv2_messages_tests.cpp
   )
   target_link_libraries(test_bitcoin bitcoin_sv2)
 endif()
