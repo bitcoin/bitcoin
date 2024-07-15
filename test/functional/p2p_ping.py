@@ -92,9 +92,7 @@ class PingPongTest(BitcoinTestFramework):
         self.mock_forward(ping_delay)
         no_pong_node.wait_until(lambda: 'ping' in no_pong_node.last_message)
         no_pong_node.send_and_ping(msg_pong(no_pong_node.last_message.pop('ping').nonce))
-        # TODO this check doesn't work due to partial 18638
-        # re-enable it after #19499 is done
-        # self.check_peer_info(pingtime=ping_delay, minping=ping_delay, pingwait=None)
+        self.check_peer_info(pingtime=ping_delay, minping=ping_delay, pingwait=None)
 
         self.log.info('Check that minping is decreased after a fast roundtrip')
         # mock time PING_INTERVAL ahead to trigger node into sending a ping
@@ -104,9 +102,7 @@ class PingPongTest(BitcoinTestFramework):
         self.mock_forward(ping_delay)
         no_pong_node.wait_until(lambda: 'ping' in no_pong_node.last_message)
         no_pong_node.send_and_ping(msg_pong(no_pong_node.last_message.pop('ping').nonce))
-        # TODO this check doesn't work due to partial 18638
-        # re-enable it after #19499 is done
-        # self.check_peer_info(pingtime=ping_delay, minping=ping_delay, pingwait=None)
+        self.check_peer_info(pingtime=ping_delay, minping=ping_delay, pingwait=None)
 
         self.log.info('Check that peer is disconnected after ping timeout')
         assert 'ping' not in no_pong_node.last_message

@@ -785,8 +785,7 @@ void CNode::CopyStats(CNodeStats& stats)
 bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 {
     complete = false;
-    // TODO: use mocktime here after bitcoin#19499 is backported
-    const auto time = std::chrono::microseconds(GetTimeMicros());
+    const auto time = GetTime<std::chrono::microseconds>();
     LOCK(cs_vRecv);
     m_last_recv = std::chrono::duration_cast<std::chrono::seconds>(time);
     nRecvBytes += msg_bytes.size();
