@@ -337,7 +337,7 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
                 // TODO: drop this condition after removing option to create non-HD wallets
                 // related backport bitcoin#11250
                 if (wallet->GetVersion() >= FEATURE_HD) {
-                    if (!wallet->GenerateNewHDChainEncrypted(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"", passphrase)) {
+                    if (!wallet->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"", passphrase)) {
                        error = Untranslated("Error: Failed to generate encrypted HD wallet");
                        status = DatabaseStatus::FAILED_CREATE;
                        return nullptr;
@@ -5022,18 +5022,9 @@ bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString
     WalletLogPrintf("Upgrading wallet to HD\n");
     SetMinVersion(FEATURE_HD);
 
-    // TODO: replace to GetLegacyScriptPubKeyMan() when `sethdseed` is backported
-    auto spk_man = GetOrCreateLegacyScriptPubKeyMan();
-    bool prev_encrypted = IsCrypted();
-    // TODO: unify encrypted and plain chains usages here
-    if (prev_encrypted) {
-        if (!GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
-            error = Untranslated("Failed to generate encrypted HD wallet");
-            return false;
-        }
-        Lock();
-    } else {
-        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+    if (!GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
+        error = Untranslated("Failed to generate HD wallet");
+        return false;
     }
     return true;
 }
@@ -5651,39 +5642,59 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
     }
 }
 
-bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase)
+bool CWallet::GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase)
 {
     auto spk_man = GetLegacyScriptPubKeyMan();
     if (!spk_man) {
         throw std::runtime_error(strprintf("%s: spk_man is not available", __func__));
     }
 
-    if (!HasEncryptionKeys()) {
-        return false;
-    }
-
-    CCrypter crypter;
-    CKeyingMaterial vMasterKey;
-
-    LOCK(cs_wallet);
-    for (const CWallet::MasterKeyMap::value_type& pMasterKey : mapMasterKeys) {
-        if (!crypter.SetKeyFromPassphrase(secureWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod)) {
-            return false;
-        }
-        // get vMasterKey to encrypt new hdChain
-        if (crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey)) {
-            break;
+    if (IsCrypted()) {
+        if (secureWalletPassphrase.empty()) {
+            throw std::runtime_error(strprintf("%s: encrypted but supplied empty wallet passphrase", __func__));
         }
 
+        bool is_locked = IsLocked();
+
+        CCrypter crypter;
+        CKeyingMaterial vMasterKey;
+
+        // We are intentionally re-locking the wallet so we can validate vMasterKey
+        // by verifying if it can unlock the wallet
+        Lock();
+
+        LOCK(cs_wallet);
+        for (const auto& [_, master_key] : mapMasterKeys) {
+            CKeyingMaterial _vMasterKey;
+            if (!crypter.SetKeyFromPassphrase(secureWalletPassphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod)) {
+                return false;
+            }
+            // Try another key if it cannot be decrypted or the key is incapable of encrypting
+            if (!crypter.Decrypt(master_key.vchCryptedKey, _vMasterKey) || _vMasterKey.size() != WALLET_CRYPTO_KEY_SIZE) {
+                continue;
+            }
+            // The likelihood of the plaintext being gibberish but also of the expected size is low but not zero.
+            // If it can unlock the wallet, it's a good key.
+            if (Unlock(_vMasterKey)) {
+                vMasterKey = _vMasterKey;
+                break;
+            }
+        }
+
+        // We got a gibberish key...
+        if (vMasterKey.empty()) {
+            throw std::runtime_error(strprintf("%s: supplied incorrect passphrase", __func__));
+        }
+
+        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
+
+        if (is_locked) {
+            Lock();
+        }
+    } else {
+        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
     }
 
-    spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
-
-    Lock();
-    if (!Unlock(secureWalletPassphrase)) {
-        // this should never happen
-        throw std::runtime_error(std::string(__func__) + ": Unlock failed");
-    }
     return true;
 }
 
