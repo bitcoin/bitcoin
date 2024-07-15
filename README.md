@@ -1,9 +1,4 @@
-
-Aqui está uma versão aprimorada do seu README para o repositório Bitcoin Core no GitHub:
-
 Bitcoin Core Integration/Staging Tree
-
-
 
 Overview
 Bitcoin Core is a full implementation of the Bitcoin protocol. It connects to the Bitcoin peer-to-peer network to download and fully validate blocks and transactions. It includes a wallet for managing your Bitcoin and a graphical user interface (GUI) for ease of use.
