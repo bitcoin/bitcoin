@@ -358,11 +358,6 @@ public:
         }
     }
 
-    // TODO: drop it, that's dash specific workaround
-    [[ noreturn ]] inline void Throw() const {
-        throw std::runtime_error(ToString());
-    }
-
     std::vector<std::string> GetArgNames() const;
 
     const std::string m_name;
