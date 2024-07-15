@@ -101,6 +101,17 @@ public:
     }
 };
 
+static bool whitelisted(JSONRPCRequest jreq)
+{
+    if (g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) return true;
+
+    // check for composite command after
+    if (!jreq.params.isArray() || jreq.params.empty()) return false;
+    if (!jreq.params[0].isStr()) return false;
+
+    return g_rpc_whitelist[jreq.authUser].count(jreq.strMethod + jreq.params[0].get_str());
+}
+
 static bool JSONErrorReply(RpcHttpRequest& rpcRequest, const UniValue& objError, const UniValue& id)
 {
     // Send error reply from json-rpc error object
@@ -226,7 +237,7 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req)
             jreq.parse(valRequest);
             rpcRequest.command = jreq.strMethod;
 
-            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].count(jreq.strMethod)) {
+            if (user_has_whitelist && !whitelisted(jreq)) {
                 LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, jreq.strMethod);
                 return rpcRequest.send_reply(HTTP_FORBIDDEN);
             }
@@ -245,7 +256,7 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req)
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
                         std::string strMethod = find_value(request, "method").get_str();
-                        if (!g_rpc_whitelist[jreq.authUser].count(strMethod)) {
+                        if (!whitelisted(jreq)) {
                             LogPrintf("RPC User %s not allowed to call method %s\n", jreq.authUser, strMethod);
                             return rpcRequest.send_reply(HTTP_FORBIDDEN);
                         }
