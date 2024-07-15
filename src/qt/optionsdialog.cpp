@@ -92,6 +92,8 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 {
     ui->setupUi(this);
 
+    ui->verticalLayout->setStretchFactor(ui->tabWidget, 1);
+
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
