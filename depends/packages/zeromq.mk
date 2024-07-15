@@ -5,6 +5,7 @@ $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43
 $(package)_patches = remove_libstd_link.patch
 $(package)_patches += macos_mktemp_check.patch
+$(package)_patches += builtin_sha1.patch
 
 define $(package)_set_vars
   $(package)_config_opts = --without-docs --disable-shared --disable-valgrind
@@ -16,7 +17,8 @@ endef
 
 define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/remove_libstd_link.patch && \
-  patch -p1 < $($(package)_patch_dir)/macos_mktemp_check.patch
+  patch -p1 < $($(package)_patch_dir)/macos_mktemp_check.patch && \
+  patch -p1 < $($(package)_patch_dir)/builtin_sha1.patch
 endef
 
 define $(package)_config_cmds
