@@ -57,7 +57,7 @@ static const int NUM_OS_RANDOM_BYTES = 32;
 
 [[noreturn]] void RandFailure()
 {
-    LogError("Failed to read randomness, aborting\n");
+    LogAlert("Failed to read randomness, aborting\n");
     std::abort();
 }
 

@@ -68,7 +68,7 @@ LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_nam
     }
     auto lock = std::make_unique<fsbridge::FileLock>(pathLockFile);
     if (!lock->TryLock()) {
-        LogError("Error while attempting to lock directory %s: %s\n", fs::PathToString(directory), lock->GetReason());
+        LogAlert("Error while attempting to lock directory %s: %s\n", fs::PathToString(directory), lock->GetReason());
         return LockResult::ErrorLock;
     }
     if (!probe_only) {

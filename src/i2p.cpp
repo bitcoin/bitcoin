@@ -148,7 +148,7 @@ bool Session::Listen(Connection& conn)
         conn.sock = StreamAccept();
         return true;
     } catch (const std::runtime_error& e) {
-        LogPrintLevel(BCLog::I2P, BCLog::Level::Error, "Couldn't listen: %s\n", e.what());
+        LogPrintLevel(BCLog::I2P, BCLog::Level::Alert, "Couldn't listen: %s\n", e.what());
         CheckControlSock();
     }
     return false;
