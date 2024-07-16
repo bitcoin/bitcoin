@@ -3,7 +3,7 @@ Sellancoin Core integration/staging tree
 
 A MOEDA MAIS PICA DE TODAS!!!
 
-NA BUSCA DE LOIRAS DE OLHO VERDE E PETRINHAS 
+NA BUSCA DE LOIRAS DE OLHO VERDE E PRETINHAS 
 
 https://bitcoincore.org
 
