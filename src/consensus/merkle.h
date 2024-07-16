@@ -24,4 +24,9 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
  */
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 
+/*
+ * Merkle path hashes ordered from deepest.
+ */
+std::vector<uint256> GetCoinBaseMerklePath(const CBlock& block);
+
 #endif // BITCOIN_CONSENSUS_MERKLE_H
