@@ -23,6 +23,7 @@ using kernel::RemoveCoinHash;
 static constexpr uint8_t DB_BLOCK_HASH{'s'};
 static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
 static constexpr uint8_t DB_MUHASH{'M'};
+static constexpr uint8_t DB_VERSION{'V'};
 
 namespace {
 
@@ -364,6 +365,27 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_
 
 bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
+    uint32_t code_version{GetVersion()};
+    uint32_t db_version{0};
+    // We are starting the index for the first time and write version first so
+    // we don't run into the version check later.
+    if (!block.has_value() && !m_db->Exists(DB_VERSION)) {
+        m_db->Write(DB_VERSION, code_version);
+        db_version = code_version;
+    }
+
+    // If we can't read a version this means the index has never been updated
+    // and needs to be reset now. Otherwise request a reset if we have a
+    // version mismatch.
+    if (m_db->Exists(DB_VERSION)) {
+        m_db->Read(DB_VERSION, db_version);
+    }
+    if (db_version != code_version) {
+        LogError("%s version mismatch: expected %s but %s was found. In order to rebuild the index, remove the indexes/coinstats directory in your datadir\n",
+                     GetName(), code_version, db_version);
+        return false;
+    }
+
     if (!m_db->Read(DB_MUHASH, m_muhash)) {
         // Check that the cause of the read failure is that the key does not
         // exist. Any other errors indicate database corruption or a disk

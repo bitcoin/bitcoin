@@ -43,6 +43,7 @@ private:
     [[nodiscard]] bool ReverseBlock(const CBlock& block, const CBlockIndex* pindex);
 
     bool AllowPrune() const override { return true; }
+    uint32_t GetVersion() const override { return 1; }
 
 protected:
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
