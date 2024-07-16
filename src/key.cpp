@@ -363,6 +363,11 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     return output;
 }
 
+KeyPair CKey::ComputeKeyPair() const
+{
+    return KeyPair(*this);
+}
+
 CKey GenerateRandomKey(bool compressed) noexcept
 {
     CKey key;
@@ -418,6 +423,16 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
     if ((nDepth == 0 && (nChild != 0 || ReadLE32(vchFingerprint) != 0)) || code[41] != 0) key = CKey();
+}
+
+KeyPair::KeyPair(const CKey& key)
+{
+    static_assert(std::tuple_size<KeyType>() == sizeof(secp256k1_keypair));
+    MakeKeyPairData();
+    auto keypair = reinterpret_cast<secp256k1_keypair*>(m_keypair->data());
+
+    bool success = secp256k1_keypair_create(secp256k1_context_sign, keypair, UCharCast(key.data()));
+    if (!success) ClearKeyPairData();
 }
 
 bool ECC_InitSanityCheck() {

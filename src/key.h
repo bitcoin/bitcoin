@@ -28,6 +28,8 @@ constexpr static size_t ECDH_SECRET_SIZE = CSHA256::OUTPUT_SIZE;
 // Used to represent ECDH shared secret (ECDH_SECRET_SIZE bytes)
 using ECDHSecret = std::array<std::byte, ECDH_SECRET_SIZE>;
 
+class KeyPair;
+
 /** An encapsulated private key. */
 class CKey
 {
@@ -202,6 +204,11 @@ public:
     ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
                                        const EllSwiftPubKey& our_ellswift,
                                        bool initiating) const;
+    /** Compute a KeyPair
+     *
+     *  Wraps a `secp256k1_keypair` type.
+     */
+    KeyPair ComputeKeyPair() const;
 };
 
 CKey GenerateRandomKey(bool compressed = true) noexcept;
@@ -233,6 +240,58 @@ struct CExtKey {
     [[nodiscard]] bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
     void SetSeed(Span<const std::byte> seed);
+};
+
+/** KeyPair
+ *
+ *  Wraps a `secp256k1_keypair` type, an opaque data structure for holding a secret and public key.
+ *  This is intended for BIP340 keys and allows us to easily determine if the secret key needs to
+ *  be negated by checking the parity of the public key. This class primarily intended for passing
+ *  secret keys to libsecp256k1 functions expecting a `secp256k1_keypair`. For all other cases,
+ *  CKey should be preferred.
+ */
+class KeyPair
+{
+public:
+    KeyPair() noexcept = default;
+    KeyPair(KeyPair&&) noexcept = default;
+    KeyPair& operator=(KeyPair&&) noexcept = default;
+    KeyPair& operator=(const KeyPair& other)
+    {
+        if (this != &other) {
+            if (other.m_keypair) {
+                MakeKeyPairData();
+                *m_keypair = *other.m_keypair;
+            } else {
+                ClearKeyPairData();
+            }
+        }
+        return *this;
+    }
+
+    KeyPair(const KeyPair& other) { *this = other; }
+
+    friend KeyPair CKey::ComputeKeyPair() const;
+    [[nodiscard]] bool SignSchnorr(const uint256& hash, Span<unsigned char> sig, const uint256& aux) const;
+
+    //! Check whether this keypair is valid.
+    bool IsValid() const { return !!m_keypair; }
+
+private:
+    KeyPair(const CKey& key);
+
+    using KeyType = std::array<unsigned char, 96>;
+    secure_unique_ptr<KeyType> m_keypair;
+
+    void MakeKeyPairData()
+    {
+        if (!m_keypair) m_keypair = make_secure_unique<KeyType>();
+    }
+
+    void ClearKeyPairData()
+    {
+        m_keypair.reset();
+    }
 };
 
 /** Check that required EC support is available at runtime. */
