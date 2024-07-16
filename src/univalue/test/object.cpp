@@ -20,17 +20,17 @@
         try { \
             (stmt); \
             assert(0 && "No exception caught"); \
-        } catch (excMatch & e) { \
-	} catch (...) { \
-	    assert(0 && "Wrong exception caught"); \
-	} \
+        } catch (excMatch&) { \
+        } catch (...) { \
+            assert(0 && "Wrong exception caught"); \
+        } \
     }
 #define BOOST_CHECK_NO_THROW(stmt) { \
         try { \
             (stmt); \
-	} catch (...) { \
-	    assert(0); \
-	} \
+        } catch (...) { \
+            assert(0); \
+        } \
     }
 
 void univalue_constructor()
