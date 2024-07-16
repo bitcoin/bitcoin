@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <univalue.h>
 #include <util/fs.h>
+#include <validation.h>
 
 class FooImplementation
 {
@@ -17,6 +18,7 @@ public:
     UniValue passUniValue(UniValue v) { return v; }
     CTransactionRef passTransaction(CTransactionRef t) { return t; }
     std::vector<char> passVectorChar(std::vector<char> v) { return v; }
+    BlockValidationState passBlockState(BlockValidationState s) { return s; }
 };
 
 void IpcPipeTest();
