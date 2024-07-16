@@ -66,7 +66,7 @@ static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 
 BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
     : chainparams{chainstate.m_chainman.GetParams()},
-      m_mempool{mempool},
+      m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
       m_options{ClampOptions(options)}
 {

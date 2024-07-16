@@ -13,6 +13,8 @@
 #ifndef BITCOIN_NODE_TYPES_H
 #define BITCOIN_NODE_TYPES_H
 
+#include <cstddef>
+
 namespace node {
 enum class TransactionError {
     OK, //!< No error
@@ -23,6 +25,13 @@ enum class TransactionError {
     MAX_FEE_EXCEEDED,
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
+};
+
+struct BlockCreateOptions {
+    /**
+     * Set false to omit mempool transactions
+     */
+    bool use_mempool{true};
 };
 } // namespace node
 
