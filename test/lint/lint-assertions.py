@@ -27,8 +27,9 @@ def main():
     # checks should be used over assert. See: src/util/check.h
     # src/rpc/server.cpp is excluded from this check since it's mostly meta-code.
     exit_code = git_grep([
-        "-nE",
-        r"\<(A|a)ss(ume|ert) *\(.*\);",
+        "--line-number",
+        "--extended-regexp",
+        r"\<(A|a)ss(ume|ert)\(",
         "--",
         "src/rpc/",
         "src/wallet/rpc*",
@@ -38,8 +39,9 @@ def main():
     # The `BOOST_ASSERT` macro requires to `#include boost/assert.hpp`,
     # which is an unnecessary Boost dependency.
     exit_code |= git_grep([
-        "-E",
-        r"BOOST_ASSERT *\(.*\);",
+        "--line-number",
+        "--extended-regexp",
+        r"BOOST_ASSERT\(",
         "--",
         "*.cpp",
         "*.h",
