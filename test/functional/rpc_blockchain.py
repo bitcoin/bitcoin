@@ -32,14 +32,16 @@ from test_framework.blocktools import (
     TIME_GENESIS_BLOCK,
     create_block,
     create_coinbase,
+    create_tx_with_script,
 )
 from test_framework.messages import (
     CBlockHeader,
+    COIN,
     from_hex,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.script import hash256
+from test_framework.script import hash256, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -556,12 +558,12 @@ class BlockchainTest(BitcoinTestFramework):
             block = node.getblock(blockhash, verbosity)
             assert_equal(blockhash, hash256(bytes.fromhex(block[:160]))[::-1].hex())
 
-        def assert_fee_not_in_block(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_fee_not_in_block(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             assert 'fee' not in block['tx'][1]
 
-        def assert_fee_in_block(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_fee_in_block(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             tx = block['tx'][1]
             assert 'fee' in tx
             assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
@@ -580,8 +582,8 @@ class BlockchainTest(BitcoinTestFramework):
                 total_vout += vout["value"]
             assert_equal(total_vin, total_vout + tx["fee"])
 
-        def assert_vin_does_not_contain_prevout(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_vin_does_not_contain_prevout(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             tx = block["tx"][1]
             if isinstance(tx, str):
                 # In verbosity level 1, only the transaction hashes are written
@@ -595,16 +597,16 @@ class BlockchainTest(BitcoinTestFramework):
         assert_hexblock_hashes(False)
 
         self.log.info("Test that getblock with verbosity 1 doesn't include fee")
-        assert_fee_not_in_block(1)
-        assert_fee_not_in_block(True)
+        assert_fee_not_in_block(blockhash, 1)
+        assert_fee_not_in_block(blockhash, True)
 
         self.log.info('Test that getblock with verbosity 2 and 3 includes expected fee')
-        assert_fee_in_block(2)
-        assert_fee_in_block(3)
+        assert_fee_in_block(blockhash, 2)
+        assert_fee_in_block(blockhash, 3)
 
         self.log.info("Test that getblock with verbosity 1 and 2 does not include prevout")
-        assert_vin_does_not_contain_prevout(1)
-        assert_vin_does_not_contain_prevout(2)
+        assert_vin_does_not_contain_prevout(blockhash, 1)
+        assert_vin_does_not_contain_prevout(blockhash, 2)
 
         self.log.info("Test that getblock with verbosity 3 includes prevout")
         assert_vin_contains_prevout(3)
@@ -612,7 +614,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")
 
-        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
+        self.log.info("Test that getblock doesn't work with deleted Undo data")
 
         def move_block_file(old, new):
             old_path = self.nodes[0].blocks_path / old
@@ -622,10 +624,8 @@ class BlockchainTest(BitcoinTestFramework):
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')
 
-        assert_fee_not_in_block(2)
-        assert_fee_not_in_block(3)
-        assert_vin_does_not_contain_prevout(2)
-        assert_vin_does_not_contain_prevout(3)
+        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 2))
+        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 3))
 
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')
@@ -640,6 +640,18 @@ class BlockchainTest(BitcoinTestFramework):
         block.solve()
         node.submitheader(block.serialize().hex())
         assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash))
+
+        self.log.info("Test getblock when block data is available but undo data isn't")
+        # Submits a block building on the header-only block, so it can't be connected and has no undo data
+        tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
+        block_noundo = create_block(block.sha256, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
+        block_noundo.solve()
+        node.submitblock(block_noundo.serialize().hex())
+
+        assert_fee_not_in_block(block_noundo.hash, 2)
+        assert_fee_not_in_block(block_noundo.hash, 3)
+        assert_vin_does_not_contain_prevout(block_noundo.hash, 2)
+        assert_vin_does_not_contain_prevout(block_noundo.hash, 3)
 
         self.log.info("Test getblock when block is missing")
         move_block_file('blk00000.dat', 'blk00000.dat.bak')
