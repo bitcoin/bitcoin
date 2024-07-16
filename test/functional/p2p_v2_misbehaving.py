@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import random
+import time
 from enum import Enum
 
 from test_framework.messages import MAGIC_BYTES
@@ -136,6 +137,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         self.log.info('Sending ellswift bytes in parts to ensure that response from responder is received only when')
         self.log.info('ellswift bytes have a mismatch from the 16 bytes(network magic followed by "version\\x00\\x00\\x00\\x00\\x00")')
         node0 = self.nodes[0]
+        node0.setmocktime(int(time.time()))
         self.log.info('Sending first 4 bytes of ellswift which match network magic')
         self.log.info('If a response is received, assertion failure would happen in our custom data_received() function')
         peer1 = node0.add_p2p_connection(MisbehavingV2Peer(TestType.EARLY_KEY_RESPONSE), wait_for_verack=False, send_version=False, supports_v2_p2p=True, wait_for_v2_handshake=False)
@@ -143,9 +145,14 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         self.log.info('Sending remaining ellswift and garbage which are different from V1_PREFIX. Since a response is')
         self.log.info('expected now, our custom data_received() function wouldn\'t result in assertion failure')
         peer1.v2_state.can_data_be_received = True
+        self.wait_until(lambda: peer1.v2_state.ellswift_ours)
         peer1.send_raw_message(peer1.v2_state.ellswift_ours[4:] + peer1.v2_state.sent_garbage)
+        node0.bumpmocktime(3)
+        # Ensure that the bytes sent after 4 bytes network magic are actually received.
+        self.wait_until(lambda: node0.getpeerinfo()[-1]["bytesrecv"] > 4)
         with node0.assert_debug_log(['V2 handshake timeout peer=0']):
-            peer1.wait_for_disconnect(timeout=5)
+            node0.bumpmocktime(1)  # `InactivityCheck()` triggers now
+            peer1.wait_for_disconnect(timeout=1)
         self.log.info('successful disconnection since modified ellswift was sent as response')
 
     def test_v2disconnection(self):
@@ -154,7 +161,7 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         expected_debug_message = [
             [],  # EARLY_KEY_RESPONSE
             ["V2 transport error: missing garbage terminator, peer=1"],  # EXCESS_GARBAGE
-            ["V2 handshake timeout peer=2"],  # WRONG_GARBAGE_TERMINATOR
+            ["V2 handshake timeout peer=3"],  # WRONG_GARBAGE_TERMINATOR
             ["V2 transport error: packet decryption failure"],  # WRONG_GARBAGE
             ["V2 transport error: packet decryption failure"],  # SEND_NO_AAD
             [],  # SEND_NON_EMPTY_VERSION_PACKET
@@ -167,8 +174,13 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
                 self.log.info(f"No disconnection for {test_type.name}")
             else:
                 with node0.assert_debug_log(expected_debug_message[test_type.value], timeout=5):
-                    peer = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
-                    peer.wait_for_disconnect()
+                    node0.setmocktime(int(time.time()))
+                    peer1 = node0.add_p2p_connection(MisbehavingV2Peer(test_type), wait_for_verack=False, send_version=False, supports_v2_p2p=True, expect_success=False)
+                    # Make a passing connection for more robust disconnection checking.
+                    peer2 = node0.add_p2p_connection(P2PInterface())
+                    assert peer2.is_connected
+                    node0.bumpmocktime(4)  # `InactivityCheck()` triggers now
+                    peer1.wait_for_disconnect()
                 self.log.info(f"Expected disconnection for {test_type.name}")
 
 
