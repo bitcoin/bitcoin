@@ -87,13 +87,13 @@ Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
 SQLite is required for the wallet:
 
-    sudo apt install libsqlite3-dev
+    sudo apt-get install libsqlite3-dev
 
 To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
 
-    sudo apt install libminiupnpc-dev libnatpmp-dev
+    sudo apt-get install libminiupnpc-dev libnatpmp-dev
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -115,7 +115,7 @@ To build with Qt 5 you need the following:
 
 Additionally, to support Wayland protocol for modern desktop environments:
 
-    sudo apt install qtwayland5
+    sudo apt-get install qtwayland5
 
 libqrencode (optional) can be installed with:
 
