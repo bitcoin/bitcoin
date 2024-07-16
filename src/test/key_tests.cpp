@@ -300,6 +300,13 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
         // Verify those signatures for good measure.
         BOOST_CHECK(pubkey.VerifySchnorr(msg256, sig64));
 
+        // Repeat the same check, but use the KeyPair directly without any merkle tweak
+        KeyPair keypair = key.ComputeKeyPair(/*merkle_root=*/nullptr);
+        bool kp_ok = keypair.SignSchnorr(msg256, sig64, aux256);
+        BOOST_CHECK(kp_ok);
+        BOOST_CHECK(pubkey.VerifySchnorr(msg256, sig64));
+        BOOST_CHECK(std::vector<unsigned char>(sig64, sig64 + 64) == sig);
+
         // Do 10 iterations where we sign with a random Merkle root to tweak,
         // and compare against the resulting tweaked keys, with random aux.
         // In iteration i=0 we tweak with empty Merkle tree.
@@ -312,6 +319,12 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
             aux256 = InsecureRand256();
             bool ok = key.SignSchnorr(msg256, sig64, &merkle_root, aux256);
             BOOST_CHECK(ok);
+            BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
+
+            // Repeat the same check, but use the KeyPair class directly
+            KeyPair keypair = key.ComputeKeyPair(&merkle_root);
+            bool kp_ok = keypair.SignSchnorr(msg256, sig64, aux256);
+            BOOST_CHECK(kp_ok);
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
         }
     }
