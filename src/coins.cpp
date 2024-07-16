@@ -320,6 +320,7 @@ void CCoinsViewCache::ReallocateCache()
 void CCoinsViewCache::SanityCheck() const
 {
     size_t recomputed_usage = 0;
+    size_t count_flagged = 0;
     for (const auto& [_, entry] : cacheCoins) {
         unsigned attr = 0;
         if (entry.IsDirty()) attr |= 1;
@@ -330,7 +331,22 @@ void CCoinsViewCache::SanityCheck() const
 
         // Recompute cachedCoinsUsage.
         recomputed_usage += entry.coin.DynamicMemoryUsage();
+
+        // Count the number of entries we expect in the linked list.
+        if (entry.IsDirty() || entry.IsFresh()) ++count_flagged;
     }
+    // Iterate over the linked list of flagged entries.
+    size_t count_linked = 0;
+    for (auto it = m_sentinel.second.Next(); it != &m_sentinel; it = it->second.Next()) {
+        // Verify linked list integrity.
+        assert(it->second.Next()->second.Prev() == it);
+        assert(it->second.Prev()->second.Next() == it);
+        // Verify they are actually flagged.
+        assert(it->second.IsDirty() || it->second.IsFresh());
+        // Count the number of entries actually in the list.
+        ++count_linked;
+    }
+    assert(count_linked == count_flagged);
     assert(recomputed_usage == cachedCoinsUsage);
 }
 
