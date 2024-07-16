@@ -88,4 +88,4 @@ class BindExtraTest(BitcoinTestFramework):
             assert_equal(binds, set(expected_services))
 
 if __name__ == '__main__':
-    BindExtraTest().main()
+    BindExtraTest(__file__).main()

@@ -182,4 +182,4 @@ class WalletGroupTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    WalletGroupTest().main()
+    WalletGroupTest(__file__).main()

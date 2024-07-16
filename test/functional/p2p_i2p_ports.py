@@ -32,4 +32,4 @@ class I2PPorts(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    I2PPorts().main()
+    I2PPorts(__file__).main()

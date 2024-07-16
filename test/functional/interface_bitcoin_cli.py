@@ -383,4 +383,4 @@ class TestBitcoinCli(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    TestBitcoinCli().main()
+    TestBitcoinCli(__file__).main()

@@ -54,4 +54,4 @@ class FilelockTest(BitcoinTestFramework):
                 check_wallet_filelock(True)
 
 if __name__ == '__main__':
-    FilelockTest().main()
+    FilelockTest(__file__).main()

@@ -42,4 +42,4 @@ class AbortNodeTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AbortNodeTest().main()
+    AbortNodeTest(__file__).main()

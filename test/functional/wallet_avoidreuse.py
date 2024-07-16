@@ -381,4 +381,4 @@ class AvoidReuseTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AvoidReuseTest().main()
+    AvoidReuseTest(__file__).main()

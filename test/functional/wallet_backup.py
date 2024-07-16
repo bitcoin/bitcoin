@@ -244,4 +244,4 @@ class WalletBackupTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    WalletBackupTest().main()
+    WalletBackupTest(__file__).main()

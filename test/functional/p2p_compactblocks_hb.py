@@ -97,4 +97,4 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    CompactBlocksConnectionTest().main()
+    CompactBlocksConnectionTest(__file__).main()

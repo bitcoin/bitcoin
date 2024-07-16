@@ -854,4 +854,4 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
 
 
 if __name__ == "__main__":
-    BumpFeeTest().main()
+    BumpFeeTest(__file__).main()

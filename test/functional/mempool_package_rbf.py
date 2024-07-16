@@ -596,4 +596,4 @@ class PackageRBFTest(BitcoinTestFramework):
         assert child_result["txid"] not in mempool_info
 
 if __name__ == "__main__":
-    PackageRBFTest().main()
+    PackageRBFTest(__file__).main()

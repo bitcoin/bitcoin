@@ -155,4 +155,4 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    FeatureIndexPruneTest().main()
+    FeatureIndexPruneTest(__file__).main()
