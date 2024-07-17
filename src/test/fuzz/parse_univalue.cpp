@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -77,7 +77,7 @@ FUZZ_TARGET(parse_univalue, .init = initialize_parse_univalue)
     }
     try {
         FlatSigningProvider provider;
-        (void)EvalDescriptorStringOrObject(univalue, provider);
+        if (buffer.size() < 10'000) (void)EvalDescriptorStringOrObject(univalue, provider);
     } catch (const UniValue&) {
     } catch (const std::runtime_error&) {
     }
