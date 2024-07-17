@@ -84,14 +84,14 @@ struct {
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
- * @param int max_weight The maximum weight available for the input set.
+ * @param int max_selection_weight The maximum allowed weight for a selection result to be valid.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
-                                             int max_weight)
+                                             int max_selection_weight)
 {
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
@@ -128,7 +128,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
             curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && is_feerate_high)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
-        } else if (curr_selection_weight > max_weight) { // Exceeding weight for standard tx, cannot find more solutions by adding more inputs
+        } else if (curr_selection_weight > max_selection_weight) { // Selected UTXOs weight exceeds the maximum weight allowed, cannot find more solutions by adding more inputs
             max_tx_weight_exceeded = true; // at least one selection attempt exceeded the max weight
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
@@ -319,10 +319,10 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  *        group with multiple as a heavier UTXO with the combined amount here.)
  * @param const CAmount& selection_target This is the minimum amount that we need for the transaction without considering change.
  * @param const CAmount& change_target The minimum budget for creating a change output, by which we increase the selection_target.
- * @param int max_weight The maximum permitted weight for the input set.
+ * @param int max_selection_weight The maximum allowed weight for a selection result to be valid.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
-util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_weight)
+util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight)
 {
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending_effval_weight);
     // The sum of UTXO amounts after this UTXO index, e.g. lookahead[5] = Σ(UTXO[6+].amount)
@@ -359,7 +359,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
 
     // The weight of the currently selected input set, and the weight of the best selection
     int curr_weight = 0;
-    int best_selection_weight = max_weight; // Tie is fine, because we prefer lower selection amount
+    int best_selection_weight = max_selection_weight; // Tie is fine, because we prefer lower selection amount
 
     // Whether the input sets generated during this search have exceeded the maximum transaction weight at any point
     bool max_tx_weight_exceeded = false;
@@ -436,8 +436,8 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
             // Insufficient funds with lookahead: CUT
             should_cut = true;
         } else if (curr_weight > best_selection_weight) {
-            // best_selection_weight is initialized to max_weight
-            if (curr_weight > max_weight) max_tx_weight_exceeded = true;
+            // best_selection_weight is initialized to max_selection_weight
+            if (curr_weight > max_selection_weight) max_tx_weight_exceeded = true;
             // Worse weight than best solution. More UTXOs only increase weight:
             // CUT if last selected group had minimal weight, else SHIFT
             if (utxo_pool[curr_tail].m_weight <= min_tail_weight[curr_tail]) {
@@ -535,7 +535,7 @@ public:
 };
 
 util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utxo_pool, CAmount target_value, CAmount change_fee, FastRandomContext& rng,
-                                             int max_weight)
+                                             int max_selection_weight)
 {
     SelectionResult result(target_value, SelectionAlgorithm::SRD);
     std::priority_queue<OutputGroup, std::vector<OutputGroup>, MinOutputGroupComparator> heap;
@@ -565,14 +565,14 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
 
         // If the selection weight exceeds the maximum allowed size, remove the least valuable inputs until we
         // are below max weight.
-        if (weight > max_weight) {
+        if (weight > max_selection_weight) {
             max_tx_weight_exceeded = true; // mark it in case we don't find any useful result.
             do {
                 const OutputGroup& to_remove_group = heap.top();
                 selected_eff_value -= to_remove_group.GetSelectionAmount();
                 weight -= to_remove_group.m_weight;
                 heap.pop();
-            } while (!heap.empty() && weight > max_weight);
+            } while (!heap.empty() && weight > max_selection_weight);
         }
 
         // Now check if we are above the target
@@ -597,11 +597,12 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
  *                              nTargetValue, with indices corresponding to groups. If the ith
  *                              entry is true, that means the ith group in groups was selected.
  * param@[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
+ * paramp[in]   max_selection_weight  The maximum allowed weight for a selection result to be valid.
  * param@[in]   iterations      Maximum number of tries.
  */
 static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups,
                                   const CAmount& nTotalLower, const CAmount& nTargetValue,
-                                  std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
+                                  std::vector<char>& vfBest, CAmount& nBest, int max_selection_weight, int iterations = 1000)
 {
     std::vector<char> vfIncluded;
 
@@ -613,6 +614,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
     {
         vfIncluded.assign(groups.size(), false);
         CAmount nTotal = 0;
+        int selected_coins_weight{0};
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
@@ -627,9 +629,9 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
                     nTotal += groups[i].GetSelectionAmount();
+                    selected_coins_weight += groups[i].m_weight;
                     vfIncluded[i] = true;
-                    if (nTotal >= nTargetValue)
-                    {
+                    if (nTotal >= nTargetValue && selected_coins_weight <= max_selection_weight) {
                         fReachedTarget = true;
                         // If the total is between nTargetValue and nBest, it's our new best
                         // approximation.
@@ -639,6 +641,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                             vfBest = vfIncluded;
                         }
                         nTotal -= groups[i].GetSelectionAmount();
+                        selected_coins_weight -= groups[i].m_weight;
                         vfIncluded[i] = false;
                     }
                 }
@@ -648,10 +651,11 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
 }
 
 util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
-                                             CAmount change_target, FastRandomContext& rng, int max_weight)
+                                             CAmount change_target, FastRandomContext& rng, int max_selection_weight)
 {
     SelectionResult result(nTargetValue, SelectionAlgorithm::KNAPSACK);
 
+    bool max_weight_exceeded{false};
     // List of values less than target
     std::optional<OutputGroup> lowest_larger;
     // Groups with selection amount smaller than the target and any change we might produce.
@@ -662,6 +666,10 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     std::shuffle(groups.begin(), groups.end(), rng);
 
     for (const OutputGroup& group : groups) {
+        if (group.m_weight > max_selection_weight) {
+            max_weight_exceeded = true;
+            continue;
+        }
         if (group.GetSelectionAmount() == nTargetValue) {
             result.AddInput(group);
             return result;
@@ -677,11 +685,18 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
         for (const auto& group : applicable_groups) {
             result.AddInput(group);
         }
-        return result;
+        if (result.GetWeight() <= max_selection_weight) return result;
+        else max_weight_exceeded = true;
+
+        // Try something else
+        result.Clear();
     }
 
     if (nTotalLower < nTargetValue) {
-        if (!lowest_larger) return util::Error();
+        if (!lowest_larger) {
+            if (max_weight_exceeded) return ErrorMaxWeightExceeded();
+            return util::Error();
+        }
         result.AddInput(*lowest_larger);
         return result;
     }
@@ -691,9 +706,9 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     std::vector<char> vfBest;
     CAmount nBest;
 
-    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
+    ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest, max_selection_weight);
     if (nBest != nTargetValue && nTotalLower >= nTargetValue + change_target) {
-        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest);
+        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest, max_selection_weight);
     }
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
@@ -709,7 +724,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
         }
 
         // If the result exceeds the maximum allowed size, return closest UTXO above the target
-        if (result.GetWeight() > max_weight) {
+        if (result.GetWeight() > max_selection_weight) {
             // No coin above target, nothing to do.
             if (!lowest_larger) return ErrorMaxWeightExceeded();
 
@@ -728,7 +743,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
             LogPrint(BCLog::SELECTCOINS, "%stotal %s\n", log_message, FormatMoney(nBest));
         }
     }
-
+    Assume(result.GetWeight() <= max_selection_weight);
     return result;
 }
 
