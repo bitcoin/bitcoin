@@ -5683,7 +5683,9 @@ bool CWallet::GenerateNewHDChain(const SecureString& secureMnemonic, const Secur
 
         // We got a gibberish key...
         if (vMasterKey.empty()) {
-            throw std::runtime_error(strprintf("%s: supplied incorrect passphrase", __func__));
+            // Mimicking the error message of RPC_WALLET_PASSPHRASE_INCORRECT as it's possible
+            // that the user may see this error when interacting with the upgradetohd RPC
+            throw std::runtime_error("Error: The wallet passphrase entered was incorrect");
         }
 
         spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
