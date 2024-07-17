@@ -61,11 +61,12 @@ public:
         }
         mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
     }
-    void serve(int fd, const char* exe_name, interfaces::Init& init) override
+    void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
     {
         assert(!m_loop);
         mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
         m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+        if (ready_fn) ready_fn();
         mp::ServeStream<messages::Init>(*m_loop, fd, init);
         m_loop->loop();
         m_loop.reset();
