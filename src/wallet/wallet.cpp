@@ -5677,15 +5677,12 @@ bool CWallet::GenerateNewHDChainEncrypted(const SecureString& secureMnemonic, co
 
     }
 
-    spk_man->GenerateNewCryptedHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
+    spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
 
     Lock();
     if (!Unlock(secureWalletPassphrase)) {
         // this should never happen
         throw std::runtime_error(std::string(__func__) + ": Unlock failed");
-    }
-    if (!spk_man->NewKeyPool()) {
-        throw std::runtime_error(std::string(__func__) + ": NewKeyPool failed");
     }
     return true;
 }
