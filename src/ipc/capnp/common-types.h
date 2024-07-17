@@ -6,6 +6,7 @@
 #define BITCOIN_IPC_CAPNP_COMMON_TYPES_H
 
 #include <clientversion.h>
+#include <interfaces/types.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <streams.h>
@@ -91,6 +92,26 @@ requires ipc::capnp::Deserializable<LocalType>
     SpanReader stream({data.begin(), data.end()});
     auto wrapper{ipc::capnp::Wrap(stream)};
     return read_dest.construct(::deserialize, wrapper);
+}
+
+//! Overload CustomBuildField and CustomReadField to serialize std::chrono
+//! parameters and return values as numbers.
+template <class Rep, class Period, typename Value, typename Output>
+void CustomBuildField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>, InvokeContext& invoke_context, Value&& value,
+                      Output&& output)
+{
+    static_assert(std::numeric_limits<decltype(output.get())>::lowest() <= std::numeric_limits<Rep>::lowest(),
+                  "capnp type does not have enough range to hold lowest std::chrono::duration value");
+    static_assert(std::numeric_limits<decltype(output.get())>::max() >= std::numeric_limits<Rep>::max(),
+                  "capnp type does not have enough range to hold highest std::chrono::duration value");
+    output.set(value.count());
+}
+
+template <class Rep, class Period, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<std::chrono::duration<Rep, Period>>, Priority<1>, InvokeContext& invoke_context,
+                               Input&& input, ReadDest&& read_dest)
+{
+    return read_dest.construct(input.get());
 }
 
 //! Overload CustomBuildField and CustomReadField to serialize UniValue
