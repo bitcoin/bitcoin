@@ -182,7 +182,8 @@ if(WITH_SV2)
     sv2_messages_tests.cpp
     sv2_template_provider_tests.cpp
   )
-  target_link_libraries(test_bitcoin bitcoin_sv2)
+  # target_link_libraries is not needed here, because bitcoin_sv2 is included
+  # by bitcoin_node below
 endif()
 
 function(add_boost_test source_file)

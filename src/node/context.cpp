@@ -17,6 +17,9 @@
 #include <node/warnings.h>
 #include <policy/fees.h>
 #include <scheduler.h>
+#ifdef WITH_SV2
+#include <sv2/template_provider.h>
+#endif
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
