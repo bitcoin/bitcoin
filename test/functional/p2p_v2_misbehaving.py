@@ -147,11 +147,11 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         peer1.v2_state.can_data_be_received = True
         self.wait_until(lambda: peer1.v2_state.ellswift_ours)
         peer1.send_raw_message(peer1.v2_state.ellswift_ours[4:] + peer1.v2_state.sent_garbage)
-        node0.bumpmocktime(3)
         # Ensure that the bytes sent after 4 bytes network magic are actually received.
         self.wait_until(lambda: node0.getpeerinfo()[-1]["bytesrecv"] > 4)
+        self.wait_until(lambda: node0.getpeerinfo()[-1]["bytessent"] > 0)
         with node0.assert_debug_log(['V2 handshake timeout peer=0']):
-            node0.bumpmocktime(1)  # `InactivityCheck()` triggers now
+            node0.bumpmocktime(4)  # `InactivityCheck()` triggers now
             peer1.wait_for_disconnect(timeout=1)
         self.log.info('successful disconnection since modified ellswift was sent as response')
 
