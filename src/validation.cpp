@@ -2243,18 +2243,20 @@ static bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nS
     fGeneratedStakeModifier = false;
     if (!pindexPrev) {
         fGeneratedStakeModifier = true;
-        return false; // "ComputeNextStakeModifier(): Could not find pindexPrev"); // genesis block's modifier is 0
+        return error("%s: did not find previous block\n", __func__); // genesis block's modifier is 0
     }
 
     // First find current stake modifier and its generation block time
     // if it's not old enough, return the same stake modifier
     int64_t nModifierTime = 0;
-    if (!blsct::GetLastStakeModifier(pindexPrev, nStakeModifier, nModifierTime))
-        return false; // "ComputeNextStakeModifier: unable to get last modifier");
+    if (!blsct::GetLastStakeModifier(pindexPrev, nStakeModifier, nModifierTime)) {
+        return error("%s: did not find previous modifier\n", __func__);
+    }
 
     //    LogPrint("stakemodifier", "ComputeNextStakeModifier: prev modifier=0x%016x time=%s\n", nStakeModifier, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nModifierTime));
-    if (nModifierTime / params.nModifierInterval >= pindexPrev->GetBlockTime() / params.nModifierInterval)
+    if (nModifierTime / params.nModifierInterval >= pindexPrev->GetBlockTime() / params.nModifierInterval) {
         return true;
+    }
 
     // Sort candidate blocks by timestamp
     std::vector<std::pair<int64_t, uint256>> vSortedByTimestamp;
@@ -2285,7 +2287,8 @@ static bool ComputeNextStakeModifier(const CBlockIndex* pindexPrev, uint64_t& nS
         nSelectionIntervalStop += blsct::GetStakeModifierSelectionIntervalSection(nRound, params);
         // select a block from the candidates of current round
         if (!SelectBlockFromCandidates(vSortedByTimestamp, mapSelectedBlocks, nSelectionIntervalStop, nStakeModifier, &pindex, params, m_blockman))
-            return false; //"ComputeNextStakeModifier: unable to select block at round %d", nRound);
+            return error("%s: unable to select block at round %d", __func__, nRound);
+
         // write the entropy bit of the selected block
         nStakeModifierNew |= (((uint64_t)pindex->GetStakeEntropyBit()) << nRound);
         // add the selected block from candidates to selected list
@@ -2440,8 +2443,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     pindex->SetStakeModifier(nStakeModifier, fGeneratedStakeModifier);
 
-    if (block.IsProofOfStake())
+    if (block.IsProofOfStake()) {
         pindex->SetKernelHash(blsct::CalculateKernelHash(pindex->pprev, block));
+    }
+
 
     const auto time_2{SteadyClock::now()};
     time_pos_calc += time_2 - time_2_;

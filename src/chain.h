@@ -137,6 +137,7 @@ enum BlockStatus : uint32_t {
     BLOCK_POS_ENTROPY = 512,
     BLOCK_STAKE_MODIFIER = 1024,
     BLOCK_KERNEL_HASH = 2048,
+    BLOCK_STAKE_MODIFIER_SET = 4096,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -313,6 +314,7 @@ public:
     void SetStakeModifier(const uint64_t& nModifier, const bool& fGeneratedStakeModifier) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
+        nStatus |= BLOCK_STAKE_MODIFIER_SET;
         nStakeModifier = nModifier;
         if (fGeneratedStakeModifier)
             nStatus |= BLOCK_STAKE_MODIFIER;
@@ -475,7 +477,7 @@ public:
             READWRITE(obj.posProof);
         else
             READWRITE(obj.nNonce);
-        if (obj.nStatus & BLOCK_STAKE_MODIFIER) READWRITE(obj.nStakeModifier);
+        if (obj.nStatus & BLOCK_STAKE_MODIFIER_SET) READWRITE(obj.nStakeModifier);
         if (obj.nStatus & BLOCK_KERNEL_HASH) READWRITE(obj.kernelHash);
     }
 

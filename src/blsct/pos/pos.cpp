@@ -83,10 +83,10 @@ bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModifier, i
     if (!pindex->GeneratedStakeModifier()) {
         nStakeModifier = 1;
         nModifierTime = pindex->GetBlockTime();
-        return true;
+    } else {
+        nStakeModifier = pindex->nStakeModifier;
+        nModifierTime = pindex->GetBlockTime();
     }
-    nStakeModifier = pindex->nStakeModifier;
-    nModifierTime = pindex->GetBlockTime();
     return true;
 }
 
