@@ -40,6 +40,22 @@ unsupported systems.
 Notable changes
 ===============
 
+### P2P
+
+- #30394 net: fix race condition in self-connect detection
+
+### Init
+
+- #30435 init: change shutdown order of load block thread and scheduler
+
+### RPC
+
+- #30357 Fix cases of calls to FillPSBT errantly returning complete=true
+
+### PSBT
+
+- #29855 psbt: Check non witness utxo outpoint early
+
 ### Build
 
 - #30283 upnp: fix build with miniupnpc 2.2.8
@@ -54,8 +70,12 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- Ava Chow
 - Cory Fields
+- Martin Zumsande
 - Max Edwards
+- Sebastian Falbesoner
+- willcl-ark
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
