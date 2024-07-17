@@ -633,6 +633,19 @@ class BlockchainTest(BitcoinTestFramework):
         assert 'previousblockhash' not in node.getblock(node.getblockhash(0))
         assert 'nextblockhash' not in node.getblock(node.getbestblockhash())
 
+        self.log.info("Test getblock when only header is known")
+        current_height = node.getblock(node.getbestblockhash())['height']
+        block_time = node.getblock(node.getbestblockhash())['time'] + 1
+        block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), block_time)
+        block.solve()
+        node.submitheader(block.serialize().hex())
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash))
+
+        self.log.info("Test getblock when block is missing")
+        move_block_file('blk00000.dat', 'blk00000.dat.bak')
+        assert_raises_rpc_error(-1, "Block not found on disk", node.getblock, blockhash)
+        move_block_file('blk00000.dat.bak', 'blk00000.dat')
+
 
 if __name__ == '__main__':
     BlockchainTest(__file__).main()
