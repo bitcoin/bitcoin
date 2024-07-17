@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,11 +37,11 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
-    std::set<COutPoint> outpoints;
+    std::vector<COutPoint> outpoints; // Duplicates are tolerated
 
     // initial outpoints used to construct transactions later
     for (uint8_t i = 0; i < 4; i++) {
-        outpoints.emplace(Txid::FromUint256(uint256{i}), 0);
+        outpoints.emplace_back(Txid::FromUint256(uint256{i}), 0);
     }
 
     CTransactionRef ptx_potential_parent = nullptr;
@@ -67,7 +67,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
             auto new_tx = MakeTransactionRef(tx_mut);
             // add newly constructed outpoints to the coin pool
             for (uint32_t i = 0; i < num_out; i++) {
-                outpoints.emplace(new_tx->GetHash(), i);
+                outpoints.emplace_back(new_tx->GetHash(), i);
             }
             return new_tx;
         }();
