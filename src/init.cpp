@@ -296,10 +296,11 @@ void Shutdown(NodeContext& node)
 
     StopTorControl();
 
-    // After everything has been shut down, but before things get flushed, stop the
-    // scheduler and load block thread.
-    if (node.scheduler) node.scheduler->stop();
     if (node.chainman && node.chainman->m_thread_load.joinable()) node.chainman->m_thread_load.join();
+    // After everything has been shut down, but before things get flushed, stop the
+    // the scheduler. After this point, SyncWithValidationInterfaceQueue() should not be called anymore
+    // as this would prevent the shutdown from completing.
+    if (node.scheduler) node.scheduler->stop();
 
     // After the threads that potentially access these pointers have been stopped,
     // destruct and reset all to nullptr.
@@ -1880,6 +1881,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     CService onion_service_target;
     if (!connOptions.onion_binds.empty()) {
         onion_service_target = connOptions.onion_binds.front();
+    } else if (!connOptions.vBinds.empty()) {
+        onion_service_target = connOptions.vBinds.front();
     } else {
         onion_service_target = DefaultOnionServiceTarget();
         connOptions.onion_binds.push_back(onion_service_target);

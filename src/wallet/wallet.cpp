@@ -2225,8 +2225,8 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bo
 
     // Complete if every input is now signed
     complete = true;
-    for (const auto& input : psbtx.inputs) {
-        complete &= PSBTInputSigned(input);
+    for (size_t i = 0; i < psbtx.inputs.size(); ++i) {
+        complete &= PSBTInputSignedAndVerified(psbtx, i, &txdata);
     }
 
     return {};

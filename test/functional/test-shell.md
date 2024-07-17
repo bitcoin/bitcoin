@@ -169,7 +169,7 @@ can be called after the TestShell is shut down.
 
 | Test parameter key | Default Value | Description |
 |---|---|---|
-| `bind_to_localhost_only` | `True` | Binds bitcoind RPC services to `127.0.0.1` if set to `True`.|
+| `bind_to_localhost_only` | `True` | Binds bitcoind P2P services to `127.0.0.1` if set to `True`.|
 | `cachedir` | `"/path/to/bitcoin/test/cache"` | Sets the bitcoind datadir directory. |
 | `chain`  | `"regtest"` | Sets the chain-type for the underlying test bitcoind processes. |
 | `configfile` | `"/path/to/bitcoin/test/config.ini"` | Sets the location of the test framework config file. |

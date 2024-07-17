@@ -116,13 +116,13 @@ std::string DescriptorChecksum(const Span<const char>& span)
      * As a result, within-group-of-32 errors count as 1 symbol, as do cross-group errors that don't affect
      * the position within the groups.
      */
-    static std::string INPUT_CHARSET =
+    static const std::string INPUT_CHARSET =
         "0123456789()[],'/*abcdefgh@:$%{}"
         "IJKLMNOPQRSTUVWXYZ&+-.;<=>?!^_|~"
         "ijklmnopqrstuvwxyzABCDEFGH`#\"\\ ";
 
     /** The character set for the checksum itself (same as bech32). */
-    static std::string CHECKSUM_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+    static const std::string CHECKSUM_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
     uint64_t c = 1;
     int cls = 0;
