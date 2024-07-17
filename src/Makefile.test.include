@@ -152,6 +152,7 @@ BITCOIN_TESTS =\
   test/sock_tests.cpp \
   test/span_tests.cpp \
   test/streams_tests.cpp \
+  test/sv2_connman_tests.cpp \
   test/sv2_messages_tests.cpp \
   test/sv2_noise_tests.cpp \
   test/sv2_transport_tests.cpp \
