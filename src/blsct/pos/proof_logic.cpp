@@ -42,7 +42,7 @@ bool ProofOfStakeLogic::Verify(const CCoinsViewCache& cache, const CBlockIndex* 
     auto kernel_hash = blsct::CalculateKernelHash(pindexPrev, block);
     auto next_target = blsct::GetNextTargetRequired(pindexPrev, &block, params);
 
-    LogPrint(BCLog::POPS, "Verifying PoPS:\n   Eta fiat shamir: %s\n   Eta phi: %s\n   Kernel Hash: %s\n   Next Target: %d\n   Staked Commitments:%s\n", HexStr(eta_fiat_shamir), HexStr(eta_phi), kernel_hash.ToString(), next_target, staked_commitments.GetString());
+    LogPrint(BCLog::POPS, "Verifying PoPS:\n   Prev block %s\n   Eta fiat shamir: %s\n   Eta phi: %s\n   Kernel Hash: %s\n   Next Target: %d\n   Staked Commitments:%s\n", pindexPrev->GetBlockHash().ToString(), HexStr(eta_fiat_shamir), HexStr(eta_phi), kernel_hash.ToString(), next_target, staked_commitments.GetString());
 
     auto res = block.posProof.Verify(staked_commitments, eta_fiat_shamir, eta_phi, kernel_hash, next_target);
 
