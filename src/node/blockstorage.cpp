@@ -1164,7 +1164,13 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         xor_key_file >> xor_key;
     } else {
         // Create initial or missing xor key file
-        AutoFile xor_key_file{fsbridge::fopen(xor_key_path, "wbx")};
+        AutoFile xor_key_file{fsbridge::fopen(xor_key_path,
+#ifdef __MINGW64__
+            "wb" // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
+#else
+            "wbx"
+#endif
+        )};
         xor_key_file << xor_key;
     }
     // If the user disabled the key, it must be zero.
