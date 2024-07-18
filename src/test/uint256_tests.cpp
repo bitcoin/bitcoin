@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
                    uint256S("1000000000000000000000000000000000000000000000000000000000000002"));
 }
 
-BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHexDeprecated begin() end() size() GetLow64 GetSerializeSize, Serialize, Unserialize
+BOOST_AUTO_TEST_CASE(methods) // GetHex SetHexDeprecated FromHex begin() end() size() GetLow64 GetSerializeSize, Serialize, Unserialize
 {
     BOOST_CHECK_EQUAL(R1L.GetHex(), R1L.ToString());
     BOOST_CHECK_EQUAL(R2L.GetHex(), R2L.ToString());
@@ -168,10 +168,10 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHexDeprecated begin() end() size() 
     // Verify previous values don't persist when setting to truncated string.
     TmpL.SetHexDeprecated("21");
     BOOST_CHECK_EQUAL(TmpL.ToString(), "0000000000000000000000000000000000000000000000000000000000000021");
-    TmpL.SetHexDeprecated(R2L.ToString());   BOOST_CHECK_EQUAL(TmpL, R2L);
-    TmpL.SetHexDeprecated(ZeroL.ToString()); BOOST_CHECK_EQUAL(TmpL, uint256());
+    BOOST_CHECK_EQUAL(uint256::FromHex(R2L.ToString()).value(), R2L);
+    BOOST_CHECK_EQUAL(uint256::FromHex(ZeroL.ToString()).value(), uint256());
 
-    TmpL.SetHexDeprecated(R1L.ToString());
+    TmpL = uint256::FromHex(R1L.ToString()).value();
     BOOST_CHECK_EQUAL_COLLECTIONS(R1L.begin(), R1L.end(), R1Array, R1Array + R1L.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(TmpL.begin(), TmpL.end(), R1Array, R1Array + TmpL.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(R2L.begin(), R2L.end(), R2Array, R2Array + R2L.size());
@@ -214,10 +214,10 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHexDeprecated begin() end() size() 
     BOOST_CHECK_EQUAL(MaxS.GetHex(), MaxS.ToString());
     uint160 TmpS(R1S);
     BOOST_CHECK_EQUAL(TmpS, R1S);
-    TmpS.SetHexDeprecated(R2S.ToString());   BOOST_CHECK_EQUAL(TmpS, R2S);
-    TmpS.SetHexDeprecated(ZeroS.ToString()); BOOST_CHECK_EQUAL(TmpS, uint160());
+    BOOST_CHECK_EQUAL(uint160::FromHex(R2S.ToString()).value(), R2S);
+    BOOST_CHECK_EQUAL(uint160::FromHex(ZeroS.ToString()).value(), uint160());
 
-    TmpS.SetHexDeprecated(R1S.ToString());
+    TmpS = uint160::FromHex(R1S.ToString()).value();
     BOOST_CHECK_EQUAL_COLLECTIONS(R1S.begin(), R1S.end(), R1Array, R1Array + R1S.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(TmpS.begin(), TmpS.end(), R1Array, R1Array + TmpS.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(R2S.begin(), R2S.end(), R2Array, R2Array + R2S.size());
