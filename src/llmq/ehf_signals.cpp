@@ -52,10 +52,6 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew, boo
         return;
     }
 
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        // TODO: v20 will never attempt to create EHF messages on main net; if this is needed it will be done by v20.1 or v21 nodes
-        return;
-    }
     const auto ehfSignals = mnhfman.GetSignalsStage(pindexNew);
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // Skip deployments that do not use dip0023
@@ -102,10 +98,6 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
 
 void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
 {
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        // TODO: v20 will never attempt to create EHF messages on main net; if this is needed it will be done by v20.1 or v21 nodes
-        return;
-    }
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
