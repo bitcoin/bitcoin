@@ -267,15 +267,10 @@ bool CCoinsViewCache::Sync()
 {
     auto cursor{CoinsViewCacheCursor(cachedCoinsUsage, m_sentinel, cacheCoins, /*will_erase=*/false)};
     bool fOk = base->BatchWrite(cursor, hashBlock);
-    // Instead of clearing `cacheCoins` as we would in Flush(), just clear the
-    // FRESH/DIRTY flags of any coin that isn't spent.
-    for (auto it = cacheCoins.begin(); it != cacheCoins.end(); ) {
-        if (it->second.coin.IsSpent()) {
-            cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
-            it = cacheCoins.erase(it);
-        } else {
-            it->second.ClearFlags();
-            ++it;
+    if (fOk) {
+        if (m_sentinel.second.Next() != &m_sentinel) {
+            /* BatchWrite must clear flags of all entries */
+            throw std::logic_error("Not all unspent flagged entries were cleared");
         }
     }
     return fOk;

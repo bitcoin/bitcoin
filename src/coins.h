@@ -245,9 +245,26 @@ private:
 
 /**
  * Cursor for iterating over the linked list of flagged entries in CCoinsViewCache.
+ *
+ * This is a helper struct to encapsulate the diverging logic between a non-erasing
+ * CCoinsViewCache::Sync and an erasing CCoinsViewCache::Flush. This allows the receiver
+ * of CCoinsView::BatchWrite to iterate through the flagged entries without knowing
+ * the caller's intent.
+ *
+ * However, the receiver can still call CoinsViewCacheCursor::WillErase to see if the
+ * caller will erase the entry after BatchWrite returns. If so, the receiver can
+ * perform optimizations such as moving the coin out of the CCoinsCachEntry instead
+ * of copying it.
  */
 struct CoinsViewCacheCursor
 {
+    //! If will_erase is not set, iterating through the cursor will erase spent coins from the map,
+    //! and other coins will be unflagged (removing them from the linked list).
+    //! If will_erase is set, the underlying map and linked list will not be modified,
+    //! as the caller is expected to wipe the entire map anyway.
+    //! This is an optimization compared to erasing all entries as the cursor iterates them when will_erase is set.
+    //! Calling CCoinsMap::clear() afterwards is faster because a CoinsCachePair cannot be coerced back into a
+    //! CCoinsMap::iterator to be erased, and must therefore be looked up again by key in the CCoinsMap before being erased.
     CoinsViewCacheCursor(size_t& usage LIFETIMEBOUND,
                         CoinsCachePair& sentinel LIFETIMEBOUND,
                         CCoinsMap& map LIFETIMEBOUND,
@@ -257,9 +274,24 @@ struct CoinsViewCacheCursor
     inline CoinsCachePair* Begin() const noexcept { return m_sentinel.second.Next(); }
     inline CoinsCachePair* End() const noexcept { return &m_sentinel; }
 
-    inline CoinsCachePair* NextAndMaybeErase(CoinsCachePair& current) noexcept { return current.second.Next(); }
+    //! Return the next entry after current, possibly erasing current
+    inline CoinsCachePair* NextAndMaybeErase(CoinsCachePair& current) noexcept
+    {
+        const auto next_entry{current.second.Next()};
+        // If we are not going to erase the cache, we must still erase spent entries.
+        // Otherwise clear the flags on the entry.
+        if (!m_will_erase) {
+            if (current.second.coin.IsSpent()) {
+                m_usage -= current.second.coin.DynamicMemoryUsage();
+                m_map.erase(current.first);
+            } else {
+                current.second.ClearFlags();
+            }
+        }
+        return next_entry;
+    }
 
-    inline bool WillErase(CoinsCachePair& current) const noexcept { return m_will_erase; }
+    inline bool WillErase(CoinsCachePair& current) const noexcept { return m_will_erase || current.second.coin.IsSpent(); }
 private:
     size_t& m_usage;
     CoinsCachePair& m_sentinel;
