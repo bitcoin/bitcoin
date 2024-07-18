@@ -239,7 +239,7 @@ bool ParseHashStr(const std::string& strHex, uint256& result)
     if ((strHex.size() != 64) || !IsHex(strHex))
         return false;
 
-    result.SetHex(strHex);
+    result.SetHexDeprecated(strHex);
     return true;
 }
 

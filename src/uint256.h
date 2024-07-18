@@ -59,7 +59,7 @@ public:
 
     // Hex string representations are little-endian.
     std::string GetHex() const;
-    void SetHex(std::string_view str);
+    void SetHexDeprecated(std::string_view str);
     std::string ToString() const;
 
     constexpr const unsigned char* data() const { return m_data.data(); }
@@ -119,7 +119,7 @@ public:
 inline uint256 uint256S(std::string_view str)
 {
     uint256 rv;
-    rv.SetHex(str);
+    rv.SetHexDeprecated(str);
     return rv;
 }
 
