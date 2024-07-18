@@ -325,6 +325,7 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
 
     // Initialize transaction index *after* chain has been constructed
     g_txindex = std::make_unique<TxIndex>(1 << 20, true);
+    assert(!g_txindex->BlockUntilSyncedToCurrentChain());
     if (!g_txindex->Start(m_node.chainman->ActiveChainstate())) {
         throw std::runtime_error("TxIndex::Start() failed.");
     }
@@ -506,6 +507,7 @@ TestChainSetup::~TestChainSetup()
     // we might be destroying it while scheduler still has some work for it
     // e.g. via BlockConnected signal
     IndexWaitSynced(*g_txindex);
+    g_txindex->Interrupt();
     g_txindex->Stop();
     SyncWithValidationInterfaceQueue();
     g_txindex.reset();
