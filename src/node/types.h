@@ -13,6 +13,8 @@
 #ifndef BITCOIN_NODE_TYPES_H
 #define BITCOIN_NODE_TYPES_H
 
+#include <cstddef>
+
 namespace node {
 enum class TransactionError {
     OK, //!< No error
@@ -23,6 +25,24 @@ enum class TransactionError {
     MAX_FEE_EXCEEDED,
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
+};
+
+struct BlockCreateOptions {
+    /**
+     * Set false to omit mempool transactions
+     */
+    bool use_mempool{true};
+    /**
+     * The maximum additional weight which the pool will add to the coinbase
+     * scriptSig, witness and outputs. This must include any additional
+     * weight needed for larger CompactSize encoded lengths.
+     */
+    size_t coinbase_max_additional_weight{4000};
+    /**
+     * The maximum additional sigops which the pool will add in coinbase
+     * transaction outputs.
+     */
+    size_t coinbase_output_max_additional_sigops{400};
 };
 } // namespace node
 
