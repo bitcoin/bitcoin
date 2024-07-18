@@ -43,7 +43,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
     DatabaseStatus status;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
+    std::unique_ptr<WalletDatabase> database = ResultExtract(MakeDatabase(path, options), &status, &error);
     if (!database) {
         tfm::format(std::cerr, "%s\n", error.original);
         return nullptr;
@@ -139,7 +139,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         }
 
         bilingual_str error;
-        std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
+        std::unique_ptr<WalletDatabase> database = ResultExtract(MakeDatabase(path, options), &status, &error);
         if (!database) {
             tfm::format(std::cerr, "%s\n", error.original);
             return false;

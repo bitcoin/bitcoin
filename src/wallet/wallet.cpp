@@ -2947,7 +2947,7 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
         status = DatabaseStatus::FAILED_BAD_PATH;
         return nullptr;
     }
-    return MakeDatabase(*wallet_path, options, status, error_string);
+    return ResultExtract(MakeDatabase(*wallet_path, options), &status, &error_string);
 }
 
 bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContext& context, bilingual_str& error, std::vector<bilingual_str>& warnings)
@@ -3866,7 +3866,7 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
     opts.require_create = true;
     opts.require_format = DatabaseFormat::SQLITE;
     DatabaseStatus db_status;
-    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
+    std::unique_ptr<WalletDatabase> new_db = ResultExtract(MakeDatabase(wallet_path, opts), &db_status, &error);
     assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
     m_database.reset();
     m_database = std::move(new_db);
