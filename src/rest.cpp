@@ -788,14 +788,17 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
 
         for (size_t i = (fCheckMemPool) ? 1 : 0; i < uriParts.size(); i++)
         {
-            int32_t nOutput;
-            std::string strTxid = uriParts[i].substr(0, uriParts[i].find('-'));
-            std::string strOutput = uriParts[i].substr(uriParts[i].find('-')+1);
-
-            if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
+            const auto txid_out{util::Split<std::string_view>(uriParts[i], '-')};
+            if (txid_out.size() != 2) {
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+            }
+            auto output{ToIntegral<uint32_t>(txid_out.at(1))};
 
-            vOutPoints.emplace_back(TxidFromString(strTxid), (uint32_t)nOutput);
+            if (!output || !IsHex(txid_out.at(0))) {
+                return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+            }
+
+            vOutPoints.emplace_back(TxidFromString(txid_out.at(0)), *output);
         }
 
         if (vOutPoints.size() > 0)
