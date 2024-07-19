@@ -792,13 +792,14 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
             if (txid_out.size() != 2) {
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
             }
+            auto txid{Txid::FromHex(txid_out.at(0))};
             auto output{ToIntegral<uint32_t>(txid_out.at(1))};
 
-            if (!output || !IsHex(txid_out.at(0))) {
+            if (!txid || !output) {
                 return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
             }
 
-            vOutPoints.emplace_back(TxidFromString(txid_out.at(0)), *output);
+            vOutPoints.emplace_back(*txid, *output);
         }
 
         if (vOutPoints.size() > 0)
