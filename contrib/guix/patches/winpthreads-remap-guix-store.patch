@@ -1,0 +1,17 @@
+Without ffile-prefix-map, the debug symbols will contain paths for the
+guix store which will include the hashes of each package. However, the
+hash for the same package will differ when on different architectures.
+In order to be reproducible regardless of the architecture used to build
+the package, map all guix store prefixes to something fixed, e.g. /usr.
+
+--- a/mingw-w64-libraries/winpthreads/Makefile.in
++++ b/mingw-w64-libraries/winpthreads/Makefile.in
+@@ -478,7 +478,7 @@ top_build_prefix = @top_build_prefix@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+ SUBDIRS = . tests
+-AM_CFLAGS = -Wall -DWIN32_LEAN_AND_MEAN $(am__append_1)
++AM_CFLAGS = -Wall -DWIN32_LEAN_AND_MEAN $(am__append_1) $(shell find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
+ ACLOCAL_AMFLAGS = -I m4
+ lib_LTLIBRARIES = libwinpthread.la
+ include_HEADERS = include/pthread.h include/sched.h include/semaphore.h include/pthread_unistd.h include/pthread_time.h include/pthread_compat.h include/pthread_signal.h
