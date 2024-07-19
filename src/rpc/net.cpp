@@ -310,6 +310,10 @@ static RPCHelpMan addnode()
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
+    if (strCommand != "onetry" && strCommand != "add" && strCommand != "remove") {
+        throw std::runtime_error(
+            self.ToString());
+    }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
@@ -715,7 +719,7 @@ static RPCHelpMan setban()
     std::string strCommand;
     if (!request.params[1].isNull())
         strCommand = request.params[1].get_str();
-    if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
+    if (strCommand != "add" && strCommand != "remove") {
         throw std::runtime_error(help.ToString());
     }
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -1009,25 +1013,25 @@ void RegisterNetRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "network",            "getconnectioncount",     &getconnectioncount,     {} },
-    { "network",            "ping",                   &ping,                   {} },
-    { "network",            "getpeerinfo",            &getpeerinfo,            {} },
-    { "network",            "addnode",                &addnode,                {"node","command"} },
-    { "network",            "disconnectnode",         &disconnectnode,         {"address", "nodeid"} },
-    { "network",            "getaddednodeinfo",       &getaddednodeinfo,       {"node"} },
-    { "network",            "getnettotals",           &getnettotals,           {} },
-    { "network",            "getnetworkinfo",         &getnetworkinfo,         {} },
-    { "network",            "setban",                 &setban,                 {"subnet", "command", "bantime", "absolute"} },
-    { "network",            "listbanned",             &listbanned,             {} },
-    { "network",            "clearbanned",            &clearbanned,            {} },
-    { "network",            "cleardiscouraged",       &cleardiscouraged,        {} },
-    { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
-    { "network",            "getnodeaddresses",       &getnodeaddresses,       {"count", "network"} },
+{ //  category              actor
+  //  --------------------- -----------------------
+    { "network",             &getconnectioncount,      },
+    { "network",             &ping,                    },
+    { "network",             &getpeerinfo,             },
+    { "network",             &addnode,                 },
+    { "network",             &disconnectnode,          },
+    { "network",             &getaddednodeinfo,        },
+    { "network",             &getnettotals,            },
+    { "network",             &getnetworkinfo,          },
+    { "network",             &setban,                  },
+    { "network",             &listbanned,              },
+    { "network",             &clearbanned,             },
+    { "network",             &cleardiscouraged,        },
+    { "network",             &setnetworkactive,        },
+    { "network",             &getnodeaddresses,        },
 
-    { "hidden",             "addconnection",          &addconnection,          {"address", "connection_type"} },
-    { "hidden",             "addpeeraddress",         &addpeeraddress,         {"address", "port"} },
+    { "hidden",              &addconnection,           },
+    { "hidden",              &addpeeraddress,          },
 };
 // clang-format on
     for (const auto& c : commands) {

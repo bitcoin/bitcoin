@@ -722,24 +722,24 @@ void RegisterMasternodeRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "dash",               "masternode",             &masternode_help,          {"command"} },
-    { "dash",               "masternode", "list",     &masternodelist_composite, {"mode", "filter"} },
-    { "dash",               "masternodelist",         &masternodelist,           {"mode", "filter"} },
-    { "dash",               "masternode", "connect",  &masternode_connect,       {"address"} },
-    { "dash",               "masternode", "count",    &masternode_count,         {} },
+{ //  category              actor (function)
+  //  --------------------- -----------------------
+    { "dash",               &masternode_help,          },
+    { "dash",               &masternodelist_composite, },
+    { "dash",               &masternodelist,           },
+    { "dash",               &masternode_connect,       },
+    { "dash",               &masternode_count,         },
 #ifdef ENABLE_WALLET
-    { "dash",               "masternode", "outputs",  &masternode_outputs,       {} },
+    { "dash",               &masternode_outputs,       },
 #endif // ENABLE_WALLET
-    { "dash",               "masternode", "status",   &masternode_status,        {} },
-    { "dash",               "masternode", "payments", &masternode_payments,      {"blockhash", "count"} },
-    { "dash",               "masternode", "winners",  &masternode_winners,       {"count", "filter"} },
-    { "dash",               "masternode", "current",  &masternode_current,       {} },
-    { "dash",               "masternode", "winner",   &masternode_winner,        {} },
+    { "dash",               &masternode_status,        },
+    { "dash",               &masternode_payments,      },
+    { "dash",               &masternode_winners,       },
+    { "dash",               &masternode_current,       },
+    { "dash",               &masternode_winner,        },
 };
 // clang-format on
     for (const auto& command : commands) {
-        t.appendCommand(command.name, command.subname, &command);
+        t.appendCommand(command.name, &command);
     }
 }

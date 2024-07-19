@@ -974,7 +974,7 @@ static RPCHelpMan verifychainlock()
         }
         nBlockHeight = pIndex->nHeight;
     } else {
-        nBlockHeight = ParseInt32V(request.params[2], "blockHeight");
+        nBlockHeight = request.params[2].get_int();
         LOCK(cs_main);
         if (nBlockHeight < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
@@ -1040,7 +1040,7 @@ static RPCHelpMan verifyislock()
 
     int maxHeight{-1};
     if (!request.params[3].isNull()) {
-        maxHeight = ParseInt32V(request.params[3], "maxHeight");
+        maxHeight = request.params[3].get_int();
     }
 
     int signHeight;
@@ -1094,7 +1094,7 @@ static RPCHelpMan submitchainlock()
 {
     const uint256 nBlockHash(ParseHashV(request.params[0], "blockHash"));
 
-    const int nBlockHeight = ParseInt32V(request.params[2], "blockHeight");
+    const int nBlockHeight = request.params[2].get_int();
     if (nBlockHeight <= 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }
@@ -1132,31 +1132,31 @@ void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)
-  //  --------------------- ------------------------  -----------------------
-    { "evo",                "quorum",                 &quorum_help,            {"command"}  },
-    { "evo",                "quorum", "list",         &quorum_list,            {"count"}  },
-    { "evo",                "quorum", "listextended", &quorum_list_extended,   {"height"}  },
-    { "evo",                "quorum", "info",         &quorum_info,            {"llmqType", "quorumHash", "includeSkShare"}  },
-    { "evo",                "quorum", "dkginfo",      &quorum_dkginfo,         {}  },
-    { "evo",                "quorum", "dkgstatus",    &quorum_dkgstatus,       {"detail_level"}  },
-    { "evo",                "quorum", "memberof",     &quorum_memberof,        {"proTxHash", "scanQuorumsCount"}  },
-    { "evo",                "quorum", "sign",         &quorum_sign,            {"llmqType", "id", "msgHash", "quorumHash", "submit"}  },
-    { "evo",                "quorum", "platformsign", &quorum_platformsign,    {"id", "msgHash", "quorumHash", "submit"}  },
-    { "evo",                "quorum", "verify",       &quorum_verify,          {"llmqType", "id", "msgHash", "signature", "quorumHash", "signHeight"}  },
-    { "evo",                "quorum", "hasrecsig",    &quorum_hasrecsig,       {"llmqType", "id", "msgHash"}  },
-    { "evo",                "quorum", "getrecsig",    &quorum_getrecsig,       {"llmqType", "id", "msgHash"}  },
-    { "evo",                "quorum", "isconflicting",&quorum_isconflicting,   {"llmqType", "id", "msgHash"}  },
-    { "evo",                "quorum", "selectquorum", &quorum_selectquorum,    {"llmqType", "id"}  },
-    { "evo",                "quorum", "dkgsimerror",  &quorum_dkgsimerror,     {"type", "rate"}  },
-    { "evo",                "quorum", "getdata",      &quorum_getdata,         {"nodeId", "llmqType", "quorumHash", "dataMask", "proTxHash"}  },
-    { "evo",                "quorum", "rotationinfo", &quorum_rotationinfo,    {"blockRequestHash", "extraShare", "baseBlockHash..."}  },
-    { "evo",                "submitchainlock",        &submitchainlock,        {"blockHash", "signature", "blockHeight"}  },
-    { "evo",                "verifychainlock",        &verifychainlock,        {"blockHash", "signature", "blockHeight"} },
-    { "evo",                "verifyislock",           &verifyislock,           {"id", "txid", "signature", "maxHeight"}  },
+{ //  category              actor (function)
+  //  --------------------- -----------------------
+    { "evo",                &quorum_help,            },
+    { "evo",                &quorum_list,            },
+    { "evo",                &quorum_list_extended,   },
+    { "evo",                &quorum_info,            },
+    { "evo",                &quorum_dkginfo,         },
+    { "evo",                &quorum_dkgstatus,       },
+    { "evo",                &quorum_memberof,        },
+    { "evo",                &quorum_sign,            },
+    { "evo",                &quorum_platformsign,    },
+    { "evo",                &quorum_verify,          },
+    { "evo",                &quorum_hasrecsig,       },
+    { "evo",                &quorum_getrecsig,       },
+    { "evo",                &quorum_isconflicting,   },
+    { "evo",                &quorum_selectquorum,    },
+    { "evo",                &quorum_dkgsimerror,     },
+    { "evo",                &quorum_getdata,         },
+    { "evo",                &quorum_rotationinfo,    },
+    { "evo",                &submitchainlock,        },
+    { "evo",                &verifychainlock,        },
+    { "evo",                &verifyislock,           },
 };
 // clang-format on
     for (const auto& command : commands) {
-        tableRPC.appendCommand(command.name, command.subname, &command);
+        tableRPC.appendCommand(command.name, &command);
     }
 }

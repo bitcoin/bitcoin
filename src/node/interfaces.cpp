@@ -67,6 +67,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <variant>
 
 using interfaces::BlockTip;
 using interfaces::Chain;
@@ -317,7 +318,7 @@ public:
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {
-        return AppInitMain(m_context_ref, *m_context, tip_info);
+        return AppInitMain(*m_context, tip_info);
     }
     void appShutdown() override
     {
@@ -479,13 +480,14 @@ public:
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
-        JSONRPCRequest req(m_context_ref);
+        JSONRPCRequest req;
+        req.context = *m_context;
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
         return ::tableRPC.execute(req);
     }
-    std::vector<std::pair<std::string, std::string>> listRpcCommands() override { return ::tableRPC.listCommands(); }
+    std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
     void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) override { RPCSetTimerInterfaceIfUnset(iface); }
     void rpcUnsetTimerInterface(RPCTimerInterface* iface) override { RPCUnsetTimerInterface(iface); }
     bool getUnspentOutput(const COutPoint& output, Coin& coin) override
@@ -580,15 +582,8 @@ public:
         m_gov.setContext(context);
         m_llmq.setContext(context);
         m_masternodeSync.setContext(context);
-
-        if (context) {
-            m_context_ref = *context;
-        } else {
-            m_context_ref = std::nullopt;
-        }
     }
     NodeContext* m_context{nullptr};
-    CoreContext m_context_ref{std::nullopt};
 };
 
 bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<RecursiveMutex>& lock, const CChain& active)
@@ -688,14 +683,14 @@ public:
                 throw;
             }
         };
-        ::tableRPC.appendCommand(m_command.name, m_command.subname, &m_command);
+        ::tableRPC.appendCommand(m_command.name, &m_command);
     }
 
     void disconnect() override final
     {
         if (m_wrapped_command) {
             m_wrapped_command = nullptr;
-            ::tableRPC.removeCommand(m_command.name, m_command.subname, &m_command);
+            ::tableRPC.removeCommand(m_command.name, &m_command);
         }
     }
 

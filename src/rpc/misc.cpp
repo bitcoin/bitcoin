@@ -617,7 +617,7 @@ static RPCHelpMan mnauth()
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
 
-    int nodeId = ParseInt64V(request.params[0], "nodeId");
+    int64_t nodeId = request.params[0].get_int64();
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
@@ -1386,8 +1386,6 @@ static RPCHelpMan echo(const std::string& name)
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.fHelp) throw std::runtime_error(self.ToString());
-
     if (request.params[9].isStr()) {
         CHECK_NONFATAL(request.params[9].get_str() != "trigger_internal_bug");
     }
@@ -1460,38 +1458,38 @@ static RPCHelpMan echojson() { return echo("echojson"); }
 void RegisterMiscRPCCommands(CRPCTable &t)
 {
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "debug",                  &debug,                  {"category"} },
-    { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
-    { "control",            "logging",                &logging,                {"include", "exclude"}},
-    { "util",               "validateaddress",        &validateaddress,        {"address"} },
-    { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
-    { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "range"} },
-    { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
-    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
-    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
-    { "util",               "getindexinfo",           &getindexinfo,           {"index_name"} },
-    { "blockchain",         "getspentinfo",           &getspentinfo,           {"request"} },
+{ //  category              actor (function)
+  //  --------------------- ------------------------
+    { "control",            &debug,                   },
+    { "control",            &getmemoryinfo,           },
+    { "control",            &logging,                 },
+    { "util",               &validateaddress,         },
+    { "util",               &createmultisig,          },
+    { "util",               &deriveaddresses,         },
+    { "util",               &getdescriptorinfo,       },
+    { "util",               &verifymessage,           },
+    { "util",               &signmessagewithprivkey,  },
+    { "util",               &getindexinfo,            },
+    { "blockchain",         &getspentinfo,            },
 
     /* Address index */
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      {"addresses"}  },
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        {"addresses"} },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       {"addresses"} },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        {"addresses"} },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      {"addresses"} },
+    { "addressindex",       &getaddressmempool,       },
+    { "addressindex",       &getaddressutxos,         },
+    { "addressindex",       &getaddressdeltas,        },
+    { "addressindex",       &getaddresstxids,         },
+    { "addressindex",       &getaddressbalance,       },
 
     /* Dash features */
-    { "dash",               "mnsync",                 &mnsync,                 {"mode"} },
-    { "dash",               "spork",                  &spork,                  {"command"} },
-    { "dash",               "sporkupdate",            &sporkupdate,            {"name","value"} },
+    { "dash",               &mnsync,                  },
+    { "dash",               &spork,                   },
+    { "dash",               &sporkupdate,             },
 
     /* Not shown in help */
-    { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
-    { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
-    { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "echojson",               &echojson,               {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "mnauth",                 &mnauth,                 {"nodeId", "proTxHash", "publicKey"}},
+    { "hidden",             &setmocktime,             },
+    { "hidden",             &mockscheduler,           },
+    { "hidden",             &echo,                    },
+    { "hidden",             &echojson,                },
+    { "hidden",             &mnauth,                  },
 };
 // clang-format on
     for (const auto& c : commands) {

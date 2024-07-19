@@ -185,7 +185,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
-const JSONRPCRequest JSONRPCRequest::squashed() const
+JSONRPCRequest JSONRPCRequest::squashed() const
 {
    if (params.empty()) {
         return *this;

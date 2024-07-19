@@ -201,8 +201,8 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req)
         return rpcRequest.send_reply(HTTP_UNAUTHORIZED);
     }
 
-    JSONRPCRequest jreq(context);
-
+    JSONRPCRequest jreq;
+    jreq.context = context;
     jreq.peerAddr = req->GetPeer().ToString();
     if (!RPCAuthorized(authHeader.second, rpcRequest.user)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
@@ -335,7 +335,7 @@ bool StartHTTPRPC(const CoreContext& context)
     if (!InitRPCAuthentication())
         return false;
 
-    auto handle_rpc = [&context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
+    auto handle_rpc = [context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
     RegisterHTTPHandler("/", true, handle_rpc);
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
