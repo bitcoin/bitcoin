@@ -250,7 +250,7 @@ private:
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
     WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
-    HDPubKeyMap mapHdPubKeys GUARDED_BY(cs_KeyStore); //<! memory map of HD extended pubkeys
+    HDPubKeyMap mapHdPubKeys GUARDED_BY(cs_KeyStore); ///<! memory map of HD extended pubkeys
 
     int64_t nTimeFirstKey GUARDED_BY(cs_KeyStore) = 0;
 

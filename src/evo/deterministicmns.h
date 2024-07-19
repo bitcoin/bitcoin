@@ -346,15 +346,11 @@ public:
      * Calculates the projected MN payees for the next *count* blocks. The result is not guaranteed to be correct
      * as PoSe banning might occur later
      * @param nCount the number of payees to return. "nCount = max()"" means "all", use it to avoid calling GetValidWeightedMNsCount twice.
-     * @return
      */
     [[nodiscard]] std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount = std::numeric_limits<int>::max()) const;
 
     /**
      * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
-     * @param maxSize
-     * @param modifier
-     * @return
      */
     [[nodiscard]] std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier, const bool onlyEvoNodes = false) const;
     [[nodiscard]] std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier, const bool onlyEvoNodes) const;
@@ -362,7 +358,6 @@ public:
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
      * for every block.
-     * @return
      */
     [[nodiscard]] int CalcMaxPoSePenalty() const;
 
@@ -371,8 +366,6 @@ public:
      * value later passed to PoSePunish. The percentage should be high enough to take per-block penalty decreasing for MNs
      * into account. This means, if you want to accept 2 failures per payment cycle, you should choose a percentage that
      * is higher then 50%, e.g. 66%.
-     * @param percent
-     * @return
      */
     [[nodiscard]] int CalcPenalty(int percent) const;
 
@@ -380,8 +373,6 @@ public:
      * Punishes a MN for misbehavior. If the resulting penalty score of the MN reaches the max penalty, it is banned.
      * Penalty scores are only increased when the MN is not already banned, which means that after banning the penalty
      * might appear lower then the current max penalty, while the MN is still banned.
-     * @param proTxHash
-     * @param penalty
      */
     void PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs);
 

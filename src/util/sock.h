@@ -250,7 +250,7 @@ public:
 
     /**
      * Check if still connected.
-     * @param[out] err The error string, if the socket has been disconnected.
+     * @param[out] errmsg The error string, if the socket has been disconnected.
      * @return true if connected
      */
     [[nodiscard]] virtual bool IsConnected(std::string& errmsg) const;
