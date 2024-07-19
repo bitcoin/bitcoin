@@ -42,6 +42,12 @@ public:
     /** Wrapped `uint256` methods. */
     constexpr bool IsNull() const { return m_wrapped.IsNull(); }
     constexpr void SetNull() { m_wrapped.SetNull(); }
+    static std::optional<transaction_identifier> FromHex(std::string_view hex)
+    {
+        auto u{uint256::FromHex(hex)};
+        if (!u) return std::nullopt;
+        return FromUint256(*u);
+    }
     std::string GetHex() const { return m_wrapped.GetHex(); }
     std::string ToString() const { return m_wrapped.ToString(); }
     static constexpr auto size() { return decltype(m_wrapped)::size(); }
@@ -66,6 +72,7 @@ using Txid = transaction_identifier<false>;
 /** Wtxid commits to all transaction fields including the witness. */
 using Wtxid = transaction_identifier<true>;
 
+/** DEPRECATED due to missing length-check and hex-check, please use the safer FromHex, or FromUint256 */
 inline Txid TxidFromString(std::string_view str)
 {
     return Txid::FromUint256(uint256S(str));
