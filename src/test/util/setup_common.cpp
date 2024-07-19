@@ -323,6 +323,14 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
     // Generate a num_blocks length chain:
     this->mineBlocks(num_blocks);
 
+    // Initialize transaction index *after* chain has been constructed
+    g_txindex = std::make_unique<TxIndex>(1 << 20, true);
+    assert(!g_txindex->BlockUntilSyncedToCurrentChain());
+    if (!g_txindex->Start(m_node.chainman->ActiveChainstate())) {
+        throw std::runtime_error("TxIndex::Start() failed.");
+    }
+    IndexWaitSynced(*g_txindex);
+
     CCheckpointData checkpoints{
         {
             /* TestChainDATSetup */
@@ -361,11 +369,10 @@ void TestChainSetup::mineBlocks(int num_blocks)
         m_coinbase_txns.push_back(b.vtx[0]);
     }
 
-    g_txindex = std::make_unique<TxIndex>(1 << 20, true);
-    assert(g_txindex->Start(m_node.chainman->ActiveChainstate()));
-
     // Allow tx index to catch up with the block index.
-    IndexWaitSynced(*g_txindex);
+    if (g_txindex) {
+        IndexWaitSynced(*g_txindex);
+    }
 }
 
 CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
@@ -500,6 +507,7 @@ TestChainSetup::~TestChainSetup()
     // we might be destroying it while scheduler still has some work for it
     // e.g. via BlockConnected signal
     IndexWaitSynced(*g_txindex);
+    g_txindex->Interrupt();
     g_txindex->Stop();
     SyncWithValidationInterfaceQueue();
     g_txindex.reset();
