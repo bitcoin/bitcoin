@@ -769,8 +769,8 @@ void InitParameterInteraction(ArgsManager& args)
             LogInfo("parameter interaction: -connect or -maxconnections=0 set -> setting -listen=0\n");
     }
 
-    std::string proxy_arg = args.GetArg("-proxy", "");
-    if (proxy_arg != "" && proxy_arg != "0") {
+    auto proxy_arg{args.GetSetting("-proxy")};
+    if (proxy_arg.getValStr() != "" && proxy_arg.getValStr() != "0") {
         // to protect privacy, do not listen by default if a default proxy server is specified
         if (args.SoftSetBoolArg("-listen", false))
             LogInfo("parameter interaction: -proxy set -> setting -listen=0\n");
@@ -1224,7 +1224,14 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         {"-zmqpubrawtx",     true,                false},
         {"-zmqpubsequence",  true,                false},
     }) {
-        for (const std::string& param_value : args.GetArgs(param_name)) {
+        std::vector<std::string> addrs;
+        std::optional<unsigned int> flags = args.GetArgFlags(param_name);
+        if (!flags || *flags & ArgsManager::ALLOW_LIST) {
+            addrs = args.GetArgs(param_name);
+        } else if (args.IsArgSet(param_name) && !args.IsArgNegated(param_name)) {
+            addrs.emplace_back(*args.GetArg(param_name));
+        }
+        for (const std::string& param_value : addrs) {
             const std::string param_value_hostport{
                 suffix_allowed ? param_value.substr(0, param_value.rfind('=')) : param_value};
             std::string host_out;
@@ -2175,7 +2182,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogInfo("-seednode is ignored when -connect is used");
         }
 
-        if (args.IsArgSet("-dnsseed") && args.GetBoolArg("-dnsseed", DEFAULT_DNSSEED) && args.IsArgSet("-proxy")) {
+        if (args.IsArgSet("-dnsseed") && args.GetBoolArg("-dnsseed", DEFAULT_DNSSEED) && !args.GetSetting("-proxy").isNull()) {
             LogInfo("-dnsseed is ignored when -connect is used and -proxy is specified");
         }
     }
