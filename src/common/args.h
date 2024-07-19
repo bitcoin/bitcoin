@@ -201,7 +201,7 @@ public:
         COMMAND = 0x800,
     };
 
-private:
+protected:
     struct Arg
     {
         std::string m_help_param;
@@ -210,11 +210,13 @@ private:
     };
 
     mutable Mutex cs_args;
+    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+
+private:
     common::Settings m_settings GUARDED_BY(cs_args);
     std::vector<std::string> m_command GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
-    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     std::optional<unsigned int> m_default_flags GUARDED_BY(cs_args){};
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
