@@ -861,6 +861,28 @@ public:
         return tip->GetBlockHash();
     }
 
+    bool waitFeesChanged(MillisecondsDouble timeout, uint256 tip, CAmount fee_delta, CAmount& fees_before, bool& tip_changed) override
+    {
+        Assume(getTipHash());
+        unsigned int last_mempool_update{context()->mempool->GetTransactionsUpdated()};
+
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        {
+            while (!chainman().m_interrupt && std::chrono::steady_clock::now() < deadline) {
+                std::this_thread::sleep_for(std::min(timeout, MillisecondsDouble(100)));
+                if (getTipHash().value() != tip) {
+                    tip_changed = true;
+                    return false;
+                }
+
+                // TODO: when cluster mempool is available, actually calculate
+                // fees for the next block. This is currently too expensive.
+                if (context()->mempool->GetTransactionsUpdated() > last_mempool_update) return true;
+            }
+        }
+        return false;
+    }
+
     bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
     {
         return chainman().ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
