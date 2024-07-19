@@ -9,6 +9,7 @@
 #include <crypto/hex_base.h>
 #include <kernel/signet.h>
 #include <tinyformat.h>
+#include <univalue.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
@@ -41,7 +42,7 @@ std::string GetSignetDataDir(const ArgsManager& args)
     std::string base_data_dir = "signet";
     // no default to treat no -signetchallenge (default signet) as distinct from
     // the empty -signetchallenge= (custom signet)
-    const auto challenge_hex = args.GetArg("-signetchallenge");
+    const auto challenge_hex = SettingToString(args.GetSetting("-signetchallenge"));
     if (!challenge_hex) {
         return base_data_dir;
     }
