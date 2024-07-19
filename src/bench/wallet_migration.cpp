@@ -3,17 +3,20 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <kernel/chain.h>
 #include <interfaces/chain.h>
+#include <kernel/chain.h>
+#include <kernel/types.h>
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 #include <optional>
+
+using kernel::ChainstateRole;
 
 namespace wallet{
 
@@ -30,7 +33,7 @@ static void WalletMigration(benchmark::Bench& bench)
 
     // Setup legacy wallet
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
-    wallet->chainStateFlushed(ChainstateRole::NORMAL, CBlockLocator{});
+    wallet->chainStateFlushed(ChainstateRole{}, CBlockLocator{});
     LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
 
     // Add watch-only addresses
