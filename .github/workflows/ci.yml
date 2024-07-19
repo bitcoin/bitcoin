@@ -9,6 +9,13 @@ on:
   # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
   push:
     branches:
+    # When a contributor maintains a fork of the repo, any pull request they make
+    # to their own fork, or to the main repository, will trigger two CI runs:
+    # one for the branch push and one for the pull request.
+    # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
+    # in Github repository settings.
+    # See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#defining-configuration-variables-for-multiple-workflows
+    - if: ${{ !env.SKIP_BRANCH_PUSH }}
       - '**'
     tags-ignore:
       - '**'
