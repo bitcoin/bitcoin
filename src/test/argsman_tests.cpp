@@ -452,6 +452,49 @@ struct TestArgsManager : public ArgsManager
             AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
         }
     }
+    //! Return registered argument information.
+    Arg* FindArg(const std::string& name)
+    {
+        LOCK(cs_args);
+        for (auto& category : m_available_args) {
+            if (Arg* arg = common::FindKey(category.second, name)) {
+                return arg;
+            }
+        }
+        return nullptr;
+    }
+    //! Look up current registered argument flags so they can be modified, and
+    //! restore them on destruction.
+    struct TestFlags {
+        TestFlags(TestArgsManager& test, const std::string& name) : arg(test.FindArg(name)) {}
+        ~TestFlags() { if (arg) arg->m_flags = prev_flags; }
+        Arg* arg;
+        unsigned int prev_flags = arg ? arg->m_flags : 0;
+    };
+    //! Call GetArgs(), temporarily enabling ALLOW_LIST so call can succeed.
+    //! This is called by old tests written before ALLOW_LIST was enforced.
+    std::vector<std::string> TestArgList(const std::string& name)
+    {
+        TestFlags test(*this, name);
+        if (test.arg) test.arg->m_flags |= ALLOW_LIST;
+        return GetArgs(name);
+    }
+    //! Call GetArg(), temporarily disabling ALLOW_LIST so call can succeed.
+    //! This is called by old tests written before ALLOW_LIST was enforced.
+    std::string TestArgString(const std::string& name, const std::string& default_value)
+    {
+        TestFlags test(*this, name);
+        if (test.arg) test.arg->m_flags &= ~ALLOW_LIST;
+        return GetArg(name, default_value);
+    }
+    //! Call GetBoolArg(), temporarily disabling ALLOW_LIST so call can succeed.
+    //! This is called by old tests written before ALLOW_LIST was enforced.
+    bool TestArgBool(const std::string& name, bool default_value)
+    {
+        TestFlags test(*this, name);
+        if (test.arg) test.arg->m_flags &= ~ALLOW_LIST;
+        return GetBoolArg(name, default_value);
+    }
     using ArgsManager::GetSetting;
     using ArgsManager::GetSettingsList;
     using ArgsManager::ReadConfigStream;
@@ -566,19 +609,33 @@ BOOST_FIXTURE_TEST_CASE(util_CheckValue, CheckValueTest)
 {
     using M = ArgsManager;
 
-    CheckValue(M::ALLOW_ANY, nullptr, Expect{{}}.DefaultString().DefaultInt().DefaultBool().List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=0", Expect{true}.String("1").Int(1).Bool(true).List({"1"}));
-    CheckValue(M::ALLOW_ANY, "-novalue=1", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=2", Expect{false}.String("0").Int(0).Bool(false).List({}));
-    CheckValue(M::ALLOW_ANY, "-novalue=abc", Expect{true}.String("1").Int(1).Bool(true).List({"1"}));
-    CheckValue(M::ALLOW_ANY, "-value", Expect{""}.String("").Int(0).Bool(true).List({""}));
-    CheckValue(M::ALLOW_ANY, "-value=", Expect{""}.String("").Int(0).Bool(true).List({""}));
-    CheckValue(M::ALLOW_ANY, "-value=0", Expect{"0"}.String("0").Int(0).Bool(false).List({"0"}));
-    CheckValue(M::ALLOW_ANY, "-value=1", Expect{"1"}.String("1").Int(1).Bool(true).List({"1"}));
-    CheckValue(M::ALLOW_ANY, "-value=2", Expect{"2"}.String("2").Int(2).Bool(true).List({"2"}));
-    CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false).List({"abc"}));
+    CheckValue(M::ALLOW_ANY, nullptr, Expect{{}}.DefaultString().DefaultInt().DefaultBool());
+    CheckValue(M::ALLOW_ANY, "-novalue", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=0", Expect{true}.String("1").Int(1).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-novalue=1", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=2", Expect{false}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-novalue=abc", Expect{true}.String("1").Int(1).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value", Expect{""}.String("").Int(0).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=", Expect{""}.String("").Int(0).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=0", Expect{"0"}.String("0").Int(0).Bool(false));
+    CheckValue(M::ALLOW_ANY, "-value=1", Expect{"1"}.String("1").Int(1).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=2", Expect{"2"}.String("2").Int(2).Bool(true));
+    CheckValue(M::ALLOW_ANY, "-value=abc", Expect{"abc"}.String("abc").Int(0).Bool(false));
+
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, nullptr, Expect{{}}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=0", Expect{true}.List({"1"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=1", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=2", Expect{false}.List({}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-novalue=abc", Expect{true}.List({"1"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value", Expect{""}.List({""}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=", Expect{""}.List({""}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=0", Expect{"0"}.List({"0"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=1", Expect{"1"}.List({"1"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=2", Expect{"2"}.List({"2"}));
+    CheckValue(M::ALLOW_ANY | M::ALLOW_LIST, "-value=abc", Expect{"abc"}.List({"abc"}));
 
     CheckValue(M::ALLOW_BOOL, nullptr, Expect{{}}.DefaultBool());
     CheckValue(M::ALLOW_BOOL, "-novalue", Expect{false}.Bool(false));
@@ -735,7 +792,7 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     TestArgsManager testArgs;
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
     const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
-    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto d = std::make_pair("-d", ArgsManager::ALLOW_ANY);
 
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
@@ -889,7 +946,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     TestArgsManager testArgs;
 
     // Params test
-    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
+    const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
     testArgs.SetupArgs({foo, bar});
@@ -898,7 +955,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "");
+    BOOST_CHECK(testArgs.TestArgString("-foo", "xxx") == "");
 
     // A double negative is a positive, and not marked as negated.
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
@@ -912,7 +969,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // This was passed twice, second one overrides the negative setting,
     // and the value.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "1");
+    BOOST_CHECK(testArgs.TestArgString("-foo", "xxx") == "1");
 
     // A double negative is a positive, and does not count as negated.
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
@@ -926,14 +983,14 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Command line overrides, but doesn't erase old setting
     BOOST_CHECK(testArgs.IsArgNegated("-foo"));
-    BOOST_CHECK(testArgs.GetArg("-foo", "xxx") == "0");
+    BOOST_CHECK(testArgs.TestArgString("-foo", "xxx") == "0");
     BOOST_CHECK(testArgs.GetArgs("-foo").size() == 0);
 
     // Command line overrides, but doesn't erase old setting
     BOOST_CHECK(!testArgs.IsArgNegated("-bar"));
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
-    BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1
-                && testArgs.GetArgs("-bar").front() == "");
+    BOOST_CHECK(testArgs.TestArgList("-bar").size() == 1
+                && testArgs.TestArgList("-bar").front() == "");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
@@ -964,13 +1021,13 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     LOCK(test_args.cs_args);
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
     const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
-    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
+    const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto d = std::make_pair("-d", ArgsManager::ALLOW_ANY);
     const auto e = std::make_pair("-e", ArgsManager::ALLOW_ANY);
     const auto fff = std::make_pair("-fff", ArgsManager::ALLOW_ANY);
     const auto ggg = std::make_pair("-ggg", ArgsManager::ALLOW_ANY);
-    const auto h = std::make_pair("-h", ArgsManager::ALLOW_ANY);
-    const auto i = std::make_pair("-i", ArgsManager::ALLOW_ANY);
+    const auto h = std::make_pair("-h", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
+    const auto i = std::make_pair("-i", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST);
     const auto iii = std::make_pair("-iii", ArgsManager::ALLOW_ANY);
     test_args.SetupArgs({a, b, ccc, d, e, fff, ggg, h, i, iii});
 
@@ -1010,46 +1067,46 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 
     BOOST_CHECK_EQUAL(test_args.GetArg("-a", "xxx"), "");
     BOOST_CHECK_EQUAL(test_args.GetArg("-b", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-ccc", "xxx"), "argument");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-ccc", "xxx"), "argument");
     BOOST_CHECK_EQUAL(test_args.GetArg("-d", "xxx"), "e");
     BOOST_CHECK_EQUAL(test_args.GetArg("-fff", "xxx"), "0");
     BOOST_CHECK_EQUAL(test_args.GetArg("-ggg", "xxx"), "1");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-h", "xxx"), "0");
-    BOOST_CHECK_EQUAL(test_args.GetArg("-i", "xxx"), "1");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-h", "xxx"), "0");
+    BOOST_CHECK_EQUAL(test_args.TestArgString("-i", "xxx"), "1");
     BOOST_CHECK_EQUAL(test_args.GetArg("-zzz", "xxx"), "xxx");
     BOOST_CHECK_EQUAL(test_args.GetArg("-iii", "xxx"), "xxx");
 
     for (const bool def : {false, true}) {
         BOOST_CHECK(test_args.GetBoolArg("-a", def));
         BOOST_CHECK(test_args.GetBoolArg("-b", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-ccc", def));
+        BOOST_CHECK(!test_args.TestArgBool("-ccc", def));
         BOOST_CHECK(!test_args.GetBoolArg("-d", def));
         BOOST_CHECK(!test_args.GetBoolArg("-fff", def));
         BOOST_CHECK(test_args.GetBoolArg("-ggg", def));
-        BOOST_CHECK(!test_args.GetBoolArg("-h", def));
-        BOOST_CHECK(test_args.GetBoolArg("-i", def));
+        BOOST_CHECK(!test_args.TestArgBool("-h", def));
+        BOOST_CHECK(test_args.TestArgBool("-i", def));
         BOOST_CHECK(test_args.GetBoolArg("-zzz", def) == def);
         BOOST_CHECK(test_args.GetBoolArg("-iii", def) == def);
     }
 
-    BOOST_CHECK(test_args.GetArgs("-a").size() == 1
-                && test_args.GetArgs("-a").front() == "");
-    BOOST_CHECK(test_args.GetArgs("-b").size() == 1
-                && test_args.GetArgs("-b").front() == "1");
+    BOOST_CHECK(test_args.TestArgList("-a").size() == 1
+                && test_args.TestArgList("-a").front() == "");
+    BOOST_CHECK(test_args.TestArgList("-b").size() == 1
+                && test_args.TestArgList("-b").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2
                 && test_args.GetArgs("-ccc").front() == "argument"
                 && test_args.GetArgs("-ccc").back() == "multiple");
-    BOOST_CHECK(test_args.GetArgs("-fff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-nofff").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-ggg").size() == 1
-                && test_args.GetArgs("-ggg").front() == "1");
-    BOOST_CHECK(test_args.GetArgs("-noggg").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-fff").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-nofff").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-ggg").size() == 1
+                && test_args.TestArgList("-ggg").front() == "1");
+    BOOST_CHECK(test_args.TestArgList("-noggg").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-h").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-noh").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-i").size() == 1
                 && test_args.GetArgs("-i").front() == "1");
     BOOST_CHECK(test_args.GetArgs("-noi").size() == 0);
-    BOOST_CHECK(test_args.GetArgs("-zzz").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-zzz").size() == 0);
 
     BOOST_CHECK(!test_args.IsArgNegated("-a"));
     BOOST_CHECK(!test_args.IsArgNegated("-b"));
@@ -1074,9 +1131,9 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // d is overridden
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
     // section-specific setting
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "1");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend1");
+    BOOST_CHECK(test_args.TestArgString("-ccc", "xxx") == "extend1");
     // check multiple values works
     const std::vector<std::string> sec1_ccc_expected = {"extend1","extend2","argument","multiple"};
     const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
@@ -1091,11 +1148,11 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(test_args.GetArg("-fff", "xxx") == "0");
     BOOST_CHECK(test_args.GetArg("-ggg", "xxx") == "1");
     BOOST_CHECK(test_args.GetArg("-zzz", "xxx") == "xxx");
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "0");
     // section-specific setting
     BOOST_CHECK(test_args.GetArg("-iii", "xxx") == "2");
     // section takes priority for multiple values
-    BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend3");
+    BOOST_CHECK(test_args.TestArgString("-ccc", "xxx") == "extend3");
     // check multiple values works
     const std::vector<std::string> sec2_ccc_expected = {"extend3","argument","multiple"};
     const auto& sec2_ccc_res = test_args.GetArgs("-ccc");
@@ -1110,19 +1167,19 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     test_args.SelectConfigNetwork(ChainTypeToString(ChainType::MAIN));
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "0");
 
     test_args.SelectConfigNetwork("sec1");
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "eee");
-    BOOST_CHECK(test_args.GetArgs("-d").size() == 1);
+    BOOST_CHECK(test_args.TestArgList("-d").size() == 1);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 2);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "1");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "1");
 
     test_args.SelectConfigNetwork("sec2");
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "xxx");
-    BOOST_CHECK(test_args.GetArgs("-d").size() == 0);
+    BOOST_CHECK(test_args.TestArgList("-d").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 1);
-    BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
+    BOOST_CHECK(test_args.TestArgString("-h", "xxx") == "0");
 }
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
@@ -1352,7 +1409,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
-        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg(key, name, ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::OPTIONS);
         if (net_specific) parser.SetNetworkOnlyArg(key);
 
         auto args = GetValues(arg_actions, section, name, "a");
@@ -1395,14 +1452,14 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
         if (!parser.IsArgSet(key)) {
             desc += "unset";
             BOOST_CHECK(!parser.IsArgNegated(key));
-            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "default");
+            BOOST_CHECK_EQUAL(parser.TestArgString(key, "default"), "default");
             BOOST_CHECK(parser.GetArgs(key).empty());
         } else if (parser.IsArgNegated(key)) {
             desc += "negated";
-            BOOST_CHECK_EQUAL(parser.GetArg(key, "default"), "0");
+            BOOST_CHECK_EQUAL(parser.TestArgString(key, "default"), "0");
             BOOST_CHECK(parser.GetArgs(key).empty());
         } else {
-            desc += parser.GetArg(key, "default");
+            desc += parser.TestArgString(key, "default");
             desc += " |";
             for (const auto& arg : parser.GetArgs(key)) {
                 desc += " ";
@@ -1479,8 +1536,8 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
         TestArgsManager parser;
         LOCK(parser.cs_args);
-        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY | ArgsManager::ALLOW_LIST, OptionsCategory::OPTIONS);
 
         auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
                                               action == DISABLE_TEST ? "-testnet=0"   :
