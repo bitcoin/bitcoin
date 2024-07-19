@@ -463,8 +463,7 @@ public:
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
     /* Generates a new HD chain */
-    void GenerateNewCryptedHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, CKeyingMaterial vMasterKey);
-    void GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase);
+    void GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, std::optional<CKeyingMaterial> vMasterKey = std::nullopt);
 
     /**
      * Explicitly make the wallet learn the related scripts for outputs to the

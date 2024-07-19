@@ -377,55 +377,41 @@ void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
     }
 }
 
-void LegacyScriptPubKeyMan::GenerateNewCryptedHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, CKeyingMaterial vMasterKey)
-{
-    assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-
-
-    CHDChain hdChainTmp;
-
-    // NOTE: an empty mnemonic means "generate a new one for me"
-    // NOTE: default mnemonic passphrase is an empty string
-    if (!hdChainTmp.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
-        throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
-    }
-
-    // add default account
-    hdChainTmp.AddAccount();
-
-    // We need to safe chain for validation further
-    CHDChain hdChainPrev = hdChainTmp;
-    bool res = EncryptHDChain(vMasterKey, hdChainTmp);
-    assert(res);
-    res = LoadHDChain(hdChainTmp);
-    assert(res);
-
-    CHDChain hdChainCrypted;
-    res = GetHDChain(hdChainCrypted);
-    assert(res);
-
-    // ids should match, seed hashes should not
-    assert(hdChainPrev.GetID() == hdChainCrypted.GetID());
-    assert(hdChainPrev.GetSeedHash() != hdChainCrypted.GetSeedHash());
-
-    if (!AddHDChainSingle(hdChainCrypted)) {
-        throw std::runtime_error(std::string(__func__) + ": AddHDChainSingle failed");
-    }
-}
-
-void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase)
+void LegacyScriptPubKeyMan::GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, std::optional<CKeyingMaterial> vMasterKeyOpt)
 {
     assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
     CHDChain newHdChain;
 
     // NOTE: an empty mnemonic means "generate a new one for me"
     // NOTE: default mnemonic passphrase is an empty string
-    if (!newHdChain.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, true)) {
+    if (!newHdChain.SetMnemonic(secureMnemonic, secureMnemonicPassphrase, /* fUpdateID = */ true)) {
         throw std::runtime_error(std::string(__func__) + ": SetMnemonic failed");
     }
 
-    // add default account
+    // Add default account
     newHdChain.AddAccount();
+
+    // Encryption routine if vMasterKey has been supplied
+    if (vMasterKeyOpt.has_value()) {
+        auto vMasterKey = vMasterKeyOpt.value();
+        if (vMasterKey.size() != WALLET_CRYPTO_KEY_SIZE) {
+            throw std::runtime_error(strprintf("%s : invalid vMasterKey size, got %zd (expected %lld)", __func__, vMasterKey.size(), WALLET_CRYPTO_KEY_SIZE));
+        }
+
+        // Maintain an unencrypted copy of the chain for sanity checking
+        CHDChain prevHdChain{newHdChain};
+
+        bool res = EncryptHDChain(vMasterKey, newHdChain);
+        assert(res);
+        res = LoadHDChain(newHdChain);
+        assert(res);
+        res = GetHDChain(newHdChain);
+        assert(res);
+
+        // IDs should match, seed hashes should not
+        assert(prevHdChain.GetID() == newHdChain.GetID());
+        assert(prevHdChain.GetSeedHash() != newHdChain.GetSeedHash());
+    }
 
     if (!AddHDChainSingle(newHdChain)) {
         throw std::runtime_error(std::string(__func__) + ": AddHDChainSingle failed");

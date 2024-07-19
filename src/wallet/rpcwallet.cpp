@@ -2779,11 +2779,13 @@ static RPCHelpMan upgradetohd()
 {
     return RPCHelpMan{"upgradetohd",
         "\nUpgrades non-HD wallets to HD.\n"
+        "\nIf your wallet is encrypted, the wallet passphrase must be supplied. Supplying an incorrect"
+        "\npassphrase may result in your wallet getting locked.\n"
         "\nWarning: You will need to make a new backup of your wallet after setting the HD wallet mnemonic.\n",
         {
             {"mnemonic", RPCArg::Type::STR, /* default */ "", "Mnemonic as defined in BIP39 to use for the new HD wallet. Use an empty string \"\" to generate a new random mnemonic."},
             {"mnemonicpassphrase", RPCArg::Type::STR, /* default */ "", "Optional mnemonic passphrase as defined in BIP39"},
-            {"walletpassphrase", RPCArg::Type::STR, /* default */ "", "If your wallet is encrypted you must have your wallet passphrase here. If your wallet is not encrypted specifying wallet passphrase will trigger wallet encryption."},
+            {"walletpassphrase", RPCArg::Type::STR, /* default */ "", "If your wallet is encrypted you must have your wallet passphrase here. If your wallet is not encrypted, specifying wallet passphrase will trigger wallet encryption."},
             {"rescan", RPCArg::Type::BOOL, /* default */ "false if mnemonic is empty", "Whether to rescan the blockchain for missing transactions or not"},
         },
         RPCResult{
@@ -2793,6 +2795,7 @@ static RPCHelpMan upgradetohd()
             HelpExampleCli("upgradetohd", "")
     + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\"")
     + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\"")
+    + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"\" \"walletpassphrase\"")
     + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\" \"walletpassphrase\"")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -2803,16 +2806,16 @@ static RPCHelpMan upgradetohd()
     bool generate_mnemonic = request.params[0].isNull() || request.params[0].get_str().empty();
     SecureString secureWalletPassphrase;
     secureWalletPassphrase.reserve(100);
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-    if (!request.params[2].isNull()) {
-        secureWalletPassphrase = request.params[2].get_str().c_str();
-        if (!pwallet->Unlock(secureWalletPassphrase)) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
-        }
-    }
 
-    EnsureWalletIsUnlocked(pwallet.get());
+    if (request.params[2].isNull()) {
+        if (pwallet->IsCrypted()) {
+            throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet encrypted but passphrase not supplied to RPC.");
+        }
+    } else {
+        // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+        // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+        secureWalletPassphrase = request.params[2].get_str().c_str();
+    }
 
     SecureString secureMnemonic;
     secureMnemonic.reserve(256);
@@ -2825,6 +2828,7 @@ static RPCHelpMan upgradetohd()
     if (!request.params[1].isNull()) {
         secureMnemonicPassphrase = request.params[1].get_str().c_str();
     }
+
     // TODO: breaking changes kept for v21!
     // instead upgradetohd let's use more straightforward 'sethdseed'
     constexpr bool is_v21 = false;
