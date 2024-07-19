@@ -401,6 +401,7 @@ BASE_SCRIPTS = [
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',
     'feature_dirsymlinks.py',
+    'feature_rare_output_scripts.py',
     'feature_help.py',
     'feature_shutdown.py',
     'wallet_migration.py',
