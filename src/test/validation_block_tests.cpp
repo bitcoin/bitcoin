@@ -8,17 +8,10 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <evo/evodb.h>
-#include <governance/governance.h>
-#include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
-#include <llmq/context.h>
-#include <llmq/instantsend.h>
 #include <miner.h>
 #include <pow.h>
 #include <random.h>
 #include <script/standard.h>
-#include <spork.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <util/time.h>

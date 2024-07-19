@@ -5,7 +5,6 @@
 #include <consensus/validation.h>
 #include <evo/evodb.h>
 #include <index/txindex.h>
-#include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 #include <random.h>

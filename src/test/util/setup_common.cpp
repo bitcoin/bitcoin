@@ -18,10 +18,8 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <netfulfilledman.h>
-#include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
-#include <llmq/dkgsessionmgr.h>
 #include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
@@ -58,11 +56,9 @@
 
 #include <bls/bls.h>
 #ifdef ENABLE_WALLET
-#include <coinjoin/client.h>
+#include <interfaces/coinjoin.h>
 #endif // ENABLE_WALLET
-#include <coinjoin/coinjoin.h>
 #include <coinjoin/context.h>
-#include <coinjoin/server.h>
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
 #include <evo/creditpool.h>
