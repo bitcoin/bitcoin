@@ -699,6 +699,12 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     const auto insane_sub = ms_ins->FindInsaneSub();
     BOOST_CHECK(insane_sub && *insane_sub->ToString(wsh_converter) == "and_b(after(1),a:after(1000000000))");
 
+    // Numbers can't be prefixed by a sign.
+    BOOST_CHECK(!miniscript::FromString("after(-1)", wsh_converter));
+    BOOST_CHECK(!miniscript::FromString("after(+1)", wsh_converter));
+    BOOST_CHECK(!miniscript::FromString("thresh(-1,pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", wsh_converter));
+    BOOST_CHECK(!miniscript::FromString("multi(+1,03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204)", wsh_converter));
+
     // Timelock tests
     Test("after(100)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock
     Test("after(1000000000)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only timelock
