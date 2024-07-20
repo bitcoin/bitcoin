@@ -144,7 +144,7 @@ static RPCHelpMan gobject_prepare()
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    EnsureWalletIsUnlocked(wallet.get());
+    EnsureWalletIsUnlocked(*wallet);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -253,7 +253,7 @@ static RPCHelpMan gobject_list_prepared()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    EnsureWalletIsUnlocked(wallet.get());
+    EnsureWalletIsUnlocked(*wallet);
 
     int64_t nCount = request.params.empty() ? 10 : ParseInt64V(request.params[0], "count");
     if (nCount < 0) {
@@ -546,7 +546,7 @@ static RPCHelpMan gobject_vote_many()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    EnsureWalletIsUnlocked(wallet.get());
+    EnsureWalletIsUnlocked(*wallet);
 
     std::map<uint256, CKeyID> votingKeys;
 
@@ -600,7 +600,7 @@ static RPCHelpMan gobject_vote_alias()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    EnsureWalletIsUnlocked(wallet.get());
+    EnsureWalletIsUnlocked(*wallet);
 
     uint256 proTxHash(ParseHashV(request.params[3], "protx-hash"));
     auto dmn = node.dmnman->GetListAtChainTip().GetValidMN(proTxHash);

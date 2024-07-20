@@ -826,7 +826,7 @@ struct CNodeState {
         bool m_protect{false};
     };
 
-    ChainSyncTimeoutState m_chain_sync{0, nullptr, false, false};
+    ChainSyncTimeoutState m_chain_sync;
 
     //! Time of last new block announcement
     int64_t m_last_block_announcement{0};
@@ -900,11 +900,7 @@ struct CNodeState {
     //! A rolling bloom filter of all announced tx CInvs to this peer.
     CRollingBloomFilter m_recently_announced_invs = CRollingBloomFilter{INVENTORY_MAX_RECENT_RELAY, 0.000001};
 
-    CNodeState(bool is_inbound) :
-        m_is_inbound(is_inbound)
-    {
-        m_recently_announced_invs.reset();
-    }
+    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
 };
 
 // Keeps track of the time (in microseconds) when transactions were requested last time
@@ -2385,7 +2381,6 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
 
 void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv, llmq::CInstantSendManager& isman)
 {
-    bool send = false;
     std::shared_ptr<const CBlock> a_recent_block;
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
     {
@@ -2419,115 +2414,112 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 
     LOCK(cs_main);
     const CBlockIndex* pindex = m_chainman.m_blockman.LookupBlockIndex(inv.hash);
-    if (pindex) {
-        send = BlockRequestAllowed(pindex);
-        if (!send) {
-            LogPrint(BCLog::NET,"%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom.GetId());
-        }
+    if (!pindex) {
+        return;
+    }
+    if (!BlockRequestAllowed(pindex)) {
+        LogPrint(BCLog::NET, "%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom.GetId());
+        return;
     }
     const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
     // disconnect node in case we have reached the outbound limit for serving historical blocks
-    if (send &&
-        m_connman.OutboundTargetReached(true) &&
+    if (m_connman.OutboundTargetReached(true) &&
         (((pindexBestHeader != nullptr) && (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.IsMsgFilteredBlk()) &&
         !pfrom.HasPermission(NetPermissionFlags::Download) // nodes with the download permission may exceed target
     ) {
         LogPrint(BCLog::NET, "historical block serving limit reached, disconnect peer=%d\n", pfrom.GetId());
-
-        //disconnect node
         pfrom.fDisconnect = true;
-        send = false;
+        return;
     }
     // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
-    if (send && !pfrom.HasPermission(NetPermissionFlags::NoBan) && (
+    if (!pfrom.HasPermission(NetPermissionFlags::NoBan) && (
             (((pfrom.GetLocalServices() & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((pfrom.GetLocalServices() & NODE_NETWORK) != NODE_NETWORK) && (m_chainman.ActiveChain().Tip()->nHeight - pindex->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
        )) {
-        LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold from peer=%d\n", pfrom.GetId());
-
+        LogPrint(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold, disconnect peer=%d\n", pfrom.GetId());
         //disconnect node and prevent it from stalling (would otherwise wait for the missing block)
         pfrom.fDisconnect = true;
-        send = false;
+        return;
     }
     // Pruned nodes may have deleted the block, so check whether
     // it's available before trying to send.
-    if (send && (pindex->nStatus & BLOCK_HAVE_DATA))
-    {
-        std::shared_ptr<const CBlock> pblock;
-        if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
-            pblock = a_recent_block;
-        } else {
-            // Send block from disk
-            std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-            if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()))
-                assert(!"cannot load block from disk");
-            pblock = pblockRead;
-        }
-        if (pblock) {
-            if (inv.IsMsgBlk()) {
-                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
-            } else if (inv.IsMsgFilteredBlk()) {
-                bool sendMerkleBlock = false;
-                CMerkleBlock merkleBlock;
-                if (!pfrom.IsBlockOnlyConn()) {
-                    LOCK(peer.m_tx_relay->m_bloom_filter_mutex);
-                    if (peer.m_tx_relay->m_bloom_filter) {
-                        sendMerkleBlock = true;
-                        merkleBlock = CMerkleBlock(*pblock, *peer.m_tx_relay->m_bloom_filter);
+    if (!(pindex->nStatus & BLOCK_HAVE_DATA)) {
+        return;
+    }
+    std::shared_ptr<const CBlock> pblock;
+    if (a_recent_block && a_recent_block->GetHash() == pindex->GetBlockHash()) {
+        pblock = a_recent_block;
+    } else {
+        // Send block from disk
+        std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()))
+            assert(!"cannot load block from disk");
+        pblock = pblockRead;
+    }
+    if (pblock) {
+        if (inv.IsMsgBlk()) {
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
+        } else if (inv.IsMsgFilteredBlk()) {
+            bool sendMerkleBlock = false;
+            CMerkleBlock merkleBlock;
+            if (!pfrom.IsBlockOnlyConn()) {
+                LOCK(peer.m_tx_relay->m_bloom_filter_mutex);
+                if (peer.m_tx_relay->m_bloom_filter) {
+                    sendMerkleBlock = true;
+                    merkleBlock = CMerkleBlock(*pblock, *peer.m_tx_relay->m_bloom_filter);
+                }
+            }
+            if (sendMerkleBlock) {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MERKLEBLOCK, merkleBlock));
+                // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
+                // This avoids hurting performance by pointlessly requiring a round-trip
+                // Note that there is currently no way for a node to request any single transactions we didn't send here -
+                // they must either disconnect and retry or request the full block.
+                // Thus, the protocol spec specified allows for us to provide duplicate txn here,
+                // however we MUST always provide at least what the remote peer needs
+                typedef std::pair<unsigned int, uint256> PairType;
+                for (PairType &pair : merkleBlock.vMatchedTxn) {
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *pblock->vtx[pair.first]));
+                }
+                for (PairType &pair : merkleBlock.vMatchedTxn) {
+                    auto islock = isman.GetInstantSendLockByTxid(pair.second);
+                    if (islock != nullptr) {
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, *islock));
                     }
                 }
-                if (sendMerkleBlock) {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MERKLEBLOCK, merkleBlock));
-                    // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
-                    // This avoids hurting performance by pointlessly requiring a round-trip
-                    // Note that there is currently no way for a node to request any single transactions we didn't send here -
-                    // they must either disconnect and retry or request the full block.
-                    // Thus, the protocol spec specified allows for us to provide duplicate txn here,
-                    // however we MUST always provide at least what the remote peer needs
-                    typedef std::pair<unsigned int, uint256> PairType;
-                    for (PairType &pair : merkleBlock.vMatchedTxn) {
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::TX, *pblock->vtx[pair.first]));
-                    }
-                    for (PairType &pair : merkleBlock.vMatchedTxn) {
-                        auto islock = isman.GetInstantSendLockByTxid(pair.second);
-                        if (islock != nullptr) {
-                            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, *islock));
-                        }
-                    }
-                }
-                // else
-                    // no response
-            } else if (inv.IsMsgCmpctBlk()) {
-                // If a peer is asking for old blocks, we're almost guaranteed
-                // they won't have a useful mempool to match against a compact block,
-                // and we don't feel like constructing the object for them, so
-                // instead we respond with the full, non-compact block.
-                if (CanDirectFetch() &&
-                    pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_CMPCTBLOCK_DEPTH) {
-                    if (a_recent_compact_block &&
-                        a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
-                    } else {
-                        CBlockHeaderAndShortTxIDs cmpctblock{*pblock};
-                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
-                    }
+            }
+            // else
+                // no response
+        } else if (inv.IsMsgCmpctBlk()) {
+            // If a peer is asking for old blocks, we're almost guaranteed
+            // they won't have a useful mempool to match against a compact block,
+            // and we don't feel like constructing the object for them, so
+            // instead we respond with the full, non-compact block.
+            if (CanDirectFetch() &&
+                pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_CMPCTBLOCK_DEPTH) {
+                if (a_recent_compact_block &&
+                    a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, *a_recent_compact_block));
                 } else {
-                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
+                    CBlockHeaderAndShortTxIDs cmpctblock{*pblock};
+                    m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CMPCTBLOCK, cmpctblock));
                 }
+            } else {
+                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
             }
         }
+    }
 
-        {
-            LOCK(peer.m_block_inv_mutex);
-            // Trigger the peer node to send a getblocks request for the next batch of inventory
-            if (inv.hash == peer.m_continuation_block) {
-                // Send immediately. This must send even if redundant,
-                // and we want it right after the last block so they don't
-                // wait for other stuff first.
-                std::vector<CInv> vInv;
-                vInv.push_back(CInv(MSG_BLOCK, m_chainman.ActiveChain().Tip()->GetBlockHash()));
-                m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::INV, vInv));
-                peer.m_continuation_block.SetNull();
-            }
+    {
+        LOCK(peer.m_block_inv_mutex);
+        // Trigger the peer node to send a getblocks request for the next batch of inventory
+        if (inv.hash == peer.m_continuation_block) {
+            // Send immediately. This must send even if redundant,
+            // and we want it right after the last block so they don't
+            // wait for other stuff first.
+            std::vector<CInv> vInv;
+            vInv.push_back(CInv(MSG_BLOCK, m_chainman.ActiveChain().Tip()->GetBlockHash()));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::INV, vInv));
+            peer.m_continuation_block.SetNull();
         }
     }
 }

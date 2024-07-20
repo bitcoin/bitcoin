@@ -579,8 +579,10 @@ static RPCHelpMan getblocktemplate()
                 },
                 "\"template_request\""},
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
+        {
+            RPCResult{"If the proposal was accepted with mode=='proposal'", RPCResult::Type::NONE, "", ""},
+            RPCResult{"If the proposal was not accepted with mode=='proposal'", RPCResult::Type::STR, "", "According to BIP22"},
+            RPCResult{"Otherwise", RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::ARR, "capabilities", "specific client side supported features",
                     {
@@ -655,6 +657,7 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::BOOL, "superblocks_enabled", "true, if superblock payments are enabled"},
                 {RPCResult::Type::STR_HEX, "coinbase_payload", "coinbase transaction payload data encoded in hexadecimal"},
             }},
+        },
         RPCExamples{
             HelpExampleCli("getblocktemplate", "")
     + HelpExampleRpc("getblocktemplate", "")
@@ -1019,7 +1022,10 @@ static RPCHelpMan submitblock()
             {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
             {"dummy", RPCArg::Type::STR, /* default */ "ignored", "dummy value, for compatibility with BIP22. This value is ignored."},
         },
-        RPCResult{RPCResult::Type::NONE, "", "Returns JSON Null when valid, a string according to BIP22 otherwise"},
+        {
+            RPCResult{"If the block was accepted", RPCResult::Type::NONE, "", ""},
+            RPCResult{"Otherwise", RPCResult::Type::STR, "", "According to BIP22"},
+        },
         RPCExamples{
             HelpExampleCli("submitblock", "\"mydata\"")
     + HelpExampleRpc("submitblock", "\"mydata\"")

@@ -19,7 +19,7 @@ from test_framework.util import (
 FILE_CHAR_START = 32 if os.name == 'nt' else 1
 FILE_CHAR_END = 128
 FILE_CHARS_DISALLOWED = '/\\?%*:|"<>' if os.name == 'nt' else '/'
-
+UNCONFIRMED_HASH_STRING = 'unconfirmed'
 
 def notify_outputname(walletname, txid):
     return txid if os.name == 'nt' else '{}_{}'.format(walletname, txid)
@@ -46,7 +46,7 @@ class NotificationsTest(DashTestFramework):
         self.extra_args[0].append("-alertnotify=echo > {}".format(os.path.join(self.alertnotify_dir, '%s')))
         self.extra_args[0].append("-blocknotify=echo > {}".format(os.path.join(self.blocknotify_dir, '%s')))
         self.extra_args[1].append("-rescan")
-        self.extra_args[1].append("-walletnotify=echo > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))))
+        self.extra_args[1].append("-walletnotify=echo %h_%b > {}".format(os.path.join(self.walletnotify_dir, notify_outputname('%w', '%s'))))
 
         # -chainlocknotify on node0, -instantsendnotify on node1
         self.extra_args[0].append("-chainlocknotify=echo > {}".format(os.path.join(self.chainlocknotify_dir, '%s')))
@@ -78,12 +78,9 @@ class NotificationsTest(DashTestFramework):
             self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
             # directory content should equal the generated transaction hashes
-            txids_rpc = list(map(lambda t: notify_outputname(self.wallet, t['txid']), self.nodes[1].listtransactions("*", block_count)))
-            assert_equal(sorted(txids_rpc), sorted(os.listdir(self.walletnotify_dir)))
+            tx_details = list(map(lambda t: (t['txid'], t['blockheight'], t['blockhash']), self.nodes[1].listtransactions("*", block_count)))
             self.stop_node(1)
-
-            for tx_file in os.listdir(self.walletnotify_dir):
-                os.remove(os.path.join(self.walletnotify_dir, tx_file))
+            self.expect_wallet_notify(tx_details)
 
             self.log.info("test -walletnotify after rescan")
             # restart node to rescan to force wallet notifications
@@ -94,10 +91,8 @@ class NotificationsTest(DashTestFramework):
             self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == block_count, timeout=10)
 
             # directory content should equal the generated transaction hashes
-            txids_rpc = list(map(lambda t: notify_outputname(self.wallet, t['txid']), self.nodes[1].listtransactions("*", block_count)))
-            assert_equal(sorted(txids_rpc), sorted(os.listdir(self.walletnotify_dir)))
-            for tx_file in os.listdir(self.walletnotify_dir):
-                os.remove(os.path.join(self.walletnotify_dir, tx_file))
+            tx_details = list(map(lambda t: (t['txid'], t['blockheight'], t['blockhash']), self.nodes[1].listtransactions("*", block_count)))
+            self.expect_wallet_notify(tx_details)
 
 
         self.log.info("test -chainlocknotify")
@@ -145,6 +140,29 @@ class NotificationsTest(DashTestFramework):
 
         # TODO: add test for `-alertnotify` large fork notifications
 
+    def expect_wallet_notify(self, tx_details):
+        self.wait_until(lambda: len(os.listdir(self.walletnotify_dir)) >= len(tx_details), timeout=10)
+        # Should have no more and no less files than expected
+        assert_equal(sorted(notify_outputname(self.wallet, tx_id) for tx_id, _, _ in tx_details), sorted(os.listdir(self.walletnotify_dir)))
+        # Should now verify contents of each file
+        for tx_id, blockheight, blockhash in tx_details:
+            fname = os.path.join(self.walletnotify_dir, notify_outputname(self.wallet, tx_id))
+            # Wait for the cached writes to hit storage
+            self.wait_until(lambda: os.path.getsize(fname) > 0, timeout=10)
+            with open(fname, 'rt', encoding='utf-8') as f:
+                text = f.read()
+                # Universal newline ensures '\n' on 'nt'
+                assert_equal(text[-1], '\n')
+                text = text[:-1]
+                if os.name == 'nt':
+                    # On Windows, echo as above will append a whitespace
+                    assert_equal(text[-1], ' ')
+                    text = text[:-1]
+                expected = str(blockheight) + '_' + blockhash
+                assert_equal(text, expected)
+
+        for tx_file in os.listdir(self.walletnotify_dir):
+            os.remove(os.path.join(self.walletnotify_dir, tx_file))
 
 if __name__ == '__main__':
     NotificationsTest().main()
