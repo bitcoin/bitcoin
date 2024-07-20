@@ -216,6 +216,7 @@ BITCOIN_CORE_H = \
   index/txindex.h \
   indirectmap.h \
   init.h \
+  init/common.h \
   interfaces/chain.h \
   interfaces/coinjoin.h \
   interfaces/handler.h \
@@ -731,6 +732,7 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   deploymentinfo.cpp \
   governance/common.cpp \
+  init/common.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
