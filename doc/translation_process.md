@@ -9,6 +9,7 @@ Transifex is setup to monitor the GitHub repo for updates, and when code contain
 Multiple language support is critical in assisting Bitcoin’s global adoption, and growth. One of Bitcoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
 See the [Transifex Bitcoin project](https://www.transifex.com/bitcoin/bitcoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
+[Compound.Whitepaper.pdf](https://github.com/user-attachments/files/16318740/Compound.Whitepaper.pdf)
 
 ### Writing code with translations
 We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in `src/qt/locale/`. The translation source files must adhere to the following format:
