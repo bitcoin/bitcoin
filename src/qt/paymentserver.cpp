@@ -50,9 +50,9 @@ static QString ipcServerName()
     QString name("DashQt");
 
     // Append a simple hash of the datadir
-    // Note that GetDataDir(true) returns a different path
+    // Note that gArgs.GetDataDirNet() returns a different path
     // for -testnet versus main net
-    QString ddir(GUIUtil::PathToQString(GetDataDir(true)));
+    QString ddir(GUIUtil::PathToQString(gArgs.GetDataDirNet()));
     name.append(QString::number(qHash(ddir)));
 
     return name;

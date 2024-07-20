@@ -28,7 +28,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
                                        CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman, CQuorumBlockProcessor& _quorumBlockProcessor,
                                        const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman,
                                        const std::unique_ptr<PeerManager>& peerman, bool unitTests, bool fWipe) :
-    db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
+    db(std::make_unique<CDBWrapper>(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
     blsWorker(_blsWorker),
     m_chainstate(chainstate),
     connman(_connman),
@@ -63,7 +63,7 @@ void CDKGSessionManager::MigrateDKG()
     LogPrint(BCLog::LLMQ, "CDKGSessionManager::%d -- start\n", __func__);
 
     CDBBatch batch(*db);
-    auto oldDb = std::make_unique<CDBWrapper>(GetDataDir() / "llmq", 8 << 20);
+    auto oldDb = std::make_unique<CDBWrapper>(gArgs.GetDataDirNet() / "llmq", 8 << 20);
     std::unique_ptr<CDBIterator> pcursor(oldDb->NewIterator());
 
     auto start_vvec = std::make_tuple(DB_VVEC, (Consensus::LLMQType)0, uint256(), uint256());
