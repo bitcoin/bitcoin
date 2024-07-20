@@ -50,6 +50,7 @@ public:
     QSize sizeHint() const override { return m_size_hint; }
 
 Q_SIGNALS:
+    void message(const QString& title, const QString& message, unsigned int style);
     /** Notify that the user has requested more information about the out-of-sync warning */
     void requestedSyncWarningInfo();
 

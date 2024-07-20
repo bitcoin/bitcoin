@@ -111,6 +111,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     {
         /** Create wallet frame*/
         walletFrame = new WalletFrame(this);
+        connect(walletFrame, &WalletFrame::message, [this](const QString& title, const QString& message, unsigned int style) {
+            this->message(title, message, style);
+        });
     } else
 #endif // ENABLE_WALLET
     {
