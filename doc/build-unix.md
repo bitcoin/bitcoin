@@ -45,11 +45,11 @@ Optional dependencies:
  gmp         | Optimized math routines | Arbitrary precision arithmetic library
  miniupnpc   | UPnP Support     | Firewall-jumping support
  libnatpmp   | NAT-PMP Support  | Firewall-jumping support
- libdb4.8    | Berkeley DB      | Optional, wallet storage (only needed when legacy wallet enabled)
+ libdb4.8    | Berkeley DB      | Wallet storage (only needed when legacy wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
- libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
- libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
- sqlite3     | SQLite DB        | Optional, wallet storage (only needed when descriptor wallet enabled)
+ libqrencode | QR codes in GUI  | QR code generation (only needed when GUI enabled)
+ libzmq3     | ZMQ notification | ZMQ notifications (requires ZMQ version >= 4.0.0)
+ sqlite3     | SQLite DB        | Wallet storage (only needed when descriptor wallet enabled)
 
 For the versions used, see [dependencies.md](dependencies.md)
 
@@ -260,15 +260,6 @@ from the root of the repository.
 Otherwise, you can build Dash Core from self-compiled [depends](/depends/README.md).
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
-
-Boost
------
-If you need to build Boost yourself:
-
-    sudo su
-    ./bootstrap.sh
-    ./bjam install
-
 
 Security
 --------
