@@ -1448,6 +1448,15 @@ int CWallet::GetCappedOutpointCoinJoinRounds(const COutPoint& outpoint) const
     return realCoinJoinRounds > CCoinJoinClientOptions::GetRounds() ? CCoinJoinClientOptions::GetRounds() : realCoinJoinRounds;
 }
 
+void CWallet::ClearCoinJoinRoundsCache()
+{
+    LOCK(cs_wallet);
+    mapOutpointRoundsCache.clear();
+    MarkDirty();
+    // Notify UI
+    NotifyTransactionChanged(uint256::ONE, CT_UPDATED);
+}
+
 bool CWallet::IsDenominated(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);

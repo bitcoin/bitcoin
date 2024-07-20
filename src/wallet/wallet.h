@@ -747,7 +747,7 @@ private:
     void AddToSpends(const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::set<COutPoint> setWalletUTXO;
-    mutable std::map<COutPoint, int> mapOutpointRoundsCache;
+    mutable std::map<COutPoint, int> mapOutpointRoundsCache GUARDED_BY(cs_wallet);
 
     /**
      * Add a transaction to the wallet, or update it.  pIndex and posInBlock should
@@ -995,6 +995,8 @@ public:
     int GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRounds = 0) const;
     // respect current settings
     int GetCappedOutpointCoinJoinRounds(const COutPoint& outpoint) const;
+    // drop the internal cache to let Get...Rounds recalculate CJ balance from scratch and notify UI
+    void ClearCoinJoinRoundsCache();
 
     bool IsDenominated(const COutPoint& outpoint) const;
     bool IsFullyMixed(const COutPoint& outpoint) const;
