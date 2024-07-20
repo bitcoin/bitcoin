@@ -181,6 +181,193 @@ static RPCHelpMan coinjoin_stop()
 },
     };
 }
+
+static RPCHelpMan coinjoinsalt()
+{
+    return RPCHelpMan{"coinjoinsalt",
+        "\nAvailable commands:\n"
+        "  generate  - Generate new CoinJoin salt\n"
+        "  get       - Fetch existing CoinJoin salt\n"
+        "  set       - Set new CoinJoin salt\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+        },
+        RPCResults{},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "Must be a valid command");
+},
+    };
+}
+
+static RPCHelpMan coinjoinsalt_generate()
+{
+    return RPCHelpMan{"coinjoinsalt generate",
+        "\nGenerate new CoinJoin salt and store it in the wallet database\n"
+        "Cannot generate new salt if CoinJoin mixing is in process or wallet has private keys disabled.\n",
+        {
+            {"overwrite", RPCArg::Type::BOOL, /* default */ "false", "Generate new salt even if there is an existing salt and/or there is CoinJoin balance"},
+        },
+        RPCResult{
+            RPCResult::Type::BOOL, "", "Status of CoinJoin salt generation and commitment"
+        },
+        RPCExamples{
+            HelpExampleCli("coinjoinsalt generate", "")
+          + HelpExampleRpc("coinjoinsalt generate", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+
+    const auto str_wallet = wallet->GetName();
+    if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_INVALID_REQUEST,
+                           strprintf("Wallet \"%s\" has private keys disabled, cannot perform CoinJoin!", str_wallet));
+    }
+
+    bool enable_overwrite{false}; // Default value
+    if (!request.params[0].isNull()) {
+        enable_overwrite = ParseBoolV(request.params[0], "overwrite");
+    }
+
+    if (!enable_overwrite && !wallet->GetCoinJoinSalt().IsNull()) {
+        throw JSONRPCError(RPC_INVALID_REQUEST,
+                           strprintf("Wallet \"%s\" already has set CoinJoin salt!", str_wallet));
+    }
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (node.coinjoin_loader != nullptr) {
+        auto cj_clientman = node.coinjoin_loader->walletman().Get(wallet->GetName());
+        if (cj_clientman != nullptr && cj_clientman->IsMixing()) {
+            throw JSONRPCError(RPC_WALLET_ERROR,
+                               strprintf("Wallet \"%s\" is currently mixing, cannot change salt!", str_wallet));
+        }
+    }
+
+    const auto wallet_balance{wallet->GetBalance()};
+    const bool has_balance{(wallet_balance.m_anonymized
+                          + wallet_balance.m_denominated_trusted
+                          + wallet_balance.m_denominated_untrusted_pending) > 0};
+    if (!enable_overwrite && has_balance) {
+        throw JSONRPCError(RPC_WALLET_ERROR,
+                           strprintf("Wallet \"%s\" has CoinJoin balance, cannot continue!", str_wallet));
+    }
+
+    if (!wallet->SetCoinJoinSalt(GetRandHash())) {
+        throw JSONRPCError(RPC_INVALID_REQUEST,
+                           strprintf("Unable to set new CoinJoin salt for wallet \"%s\"!", str_wallet));
+    }
+
+    wallet->ClearCoinJoinRoundsCache();
+
+    return true;
+},
+    };
+}
+
+static RPCHelpMan coinjoinsalt_get()
+{
+    return RPCHelpMan{"coinjoinsalt get",
+        "\nFetch existing CoinJoin salt\n"
+        "Cannot fetch salt if wallet has private keys disabled.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::STR_HEX, "", "CoinJoin salt"
+        },
+        RPCExamples{
+            HelpExampleCli("coinjoinsalt get", "")
+          + HelpExampleRpc("coinjoinsalt get", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+
+    const auto str_wallet = wallet->GetName();
+    if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_INVALID_REQUEST,
+                           strprintf("Wallet \"%s\" has private keys disabled, cannot perform CoinJoin!", str_wallet));
+    }
+
+    const auto salt{wallet->GetCoinJoinSalt()};
+    if (salt.IsNull()) {
+        throw JSONRPCError(RPC_WALLET_ERROR,
+                           strprintf("Wallet \"%s\" has no CoinJoin salt!", str_wallet));
+    }
+    return salt.GetHex();
+},
+    };
+}
+
+static RPCHelpMan coinjoinsalt_set()
+{
+    return RPCHelpMan{"coinjoinsalt set",
+        "\nSet new CoinJoin salt\n"
+        "Cannot set salt if CoinJoin mixing is in process or wallet has private keys disabled.\n"
+        "Will overwrite existing salt. The presence of a CoinJoin balance will cause the wallet to rescan.\n",
+        {
+            {"salt", RPCArg::Type::STR, RPCArg::Optional::NO, "Desired CoinJoin salt value for the wallet"},
+            {"overwrite", RPCArg::Type::BOOL, /* default */ "false", "Overwrite salt even if CoinJoin balance present"},
+        },
+        RPCResult{
+            RPCResult::Type::BOOL, "", "Status of CoinJoin salt change request"
+        },
+        RPCExamples{
+            HelpExampleCli("coinjoinsalt set", "f4184fc596403b9d638783cf57adfe4c75c605f6356fbc91338530e9831e9e16")
+          + HelpExampleRpc("coinjoinsalt set", "f4184fc596403b9d638783cf57adfe4c75c605f6356fbc91338530e9831e9e16")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+
+    const auto salt{ParseHashV(request.params[0], "salt")};
+    if (salt == uint256::ZERO) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid CoinJoin salt value");
+    }
+
+    bool enable_overwrite{false}; // Default value
+    if (!request.params[1].isNull()) {
+        enable_overwrite = ParseBoolV(request.params[1], "overwrite");
+    }
+
+    const auto str_wallet = wallet->GetName();
+    if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_INVALID_REQUEST,
+                           strprintf("Wallet \"%s\" has private keys disabled, cannot perform CoinJoin!", str_wallet));
+    }
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (node.coinjoin_loader != nullptr) {
+        auto cj_clientman = node.coinjoin_loader->walletman().Get(wallet->GetName());
+        if (cj_clientman != nullptr && cj_clientman->IsMixing()) {
+            throw JSONRPCError(RPC_WALLET_ERROR,
+                               strprintf("Wallet \"%s\" is currently mixing, cannot change salt!", str_wallet));
+        }
+    }
+
+    const auto wallet_balance{wallet->GetBalance()};
+    const bool has_balance{(wallet_balance.m_anonymized
+                          + wallet_balance.m_denominated_trusted
+                          + wallet_balance.m_denominated_untrusted_pending) > 0};
+    if (has_balance && !enable_overwrite) {
+        throw JSONRPCError(RPC_WALLET_ERROR,
+                           strprintf("Wallet \"%s\" has CoinJoin balance, cannot continue!", str_wallet));
+    }
+
+    if (!wallet->SetCoinJoinSalt(salt)) {
+        throw JSONRPCError(RPC_WALLET_ERROR,
+                           strprintf("Unable to set new CoinJoin salt for wallet \"%s\"!", str_wallet));
+    }
+
+    wallet->ClearCoinJoinRoundsCache();
+
+    return true;
+},
+    };
+}
 #endif // ENABLE_WALLET
 
 static RPCHelpMan getpoolinfo()
@@ -295,6 +482,10 @@ static const CRPCCommand commands[] =
     { "dash",                &coinjoin_reset,         },
     { "dash",                &coinjoin_start,         },
     { "dash",                &coinjoin_stop,          },
+    { "dash",                &coinjoinsalt,           },
+    { "dash",                &coinjoinsalt_generate,  },
+    { "dash",                &coinjoinsalt_get,       },
+    { "dash",                &coinjoinsalt_set,       },
 #endif // ENABLE_WALLET
 };
 // clang-format on
