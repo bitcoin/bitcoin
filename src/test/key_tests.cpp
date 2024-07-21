@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <span.h>
 #include <streams.h>
+#include <secp256k1_extrakeys.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -343,6 +344,33 @@ BOOST_AUTO_TEST_CASE(bip341_test_h)
     hw.write(MakeByteSpan(G_uncompressed));
     XOnlyPubKey H{hw.GetSHA256()};
     BOOST_CHECK(XOnlyPubKey::NUMS_H == H);
+}
+
+BOOST_AUTO_TEST_CASE(key_schnorr_tweak_smoke_test)
+{
+    // Sanity check to ensure we get the same tweak using CPubKey vs secp256k1 functions
+    secp256k1_context* secp256k1_context_sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+
+    CKey key;
+    key.MakeNewKey(true);
+    uint256 merkle_root = InsecureRand256();
+
+    // secp256k1 functions
+    secp256k1_keypair keypair;
+    BOOST_CHECK(secp256k1_keypair_create(secp256k1_context_sign, &keypair, UCharCast(key.begin())));
+    secp256k1_xonly_pubkey xonly_pubkey;
+    BOOST_CHECK(secp256k1_keypair_xonly_pub(secp256k1_context_sign, &xonly_pubkey, nullptr, &keypair));
+    unsigned char xonly_bytes[32];
+    BOOST_CHECK(secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, xonly_bytes, &xonly_pubkey));
+    uint256 tweak_old = XOnlyPubKey(xonly_bytes).ComputeTapTweakHash(&merkle_root);
+
+    // CPubKey
+    CPubKey pubkey = key.GetPubKey();
+    uint256 tweak_new = XOnlyPubKey(pubkey).ComputeTapTweakHash(&merkle_root);
+
+    BOOST_CHECK_EQUAL(tweak_old, tweak_new);
+
+    secp256k1_context_destroy(secp256k1_context_sign);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
