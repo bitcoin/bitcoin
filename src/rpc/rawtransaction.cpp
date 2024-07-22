@@ -1838,7 +1838,7 @@ static RPCHelpMan joinpsbts()
             }
         }
         for (unsigned int i = 0; i < psbt.tx->vout.size(); ++i) {
-            merged_psbt.AddOutput(psbt.tx->vout[i], psbt.outputs[i]);
+            merged_psbt.AddOutput(psbt.outputs[i]);
         }
         for (auto& xpub_pair : psbt.m_xpubs) {
             if (!merged_psbt.m_xpubs.contains(xpub_pair.first)) {
@@ -1868,7 +1868,7 @@ static RPCHelpMan joinpsbts()
         shuffled_psbt.AddInput(merged_psbt.inputs[i]);
     }
     for (int i : output_indices) {
-        shuffled_psbt.AddOutput(merged_psbt.tx->vout[i], merged_psbt.outputs[i]);
+        shuffled_psbt.AddOutput(merged_psbt.outputs[i]);
     }
     shuffled_psbt.unknown.insert(merged_psbt.unknown.begin(), merged_psbt.unknown.end());
 
