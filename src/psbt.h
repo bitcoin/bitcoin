@@ -1326,6 +1326,8 @@ struct PartiallySignedTransaction
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
+    void SetupFromTx(const CMutableTransaction& tx);
+    void CacheUnsignedTxPieces();
     PartiallySignedTransaction() = default;
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
     /**
@@ -1703,6 +1705,8 @@ struct PartiallySignedTransaction
         if (outputs.size() != output_count) {
             throw std::ios_base::failure("Outputs provided does not match the number of outputs in transaction.");
         }
+
+        CacheUnsignedTxPieces();
     }
 
     template <typename Stream>
