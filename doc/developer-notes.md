@@ -492,7 +492,7 @@ make cov
 # unit and functional tests.
 ```
 
-Additional LCOV options can be specified using `LCOV_OPTS`, but may be dependant
+Additional LCOV options can be specified using `LCOV_OPTS`, but may be dependent
 on the version of LCOV. For example, when using LCOV `2.x`, branch coverage can be
 enabled by setting `LCOV_OPTS="--rc branch_coverage=1"`, when configuring.
 

@@ -848,7 +848,7 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
     # less than (original fee + incrementalrelayfee)
     assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 2.8})
 
-    # You can fee bump as long as the new fee set from fee_rate is atleast (original fee + incrementalrelayfee)
+    # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 3})
     self.clear_mempool()
 
