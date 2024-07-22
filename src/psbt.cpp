@@ -15,8 +15,8 @@ using common::PSBTError;
 
 PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
 {
-    inputs.resize(tx.vin.size());
-    outputs.resize(tx.vout.size());
+    inputs.resize(tx.vin.size(), PSBTInput(GetVersion()));
+    outputs.resize(tx.vout.size(), PSBTOutput(GetVersion()));
 }
 
 bool PartiallySignedTransaction::IsNull() const
