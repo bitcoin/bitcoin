@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 export LC_ALL=C
 
-export PATH=$PWD/ci/retry:$PATH
+export CI_RETRY_EXE="/ci_retry --"
 
 ${CI_RETRY_EXE} apt-get update
 # Lint dependencies:
