@@ -1164,7 +1164,7 @@ struct PartiallySignedTransaction
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
     bool AddInput(PSBTInput& psbtin);
-    bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
+    bool AddOutput(const PSBTOutput& psbtout);
     void SetupFromTx(const CMutableTransaction& tx);
     void CacheUnsignedTxPieces();
     bool ComputeTimeLock(uint32_t& locktime) const;
