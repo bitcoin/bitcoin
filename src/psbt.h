@@ -84,7 +84,7 @@ static constexpr uint8_t PSBT_SEPARATOR = 0x00;
 const std::streamsize MAX_FILE_SIZE_PSBT = 100000000; // 100 MB
 
 // PSBT version number
-static constexpr uint32_t PSBT_HIGHEST_VERSION = 0;
+static constexpr uint32_t PSBT_HIGHEST_VERSION = 2;
 
 /** A structure for PSBT proprietary types */
 struct PSBTProprietary
