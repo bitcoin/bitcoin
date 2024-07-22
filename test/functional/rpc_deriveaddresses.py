@@ -61,4 +61,4 @@ class DeriveaddressesTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Descriptor does not have a corresponding address", self.nodes[0].deriveaddresses, bare_multisig_descriptor)
 
 if __name__ == '__main__':
-    DeriveaddressesTest().main()
+    DeriveaddressesTest(__file__).main()

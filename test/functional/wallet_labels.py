@@ -256,4 +256,4 @@ def change_label(node, address, old_label, new_label):
     new_label.verify(node)
 
 if __name__ == '__main__':
-    WalletLabelsTest().main()
+    WalletLabelsTest(__file__).main()

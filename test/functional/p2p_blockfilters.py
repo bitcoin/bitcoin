@@ -282,4 +282,4 @@ def compute_last_header(prev_header, hashes):
 
 
 if __name__ == '__main__':
-    CompactFiltersTest().main()
+    CompactFiltersTest(__file__).main()

@@ -325,4 +325,4 @@ class MiningTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    MiningTest().main()
+    MiningTest(__file__).main()

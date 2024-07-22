@@ -149,4 +149,4 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    ResendWalletTransactionsTest().main()
+    ResendWalletTransactionsTest(__file__).main()

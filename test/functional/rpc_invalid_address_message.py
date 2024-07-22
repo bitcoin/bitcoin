@@ -122,4 +122,4 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    InvalidAddressErrorMessageTest().main()
+    InvalidAddressErrorMessageTest(__file__).main()

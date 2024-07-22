@@ -1053,4 +1053,4 @@ class PSBTTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    PSBTTest().main()
+    PSBTTest(__file__).main()

@@ -155,4 +155,4 @@ class WalletPruningTest(BitcoinTestFramework):
         self.test_wallet_import_pruned_with_missing_blocks(wallet_birthheight_1)
 
 if __name__ == '__main__':
-    WalletPruningTest().main()
+    WalletPruningTest(__file__).main()

@@ -124,4 +124,4 @@ class RPCBindTest(BitcoinTestFramework):
         assert_raises_rpc_error(-342, "non-JSON HTTP response with '403 Forbidden' from server", self.run_allowip_test, ['1.1.1.1'], self.non_loopback_ip, self.defaultport)
 
 if __name__ == '__main__':
-    RPCBindTest().main()
+    RPCBindTest(__file__).main()

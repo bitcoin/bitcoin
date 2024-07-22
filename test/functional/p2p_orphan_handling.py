@@ -585,4 +585,4 @@ class OrphanHandlingTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    OrphanHandlingTest().main()
+    OrphanHandlingTest(__file__).main()

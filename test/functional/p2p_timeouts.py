@@ -109,4 +109,4 @@ class TimeoutsTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    TimeoutsTest().main()
+    TimeoutsTest(__file__).main()

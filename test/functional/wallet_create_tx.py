@@ -129,4 +129,4 @@ class CreateTxWalletTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    CreateTxWalletTest().main()
+    CreateTxWalletTest(__file__).main()

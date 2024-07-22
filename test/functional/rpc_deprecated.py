@@ -26,4 +26,4 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         self.log.info("No tested deprecated RPC methods")
 
 if __name__ == '__main__':
-    DeprecatedRpcTest().main()
+    DeprecatedRpcTest(__file__).main()

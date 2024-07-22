@@ -132,4 +132,4 @@ class HelpRpcTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    HelpRpcTest().main()
+    HelpRpcTest(__file__).main()

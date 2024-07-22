@@ -423,4 +423,4 @@ class TxConflicts(BitcoinTestFramework):
         carol.unloadwallet()
 
 if __name__ == '__main__':
-    TxConflicts().main()
+    TxConflicts(__file__).main()

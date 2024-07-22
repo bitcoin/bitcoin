@@ -58,4 +58,4 @@ class GetChainTipsTest (BitcoinTestFramework):
         assert_equal (tips[1], shortTip)
 
 if __name__ == '__main__':
-    GetChainTipsTest ().main ()
+    GetChainTipsTest(__file__).main()
