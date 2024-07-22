@@ -223,14 +223,14 @@ class AssetLocksTest(DashTestFramework):
         except JSONRPCException as e:
             assert expected_error in e.error['message']
 
-    def slowly_generate_batch(self, amount):
-        self.log.info(f"Slowly generate {amount} blocks")
-        while amount > 0:
-            self.log.info(f"Generating batch of blocks {amount} left")
-            next = min(10, amount)
-            amount -= next
-            self.bump_mocktime(next)
-            self.nodes[1].generate(next)
+    def slowly_generate_batch(self, count):
+        self.log.info(f"Slowly generate {count} blocks")
+        while count > 0:
+            self.log.info(f"Generating batch of blocks {count} left")
+            batch = min(10, count)
+            count -= batch
+            self.bump_mocktime(batch)
+            self.nodes[1].generate(batch)
             self.sync_all()
 
     def run_test(self):
@@ -381,7 +381,7 @@ class AssetLocksTest(DashTestFramework):
         assert_equal(rawtx_is["chainlock"], False)
         assert not "confirmations" in rawtx
         assert not "confirmations" in rawtx_is
-        # disable back IS
+        self.log.info("Disable back IS")
         self.set_sporks()
 
         assert "assetUnlockTx" in node.getrawtransaction(txid, 1)
@@ -441,7 +441,7 @@ class AssetLocksTest(DashTestFramework):
             inode.reconsiderblock(block_to_reconsider)
         self.validate_credit_pool_balance(locked - 2 * COIN)
 
-        self.log.info("Forcibly mining asset_unlock_tx_too_late and ensure block is invalid...")
+        self.log.info("Forcibly mining asset_unlock_tx_too_late and ensure block is invalid")
         self.create_and_check_block([asset_unlock_tx_too_late], expected_error = "bad-assetunlock-not-active-quorum")
 
         node.generate(1)
@@ -450,7 +450,7 @@ class AssetLocksTest(DashTestFramework):
         self.validate_credit_pool_balance(locked - 2 * COIN)
         self.validate_credit_pool_balance(block_hash=self.block_hash_1, expected=locked)
 
-        self.log.info("Forcibly mine asset_unlock_tx_full and ensure block is invalid...")
+        self.log.info("Forcibly mine asset_unlock_tx_duplicate_index and ensure block is invalid")
         self.create_and_check_block([asset_unlock_tx_duplicate_index], expected_error = "bad-assetunlock-duplicated-index")
 
 
