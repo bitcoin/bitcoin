@@ -1795,6 +1795,9 @@ static RPCHelpMan joinpsbts()
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", util::ErrorString(psbt_res).original));
         }
         const PartiallySignedTransaction& psbtx = *psbt_res;
+        if (psbtx.GetVersion() != 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "joinpsbts only operates on version 0 PSBTs");
+        }
         psbtxs.push_back(psbtx);
         // Choose the highest version number
         if (psbtx.tx_version > best_version) {
