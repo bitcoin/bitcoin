@@ -495,6 +495,9 @@ class PSBTTest(BitcoinTestFramework):
         # Create a psbt spending outputs from nodes 1 and 2
         psbt_orig = self.nodes[0].createpsbt([utxo1, utxo2], {self.nodes[0].getnewaddress():25.999})
 
+        # Check that the default psbt version is 2
+        assert_equal(self.nodes[0].decodepsbt(psbt_orig)["psbt_version"], 2)
+
         # Update psbts, should only have data for one input and not the other
         psbt1 = self.nodes[1].walletprocesspsbt(psbt_orig, False, "ALL")['psbt']
         psbt1_decoded = self.nodes[0].decodepsbt(psbt1)
