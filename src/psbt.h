@@ -1257,7 +1257,7 @@ public:
     std::optional<uint32_t> ComputeTimeLock() const;
     std::optional<CMutableTransaction> GetUnsignedTx() const;
     std::optional<Txid> GetUniqueID() const;
-    explicit PartiallySignedTransaction(const CMutableTransaction& tx);
+    explicit PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version = 0);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
