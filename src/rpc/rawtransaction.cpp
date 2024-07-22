@@ -841,6 +841,11 @@ const RPCResult decodepsbt_inputs{
             {
                 {RPCResult::Type::STR, "hash", "The hash and preimage that corresponds to it."},
             }},
+            {RPCResult::Type::STR_HEX, "previous_txid", /*optional=*/ true, "TXID of the transaction containing the output being spent by this input."},
+            {RPCResult::Type::NUM, "previous_vout", /* optional=*/ true, "Index of the output being spent"},
+            {RPCResult::Type::NUM, "sequence", /* optional=*/ true, "Sequence number for this inputs"},
+            {RPCResult::Type::NUM, "time_locktime", /* optional=*/ true, "Required time-based locktime for this input"},
+            {RPCResult::Type::NUM, "height_locktime", /* optional=*/ true, "Required height-based locktime for this input"},
             {RPCResult::Type::STR_HEX, "taproot_key_path_sig", /*optional=*/ true, "hex-encoded signature for the Taproot key path spend"},
             {RPCResult::Type::ARR, "taproot_script_path_sigs", /*optional=*/ true, "",
             {
@@ -953,6 +958,10 @@ const RPCResult decodepsbt_outputs{
                     {RPCResult::Type::STR, "path", "The path"},
                 }},
             }},
+            {RPCResult::Type::NUM, "amount", /* optional=*/ true, "The amount (nValue) for this output"},
+            {RPCResult::Type::OBJ, "script", /* optional=*/ true, "The output script (scriptPubKey) for this output",
+                {{RPCResult::Type::ELISION, "", "The layout is the same as the output of scriptPubKeys in decoderawtransaction."}},
+            },
             {RPCResult::Type::STR_HEX, "taproot_internal_key", /*optional=*/ true, "The hex-encoded Taproot x-only internal key"},
             {RPCResult::Type::ARR, "taproot_tree", /*optional=*/ true, "The tuples that make up the Taproot tree, in depth first search order",
             {
@@ -1016,7 +1025,7 @@ static RPCHelpMan decodepsbt()
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::OBJ, "tx", "The decoded network-serialized unsigned transaction.",
+                        {RPCResult::Type::OBJ, "tx", /*optional=*/true, "The decoded network-serialized unsigned transaction.",
                         {
                             {RPCResult::Type::ELISION, "", "The layout is the same as the output of decoderawtransaction."},
                         }},
@@ -1029,7 +1038,14 @@ static RPCHelpMan decodepsbt()
                                 {RPCResult::Type::STR, "path", "The path"},
                             }},
                         }},
-                        {RPCResult::Type::NUM, "psbt_version", "The PSBT version number. Not to be confused with the unsigned transaction version"},
+                        {RPCResult::Type::NUM, "tx_version", /* optional */ true, "The version number of the unsigned transaction. Not to be confused with PSBT version"},
+                        {RPCResult::Type::NUM, "fallback_locktime", /* optional */ true, "The locktime to fallback to if no inputs specify a required locktime."},
+                        {RPCResult::Type::NUM, "input_count", /* optional */ true, "The number of inputs in this psbt"},
+                        {RPCResult::Type::NUM, "output_count", /* optional */ true, "The number of outputs in this psbt."},
+                        {RPCResult::Type::BOOL, "inputs_modifiable", /* optional */ true, "Whether inputs can be modified"},
+                        {RPCResult::Type::BOOL, "outputs_modifiable", /* optional */ true, "Whether outputs can be modified"},
+                        {RPCResult::Type::BOOL, "has_sighash_single", /* optional */ true, "Whether this PSBT has SIGHASH_SINGLE inputs"},
+                        {RPCResult::Type::NUM, "psbt_version", /* optional */ true, "The PSBT version number. Not to be confused with the unsigned transaction version"},
                         {RPCResult::Type::ARR, "proprietary", "The global proprietary map",
                         {
                             {RPCResult::Type::OBJ, "", "",
@@ -1086,6 +1102,23 @@ static RPCHelpMan decodepsbt()
         }
     }
     result.pushKV("global_xpubs", std::move(global_xpubs));
+
+    // Add PSBTv2 stuff
+    if (psbtx.GetVersion() == 2) {
+        if (psbtx.tx_version != std::nullopt) {
+            result.pushKV("tx_version", *psbtx.tx_version);
+        }
+        if (psbtx.fallback_locktime != std::nullopt) {
+            result.pushKV("fallback_locktime", static_cast<uint64_t>(*psbtx.fallback_locktime));
+        }
+        result.pushKV("input_count", (uint64_t)psbtx.inputs.size());
+        result.pushKV("output_count", (uint64_t)psbtx.outputs.size());
+        if (psbtx.m_tx_modifiable != std::nullopt) {
+            result.pushKV("inputs_modifiable", psbtx.m_tx_modifiable->test(0));
+            result.pushKV("outputs_modifiable", psbtx.m_tx_modifiable->test(1));
+            result.pushKV("has_sighash_single", psbtx.m_tx_modifiable->test(2));
+        }
+    }
 
     // PSBT version
     result.pushKV("psbt_version", static_cast<uint64_t>(psbtx.GetVersion()));
@@ -1242,6 +1275,25 @@ static RPCHelpMan decodepsbt()
                 hash256_preimages.pushKV(HexStr(hash), HexStr(preimage));
             }
             in.pushKV("hash256_preimages", std::move(hash256_preimages));
+        }
+
+        // PSBTv2
+        if (psbtx.GetVersion() == 2) {
+            if (!input.prev_txid.IsNull()) {
+                in.pushKV("previous_txid", input.prev_txid.GetHex());
+            }
+            if (input.prev_out != std::nullopt) {
+                in.pushKV("previous_vout", static_cast<uint64_t>(*input.prev_out));
+            }
+            if (input.sequence != std::nullopt) {
+                in.pushKV("sequence", static_cast<uint64_t>(*input.sequence));
+            }
+            if (input.time_locktime != std::nullopt) {
+                in.pushKV("time_locktime", static_cast<uint64_t>(*input.time_locktime));
+            }
+            if (input.height_locktime!= std::nullopt) {
+                in.pushKV("height_locktime", static_cast<uint64_t>(*input.height_locktime));
+            }
         }
 
         // Taproot key path signature
@@ -1412,6 +1464,18 @@ static RPCHelpMan decodepsbt()
                 keypaths.push_back(std::move(keypath));
             }
             out.pushKV("bip32_derivs", std::move(keypaths));
+        }
+
+        // PSBTv2 stuff
+        if (psbtx.GetVersion() == 2) {
+            if (output.amount != std::nullopt) {
+                out.pushKV("amount", ValueFromAmount(*output.amount));
+            }
+            if (output.script.has_value()) {
+                UniValue spk(UniValue::VOBJ);
+                ScriptToUniv(*output.script, spk, /*include_hex=*/true, /*include_address=*/true);
+                out.pushKV("script", spk);
+            }
         }
 
         // Taproot internal key
