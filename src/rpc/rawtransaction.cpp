@@ -1873,6 +1873,9 @@ static RPCHelpMan joinpsbts()
         if (!DecodeBase64PSBT(psbtx, txs[i].get_str(), error)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
         }
+        if (psbtx.GetVersion() != 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "joinpsbts only operates on version 0 PSBTs");
+        }
         psbtxs.push_back(psbtx);
         // Choose the highest version number
         if (*psbtx.tx_version > best_version) {
