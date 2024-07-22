@@ -18,6 +18,13 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
     // Go through each input and build status
     PSBTAnalysis result;
 
+    std::optional<CMutableTransaction> unsigned_tx = psbtx.GetUnsignedTx();
+    if (!unsigned_tx) {
+        result.SetInvalid("PSBT cannot be made into a valid transaction");
+        return result;
+    }
+    CMutableTransaction& mtx = *unsigned_tx;
+
     bool calc_fee = true;
 
     CAmount in_amt = 0;
@@ -116,7 +123,6 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         result.fee = fee;
 
         // Estimate the size
-        CMutableTransaction mtx(*psbtx.tx);
         CCoinsView view_dummy;
         CCoinsViewCache view(&view_dummy);
         bool success = true;

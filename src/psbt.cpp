@@ -7,6 +7,7 @@
 #include <common/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/result.h>
@@ -14,7 +15,7 @@
 
 using common::PSBTError;
 
-PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
+PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx)
 {
     tx_version = tx.version;
     fallback_locktime = tx.nLockTime;
@@ -30,13 +31,15 @@ PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction
 
 bool PartiallySignedTransaction::IsNull() const
 {
-    return !tx && inputs.empty() && outputs.empty() && unknown.empty();
+    return inputs.empty() && outputs.empty() && unknown.empty();
 }
 
 bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
 {
     // Prohibited to merge two PSBTs over different transactions
-    if (tx->GetHash() != psbt.tx->GetHash()) {
+    std::optional<Txid> this_id = GetUniqueID();
+    std::optional<Txid> psbt_id = psbt.GetUniqueID();
+    if (!this_id || !psbt_id || this_id != psbt_id) {
         return false;
     }
 
@@ -58,23 +61,45 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     return true;
 }
 
+std::optional<CMutableTransaction> PartiallySignedTransaction::GetUnsignedTx() const
+{
+    CMutableTransaction mtx;
+    mtx.version = tx_version;
+    mtx.nLockTime = fallback_locktime.value_or(0);
+    uint32_t max_sequence = CTxIn::SEQUENCE_FINAL;
+    for (const PSBTInput& input : inputs) {
+        CTxIn txin;
+        txin.prevout.hash = input.prev_txid;
+        txin.prevout.n = input.prev_out;
+        txin.nSequence = input.sequence.value_or(max_sequence);
+        mtx.vin.push_back(txin);
+    }
+    for (const PSBTOutput& output : outputs) {
+        CTxOut txout;
+        txout.nValue = output.amount;
+        txout.scriptPubKey = output.script;
+        mtx.vout.push_back(txout);
+    }
+    return mtx;
+}
+
+std::optional<Txid> PartiallySignedTransaction::GetUniqueID() const
+{
+    // Get the unsigned transaction
+    std::optional<CMutableTransaction> mtx = GetUnsignedTx();
+    if (!mtx) {
+        return std::nullopt;
+    }
+    if (GetVersion() >= 2) {
+        for (CTxIn& txin : mtx->vin) {
+            txin.nSequence = 0;
+        }
+    }
+    return mtx->GetHash();
+}
+
 bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
 {
-    if (GetVersion() < 2) {
-        // This is a v0 psbt, so do the v0 AddInput
-        CTxIn txin(COutPoint(psbtin.prev_txid, psbtin.prev_out));
-        if (std::find(tx->vin.begin(), tx->vin.end(), txin) != tx->vin.end()) {
-            // Prevent duplicate inputs
-            return false;
-        }
-        tx->vin.push_back(std::move(txin));
-        inputs.push_back(psbtin);
-        inputs.back().partial_sigs.clear();
-        inputs.back().final_script_sig.clear();
-        inputs.back().final_script_witness.SetNull();
-        return true;
-    }
-
     // Prevent duplicate inputs
     if (std::find_if(inputs.begin(), inputs.end(),
         [psbtin](const PSBTInput& psbt) {
@@ -84,6 +109,15 @@ bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
         return false;
     }
 
+    if (GetVersion() < 2) {
+        // This is a v0 psbt, so do the v0 AddInput
+        inputs.push_back(psbtin);
+        inputs.back().partial_sigs.clear();
+        inputs.back().final_script_sig.clear();
+        inputs.back().final_script_witness.SetNull();
+        return true;
+    }
+
     return false;
 }
 
@@ -91,8 +125,6 @@ bool PartiallySignedTransaction::AddOutput(const PSBTOutput& psbtout)
 {
     if (GetVersion() < 2) {
         // This is a v0 psbt, do the v0 AddOutput
-        CTxOut txout(psbtout.amount, psbtout.script);
-        tx->vout.push_back(txout);
         outputs.push_back(psbtout);
         return true;
     }
@@ -391,10 +423,15 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction& psbt, unsigned
         return false;
     }
 
+    std::optional<CMutableTransaction> unsigned_tx = psbt.GetUnsignedTx();
+    if (!unsigned_tx) {
+        return false;
+    }
+    const CMutableTransaction& tx = *unsigned_tx;
     if (txdata) {
-        return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&(*psbt.tx), input_index, utxo.nValue, *txdata, MissingDataBehavior::FAIL});
+        return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&tx, input_index, utxo.nValue, *txdata, MissingDataBehavior::FAIL});
     } else {
-        return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&(*psbt.tx), input_index, utxo.nValue, MissingDataBehavior::FAIL});
+        return VerifyScript(input.final_script_sig, utxo.scriptPubKey, &input.final_script_witness, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker{&tx, input_index, utxo.nValue, MissingDataBehavior::FAIL});
     }
 }
 
@@ -411,7 +448,11 @@ size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt) {
 
 void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
 {
-    CMutableTransaction& tx = *Assert(psbt.tx);
+    std::optional<CMutableTransaction> unsigned_tx = psbt.GetUnsignedTx();
+    if (!unsigned_tx) {
+        return;
+    }
+    CMutableTransaction& tx = *unsigned_tx;
     const CTxOut& out = tx.vout.at(index);
     PSBTOutput& psbt_out = psbt.outputs.at(index);
 
@@ -431,7 +472,11 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
 
 std::optional<PrecomputedTransactionData> PrecomputePSBTData(const PartiallySignedTransaction& psbt)
 {
-    const CMutableTransaction& tx = *psbt.tx;
+    std::optional<CMutableTransaction> unsigned_tx = psbt.GetUnsignedTx();
+    if (!unsigned_tx) {
+        return std::nullopt;
+    }
+    const CMutableTransaction& tx = *unsigned_tx;
     bool have_all_spent_outputs = true;
     std::vector<CTxOut> utxos;
     for (const PSBTInput& input : psbt.inputs) {
@@ -449,7 +494,11 @@ std::optional<PrecomputedTransactionData> PrecomputePSBTData(const PartiallySign
 PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, std::optional<int> sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
-    const CMutableTransaction& tx = *psbt.tx;
+    std::optional<CMutableTransaction> unsigned_tx = psbt.GetUnsignedTx();
+    if (!unsigned_tx) {
+        return PSBTError::INVALID_TX;
+    }
+    const CMutableTransaction& tx = *unsigned_tx;
 
     if (PSBTInputSignedAndVerified(psbt, index, txdata)) {
         return PSBTError::OK;
@@ -623,7 +672,11 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
         return false;
     }
 
-    result = *psbtx.tx;
+    std::optional<CMutableTransaction> unsigned_tx = psbtx.GetUnsignedTx();
+    if (!unsigned_tx) {
+        return false;
+    }
+    result = *unsigned_tx;
     for (unsigned int i = 0; i < result.vin.size(); ++i) {
         result.vin[i].scriptSig = psbtx.inputs[i].final_script_sig;
         result.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
