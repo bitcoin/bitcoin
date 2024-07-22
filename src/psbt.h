@@ -1256,6 +1256,7 @@ public:
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
     bool AddInput(const PSBTInput& psbtin);
     bool AddOutput(const PSBTOutput& psbtout);
+    std::optional<uint32_t> ComputeTimeLock() const;
     std::optional<CMutableTransaction> GetUnsignedTx() const;
     std::optional<Txid> GetUniqueID() const;
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);

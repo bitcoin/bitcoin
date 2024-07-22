@@ -61,11 +61,49 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     return true;
 }
 
+std::optional<uint32_t> PartiallySignedTransaction::ComputeTimeLock() const
+{
+    if (GetVersion() >= 2) {
+        std::optional<uint32_t> time_lock{0};
+        std::optional<uint32_t> height_lock{0};
+        for (const PSBTInput& input : inputs) {
+            if (input.time_locktime.has_value() && !input.height_locktime.has_value()) {
+                height_lock.reset(); // Transaction can no longer have a height locktime
+                if (!time_lock.has_value()) {
+                    return std::nullopt;
+                }
+            } else if (!input.time_locktime.has_value() && input.height_locktime.has_value()) {
+                time_lock.reset(); // Transaction can no longer have a time locktime
+                if (!height_lock.has_value()) {
+                    return std::nullopt;
+                }
+            }
+            if (input.time_locktime && time_lock.has_value()) {
+                time_lock = std::max(time_lock, input.time_locktime);
+            }
+            if (input.height_locktime && height_lock.has_value()) {
+                height_lock = std::max(height_lock, input.height_locktime);
+            }
+        }
+        if (height_lock.has_value() && *height_lock > 0) {
+            return *height_lock;
+        }
+        if (time_lock.has_value() && *time_lock > 0) {
+            return *time_lock;
+        }
+    }
+    return fallback_locktime.value_or(0);
+}
+
 std::optional<CMutableTransaction> PartiallySignedTransaction::GetUnsignedTx() const
 {
     CMutableTransaction mtx;
     mtx.version = tx_version;
-    mtx.nLockTime = fallback_locktime.value_or(0);
+    std::optional<uint32_t> locktime = ComputeTimeLock();
+    if (!locktime) {
+        return std::nullopt;
+    }
+    mtx.nLockTime = *locktime;
     uint32_t max_sequence = CTxIn::SEQUENCE_FINAL;
     for (const PSBTInput& input : inputs) {
         CTxIn txin;
