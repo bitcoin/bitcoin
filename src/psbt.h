@@ -1353,7 +1353,7 @@ struct PartiallySignedTransaction
     CMutableTransaction GetUnsignedTx() const;
     Txid GetUniqueID() const;
     PartiallySignedTransaction() = default;
-    explicit PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version = 0);
+    explicit PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version = 2);
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
