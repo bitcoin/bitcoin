@@ -310,6 +310,13 @@ public:
     void Merge(const PSBTInput& input);
     uint32_t GetVersion() const { return m_psbt_version; }
     COutPoint GetOutPoint() const;
+    /**
+     * Retrieves the UTXO for this input
+     *
+     * @param[out] utxo The UTXO of this input
+     * @return Whether the UTXO could be retrieved
+     */
+    bool GetUTXO(CTxOut& utxo) const;
 
     explicit PSBTInput(uint32_t psbt_version, const Txid& prev_txid, uint32_t prev_out, std::optional<uint32_t> sequence = std::nullopt)
         : m_psbt_version(psbt_version),
@@ -1087,14 +1094,6 @@ public:
     bool AddInput(const PSBTInput& psbtin);
     bool AddOutput(const PSBTOutput& psbtout);
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
-    /**
-     * Finds the UTXO for a given input index
-     *
-     * @param[out] utxo The UTXO of the input if found
-     * @param[in] input_index Index of the input to retrieve the UTXO of
-     * @return Whether the UTXO for the specified input was found
-     */
-    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
