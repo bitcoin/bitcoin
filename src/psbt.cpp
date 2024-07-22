@@ -140,6 +140,11 @@ std::optional<Txid> PartiallySignedTransaction::GetUniqueID() const
 
 bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
 {
+    // The input being added must be for this PSBT's version
+    if (psbtin.GetVersion() != GetVersion()) {
+        return false;
+    }
+
     // Prevent duplicate inputs
     if (std::find_if(inputs.begin(), inputs.end(),
         [psbtin](const PSBTInput& psbt) {
@@ -158,18 +163,85 @@ bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
         return true;
     }
 
-    return false;
+    // Check inputs modifiable flag
+    if (!m_tx_modifiable.has_value() || !m_tx_modifiable->test(0)) {
+        return false;
+    }
+
+    // Determine if we need to iterate the inputs.
+    // For now, we only do this if the new input has a required time lock.
+    // BIP 370 states that we should also do this if m_tx_modifiable's bit 2 is set
+    // (Has SIGHASH_SINGLE flag) but since we are only adding inputs at the end of the vector,
+    // we don't care about that.
+    bool iterate_inputs = psbtin.time_locktime != std::nullopt || psbtin.height_locktime != std::nullopt;
+    if (iterate_inputs) {
+        std::optional<uint32_t> old_timelock = ComputeTimeLock();
+        if (!old_timelock) {
+            return false;
+        }
+
+        std::optional<uint32_t> time_lock = psbtin.time_locktime;
+        std::optional<uint32_t> height_lock = psbtin.height_locktime;
+        bool has_sigs = false;
+        for (const PSBTInput& input : inputs) {
+            if (input.time_locktime.has_value() && !input.height_locktime.has_value()) {
+                height_lock.reset(); // Transaction can no longer have a height locktime
+                if (time_lock == std::nullopt) {
+                    return false;
+                }
+            } else if (!input.time_locktime.has_value() && input.height_locktime.has_value()) {
+                time_lock.reset(); // Transaction can no longer have a time locktime
+                if (height_lock == std::nullopt) {
+                    return false;
+                }
+            }
+            if (input.time_locktime && time_lock.has_value()) {
+                time_lock = std::max(time_lock, input.time_locktime);
+            }
+            if (input.height_locktime && height_lock.has_value()) {
+                height_lock = std::max(height_lock, input.height_locktime);
+            }
+            if (input.HasSignatures()) {
+                has_sigs = true;
+            }
+        }
+        uint32_t new_timelock = fallback_locktime.value_or(0);
+        if (height_lock.has_value() && *height_lock > 0) {
+            new_timelock = *height_lock;
+        } else if (time_lock.has_value() && *time_lock > 0) {
+            new_timelock = *time_lock;
+        }
+        if (has_sigs && *old_timelock != new_timelock) {
+            return false;
+        }
+    }
+
+    // Add the input to the end
+    inputs.push_back(psbtin);
+    return true;
 }
 
 bool PartiallySignedTransaction::AddOutput(const PSBTOutput& psbtout)
 {
+    // The output being added must be for this PSBT's version
+    if (psbtout.GetVersion() != GetVersion()) {
+        return false;
+    }
+
     if (GetVersion() < 2) {
         // This is a v0 psbt, do the v0 AddOutput
         outputs.push_back(psbtout);
         return true;
     }
 
-    return false;
+    // No global tx, must be PSBTv2
+    // Check outputs are modifiable
+    if (!m_tx_modifiable.has_value() || !m_tx_modifiable->test(1)) {
+        return false;
+    }
+    outputs.push_back(psbtout);
+
+    return true;
 }
 
 bool PSBTInput::GetUTXO(CTxOut& utxo) const
@@ -362,6 +434,16 @@ void PSBTInput::Merge(const PSBTInput& input)
     for (const auto& [agg_key_lh, psigs] : input.m_musig2_partial_sigs) {
         m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
     }
+}
+
+bool PSBTInput::HasSignatures() const
+{
+    return !final_script_sig.empty()
+           || !final_script_witness.IsNull()
+           || !partial_sigs.empty()
+           || !m_tap_key_sig.empty()
+           || !m_tap_script_sigs.empty()
+           || !m_musig2_partial_sigs.empty();
 }
 
 void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
