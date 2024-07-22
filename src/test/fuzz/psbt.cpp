@@ -52,11 +52,7 @@ FUZZ_TARGET(psbt)
 
     (void)psbt.IsNull();
 
-    std::optional<CMutableTransaction> tx = psbt.tx;
-    if (tx) {
-        const CMutableTransaction& mtx = *tx;
-        const PartiallySignedTransaction psbt_from_tx{mtx};
-    }
+    (void)psbt.GetUnsignedTx();
 
     for (const PSBTInput& input : psbt.inputs) {
         (void)PSBTInputSigned(input);

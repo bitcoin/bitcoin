@@ -1074,7 +1074,7 @@ static RPCMethod decodepsbt()
 
     // Add the decoded tx
     UniValue tx_univ(UniValue::VOBJ);
-    TxToUniv(CTransaction(*psbtx.tx), /*block_hash=*/uint256(), /*entry=*/tx_univ, /*include_hex=*/false);
+    TxToUniv(CTransaction(*CHECK_NONFATAL(psbtx.GetUnsignedTx())), /*block_hash=*/uint256(), /*entry=*/tx_univ, /*include_hex=*/false);
     result.pushKV("tx", std::move(tx_univ));
 
     // Add the global xpubs
@@ -1803,12 +1803,13 @@ static RPCMethod joinpsbts()
         const PartiallySignedTransaction& psbtx = *psbt_res;
         psbtxs.push_back(psbtx);
         // Choose the highest version number
-        if (psbtx.tx->version > best_version) {
-            best_version = psbtx.tx->version;
+        if (psbtx.tx_version > best_version) {
+            best_version = psbtx.tx_version;
         }
         // Choose the lowest lock time
-        if (psbtx.tx->nLockTime < best_locktime) {
-            best_locktime = psbtx.tx->nLockTime;
+        uint32_t psbt_locktime = psbtx.fallback_locktime.value_or(0);
+        if (psbt_locktime < best_locktime) {
+            best_locktime = psbt_locktime;
         }
     }
 
