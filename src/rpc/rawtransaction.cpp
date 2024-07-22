@@ -1652,10 +1652,10 @@ static RPCMethod createpsbt()
     PartiallySignedTransaction psbtx;
     psbtx.tx = rawTx;
     for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.emplace_back();
+        psbtx.inputs.emplace_back(0);
     }
     for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.emplace_back();
+        psbtx.outputs.emplace_back(0);
     }
 
     // Serialize the PSBT
@@ -1720,10 +1720,10 @@ static RPCMethod converttopsbt()
     PartiallySignedTransaction psbtx;
     psbtx.tx = tx;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        psbtx.inputs.emplace_back();
+        psbtx.inputs.emplace_back(0);
     }
     for (unsigned int i = 0; i < tx.vout.size(); ++i) {
-        psbtx.outputs.emplace_back();
+        psbtx.outputs.emplace_back(0);
     }
 
     // Serialize the PSBT
