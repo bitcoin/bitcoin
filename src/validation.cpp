@@ -2127,7 +2127,7 @@ ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, cons
  * Note that we may set state.reason to NOT_STANDARD for extra soft-fork flags in flags, block-checking
  * callers should probably reset it to CONSENSUS in such cases.
  *
- * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
+ * Non-static (and redeclared) in src/test/txvalidationcache_tests.cpp
  */
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
