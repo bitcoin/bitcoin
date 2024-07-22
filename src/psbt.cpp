@@ -67,20 +67,18 @@ bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput
     return true;
 }
 
-bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) const
+bool PSBTInput::GetUTXO(CTxOut& utxo) const
 {
-    const PSBTInput& input = inputs[input_index];
-    uint32_t prevout_index = tx->vin[input_index].prevout.n;
-    if (input.non_witness_utxo) {
-        if (prevout_index >= input.non_witness_utxo->vout.size()) {
+    if (non_witness_utxo) {
+        if (prev_out >= non_witness_utxo->vout.size()) {
             return false;
         }
-        if (input.non_witness_utxo->GetHash() != tx->vin[input_index].prevout.hash) {
+        if (non_witness_utxo->GetHash() != prev_txid) {
             return false;
         }
-        utxo = input.non_witness_utxo->vout[prevout_index];
-    } else if (!input.witness_utxo.IsNull()) {
-        utxo = input.witness_utxo;
+        utxo = non_witness_utxo->vout[*prev_out];
+    } else if (!witness_utxo.IsNull()) {
+        utxo = witness_utxo;
     } else {
         return false;
     }
@@ -360,9 +358,9 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
 {
     const CMutableTransaction& tx = *psbt.tx;
     bool have_all_spent_outputs = true;
-    std::vector<CTxOut> utxos(tx.vin.size());
-    for (size_t idx = 0; idx < tx.vin.size(); ++idx) {
-        if (!psbt.GetInputUTXO(utxos[idx], idx)) have_all_spent_outputs = false;
+    std::vector<CTxOut> utxos;
+    for (const PSBTInput& input : psbt.inputs) {
+        if (!input.GetUTXO(utxos.emplace_back())) have_all_spent_outputs = false;
     }
     PrecomputedTransactionData txdata;
     if (have_all_spent_outputs) {
