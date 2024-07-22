@@ -8,6 +8,8 @@ export LC_ALL=C
 
 export CI_RETRY_EXE="/ci_retry --"
 
+pushd "/"
+
 ${CI_RETRY_EXE} apt-get update
 # Lint dependencies:
 # - automake pkg-config libtool (for lint_includes_build_config)
@@ -28,7 +30,7 @@ if [ ! -d "${PYTHON_PATH}/bin" ]; then
     libbz2-dev libreadline-dev libsqlite3-dev curl llvm \
     libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     clang
-  env CC=clang python-build "$(cat "./.python-version")" "${PYTHON_PATH}"
+  env CC=clang python-build "$(cat "/.python-version")" "${PYTHON_PATH}"
 fi
 export PATH="${PYTHON_PATH}/bin:${PATH}"
 command -v python3
@@ -38,7 +40,7 @@ export LINT_RUNNER_PATH="/lint_test_runner"
 if [ ! -d "${LINT_RUNNER_PATH}" ]; then
   ${CI_RETRY_EXE} apt-get install -y cargo
   (
-    cd ./test/lint/test_runner || exit 1
+    cd "/test/lint/test_runner" || exit 1
     cargo build
     mkdir -p "${LINT_RUNNER_PATH}"
     mv target/debug/test_runner "${LINT_RUNNER_PATH}"
@@ -62,3 +64,5 @@ MLC_VERSION=v0.18.0
 MLC_BIN=mlc-x86_64-linux
 curl -sL "https://github.com/becheran/mlc/releases/download/${MLC_VERSION}/${MLC_BIN}" -o "/usr/bin/mlc"
 chmod +x /usr/bin/mlc
+
+popd || exit
