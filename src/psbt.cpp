@@ -128,17 +128,36 @@ Txid PartiallySignedTransaction::GetUniqueID() const
     return mtx.GetHash();
 }
 
-bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSBTInput& psbtin)
+bool PartiallySignedTransaction::AddInput(PSBTInput& psbtin)
 {
-    if (std::find(tx->vin.begin(), tx->vin.end(), txin) != tx->vin.end()) {
-        return false;
+    if (m_version == std::nullopt || m_version == 0) {
+        // This is a v0 psbt, so do the v0 AddInput
+        CTxIn txin(COutPoint(psbtin.prev_txid, *psbtin.prev_out));
+        if (std::find(tx->vin.begin(), tx->vin.end(), txin) != tx->vin.end()) {
+            // Prevent duplicate inputs
+            return false;
+        }
+        tx->vin.push_back(txin);
+        psbtin.partial_sigs.clear();
+        psbtin.final_script_sig.clear();
+        psbtin.final_script_witness.SetNull();
+        inputs.push_back(psbtin);
+        return true;
     }
-    tx->vin.push_back(txin);
-    psbtin.partial_sigs.clear();
-    psbtin.final_script_sig.clear();
-    psbtin.final_script_witness.SetNull();
-    inputs.push_back(psbtin);
-    return true;
+
+    if (m_version >= 2) {
+        // Prevent duplicate inputs
+        if (std::find_if(inputs.begin(), inputs.end(),
+            [psbtin](const PSBTInput& psbt) {
+                return psbt.prev_txid == psbtin.prev_txid && psbt.prev_out == psbtin.prev_out;
+            }
+        ) != inputs.end()) {
+            return false;
+        }
+    }
+
+    // TODO: Do PSBTv2
+    return false;
 }
 
 bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput& psbtout)

@@ -1833,7 +1833,7 @@ static RPCHelpMan joinpsbts()
     // Merge
     for (auto& psbt : psbtxs) {
         for (unsigned int i = 0; i < psbt.tx->vin.size(); ++i) {
-            if (!merged_psbt.AddInput(psbt.tx->vin[i], psbt.inputs[i])) {
+            if (!merged_psbt.AddInput(psbt.inputs[i])) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input %s:%d exists in multiple PSBTs", psbt.tx->vin[i].prevout.hash.ToString(), psbt.tx->vin[i].prevout.n));
             }
         }
@@ -1865,7 +1865,7 @@ static RPCHelpMan joinpsbts()
     shuffled_psbt.tx->version = merged_psbt.tx->version;
     shuffled_psbt.tx->nLockTime = merged_psbt.tx->nLockTime;
     for (int i : input_indices) {
-        shuffled_psbt.AddInput(merged_psbt.tx->vin[i], merged_psbt.inputs[i]);
+        shuffled_psbt.AddInput(merged_psbt.inputs[i]);
     }
     for (int i : output_indices) {
         shuffled_psbt.AddOutput(merged_psbt.tx->vout[i], merged_psbt.outputs[i]);
