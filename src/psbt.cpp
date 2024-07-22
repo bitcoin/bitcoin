@@ -11,11 +11,14 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 
-PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx) : tx(tx)
+PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version) : m_version(version)
 {
+    if (version == 0) {
+        this->tx = tx;
+    }
     inputs.resize(tx.vin.size(), PSBTInput(GetVersion()));
     outputs.resize(tx.vout.size(), PSBTOutput(GetVersion()));
-    CacheUnsignedTxPieces();
+    SetupFromTx(tx);
 }
 
 bool PartiallySignedTransaction::IsNull() const
