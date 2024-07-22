@@ -68,9 +68,9 @@ FUZZ_TARGET(psbt)
         (void)output.IsNull();
     }
 
-    for (size_t i = 0; i < psbt.inputs.size(); ++i) {
+    for (const PSBTInput& input : psbt.inputs) {
         CTxOut tx_out;
-        if (psbt.GetInputUTXO(tx_out, i)) {
+        if (input.GetUTXO(tx_out)) {
             (void)tx_out.IsNull();
             (void)tx_out.ToString();
         }
