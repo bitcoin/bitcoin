@@ -165,7 +165,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         if (tx) {
             psbt_input.non_witness_utxo = tx;
         } else {
-            coins[tx_in.prevout]; // Create empty map entry keyed by prevout
+            coins[psbt_input.GetOutPoint()]; // Create empty map entry keyed by prevout
         }
     }
 
@@ -177,8 +177,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
             // If there are still missing utxos, add them if they were found in the utxo set
             if (!input.non_witness_utxo) {
-                const CTxIn& tx_in = psbtx.tx->vin.at(i);
-                const Coin& coin = coins.at(tx_in.prevout);
+                const Coin& coin = coins.at(input.GetOutPoint());
                 if (!coin.out.IsNull() && IsSegWitOutput(provider, coin.out.scriptPubKey)) {
                     input.witness_utxo = coin.out;
                 }

@@ -130,7 +130,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
                 mtx.vin[i].scriptSig = input.final_script_sig;
                 mtx.vin[i].scriptWitness = input.final_script_witness;
                 newcoin.nHeight = 1;
-                view.AddCoin(psbtx.tx->vin[i].prevout, std::move(newcoin), true);
+                view.AddCoin(input.GetOutPoint(), std::move(newcoin), true);
             }
         }
 
