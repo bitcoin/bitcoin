@@ -591,7 +591,7 @@ class PSBTTest(BitcoinTestFramework):
         # BIP 174 Test Vectors
 
         # Check that unknown values are just passed through
-        unknown_psbt = "cHNidP8BAD8CAAAAAf//////////////////////////////////////////AAAAAAD/////AQAAAAAAAAAAA2oBAAAAAAAACg8BAgMEBQYHCAkPAQIDBAUGBwgJCgsMDQ4PAAA="
+        unknown_psbt = "cHNidP8BAD8CAAAAAf//////////////////////////////////////////AAAAAAD/////AQAAAAAAAAAAA2oBAAAAAAAACvABAgMEBQYHCAkPAQIDBAUGBwgJCgsMDQ4PAAA="
         unknown_out = self.nodes[0].walletprocesspsbt(unknown_psbt)['psbt']
         assert_equal(unknown_psbt, unknown_out)
 
