@@ -1336,6 +1336,7 @@ struct PartiallySignedTransaction
     void SetupFromTx(const CMutableTransaction& tx);
     void CacheUnsignedTxPieces();
     bool ComputeTimeLock(uint32_t& locktime) const;
+    CMutableTransaction GetUnsignedTx() const;
     PartiallySignedTransaction() = default;
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
 
