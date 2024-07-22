@@ -4,7 +4,7 @@
 
 # See test/lint/README.md for usage.
 
-FROM debian:bookworm
+FROM docker.io/debian:bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
