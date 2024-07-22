@@ -262,6 +262,16 @@ bool CSporkManager::IsSporkActive(SporkId nSporkID) const
 
 SporkValue CSporkManager::GetSporkValue(SporkId nSporkID) const
 {
+    // Harden all sporks on Mainnet
+    if (!Params().IsTestChain()) {
+        switch (nSporkID) {
+            case SPORK_21_QUORUM_ALL_CONNECTED:
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
     LOCK(cs);
 
     if (auto opt_sporkValue = SporkValueIfActive(nSporkID)) {
