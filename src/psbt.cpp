@@ -6,6 +6,7 @@
 
 #include <node/types.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -80,6 +81,33 @@ bool PartiallySignedTransaction::ComputeTimeLock(uint32_t& locktime) const
     }
     locktime = fallback_locktime.value_or(0);
     return true;
+}
+
+CMutableTransaction PartiallySignedTransaction::GetUnsignedTx() const
+{
+    if (tx != std::nullopt) {
+        return *tx;
+    }
+
+    CMutableTransaction mtx;
+    mtx.version = *tx_version;
+    bool locktime_success = ComputeTimeLock(mtx.nLockTime);
+    assert(locktime_success);
+    uint32_t max_sequence = CTxIn::SEQUENCE_FINAL;
+    for (const PSBTInput& input : inputs) {
+        CTxIn txin;
+        txin.prevout.hash = input.prev_txid;
+        txin.prevout.n = *input.prev_out;
+        txin.nSequence = input.sequence.value_or(max_sequence);
+        mtx.vin.push_back(txin);
+    }
+    for (const PSBTOutput& output : outputs) {
+        CTxOut txout;
+        txout.nValue = *output.amount;
+        txout.scriptPubKey = *output.script;
+        mtx.vout.push_back(txout);
+    }
+    return mtx;
 }
 
 bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSBTInput& psbtin)
