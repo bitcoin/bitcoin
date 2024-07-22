@@ -305,11 +305,13 @@ struct PSBTInput
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
 
+    uint32_t m_psbt_version;
+
     bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
-    PSBTInput() = default;
+    PSBTInput(uint32_t psbt_version) : m_psbt_version(psbt_version) {}
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -990,11 +992,13 @@ struct PSBTOutput
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
 
+    uint32_t m_psbt_version;
+
     bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTOutput& output);
-    PSBTOutput() = default;
+    PSBTOutput(uint32_t psbt_version) : m_psbt_version(psbt_version) {}
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -1584,10 +1588,12 @@ struct PartiallySignedTransaction
             throw std::ios_base::failure("No unsigned transaction was provided");
         }
 
+        const uint32_t psbt_ver = GetVersion();
+
         // Read input data
         unsigned int i = 0;
         while (!s.empty() && i < input_count) {
-            PSBTInput input;
+            PSBTInput input(psbt_ver);
             s >> input;
             inputs.push_back(input);
 
@@ -1610,7 +1616,7 @@ struct PartiallySignedTransaction
         // Read output data
         i = 0;
         while (!s.empty() && i < output_count) {
-            PSBTOutput output;
+            PSBTOutput output(psbt_ver);
             s >> output;
             outputs.push_back(output);
             ++i;
