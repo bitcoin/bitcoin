@@ -21,7 +21,7 @@ ${CI_RETRY_EXE} apt-get install -y automake pkg-config libtool curl xz-utils git
 PYTHON_PATH="/python_build"
 if [ ! -d "${PYTHON_PATH}/bin" ]; then
   (
-    ${CI_RETRY_EXE} git clone https://github.com/pyenv/pyenv.git
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/pyenv/pyenv.git
     cd pyenv/plugins/python-build || exit 1
     ./install.sh
   )
