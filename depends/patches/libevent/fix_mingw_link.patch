@@ -1,0 +1,25 @@
+commit d108099913c5fdbe518f3f4d711f248f8522bd10
+Author: Hennadii Stepanov <32963518+hebasto@users.noreply.github.com>
+Date:   Mon Apr 22 06:39:35 2024 +0100
+
+    build: Add `Iphlpapi` to `Libs.private` in `*.pc` files on Windows
+    
+    It has been required since https://github.com/libevent/libevent/pull/923
+    at least for the `if_nametoindex` call.
+
+    See https://github.com/libevent/libevent/pull/1622.
+
+
+diff --git a/configure.ac b/configure.ac
+index d00e063a..cd1fce37 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -906,7 +906,7 @@ if(WIN32)
+     list(APPEND HDR_PRIVATE WIN32-Code/getopt.h)
+ 
+     set(EVENT__DNS_USE_FTIME_FOR_ID 1)
+-    set(LIB_PLATFORM ws2_32 shell32 advapi32)
++    set(LIB_PLATFORM ws2_32 shell32 advapi32 iphlpapi)
+     add_definitions(
+             -D_CRT_SECURE_NO_WARNINGS
+             -D_CRT_NONSTDC_NO_DEPRECATE)
