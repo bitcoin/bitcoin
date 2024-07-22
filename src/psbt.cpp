@@ -15,8 +15,10 @@
 
 using common::PSBTError;
 
-PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx)
+PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction& tx, uint32_t version) : m_version(version)
 {
+    assert(m_version == 0 || m_version == 2);
+
     tx_version = tx.version;
     fallback_locktime = tx.nLockTime;
     inputs.reserve(tx.vin.size());
