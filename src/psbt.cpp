@@ -98,6 +98,11 @@ bool PartiallySignedTransaction::GetInputUTXO(CTxOut& utxo, int input_index) con
     return true;
 }
 
+COutPoint PSBTInput::GetOutPoint() const
+{
+    return COutPoint(prev_txid, prev_out);
+}
+
 bool PSBTInput::IsNull() const
 {
     return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
@@ -352,7 +357,7 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction& psbt, unsigned
 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
-        COutPoint prevout = psbt.tx->vin[input_index].prevout;
+        COutPoint prevout = input.GetOutPoint();
         if (prevout.n >= input.non_witness_utxo->vout.size()) {
             return false;
         }
@@ -440,7 +445,7 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
-        COutPoint prevout = tx.vin[index].prevout;
+        COutPoint prevout = input.GetOutPoint();
         if (prevout.n >= input.non_witness_utxo->vout.size()) {
             return PSBTError::MISSING_INPUTS;
         }

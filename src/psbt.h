@@ -309,6 +309,8 @@ public:
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
     uint32_t GetVersion() const { return m_psbt_version; }
+    COutPoint GetOutPoint() const;
+
     explicit PSBTInput(uint32_t psbt_version, const Txid& prev_txid, uint32_t prev_out, std::optional<uint32_t> sequence = std::nullopt)
         : m_psbt_version(psbt_version),
         prev_txid(prev_txid),
