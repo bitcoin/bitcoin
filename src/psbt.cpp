@@ -525,7 +525,7 @@ PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& 
 PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, std::optional<int> sighash,  SignatureData* out_sigdata, bool finalize)
 {
     PSBTInput& input = psbt.inputs.at(index);
-    const CMutableTransaction& tx = *psbt.tx;
+    const CMutableTransaction& tx = psbt.GetUnsignedTx();
 
     if (PSBTInputSignedAndVerified(psbt, index, txdata)) {
         return PSBTError::OK;
@@ -541,7 +541,7 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
 
     if (input.non_witness_utxo) {
         // If we're taking our information from a non-witness UTXO, verify that it matches the prevout.
-        COutPoint prevout = tx.vin[index].prevout;
+        COutPoint prevout = input.GetOutPoint();
         if (prevout.n >= input.non_witness_utxo->vout.size()) {
             return PSBTError::MISSING_INPUTS;
         }
