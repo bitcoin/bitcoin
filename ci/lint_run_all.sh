@@ -6,6 +6,8 @@
 
 export LC_ALL=C.UTF-8
 
+# Only used in .cirrus.yml. Refer to test/lint/README.md on how to run locally.
+
 cp "./ci/retry/retry" "/ci_retry"
 set -o errexit; source ./ci/lint/04_install.sh
 set -o errexit
