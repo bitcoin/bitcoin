@@ -109,7 +109,7 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     }
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx(rawTx);
+    PartiallySignedTransaction psbtx(rawTx, /*version=*/2);
 
     // First fill transaction with our data without signing,
     // so external signers are not asked to sign more than once.
@@ -979,6 +979,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                Cat(
                 {
                     {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks\n"},
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"},
@@ -1007,6 +1008,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
                                                                                                                             "original change output. The change output’s amount can increase if bumping the transaction "
                                                                                                                             "adds new inputs, otherwise it will decrease. Cannot be used in combination with the 'outputs' option."},
                 },
+                want_psbt ? std::vector<RPCArg>{{"psbt_version", RPCArg::Type::NUM, RPCArg::Default(2), "The PSBT version number to use."}} : std::vector<RPCArg>()
+                ),
                 RPCArgOptions{.oneline_description="options"}},
         },
         RPCResult{
@@ -1045,6 +1048,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
     std::optional<uint32_t> original_change_index;
 
+    uint32_t psbt_version = 2;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
@@ -1056,6 +1061,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
                 {"outputs", UniValueType()}, // will be checked by AddOutputs()
                 {"original_change_index", UniValueType(UniValue::VNUM)},
+                {"psbt_version", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -1082,6 +1088,13 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
         if (options.exists("original_change_index")) {
             original_change_index = options["original_change_index"].getInt<uint32_t>();
+        }
+
+        if (options.exists("psbt_version")) {
+            psbt_version = options["psbt_version"].getInt<uint32_t>();
+        }
+        if (psbt_version != 2 && psbt_version != 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0");
         }
     }
 
@@ -1136,7 +1149,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
         result.pushKV("txid", txid.GetHex());
     } else {
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction psbtx(mtx, psbt_version);
         bool complete = false;
         const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true)};
         CHECK_NONFATAL(!err);
@@ -1723,6 +1736,7 @@ RPCMethod walletcreatefundedpsbt()
                         RPCArgOptions{.oneline_description="options"}},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_WALLET_TX_VERSION}, "Transaction version"},
+                    {"psbt_version", RPCArg::Type::NUM, RPCArg::Default(2), "The PSBT version number to use."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1772,7 +1786,15 @@ RPCMethod walletcreatefundedpsbt()
     auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx));
+    uint32_t psbt_version = 2;
+    if (!request.params[6].isNull()) {
+        psbt_version = request.params[6].getInt<int>();
+    }
+    if (psbt_version != 2 && psbt_version != 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0");
+    }
+
+    PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx), psbt_version);
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();

@@ -1685,7 +1685,12 @@ static RPCMethod createpsbt()
                 "Implements the Creator role.\n"
                 "Note that the transaction's inputs are not signed, and\n"
                 "it is not stored in the wallet or transmitted to the network.\n",
-                CreateTxDoc(),
+                Cat<std::vector<RPCArg>>(
+                    CreateTxDoc(),
+                    {
+                        {"psbt_version", RPCArg::Type::NUM, RPCArg::Default{2}, "The PSBT version number to use."},
+                    }
+                ),
                 RPCResult{
                     RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
                 },
@@ -1694,7 +1699,6 @@ static RPCMethod createpsbt()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-
     std::optional<bool> rbf;
     if (!request.params[3].isNull()) {
         rbf = request.params[3].get_bool();
@@ -1702,7 +1706,14 @@ static RPCMethod createpsbt()
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, self.Arg<uint32_t>("version"));
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx(rawTx);
+    uint32_t psbt_version = 2;
+    if (!request.params[5].isNull()) {
+        psbt_version = request.params[5].getInt<uint32_t>();
+    }
+    if (psbt_version != 2 && psbt_version != 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0");
+    }
+    PartiallySignedTransaction psbtx(rawTx, psbt_version);
 
     // Serialize the PSBT
     DataStream ssTx{};
@@ -1730,6 +1741,7 @@ static RPCMethod converttopsbt()
                         "This boolean should reflect whether the transaction has inputs\n"
                         "(e.g. fully valid, or on-chain transactions), if known by the caller."
                     },
+                    {"psbt_version", RPCArg::Type::NUM, RPCArg::Default{2}, "The PSBT version number to use."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "", "The resulting raw transaction (base64-encoded string)"
@@ -1763,7 +1775,14 @@ static RPCMethod converttopsbt()
     }
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx(tx);
+    uint32_t psbt_version = 2;
+    if (!request.params[3].isNull()) {
+        psbt_version = request.params[3].getInt<uint32_t>();
+    }
+    if (psbt_version != 2 && psbt_version != 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0");
+    }
+    PartiallySignedTransaction psbtx(tx, psbt_version);
 
     // Serialize the PSBT
     DataStream ssTx{};
