@@ -311,6 +311,13 @@ struct PSBTInput
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
     void Merge(const PSBTInput& input);
+    /**
+     * Retrieves the UTXO for this input
+     *
+     * @param[out] utxo The UTXO of this input
+     * @return Whether the UTXO could be retrieved
+     */
+    bool GetUTXO(CTxOut& utxo) const;
     PSBTInput(uint32_t psbt_version) : m_psbt_version(psbt_version) {}
 
     template <typename Stream>
@@ -1343,14 +1350,6 @@ struct PartiallySignedTransaction
     void CacheUnsignedTxPieces();
     PartiallySignedTransaction() = default;
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
-    /**
-     * Finds the UTXO for a given input index
-     *
-     * @param[out] utxo The UTXO of the input if found
-     * @param[in] input_index Index of the input to retrieve the UTXO of
-     * @return Whether the UTXO for the specified input was found
-     */
-    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
