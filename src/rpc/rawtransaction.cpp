@@ -1816,12 +1816,12 @@ static RPCHelpMan joinpsbts()
     // Merge
     for (auto& psbt : psbtxs) {
         for (unsigned int i = 0; i < psbt.tx->vin.size(); ++i) {
-            if (!merged_psbt.AddInput(psbt.tx->vin[i], psbt.inputs[i])) {
+            if (!merged_psbt.AddInput(psbt.inputs[i])) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input %s:%d exists in multiple PSBTs", psbt.tx->vin[i].prevout.hash.ToString(), psbt.tx->vin[i].prevout.n));
             }
         }
         for (unsigned int i = 0; i < psbt.tx->vout.size(); ++i) {
-            merged_psbt.AddOutput(psbt.tx->vout[i], psbt.outputs[i]);
+            merged_psbt.AddOutput(psbt.outputs[i]);
         }
         for (auto& xpub_pair : psbt.m_xpubs) {
             if (!merged_psbt.m_xpubs.contains(xpub_pair.first)) {
@@ -1845,10 +1845,10 @@ static RPCHelpMan joinpsbts()
 
     PartiallySignedTransaction shuffled_psbt(tx);
     for (int i : input_indices) {
-        shuffled_psbt.AddInput(merged_psbt.tx->vin[i], merged_psbt.inputs[i]);
+        shuffled_psbt.AddInput(merged_psbt.inputs[i]);
     }
     for (int i : output_indices) {
-        shuffled_psbt.AddOutput(merged_psbt.tx->vout[i], merged_psbt.outputs[i]);
+        shuffled_psbt.AddOutput(merged_psbt.outputs[i]);
     }
     shuffled_psbt.unknown.insert(merged_psbt.unknown.begin(), merged_psbt.unknown.end());
 
