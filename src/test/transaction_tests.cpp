@@ -1028,4 +1028,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_TxidFromString)
+{
+    // TxidFromString currently ignores string_view length and reads the whole
+    // string, not the specified substring.
+    BOOST_CHECK_EQUAL(TxidFromString(std::string_view("ABCD1234", 4)).ToString(),
+        "00000000000000000000000000000000000000000000000000000000abcd1234");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
