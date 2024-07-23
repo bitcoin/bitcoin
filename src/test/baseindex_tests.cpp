@@ -84,6 +84,14 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
             // Reload index to see which block data was actually committed.
             BOOST_REQUIRE(index->Init());
             BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, expected_commit_height);
+            // Deliver the reload's queued notifications before destroying the
+            // index, as the node does before stopping indexes; otherwise the
+            // reload's queued SYNCED notification would fire on the freed
+            // index. Note: this is removed in a later change adding a
+            // WaitForCurrentCallback() call to
+            // NotificationsHandlerImpl::disconnect() to ensure no notifications
+            // notifications can be received after disconnect() returns.
+            m_node.chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
             index->Stop();
         };
 
