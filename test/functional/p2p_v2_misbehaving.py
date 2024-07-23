@@ -140,7 +140,8 @@ class EncryptedP2PMisbehaving(BitcoinTestFramework):
         node0.setmocktime(int(time.time()))
         self.log.info('Sending first 4 bytes of ellswift which match network magic')
         self.log.info('If a response is received, assertion failure would happen in our custom data_received() function')
-        peer1 = node0.add_p2p_connection(MisbehavingV2Peer(TestType.EARLY_KEY_RESPONSE), wait_for_verack=False, send_version=False, supports_v2_p2p=True, wait_for_v2_handshake=False)
+        with node0.wait_for_new_peer():
+            peer1 = node0.add_p2p_connection(MisbehavingV2Peer(TestType.EARLY_KEY_RESPONSE), wait_for_verack=False, send_version=False, supports_v2_p2p=True, wait_for_v2_handshake=False)
         peer1.send_raw_message(MAGIC_BYTES['regtest'])
         self.log.info('Sending remaining ellswift and garbage which are different from V1_PREFIX. Since a response is')
         self.log.info('expected now, our custom data_received() function wouldn\'t result in assertion failure')
