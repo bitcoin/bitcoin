@@ -44,6 +44,7 @@ private:
 
     bool AllowPrune() const override { return true; }
     uint32_t GetVersion() const override { return 1; }
+    bool MigrateToV1();
 
 protected:
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
