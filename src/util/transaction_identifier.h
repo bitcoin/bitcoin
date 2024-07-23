@@ -68,7 +68,7 @@ using Wtxid = transaction_identifier<true>;
 
 inline Txid TxidFromString(std::string_view str)
 {
-    return Txid::FromUint256(uint256S(str.data()));
+    return Txid::FromUint256(uint256S(str));
 }
 
 #endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
