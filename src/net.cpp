@@ -695,11 +695,16 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
     return true;
 }
 
+std::string CNode::LogIP(bool log_ip) const
+{
+    return log_ip ? strprintf(" peeraddr=%s", addr.ToStringAddrPort()) : "";
+}
+
 std::string CNode::DisconnectMsg(bool log_ip) const
 {
     return strprintf("disconnecting peer=%d%s",
                      GetId(),
-                     log_ip ? strprintf(" peeraddr=%s", addr.ToStringAddrPort()) : "");
+                     LogIP(log_ip));
 }
 
 V1Transport::V1Transport(const NodeId node_id) noexcept
