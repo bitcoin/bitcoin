@@ -74,6 +74,10 @@ private:
     /// with an empty datadir if, e.g., `-txindex=1` is specified.
     std::atomic<bool> m_synced{false};
 
+    /// Whether index is ready to start processing block-connected and
+    /// chainstate-flushed notifications after it has been synced.
+    std::atomic<bool> m_ready{false};
+
     /// The best block in the chain that the index is considered synced to, as
     /// reported by GetSummary. This field is not set in a consistent way and is
     /// hard to rely on. In some cases, this field refers to the last block that
