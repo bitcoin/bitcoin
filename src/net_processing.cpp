@@ -6295,32 +6295,33 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         // Message: getdata (transactions)
         //
-        LOCK(m_tx_download_mutex);
-        std::vector<std::pair<NodeId, GenTxid>> expired;
-        auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
-        for (const auto& entry : expired) {
-            LogPrint(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
-                entry.second.GetHash().ToString(), entry.first);
-        }
-        for (const GenTxid& gtxid : requestable) {
-            // Exclude m_recent_rejects_reconsiderable: we may be requesting a missing parent
-            // that was previously rejected for being too low feerate.
-            if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
-                LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
-                    gtxid.GetHash().ToString(), pto->GetId());
-                vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());
-                if (vGetData.size() >= MAX_GETDATA_SZ) {
-                    MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
-                    vGetData.clear();
-                }
-                m_txrequest.RequestedTx(pto->GetId(), gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
-            } else {
-                // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
-                // this should already be called whenever a transaction becomes AlreadyHaveTx().
-                m_txrequest.ForgetTxHash(gtxid.GetHash());
+        {
+            LOCK(m_tx_download_mutex);
+            std::vector<std::pair<NodeId, GenTxid>> expired;
+            auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
+            for (const auto& entry : expired) {
+                LogPrint(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
+                    entry.second.GetHash().ToString(), entry.first);
             }
-        }
-
+            for (const GenTxid& gtxid : requestable) {
+                // Exclude m_recent_rejects_reconsiderable: we may be requesting a missing parent
+                // that was previously rejected for being too low feerate.
+                if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
+                    LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+                        gtxid.GetHash().ToString(), pto->GetId());
+                    vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());
+                    if (vGetData.size() >= MAX_GETDATA_SZ) {
+                        MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
+                        vGetData.clear();
+                    }
+                    m_txrequest.RequestedTx(pto->GetId(), gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
+                } else {
+                    // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
+                    // this should already be called whenever a transaction becomes AlreadyHaveTx().
+                    m_txrequest.ForgetTxHash(gtxid.GetHash());
+                }
+            }
+        } // release m_tx_download_mutex
 
         if (!vGetData.empty())
             MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
