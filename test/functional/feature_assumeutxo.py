@@ -100,14 +100,19 @@ class AssumeutxoTest(BitcoinTestFramework):
         # The height is not used for anything critical currently, so we just
         # confirm the manipulation in the error message
         bogus_height = 1337
-        signed_overflow_height = 3275262676
         for bad_block_hash in [bogus_block_hash, prev_block_hash]:
-            for bad_height in [bogus_height, signed_overflow_height]:
-                with open(bad_snapshot_path, 'wb') as f:
-                    f.write(valid_snapshot_contents[:11] + bad_height.to_bytes(4, "little") + bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[47:])
+            with open(bad_snapshot_path, 'wb') as f:
+                f.write(valid_snapshot_contents[:11] + bogus_height.to_bytes(4, "little") + bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[47:])
 
-                msg = f"Unable to load UTXO snapshot: assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}, height: {bad_height}). The following snapshot heights are available: 110, 200, 299."
-                assert_raises_rpc_error(-32603, msg, node.loadtxoutset, bad_snapshot_path)
+            msg = f"Unable to load UTXO snapshot: assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}, height: {bogus_height}). The following snapshot heights are available: 110, 200, 299."
+            assert_raises_rpc_error(-32603, msg, node.loadtxoutset, bad_snapshot_path)
+
+        self.log.info("  - snapshot file referring to a block that is not in the assumeutxo parameters")
+        signed_overflow_height = 3275262676
+        with open(bad_snapshot_path, 'wb') as f:
+            f.write(valid_snapshot_contents[:11] + signed_overflow_height.to_bytes(4, "little") + bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[47:])
+        msg = f"Unable to parse metadata: Block height is out of range."
+        assert_raises_rpc_error(-22, msg, node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with wrong number of coins")
         valid_num_coins = int.from_bytes(valid_snapshot_contents[47:47 + 8], "little")

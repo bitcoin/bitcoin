@@ -99,6 +99,9 @@ public:
         }
 
         s >> m_base_blockheight;
+        if (m_base_blockheight > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
+            throw std::ios_base::failure("Block height is out of range.");
+        }
         s >> m_base_blockhash;
         s >> m_coins_count;
     }
