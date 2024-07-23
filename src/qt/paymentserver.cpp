@@ -239,8 +239,8 @@ void PaymentServer::handleURIOrFile(const QString& s)
                 if (!IsValidDestination(dest)) {
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
-                            tr("Cannot process payment request as BIP70 is no longer supported.")+
-                            tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
+                            tr("Cannot process payment request as BIP70 is no longer supported.\n"
+                               "Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
                             CClientUIInterface::ICON_WARNING);
                     } else {
                         Q_EMIT message(tr("URI handling"), QString::fromStdString(error_msg),
@@ -262,8 +262,8 @@ void PaymentServer::handleURIOrFile(const QString& s)
     if (QFile::exists(s)) // payment request file
     {
         Q_EMIT message(tr("Payment request file handling"),
-            tr("Cannot process payment request as BIP70 is no longer supported.")+
-            tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
+            tr("Cannot process payment request as BIP70 is no longer supported.\n"
+               "Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
             CClientUIInterface::ICON_WARNING);
     }
 }

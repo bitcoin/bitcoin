@@ -1544,7 +1544,6 @@ QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions
 
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
     background: #00000000;
-    max-width: 430px;
     margin-right: 10px;
 }
 

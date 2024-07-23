@@ -126,24 +126,23 @@ TransactionView::TransactionView(QWidget* parent) :
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
 
-    QTableView *view = new QTableView(this);
+    transactionView = new QTableView(this);
     vlayout->addLayout(hlayout);
     vlayout->addWidget(createDateRangeWidget());
-    vlayout->addWidget(view);
+    vlayout->addWidget(transactionView);
     vlayout->setSpacing(0);
 #ifndef Q_OS_MAC
-    int width = view->verticalScrollBar()->sizeHint().width();
+    int width = transactionView->verticalScrollBar()->sizeHint().width();
     // Cover scroll bar width with spacing
     hlayout->addSpacing(width);
     // Always show scroll bar
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    transactionView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 #endif
-    view->setTabKeyNavigation(false);
-    view->setContextMenuPolicy(Qt::CustomContextMenu);
+    transactionView->setTabKeyNavigation(false);
+    transactionView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    view->installEventFilter(this);
+    transactionView->installEventFilter(this);
 
-    transactionView = view;
     transactionView->setObjectName("transactionView");
 
     // Actions
@@ -185,9 +184,9 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(search_widget, &QLineEdit::textChanged, prefix_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
     connect(prefix_typing_delay, &QTimer::timeout, this, &TransactionView::changedSearch);
 
-    connect(view, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
-    connect(view, &QTableView::clicked, this, &TransactionView::computeSum);
-    connect(view, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
+    connect(transactionView, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
+    connect(transactionView, &QTableView::clicked, this, &TransactionView::computeSum);
+    connect(transactionView, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
     connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
     connect(resendAction, &QAction::triggered, this, &TransactionView::resendTx);
