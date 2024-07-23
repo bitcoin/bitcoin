@@ -58,13 +58,8 @@ static std::string ArrayToString(const unsigned char A[], unsigned int width)
     return Stream.str();
 }
 
-inline uint160 uint160S(const char *str)
-{
-    uint160 rv;
-    rv.SetHex(str);
-    return rv;
-}
-inline uint160 uint160S(const std::string& str)
+// Input is treated as little-endian.
+inline uint160 uint160S(std::string_view str)
 {
     uint160 rv;
     rv.SetHex(str);
@@ -156,6 +151,10 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
     BOOST_CHECK_LT(OneS, MaxS);
     BOOST_CHECK_LT(R1S, MaxS);
     BOOST_CHECK_LT(R2S, MaxS);
+
+    // Verify hex strings are little-endian
+    BOOST_CHECK_LT(uint256S("2000000000000000000000000000000000000000000000000000000000000001"),
+                   uint256S("1000000000000000000000000000000000000000000000000000000000000002"));
 }
 
 BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 GetSerializeSize, Serialize, Unserialize

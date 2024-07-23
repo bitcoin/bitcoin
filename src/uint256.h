@@ -57,9 +57,9 @@ public:
     friend constexpr bool operator!=(const base_blob& a, const base_blob& b) { return a.Compare(b) != 0; }
     friend constexpr bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
 
+    // Hex string representations are little-endian.
     std::string GetHex() const;
-    void SetHex(const char* psz);
-    void SetHex(const std::string& str);
+    void SetHex(std::string_view str);
     std::string ToString() const;
 
     constexpr const unsigned char* data() const { return m_data.data(); }
@@ -112,21 +112,11 @@ public:
     static const uint256 ONE;
 };
 
-/* uint256 from const char *.
- * This is a separate function because the constructor uint256(const char*) can result
- * in dangerously catching uint256(0).
+/* uint256 from std::string_view, treated as little-endian.
+ * This is not a uint256 constructor because of historical fears of uint256(0)
+ * resolving to a NULL string and crashing.
  */
-inline uint256 uint256S(const char *str)
-{
-    uint256 rv;
-    rv.SetHex(str);
-    return rv;
-}
-/* uint256 from std::string.
- * This is a separate function because the constructor uint256(const std::string &str) can result
- * in dangerously catching uint256(0) via std::string(const char*).
- */
-inline uint256 uint256S(const std::string& str)
+inline uint256 uint256S(std::string_view str)
 {
     uint256 rv;
     rv.SetHex(str);
