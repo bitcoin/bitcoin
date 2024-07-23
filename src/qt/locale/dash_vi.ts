@@ -1,4 +1,4 @@
-<TS language="vi" version="2.1">
+<TS version="2.1" language="vi">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -74,10 +74,6 @@
         <translation>Đây là các địa chỉ Dash của bạn để gửi thanh toán. Luôn luôn kiểm tra số tiền và địa chỉ nhận trước khi bạn gửi tiền.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Đây là các địa chỉ Dash của bạn để nhận thanh toán. Gợi ý là sử dụng một địa chỉ nhận mới cho mỗi giao dịch.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Sao chép Địa chỉ</translation>
     </message>
@@ -102,16 +98,13 @@
         <translation>Kết xuất danh sách Địa chỉ</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation>Có lỗi xảy ra khi lưu các địa chỉ vào %1. Hãy thử lại.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
         <translation>Kết xuất không thành công</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Có lỗi xảy ra khi lưu các địa chỉ vào %1. Hãy thử lại.</translation>
     </message>
 </context>
 <context>
@@ -187,14 +180,6 @@
         <translation>Nhập lại mật khẩu mới</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Hiển thị mật khẩu</translation>
-    </message>
-    <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Nhập mật khẩu mới cho ví. &lt;br/&gt;Hãy sử dụng mật khẩu có &lt;b&gt;10 hoặc hơn các ký tự ngẫu nhiên&lt;/b&gt;, hay &lt;b&gt;8 từ hoặc nhiều hơn&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Mã hoá ví</translation>
     </message>
@@ -211,20 +196,8 @@
         <translation>Mở khoá ví</translation>
     </message>
     <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Công việc này cần mật khẩu ví của bạn để giải mã ví.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Giải mã ví</translation>
-    </message>
-    <message>
         <source>Change passphrase</source>
         <translation>Đổi mật khẩu</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Hãy nhập vào mật khẩu cũ và mật khẩu mới cho ví của bạn.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -271,10 +244,6 @@
         <translation>Mật khẩu bạn nhập để giải mã ví không chính xác.</translation>
     </message>
     <message>
-        <source>Wallet decryption failed</source>
-        <translation>Giải mã ví không thành công</translation>
-    </message>
-    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Mật khẩu ví đã được đổi thành công.</translation>
     </message>
@@ -302,23 +271,10 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>Có lỗi nghiêm trọng xảy ra. Dash Core không thể tiếp tục một cách an toàn được nên phải thoát ra.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Ví</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nút</translation>
-    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Tổng thể</translation>
@@ -342,6 +298,38 @@
     <message>
         <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>Yêu cầu thanh toán (sinh mã QR và dash: URIs)</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation>&amp;Tuỳ chọn…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation>&amp;Mã hoá Ví…</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation>&amp;Sao lưu Ví…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation>Đổi &amp;Mật khẩu…</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock Wallet…</source>
+        <translation>&amp;Mở khoá Ví…</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation>Ký vào &amp;thông điệp…</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation>&amp;Kiểm tra thông điệp…</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation>Mở &amp;URI…</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -368,20 +356,12 @@
         <translation>Thoát ứng dụng</translation>
     </message>
     <message>
-        <source>Show information about Dash Core</source>
-        <translation>Hiển thị thông tin về Dash Core</translation>
-    </message>
-    <message>
         <source>About &amp;Qt</source>
         <translation>Về &amp;QT</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
         <translation>Hiển thị thông tin giới thiệu về Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Tuỳ chọn...</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -400,32 +380,16 @@
         <translation>Hiển thị hoặc ẩn cửa sổ chính</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Mã hoá Ví...</translation>
-    </message>
-    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Mã hoá khoá riêng mà thuộc về ví của bạn</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Sao lưu Ví...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
         <translation>Sao lưu ví vào vị trí khác</translation>
     </message>
     <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>Đổi &amp;Mật khẩu...</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Đổi mật khẩu dùng để mã hoá ví</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;Mở khoá Ví...</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -436,16 +400,8 @@
         <translation>&amp;Khoá Ví</translation>
     </message>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>Ký vào &amp;thông điệp...</translation>
-    </message>
-    <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>Ký vào thông điệp với địa chỉ Dash để chứng minh bạn là chủ của chúng</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Kiểm tra thông điệp...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
@@ -462,10 +418,6 @@
     <message>
         <source>&amp;Debug console</source>
         <translation>Giao diện gỡ rối</translation>
-    </message>
-    <message>
-        <source>Open debugging console</source>
-        <translation>Mở giao diện gỡ rối</translation>
     </message>
     <message>
         <source>&amp;Network Monitor</source>
@@ -508,28 +460,12 @@
         <translation>Hiển thị những ví được sao lưu tự động</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Gửi địa chỉ...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Hiển thị danh sách các địa chỉ đã sử dụng và các nhãn</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Địa chỉ nhận...</translation>
-    </message>
-    <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Hiển thị danh sách các địa chỉ đã sử dụng để nhận và các nhãn</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Mở &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Mở một dash: URI hoặc một yêu cầu thanh toán</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -556,10 +492,6 @@
         <translation>&amp;Thiết đặt</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Công cụ</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>&amp;Trợ giúp</translation>
     </message>
@@ -575,30 +507,6 @@
         <source>Network activity disabled</source>
         <translation>Kết nối mạng bị tắt</translation>
     </message>
-    <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>Đang đồng bộ phần đầu (%1%)...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Đang đồng bộ với mạng lưới...</translation>
-    </message>
-    <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>Sắp xếp các khối trên đĩa...</translation>
-    </message>
-    <message>
-        <source>Processing blocks on disk...</source>
-        <translation>Đang xử lý các khối trên đĩa...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Sắp xếp lại các khối trên đĩa...</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>Đang kết nối với các máy ngang hàng...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Đã xử lý được %n block(s) của lịch sử giao dịch.</numerusform></translation>
@@ -608,8 +516,32 @@
         <translation>%1 đằng sau</translation>
     </message>
     <message>
-        <source>Catching up...</source>
-        <translation>Đang nạp bộ đệm...</translation>
+        <source>Syncing Headers (%1%)…</source>
+        <translation>Đang đồng bộ phần đầu (%1%)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation>Đang đồng bộ với mạng lưới…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation>Sắp xếp các khối trên đĩa…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation>Đang xử lý các khối trên đĩa…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation>Sắp xếp lại các khối trên đĩa…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation>Đang kết nối với các máy ngang hàng…</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation>Đang nạp bộ đệm…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -717,7 +649,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được khoá&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -877,10 +809,6 @@
         <translation>Một số coin đã được bỏ chọn vì chúng đã được tiêu.</translation>
     </message>
     <message>
-        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
-        <translation>Một số coin đã được bỏ chọn vì chúng chưa đủ số vòng trộn.</translation>
-    </message>
-    <message>
         <source>Show all coins</source>
         <translation>Hiển thị toàn bộ coin</translation>
     </message>
@@ -905,6 +833,12 @@
         <translation>không áp dụng</translation>
     </message>
 </context>
+<context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -944,10 +878,6 @@
         <translation>Địa chỉ vừa nhập "%1" không phải địa chỉ Dash hợp lệ.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Địa chỉ vừa nhập "%1" đã có trong danh sách địa chỉ.</translation>
-    </message>
-    <message>
         <source>Could not unlock wallet.</source>
         <translation>Không thể mở khoá ví.</translation>
     </message>
@@ -980,14 +910,13 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    </context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>phiên bản</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -1013,10 +942,6 @@
         <translation>Đây là lần đầu chương trình khởi chạy, bạn có thể chọn nơi %1 sẽ lưu trữ data.</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Khi bạn click OK, %1 sẽ bắt đầu download và process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</translation>
-    </message>
-    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Đồng bộ hóa ban đầu này rất đòi hỏi, và có thể phơi bày các sự cố về phần cứng với máy tính của bạn trước đó đã không được chú ý. Mỗi khi bạn chạy %1, nó sẽ tiếp tục tải về nơi nó dừng lại.</translation>
     </message>
@@ -1031,6 +956,14 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Sử dụng thư mục dữ liệu tuỳ chọn:</translation>
+    </message>
+    <message>
+        <source>%1 GB of free space available</source>
+        <translation>%1 GB còn trống </translation>
+    </message>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation>(của %1 GB cần đến)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1056,14 +989,6 @@
         <source>Error</source>
         <translation>Lỗi</translation>
     </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1 GB còn trống </translation>
-    </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation>(của %1 GB cần đến)</translation>
-    </message>
 </context>
 <context>
     <name>MasternodeList</name>
@@ -1074,10 +999,6 @@
     <message>
         <source>Status</source>
         <translation>Trạng thái</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1148,8 +1069,12 @@
         <translation>Copy các đầu ra của khoản đặt cọc</translation>
     </message>
     <message>
-        <source>Updating...</source>
-        <translation>Đang cập nhật...</translation>
+        <source>Please wait…</source>
+        <translation>Vui lòng đợi…</translation>
+    </message>
+    <message>
+        <source>Updating…</source>
+        <translation>Đang cập nhật…</translation>
     </message>
     <message>
         <source>ENABLED</source>
@@ -1184,10 +1109,6 @@
         <translation>Lọc bởi bất kỳ thuộc tính nào (ví dụ địa chỉ hoặc protx hash)</translation>
     </message>
     <message>
-        <source>Please wait...</source>
-        <translation>Vui lòng đợi...</translation>
-    </message>
-    <message>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>Thông tin thêm về DIP3 Masternode %1</translation>
     </message>
@@ -1211,8 +1132,12 @@
         <translation>Số khối còn lại</translation>
     </message>
     <message>
-        <source>Unknown...</source>
-        <translation>Không xác định...</translation>
+        <source>Unknown…</source>
+        <translation>Không xác định…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation>đang tính…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1227,10 +1152,6 @@
         <translation>Tiến trình tăng lên mỗi giờ</translation>
     </message>
     <message>
-        <source>calculating...</source>
-        <translation>đang tính...</translation>
-    </message>
-    <message>
         <source>Estimated time left until synced</source>
         <translation>Thời gian ước đoán còn lại để hoàn tất việc đồng bộ</translation>
     </message>
@@ -1238,11 +1159,7 @@
         <source>Hide</source>
         <translation>Ẩn</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Không xác định. Đang đồng bộ phần đầu (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1250,22 +1167,13 @@
         <translation>Mở URI</translation>
     </message>
     <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Mở yêu cầu thanh toán từ URI hoặc file</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Chọn file yêu cầ thanh toán</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Chọn tệp yêu cầu thanh toán để mở</translation>
-    </message>
 </context>
+<context>
+    <name>OpenWalletActivity</name>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1279,10 +1187,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Kích thước của dữ liệu cache</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1335,18 +1239,6 @@
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Hiển thị nếu proxy SOCKS5 mặc định được cung cấp để dùng tiếp cận các thiết bị ngang hàng thông qua loại mạng này.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Sử dụng các proxy riêng biệt SOCKS&amp;5 để truy cập các nút ngang hàng trên các dịch vụ ẩn danh Tor:</translation>
-    </message>
-    <message>
-        <source>Hide the icon from the system tray.</source>
-        <translation>Ẩn biểu tượng khỏi khay hệ thống.</translation>
-    </message>
-    <message>
-        <source>&amp;Hide tray icon</source>
-        <translation>Ẩn biểu tượng &amp;khay hệ thống</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -1425,10 +1317,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Kết nối với mạng lưới Dash thông qua các proxy SOCKS5 riêng biệt cho các dịch vụ ẩn danh Tor.</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Chỉ hiển thị biểu tượng ở khai sau khi thu nhỏ cửa sổ.</translation>
     </message>
@@ -1453,12 +1341,6 @@
         <translation>Giao diện ngôn ngữ người dùng có thể được thiết lập tại đây. Tùy chọn này sẽ có hiệu lực sau khi khởi động lại %1.</translation>
     </message>
     <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
-        <translation>Ngôn ngữ ị thiếu hoặc việc dịch chưa hoàn tất? Tham gia dịch giúp tại đây:
-https://www.transifex.com/projects/p/dash/</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>Đơn vị &amp;hiển thị số lượng:</translation>
     </message>
@@ -1469,10 +1351,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Số các chữ số thập phân</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Kích hoạt các tuỳ chọn dòng lệnh sẽ thay thế cho các tuỳ chọn trên:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1715,6 +1593,9 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
@@ -1729,14 +1610,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>xử lý URI</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Yêu cầu thanh toán lấy URL là không hợp lệ: %1</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Địa chỉ thanh toán không hợp lệ %1</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>URI không thể phân tích. Nó có thể bởi địa chỉ Dash không hợp lệ hoặc thông số URI dị hình.</translation>
     </message>
@@ -1744,99 +1617,41 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Payment request file handling</source>
         <translation>Thanh toán cần file xử lý</translation>
     </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Tệp yêu cầu thanh toán không thể đọc được. Nó có thể là nguyên nhân bởi tệp thanh toán không hợp lệ.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Yêu cầu giao dịch bị từ chối</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Mạng yêu cầu thanh toán không tương xứng với mạng của phần mềm.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Yêu cầu thanh toán đã hết hạn.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Yêu cầu thanh toán không được khởi tạo.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Yêu cầu thanh toán chưa được xác minh để tùy chỉnh các kịch bản thanh toán không được hỗ trợ.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Yêu cầu thanh toán không hợp lệ.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Yêu cầu thanh toán khoản tiền của  %1 là quá nhỏ (được xem là bụi).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Trả lại từ %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Yêu cầu thanh toán %1 quá lớn (%2 bytes, cho phép %3 bytes)</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Lỗi kết nối với %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Yêu cầu thanh toán không thể xử lý!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Phản hồi xấu từ máy chủ %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Yêu cầu mạng bị lỗi</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Thanh toán được ghi nhận</translation>
-    </message>
 </context>
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>NodeId</source>
-        <translation>NodeID</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>Nút/Dịch vụ</translation>
-    </message>
-    <message>
         <source>User Agent</source>
+        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation>User Agent</translation>
     </message>
     <message>
         <source>Ping</source>
+        <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation>Ping</translation>
     </message>
     <message>
         <source>Sent</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation>Đã gửi</translation>
     </message>
     <message>
         <source>Received</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
         <translation>Đã nhận</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>Proposal</name>
+    </context>
+<context>
+    <name>ProposalModel</name>
+    </context>
 <context>
     <name>QObject</name>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 vẫn chưa thoát an toàn...</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation>%1 vẫn chưa thoát an toàn…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1936,49 +1751,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Error: Xác định data directory "%1" không tồn tại.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Error: Không thể parse configuration file: %1. Chỉ dùng key=value syntax.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Error: %1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>Lỗi: Nạp font chữ không thành công.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Lỗi: Loại font được chọn không hợp lệ Giá trị hợp lệ: %1</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Lỗi: Độ đậm font chữ dạng thường được chọn không hợp lệ. Khoảng hợp lệ %1 đến %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Lỗi: Độ đậm font chữ dạng chữ đậm được chọn không hợp lệ. Khoảng hợp lệ %1 đến %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Lỗi: Cỡ chữ được chọn không hợp lệ. Khoảng hợp lệ %1 đến %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Lỗi: Đường dẫn -custom-css-dir không hợp lệ.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Lỗi: %1 File(s) CSS không tìm thấy trong đường dẫn -custom-css-dir.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -1989,38 +1761,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Mã QR</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
-    </message>
-    <message>
-        <source>Error creating QR Code.</source>
-        <translation>Lỗi khi tạo mã QR.</translation>
-    </message>
-</context>
-<context>
-    <name>QRGeneralImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>&amp;Sao chép ảnh</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>&amp;Lưu mã QR</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>PNG Image (*.png)</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Lưu ảnh…</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Lưu ảnh…</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -2030,11 +1779,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Save QR Code</source>
         <translation>&amp;Lưu mã QR</translation>
     </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>Ảnh dạng PNG (*.png)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -2082,24 +1827,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Debug log file</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Số khối hiện tại</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>Phiên bản</translation>
     </message>
     <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Sử dụng BerkeleyDB version</translation>
-    </message>
-    <message>
         <source>Block chain</source>
         <translation>Block chain</translation>
-    </message>
-    <message>
-        <source>Number of Masternodes</source>
-        <translation>Số lượng Masternodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2146,14 +1879,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Hãy chọn một máy đồng cấp để xem thông tin chi tiết.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Danh sách trắng</translation>
-    </message>
-    <message>
-        <source>Direction</source>
-        <translation>Hướng</translation>
-    </message>
-    <message>
         <source>Version</source>
         <translation>Phiên bản</translation>
     </message>
@@ -2168,10 +1893,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synced Blocks</source>
         <translation>Các khối đã đồng bộ</translation>
-    </message>
-    <message>
-        <source>Wallet Path</source>
-        <translation>Đường dẫn đến Ví</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2210,10 +1931,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Dịch vụ</translation>
     </message>
     <message>
-        <source>Ban Score</source>
-        <translation>Điểm cấm</translation>
-    </message>
-    <message>
         <source>Connection Time</source>
         <translation>Thời gian kết nối</translation>
     </message>
@@ -2250,42 +1967,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Sửa &amp;Ví</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Cứu ví</translation>
-    </message>
-    <message>
-        <source>Recover transactions 1</source>
-        <translation>Phục hồi các giao dịch 1</translation>
-    </message>
-    <message>
-        <source>Recover transactions 2</source>
-        <translation>Phục hồi các giao dịch 2</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet format</source>
-        <translation>Nâng cấp định dạng ví</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Nút dưới đây sẽ khởi động lại ví với tuỳ chọn dòng lệnh để sửa lại ví, sửa lại những vấn đề với các tệp blockchain bị lỗi hoặc các giao dịch bị thiếu/cũ.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Thử phục hồi khoá riêng từ tệp wallet.dat bị lỗi.</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Phục hồi các giao dịch từ blockchain (giữ các meta-data, ví dụ: chủ tải khoản).</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Phục hồi tất cả các giao dịch từ blockchain (bỏ đi các meta-data).</translation>
-    </message>
-    <message>
-        <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: Nâng cấp ví lên định dạng mới nhất khi khởi động. (Chú ý: điều này KHÔNG có nghĩa là nâng cấp bản thân phần mềm ví)</translation>
-    </message>
-    <message>
         <source>Wallet repair options.</source>
         <translation>Các tuỳ chọn sửa ví.</translation>
     </message>
@@ -2296,6 +1977,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
         <translation>-reindex: Tái lập lại chỉ mục cho chuỗi khối từ tệp hiện tại blk000??.dat</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Không đồng ý</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
@@ -2362,38 +2047,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tổng số: %1 (Bật: %2)</translation>
     </message>
     <message>
-        <source>(node id: %1)</source>
-        <translation>(node id: %1)</translation>
-    </message>
-    <message>
         <source>via %1</source>
         <translation>theo %1</translation>
-    </message>
-    <message>
-        <source>never</source>
-        <translation>không bao giờ</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>Kết nối về</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>Kết nối đi</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Đồng ý</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Không đồng ý</translation>
     </message>
     <message>
         <source>Unknown</source>
         <translation>Không xác định</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -2427,10 +2088,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Amount:</source>
         <translation>&amp;Số tiền:</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Yêu cầu thanh toán</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2484,13 +2141,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Copy amount</source>
         <translation>Sao chép số tiền</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>QR Code</source>
-        <translation>Mã QR</translation>
-    </message>
     <message>
         <source>Copy &amp;URI</source>
         <translation>Copy &amp;URI</translation>
@@ -2500,8 +2153,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copy địa chỉ</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Lưu ảnh…</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2510,34 +2163,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment information</source>
         <translation>Thông tin thanh toán</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Số tiền</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Nhãn</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Thông điệp</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Kết quả là URI quá dài, hãy thử rút gọn chữ trong nhãn / thông điệp.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Lỗi mã hoá URI thành mã QR.</translation>
     </message>
 </context>
 <context>
@@ -2582,10 +2207,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tính năng Kiểm soát Coin</translation>
     </message>
     <message>
-        <source>Inputs...</source>
-        <translation>Đầu vào...</translation>
-    </message>
-    <message>
         <source>automatically selected</source>
         <translation>tự động chọn</translation>
     </message>
@@ -2614,6 +2235,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bụi</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation>Đầu vào…</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>Phí sau:</translation>
     </message>
@@ -2634,12 +2259,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Phí giao dịch</translation>
     </message>
     <message>
-        <source>Choose...</source>
-        <translation>Chọn...</translation>
-    </message>
-    <message>
-        <source>collapse fee-settings</source>
-        <translation>Thu gọn các thiết lập về phí</translation>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation>(Phí khởi tạo thông minh chưa được khởi tạo. Thường thì sẽ mất vài block…)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2650,16 +2271,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nếu mức phí tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 byte, thì "theo kilobyte" chỉ trả 250 duff cho phí,&lt;br /&gt;trong khi "ít nhất" phải trả 1000 duff. Cho các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Chỉ trả phí tối thiểu cũng được chỉ khi mà có lượng giao dịch ít hơn không gian trong khối.&lt;br /&gt;Nhưng cần lưu ý là nó có thể xảy ra hiện tượng giao dịch không bao giờ được xác nhận một khi có nhiều nhu cầu giao dash hơn khả năng mà mạng lưới có thể xử lý được.</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>mỗi kilobyte</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Sử dụng phí dự phòng có thể dẫn tới việc giao dịch mất đến hàng giờ hoặc hàng ngày (hoặc thậm chí không bao giờ) được xác thực. Hãy cân nhắc tự chọn mức phí hoặc đợi đến khi bạn được chuỗi xác thực hoàn chỉnh.</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation>Chọn…</translation>
     </message>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
@@ -2670,20 +2291,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ẩn</translation>
     </message>
     <message>
-        <source>(read the tooltip)</source>
-        <translation>(xem gợi ý)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Gợi ý:</translation>
     </message>
     <message>
         <source>Custom:</source>
         <translation>Tuỳ chỉnh:</translation>
-    </message>
-    <message>
-        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Phí khởi tạo thông minh chưa được khởi tạo. Thường thì sẽ mất vài block...)</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -2758,14 +2371,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bạn có chắc mình muốn gửi?</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>được thêm vào như là phí giao dịch</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Tổng số tiền = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 của %2 các thành phần được hiển thị)&lt;/b&gt;</translation>
     </message>
@@ -2814,20 +2419,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tạo giao dịch không thành công!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>The transaction đã bị từ chối với lý do sau: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Mức phí cao hơn %1 có thể được xem là mức cao thái quá.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Yêu cầu thanh toán đã hết hạn.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Chỉ thanh toán mức phí yêu cầu của %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2856,10 +2449,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>SendCoinsEntry</name>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Đây là giao dịch thông thường.</translation>
-    </message>
     <message>
         <source>Pay &amp;To:</source>
         <translation>Trả &amp;Cho</translation>
@@ -2936,23 +2525,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Memo:</source>
         <translation>Ghi nhớ:</translation>
     </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Nhập nhãn cho địa chỉ để thêm nó vào sổ địa chỉ của bạn.</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Yes</translation>
-    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 đang shutting down...</translation>
+        <source>%1 is shutting down…</source>
+        <translation>%1 đang shutting down…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -3027,7 +2605,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation>Hãy nhập vào địa chỉ của người nhận, thông điệp (hãy đảm bảo rằng bạn copy cả dấu xuống dòng, dấu cách, dấu tab,... một cách chính xác) và chữ ký bên dưới để kiểm tra thông điệp. Hãy cẩn thận để không đọc thêm vào phần chữ ký mà nó dùng để ký, để tránh bị đánh lừa bởi kiểu tấn công người trung gian. Chú ý đây chỉ để chứng minh chữ ký của bên nhận với địa chỉ đó, nó không thể chứng minh người gửi hoặc bất kỳ giao dich nào!</translation>
+        <translation>Hãy nhập vào địa chỉ của người nhận, thông điệp (hãy đảm bảo rằng bạn copy cả dấu xuống dòng, dấu cách, dấu tab,… một cách chính xác) và chữ ký bên dưới để kiểm tra thông điệp. Hãy cẩn thận để không đọc thêm vào phần chữ ký mà nó dùng để ký, để tránh bị đánh lừa bởi kiểu tấn công người trung gian. Chú ý đây chỉ để chứng minh chữ ký của bên nhận với địa chỉ đó, nó không thể chứng minh người gửi hoặc bất kỳ giao dich nào!</translation>
     </message>
     <message>
         <source>The Dash address the message was signed with</source>
@@ -3108,13 +2686,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Message verified.</source>
         <translation>Thông điệp đã được xác thực.</translation>
-    </message>
-</context>
-<context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[mạng thử]</translation>
     </message>
 </context>
 <context>
@@ -3269,10 +2840,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>Tổng kích thước giao dịch</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Người bán</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -3456,8 +3023,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Năm nay</translation>
     </message>
     <message>
-        <source>Range...</source>
-        <translation>Khoảng...</translation>
+        <source>Range…</source>
+        <translation>Khoảng…</translation>
     </message>
     <message>
         <source>Most Common</source>
@@ -3520,10 +3087,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Sao chép chi tiết đầy đủ về giao dịch</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>Sửa nhãn</translation>
-    </message>
-    <message>
         <source>Show transaction details</source>
         <translation>Xem chi tiết giao dịch</translation>
     </message>
@@ -3534,10 +3097,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Export Transaction History</source>
         <translation>Kết xuất Lịch sử Giao dịch</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -3604,19 +3163,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Không có ví nào được nạp.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
         <translation>Gửi tiền</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3634,10 +3192,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Backup Wallet</source>
         <translation>Sao lưu Ví</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Dữ liệu Ví (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -3667,20 +3221,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đây là phiên bản chưa chính thức - hãy dùng và tự chấp nhận mạo hiểm - đừng dùng để đào coin hoặc các ứng dụng thương mại.</translation>
     </message>
     <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Cảnh báo: Mạng lưới có vẻ chưa hoàn toàn đồng ý! Một vài máy đào có vẻ như đã kinh nghiệm với những vấn đề này.</translation>
-    </message>
-    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Cảnh báo: Chúng ta có vẻ không được sự đồng ý một cách đầy đủ từ các đối tác ngang hàng! Bạn cần nâng cấp hoặc các nút khác cần nâng cấp.</translation>
     </message>
     <message>
         <source>Already have that input.</source>
         <translation>Đã có đầu vào đó.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Không thể hạ cấp ví</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
@@ -3723,14 +3269,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lỗi đọc từ cơ sở dữ liệu, đang tắt phần mềm.</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Lỗi</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Lỗi: Dung lượng đĩa thấp!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Không thành công khi lắng nghe trên các cổng. Sử dụng -listen=0 nếu bạn muốn nó.</translation>
     </message>
@@ -3767,28 +3305,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đầu vào vượt ngưỡng tối đa. </translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Không thể tải cache yêu cầu đã được thực hiện từ</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Không thể cache tải dữ liệu governance từ</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Không thể tải cache dữ liệu về masternode từ</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Đã tìm đủ người dùng, đang ký (vui lòng đợi %s)</translation>
-    </message>
-    <message>
-        <source>Found enough users, signing ...</source>
-        <translation>Đã kiếm đủ người dùng, đang ký ...</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Đang nạp...</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -3801,10 +3319,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Khối sáng thế không chính xác hoặc không tìm thấy. Sai datadir cho mạng lưới?</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Thông tin</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -3827,28 +3341,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số lượng người ký tối thiểu cho spork được chỉ bởi -minsporkkeys không hợp lệ</translation>
     </message>
     <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool đã hết, hãy gọi keypoolrefill trước</translation>
-    </message>
-    <message>
-        <source>Loading banlist...</source>
-        <translation>Đang tải danh sách từ chối...</translation>
-    </message>
-    <message>
-        <source>Loading fulfilled requests cache...</source>
-        <translation>Đang tải cache dữ liệu thực hiện...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Đang tải cache cho masternode...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Khoá đã sẵn sàng.</translation>
-    </message>
-    <message>
-        <source>Mixing in progress...</source>
-        <translation>Đang trong quá trình trộn...</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -3871,12 +3365,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không có trong danh sách Masternode.</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation>Đang xén tỉa các khối lưu trữ…</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation>Phát lại các khối…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation>Đang quét lại…</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation>Starting network threads…</translation>
+    </message>
+    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Đã được gửi cho masternode, đang đợi trong hàng đợi %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Đồng bộ đã hoàn thành</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain…</source>
+        <translation>Đang đồng bộ blockchain…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance objects…</source>
+        <translation>Đang đồng bộ các đối tượng quản trị…</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -3887,28 +3405,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Trả lời không xác định.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Tuỳ chọn không được hỗ trợ -benchmark, sử dụng -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Tuỳ chọn không được hỗ trợ -debugnet, sử dụng -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Tuỳ chọn không được hỗ trợ -tor, hãy sử dụng -onion.</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Bình luận User Agent (%s) có chứa những ký tự không an toàn.</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Đang kiểm tra (các) ví...</translation>
-    </message>
-    <message>
-        <source>Will retry...</source>
-        <translation>Sẽ thử lại...</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>
@@ -3931,10 +3429,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>File %s có chứa tất cả các khoá riêng từ ví này. Không nên chia sẻ nó với bất cứ ai.</translation>
     </message>
     <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>Tuỳ chọn -masternode không được sử dụng nữa và bị bỏ qua, việc chỉ rõ tham số -masternodeblsprivkey là đủ để khởi động một nút như là một masternode.</translation>
-    </message>
-    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Không tạo được file dự phòng, file đã tồn tại rồi! Điều này có thể xảy ra nếu bạn khởi động lại ví trong ít hơn 60 giây. Bạn có thể tiếp tục nếu bạn đồng ý với việc đó.</translation>
     </message>
@@ -3951,10 +3445,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Xén tỉa: việc đồng bộ ví mới đây đã đi quá dữ liệu được xén tỉa. Bạn cần -reindex (download toàn bộ blockchain lần nữa trong trường hợp các nút bị xén tỉa)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans là không thể trong chế độ xén tỉa. Bạn cần sử dụng -reindex mà nó sẽ tải xuống toàn bộ blockchain lại.</translation>
-    </message>
-    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>Cơ sở dữ liệu khối có chứa một khối mà nó có vẻ sẽ xuất hiện trong tương lai. Điều này có thể là do ngày giờ trên máy tính của bạn được thiết lập không chính xác. Chỉ khi tái lập lại cơ sở dữ liệu khối nếu bạn chắc chắn rằng ngày giờ máy tính của bạn là chính xác.</translation>
     </message>
@@ -3967,14 +3457,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tổng độ dài của chuỗi phiên bản mạng (%i) vượt qua độ dài tối đa (%i). Hãy giảm số hoặc kích thước của uacomments.</translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Tìm thấy tham số không được hỗ trợ -socks. Thiết lập phiên bản SOCKS không còn hiệu lực nữa, chỉ có proxy SOCKS5 mới được hỗ trợ.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Tham số không được hỗ trợ -whitelistalwaysrelay đã bị bỏ qua, hãy sử dụng -whitelistrelay và/hoặc -whitelistforcerelay.</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>CẢNH BÁO: Bổ sung keypool không thành công, hãy mở khoá ví của bạn để làm điều đó.</translation>
     </message>
@@ -3983,20 +3465,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ví đã được khoá, không thể bổ sung keypool! Tự động backups và trộn đã bị tắt, hãy mở khoá ví của bạn để bổ sung keypool.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Cảnh báo: Không xác định được phiên bản khối được đào! Có thể những luật chưa được biết đang có tác động</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
         <translation>Bạn cần phải tái lập lại cơ sở dữ liệu sử dụng tham số -reindex để thay đổi -timestampindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để quay trở lại chế độ không bị xén tỉa. Điều này sẽ làm tải lại toàn bộ blockchain</translation>
-    </message>
-    <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode không được dùng nữa.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4015,28 +3489,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lỗi nâng cấp cơ sở dữ liệu evo</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Lỗi: Một lỗi bên trong trầm trọng đã xảy ra, hãy xem file debug.log để biết thêm chi tiết</translation>
-    </message>
-    <message>
-        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>Lỗi: Không thành công trong việc thêm socket vào epolfd (epoll_ctl trả về lỗi %s)</translation>
-    </message>
-    <message>
         <source>Exceeded max tries.</source>
         <translation>Vượt quá số lần thử tối đa.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>Không thể xoá bộ nhớ đệm về các yêu cầu đã được thực hiện tại </translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>Không thể xoá bộ đệm quản trị tại </translation>
-    </message>
-    <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>Không thể xoá bộ đệm masternode tại </translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4055,12 +3509,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không xoá được backup, lỗi: %s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Thất bại việc tải dữ liệu sporks cache từ</translation>
-    </message>
-    <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Không thể quét lại ví trong quá trình khởi tạo</translation>
+    </message>
+    <message>
+        <source>Found enough users, signing…</source>
+        <translation>Đã kiếm đủ người dùng, đang ký…</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -4069,34 +3523,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>masternodeblsprivkey không hợp lệ. Hãy xem trong tài liệu.</translation>
-    </message>
-    <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>Nó đã được thay thế bởi -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Sự thay thế -disablegovernance đã bị buộc phải thực hiện.</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Đang nạp chỉ mục khối...</translation>
-    </message>
-    <message>
-        <source>Loading governance cache...</source>
-        <translation>Đang tải bộ đệm quản trị...</translation>
-    </message>
-    <message>
-        <source>Loading sporks cache...</source>
-        <translation>Đang tải dữ liệu sporks cache...</translation>
-    </message>
-    <message>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Đang nạp ví... (%3.2f %%)</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Đang tải ví...</translation>
     </message>
     <message>
         <source>Masternode queue is full.</source>
@@ -4109,6 +3535,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Missing input transaction information.</source>
         <translation>Thiếu thông tin giao dịch đầu vào.</translation>
+    </message>
+    <message>
+        <source>Mixing in progress…</source>
+        <translation>Đang trong quá trình trộn…</translation>
     </message>
     <message>
         <source>No errors detected.</source>
@@ -4139,10 +3569,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chế độ Xén-tỉa không tương thích với -txindex.</translation>
     </message>
     <message>
-        <source>Pruning blockstore...</source>
-        <translation>Đang xén tỉa các khối lưu trữ...</translation>
-    </message>
-    <message>
         <source>Specified -walletdir "%s" does not exist</source>
         <translation>Thư mục được chỉ ra -walletdir "%s" không tồn tại</translation>
     </message>
@@ -4153,10 +3579,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Thư mục được xác định bởi -walletdir "%s" không phải là một thư mục</translation>
-    </message>
-    <message>
-        <source>Synchronizing blockchain...</source>
-        <translation>Đang đồng bộ blockchain...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4191,10 +3613,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Giao dịch quá lớn</translation>
     </message>
     <message>
-        <source>Trying to connect...</source>
-        <translation>Đang thử kết nối...</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
     </message>
@@ -4207,16 +3625,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Upgrading UTXO database</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Ví %s nằm ngoài thư mục ví %s</translation>
+        <source>Verifying blocks…</source>
+        <translation>Đang kiểm tra các khối…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation>Đang kiểm tra (các) ví…</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>Wallet needed to be rewritten: restart %s to complete</translation>
-    </message>
-    <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Cảnh báo: luật mới chưa rõ đã được kích hoạt (versionbit %i)</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
@@ -4235,20 +3653,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để thay đổi -spentindex</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để thay đổi -txindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>không có phiên trộn nào sẵn sàng.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>xem debug.log để biết thêm chi tiết.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4291,24 +3701,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Không thể phát lại các khối. Bạn sẽ cần xây dựng lại cơ sở dữ liệu bằng cách sử dụng -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d của 100 khối cuối cùng có phiên bản không mong đợi</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupt, salvage failed</translation>
     </message>
     <message>
         <source>%s is not a valid backup folder!</source>
@@ -4359,12 +3753,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lỗi tải %s: Bạn không thể tắt HD trên một ví đã có HD</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Lỗi tải ví %s. Tham số -wallet tên file chỉ định bị trùng</translation>
-    </message>
-    <message>
         <source>Error upgrading chainstate database</source>
         <translation>Error upgrading chainstate database</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses…</source>
+        <translation>Loading P2P addresses…</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation>Đang tải danh sách từ chối…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation>Đang nạp chỉ mục khối…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation>Đang tải ví…</translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
@@ -4373,6 +3779,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Không thể khởi động được một hàng đợi trộn mới</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation>Đang nạp…</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4399,20 +3809,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Địa chỉ spork được chỉ ra không hợp lệ với -sporkaddr</translation>
     </message>
     <message>
-        <source>Loading P2P addresses...</source>
-        <translation>Loading P2P addresses...</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Giảm -maxconnections từ %d đến %d, bởi vì những giới hạn của hệ thống.</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Phát lại các khối...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Đang quét lại...</translation>
     </message>
     <message>
         <source>Session not complete!</source>
@@ -4425,14 +3823,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Signing transaction failed</source>
         <translation>Thất bại khi ký giao dịch</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Starting network threads...</translation>
-    </message>
-    <message>
-        <source>Synchronizing governance objects...</source>
-        <translation>Đang đồng bộ các đối tượng quản trị...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -4463,8 +3853,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Giao dịch không hợp lệ.</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Giao dịch quá lớn cho chính sách miễn phí</translation>
+        <source>Trying to connect…</source>
+        <translation>Đang thử kết nối…</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -4487,10 +3877,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Danh mục ghi nhật ký không được hỗ trợ %s=%s.</translation>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>Đang kiểm tra các khối...</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Còn lại số lượg rất ít các khoá: %d</translation>
     </message>
@@ -4499,8 +3885,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ví đã bị khoá.</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>Cảnh báo</translation>
+        <source>Will retry…</source>
+        <translation>Sẽ thử lại…</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>
@@ -4513,10 +3899,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Your entries added successfully.</source>
         <translation>Các đầu vào của bạn đã được thêm vào một cách thành công.</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Dọn sạch tất cả các giao dịch khỏi ví...</translation>
     </message>
 </context>
 </TS>

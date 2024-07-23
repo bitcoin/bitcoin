@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>Vi&amp;e...</translation>
+        <translation>Vi&amp;e…</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -302,6 +302,9 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -328,6 +331,34 @@
         <translation>Pyydä maksuja (Luo QR koodit ja Dash: URIt)</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation>&amp;Asetukset…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation>&amp;Salaa Lompakko…</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation>&amp;Varmuuskopioi Lompakko…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation>&amp;Vaihda Salasana…</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock Wallet…</source>
+        <translation>&amp;Avaa Lukitus…</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation>&amp;Allekirjoita Viesti…</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation>&amp;Tarkista Viesti…</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Lähettävät Osoitteet</translation>
     </message>
@@ -336,16 +367,16 @@
         <translation>&amp;Vastaanottavat Osoitteet</translation>
     </message>
     <message>
+        <source>Open &amp;URI…</source>
+        <translation>Avaa &amp;URI…</translation>
+    </message>
+    <message>
         <source>Open Wallet</source>
         <translation>Avaa Lompakko</translation>
     </message>
     <message>
         <source>Open a wallet</source>
         <translation>Avaa lompakko</translation>
-    </message>
-    <message>
-        <source>Close Wallet...</source>
-        <translation>Sulje Lompakko...</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -404,10 +435,6 @@
         <translation>Näytä tietoja QT:sta</translation>
     </message>
     <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Asetukset...</translation>
-    </message>
-    <message>
         <source>&amp;About %1</source>
         <translation>&amp;Tietoja %1</translation>
     </message>
@@ -428,32 +455,16 @@
         <translation>Näytä tai piilota pääikkuna</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Salaa Lompakko...</translation>
-    </message>
-    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Salaa yksityiset avaimet jotka kuuluvat lompakkoosi</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Varmuuskopioi Lompakko...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
         <translation>Varmuuskopioi lompakko toiseen paikkaan</translation>
     </message>
     <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Vaihda Salasana...</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Vaihda lompakon salaukseen käytettävä salasana</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;Avaa Lukitus...</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -464,16 +475,8 @@
         <translation>&amp;Lukitse Lompakko</translation>
     </message>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>&amp;Allekirjoita Viesti...</translation>
-    </message>
-    <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>Allekirjoita viestit Dash osoitteillasi todistaaksesi että omistat ne</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Tarkista Viesti...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
@@ -540,10 +543,6 @@
         <translation>Näytä vastaanottamiseen käytettyjen osoitteiden ja nimien lista</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Avaa &amp;URI...</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Komentorivin valinnat</translation>
     </message>
@@ -576,10 +575,6 @@
     <message>
         <source>Show information about %1</source>
         <translation>Näytä tietoja %1</translation>
-    </message>
-    <message>
-        <source>Create Wallet...</source>
-        <translation>Luo Lompakko...</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -621,30 +616,6 @@
         <source>Network activity disabled</source>
         <translation>Verkkotoiminnot ei käytössä</translation>
     </message>
-    <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>Synkronoidaan otsikoita (%1%)...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Synkronoidaan verkkoon...</translation>
-    </message>
-    <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>Indeksoidaan lohkoja levyllä...</translation>
-    </message>
-    <message>
-        <source>Processing blocks on disk...</source>
-        <translation>Käsitellään lohkoja levyllä...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Uudelleen indeksoidaan lohkoja...</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>Kytkeydytään peers...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Käsitelty %n lohko(a) tapahtumahistoriasta.</numerusform><numerusform>Käsitelty %n lohko(a) tapahtumahistoriasta.</numerusform></translation>
@@ -654,8 +625,40 @@
         <translation>%1 jäljessä</translation>
     </message>
     <message>
-        <source>Catching up...</source>
-        <translation>Saavutetaan verkkoa...</translation>
+        <source>Close Wallet…</source>
+        <translation>Sulje Lompakko…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation>Luo Lompakko…</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation>Synkronoidaan otsikoita (%1%)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation>Synkronoidaan verkkoon…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation>Indeksoidaan lohkoja levyllä…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation>Käsitellään lohkoja levyllä…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation>Uudelleen indeksoidaan lohkoja…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation>Kytkeydytään peers…</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation>Saavutetaan verkkoa…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -779,7 +782,7 @@
         <source>Original message:</source>
         <translation>Alkuperäinen viesti:</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -974,8 +977,8 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
-        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Luodaan Lompakko &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation>Luodaan Lompakko &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Create wallet failed</source>
@@ -1024,7 +1027,7 @@
         <source>Create</source>
         <translation>Luo</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1164,10 +1167,6 @@
         <translation>Tämä on ensimmäinen kerta, kun %1 on käynnistetty, joten voit valita datahakemiston paikan.</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Kun klikkaat OK, %1 alkaa latautua ja prosessoida %4 lohkoketjua (%2GB) alkaen esimmäisestä siirtotapahtumasta %3 kun %4 ensi kerran käynnistettiin.</translation>
-    </message>
-    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Tämä ensimmäinen synkronointi on vaativa, ja saattaa paljastaa laitteisto-ongelmia tietokoneessasi joita ei aikaisemmin ole huomattu. Aina kun käynnistät %1, jatkuu latautuminen siitä mihin se jäi aikaisemmin.</translation>
     </message>
@@ -1287,8 +1286,12 @@
         <translation>Kopioi Vakuus Lähtöpiste</translation>
     </message>
     <message>
-        <source>Updating...</source>
-        <translation>Päivitetään...</translation>
+        <source>Please wait…</source>
+        <translation>Odota…</translation>
+    </message>
+    <message>
+        <source>Updating…</source>
+        <translation>Päivitetään…</translation>
     </message>
     <message>
         <source>ENABLED</source>
@@ -1323,10 +1326,6 @@
         <translation>Suodata minkä tahansa ominaisuuden (esim. osoite tai protx tarkiste) mukaan</translation>
     </message>
     <message>
-        <source>Please wait...</source>
-        <translation>Odota...</translation>
-    </message>
-    <message>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>Masternode DIP3 lisätietoja %1</translation>
     </message>
@@ -1350,8 +1349,12 @@
         <translation>Lohkoja jäljellä</translation>
     </message>
     <message>
-        <source>Unknown...</source>
-        <translation>Tuntematon...</translation>
+        <source>Unknown…</source>
+        <translation>Tuntematon…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation>lasketaan…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1366,10 +1369,6 @@
         <translation>Edistymisen kasvu per tunti</translation>
     </message>
     <message>
-        <source>calculating...</source>
-        <translation>lasketaan...</translation>
-    </message>
-    <message>
         <source>Estimated time left until synced</source>
         <translation>Synkronoinnin jäljellä oleva aika</translation>
     </message>
@@ -1378,8 +1377,8 @@
         <translation>Piilota</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>Tuntematon. Synkronoidaan otsikoita (%1, %2%)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation>Tuntematon. Synkronoidaan otsikoita (%1, %2%)…</translation>
     </message>
 </context>
 <context>
@@ -1408,8 +1407,8 @@
         <translation>oletus lompakko</translation>
     </message>
     <message>
-        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Avataan Lompakko &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation>Avataan Lompakko &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
 <context>
@@ -1559,14 +1558,6 @@
         <translation>Asetukset tässä dialogissa ylikirjoitetaan joko komentorivin tai asetustiedostosta:</translation>
     </message>
     <message>
-        <source>Hide the icon from the system tray.</source>
-        <translation>Piilota kuvake tehtäväpalkista.</translation>
-    </message>
-    <message>
-        <source>&amp;Hide tray icon</source>
-        <translation>Piilota tehtäväpalkin kuvake</translation>
-    </message>
-    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Ikkunaa suljettaessa pienennä ohjelman ikkuna lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
     </message>
@@ -1669,12 +1660,6 @@
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
         <translation>Tässä voit määritellä käyttöliittymän kielen. Muutokset astuvat voimaan seuraavan kerran, kun %1 käynnistetään.</translation>
-    </message>
-    <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
-        <translation>Puuttuuko sopiva kieli tai käännös on kesken? Auta käännöstyössä täällä:
-https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1978,10 +1963,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>'dash://' ei ole validi URI. Käytä sen sijaan 'dash:'.</translation>
     </message>
     <message>
-        <source>Invalid payment address %1</source>
-        <translation>Virheellinen maksuosoite %1</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>URI:a ei voida jäsentää! Tämä voi johtua virheellisestä Dash osoitteesta tai virheellisestä URI:n muuttujasta. </translation>
     </message>
@@ -1994,18 +1975,22 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
+        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation>Käyttäjäohjelma</translation>
     </message>
     <message>
         <source>Ping</source>
+        <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation>Ping</translation>
     </message>
     <message>
         <source>Sent</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation>Lähetetty</translation>
     </message>
     <message>
         <source>Received</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
         <translation>Vastaanotettu</translation>
     </message>
     </context>
@@ -2138,8 +2123,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Virhe: %1 CSS tiedosto(t) puuttuu custom-css-dir polusta.</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 ei vielä sulkeutunut turvallisesti...</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation>%1 ei vielä sulkeutunut turvallisesti…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2249,15 +2234,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>QR Koodi</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
+        <source>&amp;Save Image…</source>
         <translation>&amp;Tallenna Kuva</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Tallenna Kuva...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Tallenna Kuva…</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -2383,10 +2368,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Valitse peer nähdäksesi tarkempia tietoja.</translation>
     </message>
     <message>
-        <source>Direction</source>
-        <translation>Suunta</translation>
-    </message>
-    <message>
         <source>Version</source>
         <translation>Versio</translation>
     </message>
@@ -2493,10 +2474,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Services</source>
         <translation>Palvelut</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Estopisteet</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2623,18 +2600,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>kautta %1</translation>
     </message>
     <message>
-        <source>never</source>
-        <translation>ei koskaan</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>Saapuva</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>Lähtevä</translation>
-    </message>
-    <message>
         <source>Regular</source>
         <translation>Normaali</translation>
     </message>
@@ -2650,7 +2615,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Unknown</source>
         <translation>Tuntematon</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -2745,7 +2710,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Copy amount</source>
         <translation>Kopioi määrä</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -2757,7 +2722,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kopioi &amp;Osoite</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
+        <source>&amp;Save Image…</source>
         <translation>&amp;Tallenna Kuva</translation>
     </message>
     <message>
@@ -2811,10 +2776,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kolikkokontrolli ominaisuudet</translation>
     </message>
     <message>
-        <source>Inputs...</source>
-        <translation>Sisääntulot...</translation>
-    </message>
-    <message>
         <source>automatically selected</source>
         <translation>automaattisesti valitut</translation>
     </message>
@@ -2843,6 +2804,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tomu:</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation>Sisääntulot…</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>Siirtomaksun jälkeen:</translation>
     </message>
@@ -2863,8 +2828,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Siirtomaksu:</translation>
     </message>
     <message>
-        <source>Choose...</source>
-        <translation>Valitse...</translation>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation>(Älykästä siirtomaksua ei ole alustettu vielä. Tämä kestää yleensä muutaman lohkon…)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2881,6 +2846,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Fallbackfee:n käyttö saattaa aiheuttaa että maksutapahtuman vahvistus kestää useita tunteja tai päiviä (tai ei koskaan). Harkitse että valitset siirtomaksun manuaalisesti tai odota että lohkoketju on täysin vahvistettu.</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation>Valitse…</translation>
     </message>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
@@ -2901,10 +2870,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Custom:</source>
         <translation>Mukautettu:</translation>
-    </message>
-    <message>
-        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Älykästä siirtomaksua ei ole alustettu vielä. Tämä kestää yleensä muutaman lohkon...)</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -3177,8 +3142,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 sulkeutuu...</translation>
+        <source>%1 is shutting down…</source>
+        <translation>%1 sulkeutuu…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -3273,7 +3238,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Tarkista &amp;Viesti...</translation>
+        <translation>Tarkista &amp;Viesti…</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -3707,8 +3672,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tänä vuonna</translation>
     </message>
     <message>
-        <source>Range...</source>
-        <translation>Arvoalue...</translation>
+        <source>Range…</source>
+        <translation>Arvoalue…</translation>
     </message>
     <message>
         <source>Most Common</source>
@@ -3903,7 +3868,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Vie...</translation>
+        <translation>&amp;Vie…</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -4045,14 +4010,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ( odotetaan %s )</translation>
     </message>
     <message>
-        <source>Found enough users, signing ...</source>
-        <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ...</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Tuodaan...</translation>
-    </message>
-    <message>
         <source>Incompatible mode.</source>
         <translation>Yhteensopimaton tila.</translation>
     </message>
@@ -4085,16 +4042,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Virheellinen minimi määrä spork allekirjoittajia määritelty -minsporkkeys</translation>
     </message>
     <message>
-        <source>Loading banlist...</source>
-        <translation>Ladataan estolistaa...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>On jo lukittu.</translation>
-    </message>
-    <message>
-        <source>Mixing in progress...</source>
-        <translation>Sekoitus käynnissä...</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -4117,12 +4066,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ei ole Masternodet listassa.</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation>Karsitaan lohkoja…</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation>Toistetaan lohkoja…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation>Skannataan uudelleen…</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation>Käynnistetään verkkoa…</translation>
+    </message>
+    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Lähetetty masternodelle, odotetaan jonossa %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Synkronointi valmis</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain…</source>
+        <translation>Synkronoidaan lohkoketju…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance objects…</source>
+        <translation>Ladataan hallinnon objekteja…</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4135,14 +4108,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Käyttäjä toimijan kommentti (%s) sisältää ei suositeltuja merkkejä.</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Tarkistetaan lompakko(ja)...</translation>
-    </message>
-    <message>
-        <source>Will retry...</source>
-        <translation>Yritetään uudelleen...</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>
@@ -4262,10 +4227,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virhe: Levytila on alhainen %s</translation>
     </message>
     <message>
-        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>Virhe: socket lisäys epollfd:ään epäonnistui (epoll_ctl palautti virheen %s)</translation>
-    </message>
-    <message>
         <source>Exceeded max tries.</source>
         <translation>Maksimi yritykset ylitetty.</translation>
     </message>
@@ -4290,6 +4251,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Lompakon uudelleen skannaaminen epäonnistui alustuksen aikana</translation>
     </message>
     <message>
+        <source>Found enough users, signing…</source>
+        <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan…</translation>
+    </message>
+    <message>
         <source>Invalid P2P permission: '%s'</source>
         <translation>Virheellinen P2P oikeus: '%s'</translation>
     </message>
@@ -4302,14 +4267,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virheellinen masternodeblsprivkey. Katso lisätietoja dokumentaatiosta.</translation>
     </message>
     <message>
-        <source>Loading block index...</source>
-        <translation>Ladataan lohkoindeksiä...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Ladataan lompakkoa...</translation>
-    </message>
-    <message>
         <source>Masternode queue is full.</source>
         <translation>Masternode jono on täysi.</translation>
     </message>
@@ -4320,6 +4277,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Missing input transaction information.</source>
         <translation>Puuttuva siirtotapahtuman tieto.</translation>
+    </message>
+    <message>
+        <source>Mixing in progress…</source>
+        <translation>Sekoitus käynnissä…</translation>
     </message>
     <message>
         <source>No errors detected.</source>
@@ -4350,10 +4311,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Karsintatila on epäyhteensopiva -txindex kanssa.</translation>
     </message>
     <message>
-        <source>Pruning blockstore...</source>
-        <translation>Karsitaan lohkoja...</translation>
-    </message>
-    <message>
         <source>Section [%s] is not recognized.</source>
         <translation>Osio [%s] ei ole tunnistettavissa.</translation>
     </message>
@@ -4368,10 +4325,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Määritelty -walletdir "%s" ei ole hakemisto</translation>
-    </message>
-    <message>
-        <source>Synchronizing blockchain...</source>
-        <translation>Synkronoidaan lohkoketju...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4406,10 +4359,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Siirtotapahtuma on liian iso</translation>
     </message>
     <message>
-        <source>Trying to connect...</source>
-        <translation>Yritetään kytkeytyä...</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Kytkeytyminen kohteeseen %s ei onnistu tällä tietokoneella. %s on luultavasti jo käynnissä.</translation>
     </message>
@@ -4428,6 +4377,14 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Upgrading UTXO database</source>
         <translation>Päivitetään UTXO tietokantaa</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation>Tarkistetaan lohkoja…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation>Tarkistetaan lompakko(ja)…</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4578,8 +4535,20 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virhe ketjutilan tietokannan päivityksessä</translation>
     </message>
     <message>
-        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation>Virhe: socket lisäys kqueuefd:ään epäonnistui (kevent palautti virheen %s)</translation>
+        <source>Loading P2P addresses…</source>
+        <translation>Ladataan P2P osoitteita…</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation>Ladataan estolistaa…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation>Ladataan lohkoindeksiä…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation>Ladataan lompakkoa…</translation>
     </message>
     <message>
         <source>Failed to clear fulfilled requests cache at %s</source>
@@ -4618,6 +4587,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Uuden sekoitusjonon käynnistys ei onnistunut</translation>
     </message>
     <message>
+        <source>Importing…</source>
+        <translation>Tuodaan…</translation>
+    </message>
+    <message>
         <source>Incorrect -rescan mode, falling back to default value</source>
         <translation>Virheellinen -rescan moodi, palataan takaisin oletusarvoon</translation>
     </message>
@@ -4646,20 +4619,8 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Virheellinen spork osoite määritelty -sporkaddr</translation>
     </message>
     <message>
-        <source>Loading P2P addresses...</source>
-        <translation>Ladataan P2P osoitteita...</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Vähennetään -maxconnections %d -&gt; %d, järjestelmän rajoituksien takia.</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Toistetaan lohkoja...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Skannataan uudelleen...</translation>
     </message>
     <message>
         <source>Session not complete!</source>
@@ -4690,14 +4651,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Viimeinen onnistunut tapahtuma oli liian äskettäin.</translation>
     </message>
     <message>
-        <source>Starting network threads...</source>
-        <translation>Käynnistetään verkkoa...</translation>
-    </message>
-    <message>
-        <source>Synchronizing governance objects...</source>
-        <translation>Ladataan hallinnon objekteja...</translation>
-    </message>
-    <message>
         <source>The source code is available from %s.</source>
         <translation>Lähdekoodi löytyy %s.</translation>
     </message>
@@ -4724,6 +4677,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Transaction not valid.</source>
         <translation>Siirtotapahtuma ei ole voimassa.</translation>
+    </message>
+    <message>
+        <source>Trying to connect…</source>
+        <translation>Yritetään kytkeytyä…</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -4758,10 +4715,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Päivitetään txindex tietokantaa</translation>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>Tarkistetaan lohkoja...</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Osoitteita vähän jäljellä: %d</translation>
     </message>
@@ -4776,6 +4729,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
         <translation>Varoitus: väärä parametri %s, tiedostopolku on oltava olemassa! Käytetään oletuspolkua.</translation>
+    </message>
+    <message>
+        <source>Will retry…</source>
+        <translation>Yritetään uudelleen…</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>

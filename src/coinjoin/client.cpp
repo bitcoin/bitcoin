@@ -321,7 +321,7 @@ bilingual_str CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
         return strAutoDenomResult;
     case POOL_STATE_SIGNING:
         if (nStatusMessageProgress % 70 <= 40)
-            return _("Found enough users, signing ...");
+            return _("Found enough users, signing…");
         else if (nStatusMessageProgress % 70 <= 50)
             strSuffix = ".";
         else if (nStatusMessageProgress % 70 <= 60)
@@ -330,7 +330,7 @@ bilingual_str CCoinJoinClientSession::GetStatus(bool fWaitForBlock) const
             strSuffix = "...";
         return strprintf(_("Found enough users, signing ( waiting %s )"), strSuffix);
     case POOL_STATE_ERROR:
-        return strprintf(_("%s request incomplete:"), gCoinJoinName) + strLastMessage + Untranslated(" ") + _("Will retry...");
+        return strprintf(_("%s request incomplete:"), gCoinJoinName) + strLastMessage + Untranslated(" ") + _("Will retry…");
     default:
         return strprintf(_("Unknown state: id = %u"), nState);
     }
@@ -807,7 +807,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CChainState& active_chainst
         }
 
         if (GetEntriesCount() > 0) {
-            strAutoDenomResult = _("Mixing in progress...");
+            strAutoDenomResult = _("Mixing in progress…");
             return false;
         }
 
@@ -912,7 +912,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CChainState& active_chainst
         }
 
         if (nSessionID) {
-            strAutoDenomResult = _("Mixing in progress...");
+            strAutoDenomResult = _("Mixing in progress…");
             return false;
         }
 
@@ -1115,7 +1115,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::JoinExistingQueue -- pending connection (from queue): nSessionDenom: %d (%s), addr=%s\n",
             nSessionDenom, CoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
-        strAutoDenomResult = _("Trying to connect...");
+        strAutoDenomResult = _("Trying to connect…");
         return true;
     }
     strAutoDenomResult = _("Failed to find mixing queue to join");
@@ -1196,7 +1196,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
         nTimeLastSuccessfulStep = GetTime();
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- pending connection, nSessionDenom: %d (%s), addr=%s\n",
             nSessionDenom, CoinJoin::DenominationToString(nSessionDenom), dmn->pdmnState->addr.ToString());
-        strAutoDenomResult = _("Trying to connect...");
+        strAutoDenomResult = _("Trying to connect…");
         return true;
     }
     strAutoDenomResult = _("Failed to start a new mixing queue");
@@ -1231,7 +1231,7 @@ void CCoinJoinClientManager::ProcessPendingDsaRequest(CConnman& connman)
     LOCK(cs_deqsessions);
     for (auto& session : deqSessions) {
         if (session.ProcessPendingDsaRequest(connman)) {
-            strAutoDenomResult = _("Mixing in progress...");
+            strAutoDenomResult = _("Mixing in progress…");
         }
     }
 }
