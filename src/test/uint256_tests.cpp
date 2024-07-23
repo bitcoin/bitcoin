@@ -101,6 +101,8 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK_EQUAL(uint256S("0x"+MaxL.ToString()), MaxL);
     BOOST_CHECK_EQUAL(uint256S(R1L.ToString()), R1L);
     BOOST_CHECK_EQUAL(uint256S("   0x"+R1L.ToString()+"   "), R1L);
+    BOOST_CHECK_EQUAL(uint256S("   0x"+R1L.ToString()+"-trash;%^&   "), R1L);
+    BOOST_CHECK_EQUAL(uint256S("\t \n  \n \f\n\r\t\v\t   0x"+R1L.ToString()+"  \t \n  \n \f\n\r\t\v\t "), R1L);
     BOOST_CHECK_EQUAL(uint256S(""), ZeroL);
     BOOST_CHECK_EQUAL(R1L, uint256S(R1ArrayHex));
     BOOST_CHECK_EQUAL(uint256(R1L), R1L);
@@ -114,6 +116,8 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK_EQUAL(uint160S("0x"+MaxS.ToString()), MaxS);
     BOOST_CHECK_EQUAL(uint160S(R1S.ToString()), R1S);
     BOOST_CHECK_EQUAL(uint160S("   0x"+R1S.ToString()+"   "), R1S);
+    BOOST_CHECK_EQUAL(uint160S("   0x"+R1S.ToString()+"-trash;%^&   "), R1S);
+    BOOST_CHECK_EQUAL(uint160S(" \t \n  \n \f\n\r\t\v\t  0x"+R1S.ToString()+"   \t \n  \n \f\n\r\t\v\t"), R1S);
     BOOST_CHECK_EQUAL(uint160S(""), ZeroS);
     BOOST_CHECK_EQUAL(R1S, uint160S(R1ArrayHex));
 
@@ -162,6 +166,9 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     BOOST_CHECK_EQUAL(MaxL.GetHex(), MaxL.ToString());
     uint256 TmpL(R1L);
     BOOST_CHECK_EQUAL(TmpL, R1L);
+    // Verify previous values don't persist when setting to truncated string.
+    TmpL.SetHex("21");
+    BOOST_CHECK_EQUAL(TmpL.ToString(), "0000000000000000000000000000000000000000000000000000000000000021");
     TmpL.SetHex(R2L.ToString());   BOOST_CHECK_EQUAL(TmpL, R2L);
     TmpL.SetHex(ZeroL.ToString()); BOOST_CHECK_EQUAL(TmpL, uint256());
 
