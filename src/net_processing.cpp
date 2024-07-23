@@ -780,10 +780,8 @@ private:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_rejects_reconsiderable.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
-     *
-     * m_tx_download_mutex must be acquired before mempool.cs
      */
-    Mutex m_tx_download_mutex;
+    Mutex m_tx_download_mutex ACQUIRED_BEFORE(m_mempool.cs);
     TxRequestTracker m_txrequest GUARDED_BY(m_tx_download_mutex);
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
 
@@ -2072,6 +2070,8 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 
 void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
 {
+    // Ensure mempool mutex was released, otherwise deadlock may occur if another thread holding
+    // m_tx_download_mutex waits on the mempool mutex.
     AssertLockNotHeld(m_mempool.cs);
     AssertLockNotHeld(m_tx_download_mutex);
 
@@ -5334,6 +5334,7 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
 
 bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockNotHeld(m_tx_download_mutex);
     AssertLockHeld(g_msgproc_mutex);
 
     PeerRef peer = GetPeerRef(pfrom->GetId());
@@ -5825,6 +5826,7 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
 
 bool PeerManagerImpl::SendMessages(CNode* pto)
 {
+    AssertLockNotHeld(m_tx_download_mutex);
     AssertLockHeld(g_msgproc_mutex);
 
     PeerRef peer = GetPeerRef(pto->GetId());
