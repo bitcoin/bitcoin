@@ -2123,8 +2123,6 @@ void PeerManagerImpl::BlockConnected(
         if (ptx->HasWitness()) {
             m_recent_confirmed_transactions.insert(ptx->GetWitnessHash().ToUint256());
         }
-    }
-    for (const auto& ptx : pblock->vtx) {
         m_txrequest.ForgetTxHash(ptx->GetHash());
         m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
     }
