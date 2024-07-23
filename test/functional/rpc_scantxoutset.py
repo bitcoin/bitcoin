@@ -120,7 +120,15 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].scantxoutset("status"), None)
         assert_equal(self.nodes[0].scantxoutset("abort"), False)
 
-        # check that first arg is needed
+        # Check that the blockhash and confirmations fields are correct
+        self.generate(self.nodes[0], 2)
+        unspent = self.nodes[0].scantxoutset("start", ["addr(mpQ8rokAhp1TAtJQR6F6TaUmjAWkAWYYBq)"])["unspents"][0]
+        blockhash = self.nodes[0].getblockhash(info["height"])
+        assert_equal(unspent["height"], info["height"])
+        assert_equal(unspent["blockhash"], blockhash)
+        assert_equal(unspent["confirmations"], 3)
+
+        # Check that first arg is needed
         assert_raises_rpc_error(-1, "scantxoutset \"action\" ( [scanobjects,...] )", self.nodes[0].scantxoutset)
 
         # Check that second arg is needed for start
