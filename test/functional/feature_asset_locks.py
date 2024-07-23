@@ -489,8 +489,7 @@ class AssetLocksTest(DashTestFramework):
 
         total = self.get_credit_pool_balance()
         coins = node_wallet.listunspent()
-        while total <= 10_100 * COIN:
-            self.log.info(f"Collecting coins in pool... Collected {total}/{10_100 * COIN}")
+        while total <= 10_901 * COIN:
             coin = coins.pop()
             to_lock = int(coin['amount'] * COIN) - tiny_amount
             if to_lock > 99 * COIN:
@@ -498,26 +497,26 @@ class AssetLocksTest(DashTestFramework):
             total += to_lock
             tx = self.create_assetlock(coin, to_lock, pubkey)
             self.send_tx_simple(tx)
+            self.log.info(f"Collecting coins in pool... Collected {total}/{10_901 * COIN}")
         self.sync_mempools()
         node.generate(1)
         self.sync_all()
         credit_pool_balance_1 = self.get_credit_pool_balance()
-        assert_greater_than(credit_pool_balance_1, 10_100 * COIN)
+        assert_greater_than(credit_pool_balance_1, 10_901 * COIN)
         limit_amount_1 = 1000 * COIN
-        self.log.info("Create 4 transaction to be sure that only 3 of them can be mined")
-        self.log.info("Sum of 600, 101 * 3 are less than 10% of credit pool but bigger than hard-limit 1000")
+        self.log.info("Create 5 transactions and make sure that only 4 of them can be mined")
+        self.log.info("because their sum is bigger than the hard-limit (1000)")
         # take most of limit by one big tx for faster testing and
         # create several tiny withdrawal with exactly 1 *invalid* / causes spend above limit tx
-        withdrawals = [600 * COIN, 101 * COIN, 101 * COIN, 101 * COIN, 101 * COIN]
+        withdrawals = [600 * COIN, 100 * COIN, 100 * COIN, 100 * COIN - 10000, 100 * COIN + 10001]
         amount_to_withdraw_1 = sum(withdrawals)
         index = 400
         for next_amount in withdrawals:
             index += 1
             asset_unlock_tx = self.create_assetunlock(index, next_amount, pubkey)
-            self.send_tx_simple(asset_unlock_tx)
-            if index == 401:
-                self.sync_mempools()
-                node.generate(1)
+            last_txid = self.send_tx_simple(asset_unlock_tx)
+            # make sure larger amounts are mined first simply to make this test deterministic
+            node.prioritisetransaction(last_txid, next_amount // 10000)
 
         self.sync_mempools()
         node.generate(1)
@@ -525,14 +524,13 @@ class AssetLocksTest(DashTestFramework):
 
         new_total = self.get_credit_pool_balance()
         amount_actually_withdrawn = total - new_total
-        block = node.getblock(node.getbestblockhash())
         self.log.info("Testing that we tried to withdraw more than we could")
         assert_greater_than(amount_to_withdraw_1, amount_actually_withdrawn)
-        self.log.info("Checking that we tried to withdraw more than the limit 1000")
+        self.log.info("Checking that we tried to withdraw more than the hard-limit (1000)")
         assert_greater_than(amount_to_withdraw_1, limit_amount_1)
         self.log.info("Checking we didn't actually withdraw more than allowed by the limit")
         assert_greater_than_or_equal(limit_amount_1, amount_actually_withdrawn)
-        assert_equal(amount_actually_withdrawn, 903 * COIN)
+        assert_equal(amount_actually_withdrawn, 900 * COIN + 10001)
 
         node.generate(1)
         self.sync_all()
@@ -540,8 +538,28 @@ class AssetLocksTest(DashTestFramework):
         self.mempool_size = 1
         self.check_mempool_size()
         assert_equal(new_total, self.get_credit_pool_balance())
+        pending_txid = node.getrawmempool()[0]
+
+        amount_to_withdraw_2 = limit_amount_1 - amount_actually_withdrawn
+        self.log.info(f"We can still consume {Decimal(str(amount_to_withdraw_2 / COIN))} before we hit the hard-limit (1000)")
+        index += 1
+        asset_unlock_tx = self.create_assetunlock(index, amount_to_withdraw_2, pubkey)
+        self.send_tx_simple(asset_unlock_tx)
+        self.sync_mempools()
+        node.generate(1)
+        self.sync_all()
+        new_total = self.get_credit_pool_balance()
+        amount_actually_withdrawn = total - new_total
+        assert_equal(limit_amount_1, amount_actually_withdrawn)
+
+        self.log.info("Checking that exactly the same tx as before stayed in mempool and it's the only one...")
+        self.mempool_size = 1
+        self.check_mempool_size()
+        assert_equal(new_total, self.get_credit_pool_balance())
+        assert pending_txid in node.getrawmempool()
+
         self.log.info("Fast forward to next day again...")
-        self.slowly_generate_batch(blocks_in_one_day - 2)
+        self.slowly_generate_batch(blocks_in_one_day - 1)
         self.log.info("Checking mempool is empty now...")
         self.mempool_size = 0
         self.check_mempool_size()
@@ -583,6 +601,7 @@ class AssetLocksTest(DashTestFramework):
     def test_mn_rr(self, node_wallet, node, pubkey):
         self.log.info("Activate mn_rr...")
         locked = self.get_credit_pool_balance()
+        node.generate(12 - node.getblockcount() % 12)
         self.activate_mn_rr(expected_activation_height=node.getblockcount() + 12 * 3)
         self.log.info(f'height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(locked, self.get_credit_pool_balance())
