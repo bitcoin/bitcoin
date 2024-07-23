@@ -734,7 +734,7 @@ bool BlockManager::UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex& in
 bool BlockManager::FlushUndoFile(int block_file, bool finalize)
 {
     FlatFilePos undo_pos_old(block_file, m_blockfile_info[block_file].nUndoSize);
-    if (!UndoFileSeq().Flush(undo_pos_old, finalize)) {
+    if (!m_undo_file_seq.Flush(undo_pos_old, finalize)) {
         m_opts.notifications.flushError(_("Flushing undo file to disk failed. This is likely the result of an I/O error."));
         return false;
     }
@@ -756,7 +756,7 @@ bool BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finali
     assert(static_cast<int>(m_blockfile_info.size()) > blockfile_num);
 
     FlatFilePos block_pos_old(blockfile_num, m_blockfile_info[blockfile_num].nSize);
-    if (!BlockFileSeq().Flush(block_pos_old, fFinalize)) {
+    if (!m_block_file_seq.Flush(block_pos_old, fFinalize)) {
         m_opts.notifications.flushError(_("Flushing block file to disk failed. This is likely the result of an I/O error."));
         success = false;
     }
@@ -808,38 +808,28 @@ void BlockManager::UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const
     std::error_code ec;
     for (std::set<int>::iterator it = setFilesToPrune.begin(); it != setFilesToPrune.end(); ++it) {
         FlatFilePos pos(*it, 0);
-        const bool removed_blockfile{fs::remove(BlockFileSeq().FileName(pos), ec)};
-        const bool removed_undofile{fs::remove(UndoFileSeq().FileName(pos), ec)};
+        const bool removed_blockfile{fs::remove(m_block_file_seq.FileName(pos), ec)};
+        const bool removed_undofile{fs::remove(m_undo_file_seq.FileName(pos), ec)};
         if (removed_blockfile || removed_undofile) {
             LogPrint(BCLog::BLOCKSTORAGE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
         }
     }
 }
 
-FlatFileSeq BlockManager::BlockFileSeq() const
-{
-    return FlatFileSeq(m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kb */ : BLOCKFILE_CHUNK_SIZE);
-}
-
-FlatFileSeq BlockManager::UndoFileSeq() const
-{
-    return FlatFileSeq(m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE);
-}
-
 AutoFile BlockManager::OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{BlockFileSeq().Open(pos, fReadOnly)};
+    return AutoFile{m_block_file_seq.Open(pos, fReadOnly)};
 }
 
 /** Open an undo file (rev?????.dat) */
 AutoFile BlockManager::OpenUndoFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{UndoFileSeq().Open(pos, fReadOnly)};
+    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly)};
 }
 
 fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
 {
-    return BlockFileSeq().FileName(pos);
+    return m_block_file_seq.FileName(pos);
 }
 
 FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime)
@@ -919,7 +909,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
     m_blockfile_info[nFile].nSize += nAddSize;
 
     bool out_of_space;
-    size_t bytes_allocated = BlockFileSeq().Allocate(pos, nAddSize, out_of_space);
+    size_t bytes_allocated = m_block_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
         m_opts.notifications.fatalError(_("Disk space is too low!"));
         return {};
@@ -965,7 +955,7 @@ bool BlockManager::FindUndoPos(BlockValidationState& state, int nFile, FlatFileP
     m_dirty_fileinfo.insert(nFile);
 
     bool out_of_space;
-    size_t bytes_allocated = UndoFileSeq().Allocate(pos, nAddSize, out_of_space);
+    size_t bytes_allocated = m_undo_file_seq.Allocate(pos, nAddSize, out_of_space);
     if (out_of_space) {
         return FatalError(m_opts.notifications, state, _("Disk space is too low!"));
     }
