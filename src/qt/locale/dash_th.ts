@@ -302,6 +302,9 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -328,6 +331,34 @@
         <translation>เรียกเก็บการชำระเงิน (สร้างคิว อาร์ โค้ด QR codes และแหล่งที่มาของ Dash: URIs)</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation>&amp;ตัวเลือก…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation>&amp;เข้ารหัสกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation>&amp;สำรองกระเป๋าสตางค์…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation>&amp;เปลี่ยนวลีรหัสผ่าน…</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock Wallet…</source>
+        <translation>&amp;ปลดล็อคกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation>การลงนาม &amp;ข้อความ…</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation>&amp;ยืนยันข้อความ…</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;ส่งที่อยู่</translation>
     </message>
@@ -336,16 +367,16 @@
         <translation>รับที่อยู่</translation>
     </message>
     <message>
+        <source>Open &amp;URI…</source>
+        <translation>เปิด &amp;URI…</translation>
+    </message>
+    <message>
         <source>Open Wallet</source>
         <translation>เปิดกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Open a wallet</source>
         <translation>เปิดกระเป๋า</translation>
-    </message>
-    <message>
-        <source>Close Wallet...</source>
-        <translation>ปิดกระเป๋าสตางค์ ...</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -404,10 +435,6 @@
         <translation>แสดงข้อมูล เกี่ยวกับ Qt</translation>
     </message>
     <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;ตัวเลือก...</translation>
-    </message>
-    <message>
         <source>&amp;About %1</source>
         <translation>&amp;เกี่ยวกับ %1</translation>
     </message>
@@ -428,32 +455,16 @@
         <translation>แสดง หรือ ซ่อน หน้าหลัก</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;เข้ารหัสกระเป๋าสตางค์</translation>
-    </message>
-    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>เข้ารหัส private keys สำหรับกระเป๋าสตางค์ของท่าน</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;สำรองกระเป๋าสตางค์...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
         <translation>สำรองกระเป๋าเงินไปยังที่เก็บอื่น</translation>
     </message>
     <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;เปลี่ยนวลีรหัสผ่าน...</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้าถึงรหัสลับของกระเป๋าสตางค์</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;ปลดล็อคกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -464,16 +475,8 @@
         <translation>ล็อคกระเป๋าสตางค์</translation>
     </message>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>การลงนาม &amp;ข้อความ...</translation>
-    </message>
-    <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>ลงชื่อด้วยที่อยู่ Dash ของคุณเพื่อแสดงว่าคุณคือเจ้าของบัญชีนี้จริง</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;ยืนยันข้อความ...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
@@ -540,10 +543,6 @@
         <translation>แสดงรายการที่อยู่ผู้รับและป้ายชื่อที่ใช้ไปแล้ว</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>เปิด &amp;URI...</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;ตัวเลือก Command-line</translation>
     </message>
@@ -586,10 +585,6 @@
         <translation>เปิด Dash: URI</translation>
     </message>
     <message>
-        <source>Create Wallet...</source>
-        <translation>สร้างกระเป๋าสตางค์ ...</translation>
-    </message>
-    <message>
         <source>Create a new wallet</source>
         <translation>สร้างกระเป๋าเงินใหม่</translation>
     </message>
@@ -629,30 +624,6 @@
         <source>Network activity disabled</source>
         <translation>ปิดการใช้งานเครือข่ายแล้ว</translation>
     </message>
-    <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>กำลังซิงค์ส่วนหัว (%1%) ...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>กำลังซิงค์กับเครือข่าย ...</translation>
-    </message>
-    <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>การกำลังสร้างดัชนีของบล็อก ในดิสก์...</translation>
-    </message>
-    <message>
-        <source>Processing blocks on disk...</source>
-        <translation>กำลังดำเนินการกับบล็อกในดิสก์...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>กำลังทำดัชนี ที่เก็บบล็อก ใหม่ ในดิสก์...</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>เชื่อมต่อกับ Peers</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>ประมวลผล %n บล็อคของประวัติการทำธุรกรรม</numerusform></translation>
@@ -662,7 +633,39 @@
         <translation>%1 ตามหลัง</translation>
     </message>
     <message>
-        <source>Catching up...</source>
+        <source>Close Wallet…</source>
+        <translation>ปิดกระเป๋าสตางค์ …</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation>สร้างกระเป๋าสตางค์ …</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation>กำลังซิงค์ส่วนหัว (%1%) …</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation>กำลังซิงค์กับเครือข่าย …</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation>การกำลังสร้างดัชนีของบล็อก ในดิสก์…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation>กำลังดำเนินการกับบล็อกในดิสก์…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation>กำลังทำดัชนี ที่เก็บบล็อก ใหม่ ในดิสก์…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation>เชื่อมต่อกับ Peers</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
         <translation>กำลังอัพเดต</translation>
     </message>
     <message>
@@ -787,7 +790,7 @@
         <source>Original message:</source>
         <translation>ข้อความต้นฉบับ:</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -982,8 +985,8 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
-        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>การสร้างกระเป๋าเงิน &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation>การสร้างกระเป๋าเงิน &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Create wallet failed</source>
@@ -1032,7 +1035,7 @@
         <source>Create</source>
         <translation>สร้าง</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1176,10 +1179,6 @@
         <translation>นี่เป็นการรันโปรแกรมครั้งแรก ท่านสามารถเลือก ว่าจะเก็บข้อมูลไว้ที่ %1</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>เมื่อคุณกด OK %1 จะเริ่มดาวน์โหลดและดำเนินการเต็ม %4 ของ block chain (%2GB) เริ่มต้นด้วยการทำธุรกรรมแรกสุดใน %3 เมื่อ %4 เริ่มดำเนินการในขั้นต้น</translation>
-    </message>
-    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>การซิงโครไนซ์ในขั้นต้นนี้เป็นที่ต้องการอย่างมาก และอาจจะปรากฏปัญหาของฮ​าร์ดแวร์กับคอมพิวเตอร์ของคุณที่อาจจะไม่ได้สังเกตมาก่อน ในแต่ละครั้งคุณดำเนินการ %1 มันจะดำเนินการดาวน์โหลดที่ค้างไว้</translation>
     </message>
@@ -1303,8 +1302,12 @@
         <translation>Copy Collateral Outpoint</translation>
     </message>
     <message>
-        <source>Updating...</source>
-        <translation>กำลังอัพเดต...</translation>
+        <source>Please wait…</source>
+        <translation>กรุณารอสักครู่…</translation>
+    </message>
+    <message>
+        <source>Updating…</source>
+        <translation>กำลังอัพเดต…</translation>
     </message>
     <message>
         <source>ENABLED</source>
@@ -1339,10 +1342,6 @@
         <translation>กรองตามทรัพย์สินต่าง ๆ  (เช่นที่อยู่หรือ protx hash)</translation>
     </message>
     <message>
-        <source>Please wait...</source>
-        <translation>กรุณารอสักครู่...</translation>
-    </message>
-    <message>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>ข้อมูลเพิ่มเติมสำหรับ DIP3 Masternode %1</translation>
     </message>
@@ -1366,8 +1365,12 @@
         <translation>จำนวนบล็อกที่เหลือ</translation>
     </message>
     <message>
-        <source>Unknown...</source>
-        <translation>ไม่ทราบ...</translation>
+        <source>Unknown…</source>
+        <translation>ไม่ทราบ…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation>กำลังคำนวณ…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1382,10 +1385,6 @@
         <translation>เพิ่มความคืบหน้าต่อชั่วโมง</translation>
     </message>
     <message>
-        <source>calculating...</source>
-        <translation>กำลังคำนวณ...</translation>
-    </message>
-    <message>
         <source>Estimated time left until synced</source>
         <translation>เวลาโดยประมาณที่เหลือจนกว่าจะซิงค์</translation>
     </message>
@@ -1394,8 +1393,8 @@
         <translation>ซ่อน</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>ไม่ทราบการซิงค์ส่วนหัว (%1, %2%)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)…</source>
+        <translation>ไม่ทราบการซิงค์ส่วนหัว (%1, %2%)…</translation>
     </message>
 </context>
 <context>
@@ -1424,8 +1423,8 @@
         <translation>กระเป๋าเงินเริ่มต้น</translation>
     </message>
     <message>
-        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>เปิดกระเป๋า &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation>เปิดกระเป๋า &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
 <context>
@@ -1583,14 +1582,6 @@
         <translation>ตัวเลือกที่ตั้งไว้ในกล่องโต้ตอบนี้จะถูกแทนที่โดยบรรทัดคำสั่งหรือในไฟล์กำหนดค่า:</translation>
     </message>
     <message>
-        <source>Hide the icon from the system tray.</source>
-        <translation>ซ่อนไอคอนจาก System tray</translation>
-    </message>
-    <message>
-        <source>&amp;Hide tray icon</source>
-        <translation>&amp;ซ่อนไอคอน tray </translation>
-    </message>
-    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>มินิไมซ์แอพ แทนการออกจากแอพพลิเคชั่น เมื่อวินโดว์ได้รับการปิด เมื่อเลือกตัวเลือกนี้ แอพพลิเคชั่น จะถูกปิด ก็ต่อเมื่อ มีการเลือกเมนู Exit/ออกจากระบบ เท่านั้น</translation>
     </message>
@@ -1697,12 +1688,6 @@
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
         <translation>สามารถตั้งค่า User interface language ได้ที่นี่ การตั้งค่านี้จะมีผลหลังจากรีสตาร์ท %1</translation>
-    </message>
-    <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
-        <translation>ภาษาขาดหายไปหรือการแปลไม่สมบูรณ์ใช่หรือไม่?  สามารถช่วยแปลเพิ่มเติมได้ที่นี่:   
-https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -2014,10 +1999,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>เนื่องจากการสนับสนุนถูกยกเลิก คุณควรขอให้ผู้ค้าจัดเตรียม URI ที่เข้ากันได้กับ BIP21 หรือใช้กระเป๋าเงินที่รองรับ BIP70 ต่อไป</translation>
     </message>
     <message>
-        <source>Invalid payment address %1</source>
-        <translation>ที่อยู่การชำระเงินไม่ถูกต้อง %1</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>ไม่สามารถประมวลผล URI ได้สำเร็จ ! ซึ่งอาจเกิดจากที่อยู่ Dash ไม่ถูกต้องหรือพารามิเตอร์ URI ที่มีรูปแบบไม่ถูกต้อง</translation>
     </message>
@@ -2030,18 +2011,22 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
+        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation>ตัวแทนผู้ใช้</translation>
     </message>
     <message>
         <source>Ping</source>
+        <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation>Ping</translation>
     </message>
     <message>
         <source>Sent</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation>ส่ง</translation>
     </message>
     <message>
         <source>Received</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
         <translation>ได้รับ</translation>
     </message>
     </context>
@@ -2174,8 +2159,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ข้อผิดพลาด:%1 CSS file(s) หายไปในเส้นทาง -custom-css-dir</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 ยังไม่สามารถออกจากระบบได้อย่างปลอดภัย ...</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation>%1 ยังไม่สามารถออกจากระบบได้อย่างปลอดภัย …</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2285,15 +2270,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>โค้ด QR</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;บันทึกรูปภาพ...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;บันทึกรูปภาพ…</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;บันทึกรูปภาพ...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;บันทึกรูปภาพ…</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -2419,10 +2404,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>เลือก Peer เพื่อดูรายละเอียด</translation>
     </message>
     <message>
-        <source>Direction</source>
-        <translation>ทิศทาง</translation>
-    </message>
-    <message>
         <source>Version</source>
         <translation>เวอร์ชั่น</translation>
     </message>
@@ -2529,10 +2510,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Services</source>
         <translation>บริการ</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Ban Score</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2659,22 +2636,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>via %1</translation>
     </message>
     <message>
-        <source>never</source>
-        <translation>ไม่เคย</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>ขาเข้า</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>ขาออก</translation>
-    </message>
-    <message>
-        <source>Outbound block-relay</source>
-        <translation>Outbound block-relay</translation>
-    </message>
-    <message>
         <source>Regular</source>
         <translation>ปกติ</translation>
     </message>
@@ -2690,7 +2651,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Unknown</source>
         <translation>ไม่ทราบ</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -2789,7 +2750,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Copy amount</source>
         <translation>คัดลอกจำนวน</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -2801,8 +2762,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>คัดลอก &amp;ที่อยู่</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;บันทึกรูปภาพ...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;บันทึกรูปภาพ…</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2855,10 +2816,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>คุณสมบัติการควบคุมเหรียญ</translation>
     </message>
     <message>
-        <source>Inputs...</source>
-        <translation>ปัจจัยการผลิต...</translation>
-    </message>
-    <message>
         <source>automatically selected</source>
         <translation>เลือกโดยอัตโนมัติ</translation>
     </message>
@@ -2887,6 +2844,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>เศษ:</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation>ปัจจัยการผลิต…</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>ส่วนที่เหลือจากค่าธรรมเนียม:</translation>
     </message>
@@ -2907,16 +2868,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ค่าธรรมเนียมการทำธุรกรรม:</translation>
     </message>
     <message>
-        <source>Choose...</source>
-        <translation>เลือก...</translation>
-    </message>
-    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
         <translation>เมื่อมีปริมาณธุรกรรมน้อยกว่าพื้นที่ในบล็อก นักขุดและโหนดรีเลย์อาจบังคับใช้ค่าธรรมเนียมขั้นต่ำ การจ่ายเฉพาะค่าธรรมเนียมขั้นต่ำนี้ถือว่าใช้ได้ แต่โปรดทราบว่าสิ่งนี้อาจส่งผลให้ธุรกรรมไม่ได้รับการยืนยันเมื่อมีความต้องการธุรกรรม Dash มากกว่าที่เครือข่ายจะสามารถดำเนินการได้</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
         <translation>ค่าธรรมเนียมที่ต่ำเกินไปอาจทำให้ธุรกรรมไม่ได้รับการยืนยัน (อ่านคำแนะนำเครื่องมือ)</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation>(ค่าธรรมเนียมยังไม่ถูกเก็บ โดยปกติจะใช้สองสามบล็อค … )</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2933,6 +2894,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>การใช้ fallbackfee อาจส่งผลให้การส่งธุรกรรมที่ต้องใช้เวลาหลายชั่วโมงหรือหลายวัน (หรือไม่) เพื่อยืนยัน พิจารณาเลือกค่าธรรมเนียมด้วยตนเองหรือรอจนกว่าคุณจะได้ตรวจสอบความสมบูรณ์ของสายโซ่</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation>เลือก…</translation>
     </message>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
@@ -2953,10 +2918,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Custom:</source>
         <translation>กำหนดเอง:</translation>
-    </message>
-    <message>
-        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(ค่าธรรมเนียมยังไม่ถูกเก็บ โดยปกติจะใช้สองสามบล็อค ... )</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -3107,10 +3068,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>หรือ</translation>
     </message>
     <message>
-        <source>To review recipient list click "Show Details..."</source>
-        <translation>หากต้องการตรวจสอบรายชื่อผู้รับ คลิก "แสดงรายละเอียด..."</translation>
-    </message>
-    <message>
         <source>Confirm send coins</source>
         <translation>ยืนยันการส่งเหรียญ</translation>
     </message>
@@ -3121,6 +3078,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Send</source>
         <translation>ส่ง</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details…"</source>
+        <translation>หากต้องการตรวจสอบรายชื่อผู้รับ คลิก "แสดงรายละเอียด…"</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -3261,8 +3222,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 กำลังปิด...</translation>
+        <source>%1 is shutting down…</source>
+        <translation>%1 กำลังปิด…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -3791,8 +3752,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ปีนี้</translation>
     </message>
     <message>
-        <source>Range...</source>
-        <translation>ช่วง...</translation>
+        <source>Range…</source>
+        <translation>ช่วง…</translation>
     </message>
     <message>
         <source>Most Common</source>
@@ -4146,15 +4107,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
-        <translation>พบผู้ใช้เพียงพอ, กำลังลงนาม...  ( กำลังรอ %s )</translation>
-    </message>
-    <message>
-        <source>Found enough users, signing ...</source>
-        <translation>พบผู้ใช้เพียงพอ, กำลังลงนาม...</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>กำลังนำเข้า...</translation>
+        <translation>พบผู้ใช้เพียงพอ, กำลังลงนาม…  ( กำลังรอ %s )</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4189,16 +4142,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>จำนวนขั้นต่ำ spork signers ไม่ถูกต้องระบุด้วย -minsporkkeys</translation>
     </message>
     <message>
-        <source>Loading banlist...</source>
-        <translation>กำลังโหลดรายการต้องห้าม</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>ล็อกอยู่ในตำแหน่งแล้ว</translation>
-    </message>
-    <message>
-        <source>Mixing in progress...</source>
-        <translation>อยู่ระหว่างการผสม...</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -4221,12 +4166,36 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>ไม่อยู่ในรายการ Masternode</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation>กำลังตัด blockstore …</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation>กำลัง reply blocks…</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation>กำลังสแกนใหม่…</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation>เริ่มต้นเธรดเครือข่าย ..</translation>
+    </message>
+    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>ส่งไปยัง masternode กำลังรอคิว %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>การซิงโครไนซ์สิ้นเสร็จ</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain…</source>
+        <translation>กำลังซิงโครไนซ์ blockchain…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance objects…</source>
+        <translation>กำลังปรับเทียบออบเจคการกำกับ …</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4239,14 +4208,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>ตัวแทนผู้ใช้แสดงความคิดเห็น (%s) มีอักขระที่ไม่ปลอดภัย</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>กำลังตรวจสอบ wallet(s)...</translation>
-    </message>
-    <message>
-        <source>Will retry...</source>
-        <translation>จะลองใหม่ ...</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>
@@ -4365,10 +4326,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>ข้อผิดพลาด: พื้นที่ดิสก์ต่ำสำหรับ %s</translation>
     </message>
     <message>
-        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>ข้อผิดพลาด: ล้มเหลวในการเพิ่ม socket to epollfd (epoll_ctl returned error %s) </translation>
-    </message>
-    <message>
         <source>Exceeded max tries.</source>
         <translation>เกินความพยายามสูงสุด</translation>
     </message>
@@ -4397,6 +4354,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>ตรวจสอบฐานข้อมูลไม่สำเร็จ</translation>
     </message>
     <message>
+        <source>Found enough users, signing…</source>
+        <translation>พบผู้ใช้เพียงพอ, กำลังลงนาม…</translation>
+    </message>
+    <message>
         <source>Ignoring duplicate -wallet %s.</source>
         <translation>ละเว้น duplicate -wallet %s.</translation>
     </message>
@@ -4413,14 +4374,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>masternodeprivkey ไม่ถูกต้อง โปรดดูเอกสารประกอบ</translation>
     </message>
     <message>
-        <source>Loading block index...</source>
-        <translation>กำลังโหลดดัชนีบล็อก ...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>กำลังโหลด Wallet ...</translation>
-    </message>
-    <message>
         <source>Masternode queue is full.</source>
         <translation>คิว Masternode เต็ม</translation>
     </message>
@@ -4431,6 +4384,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Missing input transaction information.</source>
         <translation>อินพุตข้อมูลธุรกรรมขาดหายไป</translation>
+    </message>
+    <message>
+        <source>Mixing in progress…</source>
+        <translation>อยู่ระหว่างการผสม…</translation>
     </message>
     <message>
         <source>No errors detected.</source>
@@ -4459,10 +4416,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
         <translation>โหมด Prune ไม่สามารถใช้ได้กับ -txtindex ได้</translation>
-    </message>
-    <message>
-        <source>Pruning blockstore...</source>
-        <translation>กำลังตัด blockstore ...</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
@@ -4497,10 +4450,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>-walletdir "%s" ที่ระบุไม่ใช่ไดเรกทอรี่</translation>
     </message>
     <message>
-        <source>Synchronizing blockchain...</source>
-        <translation>กำลังซิงโครไนซ์ blockchain...</translation>
-    </message>
-    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>กระเป๋าสตางค์นี้จะหลีกเลี่ยงการจ่ายเงินน้อยกว่าค่าโอนขั้นต่ำ</translation>
     </message>
@@ -4533,10 +4482,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>ธุรกรรมมีขนาดใหญ่เกินไป</translation>
     </message>
     <message>
-        <source>Trying to connect...</source>
-        <translation>กำลังพยายามเชื่อมต่อ ...</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>ไม่สามารถผูกกับ %s คอมพิวเตอร์เครื่องนี้ได้  %s อาจกำลังทำงานอยู่แล้ว</translation>
     </message>
@@ -4555,6 +4500,14 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Upgrading UTXO database</source>
         <translation>การอัพเกรดฐานข้อมูล UTXO</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation>กำลังตรวจสอบบล็อค …</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation>กำลังตรวจสอบ wallet(s)…</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4705,8 +4658,20 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>เกิดข้อผิดพลาดในการอัพเกรดฐานข้อมูล chainstate</translation>
     </message>
     <message>
-        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation>ข้อผิดพลาด: ล้มเหลวในการเพิ่ม socket to kqueuefd (kevent returned error %s) </translation>
+        <source>Loading P2P addresses…</source>
+        <translation>กำลังโหลดที่อยู่ P2P …</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation>กำลังโหลดรายการต้องห้าม</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation>กำลังโหลดดัชนีบล็อก …</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation>กำลังโหลด Wallet …</translation>
     </message>
     <message>
         <source>Failed to clear fulfilled requests cache at %s</source>
@@ -4745,6 +4710,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>ไม่สามารถเริ่มคิวการผสมใหม่</translation>
     </message>
     <message>
+        <source>Importing…</source>
+        <translation>กำลังนำเข้า…</translation>
+    </message>
+    <message>
         <source>Incorrect -rescan mode, falling back to default value</source>
         <translation>โหมด -rescan ไม่ถูกต้อง ถอยกลับไปในค่าเริ่มต้น</translation>
     </message>
@@ -4773,20 +4742,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>ที่อยู่ spork ที่ระบุด้วย -sporkaddr ไม่ถูกต้อง</translation>
     </message>
     <message>
-        <source>Loading P2P addresses...</source>
-        <translation>กำลังโหลดที่อยู่ P2P ...</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>ลดการเชื่อมต่อสูงสุดจาก %d ถึง %d เนื่องจากข้อจำกัดของระบบ</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>กำลัง reply blocks...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>กำลังสแกนใหม่...</translation>
     </message>
     <message>
         <source>Session not complete!</source>
@@ -4817,14 +4774,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>การกระทำที่ประสบความสำเร็จล่าสุดเป็นข้อมูลล่าสุด</translation>
     </message>
     <message>
-        <source>Starting network threads...</source>
-        <translation>เริ่มต้นเธรดเครือข่าย ..</translation>
-    </message>
-    <message>
-        <source>Synchronizing governance objects...</source>
-        <translation>กำลังปรับเทียบออบเจคการกำกับ ...</translation>
-    </message>
-    <message>
         <source>The source code is available from %s.</source>
         <translation>ซอร์สโค้ดที่ใช้ได้จาก %s</translation>
     </message>
@@ -4851,6 +4800,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Transaction not valid.</source>
         <translation>ธุรกรรมไม่ถูกต้อง</translation>
+    </message>
+    <message>
+        <source>Trying to connect…</source>
+        <translation>กำลังพยายามเชื่อมต่อ …</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -4885,10 +4838,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>การอัพเกรดฐานข้อมูล txindex</translation>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>กำลังตรวจสอบบล็อค ...</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>จำนวนคีย์ที่เหลืออยู่ต่ำมาก: %d</translation>
     </message>
@@ -4903,6 +4852,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
         <translation>คำเตือน: ปัจจัยที่กำหนดไม่ถูกต้อง %s, เส้นทางต้องมี! ใช้เส้นทางเริ่มต้น</translation>
+    </message>
+    <message>
+        <source>Will retry…</source>
+        <translation>จะลองใหม่ …</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>

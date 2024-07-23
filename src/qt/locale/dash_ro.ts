@@ -1,4 +1,4 @@
-<TS language="ro" version="2.1">
+<TS version="2.1" language="ro">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -74,10 +74,6 @@
         <translation>Acestea sunt adresele tale Dash pentru efectuarea platilor. Intotdeauna verifica atent suma de plata si adresa beneficiarului inainte de a trimite monede.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Acestea sunt adresele tale Dash pentru receptionarea platilor. Este recomandat sa folosesti mereu o adresa noua pentru primirea platilor.</translation>
-    </message>
-    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiază adresa</translation>
     </message>
@@ -102,16 +98,13 @@
         <translation>Exportă listă de adrese</translation>
     </message>
     <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fisier .csv cu separator - virgula</translation>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation>A apărut o eroare la salvarea listei de adrese la %1. Vă rugăm să încercaţi din nou.</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
         <translation>Export nereusit</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>A apărut o eroare la salvarea listei de adrese la %1. Vă rugăm să încercaţi din nou.</translation>
     </message>
 </context>
 <context>
@@ -151,10 +144,6 @@
         <translation>Repetaţi noua frază de acces</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Introduceţi noua parolă a portofelului electronic.&lt;br/&gt;Vă rugăm să folosiţi o parolă de&lt;b&gt;minimum 10 caractere aleatoare&lt;/b&gt;, sau &lt;b&gt;minimum 8 cuvinte&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Criptare portofel</translation>
     </message>
@@ -171,20 +160,8 @@
         <translation>Deblocare portofel</translation>
     </message>
     <message>
-        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Această acţiune necesită introducerea parolei de acces pentru decriptarea portofelului.</translation>
-    </message>
-    <message>
-        <source>Decrypt wallet</source>
-        <translation>Decriptare portofel</translation>
-    </message>
-    <message>
         <source>Change passphrase</source>
         <translation>Schimbă fraza de acces</translation>
-    </message>
-    <message>
-        <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Introduceţi vechea şi noua parolă pentru portofel.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -231,10 +208,6 @@
         <translation>Fraza de acces introdusă pentru decriptarea portofelului a fost incorectă.</translation>
     </message>
     <message>
-        <source>Wallet decryption failed</source>
-        <translation>Decriptarea portofelului a esuat.</translation>
-    </message>
-    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Parola portofelului a fost schimbata.</translation>
     </message>
@@ -258,23 +231,10 @@
     <name>BitcoinAmountField</name>
     </context>
 <context>
+    <name>BitcoinApplication</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>A apărut o eroare fatală. Dash Core nu mai poate continua în siguranță și se va opri.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portofel</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nod</translation>
-    </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Imagine de ansamblu</translation>
@@ -298,6 +258,38 @@
     <message>
         <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>Cereţi plăţi (generează coduri QR şi Dash-uri: URls)</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation>&amp;Opţiuni…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation>Cript&amp;ează portofelul…</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation>&amp;Fă o copie de siguranță a  portofelului…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation>S&amp;chimbă parola…</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock Wallet…</source>
+        <translation>&amp;Deblochează portofelul</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation>Semnează &amp;mesaj…</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation>&amp;Verifică mesaj…</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI…</source>
+        <translation>Deschide &amp;URI…</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -324,20 +316,12 @@
         <translation>Închide aplicaţia</translation>
     </message>
     <message>
-        <source>Show information about Dash Core</source>
-        <translation>Arată informații despre Dash Core</translation>
-    </message>
-    <message>
         <source>About &amp;Qt</source>
         <translation>Despre &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
         <translation>Arată informaţii despre Qt</translation>
-    </message>
-    <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Opţiuni...</translation>
     </message>
     <message>
         <source>&amp;About %1</source>
@@ -356,32 +340,16 @@
         <translation>Arată sau ascunde fereastra principală</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>Cript&amp;ează portofelul...</translation>
-    </message>
-    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Criptează cheile private ale portofelului dvs.</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Fă o copie de siguranță a  portofelului...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
         <translation>Creează o copie de rezervă a portofelului într-o locaţie diferită</translation>
     </message>
     <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>S&amp;chimbă parola...</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Schimbă fraza de acces folosită pentru criptarea portofelului</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;Deblochează portofelul</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -392,16 +360,8 @@
         <translation>Blochează portofelul</translation>
     </message>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>Semnează &amp;mesaj...</translation>
-    </message>
-    <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>Semnaţi mesaje cu adresa dvs. Dash pentru a dovedi că vă aparţin</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Verifică mesaj...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
@@ -418,10 +378,6 @@
     <message>
         <source>&amp;Debug console</source>
         <translation>&amp;Consola pentru debug </translation>
-    </message>
-    <message>
-        <source>Open debugging console</source>
-        <translation>Deshide consola pentru debugging</translation>
     </message>
     <message>
         <source>&amp;Network Monitor</source>
@@ -464,28 +420,12 @@
         <translation>Afișează backup-urile create în mod automat în portofel</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Adrese de trimitere...</translation>
-    </message>
-    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Arată lista de adrese trimise şi etichetele folosite.</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Adrese de primire...</translation>
-    </message>
-    <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Arată lista de adrese pentru primire şi etichetele</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation>Deschide &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Deschidere Dash: o adresa URI sau o cerere de plată</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -508,10 +448,6 @@
         <translation>&amp;Setări</translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Unelte</translation>
-    </message>
-    <message>
         <source>&amp;Help</source>
         <translation>A&amp;jutor</translation>
     </message>
@@ -527,30 +463,6 @@
         <source>Network activity disabled</source>
         <translation>Activitatea retelei a fost oprita.</translation>
     </message>
-    <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>Se sincronizeaza Header-ele (%1%)...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Se sincronizează cu reţeaua...</translation>
-    </message>
-    <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>Se indexează blocurile pe disc...</translation>
-    </message>
-    <message>
-        <source>Processing blocks on disk...</source>
-        <translation>Se proceseaza blocurile pe disc...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Se reindexează blocurile pe disc...</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>Se conecteaza cu alte noduri...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>%n block procesat de istorie a tranzacțiilor</numerusform><numerusform>%n block-uri procesate de istorie a tranzacțiilor</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform></translation>
@@ -560,8 +472,32 @@
         <translation>%1 în urmă</translation>
     </message>
     <message>
-        <source>Catching up...</source>
-        <translation>Se actualizează...</translation>
+        <source>Syncing Headers (%1%)…</source>
+        <translation>Se sincronizeaza Header-ele (%1%)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation>Se sincronizează cu reţeaua…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation>Se indexează blocurile pe disc…</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation>Se proceseaza blocurile pe disc…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation>Se reindexează blocurile pe disc…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation>Se conecteaza cu alte noduri…</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation>Se actualizează…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -669,7 +605,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Portofelul este &lt;b&gt;criptat&lt;/b&gt; iar în momentul de faţă este &lt;b&gt;blocat&lt;/b&gt;</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -838,6 +774,12 @@
     </message>
 </context>
 <context>
+    <name>CreateWalletActivity</name>
+    </context>
+<context>
+    <name>CreateWalletDialog</name>
+    </context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -876,10 +818,6 @@
         <translation>Adresa introdusă "%1" nu este o adresă Dash validă</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Adresa introdusă "%1" se află deja în lista de adrese.</translation>
-    </message>
-    <message>
         <source>Could not unlock wallet.</source>
         <translation>Portofelul nu a putut fi deblocat.</translation>
     </message>
@@ -912,14 +850,13 @@
     </message>
 </context>
 <context>
+    <name>GovernanceList</name>
+    </context>
+<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
         <translation>versiune</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
     </message>
     <message>
         <source>About %1</source>
@@ -945,10 +882,6 @@
         <translation>Deoarece este prima lansare a programului poți alege unde %1 va stoca datele sale.</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Cand apasati OK, %1 va incepe descarcarea si procesarea intregului %4 blockchain (%2GB) incepand cu cele mai vechi tranzactii din %3 de la lansarea initiala a %4.</translation>
-    </message>
-    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Sincronizarea initiala necesita foarte multe resurse, si poate releva probleme de hardware ale computerului care anterior au trecut neobservate. De fiecare data cand rulati %1, descarcarea va continua de unde a fost intrerupta.</translation>
     </message>
@@ -963,6 +896,14 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Foloseşte un dosar de date personalizat:</translation>
+    </message>
+    <message>
+        <source>%1 GB of free space available</source>
+        <translation>%1 GB de spațiu liber disponibil</translation>
+    </message>
+    <message>
+        <source>(of %1 GB needed)</source>
+        <translation>(din %1 GB necesar)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -988,14 +929,6 @@
         <source>Error</source>
         <translation>Eroare</translation>
     </message>
-    <message>
-        <source>%1 GB of free space available</source>
-        <translation>%1 GB de spațiu liber disponibil</translation>
-    </message>
-    <message>
-        <source>(of %1 GB needed)</source>
-        <translation>(din %1 GB necesar)</translation>
-    </message>
 </context>
 <context>
     <name>MasternodeList</name>
@@ -1006,10 +939,6 @@
     <message>
         <source>Status</source>
         <translation>Stare</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1131,8 +1060,12 @@
         <translation>Numarul de blocuri ramase</translation>
     </message>
     <message>
-        <source>Unknown...</source>
-        <translation>Necunoscut...</translation>
+        <source>Unknown…</source>
+        <translation>Necunoscut…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation>calculeaza…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1147,10 +1080,6 @@
         <translation>Cresterea progresului per ora</translation>
     </message>
     <message>
-        <source>calculating...</source>
-        <translation>calculeaza...</translation>
-    </message>
-    <message>
         <source>Estimated time left until synced</source>
         <translation>Timp estimat pana la sincronizare</translation>
     </message>
@@ -1158,11 +1087,7 @@
         <source>Hide</source>
         <translation>Ascunde</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Necunoscut. Se sincronizeaza headerele (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1170,22 +1095,13 @@
         <translation>Deschide URI</translation>
     </message>
     <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Deschideţi cerere de plată prin intermediul adresei URI sau a fişierului</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Selectaţi fişierul cerere de plată</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Selectati care fisier de cerere de plata va fi deschis</translation>
-    </message>
 </context>
+<context>
+    <name>OpenWalletActivity</name>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1199,10 +1115,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Mărimea bazei de &amp;date cache</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1317,10 +1229,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Conectare la reteaua Dash printr-un proxy SOCKS5 separat pentru serviciile TOR ascunse.</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Afişează doar un icon in tray la ascunderea ferestrei</translation>
     </message>
@@ -1345,12 +1253,6 @@
         <translation>Limba interfeţei utilizatorului poate fi setată aici. Această setare va avea efect după repornirea %1.</translation>
     </message>
     <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
-        <translation>Limba lipsă sau traducerea incompletă? Ajută contribuind traduceri aici:
-https://www.transifex.com/projects/p/dash/</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Unitatea de măsură pentru afişarea sumelor:</translation>
     </message>
@@ -1361,10 +1263,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Zecimale</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Opţiuni linie de comandă active care oprimă opţiunile de mai sus:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1599,6 +1497,9 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>Payment request error</source>
@@ -1613,14 +1514,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Gestionare URI</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>URL-ul cererii de plată preluat nu este valid: %1</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Adresă pentru plată invalidă %1</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresă Dash invalidă sau parametri URI deformaţi.</translation>
     </message>
@@ -1628,91 +1521,31 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Payment request file handling</source>
         <translation>Manipulare fişier cerere de plată</translation>
     </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Fişierul cerere de plată nu poate fi citit! Cauza poate fi un fişier cerere de plată nevalid.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Cerere de plată refuzată</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Cererea de plată din reţea nu se potriveşte cu clientul din reţea</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Cerere de plată expirata</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Cererea de plată nu este iniţializată.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Cererile nesecurizate către scripturi personalizate de plăți nu sunt suportate</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Cerere de plată invalidă.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Suma cerută de plată de %1 este prea mică (considerată praf).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Rambursare de la %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Cererea de plată %1 este prea mare (%2 octeţi, permis %3 octeţi).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Eroare la comunicarea cu %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Cererea de plată nu poate fi analizată!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Răspuns greşit de la server %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Eroare în cererea de reţea</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Plată acceptată</translation>
-    </message>
 </context>
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>NodeId</source>
-        <translation>NodeID</translation>
-    </message>
-    <message>
-        <source>Node/Service</source>
-        <translation>Nod/Serviciu</translation>
-    </message>
-    <message>
         <source>User Agent</source>
+        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation>Agent utilizator</translation>
     </message>
     <message>
         <source>Ping</source>
+        <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation>Ping</translation>
     </message>
     </context>
 <context>
+    <name>Proposal</name>
+    </context>
+<context>
+    <name>ProposalModel</name>
+    </context>
+<context>
     <name>QObject</name>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 nu a fost inchis in siguranta...</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation>%1 nu a fost inchis in siguranta…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -1784,21 +1617,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Eroare: Directorul de date specificat "%1" nu există.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Eroare: Nu se poate parsa fișierul de configurare: %1. Utilizează numai sintaxa cheie=valoare.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Eroare: %1</translation>
-    </message>
-    </context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -1809,38 +1627,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cod QR</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Salvează imaginea...</translation>
-    </message>
-    <message>
-        <source>Error creating QR Code.</source>
-        <translation>Eroare la crearea Codului QR</translation>
-    </message>
-</context>
-<context>
-    <name>QRGeneralImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Salvează imaginea...</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation>&amp;Copiaza Imaginea</translation>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation>Salvează codul QR</translation>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>Imagine de tip PNG (*.png)</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Salvează imaginea…</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Salvează imaginea...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Salvează imaginea…</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -1850,11 +1645,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Save QR Code</source>
         <translation>Salvează codul QR</translation>
     </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation>Imagine de tip PNG (*.png)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1902,24 +1693,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Fişier jurnal depanare</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Numărul curent de blocuri</translation>
-    </message>
-    <message>
         <source>Client version</source>
         <translation>Versiune client</translation>
     </message>
     <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Foloseşte BerkeleyDB versiunea</translation>
-    </message>
-    <message>
         <source>Block chain</source>
         <translation>Lanţ de blocuri</translation>
-    </message>
-    <message>
-        <source>Number of Masternodes</source>
-        <translation>Număr de Masternode-uri</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1966,14 +1745,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Selectaţi un partener pentru a vedea informaţiile detaliate.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Whitelisted</translation>
-    </message>
-    <message>
-        <source>Direction</source>
-        <translation>Direcţie</translation>
-    </message>
-    <message>
         <source>Version</source>
         <translation>versiune</translation>
     </message>
@@ -1988,10 +1759,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synced Blocks</source>
         <translation>Blocuri Sincronizate</translation>
-    </message>
-    <message>
-        <source>Wallet Path</source>
-        <translation>Traiectoria Portofelului</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2024,10 +1791,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Services</source>
         <translation>Servicii</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Scor Ban</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2066,42 +1829,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Repararea Portofelului</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Salvează portofelul</translation>
-    </message>
-    <message>
-        <source>Recover transactions 1</source>
-        <translation>Recuperează tranzacții 1</translation>
-    </message>
-    <message>
-        <source>Recover transactions 2</source>
-        <translation>Recuperează tranzacții 2</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet format</source>
-        <translation>Actualizează formatul portofelului</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Butoanele de mai jos vor reporni portofelul cu opțiuni din linia de comandă pentru a repara portofelul, pentru a rezolva problemele cu fișierele blocate corupte sau cu tranzacțiile care lipsesc / sunt vechi.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Încearcă să recuperezi cheile private de la un wallet.dat. corupt</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Recuperează tranzacții din blockchain (păstrează meta-data, ex: proprietarul contului).</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Recuperează tranzacții din blockchain (șterge meta-data).</translation>
-    </message>
-    <message>
-        <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: Actualizează portofelul la ultimul format la pornire. (Notă: aceasta nu este o actualizare a portofelului în sine!)</translation>
-    </message>
-    <message>
         <source>Wallet repair options.</source>
         <translation>Opțiuni de reparație a portofelului</translation>
     </message>
@@ -2112,6 +1839,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
         <translation>-reindexează: Reconstruiește index-ul block chain din fișierele curente blk000??.dat.</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nu</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
@@ -2170,38 +1901,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Total: %1 (Activat: %2)</translation>
     </message>
     <message>
-        <source>(node id: %1)</source>
-        <translation>(node id: %1)</translation>
-    </message>
-    <message>
         <source>via %1</source>
         <translation>via %1</translation>
-    </message>
-    <message>
-        <source>never</source>
-        <translation>niciodată</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>Intrare</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>Ieşire</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Da</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nu</translation>
     </message>
     <message>
         <source>Unknown</source>
         <translation>necunoscut</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -2235,10 +1942,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Amount:</source>
         <translation>Sum&amp;a:</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Cerere plată</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2284,13 +1987,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Copy amount</source>
         <translation>Copiază suma</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>QR Code</source>
-        <translation>Cod QR</translation>
-    </message>
     <message>
         <source>Copy &amp;URI</source>
         <translation>Copiază &amp;URl</translation>
@@ -2300,8 +1999,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copiază &amp;adresa</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Salvează imaginea...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Salvează imaginea…</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2310,34 +2009,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment information</source>
         <translation>Informaţiile plată</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Cantitate</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etichetă</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mesaj</translation>
-    </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>URI rezultat este prea lung, încearcă să reduci textul pentru etichetă / mesaj.</translation>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation>Eroare la codarea URl-ului în cod QR.</translation>
     </message>
 </context>
 <context>
@@ -2382,10 +2053,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Caracteristici control ale monedei</translation>
     </message>
     <message>
-        <source>Inputs...</source>
-        <translation>Intrări</translation>
-    </message>
-    <message>
         <source>automatically selected</source>
         <translation>Selectie automatică</translation>
     </message>
@@ -2414,6 +2081,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Praf:</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation>Intrări</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>După taxe:</translation>
     </message>
@@ -2434,12 +2105,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Taxă tranzacţie:</translation>
     </message>
     <message>
-        <source>Choose...</source>
-        <translation>Alegeţi...</translation>
-    </message>
-    <message>
-        <source>collapse fee-settings</source>
-        <translation>inchide setarile de taxare</translation>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation>(Taxa smart nu este inca initializata. Aceasta poate dura cateva blocuri…)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2450,16 +2117,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Dacă taxa vamală este stabilită la 1000 de duffi și tranzacția are doar 250 de octeți, atunci "per kilobyte" plătește doar 250 de duffi în taxă,&lt;br /&gt;în timp ce "cel puțin" plătește 1000 de duffi. Pentru tranzacțiile mai mari decât un kilobyte, ambele plătesc cu kilobyte.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Plata numai a taxei minime este ok, atâta timp cât există un volum mai mic de tranzacții decât spațiul din block-uri.&lt;br /&gt;Dar trebuie să știi că acest lucru se poate încheia într-o tranzacție care nu se confirmă odată ce există mai multă cerere pentru tranzacții dash decât poate procesa rețeaua.</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>per kilooctet</translation>
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
         <translation>Utilizarea fallbackfee-ului poate duce la trimiterea unei tranzacții care va dura mai multe ore sau zile (sau niciodată) pentru confirmare. Ia în considerare alegerea manuală a taxei sau așteaptă până când ai validat lanțul complet.</translation>
+    </message>
+    <message>
+        <source>Choose…</source>
+        <translation>Alegeţi…</translation>
     </message>
     <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
@@ -2470,20 +2137,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ascunde</translation>
     </message>
     <message>
-        <source>(read the tooltip)</source>
-        <translation>(citeste tooltip)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Recomandat:</translation>
     </message>
     <message>
         <source>Custom:</source>
         <translation>Personalizat:</translation>
-    </message>
-    <message>
-        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Taxa smart nu este inca initializata. Aceasta poate dura cateva blocuri...)</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -2558,14 +2217,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Sigur doriţi să trimiteţi?</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>se adaugă ca și comision de tranzacție</translation>
-    </message>
-    <message>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Suma Totală = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
-    </message>
-    <message>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 of %2 înregistrările afișate)&lt;/b&gt;</translation>
     </message>
@@ -2614,20 +2265,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Creare tranzacţie nereuşită!</translation>
     </message>
     <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Tranzactia a fost refuzata pentru urmatorul motiv: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation> O taxă mai mare de %1 este considerată o taxă absurd de mare </translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Cerere de plată expirata</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Plăteşte doar taxa solicitata de %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2656,10 +2295,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>SendCoinsEntry</name>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation>Aceasta este o tranzacţie normală.</translation>
-    </message>
     <message>
         <source>Pay &amp;To:</source>
         <translation>Plăteşte că&amp;tre:</translation>
@@ -2732,22 +2367,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Introdu o etichetă pentru această adresă pentru a fi adăugată în lista ta de adrese</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Da</translation>
-    </message>
 </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
+        <source>%1 is shutting down…</source>
         <translation>%1 se închide</translation>
     </message>
     <message>
@@ -2895,13 +2519,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>SplashScreen</name>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-</context>
-<context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
@@ -3037,10 +2654,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>Dimensiune totala tranzacţie</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Comerciant</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -3216,8 +2829,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Anul acesta</translation>
     </message>
     <message>
-        <source>Range...</source>
-        <translation>Interval...</translation>
+        <source>Range…</source>
+        <translation>Interval…</translation>
     </message>
     <message>
         <source>Most Common</source>
@@ -3276,10 +2889,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copiaza toate detaliile tranzacţiei</translation>
     </message>
     <message>
-        <source>Edit label</source>
-        <translation>Editează eticheta</translation>
-    </message>
-    <message>
         <source>Show transaction details</source>
         <translation>Arată detaliile tranzacţiei</translation>
     </message>
@@ -3290,10 +2899,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Export Transaction History</source>
         <translation>Export istoric tranzacţii</translation>
-    </message>
-    <message>
-        <source>Comma separated file (*.csv)</source>
-        <translation>Fisier .csv cu separator - virgula</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -3360,19 +2965,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Nu a fost încărcat nici un portofel.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
         <translation>Trimite monede</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3390,10 +2994,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Backup Wallet</source>
         <translation>Backup portofelul electronic</translation>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation>Date portofel (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -3423,20 +3023,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Aceasta este o versiune de test preliminară - vă asumaţi riscul folosind-o - nu folosiţi pentru minerit sau aplicaţiile comercianţilor</translation>
     </message>
     <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Atenţie: Reţeaua nu pare să fie de acord în totalitate! Aparent nişte mineri au probleme.</translation>
-    </message>
-    <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Atenţie: Aparent, nu sîntem de acord cu toţi partenerii noştri! Va trebui să faceţi o actualizare, sau alte noduri necesită actualizare.</translation>
     </message>
     <message>
         <source>Already have that input.</source>
         <translation>Această intrare deja există.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Nu se poate retrograda portofelul</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
@@ -3479,14 +3071,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Eroare la citirea bazei de date. Oprire.</translation>
     </message>
     <message>
-        <source>Error</source>
-        <translation>Eroare</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Eroare: Spaţiu pe disc redus!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Am esuat ascultarea pe orice port. Folositi -listen=0 daca vreti asta.</translation>
     </message>
@@ -3511,28 +3095,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Intrarea depășește dimensiunea maximă.</translation>
     </message>
     <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Nu a reușit să se încarce cache-ul cererilor îndeplinite de la</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Nu a reușit să se încarce cache-ul guvernării de la</translation>
-    </message>
-    <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Nu a reușit să se încarce cache-ul masternode-urilor de la</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>S-au găsit suficienți utilizatori, semnând (așteptând %s )</translation>
-    </message>
-    <message>
-        <source>Found enough users, signing ...</source>
-        <translation>S-au găsit suficienți utilizatori, semnând ...</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Import...</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -3545,10 +3109,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Incorect sau nici un bloc de geneza găsit. Directorul de retea greşit?</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informaţie</translation>
     </message>
     <message>
         <source>Input is not valid.</source>
@@ -3571,28 +3131,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Număr minim de semnatari spork specificat cu -minsporkkeys nu este valabil. </translation>
     </message>
     <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool epuizat, folositi intai functia keypoolrefill</translation>
-    </message>
-    <message>
-        <source>Loading banlist...</source>
-        <translation>Încărcare banlist...</translation>
-    </message>
-    <message>
-        <source>Loading fulfilled requests cache...</source>
-        <translation>Încărcarea cache-ului de cereri îndeplinite ...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Încărcarea cache-ului masternode-ului</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Blocarea este deja în vigoare.</translation>
-    </message>
-    <message>
-        <source>Mixing in progress...</source>
-        <translation>Amestecare în curs ...</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -3615,12 +3155,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nu este în lista Masternode</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation>Reductie blockstore…</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation>Redirecționarea block-urilor …</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation>Rescanare…</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation>Se pornesc threadurile retelei…</translation>
+    </message>
+    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Trimis la masternode, așteaptă la coadă %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Sincronizarea s-a terminat</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain…</source>
+        <translation>Sincronizarea blockchain-ului…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance objects…</source>
+        <translation>Sincronizarea obiectelor de guvernare…</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -3631,28 +3195,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Răspuns necunoscut.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Argumentul nesuportat -benchmark este ignorat, folositi debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Argument nesuportat -debugnet ignorat, folosiţi -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Argument nesuportat -tor găsit, folosiţi -onion.</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Comentariul (%s) al Agentului Utilizator contine caractere nesigure.</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Verificare portofelului (rilor) ...</translation>
-    </message>
-    <message>
-        <source>Will retry...</source>
-        <translation>Se va reîncerca...</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>
@@ -3675,10 +3219,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s fișierul conține toate cheile private din acest portofel. Nu le împărtăși nimănui!</translation>
     </message>
     <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>- optiunea masternode este dezaprobata si ignorata - specificarea masternodeblsprivkey-ului este suficienta pentru a porni acest nod ca si un masternode.</translation>
-    </message>
-    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Nu s-a reușit crearea unui backup, fișierul există deja! Acest lucru s-ar putea întâmpla dacă ai repornit portofelul în mai puțin de 60 de secunde. Poți continua dacă eşti de acord cu asta.</translation>
     </message>
@@ -3695,10 +3235,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Reductie: ultima sincronizare merge dincolo de datele reductiei. Trebuie sa faceti -reindex (sa descarcati din nou intregul blockchain in cazul unui nod redus)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescanarile nu sunt posibile in modul redus. Va trebui sa folositi -reindex, ceea ce va descarca din nou intregul blockchain.</translation>
-    </message>
-    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>Baza de date a blocurilor contine un bloc ce pare a fi din viitor. Acest lucru poate fi cauzat de setarea incorecta a datei si orei in computerul dvs. Reconstruiti baza de date a blocurilor doar daca sunteti sigur ca data si ora calculatorului dvs sunt corecte.</translation>
     </message>
@@ -3711,24 +3247,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lungimea totala a sirului versiunii retelei (%i) depaseste lungimea maxima (%i). Reduceti numarul sa dimensiunea uacomments. </translation>
     </message>
     <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>S-a gasit un argument -socks nesuportat. Setarea versiunii SOCKS nu mai este posibila, sunt suportate doar proxiurile SOCKS5.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Se ignora argumentul nesuportat -whitelistalwaysrelay, folositi -whitelistrelay si/sau -whitelistforcerelay.</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>AVERTIZARE! Nu s-a reușit reîncărcarea keypool-ului, deblochează portofelul pentru a face acest lucru.</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
         <translation>Portofelul este blocat, nu poate fi completat keypool-ul! Backupurile automate și amestecarea sunt dezactivate, deblochează portofelul pentru a completa keypool-ul.</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Atentie: se mineaza blocuri cu versiune necunoscuta! Este posibil sa fie in vigoare reguli necunoscute.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -timestampindex</source>
@@ -3751,10 +3275,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>EROARE! Backup-ul automat a eșuat</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Eroare: S-a produs o eroare interna fatala, vedeti debug.log pentru detalii</translation>
-    </message>
-    <message>
         <source>Failed to create backup %s!</source>
         <translation>Crearea backup-ului a eșuat %s!</translation>
     </message>
@@ -3767,8 +3287,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ștergerea backup-ului a eșuat, eroare: %s</translation>
     </message>
     <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Nu s-a putut încărca cache-ul sporks din</translation>
+        <source>Found enough users, signing…</source>
+        <translation>S-au găsit suficienți utilizatori, semnând…</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -3777,26 +3297,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>masternodeblsprivkey nu este valabil. Consultă documentația.</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Încarc indice bloc...</translation>
-    </message>
-    <message>
-        <source>Loading governance cache...</source>
-        <translation>Se încarcă cache-ul de guvernanță...</translation>
-    </message>
-    <message>
-        <source>Loading sporks cache...</source>
-        <translation>Se încarcă cache-ul sporks...</translation>
-    </message>
-    <message>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Se încarcă portofelul... (%3.2f %%)</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Încarc portofel...</translation>
     </message>
     <message>
         <source>Masternode queue is full.</source>
@@ -3809,6 +3309,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Missing input transaction information.</source>
         <translation>Lipsesc informațiile despre tranzacțiile de intrare.</translation>
+    </message>
+    <message>
+        <source>Mixing in progress…</source>
+        <translation>Amestecare în curs …</translation>
     </message>
     <message>
         <source>No errors detected.</source>
@@ -3833,14 +3337,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
         <translation>Modul redus este incompatibil cu -txindex.</translation>
-    </message>
-    <message>
-        <source>Pruning blockstore...</source>
-        <translation>Reductie blockstore...</translation>
-    </message>
-    <message>
-        <source>Synchronizing blockchain...</source>
-        <translation>Sincronizarea blockchain-ului...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -3871,10 +3367,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tranzacţie prea mare</translation>
     </message>
     <message>
-        <source>Trying to connect...</source>
-        <translation>Se încearcă conectarea...</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Nu se poate efectua legatura la %s pe acest computer. %s probabil ruleaza deja.</translation>
     </message>
@@ -3883,12 +3375,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Actualizarea bazei de date UTXO</translation>
     </message>
     <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>Portofelul trebuie rescris: reporneşte %s pentru finalizare</translation>
+        <source>Verifying blocks…</source>
+        <translation>Se verifică blocurile…</translation>
     </message>
     <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Atentie: se activeaza reguli noi necunoscute (versionbit %i)</translation>
+        <source>Verifying wallet(s)…</source>
+        <translation>Verificare portofelului (rilor) …</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Portofelul trebuie rescris: reporneşte %s pentru finalizare</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
@@ -3907,20 +3403,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -spentindex</translation>
     </message>
     <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -txindex</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>mixing nu este valabil</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>vezi debug.log pentru detalii.</translation>
-    </message>
-    <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -3963,24 +3451,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Aceasta este taxa de tranzactie pe care este posibil sa o platiti daca estimarile de taxe nu sunt disponibile.</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Acest produs include software dezvoltat de OpenSSL Project pentru a fi folosit in Toolkitul OpenSSL %s, software criptografic scris de Eric Young si software UPnP scris de Thomas Bernard. </translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Imposibil de redat block-urile. Va trebui să reconstruiți baza de date folosind -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Atenţie: fişierul portofelului este corupt, date salvate! Fişierul %s a fost salvat ca %s in %s; dacă balanta sau tranzactiile sunt incorecte ar trebui să restauraţi dintr-o copie de siguranţă.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d din ultimele 100 de blocuri au versiune neașteptată</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corupt, salvare nereuşită</translation>
     </message>
     <message>
         <source>%s is not a valid backup folder!</source>
@@ -4031,12 +3503,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Eroare la încărcare %s: Nu poți dezactiva HD pe un portofel HD deja existent</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Eroare la încărcarea portofelului %s. Numele de fișier duplicat -wallet specificat.</translation>
-    </message>
-    <message>
         <source>Error upgrading chainstate database</source>
         <translation>Eroare la actualizarea bazei de date chainstate</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses…</source>
+        <translation>Încărcare adrese P2P…</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation>Încărcare banlist…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation>Încarc indice bloc…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation>Încarc portofel…</translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
@@ -4045,6 +3529,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Nu a reușit să pornească un nou queue de amestecare</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation>Import…</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4071,20 +3559,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Adresa spork nevalidă specificată cu -sporkaddr</translation>
     </message>
     <message>
-        <source>Loading P2P addresses...</source>
-        <translation>Încărcare adrese P2P...</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Se micsoreaza -maxconnections de la %d la %d, datorita limitarilor de sistem.</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Redirecționarea block-urilor ...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Rescanare...</translation>
     </message>
     <message>
         <source>Session not complete!</source>
@@ -4097,14 +3573,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Signing transaction failed</source>
         <translation>Nu s-a reuşit semnarea tranzacţiei</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Se pornesc threadurile retelei...</translation>
-    </message>
-    <message>
-        <source>Synchronizing governance objects...</source>
-        <translation>Sincronizarea obiectelor de guvernare...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -4135,8 +3603,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tranzacția nu este validă.</translation>
     </message>
     <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Tranzacţia are suma prea mare pentru a beneficia de gratuitate</translation>
+        <source>Trying to connect…</source>
+        <translation>Se încearcă conectarea…</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -4159,10 +3627,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Categorie de înregistrare neacceptată %s=%s.</translation>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>Se verifică blocurile...</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Un număr foarte scăzut de chei rămase: %d</translation>
     </message>
@@ -4171,16 +3635,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Portofel blocat.</translation>
     </message>
     <message>
-        <source>Warning</source>
-        <translation>Avertisment</translation>
+        <source>Will retry…</source>
+        <translation>Se va reîncerca…</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>
         <translation>Intrările tale au fost adăugate cu succes.</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Şterge toate tranzacţiile din portofel...</translation>
     </message>
 </context>
 </TS>

@@ -302,6 +302,9 @@
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
@@ -328,6 +331,34 @@
         <translation>Заявка за плащане (генерира QR кодове и Dash: URI)</translation>
     </message>
     <message>
+        <source>&amp;Options…</source>
+        <translation>&amp;Опции…</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation>&amp;Шифриране на портфейла…</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation>&amp;Запазване на портфейла…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation>&amp;Смяна на паролата…</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock Wallet…</source>
+        <translation>&amp;Отключи Портфейл…</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation>Подписване на &amp;съобщение…</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message…</source>
+        <translation>&amp;Проверка на съобщение…</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Адреси за изпращане</translation>
     </message>
@@ -336,16 +367,16 @@
         <translation>&amp;Адреси за получаване</translation>
     </message>
     <message>
+        <source>Open &amp;URI…</source>
+        <translation>Отвори &amp;URI…</translation>
+    </message>
+    <message>
         <source>Open Wallet</source>
         <translation>Отвори портфейла</translation>
     </message>
     <message>
         <source>Open a wallet</source>
         <translation>Отворете портфейл </translation>
-    </message>
-    <message>
-        <source>Close Wallet...</source>
-        <translation>Затваряне на портфейла...</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -404,10 +435,6 @@
         <translation>Покажи информация за Qt</translation>
     </message>
     <message>
-        <source>&amp;Options...</source>
-        <translation>&amp;Опции...</translation>
-    </message>
-    <message>
         <source>&amp;About %1</source>
         <translation>&amp;Относно %1</translation>
     </message>
@@ -428,32 +455,16 @@
         <translation>Показване и скриване на основния прозорец</translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Шифриране на портфейла...</translation>
-    </message>
-    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Криптирай частните ключове принадлежащи към твоя портфейл</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Запазване на портфейла...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
         <translation>Запазване на портфейла на друго място</translation>
     </message>
     <message>
-        <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Смяна на паролата...</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Променя паролата за криптиране на портфейла</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;Отключи Портфейл...</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -464,16 +475,8 @@
         <translation>&amp;Заключи Портфейл</translation>
     </message>
     <message>
-        <source>Sign &amp;message...</source>
-        <translation>Подписване на &amp;съобщение...</translation>
-    </message>
-    <message>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>Подпиши съобщения с твоите Dash адреси за да докажеш че ги притежаваш</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Проверка на съобщение...</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
@@ -540,10 +543,6 @@
         <translation>Покажи списъкът от използвани адреси за получаване и наименования</translation>
     </message>
     <message>
-        <source>Open &amp;URI...</source>
-        <translation>Отвори &amp;URI...</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Опции на командния ред</translation>
     </message>
@@ -590,10 +589,6 @@
         <translation>Отвори dash: URI</translation>
     </message>
     <message>
-        <source>Create Wallet...</source>
-        <translation>Създай портфейл...</translation>
-    </message>
-    <message>
         <source>Create a new wallet</source>
         <translation>Създай нов портфейл</translation>
     </message>
@@ -633,30 +628,6 @@
         <source>Network activity disabled</source>
         <translation>Мрежова активност изключена</translation>
     </message>
-    <message>
-        <source>Syncing Headers (%1%)...</source>
-        <translation>Синхронизиране на Headers (%1%)...</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network...</source>
-        <translation>Синхронизиране с мрежата...</translation>
-    </message>
-    <message>
-        <source>Indexing blocks on disk...</source>
-        <translation>Индексиране блоковете на диска ...</translation>
-    </message>
-    <message>
-        <source>Processing blocks on disk...</source>
-        <translation>Обработване блоковете на диска...</translation>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Преиндексиране на блокове на диска...</translation>
-    </message>
-    <message>
-        <source>Connecting to peers...</source>
-        <translation>Свързване към пиъри...</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation><numerusform>Обработени %n блок(а) от историята на транзакциите.</numerusform><numerusform>Обработени %n блока от историята на транзакциите.</numerusform></translation>
@@ -666,8 +637,40 @@
         <translation>%1 назад</translation>
     </message>
     <message>
-        <source>Catching up...</source>
-        <translation>Зарежда блокове...</translation>
+        <source>Close Wallet…</source>
+        <translation>Затваряне на портфейла…</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation>Създай портфейл…</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation>Синхронизиране на Headers (%1%)…</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation>Синхронизиране с мрежата…</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation>Индексиране блоковете на диска …</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation>Обработване блоковете на диска…</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk…</source>
+        <translation>Преиндексиране на блокове на диска…</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation>Свързване към пиъри…</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation>Зарежда блокове…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -790,10 +793,6 @@
     <message>
         <source>Original message:</source>
         <translation>Оригинално съобщение:</translation>
-    </message>
-    <message>
-        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation>Възникна фатална грешка. %1 не може да продължи безопасно и ще се изключи.</translation>
     </message>
 </context>
 <context>
@@ -990,8 +989,8 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
-        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
-        <translation>Създаване на портфейл &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation>Създаване на портфейл &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Create wallet failed</source>
@@ -1128,10 +1127,6 @@
         <translation>Тъй като това е първият път, когато програмата се стартира, можете да изберете къде %1 да съхранява данните си.</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Когато изберете OK, %1 ще започне да изтегля и обработва %4 блок верига (%2GB) стартирайки с първите транзакции в %3 когато %4 е  пуснат първоначално.</translation>
-    </message>
-    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Тази първоначална синхронизация изисква много ресурси и може да покаже хардуерните проблеми с компютъра, които преди това не сте забелязали. Всеки път, когато стартирате %1, той ще продължи да се изтегля там, където е спрял.</translation>
     </message>
@@ -1251,8 +1246,12 @@
         <translation>Копирай Collateral Outpoint</translation>
     </message>
     <message>
-        <source>Updating...</source>
-        <translation>Обновяване...</translation>
+        <source>Please wait…</source>
+        <translation>Моля изчакайте…</translation>
+    </message>
+    <message>
+        <source>Updating…</source>
+        <translation>Обновяване…</translation>
     </message>
     <message>
         <source>ENABLED</source>
@@ -1287,10 +1286,6 @@
         <translation>Филтрирайте по някакво свойство (напр. Адрес или хеш на protx)</translation>
     </message>
     <message>
-        <source>Please wait...</source>
-        <translation>Моля изчакайте...</translation>
-    </message>
-    <message>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>Допълнителна информация за DIP3 Masternode %1</translation>
     </message>
@@ -1314,8 +1309,12 @@
         <translation>Оставащ брой блокове</translation>
     </message>
     <message>
-        <source>Unknown...</source>
-        <translation>Неизвестни...</translation>
+        <source>Unknown…</source>
+        <translation>Неизвестни…</translation>
+    </message>
+    <message>
+        <source>calculating…</source>
+        <translation>изчисляване…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1328,10 +1327,6 @@
     <message>
         <source>Progress increase per hour</source>
         <translation>Увеличаване напредъка за час</translation>
-    </message>
-    <message>
-        <source>calculating...</source>
-        <translation>изчисляване...</translation>
     </message>
     <message>
         <source>Estimated time left until synced</source>
@@ -1471,14 +1466,6 @@
         <translation>Показва ако зададеното по подразбиране SOCKS5 proxy се използва за намиране на пиъри чрез тази мрежа.</translation>
     </message>
     <message>
-        <source>Hide the icon from the system tray.</source>
-        <translation>Скрий иконата от системният трей.</translation>
-    </message>
-    <message>
-        <source>&amp;Hide tray icon</source>
-        <translation>Скрий трей иконата</translation>
-    </message>
-    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>При затваряне на прозореца приложението остава минимизирано. Ако изберете тази опция, приложението може да се затвори само чрез Изход в менюто.</translation>
     </message>
@@ -1577,12 +1564,6 @@
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
         <translation>Тук можете да промените езика на потребителския изглед. Настройката ще влезе в сила след рестартиране %1.</translation>
-    </message>
-    <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
-        <translation>Липсва език или превода е непълен? Можете да помогнете с превода тук:
-https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1886,10 +1867,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>'dash://' не е валиден URI. Използвайте 'dash:' вместо това.</translation>
     </message>
     <message>
-        <source>Invalid payment address %1</source>
-        <translation>Невалиден адрес за плащане %1</translation>
-    </message>
-    <message>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>Грешка при анализ на URI! Това може да е следствие от неправилен Dash адрес или неправилно зададени URI параметри.</translation>
     </message>
@@ -1902,18 +1879,22 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
+        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
         <translation>Потребителски агент</translation>
     </message>
     <message>
         <source>Ping</source>
+        <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation>Пинг</translation>
     </message>
     <message>
         <source>Sent</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation>Изпратени</translation>
     </message>
     <message>
         <source>Received</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
         <translation>Получени</translation>
     </message>
     </context>
@@ -1962,8 +1943,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Покажи начален екран при стартиране (по подразбиране: %u)</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
-        <translation>%1 все още не е излязъл безопастно...</translation>
+        <source>%1 didn't yet exit safely…</source>
+        <translation>%1 все още не е излязъл безопастно…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2073,15 +2054,15 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>QR Код</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Запиши изображение...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Запиши изображение…</translation>
     </message>
 </context>
 <context>
     <name>QRImageWidget</name>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Запиши изображението...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Запиши изображението…</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -2195,10 +2176,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Избери пиър за подробна информация.</translation>
     </message>
     <message>
-        <source>Direction</source>
-        <translation>Направление</translation>
-    </message>
-    <message>
         <source>Version</source>
         <translation>Версия</translation>
     </message>
@@ -2277,10 +2254,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Services</source>
         <translation>Услуги</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Точки за бан</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2407,18 +2380,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>чрез %1</translation>
     </message>
     <message>
-        <source>never</source>
-        <translation>никога</translation>
-    </message>
-    <message>
-        <source>Inbound</source>
-        <translation>Входящи</translation>
-    </message>
-    <message>
-        <source>Outbound</source>
-        <translation>Изходящи</translation>
-    </message>
-    <message>
         <source>Regular</source>
         <translation>Редовно</translation>
     </message>
@@ -2434,7 +2395,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Unknown</source>
         <translation>Неизвестни</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -2521,7 +2482,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Copy amount</source>
         <translation>Копирай сума</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -2533,8 +2494,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Копирай адрес</translation>
     </message>
     <message>
-        <source>&amp;Save Image...</source>
-        <translation>&amp;Запиши изображението...</translation>
+        <source>&amp;Save Image…</source>
+        <translation>&amp;Запиши изображението…</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2587,10 +2548,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Функции за контрол на монетата</translation>
     </message>
     <message>
-        <source>Inputs...</source>
-        <translation>Входове...</translation>
-    </message>
-    <message>
         <source>automatically selected</source>
         <translation>автоматично избрано</translation>
     </message>
@@ -2619,6 +2576,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Незначителен остатък:</translation>
     </message>
     <message>
+        <source>Inputs…</source>
+        <translation>Входове…</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>След таксата:</translation>
     </message>
@@ -2639,8 +2600,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Такса транзакция:</translation>
     </message>
     <message>
-        <source>Choose...</source>
-        <translation>Избери...</translation>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
+        <translation>(Смарт таксата не е разпозната все още.Това ще отнеме няколко блока… )</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2659,6 +2620,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Използването на резервната такса може да доведе до изпращане на транзакция, което ще отнеме няколко часа или дни (или никога), за потвърждение. Помислете дали да изберете вашата такса ръчно или да изчакате, докато валидирате пълната верига.</translation>
     </message>
     <message>
+        <source>Choose…</source>
+        <translation>Избери…</translation>
+    </message>
+    <message>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
         <translation>Бележка: Няма достатъчно данни за оценка на таксата, вместо това използвайте резервната такса.</translation>
     </message>
@@ -2673,10 +2638,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Custom:</source>
         <translation>Персонализиран:</translation>
-    </message>
-    <message>
-        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Смарт таксата не е разпозната все още.Това ще отнеме няколко блока... )</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
@@ -2929,8 +2890,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <source>%1 is shutting down...</source>
-        <translation>%1 се изключва...</translation>
+        <source>%1 is shutting down…</source>
+        <translation>%1 се изключва…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -3451,8 +3412,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Тази година</translation>
     </message>
     <message>
-        <source>Range...</source>
-        <translation>От - до...</translation>
+        <source>Range…</source>
+        <translation>От - до…</translation>
     </message>
     <message>
         <source>Most Common</source>
@@ -3761,14 +3722,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Открити са достатъчно потребители, подписване ( изчаква %s )</translation>
     </message>
     <message>
-        <source>Found enough users, signing ...</source>
-        <translation>Открити са достатъчно потребители, подписва...</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Внасяне...</translation>
-    </message>
-    <message>
         <source>Incompatible mode.</source>
         <translation>Несъвместим режим.</translation>
     </message>
@@ -3801,16 +3754,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Невалиден минимален брой ауторизатори на spork определен с -minsporkkeys</translation>
     </message>
     <message>
-        <source>Loading banlist...</source>
-        <translation>Зареждане на бан лист...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Заключването е вече налично.</translation>
-    </message>
-    <message>
-        <source>Mixing in progress...</source>
-        <translation>В процес на смесване...</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -3833,12 +3778,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не е в Мasternode списъка.</translation>
     </message>
     <message>
+        <source>Pruning blockstore…</source>
+        <translation>Изчистване на блоковото пространство…</translation>
+    </message>
+    <message>
+        <source>Replaying blocks…</source>
+        <translation>Възпроизвеждането на блокове …</translation>
+    </message>
+    <message>
+        <source>Rescanning…</source>
+        <translation>Повторно сканиране…</translation>
+    </message>
+    <message>
+        <source>Starting network threads…</source>
+        <translation>Стартиране на мрежовите нишки…</translation>
+    </message>
+    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Изпратено към Мастернода, чака в опашката %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Синхронизацията е завършена</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain…</source>
+        <translation>Синхронизиране на блок веригата…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance objects…</source>
+        <translation>Синхронизиране на governance обектите…</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -3851,14 +3820,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>User Agent comment (%s) съдържа опасни символи.</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Проверка на портфейла(ите)...</translation>
-    </message>
-    <message>
-        <source>Will retry...</source>
-        <translation>Ще опита отново...</translation>
     </message>
     <message>
         <source>Can't find random Masternode.</source>
@@ -3949,10 +3910,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Грешка при надстройката на базата данни evo</translation>
     </message>
     <message>
-        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>Грешка: неуспешно добавяне на socket към epollfd (epoll_ctl дава грешка %s)</translation>
-    </message>
-    <message>
         <source>Exceeded max tries.</source>
         <translation>Надвишен брой опити.</translation>
     </message>
@@ -3977,20 +3934,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неуспешно сканиране на портфейла по време на инициализация</translation>
     </message>
     <message>
+        <source>Found enough users, signing…</source>
+        <translation>Открити са достатъчно потребители, подписва…</translation>
+    </message>
+    <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Невалидно количество за -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>Невалиден masternodeblsprivkey. Моля вижте документацията.</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Зареждане на блок индекса...</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Зареждане на портфейла...</translation>
     </message>
     <message>
         <source>Masternode queue is full.</source>
@@ -4003,6 +3956,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Missing input transaction information.</source>
         <translation>Липсва входяща информация за транзакцията.</translation>
+    </message>
+    <message>
+        <source>Mixing in progress…</source>
+        <translation>В процес на смесване…</translation>
     </message>
     <message>
         <source>No errors detected.</source>
@@ -4033,10 +3990,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Изчистен режим е несъвместим с  -txindex.</translation>
     </message>
     <message>
-        <source>Pruning blockstore...</source>
-        <translation>Изчистване на блоковото пространство...</translation>
-    </message>
-    <message>
         <source>Specified -walletdir "%s" does not exist</source>
         <translation>Посоченият -walletdir "%s" не съществува</translation>
     </message>
@@ -4047,10 +4000,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Посоченият -walletdir "%s" не е папка</translation>
-    </message>
-    <message>
-        <source>Synchronizing blockchain...</source>
-        <translation>Синхронизиране на блок веригата...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4085,10 +4034,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Транзакцията е твърде голяма</translation>
     </message>
     <message>
-        <source>Trying to connect...</source>
-        <translation>Опит за свързване...</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Невъзможно да се свърже към %s на този компютър. %s вероятно  вече работи.</translation>
     </message>
@@ -4099,6 +4044,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Upgrading UTXO database</source>
         <translation>Обновяване на UTXO база данни</translation>
+    </message>
+    <message>
+        <source>Verifying blocks…</source>
+        <translation>Проверка на блоковете…</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)…</source>
+        <translation>Проверка на портфейла(ите)…</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4233,8 +4186,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Грешка при надграждане на верижната база данни </translation>
     </message>
     <message>
-        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation>Грешка:неуспешно добавяне на socket към kqueuefd (kevent дава грешка %s)</translation>
+        <source>Loading P2P addresses…</source>
+        <translation>Зареждане на P2P адреси…</translation>
+    </message>
+    <message>
+        <source>Loading banlist…</source>
+        <translation>Зареждане на бан лист…</translation>
+    </message>
+    <message>
+        <source>Loading block index…</source>
+        <translation>Зареждане на блок индекса…</translation>
+    </message>
+    <message>
+        <source>Loading wallet…</source>
+        <translation>Зареждане на портфейла…</translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
@@ -4243,6 +4208,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Неуспешно стартиране на нова опашка за миксиране</translation>
+    </message>
+    <message>
+        <source>Importing…</source>
+        <translation>Внасяне…</translation>
     </message>
     <message>
         <source>Incorrect -rescan mode, falling back to default value</source>
@@ -4273,20 +4242,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Невалиден спорк адрес посочен с -sporkaddr</translation>
     </message>
     <message>
-        <source>Loading P2P addresses...</source>
-        <translation>Зареждане на P2P адреси...</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Намаляване -maxconnections от %d до %d, поради ограниченията на системата.</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Възпроизвеждането на блокове ...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Повторно сканиране...</translation>
     </message>
     <message>
         <source>Session not complete!</source>
@@ -4311,14 +4268,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Last successful action was too recent.</source>
         <translation>Последното успешно действие беше твърде скоро.</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Стартиране на мрежовите нишки...</translation>
-    </message>
-    <message>
-        <source>Synchronizing governance objects...</source>
-        <translation>Синхронизиране на governance обектите...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
@@ -4349,6 +4298,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Транзакцията е невалидна.</translation>
     </message>
     <message>
+        <source>Trying to connect…</source>
+        <translation>Опит за свързване…</translation>
+    </message>
+    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Не може да се свърже с %s на този компютър (връща грешка %s)</translation>
     </message>
@@ -4377,10 +4330,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неподдържана категория на журналиране %s=%s.</translation>
     </message>
     <message>
-        <source>Verifying blocks...</source>
-        <translation>Проверка на блоковете...</translation>
-    </message>
-    <message>
         <source>Very low number of keys left: %d</source>
         <translation>Много малък останали ключове: %d</translation>
     </message>
@@ -4395,6 +4344,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
         <translation>Внимание: некоректен параметър %s, пътят трябва да съществува! Използвайте път по подразбиране.</translation>
+    </message>
+    <message>
+        <source>Will retry…</source>
+        <translation>Ще опита отново…</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>
