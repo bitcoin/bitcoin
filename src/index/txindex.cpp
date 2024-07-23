@@ -4,6 +4,7 @@
 
 #include <index/disktxpos.h>
 #include <index/txindex.h>
+#include <node/blockstorage.h>
 #include <node/ui_interface.h>
 #include <shutdown.h>
 #include <util/system.h>
@@ -203,7 +204,7 @@ bool TxIndex::Init()
     // Attempt to migrate txindex from the old database to the new one. Even if
     // chain_tip is null, the node could be reindexing and we still want to
     // delete txindex records in the old database.
-    if (!m_db->MigrateData(*pblocktree, m_chainstate->m_chain.GetLocator())) {
+    if (!m_db->MigrateData(*m_chainstate->m_blockman.m_block_tree_db, m_chainstate->m_chain.GetLocator())) {
         return false;
     }
 
@@ -215,7 +216,9 @@ bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     // Exclude genesis block transaction because outputs are not spendable.
     if (pindex->nHeight == 0) return true;
 
-    CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
+    CDiskTxPos pos{
+        WITH_LOCK(::cs_main, return pindex->GetBlockPos()),
+        GetSizeOfCompactSize(block.vtx.size())};
     std::vector<std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
     for (const auto& tx : block.vtx) {

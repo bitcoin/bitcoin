@@ -10,6 +10,7 @@
 #include <consensus/params.h>
 #include <flatfile.h>
 #include <primitives/block.h>
+#include <sync.h>
 #include <uint256.h>
 
 #include <vector>
@@ -33,6 +34,8 @@ static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
  * for the "Catching up..." mode in GUI.
  */
 static constexpr int64_t MAX_BLOCK_TIME_GAP = 25 * 60;
+
+extern RecursiveMutex cs_main;
 
 class CBlockFileInfo
 {
@@ -124,6 +127,14 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 
     BLOCK_CONFLICT_CHAINLOCK =   128, //!< conflicts with chainlock system
+
+    /**
+     * If set, this indicates that the block index entry is assumed-valid.
+     * Certain diagnostics will be skipped in e.g. CheckBlockIndex().
+     * It almost certainly means that the block's full validation is pending
+     * on a background chainstate. See `doc/assumeutxo.md`.
+     */
+    BLOCK_ASSUMED_VALID      =   256,
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -147,13 +158,13 @@ public:
     int nHeight{0};
 
     //! Which # file this block is stored in (blk?????.dat)
-    int nFile{0};
+    int nFile GUARDED_BY(::cs_main){0};
 
     //! Byte offset within blk?????.dat where this block's data is stored
-    unsigned int nDataPos{0};
+    unsigned int nDataPos GUARDED_BY(::cs_main){0};
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
-    unsigned int nUndoPos{0};
+    unsigned int nUndoPos GUARDED_BY(::cs_main){0};
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
@@ -181,7 +192,7 @@ public:
     //! load to avoid the block index being spuriously rewound.
     //! @sa NeedsRedownload
     //! @sa ActivateSnapshot
-    uint32_t nStatus{0};
+    uint32_t nStatus GUARDED_BY(::cs_main){0};
 
     //! block header
     int32_t nVersion{0};
@@ -209,7 +220,9 @@ public:
     {
     }
 
-    FlatFilePos GetBlockPos() const {
+    FlatFilePos GetBlockPos() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
         FlatFilePos ret;
         if (nStatus & BLOCK_HAVE_DATA) {
             ret.nFile = nFile;
@@ -218,7 +231,9 @@ public:
         return ret;
     }
 
-    FlatFilePos GetUndoPos() const {
+    FlatFilePos GetUndoPos() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
         FlatFilePos ret;
         if (nStatus & BLOCK_HAVE_UNDO) {
             ret.nFile = nFile;
@@ -284,21 +299,38 @@ public:
 
     //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
         if (nStatus & BLOCK_FAILED_MASK)
             return false;
         return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
     }
 
+    //! @returns true if the block is assumed-valid; this means it is queued to be
+    //!   validated by a background chainstate.
+    bool IsAssumedValid() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
+        return nStatus & BLOCK_ASSUMED_VALID;
+    }
+
     //! Raise the validity level of this block index entry.
     //! Returns true if the validity was changed.
-    bool RaiseValidity(enum BlockStatus nUpTo)
+    bool RaiseValidity(enum BlockStatus nUpTo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
+        AssertLockHeld(::cs_main);
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
-        if (nStatus & BLOCK_FAILED_MASK)
-            return false;
+        if (nStatus & BLOCK_FAILED_MASK) return false;
+
         if ((nStatus & BLOCK_VALID_MASK) < nUpTo) {
+            // If this block had been marked assumed-valid and we're raising
+            // its validity to a certain point, there is no longer an assumption.
+            if (nStatus & BLOCK_ASSUMED_VALID && nUpTo >= BLOCK_VALID_SCRIPTS) {
+                nStatus &= ~BLOCK_ASSUMED_VALID;
+            }
+
             nStatus = (nStatus & ~BLOCK_VALID_MASK) | nUpTo;
             return true;
         }
@@ -339,6 +371,7 @@ public:
 
     SERIALIZE_METHODS(CDiskBlockIndex, obj)
     {
+        LOCK(::cs_main);
         int _nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 

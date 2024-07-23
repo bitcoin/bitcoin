@@ -251,7 +251,7 @@ void FuncDIP3Activation(TestChainSetup& setup)
     int nHeight = chainman.ActiveChain().Height();
 
     // We start one block before DIP3 activation, so mining a block with a DIP3 transaction should fail
-    auto block = std::make_shared<CBlock>(setup.CreateBlock(txns, setup.coinbaseKey));
+    auto block = std::make_shared<CBlock>(setup.CreateBlock(txns, setup.coinbaseKey, chainman.ActiveChainstate()));
     chainman.ProcessNewBlock(Params(), block, true, nullptr);
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight);
     BOOST_ASSERT(block->GetHash() != chainman.ActiveChain().Tip()->GetBlockHash());
@@ -261,7 +261,7 @@ void FuncDIP3Activation(TestChainSetup& setup)
     setup.CreateAndProcessBlock({}, setup.coinbaseKey);
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 1);
     // Mining a block with a DIP3 transaction should succeed now
-    block = std::make_shared<CBlock>(setup.CreateBlock(txns, setup.coinbaseKey));
+    block = std::make_shared<CBlock>(setup.CreateBlock(txns, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 2);
@@ -288,7 +288,7 @@ void FuncV19Activation(TestChainSetup& setup)
 
     int nHeight = chainman.ActiveChain().Height();
 
-    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey));
+    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     BOOST_ASSERT(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
@@ -306,7 +306,7 @@ void FuncV19Activation(TestChainSetup& setup)
     operator_key_new.MakeNewKey();
     auto tx_upreg = CreateProUpRegTx(chainman.ActiveChain(), *(setup.m_node.mempool), utxos, tx_reg_hash, owner_key, operator_key_new.GetPublicKey(), owner_key.GetPubKey().GetID(), collateralScript, setup.coinbaseKey);
 
-    block = std::make_shared<CBlock>(setup.CreateBlock({tx_upreg}, setup.coinbaseKey));
+    block = std::make_shared<CBlock>(setup.CreateBlock({tx_upreg}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     BOOST_ASSERT(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
@@ -326,7 +326,7 @@ void FuncV19Activation(TestChainSetup& setup)
     FillableSigningProvider signing_provider;
     signing_provider.AddKeyPubKey(collateral_key, collateral_key.GetPubKey());
     BOOST_ASSERT(SignSignature(signing_provider, CTransaction(tx_reg), tx_spend, 0, SIGHASH_ALL));
-    block = std::make_shared<CBlock>(setup.CreateBlock({tx_spend}, setup.coinbaseKey));
+    block = std::make_shared<CBlock>(setup.CreateBlock({tx_spend}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     BOOST_ASSERT(!DeploymentActiveAfter(chainman.ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
     ++nHeight;
@@ -614,7 +614,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
     FundTransaction(chainman.ActiveChain(), tx_collateral, utxos, scriptCollateral, dmn_types::Regular.collat_amount, setup.coinbaseKey);
     SignTransaction(*(setup.m_node.mempool), tx_collateral, setup.coinbaseKey);
 
-    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_collateral}, setup.coinbaseKey));
+    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_collateral}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     setup.m_node.dmnman->UpdatedBlockTip(chainman.ActiveChain().Tip());
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 1);
@@ -756,7 +756,7 @@ void FuncVerifyDB(TestChainSetup& setup)
     FundTransaction(chainman.ActiveChain(), tx_collateral, utxos, scriptCollateral, dmn_types::Regular.collat_amount, setup.coinbaseKey);
     SignTransaction(*(setup.m_node.mempool), tx_collateral, setup.coinbaseKey);
 
-    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_collateral}, setup.coinbaseKey));
+    auto block = std::make_shared<CBlock>(setup.CreateBlock({tx_collateral}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 1);
@@ -788,7 +788,7 @@ void FuncVerifyDB(TestChainSetup& setup)
 
     auto tx_reg_hash = tx_reg.GetHash();
 
-    block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey));
+    block = std::make_shared<CBlock>(setup.CreateBlock({tx_reg}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 2);
@@ -800,7 +800,7 @@ void FuncVerifyDB(TestChainSetup& setup)
     collateral_utxos.emplace(payload.collateralOutpoint, std::make_pair(1, 1000));
     auto proUpRevTx = CreateProUpRevTx(chainman.ActiveChain(), *(setup.m_node.mempool), collateral_utxos, tx_reg_hash, operatorKey, collateralKey);
 
-    block = std::make_shared<CBlock>(setup.CreateBlock({proUpRevTx}, setup.coinbaseKey));
+    block = std::make_shared<CBlock>(setup.CreateBlock({proUpRevTx}, setup.coinbaseKey, chainman.ActiveChainstate()));
     BOOST_ASSERT(chainman.ProcessNewBlock(Params(), block, true, nullptr));
     dmnman.UpdatedBlockTip(chainman.ActiveChain().Tip());
     BOOST_CHECK_EQUAL(chainman.ActiveChain().Height(), nHeight + 3);

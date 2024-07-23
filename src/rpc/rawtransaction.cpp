@@ -75,7 +75,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
         if (!tx.IsCoinBase()) {
             CSpentIndexValue spentInfo;
             CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
-            if (GetSpentIndex(*pblocktree, mempool, spentKey, spentInfo)) {
+            if (GetSpentIndex(*active_chainstate.m_blockman.m_block_tree_db, mempool, spentKey, spentInfo)) {
                 txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
             }
         }
@@ -83,7 +83,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         CSpentIndexValue spentInfo;
         CSpentIndexKey spentKey(txid, i);
-        if (GetSpentIndex(*pblocktree, mempool, spentKey, spentInfo)) {
+        if (GetSpentIndex(*active_chainstate.m_blockman.m_block_tree_db, mempool, spentKey, spentInfo)) {
             txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
         }
     }
@@ -93,7 +93,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, CTxMemPool& mempo
     bool chainLock = false;
     if (!hashBlock.IsNull()) {
         entry.pushKV("blockhash", hashBlock.GetHex());
-        CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
+        const CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
         if (pindex) {
             if (active_chainstate.m_chain.Contains(pindex)) {
                 entry.pushKV("height", pindex->nHeight);
@@ -208,7 +208,7 @@ static RPCHelpMan getrawtransaction()
 
     bool in_active_chain = true;
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
-    CBlockIndex* blockindex = nullptr;
+    const CBlockIndex* blockindex = nullptr;
 
     if (hash == Params().GenesisBlock().hashMerkleRoot) {
         // Special exception for the genesis block coinbase transaction
@@ -242,7 +242,8 @@ static RPCHelpMan getrawtransaction()
     if (!tx) {
         std::string errmsg;
         if (blockindex) {
-            if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
+            const bool block_has_data = WITH_LOCK(::cs_main, return blockindex->nStatus & BLOCK_HAVE_DATA);
+            if (!block_has_data) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
             }
             errmsg = "No such transaction found in the provided block";
@@ -323,7 +324,7 @@ static RPCHelpMan getrawtransactionmulti() {
         const uint256 blockhash{uint256S(blockhash_str)};
         const UniValue txids = transactions[blockhash_str].get_array();
 
-        CBlockIndex* blockindex{blockhash.IsNull() ? nullptr : WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(blockhash))};
+        const CBlockIndex* blockindex{blockhash.IsNull() ? nullptr : WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(blockhash))};
         if (blockindex == nullptr && !blockhash.IsNull()) {
             for (const auto idx : irange::range(txids.size())) {
                 result.pushKV(txids[idx].get_str(), "None");
@@ -609,7 +610,7 @@ static RPCHelpMan gettxoutproof()
         }
     }
 
-    CBlockIndex* pblockindex = nullptr;
+    const CBlockIndex* pblockindex = nullptr;
     uint256 hashBlock;
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!request.params[1].isNull()) {

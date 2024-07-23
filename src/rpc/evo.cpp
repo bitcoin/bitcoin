@@ -1556,7 +1556,7 @@ static RPCHelpMan protx_info()
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    CBlockIndex* pindex{nullptr};
+    const CBlockIndex* pindex{nullptr};
 
     uint256 proTxHash(ParseHashV(request.params[0], "proTxHash"));
 

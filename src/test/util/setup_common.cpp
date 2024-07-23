@@ -220,12 +220,11 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
     m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
 
-    pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>();
     m_node.mempool = std::make_unique<CTxMemPool>(m_node.fee_estimator.get(), 1);
 
     m_node.chainman = std::make_unique<ChainstateManager>();
+    m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true);
 
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
@@ -260,7 +259,6 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.scheduler.reset();
     m_node.chainman->Reset();
     m_node.chainman.reset();
-    pblocktree.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
@@ -371,10 +369,17 @@ void TestChainSetup::mineBlocks(int num_blocks)
     }
 }
 
-CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChainSetup::CreateAndProcessBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CScript& scriptPubKey,
+    CChainState* chainstate)
 {
+    if (!chainstate) {
+        chainstate = &Assert(m_node.chainman)->ActiveChainstate();
+    }
+
     const CChainParams& chainparams = Params();
-    auto block = CreateBlock(txns, scriptPubKey);
+    auto block = this->CreateBlock(txns, scriptPubKey, *chainstate);
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
@@ -382,17 +387,23 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
     return block;
 }
 
-CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+CBlock TestChainSetup::CreateAndProcessBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CKey& scriptKey,
+    CChainState* chainstate)
 {
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateAndProcessBlock(txns, scriptPubKey);
+    return CreateAndProcessBlock(txns, scriptPubKey, chainstate);
 }
 
-CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
+CBlock TestChainSetup::CreateBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CScript& scriptPubKey,
+    CChainState& chainstate)
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler(chainstate, m_node, empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
 
     std::vector<CTransactionRef> llmqCommitments;
     for (const auto& tx : block.vtx) {
@@ -441,10 +452,13 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     return result;
 }
 
-CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+CBlock TestChainSetup::CreateBlock(
+    const std::vector<CMutableTransaction>& txns,
+    const CKey& scriptKey,
+    CChainState& chainstate)
 {
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateBlock(txns, scriptPubKey);
+    return CreateBlock(txns, scriptPubKey, chainstate);
 }
 
 
