@@ -74,16 +74,14 @@ protected:
     };
 
 private:
-    /// Whether the index has been initialized or not.
-    std::atomic<bool> m_init{false};
-    /// Whether the index is in sync with the main chain. The flag is flipped
-    /// from false to true once, after which point this starts processing
-    /// ValidationInterface notifications to stay in sync.
-    ///
-    /// Note that this will latch to true *immediately* upon startup if
-    /// `m_chainstate->m_chain` is empty, which will be the case upon startup
-    /// with an empty datadir if, e.g., `-txindex=1` is specified.
-    std::atomic<bool> m_synced{false};
+    /** Index synchronization state. */
+    enum class State : uint8_t {
+        INITIALIZING, //!< Constructed but Init() not yet called.
+        SYNCING,      //!< Catching up to the current chain tip in the background.
+        SETTLING,     //!< At tip; letting stale queued notifications pass before going live.
+        UPDATING,     //!< At tip; actively processing new block notifications.
+    };
+    std::atomic<State> m_state{State::INITIALIZING};
 
     /// The best block in the chain that the index is considered synced to, as
     /// reported by GetSummary. This field is not set in a consistent way and is
@@ -94,12 +92,12 @@ private:
     ///
     /// More specifically:
     ///
-    /// - During initial sync when m_synced is false, m_best_block_index is not
+    /// - During initial sync, in SYNCING state, m_best_block_index is not
     ///   updated when blocks are added to the index. It is only updated when
     ///   the data is committed (which is every 30 seconds, and at the end of
     ///   the sync, and any time after blocks are rewound).
     ///
-    /// - After initial sync when m_synced is true, m_best_block_index is set
+    /// - After initial sync, in UPDATING state, m_best_block_index is set
     ///   after each block is added to the index, whether or not the data is
     ///   committed.
     ///
@@ -190,8 +188,8 @@ public:
 
     /// Sync the index with the block index starting from the current best block.
     /// Intended to be run in its own thread, m_thread_sync, and can be
-    /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
-    /// flag is set and the BlockConnected ValidationInterface callback takes
+    /// interrupted with m_interrupt. Once the index gets in sync, the UPDATING
+    /// state is set and the BlockConnected ValidationInterface callback takes
     /// over and the sync thread exits.
     void Sync();
 
