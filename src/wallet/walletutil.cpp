@@ -19,7 +19,7 @@ fs::path GetWalletDir()
             path = "";
         }
     } else {
-        path = GetDataDir();
+        path = gArgs.GetDataDirNet();
         // If a wallets directory exists, use that, otherwise default to GetDataDir
         if (fs::is_directory(path / "wallets")) {
             path /= "wallets";

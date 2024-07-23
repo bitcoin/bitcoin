@@ -30,7 +30,7 @@ FUZZ_TARGET_INIT(i2p, initialize_i2p)
     const CService sam_proxy;
     CThreadInterrupt interrupt;
 
-    i2p::sam::Session sess{GetDataDir() / "fuzzed_i2p_private_key", sam_proxy, &interrupt};
+    i2p::sam::Session sess{gArgs.GetDataDirNet() / "fuzzed_i2p_private_key", sam_proxy, &interrupt};
 
     i2p::Connection conn;
 

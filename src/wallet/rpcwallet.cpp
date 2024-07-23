@@ -2716,16 +2716,8 @@ static RPCHelpMan listwallets()
     };
 }
 
-static std::tuple<std::shared_ptr<CWallet>, std::vector<bilingual_str>> LoadWalletHelper(WalletContext& context, UniValue load_on_start_param, const std::string wallet_name)
+void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
 {
-    DatabaseOptions options;
-    DatabaseStatus status;
-    options.require_existing = true;
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
-    std::optional<bool> load_on_start = load_on_start_param.isNull() ? std::nullopt : std::optional<bool>(load_on_start_param.get_bool());
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, *context.m_coinjoin_loader, wallet_name, load_on_start, options, status, error, warnings);
-
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
         // wallet directory exists, but doesn't contain a data file.
@@ -2738,13 +2730,17 @@ static std::tuple<std::shared_ptr<CWallet>, std::vector<bilingual_str>> LoadWall
             case DatabaseStatus::FAILED_ALREADY_LOADED:
                 code = RPC_WALLET_ALREADY_LOADED;
                 break;
+            case DatabaseStatus::FAILED_ALREADY_EXISTS:
+                code = RPC_WALLET_ALREADY_EXISTS;
+                break;
+            case DatabaseStatus::FAILED_INVALID_BACKUP_FILE:
+                code = RPC_INVALID_PARAMETER;
+                break;
             default: // RPC_WALLET_ERROR is returned for all other cases.
                 break;
         }
         throw JSONRPCError(code, error.original);
     }
-
-    return { wallet, warnings };
 }
 
 static RPCHelpMan upgradetohd()
@@ -2872,7 +2868,15 @@ static RPCHelpMan loadwallet()
     WalletContext& context = EnsureWalletContext(request.context);
     const std::string name(request.params[0].get_str());
 
-    auto [wallet, warnings] = LoadWalletHelper(context, request.params[1], name);
+    DatabaseOptions options;
+    DatabaseStatus status;
+    options.require_existing = true;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, *context.m_coinjoin_loader, name, load_on_start, options, status, error, warnings);
+
+    HandleWalletError(wallet, status, error);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
@@ -3072,27 +3076,17 @@ static RPCHelpMan restorewallet()
 
     std::string backup_file = request.params[1].get_str();
 
-    if (!fs::exists(backup_file)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Backup file does not exist");
-    }
-
     std::string wallet_name = request.params[0].get_str();
 
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), wallet_name);
+    std::optional<bool> load_on_start = request.params[2].isNull() ? std::nullopt : std::optional<bool>(request.params[2].get_bool());
 
-    if (fs::exists(wallet_path)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Wallet name already exists.");
-    }
+    DatabaseStatus status;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
 
-    if (!TryCreateDirectories(wallet_path)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Failed to create database path '%s'. Database already exists.", wallet_path.string()));
-    }
+    const std::shared_ptr<CWallet> wallet = RestoreWallet(*context.chain, *context.m_coinjoin_loader, backup_file, wallet_name, load_on_start, status, error, warnings);
 
-    auto wallet_file = wallet_path / "wallet.dat";
-
-    fs::copy_file(backup_file, wallet_file, fs::copy_option::fail_if_exists);
-
-    auto [wallet, warnings] = LoadWalletHelper(context, request.params[2], wallet_name);
+    HandleWalletError(wallet, status, error);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());

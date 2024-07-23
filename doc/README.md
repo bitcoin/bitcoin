@@ -68,6 +68,7 @@ The Dash Core repo's [root README](/README.md) contains relevant information on 
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
+- [Assumeutxo design](assumeutxo.md)
 - [dash.conf Configuration File](dash-conf.md)
 - [CJDNS Support](cjdns.md)
 - [Files](files.md)

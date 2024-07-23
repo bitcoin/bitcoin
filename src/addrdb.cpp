@@ -52,7 +52,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     std::string tmpfn = strprintf("%s.%04x", prefix, randv);
 
     // open temp output file, and associate with CAutoFile
-    fs::path pathTmp = GetDataDir() / tmpfn;
+    fs::path pathTmp = gArgs.GetDataDirNet() / tmpfn;
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, version);
     if (fileout.IsNull()) {
@@ -172,7 +172,7 @@ bool CBanDB::Read(banmap_t& banSet)
 
 bool DumpPeerAddresses(const ArgsManager& args, const AddrMan& addr)
 {
-    const auto pathAddr = GetDataDir() / "peers.dat";
+    const auto pathAddr = gArgs.GetDataDirNet() / "peers.dat";
     return SerializeFileDB("peers", pathAddr, addr, CLIENT_VERSION);
 }
 
@@ -187,7 +187,7 @@ std::optional<bilingual_str> LoadAddrman(const std::vector<bool>& asmap, const A
     addrman = std::make_unique<AddrMan>(asmap, /* deterministic */ false, /* consistency_check_ratio */ check_addrman);
 
     int64_t nStart = GetTimeMillis();
-    const auto path_addr{GetDataDir() / "peers.dat"};
+    const auto path_addr{gArgs.GetDataDirNet() / "peers.dat"};
     try {
         DeserializeFileDB(path_addr, *addrman, CLIENT_VERSION);
         LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
