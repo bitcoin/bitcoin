@@ -947,6 +947,14 @@ public:
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
+    /**
+     * Helper function to log disconnects.
+     *
+     * @param[in] log_ip whether to include the IP address
+     * @return "disconnecting peer=..." and optionally "peeraddr=..."
+     */
+    std::string DisconnectMsg(bool log_ip) const;
+
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
     void PongReceived(std::chrono::microseconds ping_time) {
         m_last_ping_time = ping_time;
