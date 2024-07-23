@@ -380,7 +380,14 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
     if (m_db->Exists(DB_VERSION)) {
         m_db->Read(DB_VERSION, db_version);
     }
-    if (db_version != code_version) {
+    if (db_version == 0 && code_version == 1) {
+        // Attempt to migrate coinstatsindex without the need to reindex
+        if (!MigrateToV1()) {
+            LogError("%s migration: Error while migrating to v1. In order to rebuild the index, remove the indexes/coinstats directory in your datadir\n",
+                    GetName());
+            return false;
+        };
+    } else if (db_version != code_version) {
         LogError("%s version mismatch: expected %s but %s was found. In order to rebuild the index, remove the indexes/coinstats directory in your datadir\n",
                      GetName(), code_version, db_version);
         return false;
@@ -531,5 +538,58 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
     m_block_unspendables_scripts = read_out.second.block_unspendables_scripts;
     m_block_unspendables_unclaimed_rewards = read_out.second.block_unspendables_unclaimed_rewards;
 
+    return true;
+}
+
+bool CoinStatsIndex::MigrateToV1() {
+    LogInfo("Migrating coinstatsindex to new format (v1). This might take a few minutes.\n");
+    CDBBatch batch(*m_db);
+    DBVal entry;
+    DBVal entry_prev;
+    const CBlockIndex *pindex{m_best_block_index};
+    if (!LookUpOne(*m_db, {pindex->GetBlockHash(), pindex->nHeight}, entry)) {
+        return false;
+    }
+
+    // Loop backwards until we hit the genesis block which doesn't need to be updated
+    while (pindex->pprev) {
+        if (pindex->nHeight % 10000 == 0) LogInfo("Migrating block at height %i\n", pindex->nHeight);
+        // Load Previous entry
+        if (!LookUpOne(*m_db, {pindex->pprev->GetBlockHash(), pindex->pprev->nHeight}, entry_prev)) {
+            LogError("Coinstatsindex is corrupted at height %i\n", pindex->pprev->nHeight);
+            return false;
+        }
+        // Combine entries
+        if (entry.block_subsidy < entry_prev.block_subsidy
+            || entry.block_prevout_spent_amount < entry_prev.block_prevout_spent_amount
+            || entry.block_prevout_spent_amount < entry_prev.block_prevout_spent_amount
+            || entry.block_new_outputs_ex_coinbase_amount < entry_prev.block_new_outputs_ex_coinbase_amount
+            || entry.block_coinbase_amount < entry_prev.block_coinbase_amount
+            || entry.block_unspendables_genesis_block < entry_prev.block_unspendables_genesis_block
+            || entry.block_unspendables_bip30 < entry_prev.block_unspendables_bip30
+            || entry.block_unspendables_scripts < entry_prev.block_unspendables_scripts
+            || entry.block_unspendables_unclaimed_rewards < entry_prev.block_unspendables_unclaimed_rewards
+        ) {
+            LogError("Coinstatsindex is corrupted at height %i\n", pindex->nHeight);
+            return false;
+        }
+        entry.block_subsidy = entry.block_subsidy - entry_prev.block_subsidy;
+        entry.block_prevout_spent_amount = entry.block_prevout_spent_amount - entry_prev.block_prevout_spent_amount;
+        entry.block_new_outputs_ex_coinbase_amount = entry.block_new_outputs_ex_coinbase_amount - entry_prev.block_new_outputs_ex_coinbase_amount;
+        entry.block_coinbase_amount = entry.block_coinbase_amount - entry_prev.block_coinbase_amount;
+        entry.block_unspendables_genesis_block = entry.block_unspendables_genesis_block - entry_prev.block_unspendables_genesis_block;
+        entry.block_unspendables_bip30 = entry.block_unspendables_bip30 - entry_prev.block_unspendables_bip30;
+        entry.block_unspendables_scripts = entry.block_unspendables_scripts - entry_prev.block_unspendables_scripts;
+        entry.block_unspendables_unclaimed_rewards = entry.block_unspendables_unclaimed_rewards - entry_prev.block_unspendables_unclaimed_rewards;
+        std::pair<uint256, DBVal> result;
+        result.first = pindex->GetBlockHash();
+        result.second = entry;
+        batch.Write(DBHeightKey(pindex->nHeight), result);
+        pindex = pindex->pprev;
+        entry = entry_prev;
+    }
+    batch.Write(DB_VERSION, 1);
+    if (!m_db->WriteBatch(batch)) return false;
+    LogInfo("Migration succeeded\n");
     return true;
 }
