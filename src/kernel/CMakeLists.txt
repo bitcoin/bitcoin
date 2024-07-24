@@ -97,3 +97,10 @@ target_link_libraries(bitcoinkernel
 set_target_properties(bitcoinkernel PROPERTIES
   CXX_VISIBILITY_PRESET default
 )
+
+include(GNUInstallDirs)
+install(TARGETS bitcoinkernel
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

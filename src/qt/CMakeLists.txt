@@ -255,10 +255,16 @@ if(WITH_MULTIPROCESS)
     bitcoin_ipc
   )
   import_plugins(bitcoin-gui)
+  list(APPEND installable_targets bitcoin-gui)
   if(WIN32)
     set_target_properties(bitcoin-gui PROPERTIES WIN32_EXECUTABLE TRUE)
   endif()
 endif()
+
+install(TARGETS ${installable_targets}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT GUI
+)
 
 if(BUILD_GUI_TESTS)
   add_subdirectory(test)
