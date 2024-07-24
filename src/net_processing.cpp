@@ -5179,9 +5179,12 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
         NodeId worst_peer = -1;
         int64_t oldest_block_announcement = std::numeric_limits<int64_t>::max();
 
+        // We want to prevent recently connected to Onion peers from being disconnected here, protect them as long as
+        // there are more non_onion nodes than onion nodes so far
+        size_t onion_count = 0;
         m_connman.ForEachNode([&](CNode* pnode) {
             LockAssertion lock(::cs_main);
-
+            if (pnode->addr.IsTor() && ++onion_count <= m_connman.GetMaxOutboundOnionNodeCount()) return;
             // Don't disconnect masternodes just because they were slow in block announcement
             if (pnode->m_masternode_connection) return;
             // Only consider outbound-full-relay peers that are not already
