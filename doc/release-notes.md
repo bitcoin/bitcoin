@@ -51,7 +51,7 @@ Once the EHF signed message is mined and a cycle ends, the hard fork status will
 miners on v20 and v21 will begin to signal for activation of MN_RR. As such, nearly 100% of miners will
 likely be signalling. If a sufficient number of mined blocks signal support for activation (starting at 80% and gradually decreasing to 60%)
 by the end of a cycle, the hard fork will change status from `started` to `locked_in`. At this point, hard fork activation
-will occur at the end of the next cycle. 
+will occur at the end of the next cycle.
 
 Now that the hard fork is active, the new rules will be in effect.
 
@@ -339,7 +339,7 @@ dash-tx Changes
 - When creating a hex-encoded Dash transaction using the `dash-tx` utility
   with the `-json` option set, the following fields: `addresses`, `reqSigs` are no longer
   returned in the tx output of the response.
-  
+
 dash-cli Changes
 ----------------
 
@@ -376,7 +376,7 @@ user-friendly for managing Dash wallets.
 - new commands `dump` and `createfromdump` have been added, enhancing the wallet's storage migration capabilities. The
   `dump` command allows for exporting every key-value pair from the wallet as comma-separated hex values, facilitating a
   storage agnostic dump. Meanwhile, the `createfromdump` command enables the creation of a new wallet file using the
-  records specified in a dump file. These commands are similar to BDB's `db_dump` and `db_load` tools and are useful 
+  records specified in a dump file. These commands are similar to BDB's `db_dump` and `db_load` tools and are useful
   for manual wallet file construction for testing or migration purposes.
 
 
