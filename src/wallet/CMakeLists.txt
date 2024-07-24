@@ -39,6 +39,7 @@ target_link_libraries(bitcoin_wallet
     bitcoin_common
     univalue
     Boost::headers
+    $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 
 if(NOT USE_SQLITE AND NOT USE_BDB)
