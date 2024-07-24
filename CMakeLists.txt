@@ -85,13 +85,111 @@ target_link_libraries(core_interface INTERFACE
   $<$<CONFIG:Debug>:core_interface_debug>
 )
 
+include(TryAppendCXXFlags)
+include(TryAppendLinkerFlag)
+
+if(WIN32)
+  #[=[
+  This build system supports two ways to build binaries for Windows.
+
+  1. Building on Windows using MSVC.
+  Implementation notes:
+  - /DWIN32 and /D_WINDOWS definitions are included into the CMAKE_CXX_FLAGS_INIT
+    and CMAKE_CXX_FLAGS_INIT variables by default.
+  - A run-time library is selected using the CMAKE_MSVC_RUNTIME_LIBRARY variable.
+  - MSVC-specific options, for example, /Zc:__cplusplus, are additionally required.
+
+  2. Cross-compiling using MinGW.
+  Implementation notes:
+  - WIN32 and _WINDOWS definitions must be provided explicitly.
+  - A run-time library must be specified explicitly using _MT definition.
+  ]=]
+
+  target_compile_definitions(core_interface INTERFACE
+    _WIN32_WINNT=0x0601
+    _WIN32_IE=0x0501
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+  )
+
+  if(MSVC)
+    if(VCPKG_TARGET_TRIPLET MATCHES "-static")
+      set(msvc_library_linkage "")
+    else()
+      set(msvc_library_linkage "DLL")
+    endif()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>${msvc_library_linkage}")
+    unset(msvc_library_linkage)
+
+    target_compile_definitions(core_interface INTERFACE
+      _UNICODE;UNICODE
+    )
+    target_compile_options(core_interface INTERFACE
+      /utf-8
+      /Zc:preprocessor
+      /Zc:__cplusplus
+      /sdl
+    )
+    # Improve parallelism in MSBuild.
+    # See: https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/.
+    list(APPEND CMAKE_VS_GLOBALS "UseMultiToolTask=true")
+  endif()
+
+  if(MINGW)
+    target_compile_definitions(core_interface INTERFACE
+      WIN32
+      _WINDOWS
+      _MT
+    )
+    # Avoid the use of aligned vector instructions when building for Windows.
+    # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54412.
+    try_append_cxx_flags("-Wa,-muse-unaligned-vector-move" TARGET core_interface SKIP_LINK)
+    try_append_linker_flag("-static" TARGET core_interface)
+    # We require Windows 7 (NT 6.1) or later.
+    try_append_linker_flag("-Wl,--major-subsystem-version,6" TARGET core_interface)
+    try_append_linker_flag("-Wl,--minor-subsystem-version,1" TARGET core_interface)
+  endif()
+endif()
+
+# Use 64-bit off_t on 32-bit Linux.
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+  # Ensure 64-bit offsets are used for filesystem accesses for 32-bit compilation.
+  target_compile_definitions(core_interface INTERFACE
+    _FILE_OFFSET_BITS=64
+  )
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  target_compile_definitions(core_interface INTERFACE
+    MAC_OSX
+    OBJC_OLD_DISPATCH_PROTOTYPES=0
+  )
+  # These flags are specific to ld64, and may cause issues with other linkers.
+  # For example: GNU ld will interpret -dead_strip as -de and then try and use
+  # "ad_strip" as the symbol for the entry point.
+  try_append_linker_flag("-Wl,-dead_strip" TARGET core_interface)
+  try_append_linker_flag("-Wl,-dead_strip_dylibs" TARGET core_interface)
+  if(CMAKE_HOST_APPLE)
+    try_append_linker_flag("-Wl,-headerpad_max_install_names" TARGET core_interface)
+  endif()
+endif()
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(core_base_interface INTERFACE
+target_link_libraries(core_interface INTERFACE
   Threads::Threads
 )
 
 include(cmake/introspection.cmake)
+
+# Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
+try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK)
+
+# Currently all versions of gcc are subject to a class of bugs, see the
+# gccbug_90348 test case (only reproduces on GCC 11 and earlier) and
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111843. To work around that, set
+# -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
+try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 
 # TODO: The `CMAKE_SKIP_BUILD_RPATH` variable setting can be deleted
 #       in the future after reordering Guix script commands to
