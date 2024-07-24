@@ -110,7 +110,7 @@ auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
 }
 
 template<typename B = uint8_t>
-[[ nodiscard ]] inline std::vector<B> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline std::vector<B> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     static_assert(sizeof(B) == 1);
     const std::string s = max_length ?
@@ -121,17 +121,17 @@ template<typename B = uint8_t>
     return ret;
 }
 
-[[ nodiscard ]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
-[[ nodiscard ]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     return CDataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
 }
 
-[[ nodiscard ]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
+[[nodiscard]] inline std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16, const size_t max_string_length = 16) noexcept
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<std::string> r;
@@ -142,7 +142,7 @@ template<typename B = uint8_t>
 }
 
 template <typename T>
-[[ nodiscard ]] inline std::vector<T> ConsumeRandomLengthIntegralVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16) noexcept
+[[nodiscard]] inline std::vector<T> ConsumeRandomLengthIntegralVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_vector_size = 16) noexcept
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<T> r;
@@ -153,7 +153,7 @@ template <typename T>
 }
 
 template <typename T>
-[[ nodiscard ]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+[[nodiscard]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
@@ -167,37 +167,37 @@ template <typename T>
 }
 
 template <typename WeakEnumType, size_t size>
-[[ nodiscard ]] WeakEnumType ConsumeWeakEnum(FuzzedDataProvider& fuzzed_data_provider, const WeakEnumType (&all_types)[size]) noexcept
+[[nodiscard]] WeakEnumType ConsumeWeakEnum(FuzzedDataProvider& fuzzed_data_provider, const WeakEnumType (&all_types)[size]) noexcept
 {
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
                WeakEnumType(fuzzed_data_provider.ConsumeIntegral<typename std::underlying_type<WeakEnumType>::type>());
 }
 
-[[ nodiscard ]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return static_cast<opcodetype>(fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, MAX_OPCODE));
 }
 
-[[ nodiscard ]] inline CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
 }
 
-[[ nodiscard ]] int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
+[[nodiscard]] int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
 
-[[ nodiscard ]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
+[[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
 
-[[ nodiscard ]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept;
+[[nodiscard]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept;
 
-[[ nodiscard ]] uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+[[nodiscard]] uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
-[[ nodiscard ]] inline CScriptNum ConsumeScriptNum(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline CScriptNum ConsumeScriptNum(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
 }
 
-[[ nodiscard ]] inline uint160 ConsumeUInt160(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline uint160 ConsumeUInt160(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     const std::vector<uint8_t> v160 = fuzzed_data_provider.ConsumeBytes<uint8_t>(160 / 8);
     if (v160.size() != 160 / 8) {
@@ -206,7 +206,7 @@ template <typename WeakEnumType, size_t size>
     return uint160{v160};
 }
 
-[[ nodiscard ]] inline uint256 ConsumeUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline uint256 ConsumeUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     const std::vector<uint8_t> v256 = fuzzed_data_provider.ConsumeBytes<uint8_t>(256 / 8);
     if (v256.size() != 256 / 8) {
@@ -215,12 +215,12 @@ template <typename WeakEnumType, size_t size>
     return uint256{v256};
 }
 
-[[ nodiscard ]] inline arith_uint256 ConsumeArithUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline arith_uint256 ConsumeArithUInt256(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
-[[ nodiscard ]] inline CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
+[[nodiscard]] inline CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
 {
     // Avoid:
     // policy/feerate.cpp:28:34: runtime error: signed integer overflow: 34873208148477500 * 1000 cannot be represented in type 'long'
@@ -236,7 +236,7 @@ template <typename WeakEnumType, size_t size>
     return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, spends_coinbase, sig_op_cost, {}};
 }
 
-[[ nodiscard ]] inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     CTxDestination tx_destination;
     CallOneOf(
@@ -254,7 +254,7 @@ template <typename WeakEnumType, size_t size>
 }
 
 template <typename T>
-[[ nodiscard ]] bool MultiplicationOverflow(const T i, const T j) noexcept
+[[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
 {
     static_assert(std::is_integral<T>::value, "Integral required.");
     if (std::numeric_limits<T>::is_signed) {
@@ -276,7 +276,7 @@ template <typename T>
     }
 }
 
-[[ nodiscard ]] inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
+[[nodiscard]] inline bool ContainsSpentInput(const CTransaction& tx, const CCoinsViewCache& inputs) noexcept
 {
     for (const CTxIn& tx_in : tx.vin) {
         const Coin& coin = inputs.AccessCoin(tx_in.prevout);
@@ -311,7 +311,7 @@ inline void SetFuzzedErrNo(FuzzedDataProvider& fuzzed_data_provider) noexcept
  * from the fuzzer. Pads with zero value bytes if needed to achieve the specified size.
  */
 template<typename B = uint8_t>
-[[ nodiscard ]] inline std::vector<B> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
+[[nodiscard]] inline std::vector<B> ConsumeFixedLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t length) noexcept
 {
     static_assert(sizeof(B) == 1);
     auto random_bytes = fuzzed_data_provider.ConsumeBytes<B>(length);
@@ -516,7 +516,7 @@ public:
     }
 };
 
-[[ nodiscard ]] inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline FuzzedFileProvider ConsumeFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return {fuzzed_data_provider};
 }
@@ -537,7 +537,7 @@ public:
     }
 };
 
-[[ nodiscard ]] inline FuzzedAutoFileProvider ConsumeAutoFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
+[[nodiscard]] inline FuzzedAutoFileProvider ConsumeAutoFile(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
     return {fuzzed_data_provider};
 }
