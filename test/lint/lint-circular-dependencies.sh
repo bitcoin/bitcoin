@@ -87,10 +87,11 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/deterministicmns -> validationinterface -> evo/deterministicmns"
     "logging -> util/system -> sync -> logging/timer -> logging"
 
+    "coinjoin/client -> net_processing -> coinjoin/client"
+    "coinjoin/client -> net_processing -> coinjoin/context -> coinjoin/client"
     "coinjoin/context -> coinjoin/server -> net_processing -> coinjoin/context"
     "coinjoin/server -> net_processing -> coinjoin/server"
     "llmq/context -> llmq/ehf_signals -> net_processing -> llmq/context"
-    "coinjoin/client -> coinjoin/util -> wallet/wallet -> psbt -> node/transaction -> node/context -> coinjoin/context -> coinjoin/client"
     "llmq/blockprocessor -> net_processing -> llmq/blockprocessor"
     "llmq/chainlocks -> net_processing -> llmq/chainlocks"
     "llmq/dkgsession -> net_processing -> llmq/quorums -> llmq/dkgsession"
@@ -100,7 +101,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/blockprocessor -> net_processing -> llmq/context -> llmq/blockprocessor"
     "llmq/blockprocessor -> net_processing -> llmq/quorums -> llmq/blockprocessor"
     "llmq/chainlocks -> net_processing -> llmq/context -> llmq/chainlocks"
-    "coinjoin/client -> coinjoin/coinjoin -> llmq/chainlocks -> net_processing -> coinjoin/client"
     "rpc/blockchain -> rpc/server -> rpc/blockchain"
 )
 

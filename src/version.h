@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70233;
+static const int PROTOCOL_VERSION = 70234;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -54,6 +54,9 @@ static const int MNLISTDIFF_CHAINLOCKS_PROTO_VERSION = 70230;
 
 //! Legacy ISLOCK messages and a corresponding INV were dropped in this version
 static const int NO_LEGACY_ISLOCK_PROTO_VERSION = 70231;
+
+//! Inventory type for DSQ messages added
+static const int DSQ_INV_VERSION = 70234;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 

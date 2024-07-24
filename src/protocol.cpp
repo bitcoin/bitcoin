@@ -288,6 +288,7 @@ const char* CInv::GetCommandInternal() const
         case MSG_QUORUM_RECOVERED_SIG:          return NetMsgType::QSIGREC;
         case MSG_CLSIG:                         return NetMsgType::CLSIG;
         case MSG_ISDLOCK:                       return NetMsgType::ISDLOCK;
+        case MSG_DSQ:                           return NetMsgType::DSQUEUE;
         default:
             return nullptr;
     }
