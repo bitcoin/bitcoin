@@ -28,6 +28,7 @@ target_link_libraries(bitcoin_clientversion
 )
 add_dependencies(bitcoin_clientversion generate_build_info)
 
+add_subdirectory(crypto)
 add_subdirectory(univalue)
 
 #=============================
