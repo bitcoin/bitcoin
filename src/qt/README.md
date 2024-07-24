@@ -4,7 +4,7 @@ The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/q
 
 ## Compile and run
 
-See build instructions: [Unix](/doc/build-unix.md), [macOS](/doc/build-osx.md), [Windows](/doc/build-windows.md), [FreeBSD](/doc/build-freebsd.md), [NetBSD](/doc/build-netbsd.md), [OpenBSD](/doc/build-openbsd.md)
+See build instructions: [Unix](/doc/build-unix.md), [macOS](/doc/build-osx.md), [Windows](/doc/build-windows-msvc.md), [FreeBSD](/doc/build-freebsd.md), [NetBSD](/doc/build-netbsd.md), [OpenBSD](/doc/build-openbsd.md)
 
 When following your systems build instructions, make sure to install the `Qt` dependencies.
 

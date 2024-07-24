@@ -48,7 +48,7 @@ lots of money.
 
 Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
 submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
+(assuming they weren't disabled during the generation of the build system) with: `ctest`. Further details on running
 and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
 
 There are also [regression and integration tests](/test), written
