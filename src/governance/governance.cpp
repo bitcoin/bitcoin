@@ -55,7 +55,6 @@ CGovernanceManager::CGovernanceManager(CMasternodeMetaMan& mn_metaman, CNetFulfi
     m_mn_sync{mn_sync},
     nTimeLastDiff(0),
     nCachedBlockHeight(0),
-    setRequestedObjects(),
     fRateChecksEnabled(true),
     votedFundingYesTriggerHash(std::nullopt),
     mapTrigger{}
@@ -453,7 +452,25 @@ void CGovernanceManager::CheckAndRemove()
         }
     }
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s\n", ToString());
+    // forget about expired requests
+    auto m_ro_it = mapRequestedObjects.begin();
+    while (m_ro_it != mapRequestedObjects.end()) {
+        if (m_ro_it->second < nNow) {
+            mapRequestedObjects.erase(m_ro_it++);
+        } else {
+            ++m_ro_it;
+        }
+    }
+    auto m_rv_it = mapRequestedVotes.begin();
+    while (m_rv_it != mapRequestedVotes.end()) {
+        if (m_rv_it->second < nNow) {
+            mapRequestedVotes.erase(m_rv_it++);
+        } else {
+            ++m_rv_it;
+        }
+    }
+
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s, mapRequestedObjects=%d, mapRequestedVotes=%d\n", ToString(), mapRequestedObjects.size(), mapRequestedVotes.size());
 }
 
 const CGovernanceObject* CGovernanceManager::FindConstGovernanceObject(const uint256& nHash) const
@@ -838,22 +855,25 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
     }
 
 
-    hash_s_t* setHash = nullptr;
+    std::map<uint256, int64_t>* mapHash = nullptr;
+    std::string set_name = "n/a";
     switch (inv.type) {
     case MSG_GOVERNANCE_OBJECT:
-        setHash = &setRequestedObjects;
+        mapHash = &mapRequestedObjects;
+        set_name = "object";
         break;
     case MSG_GOVERNANCE_OBJECT_VOTE:
-        setHash = &setRequestedVotes;
+        mapHash = &mapRequestedVotes;
+        set_name = "vote";
         break;
     default:
         return false;
     }
 
-    const auto& [_itr, inserted] = setHash->insert(inv.hash);
+    const auto& [_itr, inserted] = mapHash->emplace(inv.hash, GetTime<std::chrono::seconds>().count() + RELIABLE_PROPAGATION_TIME);
 
     if (inserted) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added inv to requested set\n");
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added %s inv to requested set, size=%d\n", set_name, mapHash->size());
     }
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest reached end, returning true\n");
@@ -1333,24 +1353,24 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
 bool CGovernanceManager::AcceptObjectMessage(const uint256& nHash)
 {
     LOCK(cs);
-    return AcceptMessage(nHash, setRequestedObjects);
+    return AcceptMessage(nHash, mapRequestedObjects);
 }
 
 bool CGovernanceManager::AcceptVoteMessage(const uint256& nHash)
 {
     LOCK(cs);
-    return AcceptMessage(nHash, setRequestedVotes);
+    return AcceptMessage(nHash, mapRequestedVotes);
 }
 
-bool CGovernanceManager::AcceptMessage(const uint256& nHash, hash_s_t& setHash)
+bool CGovernanceManager::AcceptMessage(const uint256& nHash, std::map<uint256, int64_t>& mapHash)
 {
-    auto it = setHash.find(nHash);
-    if (it == setHash.end()) {
+    auto it = mapHash.find(nHash);
+    if (it == mapHash.end()) {
         // We never requested this
         return false;
     }
     // Only accept one response
-    setHash.erase(it);
+    mapHash.erase(it);
     return true;
 }
 
@@ -1580,7 +1600,7 @@ void CGovernanceManager::RemoveInvalidVotes()
                 cmapVoteToObject.Erase(voteHash);
                 cmapInvalidVotes.Erase(voteHash);
                 cmmapOrphanVotes.Erase(voteHash);
-                setRequestedVotes.erase(voteHash);
+                mapRequestedVotes.erase(voteHash);
             }
         }
     }

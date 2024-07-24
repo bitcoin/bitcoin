@@ -270,8 +270,8 @@ private:
     int nCachedBlockHeight;
     std::map<uint256, CGovernanceObject> mapPostponedObjects;
     hash_s_t setAdditionalRelayObjects;
-    hash_s_t setRequestedObjects;
-    hash_s_t setRequestedVotes;
+    std::map<uint256, int64_t> mapRequestedObjects;
+    std::map<uint256, int64_t> mapRequestedVotes;
     bool fRateChecksEnabled;
     std::optional<uint256> votedFundingYesTriggerHash;
     std::map<uint256, std::shared_ptr<CSuperblock>> mapTrigger;
@@ -395,7 +395,7 @@ private:
     /// Called to indicate a requested vote has been received
     bool AcceptVoteMessage(const uint256& nHash);
 
-    static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
+    static bool AcceptMessage(const uint256& nHash, std::map<uint256, int64_t>& mapHash);
 
     void CheckOrphanVotes(CGovernanceObject& govobj, PeerManager& peerman);
 
