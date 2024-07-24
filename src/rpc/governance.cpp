@@ -425,9 +425,9 @@ static bool SignVote(const CWallet& wallet, const CKeyID& keyID, CGovernanceVote
         LogPrintf("SignVote failed due to: %s\n", SigningResultString(err));
         return false;
     }
-    bool ret = true;
-    const auto decoded = DecodeBase64(signature, &ret);
-    assert(!ret); // it should not fail
+    bool failed = true;
+    const auto decoded = DecodeBase64(signature, &failed);
+    CHECK_NONFATAL(!failed); // DecodeBase64 should not fail
 
     vote.SetSignature(std::vector<unsigned char>(decoded.data(), decoded.data() + decoded.size()));
     return true;
