@@ -3473,6 +3473,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
         {
             LOCK(cs_main);
+            {
             // Lock transaction pool for at least as long as it takes for connectTrace to be consumed
             LOCK(MempoolMutex());
             const bool was_in_ibd = m_chainman.IsInitialBlockDownload();
@@ -3549,7 +3550,12 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                     break;
                 }
             }
-        }
+            } // release MempoolMutex
+            // Notify external listeners about the new tip, even if pindexFork == pindexNewTip.
+            if (m_chainman.m_options.signals && this == &m_chainman.ActiveChainstate()) {
+                m_chainman.m_options.signals->ActiveTipChange(pindexNewTip, m_chainman.IsInitialBlockDownload());
+            }
+        } // release cs_main
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
         if (exited_ibd) {
@@ -3768,6 +3774,12 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // distinguish user-initiated invalidateblock changes from other
         // changes.
         (void)m_chainman.GetNotifications().blockTip(GetSynchronizationState(m_chainman.IsInitialBlockDownload(), m_chainman.m_blockman.m_blockfiles_indexed), *to_mark_failed->pprev);
+
+        // Fire ActiveTipChange now for the current chain tip to make sure clients are notified.
+        // ActivateBestChain may call this as well, but not necessarily.
+        if (m_chainman.m_options.signals) {
+            m_chainman.m_options.signals->ActiveTipChange(m_chain.Tip(), m_chainman.IsInitialBlockDownload());
+        }
     }
     return true;
 }
