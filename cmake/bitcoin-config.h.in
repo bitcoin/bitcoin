@@ -38,6 +38,9 @@
 /* Define this symbol to build code that uses SSE4.1 intrinsics */
 #cmakedefine ENABLE_SSE41 1
 
+/* Define to 1 to enable wallet functions. */
+#cmakedefine ENABLE_WALLET 1
+
 /* Define this symbol to build code that uses x86 SHA-NI intrinsics */
 #cmakedefine ENABLE_X86_SHANI 1
 
@@ -127,5 +130,11 @@
 
 /* Define to 1 if strerror_r returns char *. */
 #cmakedefine STRERROR_R_CHAR_P 1
+
+/* Define if BDB support should be compiled in */
+#cmakedefine USE_BDB 1
+
+/* Define if sqlite support should be compiled in */
+#cmakedefine USE_SQLITE 1
 
 #endif //BITCOIN_CONFIG_H

@@ -154,6 +154,10 @@ target_link_libraries(test_bitcoin
   $<TARGET_NAME_IF_EXISTS:libevent::libevent>
 )
 
+if(ENABLE_WALLET)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test wallet)
+endif()
+
 function(add_boost_test source_file)
   if(NOT EXISTS ${source_file})
     return()

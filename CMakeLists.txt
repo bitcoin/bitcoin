@@ -64,11 +64,43 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 #=============================
 # Configurable options
 #=============================
+include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
+
+option(ENABLE_WALLET "Enable wallet." ON)
+option(WITH_SQLITE "Enable SQLite wallet support." ${ENABLE_WALLET})
+if(WITH_SQLITE)
+  if(VCPKG_TARGET_TRIPLET)
+    # Use of the `unofficial::` namespace is a vcpkg package manager convention.
+    find_package(unofficial-sqlite3 CONFIG REQUIRED)
+  else()
+    find_package(SQLite3 3.7.17 REQUIRED)
+  endif()
+  set(USE_SQLITE ON)
+  set(ENABLE_WALLET ON)
+endif()
+option(WITH_BDB "Enable Berkeley DB (BDB) wallet support." OFF)
+cmake_dependent_option(WARN_INCOMPATIBLE_BDB "Warn when using a Berkeley DB (BDB) version other than 4.8." ON "WITH_BDB" OFF)
+if(WITH_BDB)
+  find_package(BerkeleyDB 4.8 MODULE REQUIRED)
+  set(USE_BDB ON)
+  set(ENABLE_WALLET ON)
+  if(NOT BerkeleyDB_VERSION VERSION_EQUAL 4.8)
+    message(WARNING "Found Berkeley DB (BDB) other than 4.8.\n"
+                    "BDB (legacy) wallets opened by this build will not be portable!"
+    )
+    if(WARN_INCOMPATIBLE_BDB)
+      message(WARNING "If this is intended, pass \"-DWARN_INCOMPATIBLE_BDB=OFF\".\n"
+                      "Passing \"-DWITH_BDB=OFF\" will suppress this warning."
+      )
+    endif()
+  endif()
+endif()
+cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
@@ -235,6 +267,13 @@ message("=================")
 message("Executables:")
 message("  bitcoind ............................ ${BUILD_DAEMON}")
 message("  bitcoin-cli ......................... ${BUILD_CLI}")
+message("  bitcoin-wallet ...................... ${BUILD_WALLET_TOOL}")
+message("Optional features:")
+message("  wallet support ...................... ${ENABLE_WALLET}")
+if(ENABLE_WALLET)
+  message("   - descriptor wallets (SQLite) ...... ${WITH_SQLITE}")
+  message("   - legacy wallets (Berkeley DB) ..... ${WITH_BDB}")
+endif()
 message("Tests:")
 message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("")
