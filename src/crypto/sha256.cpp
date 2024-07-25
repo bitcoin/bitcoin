@@ -7,8 +7,9 @@
 #include <crypto/sha256.h>
 #include <crypto/common.h>
 
-#include <assert.h>
-#include <string.h>
+#include <algorithm>
+#include <cassert>
+#include <cstring>
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #include <compat/cpuid.h>
