@@ -26,6 +26,8 @@ enum class PSBTError;
 bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
 std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
+std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);
+std::string FeeModesDetail(std::string default_info);
 std::string InvalidEstimateModeErrorMessage();
 bilingual_str PSBTErrorString(PSBTError error);
 bilingual_str TransactionErrorString(const node::TransactionError error);
