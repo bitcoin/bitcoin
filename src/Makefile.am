@@ -234,7 +234,6 @@ BITCOIN_CORE_H = \
   llmq/dkgsession.h \
   llmq/dkgsessionhandler.h \
   llmq/dkgsessionmgr.h \
-  llmq/ehf_signals.cpp \
   llmq/ehf_signals.h \
   llmq/instantsend.h \
   llmq/options.h \
@@ -460,21 +459,22 @@ libbitcoin_server_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
-  llmq/quorums.cpp \
   llmq/blockprocessor.cpp \
-  llmq/commitment.cpp \
   llmq/chainlocks.cpp \
   llmq/clsig.cpp \
+  llmq/commitment.cpp \
+  llmq/context.cpp \
   llmq/debug.cpp \
+  llmq/dkgsession.cpp \
   llmq/dkgsessionhandler.cpp \
   llmq/dkgsessionmgr.cpp \
-  llmq/dkgsession.cpp \
-  llmq/context.cpp \
+  llmq/ehf_signals.cpp \
   llmq/instantsend.cpp \
   llmq/options.cpp \
-  llmq/snapshot.cpp \
+  llmq/quorums.cpp \
   llmq/signing.cpp \
   llmq/signing_shares.cpp \
+  llmq/snapshot.cpp \
   llmq/utils.cpp \
   mapport.cpp \
   masternode/node.cpp \
