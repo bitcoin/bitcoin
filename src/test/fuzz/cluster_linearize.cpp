@@ -458,6 +458,7 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
     while (todo.Any()) {
         // Call the ancestor finder's FindCandidateSet for what remains of the graph.
         assert(!anc_finder.AllDone());
+        assert(todo.Count() == anc_finder.NumRemaining());
         auto best_anc = anc_finder.FindCandidateSet();
         // Sanity check the result.
         assert(best_anc.transactions.Any());
@@ -489,6 +490,7 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
         anc_finder.MarkDone(del_set);
     }
     assert(anc_finder.AllDone());
+    assert(anc_finder.NumRemaining() == 0);
 }
 
 static constexpr auto MAX_SIMPLE_ITERATIONS = 300000;
@@ -523,6 +525,7 @@ FUZZ_TARGET(clusterlin_search_finder)
         assert(!smp_finder.AllDone());
         assert(!exh_finder.AllDone());
         assert(!anc_finder.AllDone());
+        assert(anc_finder.NumRemaining() == todo.Count());
 
         // For each iteration, read an iteration count limit from the fuzz input.
         uint64_t max_iterations = 1;
@@ -605,6 +608,7 @@ FUZZ_TARGET(clusterlin_search_finder)
     assert(smp_finder.AllDone());
     assert(exh_finder.AllDone());
     assert(anc_finder.AllDone());
+    assert(anc_finder.NumRemaining() == 0);
 }
 
 FUZZ_TARGET(clusterlin_linearization_chunking)
