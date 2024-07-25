@@ -549,7 +549,7 @@ if(WERROR)
   unset(werror_flag)
 endif()
 
-find_package(Python3 3.9 COMPONENTS Interpreter)
+find_package(Python3 3.10 COMPONENTS Interpreter)
 if(Python3_EXECUTABLE)
   set(PYTHON_COMMAND ${Python3_EXECUTABLE})
 else()
