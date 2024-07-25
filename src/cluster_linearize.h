@@ -536,6 +536,12 @@ public:
         return m_todo.None();
     }
 
+    /** Count the number of remaining unlinearized transactions. */
+    ClusterIndex NumRemaining() const noexcept
+    {
+        return m_todo.Count();
+    }
+
     /** Find the best (highest-feerate, smallest among those in case of a tie) ancestor set
      *  among the remaining transactions. Requires !AllDone().
      *
@@ -960,9 +966,19 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
     std::vector<ClusterIndex> linearization;
 
     AncestorCandidateFinder anc_finder(depgraph);
-    SearchCandidateFinder src_finder(depgraph, rng_seed);
+    std::optional<SearchCandidateFinder<SetType>> src_finder;
     linearization.reserve(depgraph.TxCount());
     bool optimal = true;
+
+    // Treat the initialization of SearchCandidateFinder as taking N^2/64 (rounded up) iterations
+    // (largely due to the cost of constructing the internal sorted-by-feerate DepGraph inside
+    // SearchCandidateFinder), a rough approximation based on benchmark. If we don't have that
+    // many, don't start it.
+    uint64_t start_iterations = (uint64_t{depgraph.TxCount()} * depgraph.TxCount() + 63) / 64;
+    if (iterations_left > start_iterations) {
+        iterations_left -= start_iterations;
+        src_finder.emplace(depgraph, rng_seed);
+    }
 
     /** Chunking of what remains of the old linearization. */
     LinearizationChunking old_chunking(depgraph, old_linearization);
@@ -976,12 +992,22 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
         auto best = anc_finder.FindCandidateSet();
         if (!best_prefix.feerate.IsEmpty() && best_prefix.feerate >= best.feerate) best = best_prefix;
 
-        // Invoke bounded search to update best, with up to half of our remaining iterations as
-        // limit.
-        uint64_t max_iterations_now = (iterations_left + 1) / 2;
         uint64_t iterations_done_now = 0;
-        std::tie(best, iterations_done_now) = src_finder.FindCandidateSet(max_iterations_now, best);
-        iterations_left -= iterations_done_now;
+        uint64_t max_iterations_now = 0;
+        if (src_finder) {
+            // Treat the invocation of SearchCandidateFinder::FindCandidateSet() as costing N/4
+            // up-front (rounded up) iterations (largely due to the cost of connected-component
+            // splitting), a rough approximation based on benchmarks.
+            uint64_t base_iterations = (anc_finder.NumRemaining() + 3) / 4;
+            if (iterations_left > base_iterations) {
+                // Invoke bounded search to update best, with up to half of our remaining
+                // iterations as limit.
+                iterations_left -= base_iterations;
+                max_iterations_now = (iterations_left + 1) / 2;
+                std::tie(best, iterations_done_now) = src_finder->FindCandidateSet(max_iterations_now, best);
+                iterations_left -= iterations_done_now;
+            }
+        }
 
         if (iterations_done_now == max_iterations_now) {
             optimal = false;
@@ -999,7 +1025,7 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
         // Update state to reflect best is no longer to be linearized.
         anc_finder.MarkDone(best.transactions);
         if (anc_finder.AllDone()) break;
-        src_finder.MarkDone(best.transactions);
+        if (src_finder) src_finder->MarkDone(best.transactions);
         if (old_chunking.NumChunksLeft() > 0) {
             old_chunking.MarkDone(best.transactions);
         }
