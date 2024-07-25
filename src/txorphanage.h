@@ -18,6 +18,7 @@
  * Since we cannot distinguish orphans from bad transactions with
  * non-existent inputs, we heavily limit the number of orphans
  * we keep and the duration we keep them for.
+ * Not thread-safe. Requires external synchronization.
  */
 class TxOrphanage {
 public:

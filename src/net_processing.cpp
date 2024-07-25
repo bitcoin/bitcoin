@@ -489,7 +489,7 @@ public:
                     CTxMemPool& pool, node::Warnings& warnings, Options opts);
 
     /** Overridden from CValidationInterface. */
-    void ActiveTipChange(const CBlockIndex* new_tip, bool) override
+    void ActiveTipChange(const CBlockIndex& new_tip, bool) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
@@ -780,10 +780,8 @@ private:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_rejects_reconsiderable.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
-     *
-     * m_tx_download_mutex must be acquired before mempool.cs
      */
-    Mutex m_tx_download_mutex;
+    Mutex m_tx_download_mutex ACQUIRED_BEFORE(m_mempool.cs);
     TxRequestTracker m_txrequest GUARDED_BY(m_tx_download_mutex);
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
 
@@ -2070,8 +2068,10 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
-void PeerManagerImpl::ActiveTipChange(const CBlockIndex* new_tip, bool is_ibd)
+void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
 {
+    // Ensure mempool mutex was released, otherwise deadlock may occur if another thread holding
+    // m_tx_download_mutex waits on the mempool mutex.
     AssertLockNotHeld(m_mempool.cs);
     AssertLockNotHeld(m_tx_download_mutex);
 
@@ -2123,8 +2123,6 @@ void PeerManagerImpl::BlockConnected(
         if (ptx->HasWitness()) {
             m_recent_confirmed_transactions.insert(ptx->GetWitnessHash().ToUint256());
         }
-    }
-    for (const auto& ptx : pblock->vtx) {
         m_txrequest.ForgetTxHash(ptx->GetHash());
         m_txrequest.ForgetTxHash(ptx->GetWitnessHash());
     }
@@ -5336,6 +5334,7 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
 
 bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockNotHeld(m_tx_download_mutex);
     AssertLockHeld(g_msgproc_mutex);
 
     PeerRef peer = GetPeerRef(pfrom->GetId());
@@ -5827,6 +5826,7 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
 
 bool PeerManagerImpl::SendMessages(CNode* pto)
 {
+    AssertLockNotHeld(m_tx_download_mutex);
     AssertLockHeld(g_msgproc_mutex);
 
     PeerRef peer = GetPeerRef(pto->GetId());
@@ -6297,32 +6297,33 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         // Message: getdata (transactions)
         //
-        LOCK(m_tx_download_mutex);
-        std::vector<std::pair<NodeId, GenTxid>> expired;
-        auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
-        for (const auto& entry : expired) {
-            LogPrint(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
-                entry.second.GetHash().ToString(), entry.first);
-        }
-        for (const GenTxid& gtxid : requestable) {
-            // Exclude m_recent_rejects_reconsiderable: we may be requesting a missing parent
-            // that was previously rejected for being too low feerate.
-            if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
-                LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
-                    gtxid.GetHash().ToString(), pto->GetId());
-                vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());
-                if (vGetData.size() >= MAX_GETDATA_SZ) {
-                    MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
-                    vGetData.clear();
-                }
-                m_txrequest.RequestedTx(pto->GetId(), gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
-            } else {
-                // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
-                // this should already be called whenever a transaction becomes AlreadyHaveTx().
-                m_txrequest.ForgetTxHash(gtxid.GetHash());
+        {
+            LOCK(m_tx_download_mutex);
+            std::vector<std::pair<NodeId, GenTxid>> expired;
+            auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
+            for (const auto& entry : expired) {
+                LogPrint(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", entry.second.IsWtxid() ? "wtx" : "tx",
+                    entry.second.GetHash().ToString(), entry.first);
             }
-        }
-
+            for (const GenTxid& gtxid : requestable) {
+                // Exclude m_recent_rejects_reconsiderable: we may be requesting a missing parent
+                // that was previously rejected for being too low feerate.
+                if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
+                    LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+                        gtxid.GetHash().ToString(), pto->GetId());
+                    vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());
+                    if (vGetData.size() >= MAX_GETDATA_SZ) {
+                        MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
+                        vGetData.clear();
+                    }
+                    m_txrequest.RequestedTx(pto->GetId(), gtxid.GetHash(), current_time + GETDATA_TX_INTERVAL);
+                } else {
+                    // We have already seen this transaction, no need to download. This is just a belt-and-suspenders, as
+                    // this should already be called whenever a transaction becomes AlreadyHaveTx().
+                    m_txrequest.ForgetTxHash(gtxid.GetHash());
+                }
+            }
+        } // release m_tx_download_mutex
 
         if (!vGetData.empty())
             MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
