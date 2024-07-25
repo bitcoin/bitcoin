@@ -777,7 +777,7 @@ static RPCHelpMan getblockfrompeer()
         "\nWe must have the header for this block, e.g. using submitheader.\n"
         "\nReturns {} if a block-request was successfully scheduled\n",
         {
-            {"block_hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
             {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
         },
         RPCResult{RPCResult::Type::OBJ, "", "",
@@ -794,7 +794,7 @@ static RPCHelpMan getblockfrompeer()
     ChainstateManager& chainman = EnsureChainman(node);
     PeerManager& peerman = EnsurePeerman(node);
 
-    const uint256& block_hash{ParseHashV(request.params[0], "block_hash")};
+    const uint256& block_hash{ParseHashV(request.params[0], "blockhash")};
     const NodeId peer_id{request.params[1].get_int64()};
 
     const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
@@ -2696,6 +2696,9 @@ public:
 
 static RPCHelpMan scantxoutset()
 {
+    // scriptPubKey corresponding to mainnet address XcJSEb79KEeNbwMU7eE27aL5dhDwvjgBuH
+    const std::string EXAMPLE_DESCRIPTOR_RAW = "raw(76a91411b366edfc0a8b66feebae5c2e25a7b6a5d1cf3188ac)#fm24fxxy";
+
     return RPCHelpMan{"scantxoutset",
         "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
         "Examples of output descriptors are:\n"
@@ -2728,13 +2731,7 @@ static RPCHelpMan scantxoutset()
                 "[scanobjects,...]"},
         },
         {
-            RPCResult{"When action=='abort'", RPCResult::Type::BOOL, "", ""},
-            RPCResult{"When action=='status' and no scan is in progress", RPCResult::Type::NONE, "", ""},
-            RPCResult{"When action=='status' and scan is in progress", RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "progress", "The scan progress"},
-            }},
-            RPCResult{"When action=='start'", RPCResult::Type::OBJ, "", "", {
+            RPCResult{"when action=='start'; only returns after scan completes", RPCResult::Type::OBJ, "", "", {
                 {RPCResult::Type::BOOL, "success", "Whether the scan was completed"},
                 {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs scanned"},
                 {RPCResult::Type::NUM, "height", "The current block height (index)"},
@@ -2753,8 +2750,21 @@ static RPCHelpMan scantxoutset()
                     }},
                 {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
             }},
+            RPCResult{"when action=='abort'", RPCResult::Type::BOOL, "success", "True if scan will be aborted (not necessarily before this RPC returns), or false if there is no scan to abort"},
+            RPCResult{"when action=='status' and a scan is currently in progress", RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::NUM, "progress", "Approximate percent complete"},
+            }},
+            RPCResult{"when action=='status' and no scan is in progress - possibly already completed", RPCResult::Type::NONE, "", ""},
         },
-        RPCExamples{""},
+        RPCExamples{
+            HelpExampleCli("scantxoutset", "start \'[\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]\'") +
+            HelpExampleCli("scantxoutset", "status") +
+            HelpExampleCli("scantxoutset", "abort") +
+            HelpExampleRpc("scantxoutset", "\"start\", [\"" + EXAMPLE_DESCRIPTOR_RAW + "\"]") +
+            HelpExampleRpc("scantxoutset", "\"status\"") +
+            HelpExampleRpc("scantxoutset", "\"abort\"")
+        },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR});
