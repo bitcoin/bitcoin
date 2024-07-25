@@ -530,19 +530,19 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::NUM, "vout", "the vout value"},
                             {RPCResult::Type::STR, "address", /*optional=*/true, "the bitcoin address"},
                             {RPCResult::Type::STR, "label", /*optional=*/true, "The associated label, or \"\" for the default label"},
-                            {RPCResult::Type::STR, "scriptPubKey", "the script key"},
+                            {RPCResult::Type::STR, "scriptPubKey", "the output script"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::NUM, "ancestorcount", /*optional=*/true, "The number of in-mempool ancestor transactions, including this one (if transaction is in the mempool)"},
                             {RPCResult::Type::NUM, "ancestorsize", /*optional=*/true, "The virtual transaction size of in-mempool ancestors, including this one (if transaction is in the mempool)"},
                             {RPCResult::Type::STR_AMOUNT, "ancestorfees", /*optional=*/true, "The total fees of in-mempool ancestors (including this one) with fee deltas used for mining priority in " + CURRENCY_ATOM + " (if transaction is in the mempool)"},
-                            {RPCResult::Type::STR_HEX, "redeemScript", /*optional=*/true, "The redeemScript if scriptPubKey is P2SH"},
-                            {RPCResult::Type::STR, "witnessScript", /*optional=*/true, "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
+                            {RPCResult::Type::STR_HEX, "redeemScript", /*optional=*/true, "The redeem script if the output script is P2SH"},
+                            {RPCResult::Type::STR, "witnessScript", /*optional=*/true, "witness script if the output script is P2WSH or P2SH-P2WSH"},
                             {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                             {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
                             {RPCResult::Type::BOOL, "reused", /*optional=*/true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
                             {RPCResult::Type::STR, "desc", /*optional=*/true, "(only when solvable) A descriptor for spending this output"},
-                            {RPCResult::Type::ARR, "parent_descs", /*optional=*/false, "List of parent descriptors for the scriptPubKey of this coin.", {
+                            {RPCResult::Type::ARR, "parent_descs", /*optional=*/false, "List of parent descriptors for the output script of this coin.", {
                                 {RPCResult::Type::STR, "desc", "The descriptor string."},
                             }},
                             {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
