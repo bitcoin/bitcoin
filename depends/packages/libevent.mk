@@ -39,7 +39,7 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm bin/event_rpcgen.py && \
+  rm -rf bin && \
   rm include/ev*.h && \
   rm include/event2/*_compat.h
 endef

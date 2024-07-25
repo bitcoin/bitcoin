@@ -29,3 +29,8 @@ endef
 define $(package)_stage_cmds
   cmake --install . --prefix $($(package)_staging_prefix_dir)
 endef
+
+define $(package)_postprocess_cmds
+  rm -rf bin && \
+  rm -rf share
+endef
