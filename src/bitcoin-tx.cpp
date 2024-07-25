@@ -264,8 +264,8 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
         throw std::runtime_error("TX input missing separator");
 
     // extract and validate TXID
-    uint256 txid;
-    if (!ParseHashStr(vStrInputParts[0], txid)) {
+    auto txid{Txid::FromHex(vStrInputParts[0])};
+    if (!txid) {
         throw std::runtime_error("invalid TX input txid");
     }
 
@@ -285,7 +285,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     }
 
     // append to transaction input list
-    CTxIn txin(Txid::FromUint256(txid), vout, CScript(), nSequenceIn);
+    CTxIn txin(*txid, vout, CScript(), nSequenceIn);
     tx.vin.push_back(txin);
 }
 
@@ -625,8 +625,8 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             if (!prevOut.checkObject(types))
                 throw std::runtime_error("prevtxs internal object typecheck fail");
 
-            uint256 txid;
-            if (!ParseHashStr(prevOut["txid"].get_str(), txid)) {
+            auto txid{Txid::FromHex(prevOut["txid"].get_str())};
+            if (!txid) {
                 throw std::runtime_error("txid must be hexadecimal string (not '" + prevOut["txid"].get_str() + "')");
             }
 
@@ -634,7 +634,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             if (nOut < 0)
                 throw std::runtime_error("vout cannot be negative");
 
-            COutPoint out(Txid::FromUint256(txid), nOut);
+            COutPoint out(*txid, nOut);
             std::vector<unsigned char> pkData(ParseHexUV(prevOut["scriptPubKey"], "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
