@@ -58,7 +58,7 @@ For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-ex
 
 #### For Win64 cross compilation
 
-- see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
+- see [build-windows-mingw.md](../doc/build-windows-mingw.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
 #### For linux (including i386, ARM) cross compilation
 

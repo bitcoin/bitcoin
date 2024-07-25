@@ -11,7 +11,7 @@ To build Bitcoin Core from the command-line, it is sufficient to only install th
 
 The "Desktop development with C++" workload must be installed as well.
 
-Building with Visual Studio is an alternative to the Linux based [cross-compiler build](../doc/build-windows.md).
+Building with Visual Studio is an alternative to the Linux based [cross-compiler build](../doc/build-windows-mingw.md).
 
 
 Prerequisites
