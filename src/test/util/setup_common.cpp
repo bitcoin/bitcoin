@@ -230,9 +230,11 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
-    m_node.scheduler = std::make_unique<CScheduler>();
-    m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
-    m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
+    if (opts.setup_validation_interface) {
+        m_node.scheduler = std::make_unique<CScheduler>();
+        m_node.scheduler->m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { m_node.scheduler->serviceQueue(); });
+        m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
+    }
 
     m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
     bilingual_str error{};
@@ -267,7 +269,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
-    m_node.validation_signals->FlushBackgroundCallbacks();
+    if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.addrman.reset();
@@ -317,6 +319,8 @@ TestingSetup::TestingSetup(
     RegisterAllCoreRPCCommands(tableRPC);
 
     LoadVerifyActivateChainstate();
+
+    if (!opts.setup_net) return;
 
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
     m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,

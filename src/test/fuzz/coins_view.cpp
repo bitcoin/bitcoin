@@ -27,7 +27,6 @@
 #include <vector>
 
 namespace {
-const TestingSetup* g_setup;
 const Coin EMPTY_COIN{};
 
 bool operator==(const Coin& a, const Coin& b)
@@ -39,8 +38,7 @@ bool operator==(const Coin& a, const Coin& b)
 
 void initialize_coins_view()
 {
-    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
-    g_setup = testing_setup.get();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET(coins_view, .init = initialize_coins_view)
