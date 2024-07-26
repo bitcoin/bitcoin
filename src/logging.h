@@ -10,6 +10,7 @@
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/string.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <cstdint>
@@ -79,15 +80,29 @@ namespace BCLog {
         Error,
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
+    constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
 
     class Logger
     {
+    public:
+        struct BufferedLog {
+            SystemClock::time_point now;
+            std::chrono::seconds mocktime;
+            std::string str, logging_function, source_file, threadname;
+            int source_line;
+            LogFlags category;
+            Level level;
+        };
+
     private:
         mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
-        std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
+        std::list<BufferedLog> m_msgs_before_open GUARDED_BY(m_cs);
         bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
+        size_t m_max_buffer_memusage GUARDED_BY(m_cs){DEFAULT_MAX_LOG_BUFFER};
+        size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
+        size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -106,10 +121,16 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<uint32_t> m_categories{0};
 
-        std::string LogTimestampStr(const std::string& str);
+        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+
+        std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
         /** Slots that connect to the print signal */
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+
+        /** Send a string to the log output (internal) */
+        void LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+            EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
     public:
         bool m_print_to_console = false;
@@ -127,17 +148,18 @@ namespace BCLog {
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, int source_line, BCLog::LogFlags category, BCLog::Level level);
+        void LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+            EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const
+        bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
         }
 
         /** Connect a slot to the print signal and return the connection */
-        std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun)
+        std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.push_back(std::move(fun));
@@ -145,44 +167,52 @@ namespace BCLog {
         }
 
         /** Delete a connection */
-        void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it)
+        void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_print_callbacks.erase(it);
         }
 
         /** Start logging (and flush all buffered messages) */
-        bool StartLogging();
+        bool StartLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Only for testing */
-        void DisconnectTestLogger();
+        void DisconnectTestLogger() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+
+        /** Disable logging
+         * This offers a slight speedup and slightly smaller memory usage
+         * compared to leaving the logging system in its default state.
+         * Mostly intended for libbitcoin-kernel apps that don't want any logging.
+         * Should be used instead of StartLogging().
+         */
+        void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         void ShrinkDebugFile();
 
-        std::unordered_map<LogFlags, Level> CategoryLevels() const
+        std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             return m_category_log_levels;
         }
-        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels)
+        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_category_log_levels = levels;
         }
-        bool SetCategoryLogLevel(const std::string& category_str, const std::string& level_str);
+        bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         Level LogLevel() const { return m_log_level.load(); }
         void SetLogLevel(Level level) { m_log_level = level; }
-        bool SetLogLevel(const std::string& level);
+        bool SetLogLevel(std::string_view level);
 
         uint32_t GetCategoryMask() const { return m_categories.load(); }
 
         void EnableCategory(LogFlags flag);
-        bool EnableCategory(const std::string& str);
+        bool EnableCategory(std::string_view str);
         void DisableCategory(LogFlags flag);
-        bool DisableCategory(const std::string& str);
+        bool DisableCategory(std::string_view str);
 
         bool WillLogCategory(LogFlags category) const;
-        bool WillLogCategoryLevel(LogFlags category, Level level) const;
+        bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;
@@ -212,14 +242,14 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 }
 
 /** Return true if str parses as a log category and set the flag */
-bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
+bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 // Be conservative when using functions that
 // unconditionally log to debug.log! It should not be the case that an inbound
 // peer can fill up a user's disk with debug.log entries.
 
 template <typename... Args>
-static inline void LogPrintf_(const std::string& logging_function, const std::string& source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
+static inline void LogPrintf_(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
