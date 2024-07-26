@@ -102,7 +102,30 @@ CTransactionRef AggregateTransactions(const std::vector<CTransactionRef>& txs)
     std::vector<Signature> vSigs;
     CAmount nFee = 0;
 
+    std::set<Txid> setHashes;
+    std::set<Txid> setNoAscendents;
+
     for (auto& tx : txs) {
+        setHashes.insert(tx->GetHash());
+    }
+
+    for (auto& tx : txs) {
+        bool fDependsOnOther = false;
+        for (auto& in : tx->vin) {
+            if (setHashes.find(in.prevout.hash) != setHashes.end()) {
+                fDependsOnOther = true;
+                break;
+            }
+        }
+        if (!fDependsOnOther)
+            setNoAscendents.insert(tx->GetHash());
+    }
+
+    for (auto& tx : txs) {
+        if (setNoAscendents.find(tx->GetHash()) != setNoAscendents.end()) {
+            continue;
+        }
+
         vSigs.push_back(tx->txSig);
         for (auto& in : tx->vin) {
             ret.vin.push_back(in);
