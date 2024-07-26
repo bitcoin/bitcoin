@@ -166,9 +166,6 @@ private:
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height);
     bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize);
 
-    FlatFileSeq BlockFileSeq() const;
-    FlatFileSeq UndoFileSeq() const;
-
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
     /**
@@ -261,12 +258,17 @@ private:
 
     const kernel::BlockManagerOpts m_opts;
 
+    const FlatFileSeq m_block_file_seq;
+    const FlatFileSeq m_undo_file_seq;
+
 public:
     using Options = kernel::BlockManagerOpts;
 
     explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts)
         : m_prune_mode{opts.prune_target > 0},
           m_opts{std::move(opts)},
+          m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
+          m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
           m_interrupt{interrupt} {}
 
     const util::SignalInterrupt& m_interrupt;

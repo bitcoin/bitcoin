@@ -30,7 +30,7 @@ fs::path FlatFileSeq::FileName(const FlatFilePos& pos) const
     return m_dir / fs::u8path(strprintf("%s%05u.dat", m_prefix, pos.nFile));
 }
 
-FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
+FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
 {
     if (pos.IsNull()) {
         return nullptr;
@@ -52,7 +52,7 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
     return file;
 }
 
-size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space)
+size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space) const
 {
     out_of_space = false;
 
@@ -78,7 +78,7 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
     return 0;
 }
 
-bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
+bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize) const
 {
     FILE* file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
     if (!file) {
