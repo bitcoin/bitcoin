@@ -820,7 +820,8 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
     BOOST_CHECK_EQUAL(get_valid_opts({"-nominimumchainwork"}).minimum_chain_work.value().GetCompact(), 0U);
     BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0x1234"}).minimum_chain_work.value().GetCompact(), 0x02123400U);
 
-    BOOST_CHECK(!get_opts({"-minimumchainwork=xyz"})); // invalid hex characters
+    BOOST_CHECK(!get_opts({"-minimumchainwork=xyz"}));                                                               // invalid hex characters
+    BOOST_CHECK(!get_opts({"-minimumchainwork=01234567890123456789012345678901234567890123456789012345678901234"})); // > 64 hex chars
 }
 
 BOOST_AUTO_TEST_SUITE_END()
