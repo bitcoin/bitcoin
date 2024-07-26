@@ -14,3 +14,30 @@ struct BlockRef $Proxy.wrap("interfaces::BlockRef") {
     hash @0 :Data;
     height @1 :Int32;
 }
+
+struct BilingualStr $Proxy.wrap("bilingual_str") {
+    original @0 :Text;
+    translated @1 :Text;
+}
+
+struct Result(Value) {
+    value @0 :Value;
+    error @1: BilingualStr;
+}
+
+# Wrapper for util::Result<void>
+struct ResultVoid(Value) {
+    error @0: BilingualStr;
+}
+
+struct Expected(Value, Error) {
+    union {
+        value @0 :Value;
+        error @1 :Error;
+    }
+}
+
+struct Pair(Key, Value) {
+    key @0 :Key;
+    value @1 :Value;
+}
