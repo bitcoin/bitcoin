@@ -39,6 +39,7 @@ public:
     virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
     virtual std::unique_ptr<Rpc> makeRpc() { return nullptr; }
     virtual Ipc* ipc() { return nullptr; }
+    virtual bool canConnectIpc() { return false; }
     virtual bool canListenIpc() { return false; }
     virtual const char* exeName() { return nullptr; }
     virtual void makeMiningOld2() { throw std::runtime_error("Old mining interface (@2) not supported. Please update your client!"); }
