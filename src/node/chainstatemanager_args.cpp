@@ -32,10 +32,11 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
     if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
 
     if (auto value{args.GetArg("-minimumchainwork")}) {
-        if (!TrySanitizeHexNumber(*value)) {
+        if (auto sanitized_hex{TrySanitizeHexNumber(*value, /*result_size=*/uint256::size() * 2)}) {
+            opts.minimum_chain_work = UintToArith256(*uint256::FromHex(*sanitized_hex));
+        } else {
             return util::Error{strprintf(Untranslated("Invalid non-hex (%s) minimum chain work value specified"), *value)};
         }
-        opts.minimum_chain_work = UintToArith256(uint256S(*value));
     }
 
     if (auto value{args.GetArg("-assumevalid")}) opts.assumed_valid_block = uint256S(*value);
