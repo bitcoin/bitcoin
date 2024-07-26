@@ -124,36 +124,41 @@ void TxOrphanage::EraseForPeer(NodeId peer)
     if (nErased > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", nErased, peer);
 }
 
-void TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
+std::vector<Wtxid> TxOrphanage::LimitOrphans(unsigned int max_orphans, FastRandomContext& rng)
 {
+    std::vector<Wtxid> erased_and_evicted;
     unsigned int nEvicted = 0;
     auto nNow{Now<NodeSeconds>()};
     if (m_next_sweep <= nNow) {
         // Sweep out expired orphan pool entries:
-        int nErased = 0;
         auto nMinExpTime{nNow + ORPHAN_TX_EXPIRE_TIME - ORPHAN_TX_EXPIRE_INTERVAL};
         std::map<Wtxid, OrphanTx>::iterator iter = m_orphans.begin();
         while (iter != m_orphans.end())
         {
             std::map<Wtxid, OrphanTx>::iterator maybeErase = iter++;
             if (maybeErase->second.nTimeExpire <= nNow) {
-                nErased += EraseTx(maybeErase->second.tx->GetWitnessHash());
+                const auto& wtxid = maybeErase->second.tx->GetWitnessHash();
+                erased_and_evicted.emplace_back(wtxid);
+                EraseTx(wtxid);
             } else {
                 nMinExpTime = std::min(maybeErase->second.nTimeExpire, nMinExpTime);
             }
         }
         // Sweep again 5 minutes after the next entry that expires in order to batch the linear scan.
         m_next_sweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
-        if (nErased > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", nErased);
+        if (!erased_and_evicted.empty()) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan tx due to expiration\n", erased_and_evicted.size());
     }
     while (m_orphans.size() > max_orphans)
     {
         // Evict a random orphan:
         size_t randompos = rng.randrange(m_orphan_list.size());
-        EraseTx(m_orphan_list[randompos]->second.tx->GetWitnessHash());
+        const auto& wtxid = m_orphan_list[randompos]->second.tx->GetWitnessHash();
+        erased_and_evicted.emplace_back(wtxid);
         ++nEvicted;
+        EraseTx(wtxid);
     }
     if (nEvicted > 0) LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
+    return erased_and_evicted;
 }
 
 void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
