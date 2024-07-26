@@ -21,6 +21,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     GETDATA_TX_INTERVAL,
     NONPREF_PEER_TX_DELAY,
+    ORPHAN_ANCESTOR_GETDATA_INTERVAL,
     OVERLOADED_PEER_TX_DELAY,
     p2p_lock,
     P2PInterface,
@@ -624,6 +625,74 @@ class OrphanHandlingTest(BitcoinTestFramework):
             peer_1.send_and_ping(msg_tx(parent_orphan))
         assert_equal(len(node.getorphantxs()),0)
 
+    @cleanup
+    def test_orphan_handling_prefer_outbound(self):
+        self.log.info("Test that the node prefers requesting from outbound peers")
+        node = self.nodes[0]
+        orphan_wtxid, orphan_tx, parent_tx = self.create_parent_and_child()
+        orphan_inv = CInv(t=MSG_WTX, h=int(orphan_wtxid, 16))
+
+        peer_inbound = node.add_p2p_connection(PeerTxRelayer())
+        peer_outbound = node.add_outbound_p2p_connection(PeerTxRelayer(), p2p_idx=1)
+
+        # Inbound peer relays the transaction.
+        peer_inbound.send_and_ping(msg_inv([orphan_inv]))
+        self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
+        peer_inbound.wait_for_getdata([int(orphan_wtxid, 16)])
+
+        # Both peers send invs for the orphan, so the node can expect both to know its ancestors.
+        peer_outbound.send_and_ping(msg_inv([orphan_inv]))
+
+        # The outbound peer should be preferred for getting orphan parents
+        peer_inbound.send_and_ping(msg_tx(orphan_tx))
+        self.nodes[0].bumpmocktime(TXID_RELAY_DELAY)
+        peer_outbound.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+
+        # There should be no request to the inbound peer
+        peer_inbound.assert_never_requested(int(parent_tx.rehash(), 16))
+
+        self.log.info("Test that, if the preferred peer doesn't respond, the node sends another request")
+        self.nodes[0].bumpmocktime(ORPHAN_ANCESTOR_GETDATA_INTERVAL)
+        peer_inbound.sync_with_ping()
+        peer_inbound.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+
+    @cleanup
+    def test_announcers_before_and_after(self):
+        self.log.info("Test that the node uses all peers who announced the tx prior to realizing it's an orphan")
+        node = self.nodes[0]
+        orphan_wtxid, orphan_tx, parent_tx = self.create_parent_and_child()
+        orphan_inv = CInv(t=MSG_WTX, h=int(orphan_wtxid, 16))
+
+        # Announces before tx is sent, disconnects while node is requesting parents
+        peer_early_disconnected = node.add_outbound_p2p_connection(PeerTxRelayer(), p2p_idx=3)
+        # Announces before tx is sent, doesn't respond to parent request
+        peer_early_unresponsive = node.add_p2p_connection(PeerTxRelayer())
+
+        # Announces after tx is sent
+        peer_late_announcer = node.add_p2p_connection(PeerTxRelayer())
+
+        # Both peers send invs for the orphan, so the node an expect both to know its ancestors.
+        peer_early_disconnected.send_and_ping(msg_inv([orphan_inv]))
+        self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
+        peer_early_disconnected.wait_for_getdata([int(orphan_wtxid, 16)])
+        peer_early_unresponsive.send_and_ping(msg_inv([orphan_inv]))
+        peer_early_disconnected.send_and_ping(msg_tx(orphan_tx))
+
+        # Peer disconnects before responding to request
+        self.nodes[0].bumpmocktime(TXID_RELAY_DELAY)
+        peer_early_disconnected.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+        peer_early_disconnected.peer_disconnect()
+
+        # The node should retry with the other peer that announced the orphan earlier.
+        # This node's request was additionally delayed because it's an inbound peer.
+        self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
+        peer_early_unresponsive.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
+
+        self.log.info("Test that the node uses peers who announce the tx after realizing it's an orphan")
+        peer_late_announcer.send_and_ping(msg_inv([orphan_inv]))
+
+        self.nodes[0].bumpmocktime(ORPHAN_ANCESTOR_GETDATA_INTERVAL)
+        peer_late_announcer.wait_for_parent_requests([int(parent_tx.rehash(), 16)])
 
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
@@ -641,6 +710,8 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_same_txid_orphan_of_orphan()
         self.test_orphan_txid_inv()
         self.test_max_orphan_amount()
+        self.test_orphan_handling_prefer_outbound()
+        self.test_announcers_before_and_after()
 
 
 if __name__ == '__main__':
