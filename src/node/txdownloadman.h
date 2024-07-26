@@ -92,7 +92,7 @@ struct PackageToValidate {
 struct RejectedTxTodo
 {
     bool m_should_add_extra_compact_tx;
-    std::vector<uint256> m_unique_parents;
+    std::vector<Txid> m_unique_parents;
     std::optional<PackageToValidate> m_package_to_validate;
 };
 
