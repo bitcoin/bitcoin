@@ -128,6 +128,11 @@ public:
         return *m_lazy_recent_confirmed_transactions;
     }
 
+    /** Tracks orphans we are trying to resolve. All hashes stored are wtxids, i.e., the wtxid of
+     * the orphan. Used to schedule resolution with peers, which means requesting the missing
+     * parents by txid. */
+    TxRequestTracker m_orphan_resolution_tracker;
+
     TxDownloadManagerImpl(const TxDownloadOptions& options) : m_opts{options}, m_txrequest{options.m_deterministic_txrequest} {}
 
     struct PeerInfo {
@@ -189,6 +194,12 @@ public:
     void CheckIsEmpty(NodeId nodeid);
 
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
+protected:
+    /** Determine candidacy (and delay) for potential orphan resolution candidate.
+     * @returns delay for orphan resolution if this peer is a good candidate for orphan resolution,
+     * std::nullopt if this peer cannot be added because it has reached download/orphanage limits.
+     * */
+    std::optional<std::chrono::seconds> OrphanResolutionCandidate(NodeId nodeid, const Wtxid& orphan_wtxid);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H
