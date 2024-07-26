@@ -814,6 +814,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
     const std::string cmd{"-assumevalid=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
     BOOST_CHECK_EQUAL(get_valid_opts({cmd.c_str()}).assumed_valid_block.value().ToString(), cmd.substr(13, cmd.size()));
 
+    BOOST_CHECK(!get_opts({"-assumevalid=xyz"}));                                                               // invalid hex characters
+    BOOST_CHECK(!get_opts({"-assumevalid=01234567890123456789012345678901234567890123456789012345678901234"})); // > 64 hex chars
+
     // test -minimumchainwork
     BOOST_CHECK(!get_valid_opts({}).minimum_chain_work.has_value());
     BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0"}).minimum_chain_work.value().GetCompact(), 0U);

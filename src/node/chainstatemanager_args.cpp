@@ -39,7 +39,13 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         }
     }
 
-    if (auto value{args.GetArg("-assumevalid")}) opts.assumed_valid_block = uint256S(*value);
+    if (auto value{args.GetArg("-assumevalid")}) {
+        if (auto block_hash{uint256::FromUserHex(*value)}) {
+            opts.assumed_valid_block = *block_hash;
+        } else {
+            return util::Error{strprintf(Untranslated("Invalid assumevalid block hash specified (%s), must be up to %d hex digits (or 0 to disable)"), *value, uint256::size() * 2)};
+        }
+    }
 
     if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
 
