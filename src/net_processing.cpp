@@ -2978,7 +2978,7 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
     if (add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
         AddToCompactExtraTransactions(ptx);
     }
-    for (const uint256& parent_txid : unique_parents) {
+    for (const Txid& parent_txid : unique_parents) {
         if (peer) AddKnownTx(*peer, parent_txid);
     }
 

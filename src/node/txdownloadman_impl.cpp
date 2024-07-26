@@ -308,7 +308,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     // Whether we should call AddToCompactExtraTransactions at the end
     bool add_extra_compact_tx{first_time_failure};
     // Hashes to pass to AddKnownTx later
-    std::vector<uint256> unique_parents;
+    std::vector<Txid> unique_parents;
     // Populated if failure is reconsiderable and eligible package is found.
     std::optional<node::PackageToValidate> package_to_validate;
 
