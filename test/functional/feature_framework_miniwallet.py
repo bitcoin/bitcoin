@@ -3,6 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test MiniWallet."""
+import random
+import string
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -31,6 +34,20 @@ class FeatureFrameworkMiniWalletTest(BitcoinTestFramework):
                 assert_greater_than_or_equal(tx.get_weight(), target_weight)
                 assert_greater_than_or_equal(target_weight + 3, tx.get_weight())
 
+    def test_wallet_tagging(self):
+        """Verify that tagged wallet instances are able to send funds."""
+        self.log.info(f"Test tagged wallet instances...")
+        node = self.nodes[0]
+        untagged_wallet = self.wallets[0][1]
+        for i in range(10):
+            tag = ''.join(random.choice(string.ascii_letters) for _ in range(20))
+            self.log.debug(f"-> ({i}) tag name: {tag}")
+            tagged_wallet = MiniWallet(node, tag_name=tag)
+            untagged_wallet.send_to(from_node=node, scriptPubKey=tagged_wallet.get_scriptPubKey(), amount=100000)
+            tagged_wallet.rescan_utxos()
+            tagged_wallet.send_self_transfer(from_node=node)
+        self.generate(node, 1)  # clear mempool
+
     def run_test(self):
         node = self.nodes[0]
         self.wallets = [
@@ -43,6 +60,7 @@ class FeatureFrameworkMiniWalletTest(BitcoinTestFramework):
         self.generate(wallet, COINBASE_MATURITY)
 
         self.test_tx_padding()
+        self.test_wallet_tagging()
 
 
 if __name__ == '__main__':
