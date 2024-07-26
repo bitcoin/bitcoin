@@ -78,9 +78,9 @@ BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)
     BOOST_CHECK(wtxid_2.GetHex() < wtxid_3.GetHex());
 
     // The txids are not (we want to test that sorting and hashing use wtxid, not txid):
-    Txid txid_1{TxidFromString("0xbd0f71c1d5e50589063e134fad22053cdae5ab2320db5bf5e540198b0b5a4e69")};
-    Txid txid_2{TxidFromString("0xb4749f017444b051c44dfd2720e88f314ff94f3dd6d56d40ef65854fcd7fff6b")};
-    Txid txid_3{TxidFromString("0xee707be5201160e32c4fc715bec227d1aeea5940fb4295605e7373edce3b1a93")};
+    Txid txid_1{Txid::FromHex("bd0f71c1d5e50589063e134fad22053cdae5ab2320db5bf5e540198b0b5a4e69").value()};
+    Txid txid_2{Txid::FromHex("b4749f017444b051c44dfd2720e88f314ff94f3dd6d56d40ef65854fcd7fff6b").value()};
+    Txid txid_3{Txid::FromHex("ee707be5201160e32c4fc715bec227d1aeea5940fb4295605e7373edce3b1a93").value()};
     BOOST_CHECK_EQUAL(tx_1.GetHash(), txid_1);
     BOOST_CHECK_EQUAL(tx_2.GetHash(), txid_2);
     BOOST_CHECK_EQUAL(tx_3.GetHash(), txid_3);

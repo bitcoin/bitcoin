@@ -72,10 +72,4 @@ using Txid = transaction_identifier<false>;
 /** Wtxid commits to all transaction fields including the witness. */
 using Wtxid = transaction_identifier<true>;
 
-/** DEPRECATED due to missing length-check and hex-check, please use the safer FromHex, or FromUint256 */
-inline Txid TxidFromString(std::string_view str)
-{
-    return Txid::FromUint256(uint256S(str));
-}
-
 #endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H

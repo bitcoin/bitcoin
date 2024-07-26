@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     fValid = false;
                     break;
                 }
-                COutPoint outpoint{TxidFromString(vinput[0].get_str()), uint32_t(vinput[1].getInt<int>())};
+                COutPoint outpoint{Txid::FromHex(vinput[0].get_str()).value(), uint32_t(vinput[1].getInt<int>())};
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     fValid = false;
                     break;
                 }
-                COutPoint outpoint{TxidFromString(vinput[0].get_str()), uint32_t(vinput[1].getInt<int>())};
+                COutPoint outpoint{Txid::FromHex(vinput[0].get_str()).value(), uint32_t(vinput[1].getInt<int>())};
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     // create a big transaction of 4500 inputs signed by the same key
     for(uint32_t ij = 0; ij < 4500; ij++) {
         uint32_t i = mtx.vin.size();
-        COutPoint outpoint(TxidFromString("0000000000000000000000000000000000000000000000000000000000000100"), i);
+        COutPoint outpoint(Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000100").value(), i);
 
         mtx.vin.resize(mtx.vin.size() + 1);
         mtx.vin[i].prevout = outpoint;
@@ -1026,14 +1026,6 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         t.vout[0].nValue = 239;
         CheckIsNotStandard(t, "dust");
     }
-}
-
-BOOST_AUTO_TEST_CASE(test_TxidFromString)
-{
-    // Make sure TxidFromString respects string_view length and stops reading at
-    // end of the substring.
-    BOOST_CHECK_EQUAL(TxidFromString(std::string_view("ABCD1234", 4)).ToString(),
-        "000000000000000000000000000000000000000000000000000000000000abcd");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
