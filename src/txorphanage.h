@@ -56,7 +56,7 @@ public:
     void EraseForPeer(NodeId peer);
 
     /** Erase all orphans included in or invalidated by a new block */
-    void EraseForBlock(const CBlock& block);
+    std::vector<Wtxid> EraseForBlock(const CBlock& block);
 
     /** Limit the orphanage to the given maximum */
     void LimitOrphans(unsigned int max_orphans, FastRandomContext& rng);
