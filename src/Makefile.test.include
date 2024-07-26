@@ -83,6 +83,7 @@ BITCOIN_TESTS =\
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
+  test/cluster_linearize_tests.cpp \
   test/coins_tests.cpp \
   test/coinstatsindex_tests.cpp \
   test/common_url_tests.cpp \
@@ -302,6 +303,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/buffered_file.cpp \
  test/fuzz/chain.cpp \
  test/fuzz/checkqueue.cpp \
+ test/fuzz/cluster_linearize.cpp \
  test/fuzz/coins_view.cpp \
  test/fuzz/coinscache_sim.cpp \
  test/fuzz/connman.cpp \
