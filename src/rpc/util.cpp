@@ -19,6 +19,7 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/result.h>
@@ -102,11 +103,11 @@ CFeeRate ParseFeeRate(const UniValue& json)
 uint256 ParseHashV(const UniValue& v, std::string_view name)
 {
     const std::string& strHex(v.get_str());
-    if (64 != strHex.length())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", name, 64, strHex.length(), strHex));
-    if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be hexadecimal string (not '%s')", name, strHex));
-    return uint256S(strHex);
+    if (auto rv{uint256::FromHex(strHex)}) return *rv;
+    if (auto expected_len{uint256::size() * 2}; strHex.length() != expected_len) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be of length %d (not %d, for '%s')", name, expected_len, strHex.length(), strHex));
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be hexadecimal string (not '%s')", name, strHex));
 }
 uint256 ParseHashO(const UniValue& o, std::string_view strKey)
 {
