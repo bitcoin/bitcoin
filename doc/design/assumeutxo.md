@@ -150,7 +150,7 @@ background chainstate's UTXO set contents and ensure it matches the compiled val
 
 The background chainstate data lingers on disk until the program is restarted.
 
-### Bitcoind restarts sometime after snapshot validation has completed
+### Bitcoind restarts sometime after snapshot validation has been completed
 
 After a shutdown and subsequent restart, `LoadChainstate()` cleans up the background
 chainstate with `ValidatedSnapshotCleanup()`, which renames the `chainstate_snapshot`
