@@ -231,29 +231,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBLSCTBlock(const blsct:
         addPackageTxs(*m_mempool, nPackagesSelected, nDescendantsUpdated);
     }
 
-    std::set<Txid> setHashes;
-    std::set<Txid> setNoAscendents;
-
-    for (auto& tx : txns) {
-        setHashes.insert(tx.GetHash());
-    }
-
-    for (auto& tx : txns) {
-        bool fDependsOnOther = false;
-        for (auto& in : tx.vin) {
-            if (setHashes.find(in.prevout.hash) != setHashes.end()) {
-                fDependsOnOther = true;
-                break;
-            }
-        }
-        if (!fDependsOnOther)
-            setNoAscendents.insert(tx.GetHash());
-    }
-
     for (const CMutableTransaction& tx : txns) {
-        if (setNoAscendents.find(tx.GetHash()) != setNoAscendents.end()) {
-            continue;
-        }
         for (auto& out : tx.vout) {
             if (out.scriptPubKey.IsFee()) {
                 nFees += out.nValue;
@@ -360,6 +338,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
 
 void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
+    if (iter->GetTx().IsBLSCT() && iter->GetMemPoolParents().size() > 0) return;
     pblocktemplate->block.vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
