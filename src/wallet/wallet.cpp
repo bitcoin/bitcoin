@@ -917,8 +917,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
                 outputs.emplace_back(wtx.tx, i);
             }
         }
-        for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
-            LockCoin(outPoint);
+        // TODO: refactor duplicated code between CWallet::AddToWallet and CWallet::AutoLockMasternodeCollaterals
+        if (m_chain) {
+            for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+                LockCoin(outPoint);
+            }
         }
     }
 
@@ -946,8 +949,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
                 }
             }
         }
-        for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
-            LockCoin(outPoint);
+        // TODO: refactor duplicated code with case fInstertedNew
+        if (m_chain) {
+            for (const auto& outPoint : m_chain->listMNCollaterials(outputs)) {
+                LockCoin(outPoint);
+            }
         }
     }
 
@@ -4018,6 +4024,8 @@ DBErrors CWallet::LoadWallet()
 // This avoids accidental spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {
+    if (!m_chain) return;
+
     std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
 
     LOCK(cs_wallet);
@@ -4452,6 +4460,11 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
+    // TODO: refactor duplicated code between CWallet::AutoLockMasternodeCollaterals and CWallet::ListProTxCoins
+    if (!m_chain) {
+        vOutpts.clear();
+        return;
+    }
     std::vector<std::pair<const CTransactionRef&, unsigned int>> outputs;
 
     AssertLockHeld(cs_wallet);
