@@ -92,6 +92,10 @@
  *   peers with a nonzero number of tracked announcements.
  * - CPU usage is generally logarithmic in the total number of tracked announcements, plus the number of
  *   announcements affected by an operation (amortized O(1) per announcement).
+ *
+ * Context:
+ * - In an earlier version of the transaction request logic it was possible for a peer to prevent us from seeing a
+ *   specific transaction. See https://bitcoincore.org/en/2024/07/03/disclose_already_asked_for.
  */
 class TxRequestTracker {
     // Avoid littering this header file with implementation details.
