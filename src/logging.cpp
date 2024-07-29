@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,7 +103,6 @@ void BCLog::Logger::DisconnectTestLogger()
     m_cur_buffer_memusage = 0;
     m_buffer_lines_discarded = 0;
     m_msgs_before_open.clear();
-
 }
 
 void BCLog::Logger::DisableLogging()
