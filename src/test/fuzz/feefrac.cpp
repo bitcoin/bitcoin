@@ -159,7 +159,8 @@ FUZZ_TARGET(feefrac_mul_div)
 
     // If the result is not representable by an int64_t, bail out.
     if ((is_negative && quot_abs > MAX_ABS_INT64) || (!is_negative && quot_abs >= MAX_ABS_INT64)) {
-        // If 0 <= mul32 <= div, then the result is guaranteed to be representable.
+        // If 0 <= mul32 <= div, then the result is guaranteed to be representable. In the context
+        // of the Evaluate call below, this corresponds to 0 <= at_size <= feefrac.size.
         assert(mul32 < 0 || mul32 > div);
         return;
     }
@@ -172,4 +173,10 @@ FUZZ_TARGET(feefrac_mul_div)
     // Verify the behavior of FeeFrac::MulFallback + FeeFrac::DivFallback.
     auto res_fallback = FeeFrac::DivFallback(FeeFrac::MulFallback(mul64, mul32), div);
     assert(res == res_fallback);
+
+    // Verify the behavior of FeeFrac::Evaluate.
+    if (mul32 > 0) {
+        auto res_fee = FeeFrac{mul64, div}.Evaluate(mul32);
+        assert(res == res_fee);
+    }
 }
