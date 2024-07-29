@@ -51,7 +51,7 @@ namespace {
 constexpr CAmount fallbackFee = 1000;
 } // anonymous namespace
 
-static std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain* chain, interfaces::CoinJoin::Loader& coinjoin_loader)
+static std::shared_ptr<CWallet> TestLoadWallet(interfaces::Chain* chain, interfaces::CoinJoin::Loader* coinjoin_loader)
 {
     DatabaseOptions options;
     DatabaseStatus status;
@@ -1232,7 +1232,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
     // Create new wallet with known key and unload it.
-    auto wallet = TestLoadWallet(m_node.chain.get(), *m_node.coinjoin_loader);
+    auto wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
     CKey key;
     key.MakeNewKey(true);
     AddKey(*wallet, key);
@@ -1272,7 +1272,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 
     // Reload wallet and make sure new transactions are detected despite events
     // being blocked
-    wallet = TestLoadWallet(m_node.chain.get(), *m_node.coinjoin_loader);
+    wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
     BOOST_CHECK(rescan_completed);
     BOOST_CHECK_EQUAL(addtx_count, 2);
     {
@@ -1311,7 +1311,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
             ENTER_CRITICAL_SECTION(wallet->wallet()->cs_wallet);
             ENTER_CRITICAL_SECTION(cs_wallets);
         });
-    wallet = TestLoadWallet(m_node.chain.get(), *m_node.coinjoin_loader);
+    wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
     BOOST_CHECK_EQUAL(addtx_count, 4);
     {
         LOCK(wallet->cs_wallet);
@@ -1392,7 +1392,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
 {
-    auto wallet = TestLoadWallet(nullptr, *m_node.coinjoin_loader);
+    // TODO: FIX FIX FIX - coinjoin_loader is null heere!
+    auto wallet = TestLoadWallet(nullptr, nullptr);
     BOOST_CHECK(wallet);
     UnloadWallet(std::move(wallet));
 }
@@ -1401,7 +1402,7 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 {
     gArgs.ForceSetArg("-unsafesqlitesync", "1");
     auto chain = interfaces::MakeChain(m_node);
-    auto wallet = TestLoadWallet(m_node.chain.get(), *m_node.coinjoin_loader);
+    auto wallet = TestLoadWallet(m_node.chain.get(), m_node.coinjoin_loader.get());
     CKey key;
     key.MakeNewKey(true);
     AddKey(*wallet, key);
