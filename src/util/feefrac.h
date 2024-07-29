@@ -182,6 +182,27 @@ struct FeeFrac
         std::swap(a.fee, b.fee);
         std::swap(a.size, b.size);
     }
+
+    /** Compute the fee for a given size `at_size` using this object's feerate.
+     *
+     * This effectively corresponds to evaluating (this->fee * at_size) / this->size, with the
+     * result rounded down (even for negative feerates).
+     *
+     * Requires this->size > 0, at_size >= 0, and that the correct result fits in a int64_t. This
+     * is guaranteed to be the case when 0 <= at_size <= this->size.
+     */
+    int64_t EvaluateFee(int32_t at_size) const noexcept
+    {
+        Assume(size > 0);
+        Assume(at_size >= 0);
+        if (fee >= 0 && fee < 0x200000000) [[likely]] {
+            // Common case where (this->fee * at_size) is guaranteed to fit in a uint64_t.
+            return (uint64_t(fee) * at_size) / uint32_t(size);
+        } else {
+            // Otherwise, use Mul and Div.
+            return Div(Mul(fee, at_size), size);
+        }
+    }
 };
 
 /** Compare the feerate diagrams implied by the provided sorted chunks data.
