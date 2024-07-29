@@ -37,23 +37,21 @@
  */
 struct FeeFrac
 {
-    /** Fallback version for Mul (see below).
-     *
-     * Separate to permit testing on platforms where it isn't actually needed.
-     */
+    /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
+     *  ordered type. This is a fallback version, separate so it can be tested on platforms where
+     *  it isn't actually needed. */
     static inline std::pair<int64_t, uint32_t> MulFallback(int64_t a, int32_t b) noexcept
     {
-        // Otherwise, emulate 96-bit multiplication using two 64-bit multiplies.
         int64_t low = int64_t{static_cast<uint32_t>(a)} * b;
         int64_t high = (a >> 32) * b;
         return {high + (low >> 32), static_cast<uint32_t>(low)};
     }
 
-    // Compute a * b, returning an unspecified but totally ordered type.
 #ifdef __SIZEOF_INT128__
+    /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
+     *  ordered type. This is a version relying on __int128. */
     static inline __int128 Mul(int64_t a, int32_t b) noexcept
     {
-        // If __int128 is available, use 128-bit wide multiply.
         return __int128{a} * b;
     }
 #else
