@@ -15,7 +15,28 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     FeeFrac sum{1500, 400};
     FeeFrac diff{500, -200};
     FeeFrac empty{0, 0};
-    [[maybe_unused]] FeeFrac zero_fee{0, 1}; // zero-fee allowed
+    FeeFrac zero_fee{0, 1}; // zero-fee allowed
+
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFee(0), 0);
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFee(1), 0);
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFee(1000000), 0);
+    BOOST_CHECK_EQUAL(zero_fee.EvaluateFee(0x7fffffff), 0);
+
+    BOOST_CHECK_EQUAL(p1.EvaluateFee(0), 0);
+    BOOST_CHECK_EQUAL(p1.EvaluateFee(1), 10);
+    BOOST_CHECK_EQUAL(p1.EvaluateFee(100000000), 1000000000);
+    BOOST_CHECK_EQUAL(p1.EvaluateFee(0x7fffffff), int64_t(0x7fffffff) * 10);
+
+    FeeFrac neg{-1001, 100};
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(0), 0);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(1), -11);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(2), -21);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(3), -31);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(100), -1001);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(101), -1012);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(100000000), -1001000000);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(100000001), -1001000011);
+    BOOST_CHECK_EQUAL(neg.EvaluateFee(0x7fffffff), -21496311307);
 
     BOOST_CHECK(empty == FeeFrac{}); // same as no-args
 
@@ -67,6 +88,16 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(oversized_1 << oversized_2);
     BOOST_CHECK(oversized_1 != oversized_2);
 
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFee(0), 0);
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFee(1), 1152921);
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFee(2), 2305843);
+    BOOST_CHECK_EQUAL(oversized_1.EvaluateFee(1548031267), 1784758530396540);
+
+    // Test cases on the threshold where FeeFrac::EvaluateFee start using Mul/Div.
+    BOOST_CHECK_EQUAL(FeeFrac(0x1ffffffff, 123456789).EvaluateFee(98765432), 6871947728);
+    BOOST_CHECK_EQUAL(FeeFrac(0x200000000, 123456789).EvaluateFee(98765432), 6871947729);
+    BOOST_CHECK_EQUAL(FeeFrac(0x200000001, 123456789).EvaluateFee(98765432), 6871947730);
+
     // Tests paths that use double arithmetic
     FeeFrac busted{(static_cast<int64_t>(INT32_MAX)) + 1, INT32_MAX};
     BOOST_CHECK(!(busted < busted));
@@ -76,6 +107,13 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(!(max_fee > max_fee));
     BOOST_CHECK(max_fee <= max_fee);
     BOOST_CHECK(max_fee >= max_fee);
+
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFee(0), 0);
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFee(1), 977888);
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFee(2), 1955777);
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFee(3), 2933666);
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFee(1256796054), 1229006664189047);
+    BOOST_CHECK_EQUAL(max_fee.EvaluateFee(INT32_MAX), 2100000000000000);
 
     FeeFrac max_fee2{1, 1};
     BOOST_CHECK(max_fee >= max_fee2);

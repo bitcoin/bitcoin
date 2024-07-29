@@ -136,7 +136,7 @@ FUZZ_TARGET(feefrac_div_fallback)
     assert(Abs256(res) == quot_abs);
 
     // Compare approximately with floating-point.
-    long double expect = std::floorl(num_high * 4294967296.0L + num_low) / den;
+    long double expect = std::floor(num_high * 4294967296.0L + num_low) / den;
     // Expect to be accurate within 50 bits of precision, +- 1 sat.
     if (expect == 0.0L) {
         assert(res >= -1 && res <= 1);
@@ -173,7 +173,8 @@ FUZZ_TARGET(feefrac_mul_div)
 
     // If the result is not representable by an int64_t, bail out.
     if ((is_negative && quot_abs > MAX_ABS_INT64) || (!is_negative && quot_abs >= MAX_ABS_INT64)) {
-        // If 0 <= mul32 <= div, then the result is guaranteed to be representable.
+        // If 0 <= mul32 <= div, then the result is guaranteed to be representable. In the context
+        // of the Evaluate call below, this corresponds to 0 <= at_size <= feefrac.size.
         assert(mul32 < 0 || mul32 > div);
         return;
     }
@@ -188,7 +189,7 @@ FUZZ_TARGET(feefrac_mul_div)
     assert(res == res_fallback);
 
     // Compare approximately with floating-point.
-    long double expect = std::floorl(static_cast<long double>(mul32) * mul64 / div);
+    long double expect = std::floor(static_cast<long double>(mul32) * mul64 / div);
     // Expect to be accurate within 50 bits of precision, +- 1 sat.
     if (expect == 0.0L) {
         assert(res >= -1 && res <= 1);
@@ -198,5 +199,11 @@ FUZZ_TARGET(feefrac_mul_div)
     } else {
         assert(res >= expect * 1.000000000000001L - 1.0L);
         assert(res <= expect * 0.999999999999999L + 1.0L);
+    }
+
+    // Verify the behavior of FeeFrac::Evaluate.
+    if (mul32 >= 0) {
+        auto res_fee = FeeFrac{mul64, div}.EvaluateFee(mul32);
+        assert(res == res_fee);
     }
 }
