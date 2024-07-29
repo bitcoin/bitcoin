@@ -522,7 +522,6 @@ inspecting signatures in Mach-O binaries.")
         autoconf-2.71
         automake
         pkg-config
-        bison
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
@@ -537,7 +536,8 @@ inspecting signatures in Mach-O binaries.")
                  nss-certs
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (list gcc-toolchain-12 "static")
+           (list bison
+                 (list gcc-toolchain-12 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-18
