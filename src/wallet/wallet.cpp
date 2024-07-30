@@ -1260,7 +1260,13 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                             WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), conf->confirmed_block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
                             MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second);
                         } else {
-                            AbandonTransaction(range.first->second);
+                            std::vector<uint256> vHash;
+                            vHash.push_back(range.first->second);
+                            std::vector<uint256> vHashOut;
+
+                            if (ZapSelectTx(vHash, vHashOut) != DBErrors::LOAD_OK) {
+                                AbandonTransaction(range.first->second);
+                            }
                         }
                     }
                     range.first++;
