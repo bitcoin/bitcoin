@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <logging.h>
 #include <random.h>
+#include <util/strencodings.h>
 #include <util/trace.h>
 
 bool CCoinsView::GetCoin(const COutPoint& outpoint, Coin& coin) const { return false; }
@@ -113,6 +114,7 @@ void CCoinsViewCache::AddCoin(const COutPoint& outpoint, Coin&& coin, bool possi
     if (it->second.coin.out.IsStakedCommitment()) {
         GetStakedCommitments();
         cacheStakedCommitments.Add(it->second.coin.out.blsctData.rangeProof.Vs[0]);
+        LogPrint(BCLog::POPS, "%s: Adding staked commitment %s from height %d\n", __func__, HexStr(it->second.coin.out.blsctData.rangeProof.Vs[0].GetVch()), (uint32_t)it->second.coin.nHeight);
     }
 }
 
@@ -152,6 +154,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint& outpoint, Coin* moveout)
         *moveout = std::move(it->second.coin);
     }
     if (it->second.coin.out.IsStakedCommitment()) {
+        LogPrint(BCLog::POPS, "%s: Removing staked commitment %s at height %d\n", __func__, HexStr(it->second.coin.out.blsctData.rangeProof.Vs[0].GetVch()), (uint32_t)it->second.coin.nHeight);
         cacheStakedCommitments.Remove(it->second.coin.out.blsctData.rangeProof.Vs[0]);
     }
     if (it->second.flags & CCoinsCacheEntry::FRESH) {
@@ -277,7 +280,7 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlockIn
         }
     }
     hashBlock = hashBlockIn;
-    cacheStakedCommitments.Add(cacheStakedCommitmentsIn);
+    cacheStakedCommitments = cacheStakedCommitmentsIn;
     return true;
 }
 
