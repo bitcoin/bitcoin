@@ -555,6 +555,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-i2pacceptincoming", strprintf("Whether to accept inbound I2P connections (default: %i). Ignored if -i2psam is not set. Listening for inbound I2P connections is done through the SAM proxy, not by binding to a local address and port.", DEFAULT_I2P_ACCEPT_INCOMING), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-onlynet=<net>", "Make automatic outbound connections only to network <net> (" + Join(GetNetworkNames(), ", ") + "). Inbound and manual connections are not affected by this option. It can be specified multiple times to allow multiple networks.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-v2transport", strprintf("Support v2 transport (default: %u)", DEFAULT_V2_TRANSPORT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-v2onlyclearnet", strprintf("Ensure all outbound IPv4/IPv6 peers use encrypted network traffic (default: %u). Using this option requires -listen=0 and takes valuable listening capacity away from the network. Enable this option only if passive network observers like ISPs, firewalls, etc. pose a threat and unencrypted network traffic must be avoided. Note: Encryption protects message contents but does not obscure that you are running a Bitcoin node. Peers can still connect to you, observers can identify Bitcoin activity from connection attempts on the default port (8333) or from analysing Bitcoin network traffic patterns.", DEFAULT_V2_ONLY_CLEARNET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerbloomfilters", strprintf("Support filtering of blocks and transaction with bloom filters (default: %u)", DEFAULT_PEERBLOOMFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-peerblockfilters", strprintf("Serve compact block filters to peers per BIP 157 (default: %u)", DEFAULT_PEERBLOCKFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-txreconciliation", strprintf("Enable transaction reconciliations per BIP 330 (default: %d)", DEFAULT_TXRECONCILIATION_ENABLE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
@@ -964,6 +965,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Signal NODE_P2P_V2 if BIP324 v2 transport is enabled.
     if (args.GetBoolArg("-v2transport", DEFAULT_V2_TRANSPORT)) {
         g_local_services = ServiceFlags(g_local_services | NODE_P2P_V2);
+    } else if (args.GetBoolArg("-v2onlyclearnet", DEFAULT_V2_ONLY_CLEARNET)) {
+        return InitError(_("Cannot set -v2onlyclearnet to true when v2transport is disabled."));
     }
 
     // Signal NODE_COMPACT_FILTERS if peerblockfilters and basic filters index are both enabled.
@@ -997,6 +1000,12 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // if listen=0, then disallow listenonion=1
     if (!args.GetBoolArg("-listen", DEFAULT_LISTEN) && args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
         return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
+    }
+
+    if (args.GetBoolArg("-v2onlyclearnet", DEFAULT_V2_ONLY_CLEARNET)) {
+        if (args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+            return InitError(_("Cannot set -v2onlyclearnet=1 with listen=0. Current listen=1 provides valuable network capacity. Use -v2onlyclearnet only if you truly need encrypted-only outbound traffic."));
+        }
     }
 
     // Make sure enough file descriptors are available. We need to reserve enough FDs to account for the bare minimum,
@@ -2044,6 +2053,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.whitelist_forcerelay = args.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY);
     connOptions.whitelist_relay = args.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY);
     connOptions.m_capture_messages = args.GetBoolArg("-capturemessages", false);
+    connOptions.m_v2only_clearnet = args.GetBoolArg("-v2onlyclearnet", DEFAULT_V2_ONLY_CLEARNET);
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =
