@@ -199,14 +199,4 @@ public:
     static const uint256 ONE;
 };
 
-/* uint256 from std::string_view, containing byte-reversed hex encoding.
- * DEPRECATED. Unlike FromHex this accepts any invalid input, thus it is fragile and deprecated!
- */
-inline uint256 uint256S(std::string_view str)
-{
-    uint256 rv;
-    rv.SetHexDeprecated(str);
-    return rv;
-}
-
 #endif // BITCOIN_UINT256_H

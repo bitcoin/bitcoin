@@ -37,7 +37,6 @@ FUZZ_TARGET(hex)
     if (const auto result{uint256::FromUserHex(random_hex_string)}) {
         assert(uint256::FromHex(result->ToString()));
     }
-    (void)uint256S(random_hex_string);
     try {
         (void)HexToPubKey(random_hex_string);
     } catch (const UniValue&) {
