@@ -303,6 +303,18 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
         <translation type="unfinished">ismeretlen</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Beágyazva "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Alapértelmezett betűtípus "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Egyedi…</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Összeg</translation>
     </message>
@@ -1598,6 +1610,10 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
         <translation type="unfinished">Az alkalmazásból való kilépés helyett az eszköztárba kicsinyíti az alkalmazást az ablak bezárásakor. Ez esetben az alkalmazás csak a Kilépés menüponttal zárható be.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">A Főoldal fül betűtípusa:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Ebben az ablakban megadott beállítások felülbírálásra kerültek a parancssori kapcsolók által:</translation>
     </message>
@@ -2633,6 +2649,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Parancs végrehajtása tárca nélkül</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Node ablak - [%1]</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -4453,6 +4473,10 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">A %s elérési úton fájl nem létezik.</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Hiba tietokannan transaktion vahvistamisessa lompakon tapahtumien poistamiseksi.</translation>
+    </message>
+    <message>
         <source>Error creating %s</source>
         <translation type="unfinished">Hiba %s létrehozása közben</translation>
     </message>
@@ -4499,6 +4523,10 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Error reading next record from wallet database</source>
         <translation type="unfinished">A tárca-adatbázisból a következő rekord beolvasása sikertelen.</translation>
+    </message>
+    <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Hinta tietokannan transaktion aloittamisessa lompakon tapahtumien poistamiseksi.</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
@@ -4585,6 +4613,14 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">Hiba: Nem lehet írni a figyelő tárca legfelső blokkját megadó rekordot</translation>
     </message>
     <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Virhe: osoitekirjan kopioiminen epäonnistui lompakolle %s</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Virhe: tietokantatransaktiota ei voida suorittaa lompakolle %s</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Egyik hálózati portot sem sikerül figyelni. Használja a -listen=0 kapcsolót, ha ezt szeretné.</translation>
     </message>
@@ -4599,6 +4635,11 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Adatbázis ellenőrzése sikertelen</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished"> 
+Virhe tapahtuman poistamisessa: %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4821,6 +4862,10 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">Ez a tranzakció díja, amelyet kifizet, ha tranzakciót indít.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">tranzakció%s ei kuulu tähän lompakkoon.</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Tranzakció összege túl alacsony</translation>
     </message>
@@ -4927,6 +4972,10 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
         <translation type="unfinished">Hiba: Nem sikerült hozzáadni a megfigyelt %s tranzakciót a figyelő tárcához</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Virhe: Ei voitu poistaa vain seurantatapahtumia.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

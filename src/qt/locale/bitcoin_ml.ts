@@ -265,6 +265,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>QObject</name>
     <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">ഡിഫോൾട്ട് മൂല്യങ്ങളിലേക്ക് ക്രമീകരണം പുനഃസജ്ജമാക്കണോ അതോ മാറ്റങ്ങൾ വരുത്താതെ തന്നെ നിർത്തലാക്കണോ?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">ഒരു മാരകമായ പിശക് സംഭവിച്ചു. ക്രമീകരണ ഫയൽ എഴുതാനാവുന്നതാണോയെന്ന് പരിശോധിക്കുക അല്ലെങ്കിൽ ക്രമീകരണങ്ങളില്ലാതെ പ്രവർത്തിപ്പിക്കാൻ ശ്രമിക്കുക.</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">തെറ്റ് : %1 </translation>
     </message>
@@ -380,6 +390,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഒരു പുതിയ വാലറ്റ് സൃഷ്ടിക്കുക</translation>
     </message>
     <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished"> ഒപ്പം ചെറുതാക്കുക</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation type="unfinished">പണസഞ്ചി </translation>
     </message>
@@ -417,16 +431,44 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ഇഷ്‌ടമുള്ളത്‌ തിരഞ്ഞെടുക്കല്‍</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">വാലറ്റ് എൻക്രിപ്റ്റ് ചെയ്യുക…</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation type="unfinished">നിങ്ങളുടെ വാലറ്റിന്റെ സ്വകാര്യ കീകൾ എൻ‌ക്രിപ്റ്റ് ചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>&amp;Backup Wallet…</source>
+        <translation type="unfinished"> ബാക്കപ്പ് വാലറ്റും…</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">പാസ്ഫ്രെയ്സ് മാറ്റുക</translation>
+    </message>
+    <message>
+        <source>Sign &amp;message…</source>
+        <translation type="unfinished">ഒപ്പിടുക, സന്ദേശം നൽകുക</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
         <translation type="unfinished">നിങ്ങളുടെ ബിറ്റ്കോയിൻ വിലാസങ്ങൾ സ്വന്തമാണെന്ന് തെളിയിക്കാൻ സന്ദേശങ്ങൾ ഒപ്പിടുക</translation>
     </message>
     <message>
+        <source>&amp;Verify message…</source>
+        <translation type="unfinished">സന്ദേശം പരിശോധിക്കുക...</translation>
+    </message>
+    <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
         <translation type="unfinished">നിർദ്ദിഷ്ട ബിറ്റ്കോയിൻ വിലാസങ്ങളിൽ സന്ദേശങ്ങൾ ഒപ്പിട്ടിട്ടുണ്ടെന്ന് ഉറപ്പാക്കാൻ സ്ഥിരീകരിക്കുക</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file…</source>
+        <translation type="unfinished"> തുറന്ന് URL</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">വാലറ്റ് അടയ്ക്കുക</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -443,6 +485,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">ടാബുകളുടെ ടൂൾബാർ</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished"> നെറ്റ്‌വർക്കുമായി സമന്വയിപ്പിക്കുന്നു...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -532,6 +578,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലറ്റ് പൂട്ടുക </translation>
     </message>
     <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">ഒരു ബാക്കപ്പ് ഫയലിൽ നിന്ന് ഒരു വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
+    </message>
+    <message>
         <source>Close all wallets</source>
         <translation type="unfinished">എല്ലാ വാലറ്റുകളും അടയ്‌ക്കുക ...</translation>
     </message>
@@ -554,6 +605,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">വാലറ്റ് ഒന്നും ലഭ്യം അല്ല </translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">വാലറ്റ് ബാക്കപ്പ് ലോഡ് ചെയ്യുക</translation>
     </message>
     <message>
         <source>Restore Wallet</source>
@@ -588,6 +644,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">പുതിയ വാലറ്റ് സൃഷ്ടിക്കാൻ കഴിയില്ല, സ്‌ക്ലൈറ്റ്
+പിന്തുണയില്ലാതെ സോഫ്‌റ്റ്‌വെയർ കംപൈൽ ചെയ്‌തു (ഡിസ്‌ക്രിപ്‌റ്റർ വാലറ്റുകൾക്ക് ആവശ്യമാണ്)</translation>
     </message>
     <message>
         <source>Error: %1</source>

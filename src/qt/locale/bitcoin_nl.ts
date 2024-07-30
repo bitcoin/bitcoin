@@ -299,6 +299,18 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">onbekend</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Ingebed "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Standaard systeemlettertype "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Aangepast...</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Bedrag</translation>
     </message>
@@ -1556,6 +1568,10 @@ Het migratieproces maakt voorafgaand aan het migreren een backup van de wallet. 
         <translation type="unfinished">Minimaliseren in plaats van de applicatie af te sluiten wanneer het venster is afgesloten. Als deze optie is ingeschakeld, zal de toepassing pas worden afgesloten na het selecteren van Exit in het menu.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Lettertype in het Overzicht tab:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Gekozen opties in dit dialoogvenster worden overschreven door de command line:</translation>
     </message>
@@ -2541,6 +2557,10 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21-compatib
     <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Uitvoeren van commando zonder gebruik van een wallet</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Nodevenster - [%1]</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -4278,6 +4298,10 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Dumpbestand %s bestaat niet.</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Fout bij db txn verwerking voor verwijderen wallet transacties</translation>
+    </message>
+    <message>
         <source>Error creating %s</source>
         <translation type="unfinished">Fout bij het maken van %s</translation>
     </message>
@@ -4324,6 +4348,10 @@ Kan mislukte migratie niet opschonen</translation>
     <message>
         <source>Error reading next record from wallet database</source>
         <translation type="unfinished">Fout bij het lezen van het volgende record in de walletdatabase</translation>
+    </message>
+    <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Fout bij starten db txn voor verwijderen wallet transacties</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
@@ -4410,6 +4438,14 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Fout: Kan beste block locatie aanduiding niet opslaan in alleen lezen wallet</translation>
     </message>
     <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Fout: Kopiëren adresboek mislukt voor wallet %s</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Fout: Kan databasetransactie niet uitvoeren voor wallet %s</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Mislukt om op welke poort dan ook te luisteren. Gebruik -listen=0 as u dit wilt.</translation>
     </message>
@@ -4424,6 +4460,10 @@ Kan mislukte migratie niet opschonen</translation>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Mislukt om de databank te controleren</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Verwijderen transactie mislukt: %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4646,6 +4686,10 @@ Kan mislukte migratie niet opschonen</translation>
         <translation type="unfinished">Dit is de transactievergoeding dat je betaalt wanneer je een transactie verstuurt.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">Transactie %s behoort niet tot deze wallet</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Transactiebedrag te klein</translation>
     </message>
@@ -4752,6 +4796,10 @@ Kan mislukte migratie niet opschonen</translation>
     <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
         <translation type="unfinished">Fout: Kon alleen lezen tx %s niet toevoegen aan alleen lezen wallet</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Fout: Kon alleen-lezen transacties niet verwijderen</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

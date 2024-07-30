@@ -181,6 +181,10 @@
         <translation type="unfinished">Net-virksemi óvirkijað.</translation>
     </message>
     <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">&amp;Móttak</translation>
+    </message>
+    <message>
         <source>Sign &amp;message…</source>
         <translation type="unfinished">&amp;Undirrita  boð</translation>
     </message>

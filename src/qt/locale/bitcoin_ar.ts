@@ -2,34 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Right-click to edit address or label</source>
-        <translation type="unfinished">انقر بالزر الايمن لتعديل العنوان</translation>
-    </message>
-    <message>
-        <source>Create a new address</source>
-        <translation type="unfinished">أنشئ عنوان جديد</translation>
-    </message>
-    <message>
-        <source>&amp;New</source>
-        <translation type="unfinished">&amp;جديد</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">‫انسخ العنوان المحدد للحافظة‬</translation>
-    </message>
-    <message>
-        <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;نسخ</translation>
-    </message>
-    <message>
-        <source>C&amp;lose</source>
-        <translation type="unfinished">ا&amp;غلاق</translation>
-    </message>
-    <message>
-        <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">احذف العنوان المحدد من القائمة</translation>
-    </message>
-    <message>
         <source>Enter address or label to search</source>
         <translation type="unfinished">أدخل عنوانا أو مذكرة للبحث</translation>
     </message>
@@ -42,62 +14,10 @@
         <translation type="unfinished">&amp;تصدير</translation>
     </message>
     <message>
-        <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;حذف</translation>
-    </message>
-    <message>
-        <source>Choose the address to send coins to</source>
-        <translation type="unfinished">اختر العنوان الذي ترغب بارسال بتكوين اليه</translation>
-    </message>
-    <message>
         <source>Choose the address to receive coins with</source>
         <translation type="unfinished">اختر العنوان الذي ترغب باستلام بتكوين اليه</translation>
     </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation type="unfinished">ا&amp;ختر</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">‫هذه عناوين البتكوين الخاصة بك لإرسال المدفوعات. تأكد دائما من القيم المدخلة ومن العنوان المستلم قبل الارسال.‬</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
-Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">هذه عناوين البتكوين الخاصة بك لاستلام المدفوعات. قم بالنقر على زر انشاء عنوان استلام جديد لإنشاء عناوين جديدة.
-التوقيع ممكن باستخدام العناوين القديمة "Legacy" فقط.</translation>
-    </message>
-    <message>
-        <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;نسخ العنوان</translation>
-    </message>
-    <message>
-        <source>Copy &amp;Label</source>
-        <translation type="unfinished">نسخ &amp;المذكرة</translation>
-    </message>
-    <message>
-        <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;تحرير</translation>
-    </message>
-    <message>
-        <source>Export Address List</source>
-        <translation type="unfinished">تصدير قائمة العناوين</translation>
-    </message>
-    <message>
-        <source>Comma separated file</source>
-        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
-        <translation type="unfinished">ملف القيم المفصولة بفاصلة</translation>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
-        <translation type="unfinished">حدث خطأ أثناء محاولة حفظ قائمة العناوين في %1. يرجى معاودة المحاولة. </translation>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation type="unfinished">فشل التصدير</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -1637,11 +1557,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
         <translation type="unfinished">‫تفعيل التحكم ب &amp;المعاملات الموقعة جزئيا‬</translation>
-    </message>
-    <message>
-        <source>Whether to show PSBT controls.</source>
-        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">‫خيار عرض التحكم بالمعاملات الموقعة جزئيا.‬</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>

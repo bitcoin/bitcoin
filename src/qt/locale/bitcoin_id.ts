@@ -259,6 +259,18 @@ Tanda tangan hanya bisa digunakan dengan tipe alamat 'warisan'</translation>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation type="unfinished">Error yang fatal telah terjadi. Periksa bahwa file pengaturan dapat ditulis atau coba jalankan dengan -nosettings</translation>
     </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Di embed "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Font bawaan sistem "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Pilihan...</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -551,6 +563,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
     <message>
         <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
         <translation type="unfinished">Skrip hanya lihat telah dimigrasikan ke dompet yang baru '%1'.</translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Skrip hanya lihat telah diimigrasikan ke dompet baru yang bernama '%1'.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -974,6 +990,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <translation type="unfinished">Minimalisasi aplikasi ketika jendela ditutup. Ketika pilihan ini dipilih, aplikasi akan menutup seluruhnya jika anda memilih Keluar di menu yang tersedia.</translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Font pada tab Overview:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Set opsi pengaturan pada jendela dialog ini tertutup oleh baris perintah:</translation>
     </message>
@@ -1112,6 +1132,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <source>PSBT Operations</source>
         <translation type="unfinished">Operasi PBST</translation>
     </message>
+    <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Mengirim %1 ke %2</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -1244,6 +1268,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <translation type="unfinished">Salin Perubahan</translation>
     </message>
     <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 dari dompet '%2'</translation>
+    </message>
+    <message>
         <source>Unsigned Transaction</source>
         <comment>PSBT copied</comment>
         <extracomment>Caption of "PSBT has been copied" messagebox</extracomment>
@@ -1285,6 +1313,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <translation type="unfinished">
             <numerusform>matures in %n more block(s)</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (Sertifikat tidak terverifikasi)</translation>
     </message>
     </context>
 <context>
@@ -1507,8 +1539,16 @@ Tidak dapat memulihkan cadangan dompet..</translation>
         <translation type="unfinished">Verifikasi Blok terganggu</translation>
     </message>
     <message>
+        <source>Error committing db txn for wallet transactions removal</source>
+        <translation type="unfinished">Kesalahan dalam melakukan db txn untuk penghapusan transaksi dompet</translation>
+    </message>
+    <message>
         <source>Error reading configuration file: %s</source>
         <translation type="unfinished">Kesalahan membaca file konfigurasi: %s</translation>
+    </message>
+    <message>
+        <source>Error starting db txn for wallet transactions removal</source>
+        <translation type="unfinished">Kesalahan memulai db txn untuk penghapusan transaksi dompet</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
@@ -1539,12 +1579,36 @@ Tidak dapat memulihkan cadangan dompet..</translation>
         <translation type="unfinished">Kesalahan: Tidak dapat membaca semua catatan dalam database</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Kesalahan: Tidak dapat membaca catatan pencari blok terbaik dompet</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Kesalahan: Tidak dapat menghapus data buku alamat yang hanya dilihat</translation>
     </message>
     <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Kesalahan: Tidak dapat menulis catatan pencari blok terbaik dompet solvable</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Kesalahan: Tidak dapat menulis catatan pencari blok terbaik dompet watchonly</translation>
+    </message>
+    <message>
+        <source>Error: address book copy failed for wallet %s</source>
+        <translation type="unfinished">Kesalahan: penyalinan daftar kontak gagal untuk dompet %s</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Kesalahan: database transaksi tidak dapat dilakukan untuk dompet %s</translation>
+    </message>
+    <message>
         <source>Failed to start indexes, shutting down..</source>
         <translation type="unfinished">Gagal memulai indeks, mematikan..</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Gagal menghapus transaksi: %s</translation>
     </message>
     <message>
         <source>Insufficient dbcache for block verification</source>
@@ -1583,6 +1647,10 @@ Tidak dapat memulihkan cadangan dompet..</translation>
         <translation type="unfinished">Direktori data yang ditentukan "%s" tidak ada.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">Transaksi %s tidak termasuk dompet ini</translation>
+    </message>
+    <message>
         <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
         <translation type="unfinished">Tidak dapat mengalokasikan memori untuk -maxsigcachesize: '%s' MiB</translation>
     </message>
@@ -1599,8 +1667,20 @@ Tidak dapat memulihkan cadangan dompet..</translation>
         <translation type="unfinished">Tingkat penebangan global yang tidak didukung %s = %s. Nilai yang valid: %s.</translation>
     </message>
     <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Pembuatan berkas dompet gagal: %s</translation>
+    </message>
+    <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
         <translation type="unfinished">menerima estimasi biaya basi tidak didukung pada %s rantai.</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Kesalahan: Tidak mampu menambahkan watchonly tx %s ke dompet watchonly</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Kesalahan: Tidak mampu menghapus transaksi watchonly.</translation>
     </message>
     </context>
 </TS>

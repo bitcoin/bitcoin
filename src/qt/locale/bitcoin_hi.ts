@@ -533,6 +533,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">बटवा निर्माण में गलती</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">त्रुटि: %1</translation>
     </message>
@@ -682,6 +686,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>MigrateWalletActivity</name>
     <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">वॉलेट माइग्रेट करें</translation>
+    </message>
+    <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">वॉलेट माइग्रेट करें</translation>
     </message>
@@ -694,6 +702,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">माइग्रेशन हो गया</translation>
     </message>
 </context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">आपके नए बटवे के निर्माण से आप सिर्फ एक कदम दूर है</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message numerus="yes">

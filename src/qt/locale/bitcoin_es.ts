@@ -520,7 +520,7 @@ Solo es posible firmar con direcciones de tipo "legacy".</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Firmar mensajes con tus direcciones Bitcoin para probar la propiedad</translation>
+        <translation type="unfinished">Firmar mensajes con tus direcciones de Bitcoin para probar la propiedad</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
@@ -1252,7 +1252,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Compilado sin soporte de firma externa (necesario para la firma externa)</translation>
+        <translation type="unfinished">Compilado sin compatibilidad con firma externa (se requiere para la firma externa)</translation>
     </message>
 </context>
 <context>
@@ -1562,7 +1562,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished">Dirección IP del proxy (por ejemplo, IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation type="unfinished">Dirección IP del proxy (p. ej., IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1570,7 +1570,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation type="unfinished">Minimizar en vez de salir de la aplicación cuando la ventana está cerrada. Cuando se activa esta opción, la aplicación sólo se cerrará después de seleccionar "Salir" en el menú.</translation>
+        <translation type="unfinished">Minimizar en vez de salir de la aplicación cuando la ventana esté cerrada. Cuando se activa esta opción, la aplicación solo se cerrará después de seleccionar "Salir" en el menú.</translation>
     </message>
     <message>
         <source>Font in the Overview tab: </source>
@@ -1611,7 +1611,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     <message>
         <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
         <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Tamaño máximo de la caché de la base de datos. Una caché más grande puede contribuir a una sincronización más rápida, después de lo cual el beneficio es menos pronunciado para la mayoría de los casos de uso. Disminuir el tamaño de la caché reducirá el uso de la memoria. La memoria mempool no utilizada se comparte para esta caché.</translation>
+        <translation type="unfinished">Tamaño máximo de la caché de la base de datos. Una caché más grande puede contribuir a una sincronización más rápida, después de lo cual el beneficio es menos pronunciado para la mayoría de los casos de uso. Disminuir el tamaño de la caché reducirá el uso de la memoria. La memoria del mempool no utilizada se comparte para esta caché.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
@@ -1665,12 +1665,12 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">Activar controles &amp;TBPF</translation>
+        <translation type="unfinished">Activar controles de &amp;TBPF</translation>
     </message>
     <message>
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">Establecer si se muestran los controles TBPF</translation>
+        <translation type="unfinished">Establecer si se muestran los controles de TBPF</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -1774,7 +1774,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     </message>
     <message>
         <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished">URL de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como elementos del menú contextual. %s en la URL se sustituye por el hash de la transacción. Las URL múltiples se separan con una barra vertical |.</translation>
+        <translation type="unfinished">URL de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como elementos del menú contextual. %s en la URL se sustituye por el hash de la transacción. Las URL múltiples se separan con una barra vertical (|).</translation>
     </message>
     <message>
         <source>&amp;Third-party transaction URLs</source>
@@ -1803,7 +1803,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Compilado sin soporte de firma externa (requerido para la firma externa)</translation>
+        <translation type="unfinished">Compilado sin compatibilidad con firma externa (se requiere para la firma externa)</translation>
     </message>
     <message>
         <source>default</source>
@@ -1903,7 +1903,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     </message>
     <message>
         <source>Immature:</source>
-        <translation type="unfinished">Inmadura:</translation>
+        <translation type="unfinished">Inmaduro:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
@@ -1950,7 +1950,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     <name>PSBTOperationsDialog</name>
     <message>
         <source>PSBT Operations</source>
-        <translation type="unfinished">Operaciones TBPF</translation>
+        <translation type="unfinished">Operaciones de TBPF</translation>
     </message>
     <message>
         <source>Sign Tx</source>
@@ -2063,7 +2063,7 @@ El proceso de migración creará una copia de seguridad del monedero antes de mi
     </message>
     <message>
         <source>(But no wallet is loaded.)</source>
-        <translation type="unfinished">(No existe ningún monedero cargado).</translation>
+        <translation type="unfinished">(No hay ningún monedero cargado).</translation>
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
@@ -2114,7 +2114,7 @@ Si recibes este error, debes solicitar al comerciante que te proporcione un URI 
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished">Gestión del archivo de solicitud de pago</translation>
+        <translation type="unfinished">Gestión de archivos de solicitud de pago</translation>
     </message>
 </context>
 <context>
