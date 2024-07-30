@@ -560,10 +560,10 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
         }
         assert(combined == todo);
 
-        // Verify the expected properties of LinearizationChunking::Intersect:
-        auto intersect = chunking.Intersect(subset);
+        // Verify the expected properties of LinearizationChunking::IntersectPrefixes:
+        auto intersect = chunking.IntersectPrefixes(subset);
         // - Intersecting again doesn't change the result.
-        assert(chunking.Intersect(intersect) == intersect);
+        assert(chunking.IntersectPrefixes(intersect) == intersect);
         // - The intersection is topological.
         TestBitSet intersect_anc;
         for (auto idx : intersect.transactions) {

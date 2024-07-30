@@ -333,12 +333,12 @@ public:
      *  of the linearization that has a feerate not below subset's.
      *
      * This is a crucial operation in guaranteeing improvements to linearizations. If subset has
-     * a feerate not below GetChunk(0)'s, then moving Intersect(subset) to the front of (what
-     * remains of) the linearization is guaranteed not to make it worse at any point.
+     * a feerate not below GetChunk(0)'s, then moving IntersectPrefixes(subset) to the front of
+     * (what remains of) the linearization is guaranteed not to make it worse at any point.
      *
      * See https://delvingbitcoin.org/t/introduction-to-cluster-linearization/1032 for background.
      */
-    SetInfo<SetType> Intersect(const SetInfo<SetType>& subset) const noexcept
+    SetInfo<SetType> IntersectPrefixes(const SetInfo<SetType>& subset) const noexcept
     {
         Assume(subset.transactions.IsSubsetOf(m_todo));
         SetInfo<SetType> accumulator;
@@ -719,7 +719,7 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
             // sure we don't pick something that makes us unable to reach further diagram points
             // of the old linearization.
             if (old_chunking.NumChunksLeft() > 0) {
-                best = old_chunking.Intersect(best);
+                best = old_chunking.IntersectPrefixes(best);
             }
         }
 
