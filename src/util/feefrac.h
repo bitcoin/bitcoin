@@ -47,14 +47,15 @@ struct FeeFrac
         return {high + (low >> 32), static_cast<uint32_t>(low)};
     }
 
-    /** Helper function for 96/32 signed division, rounding towards negative infinity. This is a
-     *  fallback version, separate so it can be tested on platforms where it isn't actually needed.
+    /** Helper function for 96/32 signed division, rounding towards negative infinity (if
+     *  round_down) or positive infinity (if !round_down). This is a fallback version, separate so
+     *  that it can be tested on platforms where it isn't actually needed.
      *
      * The exact behavior with negative n does not really matter, but this implementation chooses
-     * to always round down, for consistency and testability.
+     * to be consistent for testability reasons.
      *
      * The result must fit in an int64_t, and d must be strictly positive. */
-    static inline int64_t DivFallback(std::pair<int64_t, uint32_t> n, int32_t d) noexcept
+    static inline int64_t DivFallback(std::pair<int64_t, uint32_t> n, int32_t d, bool round_down) noexcept
     {
         Assume(d > 0);
         // Compute quot_high = n.first / d, so the result becomes
@@ -64,11 +65,13 @@ struct FeeFrac
         // Evaluate the parenthesized expression above, so the result becomes
         // n_low / d + (quot_high * 2**32)
         int64_t n_low = ((n.first % d) << 32) + n.second;
-        // Evaluate the division so the result becomes quot_low + quot_high * 2**32. We need this
-        // division to round down however, while the / operator rounds towards zero. In case n_low
-        // is negative and not a multiple of size, we thus need a correction.
+        // Evaluate the division so the result becomes quot_low + quot_high * 2**32. It is possible
+        // that the / operator here rounds in the wrong direction (if n_low is not a multiple of
+        // size, and is (if round_down) negative, or (if !round_down) positive). If so, make a
+        // correction.
         int64_t quot_low = n_low / d;
-        quot_low -= (n_low % d) < 0;
+        int32_t mod_low = n_low % d;
+        quot_low += (mod_low > 0) - (mod_low && round_down);
         // Combine and return the result
         return (quot_high << 32) + quot_low;
     }
@@ -81,17 +84,19 @@ struct FeeFrac
         return __int128{a} * b;
     }
 
-    /** Helper function for 96/32 signed division, rounding towards negative infinity. This is a
+    /** Helper function for 96/32 signed division, rounding towards negative infinity (if
+     *  round_down), or towards positive infinity (if !round_down). This is a
      *  version relying on __int128.
      *
      * The result must fit in an int64_t, and d must be strictly positive. */
-    static inline int64_t Div(__int128 n, int32_t d) noexcept
+    static inline int64_t Div(__int128 n, int32_t d, bool round_down) noexcept
     {
         Assume(d > 0);
         // Compute the division.
         int64_t quot = n / d;
-        // Make it round down.
-        return quot - ((n % d) < 0);
+        int32_t mod = n % d;
+        // Correct result if the / operator above rounded in the wrong direction.
+        return quot + (mod > 0) - (mod && round_down);
     }
 #else
     static constexpr auto Mul = MulFallback;
@@ -186,23 +191,35 @@ struct FeeFrac
     /** Compute the fee for a given size `at_size` using this object's feerate.
      *
      * This effectively corresponds to evaluating (this->fee * at_size) / this->size, with the
-     * result rounded down (even for negative feerates).
+     * result rounded towards negative infinity (if RoundDown) or towards positive infinity
+     * (if !RoundDown).
      *
      * Requires this->size > 0, at_size >= 0, and that the correct result fits in a int64_t. This
      * is guaranteed to be the case when 0 <= at_size <= this->size.
      */
+    template<bool RoundDown>
     int64_t EvaluateFee(int32_t at_size) const noexcept
     {
         Assume(size > 0);
         Assume(at_size >= 0);
         if (fee >= 0 && fee < 0x200000000) [[likely]] {
             // Common case where (this->fee * at_size) is guaranteed to fit in a uint64_t.
-            return (uint64_t(fee) * at_size) / uint32_t(size);
+            if constexpr (RoundDown) {
+                return (uint64_t(fee) * at_size) / uint32_t(size);
+            } else {
+                return (uint64_t(fee) * at_size + size - 1U) / uint32_t(size);
+            }
         } else {
             // Otherwise, use Mul and Div.
-            return Div(Mul(fee, at_size), size);
+            return Div(Mul(fee, at_size), size, RoundDown);
         }
     }
+
+public:
+    /** Compute the fee for a given size `at_size` using this object's feerate, rounding down. */
+    int64_t EvaluateFeeDown(int32_t at_size) const noexcept { return EvaluateFee<true>(at_size); }
+    /** Compute the fee for a given size `at_size` using this object's feerate, rounding up. */
+    int64_t EvaluateFeeUp(int32_t at_size) const noexcept { return EvaluateFee<false>(at_size); }
 };
 
 /** Compare the feerate diagrams implied by the provided sorted chunks data.
