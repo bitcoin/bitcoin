@@ -50,17 +50,11 @@ darwin_STRIP=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-strip")
 #         Disable adhoc codesigning (for now) when using LLVM tooling, to avoid
 #         non-determinism issues with the Identifier field.
 
-darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
-              -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
-              -u LIBRARY_PATH \
-              $(clang_prog) --target=$(host) \
+darwin_CC=$(clang_prog) --target=$(host) \
               -isysroot$(OSX_SDK) -nostdlibinc \
               -iwithsysroot/usr/include -iframeworkwithsysroot/System/Library/Frameworks
 
-darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
-               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
-               -u LIBRARY_PATH \
-               $(clangxx_prog) --target=$(host) \
+darwin_CXX=$(clangxx_prog) --target=$(host) \
                -isysroot$(OSX_SDK) -nostdlibinc \
                -iwithsysroot/usr/include/c++/v1 \
                -iwithsysroot/usr/include -iframeworkwithsysroot/System/Library/Frameworks

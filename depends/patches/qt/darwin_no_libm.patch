@@ -1,0 +1,17 @@
+build: remove explicit -lm link from qttools
+    
+This causes issues with at least the macOS cross build, and shouldn't
+actually be required anywhere else. GCC with libstdc++ will already get libm.
+
+--- a/qtbase/src/corelib/tools/tools.pri
++++ b/qtbase/src/corelib/tools/tools.pri
+@@ -111,9 +111,6 @@ qtConfig(easingcurve) {
+         tools/qtimeline.cpp
+ }
+ 
+-# Note: libm should be present by default becaue this is C++
+-unix:!macx-icc:!vxworks:!haiku:!integrity:!wasm: LIBS_PRIVATE += -lm
+-
+ TR_EXCLUDE += ../3rdparty/*
+ 
+ # MIPS DSP
