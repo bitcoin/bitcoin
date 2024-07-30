@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@
 #include <node/database_args.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <util/string.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
@@ -27,7 +28,7 @@ constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 
 template <typename... Args>
-void BaseIndex::FatalErrorf(const char* fmt, const Args&... args)
+void BaseIndex::FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     auto message = tfm::format(fmt, args...);
     node::AbortNode(m_chain->context()->shutdown, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
+#include <util/string.h>
 #include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
@@ -94,7 +95,7 @@ private:
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
-    void FatalErrorf(const char* fmt, const Args&... args);
+    void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
