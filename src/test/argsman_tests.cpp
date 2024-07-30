@@ -24,6 +24,313 @@ using util::ToString;
 
 BOOST_FIXTURE_TEST_SUITE(argsman_tests, BasicTestingSetup)
 
+//! Example code showing how to declare and parse options using ArgsManager flags.
+namespace example_options {
+struct Address {
+    std::string host;
+    uint16_t port;
+};
+
+struct RescanOptions {
+    std::optional<int> start_height;
+};
+
+struct Options {
+    //! Whether to use UPnP to map the listening port.
+    //! Example of a boolean option defaulting to false.
+    bool enable_upnp{false};
+
+    //! Whether to listen for RPC commands.
+    //! Example of a boolean option defaulting to true.
+    bool enable_rpc_server{true};
+
+    //! Whether to look for peers with DNS lookup.
+    //! Example of a boolean option without a default value. (If unspecified,
+    //! default behavior depends on other options.)
+    std::optional<bool> enable_dns_seed;
+
+    //! Amount of time to ban peers
+    //! Example of a simple integer setting.
+    std::chrono::seconds bantime{86400};
+
+    //! Equivalent bytes per sigop.
+    //! Example of where negation should be disallowed.
+    int bytes_per_sigop{20};
+
+    //! Hash of block to assume valid and skip script verification.
+    //! Example of a simple string option.
+    std::optional<uint256> assumevalid;
+
+    //! Path to log file
+    //! Example of a simple string option with a default value.
+    fs::path log_file{"debug.log"};
+
+    //! Chain name.
+    //! Example of a simple string option that cannot be negated
+    ChainType chain{ChainType::MAIN};
+
+    //! Paths of block files to load before starting.
+    //! Example of a simple string list setting.
+    std::vector<fs::path> load_block;
+
+    //! Addresses to listen on.
+    //! Example of a list setting where negating the setting is different than
+    //! not specifying it.
+    std::optional<std::vector<Address>> listen_addresses;
+};
+
+void RegisterArgs(ArgsManager& args)
+{
+    args.AddArg("-upnp", "",          ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-rpcserver", "",     ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-dnsseed", "",       ArgsManager::ALLOW_BOOL, {});
+    args.AddArg("-bantime", "",       ArgsManager::ALLOW_INT, {});
+    args.AddArg("-bytespersigop", "", ArgsManager::ALLOW_INT | ArgsManager::DISALLOW_NEGATION, {});
+    args.AddArg("-assumevalid", "",   ArgsManager::ALLOW_STRING, {});
+    args.AddArg("-logfile", "",       ArgsManager::ALLOW_STRING, {});
+    args.AddArg("-chain", "",         ArgsManager::ALLOW_STRING | ArgsManager::DISALLOW_NEGATION, {});
+    args.AddArg("-loadblock", "",     ArgsManager::ALLOW_STRING | ArgsManager::ALLOW_LIST, {});
+    args.AddArg("-listen", "",        ArgsManager::ALLOW_STRING | ArgsManager::ALLOW_LIST, {});
+}
+
+void ReadOptions(const ArgsManager& args, Options& options)
+{
+    if (auto value = args.GetBoolArg("-upnp")) options.enable_upnp = *value;
+
+    if (auto value = args.GetBoolArg("-rpcserver")) options.enable_rpc_server = *value;
+
+    if (auto value = args.GetBoolArg("-dnsseed")) options.enable_dns_seed = *value;
+
+    if (auto value = args.GetIntArg("-bantime")) {
+        if (*value < 0) throw std::runtime_error(strprintf("-bantime value %i is negative", *value));
+        options.bantime = std::chrono::seconds{*value};
+    }
+
+    if (auto value = args.GetIntArg("-bytespersigop")) {
+        if (*value < 1) throw std::runtime_error(strprintf("-bytespersigop value %i is less than 1", *value));
+        options.bytes_per_sigop = *value;
+    }
+
+    if (auto value = args.GetArg("-assumevalid"); value && !value->empty()) {
+        if (auto hash{uint256::FromHex(*value)}) {
+            options.assumevalid = *hash;
+        } else {
+            throw std::runtime_error(strprintf("-assumevalid value '%s' is not a valid hash", *value));
+        }
+    }
+
+    if (auto value = args.GetArg("-logfile")) {
+        options.log_file = fs::PathFromString(*value);
+    }
+
+    if (auto value = args.GetArg("-chain")) {
+        if (auto chain_type{ChainTypeFromString(*value)}) {
+           options.chain = *chain_type;
+        } else {
+            throw std::runtime_error(strprintf("Invalid chain type '%s'", *value));
+        }
+    }
+
+    for (const std::string& value : args.GetArgs("-loadblock")) {
+        if (value.empty()) throw std::runtime_error(strprintf("-loadblock value '%s' is not a valid file path", value));
+        options.load_block.push_back(fs::PathFromString(value));
+    }
+
+    if (args.IsArgNegated("-listen")) {
+        // If -nolisten was passed, disable listening by assigning an empty list
+        // of listening addresses.
+        options.listen_addresses.emplace();
+    } else if (auto addresses{args.GetArgs("-listen")}; !addresses.empty()) {
+        // If -listen=<addresses> options were passed, explicitly add these as
+        // listening addresses, otherwise leave listening option unset to enable
+        // default listening behavior.
+        options.listen_addresses.emplace();
+        for (const std::string& value : addresses) {
+            Address addr{"", 8333};
+            if (!SplitHostPort(value, addr.port, addr.host) || addr.host.empty()) {
+                throw std::runtime_error(strprintf("-listen address '%s' is not a valid host[:port]", value));
+            }
+            options.listen_addresses->emplace_back(std::move(addr));
+        }
+    }
+}
+
+//! Return Options::load_block as a human readable string for easier testing.
+std::string LoadBlockStr(const Options& options)
+{
+    std::string ret;
+    for (const auto& block : options.load_block) {
+        if (!ret.empty()) ret += " ";
+        ret += fs::PathToString(block);
+    }
+    return ret;
+}
+
+//! Return Options::listen_addresses as a human readable string for easier
+//! testing.
+std::string ListenStr(const Options& options)
+{
+    if (!options.listen_addresses) {
+        // Default listening behavior in this example is just to listen on port
+        // 8333. In reality, it could be arbitrarily complicated and depend on
+        // other settings.
+        return "0.0.0.0:8333";
+    } else {
+        std::string ret;
+        for (const auto& addr : *options.listen_addresses) {
+            if (!ret.empty()) ret += " ";
+            ret += strprintf("%s:%d", addr.host, addr.port);
+        }
+        return ret;
+    }
+}
+
+struct TestSetup : public BasicTestingSetup
+{
+    Options ParseOptions(const std::vector<std::string>& opts)
+    {
+        ArgsManager args;
+        RegisterArgs(args);
+        std::vector<const char*> argv{"ignored"};
+        for (const auto& opt : opts) {
+            argv.push_back(opt.c_str());
+        }
+        std::string error;
+        if (!args.ParseParameters(argv.size(), argv.data(), error)) {
+            throw std::runtime_error(error);
+        }
+        BOOST_CHECK_EQUAL(error, "");
+        Options options;
+        ReadOptions(args, options);
+        return options;
+    }
+};
+} // namespace example_options
+
+BOOST_FIXTURE_TEST_CASE(ExampleOptions, example_options::TestSetup)
+{
+    // Check default upnp value is false
+    BOOST_CHECK_EQUAL(ParseOptions({}).enable_upnp, false);
+    // Check passing -upnp makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-upnp"}).enable_upnp, true);
+    // Check passing -upnp=1 makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-upnp=1"}).enable_upnp, true);
+    // Check adding -upnp= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-upnp=1", "-upnp="}).enable_upnp, false);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-upnp=yes"}), std::exception, HasReason{"Cannot set -upnp value to 'yes'. It must be set to 0 or 1."});
+
+    // Check default rpcserver value is true.
+    BOOST_CHECK_EQUAL(ParseOptions({}).enable_rpc_server, true);
+    // Check passing -norpcserver makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-norpcserver"}).enable_rpc_server, false);
+    // Check passing -rpcserver=0 makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rpcserver=0"}).enable_rpc_server, false);
+    // Check adding -rpcserver= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-rpcserver=0", "-rpcserver="}).enable_rpc_server, true);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-rpcserver=yes"}), std::exception, HasReason{"Cannot set -rpcserver value to 'yes'. It must be set to 0 or 1."});
+
+    // Check default dnsseed value is unset.
+    BOOST_CHECK_EQUAL(ParseOptions({}).enable_dns_seed, std::nullopt);
+    // Check passing -dnsseed makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed"}).enable_dns_seed, true);
+    // Check passing -dnsseed=1 makes it true.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed=1"}).enable_dns_seed, true);
+    // Check passing -nodnsseed makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-nodnsseed"}).enable_dns_seed, false);
+    // Check passing -dnsseed=0 makes it false.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed=0"}).enable_dns_seed, false);
+    // Check adding -dnsseed= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-dnsseed=1", "-dnsseed="}).enable_dns_seed, std::nullopt);
+    // Check passing invalid value.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-dnsseed=yes"}), std::exception, HasReason{"Cannot set -dnsseed value to 'yes'. It must be set to 0 or 1."});
+
+    // Check default bantime value is unset.
+    BOOST_CHECK_EQUAL(ParseOptions({}).bantime.count(), 86400);
+    // Check passing -bantime=3600 overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bantime=3600"}).bantime.count(), 3600);
+    // Check passing -nobantime makes it 0.
+    BOOST_CHECK_EQUAL(ParseOptions({"-nobantime"}).bantime.count(), 0);
+    // Check passing -bantime=0 makes it 0.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bantime=0"}).bantime.count(), 0);
+    // Check adding -bantime= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bantime=3600", "-bantime="}).bantime.count(), 86400);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bantime"}), std::exception, HasReason{"Cannot set -bantime with no value. Please specify value with -bantime=value. It must be set to an integer."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bantime=abc"}), std::exception, HasReason{"Cannot set -bantime value to 'abc'. It must be set to an integer."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bantime=-1000"}), std::exception, HasReason{"-bantime value -1000 is negative"});
+
+    // Check default bytespersigop value.
+    BOOST_CHECK_EQUAL(ParseOptions({}).bytes_per_sigop, 20);
+    // Check passing -bytespersigop=30 overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bytespersigop=30"}).bytes_per_sigop, 30);
+    // Check adding -bytespersigop= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-bytespersigop=30", "-bytespersigop="}).bytes_per_sigop, 20);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bytespersigop"}), std::exception, HasReason{"Cannot set -bytespersigop with no value. Please specify value with -bytespersigop=value. It must be set to an integer."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-nobytespersigop"}), std::exception, HasReason{"Negating of -bytespersigop is meaningless and therefore forbidden"});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bytespersigop=0"}), std::exception, HasReason{"-bytespersigop value 0 is less than 1"});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-bytespersigop=abc"}), std::exception, HasReason{"Cannot set -bytespersigop value to 'abc'. It must be set to an integer."});
+
+    // Check default assumevalid value is unset.
+    BOOST_CHECK_EQUAL(ParseOptions({}).assumevalid, std::nullopt);
+    // Check passing -assumevalid=<hash> makes it set that hash.
+    BOOST_CHECK_EQUAL(ParseOptions({"-assumevalid=0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"}).assumevalid, uint256{"0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"});
+    // Check passing -noassumevalid makes it not assumevalid.
+    BOOST_CHECK_EQUAL(ParseOptions({"-noassumevalid"}).assumevalid, std::nullopt);
+    // Check adding -assumevalid= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-assumevalid=0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff", "-assumevalid="}).assumevalid, std::nullopt);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-assumevalid"}), std::exception, HasReason{"Cannot set -assumevalid with no value. Please specify value with -assumevalid=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-assumevalid=1"}), std::exception, HasReason{"-assumevalid value '1' is not a valid hash"});
+
+    // Check default logfile value.
+    BOOST_CHECK_EQUAL(ParseOptions({}).log_file, fs::path{"debug.log"});
+    // Check passing -logfile=custom.log overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-logfile=custom.log"}).log_file, fs::path{"custom.log"});
+    // Check passing -nologfile makes it disables logging.
+    BOOST_CHECK_EQUAL(ParseOptions({"-nologfile"}).log_file, fs::path{});
+    // Check adding -logfile= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-logfile=custom.log", "-logfile="}).log_file, fs::path{"debug.log"});
+    BOOST_CHECK_EQUAL(ParseOptions({"-nologfile", "-logfile="}).log_file, fs::path{"debug.log"});
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-logfile"}), std::exception, HasReason{"Cannot set -logfile with no value. Please specify value with -logfile=value. It must be set to a string."});
+
+    // Check default chain value.
+    BOOST_CHECK_EQUAL(ParseOptions({}).chain, ChainType::MAIN);
+    // Check passing -chain=regtest overrides it.
+    BOOST_CHECK_EQUAL(ParseOptions({"-chain=regtest"}).chain, ChainType::REGTEST);
+    // Check adding -chain= sets it back to default.
+    BOOST_CHECK_EQUAL(ParseOptions({"-chain=regtest", "-chain="}).chain, ChainType::MAIN);
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-chain"}), std::exception, HasReason{"Cannot set -chain with no value. Please specify value with -chain=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-chain=abc"}), std::exception, HasReason{"Invalid chain type 'abc'"});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-nochain"}), std::exception, HasReason{"Negating of -chain is meaningless and therefore forbidden"});
+
+    // Check default loadblock value is empty.
+    BOOST_CHECK_EQUAL(LoadBlockStr(ParseOptions({})), "");
+    // Check passing -loadblock can set multiple values.
+    BOOST_CHECK_EQUAL(LoadBlockStr(ParseOptions({"-loadblock=a", "-loadblock=b"})), "a b");
+    // Check passing -noloadblock clears previous values.
+    BOOST_CHECK_EQUAL(LoadBlockStr(ParseOptions({"-loadblock=a", "-noloadblock", "-loadblock=b", "-loadblock=c"})), "b c");
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-loadblock"}), std::exception, HasReason{"Cannot set -loadblock with no value. Please specify value with -loadblock=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-loadblock="}), std::exception, HasReason{"-loadblock value '' is not a valid file path"});
+
+    // Check default listen value.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({})), "0.0.0.0:8333");
+    // Check passing -listen can set multiple values.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({"-listen=a", "-listen=b"})), "a:8333 b:8333");
+    // Check passing -nolisten clears previous values.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({"-listen=a", "-nolisten", "-listen=b", "-listen=c"})), "b:8333 c:8333");
+    // Check final -nolisten disables listening.
+    BOOST_CHECK_EQUAL(ListenStr(ParseOptions({"-listen=a", "-nolisten"})), "");
+    // Check passing invalid values.
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-listen"}), std::exception, HasReason{"Cannot set -listen with no value. Please specify value with -listen=value. It must be set to a string."});
+    BOOST_CHECK_EXCEPTION(ParseOptions({"-listen="}), std::exception, HasReason{"-listen address '' is not a valid host[:port]"});
+}
+
 BOOST_AUTO_TEST_CASE(util_datadir)
 {
     // Use local args variable instead of m_args to avoid making assumptions about test setup
