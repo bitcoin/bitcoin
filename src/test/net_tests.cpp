@@ -1413,7 +1413,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "pong" && Span{(*ret)[1]->m_recv} == MakeByteSpan(msg_data_2));
 
         // Then send a too-large message.
-        auto msg_data_3 = g_insecure_rand_ctx.randbytes<uint8_t>(4005000);
+        auto msg_data_3 = g_insecure_rand_ctx.randbytes<uint8_t>(16005000);
         tester.SendMessage(uint8_t(11), msg_data_3); // getdata short id
         ret = tester.Interact();
         BOOST_CHECK(!ret);
