@@ -108,6 +108,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                         CTransactionRef ref = orphanage.GetTxToReconsider(peer_id);
                         if (ref) {
                             Assert(orphanage.HaveTx(ref->GetWitnessHash()));
+                            Assert(orphanage.GetParentTxids(ref->GetWitnessHash()).has_value());
                         }
                     }
                 },
@@ -121,11 +122,24 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                         Assert(!have_tx || !add_tx);
                     }
                     have_tx = orphanage.HaveTx(tx->GetWitnessHash());
+                    Assert(have_tx == orphanage.GetParentTxids(tx->GetWitnessHash()).has_value());
                     {
                         bool add_tx = orphanage.AddTx(tx, peer_id, {});
                         // if have_tx is still false, it must be too big
                         Assert(!have_tx == (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT));
                         Assert(!have_tx || !add_tx);
+                    }
+                },
+                [&] {
+                    bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
+                    bool have_tx_and_peer = orphanage.HaveTxAndPeer(tx->GetWitnessHash(), peer_id);
+                    // AddAnnouncer should return false if tx doesn't exist or we already HaveTxAndPeer.
+                    {
+                        bool added_announcer = orphanage.AddAnnouncer(tx->GetWitnessHash(), peer_id);
+                        // have_tx == false -> added_announcer == false
+                        Assert(have_tx || !added_announcer);
+                        // have_tx_and_peer == true -> added_announcer == false
+                        Assert(!have_tx_and_peer || !added_announcer);
                     }
                 },
                 [&] {
@@ -141,7 +155,11 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     }
                 },
                 [&] {
+                    orphanage.EraseOrphanOfPeer(tx->GetWitnessHash(), peer_id);
+                },
+                [&] {
                     orphanage.EraseForPeer(peer_id);
+                    Assert(!orphanage.HaveTxAndPeer(tx->GetWitnessHash(), peer_id));
                 },
                 [&] {
                     // test mocktime and expiry
