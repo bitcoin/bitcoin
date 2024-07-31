@@ -2589,7 +2589,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
         ++it;
 
-        if (!peer.m_addr_relay_enabled && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
+        if (peer.m_block_relay_only && NetMessageViolatesBlocksOnly(inv.GetCommand())) {
             // Note that if we receive a getdata for non-block messages
             // from a block-relay-only outbound peer that violate the policy,
             // we skip such getdata messages from this peer
