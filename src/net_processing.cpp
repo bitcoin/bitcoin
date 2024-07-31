@@ -584,7 +584,7 @@ private:
      * @param[in]   maybe_add_extra_compact_tx    Whether this tx should be added to vExtraTxnForCompact.
      *                                            Set to false if the tx has already been rejected before,
      *                                            e.g. is an orphan, to avoid adding duplicate entries.
-     * Updates m_txrequest, m_recent_rejects, m_recent_rejects_reconsiderable, m_orphanage, and vExtraTxnForCompact. */
+     * Updates m_txrequest, m_lazy_recent_rejects, m_lazy_recent_rejects_reconsiderable, m_orphanage, and vExtraTxnForCompact. */
     void ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const TxValidationState& result,
                           bool maybe_add_extra_compact_tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
@@ -776,9 +776,9 @@ private:
     /** Synchronizes tx download including TxRequestTracker, rejection filters, and TxOrphanage.
      * Lock invariants:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_orphanage.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_rejects.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_rejects_reconsiderable.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_recent_confirmed_transactions.
+     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects.
+     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable.
+     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
      */
     Mutex m_tx_download_mutex ACQUIRED_BEFORE(m_mempool.cs);
@@ -856,9 +856,9 @@ private:
     /** Check whether we already have this gtxid in:
      *  - mempool
      *  - orphanage
-     *  - m_recent_rejects
-     *  - m_recent_rejects_reconsiderable (if include_reconsiderable = true)
-     *  - m_recent_confirmed_transactions
+     *  - m_lazy_recent_rejects
+     *  - m_lazy_recent_rejects_reconsiderable (if include_reconsiderable = true)
+     *  - m_lazy_recent_confirmed_transactions
      *  */
     bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable)
         EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex);
@@ -897,17 +897,17 @@ private:
      *
      * Memory used: 1.3 MB
      */
-    std::unique_ptr<CRollingBloomFilter> m_recent_rejects GUARDED_BY(m_tx_download_mutex){nullptr};
+    std::unique_ptr<CRollingBloomFilter> m_lazy_recent_rejects GUARDED_BY(m_tx_download_mutex){nullptr};
 
     CRollingBloomFilter& RecentRejectsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
     {
         AssertLockHeld(m_tx_download_mutex);
 
-        if (!m_recent_rejects) {
-            m_recent_rejects = std::make_unique<CRollingBloomFilter>(120'000, 0.000'001);
+        if (!m_lazy_recent_rejects) {
+            m_lazy_recent_rejects = std::make_unique<CRollingBloomFilter>(120'000, 0.000'001);
         }
 
-        return *m_recent_rejects;
+        return *m_lazy_recent_rejects;
     }
 
     /**
@@ -916,7 +916,7 @@ private:
      * eligible for reconsideration if submitted with other transactions.
      * (2) packages (see GetPackageHash) we have already rejected before and should not retry.
      *
-     * Similar to m_recent_rejects, this filter is used to save bandwidth when e.g. all of our peers
+     * Similar to m_lazy_recent_rejects, this filter is used to save bandwidth when e.g. all of our peers
      * have larger mempools and thus lower minimum feerates than us.
      *
      * When a transaction's error is TxValidationResult::TX_RECONSIDERABLE (in a package or by
@@ -928,19 +928,19 @@ private:
      *
      * Reset this filter when the chain tip changes.
      *
-     * Parameters are picked to be the same as m_recent_rejects, with the same rationale.
+     * Parameters are picked to be the same as m_lazy_recent_rejects, with the same rationale.
      */
-    std::unique_ptr<CRollingBloomFilter> m_recent_rejects_reconsiderable GUARDED_BY(m_tx_download_mutex){nullptr};
+    std::unique_ptr<CRollingBloomFilter> m_lazy_recent_rejects_reconsiderable GUARDED_BY(m_tx_download_mutex){nullptr};
 
     CRollingBloomFilter& RecentRejectsReconsiderableFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
     {
         AssertLockHeld(m_tx_download_mutex);
 
-        if (!m_recent_rejects_reconsiderable) {
-            m_recent_rejects_reconsiderable = std::make_unique<CRollingBloomFilter>(120'000, 0.000'001);
+        if (!m_lazy_recent_rejects_reconsiderable) {
+            m_lazy_recent_rejects_reconsiderable = std::make_unique<CRollingBloomFilter>(120'000, 0.000'001);
         }
 
-        return *m_recent_rejects_reconsiderable;
+        return *m_lazy_recent_rejects_reconsiderable;
     }
 
     /*
@@ -958,17 +958,17 @@ private:
      * transaction per day that would be inadvertently ignored (which is the
      * same probability that we have in the reject filter).
      */
-    std::unique_ptr<CRollingBloomFilter> m_recent_confirmed_transactions GUARDED_BY(m_tx_download_mutex){nullptr};
+    std::unique_ptr<CRollingBloomFilter> m_lazy_recent_confirmed_transactions GUARDED_BY(m_tx_download_mutex){nullptr};
 
     CRollingBloomFilter& RecentConfirmedTransactionsFilter() EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex)
     {
         AssertLockHeld(m_tx_download_mutex);
 
-        if (!m_recent_confirmed_transactions) {
-            m_recent_confirmed_transactions = std::make_unique<CRollingBloomFilter>(48'000, 0.000'001);
+        if (!m_lazy_recent_confirmed_transactions) {
+            m_lazy_recent_confirmed_transactions = std::make_unique<CRollingBloomFilter>(48'000, 0.000'001);
         }
 
-        return *m_recent_confirmed_transactions;
+        return *m_lazy_recent_confirmed_transactions;
     }
 
     /**
@@ -3225,7 +3225,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
         // for concerns around weakening security of unupgraded nodes
         // if we start doing this too early.
         if (state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
-            // If the result is TX_RECONSIDERABLE, add it to m_recent_rejects_reconsiderable
+            // If the result is TX_RECONSIDERABLE, add it to m_lazy_recent_rejects_reconsiderable
             // because we should not download or submit this transaction by itself again, but may
             // submit it as part of a package later.
             RecentRejectsReconsiderableFilter().insert(ptx->GetWitnessHash().ToUint256());
@@ -3389,7 +3389,7 @@ std::optional<PeerManagerImpl::PackageToValidate> PeerManagerImpl::Find1P1CPacka
 
     for (const auto index : tx_indices) {
         // If we already tried a package and failed for any reason, the combined hash was
-        // cached in m_recent_rejects_reconsiderable.
+        // cached in m_lazy_recent_rejects_reconsiderable.
         const auto [child_tx, child_sender] = cpfp_candidates_different_peer.at(index);
         Package maybe_cpfp_package{ptx, child_tx};
         if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package))) {
@@ -4585,7 +4585,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
 
             if (RecentRejectsReconsiderableFilter().contains(wtxid)) {
-                // When a transaction is already in m_recent_rejects_reconsiderable, we shouldn't submit
+                // When a transaction is already in m_lazy_recent_rejects_reconsiderable, we shouldn't submit
                 // it by itself again. However, look for a matching child in the orphanage, as it is
                 // possible that they succeed as a package.
                 LogPrint(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage\n",
@@ -4597,20 +4597,20 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     ProcessPackageResult(package_to_validate.value(), package_result);
                 }
             }
-            // If a tx is detected by m_recent_rejects it is ignored. Because we haven't
+            // If a tx is detected by m_lazy_recent_rejects it is ignored. Because we haven't
             // submitted the tx to our mempool, we won't have computed a DoS
             // score for it or determined exactly why we consider it invalid.
             //
             // This means we won't penalize any peer subsequently relaying a DoSy
             // tx (even if we penalized the first peer who gave it to us) because
-            // we have to account for m_recent_rejects showing false positives. In
+            // we have to account for m_lazy_recent_rejects showing false positives. In
             // other words, we shouldn't penalize a peer if we aren't *sure* they
             // submitted a DoSy tx.
             //
-            // Note that m_recent_rejects doesn't just record DoSy or invalid
+            // Note that m_lazy_recent_rejects doesn't just record DoSy or invalid
             // transactions, but any tx not accepted by the mempool, which may be
             // due to node policy (vs. consensus). So we can't blanket penalize a
-            // peer simply for relaying a tx that our m_recent_rejects has caught,
+            // peer simply for relaying a tx that our m_lazy_recent_rejects has caught,
             // regardless of false positives.
             return;
         }
@@ -4637,16 +4637,16 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             std::sort(unique_parents.begin(), unique_parents.end());
             unique_parents.erase(std::unique(unique_parents.begin(), unique_parents.end()), unique_parents.end());
 
-            // Distinguish between parents in m_recent_rejects and m_recent_rejects_reconsiderable.
-            // We can tolerate having up to 1 parent in m_recent_rejects_reconsiderable since we
-            // submit 1p1c packages. However, fail immediately if any are in m_recent_rejects.
+            // Distinguish between parents in m_lazy_recent_rejects and m_lazy_recent_rejects_reconsiderable.
+            // We can tolerate having up to 1 parent in m_lazy_recent_rejects_reconsiderable since we
+            // submit 1p1c packages. However, fail immediately if any are in m_lazy_recent_rejects.
             std::optional<uint256> rejected_parent_reconsiderable;
             for (const uint256& parent_txid : unique_parents) {
                 if (RecentRejectsFilter().contains(parent_txid)) {
                     fRejectedParents = true;
                     break;
                 } else if (RecentRejectsReconsiderableFilter().contains(parent_txid) && !m_mempool.exists(GenTxid::Txid(parent_txid))) {
-                    // More than 1 parent in m_recent_rejects_reconsiderable: 1p1c will not be
+                    // More than 1 parent in m_lazy_recent_rejects_reconsiderable: 1p1c will not be
                     // sufficient to accept this package, so just give up here.
                     if (rejected_parent_reconsiderable.has_value()) {
                         fRejectedParents = true;
@@ -4666,7 +4666,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     // protocol for getting all unconfirmed parents.
                     const auto gtxid{GenTxid::Txid(parent_txid)};
                     AddKnownTx(*peer, parent_txid);
-                    // Exclude m_recent_rejects_reconsiderable: the missing parent may have been
+                    // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
                     // previously rejected for being too low feerate. This orphan might CPFP it.
                     if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
@@ -6339,7 +6339,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     entry.second.GetHash().ToString(), entry.first);
             }
             for (const GenTxid& gtxid : requestable) {
-                // Exclude m_recent_rejects_reconsiderable: we may be requesting a missing parent
+                // Exclude m_lazy_recent_rejects_reconsiderable: we may be requesting a missing parent
                 // that was previously rejected for being too low feerate.
                 if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
                     LogPrint(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
