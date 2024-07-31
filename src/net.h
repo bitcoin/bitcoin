@@ -85,6 +85,8 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const auto INBOUND_EVICTION_PROTECTION_TIME{1s};
 /** Maximum number of block-relay-only outgoing connections */
 static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
+/** Maximum number of onion connections we will try harder to connect to / protect from eviction */
+static const int MAX_DESIRED_ONION_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
 /** -listen default */
@@ -873,6 +875,7 @@ public:
         int nMaxConnections = 0;
         int m_max_outbound_full_relay = 0;
         int m_max_outbound_block_relay = 0;
+        int m_max_outbound_onion = 0;
         int nMaxAddnode = 0;
         int nMaxFeeler = 0;
         CClientUIInterface* uiInterface = nullptr;
@@ -905,6 +908,7 @@ public:
         nMaxConnections = connOptions.nMaxConnections;
         m_max_outbound_full_relay = std::min(connOptions.m_max_outbound_full_relay, connOptions.nMaxConnections);
         m_max_outbound_block_relay = connOptions.m_max_outbound_block_relay;
+        m_max_outbound_onion = connOptions.m_max_outbound_onion;
         m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
@@ -1179,6 +1183,7 @@ public:
 
     size_t GetNodeCount(ConnectionDirection) const;
     size_t GetMaxOutboundNodeCount();
+    size_t GetMaxOutboundOnionNodeCount();
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);
@@ -1514,6 +1519,9 @@ private:
     // How many block-relay only outbound peers we want
     // We do not relay tx or addr messages with these peers
     int m_max_outbound_block_relay;
+
+    // How many onion outbound peers we want; don't care if full or block only; does not increase m_max_outbound
+    int m_max_outbound_onion;
 
     int nMaxAddnode;
     int nMaxFeeler;

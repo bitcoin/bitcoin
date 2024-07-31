@@ -2573,12 +2573,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
         // This is only done for mainnet and testnet
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
+        int nOutboundOnionRelay = 0;
         std::set<std::vector<unsigned char> > setConnected;
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
                 if (pnode->IsFullOutboundConn() && !pnode->m_masternode_connection) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
+                if (pnode->IsFullOutboundConn() && pnode->ConnectedThroughNetwork() == Network::NET_ONION) nOutboundOnionRelay++;
 
                 // Netgroups for inbound and manual peers are not excluded because our goal here
                 // is to not use multiple of our limited outbound slots on a single netgroup
@@ -2613,6 +2615,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
         auto now = GetTime<std::chrono::microseconds>();
         bool anchor = false;
         bool fFeeler = false;
+        bool onion_only = false;
 
         // Determine what type of connection to open. Opening
         // BLOCK_RELAY connections to addresses from anchors.dat gets the highest
@@ -2662,6 +2665,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             next_feeler = PoissonNextSend(now, FEELER_INTERVAL);
             conn_type = ConnectionType::FEELER;
             fFeeler = true;
+        } else if (nOutboundOnionRelay < m_max_outbound_onion && IsReachable(Network::NET_ONION)) {
+            onion_only = true;
         } else {
             // skip to next iteration of while loop
             continue;
@@ -2744,6 +2749,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
 
             if (!IsReachable(addr))
                 continue;
+            if (onion_only && !addr.IsTor()) continue;
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr_last_try < 600 && nTries < 30)
@@ -3950,6 +3956,10 @@ size_t CConnman::GetNodeCount(ConnectionDirection flags) const
 size_t CConnman::GetMaxOutboundNodeCount()
 {
     return m_max_outbound;
+}
+size_t CConnman::GetMaxOutboundOnionNodeCount()
+{
+    return m_max_outbound_onion;
 }
 
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
