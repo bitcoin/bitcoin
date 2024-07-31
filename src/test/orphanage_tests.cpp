@@ -392,4 +392,58 @@ BOOST_AUTO_TEST_CASE(too_large_orphan_tx)
     BOOST_CHECK(orphanage.AddTx(MakeTransactionRef(tx), 0));
 }
 
+BOOST_AUTO_TEST_CASE(process_block)
+{
+    FastRandomContext det_rand{true};
+    TxOrphanageTest orphanage{det_rand};
+
+    // Create outpoints that will be spent by transactions in the block
+    std::vector<COutPoint> outpoints;
+    const uint32_t num_outpoints{6};
+    outpoints.reserve(num_outpoints);
+    for (uint32_t i{0}; i < num_outpoints; ++i) {
+        // All the hashes should be different, but change the n just in case.
+        outpoints.emplace_back(Txid::FromUint256(det_rand.rand256()), i);
+    }
+
+    CBlock block;
+    const NodeId node{0};
+
+    auto control_tx = MakeTransactionSpending({}, det_rand);
+    BOOST_CHECK(orphanage.AddTx(control_tx, node));
+
+    auto bo_tx_same_txid = MakeTransactionSpending({outpoints.at(0)}, det_rand);
+    BOOST_CHECK(orphanage.AddTx(bo_tx_same_txid, node));
+    block.vtx.emplace_back(bo_tx_same_txid);
+
+    // 2 transactions with the same txid but different witness
+    auto b_tx_same_txid_diff_witness = MakeTransactionSpending({outpoints.at(1)}, det_rand);
+    block.vtx.emplace_back(b_tx_same_txid_diff_witness);
+
+    auto o_tx_same_txid_diff_witness = MakeMutation(b_tx_same_txid_diff_witness);
+    BOOST_CHECK(orphanage.AddTx(o_tx_same_txid_diff_witness, node));
+
+    // 2 different transactions that spend the same input.
+    auto b_tx_conflict = MakeTransactionSpending({outpoints.at(2)}, det_rand);
+    block.vtx.emplace_back(b_tx_conflict);
+
+    auto o_tx_conflict = MakeTransactionSpending({outpoints.at(2)}, det_rand);
+    BOOST_CHECK(orphanage.AddTx(o_tx_conflict, node));
+
+    // 2 different transactions that have 1 overlapping input.
+    auto b_tx_conflict_partial = MakeTransactionSpending({outpoints.at(3), outpoints.at(4)}, det_rand);
+    block.vtx.emplace_back(b_tx_conflict_partial);
+
+    auto o_tx_conflict_partial_2 = MakeTransactionSpending({outpoints.at(4), outpoints.at(5)}, det_rand);
+    BOOST_CHECK(orphanage.AddTx(o_tx_conflict_partial_2, node));
+
+    orphanage.EraseForBlock(block);
+    for (const auto& expected_removed : {bo_tx_same_txid, o_tx_same_txid_diff_witness, o_tx_conflict, o_tx_conflict_partial_2}) {
+        const auto& expected_removed_wtxid = expected_removed->GetWitnessHash();
+        BOOST_CHECK(!orphanage.HaveTx(expected_removed_wtxid));
+    }
+    // Only remaining tx is control_tx
+    BOOST_CHECK_EQUAL(orphanage.Size(), 1);
+    BOOST_CHECK(orphanage.HaveTx(control_tx->GetWitnessHash()));
+}
 BOOST_AUTO_TEST_SUITE_END()
