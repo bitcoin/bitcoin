@@ -296,10 +296,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         assert_equal(1, len(events))
         event = events[0]
         assert_equal(bytes(event.hash)[::-1].hex(), tx["tx"].hash)
-        # The next test is already known to fail, so disable it to avoid
-        # wasting CPU time and developer time. See
-        # https://github.com/bitcoin/bitcoin/issues/27380
-        #assert_equal(event.reason.decode("UTF-8"), "min relay fee not met")
+        assert_equal(event.reason.decode("UTF-8"), "min relay fee not met")
 
         bpf.cleanup()
         self.generate(self.wallet, 1)
