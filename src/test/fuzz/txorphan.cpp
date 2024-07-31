@@ -130,6 +130,18 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 },
                 [&] {
                     bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
+                    bool have_tx_and_peer = orphanage.HaveTxFromPeer(tx->GetWitnessHash(), peer_id);
+                    // AddAnnouncer should return false if tx doesn't exist or we already HaveTxFromPeer.
+                    {
+                        bool added_announcer = orphanage.AddAnnouncer(tx->GetWitnessHash(), peer_id);
+                        // have_tx == false -> added_announcer == false
+                        Assert(have_tx || !added_announcer);
+                        // have_tx_and_peer == true -> added_announcer == false
+                        Assert(!have_tx_and_peer || !added_announcer);
+                    }
+                },
+                [&] {
+                    bool have_tx = orphanage.HaveTx(tx->GetWitnessHash());
                     // EraseTx should return 0 if m_orphans doesn't have the tx
                     {
                         Assert(have_tx == orphanage.EraseTx(tx->GetWitnessHash()));
@@ -142,6 +154,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 },
                 [&] {
                     orphanage.EraseForPeer(peer_id);
+                    Assert(!orphanage.HaveTxFromPeer(tx->GetWitnessHash(), peer_id));
                 },
                 [&] {
                     // test mocktime and expiry
