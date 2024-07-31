@@ -694,27 +694,6 @@ void SignatureData::MergeSignatureData(SignatureData sigdata)
     signatures.insert(std::make_move_iterator(sigdata.signatures.begin()), std::make_move_iterator(sigdata.signatures.end()));
 }
 
-bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data)
-{
-    assert(nIn < txTo.vin.size());
-
-    MutableTransactionSignatureCreator creator(txTo, nIn, amount, nHashType);
-
-    bool ret = ProduceSignature(provider, creator, fromPubKey, sig_data);
-    UpdateInput(txTo.vin.at(nIn), sig_data);
-    return ret;
-}
-
-bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType, SignatureData& sig_data)
-{
-    assert(nIn < txTo.vin.size());
-    const CTxIn& txin = txTo.vin[nIn];
-    assert(txin.prevout.n < txFrom.vout.size());
-    const CTxOut& txout = txFrom.vout[txin.prevout.n];
-
-    return SignSignature(provider, txout.scriptPubKey, txTo, nIn, txout.nValue, nHashType, sig_data);
-}
-
 namespace {
 /** Dummy signature checker which accepts all signatures. */
 class DummySignatureChecker final : public BaseSignatureChecker
