@@ -220,6 +220,23 @@ def tx_from_hex(hex_string):
     return from_hex(CTransaction(), hex_string)
 
 
+def malleate_tx(tx):
+    """
+    Create a malleated version of the tx where the witness is replaced with garbage data.
+    Returns a CTransaction object.
+    """
+    tx_bad_wit = tx_from_hex(tx["hex"])
+    tx_bad_wit.wit.vtxinwit = [CTxInWitness()]
+    # Add garbage data to witness 0. We cannot simply strip the witness, as the node would
+    # classify it as a transaction in which the witness was missing rather than wrong.
+    tx_bad_wit.wit.vtxinwit[0].scriptWitness.stack = [b'garbage']
+
+    assert_equal(tx["txid"], tx_bad_wit.rehash())
+    assert tx["wtxid"] != tx_bad_wit.getwtxid()
+
+    return tx_bad_wit
+
+
 # like from_hex, but without the hex part
 def from_binary(cls, stream):
     """deserialize a binary stream (or bytes object) into an object"""
