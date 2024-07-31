@@ -128,13 +128,17 @@ desirable for building Bitcoin Core release binaries."
   (package-with-extra-patches binutils
     (search-our-patches "binutils-unaligned-default.patch")))
 
+(define (winpthreads-patches mingw-w64-x86_64-winpthreads)
+  (package-with-extra-patches mingw-w64-x86_64-winpthreads
+    (search-our-patches "winpthreads-remap-guix-store.patch")))
+
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
   (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
          (machine (substring target 0 (string-index target #\-)))
-         (pthreads-xlibc (make-mingw-w64 machine
+         (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
                                          #:xgcc (cross-gcc target #:xgcc (gcc-mingw-patches base-gcc))
-                                         #:with-winpthreads? #t))
+                                         #:with-winpthreads? #t)))
          (pthreads-xgcc (cross-gcc target
                                     #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
