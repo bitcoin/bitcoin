@@ -16,8 +16,6 @@ This tutorial also uses the default WPKH derivation path to get the xpubs and do
 
 At the time of writing, there is no way to extract a specific path from wallets in Bitcoin Core. For this, an external signer/xpub can be used.
 
-[PR #22341](https://github.com/bitcoin/bitcoin/pull/22341), which is still under development, introduces a new wallet RPC `getxpub`. It takes a BIP32 path as an argument and returns the xpub, along with the master key fingerprint.
-
 ## 1.1 Basic Multisig Workflow
 
 ### 1.1 Create the Descriptor Wallets
