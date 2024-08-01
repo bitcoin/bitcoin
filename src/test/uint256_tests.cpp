@@ -61,14 +61,6 @@ static std::string ArrayToString(const unsigned char A[], unsigned int width)
     return Stream.str();
 }
 
-// Takes hex string in reverse byte order.
-inline uint160 uint160S(std::string_view str)
-{
-    uint160 rv;
-    rv.SetHexDeprecated(str);
-    return rv;
-}
-
 BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
 {
     // constructor uint256(vector<char>):
@@ -102,17 +94,12 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK_EQUAL(uint256(ZeroL), ZeroL);
     BOOST_CHECK_EQUAL(uint256(OneL), OneL);
 
-    BOOST_CHECK_EQUAL(uint160S("0x"+R1S.ToString()), R1S);
-    BOOST_CHECK_EQUAL(uint160S("0x"+R2S.ToString()), R2S);
-    BOOST_CHECK_EQUAL(uint160S("0x"+ZeroS.ToString()), ZeroS);
-    BOOST_CHECK_EQUAL(uint160S("0x"+OneS.ToString()), OneS);
-    BOOST_CHECK_EQUAL(uint160S("0x"+MaxS.ToString()), MaxS);
-    BOOST_CHECK_EQUAL(uint160S(R1S.ToString()), R1S);
-    BOOST_CHECK_EQUAL(uint160S("   0x"+R1S.ToString()+"   "), R1S);
-    BOOST_CHECK_EQUAL(uint160S("   0x"+R1S.ToString()+"-trash;%^&   "), R1S);
-    BOOST_CHECK_EQUAL(uint160S(" \t \n  \n \f\n\r\t\v\t  0x"+R1S.ToString()+"   \t \n  \n \f\n\r\t\v\t"), R1S);
-    BOOST_CHECK_EQUAL(uint160S(""), ZeroS);
-    BOOST_CHECK_EQUAL(R1S, uint160S(R1ArrayHex));
+    BOOST_CHECK_EQUAL(uint160::FromHex(R1S.ToString()).value(), R1S);
+    BOOST_CHECK_EQUAL(uint160::FromHex(R2S.ToString()).value(), R2S);
+    BOOST_CHECK_EQUAL(uint160::FromHex(ZeroS.ToString()).value(), ZeroS);
+    BOOST_CHECK_EQUAL(uint160::FromHex(OneS.ToString()).value(), OneS);
+    BOOST_CHECK_EQUAL(uint160::FromHex(MaxS.ToString()).value(), MaxS);
+    BOOST_CHECK_EQUAL(uint160::FromHex(std::string_view{R1ArrayHex + 24, 40}).value(), R1S);
 
     BOOST_CHECK_EQUAL(uint160(R1S), R1S);
     BOOST_CHECK_EQUAL(uint160(ZeroS), ZeroS);
