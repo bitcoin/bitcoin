@@ -661,6 +661,14 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Tüm cüzdanları kapat</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Cüzdanı Taşı</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Bir Cüzdanı Taşı</translation>
+    </message>
+    <message>
         <source>&amp;Mask values</source>
         <translation type="unfinished">&amp; Değerleri maskele</translation>
     </message>
@@ -750,6 +758,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Üstbilgiler senkronize ediliyor (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Cüzdan oluşturulurken hata meydana geldi</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1001,6 +1013,37 @@ Cüzdan kilidini aç.</translation>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Cüzdanı taşı</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Cüzdanı taşımak istediğine emin misin &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Cüzdanı Taşı</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Cüzdan Taşınıyor &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">Cüzdan '%1' başarıyla taşındı.</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Taşıma başarısız oldu.</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Taşıma Başarılı</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1081,6 +1124,14 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Cüzdan Oluştur</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Yeni cüzdanını yaratmaktan bir adım uzaktasın!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Lütfen bir isim sağla ve, isteğe bağlı olarak, gelişmiş seçenekleri etkinleştir.</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -2056,8 +2107,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Ayrıntılı bilgi görmek için bir eş seçin.</translation>
     </message>
     <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">Taşıma katmanı versiyonu: %1</translation>
+    </message>
+    <message>
         <source>Transport</source>
         <translation type="unfinished">Aktar</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">Oturum ID</translation>
     </message>
     <message>
         <source>Version</source>
@@ -2224,6 +2283,21 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Out:</source>
         <translation type="unfinished">Dışarı:</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">keşfediliyor: eş v1 veya v2 olabilir</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: şifrelenmemiş, açık metin taşıma protokolü</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: BIP324 şifrelenmiş taşıma protokolü</translation>
     </message>
     <message>
         <source>&amp;Copy address</source>
@@ -3633,6 +3707,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation type="unfinished">Başlatma sırasında cüzdanı yeniden tarama işlemi başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Failed to start indexes, shutting down..</source>
+        <translation type="unfinished">Endekslerin başlatılması başarısız oldu, kapatılıyor..</translation>
     </message>
     <message>
         <source>Failed to verify database</source>

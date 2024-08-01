@@ -611,7 +611,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">连到同行...</translation>
+        <translation type="unfinished">连接到节点...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -1308,7 +1308,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished">跟這個地址清單關聯的地址。只有發送地址能被修改。</translation>
+        <translation type="unfinished">与这个地址列表项关联的地址。只有发送地址可以修改。</translation>
     </message>
     <message>
         <source>&amp;Address</source>

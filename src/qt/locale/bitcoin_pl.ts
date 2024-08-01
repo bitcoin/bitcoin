@@ -257,6 +257,18 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">nieznane</translation>
     </message>
     <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Osadzony "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Domyślna czcionka systemu "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Własna:</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Kwota</translation>
     </message>
@@ -1062,6 +1074,14 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Portfel '%1' został poprawnie przeniesiony.</translation>
     </message>
     <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Skrypty tylko do odczytu zostały przeniesione do nowego portfela '%1'</translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Sprawne, ale nie oglądane skrypty tylko do odczytu zostały przeniesione do nowego portfela '%1'</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Przeniesienie nie powiodło się</translation>
     </message>
@@ -1155,6 +1175,10 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>You are one step away from creating your new wallet!</source>
         <translation type="unfinished">Jesteś jeden krok od stworzenia swojego nowego portfela!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Proszę podać nazwę, i jeśli potrzeba, włącz zaawansowane ustawienia.</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1542,6 +1566,10 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">Minimalizuje zamiast zakończyć działanie programu przy zamykaniu okna. Kiedy ta opcja jest włączona, program zakończy działanie po wybieraniu Zamknij w menu.</translation>
+    </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Czcionka w zakładce Przegląd:</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
@@ -2265,6 +2293,18 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Wersja warstwy transportowej: %1</translation>
     </message>
     <message>
+        <source>Transport</source>
+        <translation type="unfinished">Transfer</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex, if any.</source>
+        <translation type="unfinished">ID sesji BIP324 jest szestnastkowym ciągiem znaków, jeśli istnieje.</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">ID sesji</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation type="unfinished">Wersja</translation>
     </message>
@@ -2557,6 +2597,10 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Wykonuję komendę bez portfela</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Okno węzła  - [%1]</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -4012,6 +4056,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Błąd: starsze portfele obsługują tylko typy adresów „legacy”, „p2sh-segwit” i „bech32”</translation>
     </message>
     <message>
+        <source>Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.</source>
+        <translation type="unfinished">Błąd: Nie można wygenerować deskryptorów dla tego starego portfela. Upewnij się najpierw, że portfel jest odblokowany.</translation>
+    </message>
+    <message>
         <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
         <translation type="unfinished">Plik 1%s już istnieje. Jeśli jesteś pewien, że tego chcesz, najpierw usuń to z drogi.</translation>
     </message>
@@ -4096,6 +4144,18 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Podano nieznany typ pliku portfela "%s". Proszę podać jeden z "bdb" lub "sqlite".</translation>
     </message>
     <message>
+        <source>Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %3$s. Valid loglevels: %4$s.</source>
+        <translation type="unfinished">Nieobsługiwany poziom rejestrowania specyficzny dla kategorii %1$s=%2$s. Oczekiwano %1$s=&lt;category&gt;:&lt;loglevel&gt;. Poprawne kategorie %3$s. Poprawne poziomy logowania: %4 $s.</translation>
+    </message>
+    <message>
+        <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
+        <translation type="unfinished">Znaleziono nieobsługiwany format bazy danych chainstate. Proszę uruchomić ponownie z opcją -reindex-chainstate. To odbuduje bazę danych chainstate.</translation>
+    </message>
+    <message>
+        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
+        <translation type="unfinished">Portfel został załadowany pomyślnie. Starszy typ portfela jest przestarzały, a obsługa tworzenia i otwierania starszych portfeli zostanie usunięta w przyszłości. Starsze portfele można migrować do portfela deskryptora za pomocą migratewallet.</translation>
+    </message>
+    <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
         <translation type="unfinished">Uwaga: Wykryto klucze prywatne w portfelu [%s] który ma wyłączone klucze prywatne</translation>
     </message>
@@ -4124,12 +4184,20 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Nie można rozpoznać -%s adresu: '%s'</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation type="unfinished">Nie można ustawić -forcednsseed na true gdy ustawienie -dnsseed wynosi false.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">Nie można ustawić -peerblockfilters bez -blockfilterindex.</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
         <translation type="unfinished">Nie mogę zapisać do katalogu danych '%s'; sprawdź uprawnienia.</translation>
+    </message>
+    <message>
+        <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished">%sto bardzo dużo!  Tak duże opłaty można uiścić w ramach jednej transakcji.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4148,8 +4216,40 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Błąd: Podczas migracji utworzono zduplikowane deskryptory. Twój portfel może być uszkodzony.</translation>
     </message>
     <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Nie udało się obliczyć opłat za uderzenia, ponieważ niepotwierdzone UTXO zależą od ogromnego skupiska niepotwierdzonych transakcji.</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Zmiana nazwy nieprawidłowego pliku peers.dat nie powiodła się. Przenieś go lub usuń i spróbuj ponownie.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
+        <translation type="unfinished">Estymacja opłat nieudana. Domyślna opłata jest wyłączona. Poczekaj kilka bloków lub włącz  -%s.</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
+        <translation type="unfinished">Połączenia wychodzące ograniczone do CJDNS (-onlynet=cjdns), ale nie podano -cjdnsreachable</translation>
+    </message>
+    <message>
+        <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
+        <translation type="unfinished">Połączenia wychodzące ograniczone do sieci Tor (-onlynet=onion), ale proxy do uzyskania dostępu do sieci Tor jest wyraźnie zabronione: -onion=0</translation>
+    </message>
+    <message>
+        <source>
+Unable to cleanup failed migration</source>
+        <translation type="unfinished">
+Nie można wyczyścić nieudanej migracji</translation>
+    </message>
+    <message>
+        <source>
+Unable to restore backup of wallet.</source>
+        <translation type="unfinished">
+Nie można przywrócić kopii zapasowej portfela</translation>
+    </message>
+    <message>
+        <source>Block verification was interrupted</source>
+        <translation type="unfinished">Weryfikacja bloku została przerwana</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -4182,6 +4282,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
     <message>
         <source>Done loading</source>
         <translation type="unfinished">Wczytywanie zakończone</translation>
+    </message>
+    <message>
+        <source>Dump file %s does not exist.</source>
+        <translation type="unfinished">Plik zrzutu aplikacji %s nie istnieje.</translation>
     </message>
     <message>
         <source>Error creating %s</source>
@@ -4220,6 +4324,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Błąd otwierania bazy bloków</translation>
     </message>
     <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">Błąd: nie można odczytać pliku konfiguracyjnego: %s</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished">Błąd odczytu z bazy danych, wyłączam się.</translation>
     </message>
@@ -4228,12 +4336,32 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Błąd odczytu kolejnego rekordu z bazy danych portfela</translation>
     </message>
     <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation type="unfinished">Błąd: Nie można wyodrębnić miejsca docelowego z wygenerowanego scriptpubkey</translation>
+    </message>
+    <message>
+        <source>Error: Couldn't create cursor into database</source>
+        <translation type="unfinished">Błąd: Nie udało się utworzyć kursora w bazie danych</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low for %s</source>
         <translation type="unfinished">Błąd: zbyt mało miejsca na dysku dla %s</translation>
     </message>
     <message>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
         <translation type="unfinished">Błąd: Plik zrzutu suma kontrolna nie pasuje. Obliczone %s,  spodziewane %s</translation>
+    </message>
+    <message>
+        <source>Error: Failed to create new watchonly wallet</source>
+        <translation type="unfinished">Błąd: Utworzenie portfela tylko do odczytu nie powiodło się</translation>
+    </message>
+    <message>
+        <source>Error: Got key that was not hex: %s</source>
+        <translation type="unfinished">Błąd: Otrzymana wartość nie jest szestnastkowa%s</translation>
+    </message>
+    <message>
+        <source>Error: Got value that was not hex: %s</source>
+        <translation type="unfinished">Błąd: Otrzymana wartość nie jest szestnastkowa%s</translation>
     </message>
     <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
@@ -4252,8 +4380,32 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Błąd: Ten portfel już używa SQLite</translation>
     </message>
     <message>
+        <source>Error: This wallet is already a descriptor wallet</source>
+        <translation type="unfinished">Błąd: Ten portfel jest już portfelem opisowym (descriptor wallet)</translation>
+    </message>
+    <message>
+        <source>Error: Unable to begin reading all records in the database</source>
+        <translation type="unfinished">Błąd: Nie można odczytać wszystkich rekordów z bazy danych</translation>
+    </message>
+    <message>
         <source>Error: Unable to make a backup of your wallet</source>
         <translation type="unfinished">Błąd: Nie mogę zrobić kopii twojego portfela</translation>
+    </message>
+    <message>
+        <source>Error: Unable to parse version %u as a uint32_t</source>
+        <translation type="unfinished">Błąd: Nie można zapisać wersji %u jako uint32_t</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read all records in the database</source>
+        <translation type="unfinished">Błąd: Nie można odczytać wszystkich rekordów z bazy danych</translation>
+    </message>
+    <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Błąd: Nie można odczytać najlepszego rekordu lokalizatora bloków portfela</translation>
+    </message>
+    <message>
+        <source>Error: Unable to remove watchonly address book data</source>
+        <translation type="unfinished">Błąd: Nie można usunąć danych książki adresowej tylko do odczytu</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -4268,8 +4420,16 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Nie udało się ponownie przeskanować portfela podczas inicjalizacji.</translation>
     </message>
     <message>
+        <source>Failed to start indexes, shutting down..</source>
+        <translation type="unfinished">Nie udało się uruchomić indeksów, zamykanie...</translation>
+    </message>
+    <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Nie udało się zweryfikować bazy danych</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Nie udało się usunąć transakcji %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4296,6 +4456,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Wejście nie znalezione lub już wydane</translation>
     </message>
     <message>
+        <source>Insufficient dbcache for block verification</source>
+        <translation type="unfinished">Niewystarczająca pamięć podręczna bazy danych (dbcache) do weryfikacji bloków</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Niewystarczające środki</translation>
     </message>
@@ -4316,12 +4480,28 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Nieprawidłowe uprawnienia P2P: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation type="unfinished">Nieprawidłowa kwota dla %s=&lt;amount&gt;: '%s' (musi być co najmniej %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
+        <translation type="unfinished">Nieprawidłowa kwota dla %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Nieprawidłowa kwota dla -%s=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation type="unfinished">Nieprawidłowa maska sieci określona w -whitelist: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid port specified in %s: '%s'</source>
+        <translation type="unfinished">Nieprawidłowa maska sieci określona w %s: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid pre-selected input %s</source>
+        <translation type="unfinished">Niepoprawne wstępnie wybrane dane wejściowe %s</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
@@ -4358,6 +4538,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
     <message>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished">Brak wystarczającej liczby deskryptorów plików.</translation>
+    </message>
+    <message>
+        <source>Not found pre-selected input %s</source>
+        <translation type="unfinished">Nie znaleziono wstępnie wybranego wejścia %s</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4425,12 +4609,20 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
 </translation>
     </message>
     <message>
+        <source>Specified data directory "%s" does not exist.</source>
+        <translation type="unfinished">Określony katalog danych "%s" nie istnieje</translation>
+    </message>
+    <message>
         <source>Starting network threads…</source>
         <translation type="unfinished">Startowanie wątków sieciowych...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">Kod źródłowy dostępny jest z %s.</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist</source>
+        <translation type="unfinished">Podany plik konfiguracyjny %s nie istnieje</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -4451,6 +4643,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
         <translation type="unfinished">To jest opłata transakcyjna którą zapłacisz jeśli wyślesz transakcję.</translation>
+    </message>
+    <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">Transakcja %s nie należy do tego portfela</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -4541,8 +4737,28 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
         <translation type="unfinished">Aktywowano nieznane nowe reguły (versionbit %i)</translation>
     </message>
     <message>
+        <source>Unsupported global logging level %s=%s. Valid values: %s.</source>
+        <translation type="unfinished">Niewspierany globalny poziom logowania%s=%s. Poprawne wartości: %s.</translation>
+    </message>
+    <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Utworzenie pliku portfela nie powiodło się: %s</translation>
+    </message>
+    <message>
+        <source>acceptstalefeeestimates is not supported on %s chain.</source>
+        <translation type="unfinished">akceptowalne nieaktualne szacunki opłat nie są wspierane na łańcuchu %s</translation>
+    </message>
+    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Nieobsługiwana kategoria rejestrowania %s=%s.</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Błąd: Nie można dodać tx %s tylko do odczytu do portfela tylko do odczytu</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Błąd: Nie można usunąć transakcji tylko do odczytu.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

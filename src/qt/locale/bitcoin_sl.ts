@@ -730,6 +730,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Predsinhronizacija zaglavij (%1 %)...</translation>
     </message>
     <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Napaka pri ustvarjanju denarnice</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Napaka: %1</translation>
     </message>
@@ -4210,6 +4214,10 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     <message>
         <source>Error opening block database</source>
         <translation type="unfinished">Napaka pri odpiranju podatkovne baze blokov</translation>
+    </message>
+    <message>
+        <source>Error reading configuration file: %s</source>
+        <translation type="unfinished">Napaka pri branju nastavitvene datoteke: 1%s</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>

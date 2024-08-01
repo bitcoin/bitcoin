@@ -357,6 +357,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Kuhusu &amp;Qt</translation>
     </message>
     <message>
+        <source>Show information about Qt</source>
+        <translation type="unfinished">Onyesha habari kuhusu Qt</translation>
+    </message>
+    <message>
         <source>Modify configuration options for %1</source>
         <translation type="unfinished">Badilisha chaguo za usanidi kwa %1</translation>
     </message>
@@ -396,6 +400,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>&amp;Send</source>
         <translation type="unfinished">&amp;TUMA</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">&amp;Pokea</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
@@ -497,9 +505,37 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         </translation>
     </message>
     <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation type="unfinished">Shughuli baada ya hii bado hazitaonekana.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Onyo</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">Onyo</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">Habari</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation type="unfinished">Fungua Pochi</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Funga Pochi</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">Jina la Wallet</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Ficha</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -526,6 +562,18 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Wingi</translation>
     </message>
     <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Kiasi:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Ada:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation type="unfinished">Baada ya Ada</translation>
+    </message>
+    <message>
         <source>Received with label</source>
         <translation type="unfinished">Imepokelewa na chapa</translation>
     </message>
@@ -539,6 +587,14 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">Fungua Pochi</translation>
+    </message>
+    </context>
+<context>
     <name>RestoreWalletActivity</name>
     <message>
         <source>Restore wallet warning</source>
@@ -548,6 +604,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">Funga Pochi</translation>
+    </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation type="unfinished">Kufunga pochi kwa muda mrefu sana kunaweza kusababisha kusawazisha tena mnyororo mzima ikiwa upogoaji umewezeshwa.</translation>
@@ -657,6 +717,17 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Onyo</translation>
+    </message>
+    </context>
+<context>
+    <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Onyo</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -699,6 +770,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Kiasi:</translation>
+    </message>
+    <message>
         <source>Label:</source>
         <translation type="unfinished">Chapa:</translation>
     </message>
@@ -723,6 +798,18 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>Quantity:</source>
         <translation type="unfinished">Wingi</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Kiasi:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Ada:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation type="unfinished">Baada ya Ada</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -817,6 +904,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">Unda mkoba mpya</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Onyo</translation>
     </message>
     </context>
 <context>

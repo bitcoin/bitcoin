@@ -81,6 +81,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">Terdapat ralat semasa cubaan menyimpan senarai alamat kepada %1. Sila cuba lagi.</translation>
     </message>
     <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Alamat Terima - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Mengeksport Gagal</translation>
     </message>

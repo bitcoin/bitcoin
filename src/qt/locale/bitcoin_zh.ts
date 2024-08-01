@@ -434,10 +434,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%1 字节</translation>
     </message>
     <message>
-        <source>%1 MB</source>
-        <translation type="unfinished">%1 MB (百萬位元組)</translation>
-    </message>
-    <message>
         <source>%1 GB</source>
         <translation type="unfinished">%1 GB (十億位元組)</translation>
     </message>

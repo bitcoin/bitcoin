@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">&amp;Schließen</translation>
+        <translation type="unfinished">&amp;Schliessen</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -445,6 +445,18 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message>
         <source>Create a new wallet</source>
         <translation type="unfinished">Neues Wallet erstellen</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Minimieren</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation type="unfinished">&amp;Senden</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">&amp;Empfangen</translation>
     </message>
     <message>
         <source>&amp;Options…</source>

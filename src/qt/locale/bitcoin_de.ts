@@ -366,10 +366,6 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">%1 T</translation>
     </message>
     <message>
-        <source>%1 h</source>
-        <translation type="unfinished">%1 S</translation>
-    </message>
-    <message>
         <source>%1 m</source>
         <translation type="unfinished">%1 min</translation>
     </message>
@@ -1226,7 +1222,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     </message>
     <message>
         <source>You are one step away from creating your new wallet!</source>
-        <translation type="unfinished">Nur noch einen Schritt entfernt, das neue Wallet zu erstellen!</translation>
+        <translation type="unfinished">Nur noch einen Schritt entfernt um das neue Wallet zu erstellen!</translation>
     </message>
     <message>
         <source>Please provide a name and, if desired, enable any advanced options</source>
@@ -2169,7 +2165,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
-        <translation type="unfinished">Übertragen</translation>
+        <translation type="unfinished">Gesendet</translation>
     </message>
     <message>
         <source>Received</source>
@@ -2310,7 +2306,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>Sent</source>
-        <translation type="unfinished">Übertragen</translation>
+        <translation type="unfinished">Gesendet</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
@@ -2685,7 +2681,7 @@ Benutze %3 und %4, um die Fontgröße zu vergrößern bzw. verkleinern.
 Tippe %5 für einen Überblick über verfügbare Befehle.
 Für weitere Informationen über diese Konsole, tippe %6.
 
-%7 ACHTUNG: Es sind Betrüger zu Gange, die Benutzer anweisen, hier Kommandos einzugeben, wodurch sie den Inhalt der Wallet stehlen können. Benutze diese Konsole nicht, ohne die Implikationen eines Kommandos vollständig zu verstehen.%8</translation>
+%7ACHTUNG: Es sind Betrüger zu Gange, die Benutzer anweisen, hier Kommandos einzugeben, wodurch sie den Inhalt der Wallet stehlen können. Benutze diese Konsole nicht, ohne die Implikationen eines Kommandos vollständig zu verstehen.%8</translation>
     </message>
     <message>
         <source>Executing…</source>
@@ -3042,7 +3038,7 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
-        <translation type="unfinished">Eine niedrige Gebühr kann dazu führen das eine Transaktion niemals bestätigt wird (Lesen sie die Anmerkung).</translation>
+        <translation type="unfinished">Eine niedrige Gebühr kann dazu führen das eine Transaktion niemals bestätigt wird (Lesen Sie die Anmerkung).</translation>
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
@@ -3124,7 +3120,7 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     </message>
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation type="unfinished">Erzeugt eine teilsignierte Bitcoin Transaktion (PSBT) zur Benutzung mit z.B. einem Offline %1 Wallet, oder einem kompatiblen Hardware Wallet.</translation>
+        <translation type="unfinished">Erzeugt eine teilsignierte Bitcoin Transaktion (PSBT) zur Benutzung mit z.B. einem Offline %1 Wallet oder einem kompatiblen Hardware Wallet.</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
