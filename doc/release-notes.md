@@ -1,4 +1,4 @@
-# Dash Core version v21.0.1
+# Dash Core version v21.0.2
 
 This is a new patch release, bringing an important bugfix, as well as docker build improvements.
 
@@ -48,7 +48,7 @@ The [docker images](https://hub.docker.com/r/dashpay/dashd) should now provide S
 SBOM and provenenance provide additional information about the build process and exact dependencies included.
 See this [blog post](https://www.docker.com/blog/generate-sboms-with-buildkit/) by Docker for more information.
 
-# v21.0.1 Change log
+# v21.0.2 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -116,4 +116,4 @@ These release are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v21.0.0...dashpay:v21.0.1
+[set-of-changes]: https://github.com/dashpay/dash/compare/v21.0.0...dashpay:v21.0.2
