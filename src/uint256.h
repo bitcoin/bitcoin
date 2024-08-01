@@ -53,17 +53,46 @@ public:
         std::fill(m_data.begin(), m_data.end(), 0);
     }
 
+    /** Lexicographic ordering
+     * @note Does NOT match the ordering on the corresponding \ref
+     *       base_uint::CompareTo, which starts comparing from the end.
+     */
     constexpr int Compare(const base_blob& other) const { return std::memcmp(m_data.data(), other.m_data.data(), WIDTH); }
 
     friend constexpr bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend constexpr bool operator!=(const base_blob& a, const base_blob& b) { return a.Compare(b) != 0; }
     friend constexpr bool operator<(const base_blob& a, const base_blob& b) { return a.Compare(b) < 0; }
 
-    // Hex string representations are little-endian.
+    /** @name Hex representation
+     *
+     * The reverse-byte hex representation is a convenient way to view the blob
+     * as a number, because it is consistent with the way the base_uint class
+     * converts blobs to numbers.
+     *
+     * @note base_uint treats the blob as an array of bytes with the numerically
+     * least significant byte first and the most significant byte last. Because
+     * numbers are typically written with the most significant digit first and
+     * the least significant digit last, the reverse hex display of the blob
+     * corresponds to the same numeric value that base_uint interprets from the
+     * blob.
+     * @{*/
     std::string GetHex() const;
-    /** Unlike FromHex this accepts any invalid input, thus it is fragile and deprecated */
+    /** Unlike FromHex this accepts any invalid input, thus it is fragile and deprecated!
+     *
+     * - Hex numbers that don't specify enough bytes to fill the internal array
+     *   will be treated as setting the beginning of it, which corresponds to
+     *   the least significant bytes when converted to base_uint.
+     *
+     * - Hex numbers specifying too many bytes will have the numerically most
+     *   significant bytes (the beginning of the string) narrowed away.
+     *
+     * - An odd count of hex digits will result in the high bits of the leftmost
+     *   byte being zero.
+     *   "0x123" => {0x23, 0x1, 0x0, ..., 0x0}
+     */
     void SetHexDeprecated(std::string_view str);
     std::string ToString() const;
+    /**@}*/
 
     constexpr const unsigned char* data() const { return m_data.data(); }
     constexpr unsigned char* data() { return m_data.data(); }
@@ -93,7 +122,7 @@ public:
 
 namespace detail {
 /**
- * Writes the hex string (treated as little-endian) into a new uintN_t object
+ * Writes the hex string (in reverse byte order) into a new uintN_t object
  * and only returns a value iff all of the checks pass:
  *   - Input length is uintN_t::size()*2
  *   - All characters are hex
@@ -134,7 +163,7 @@ public:
     static const uint256 ONE;
 };
 
-/* uint256 from std::string_view, treated as little-endian.
+/* uint256 from std::string_view, containing byte-reversed hex encoding.
  * DEPRECATED. Unlike FromHex this accepts any invalid input, thus it is fragile and deprecated!
  */
 inline uint256 uint256S(std::string_view str)
