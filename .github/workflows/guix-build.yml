@@ -3,6 +3,9 @@ name: Guix Build
 on:
   pull_request:
     types: [ labeled ]
+  push:
+    tags:
+      - '*'           # Push events to every tag not containing /
   workflow_dispatch:
 
 jobs:
