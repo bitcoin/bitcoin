@@ -21,6 +21,10 @@
 #include <wallet/walletdb.h>
 
 namespace blsct {
+
+const int64_t CHANGE_ACCOUNT = -1;
+const int64_t STAKING_ACCOUNT = -2;
+
 class Manager
 {
 protected:

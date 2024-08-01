@@ -1251,6 +1251,8 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
     {
         AssertLockHeld(cs_wallet);
 
+        std::vector<uint256> vHashToZap;
+
         if (auto* conf = std::get_if<TxStateConfirmed>(&state)) {
             for (const CTxIn& txin : tx.vin) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(txin.prevout);
@@ -1260,18 +1262,18 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                             WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), conf->confirmed_block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
                             MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second);
                         } else {
-                            std::vector<uint256> vHash;
-                            vHash.push_back(range.first->second);
-                            std::vector<uint256> vHashOut;
-
-                            if (ZapSelectTx(vHash, vHashOut) != DBErrors::LOAD_OK) {
-                                AbandonTransaction(range.first->second);
-                            }
+                            vHashToZap.push_back(range.first->second);
                         }
                     }
                     range.first++;
                 }
             }
+        }
+
+        std::vector<uint256> vHashOut;
+
+        if (ZapSelectTx(vHashToZap, vHashOut) != DBErrors::LOAD_OK) {
+            throw std::runtime_error("DB error zapping conflicted transaction, load failed");
         }
 
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
@@ -1305,6 +1307,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                 }
             }
 
+
             // Block disconnection override an abandoned tx as unconfirmed
             // which means user may have to call abandontransaction again
             TxState tx_state = std::visit([](auto&& s) -> TxState { return s; }, state);
@@ -1314,6 +1317,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                 // As we only store arriving transaction in this process, and we don't want an inconsistent state, let's throw an error.
                 throw std::runtime_error("DB error adding transaction to wallet, write failed");
             }
+
             return true;
         }
     }

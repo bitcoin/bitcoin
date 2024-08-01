@@ -43,7 +43,7 @@ Signature UnsignedOutput::GetSignature() const
     return Signature::Aggregate(txSigs);
 }
 
-UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const CreateOutputType& type, const CAmount& minStake)
+UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destKeys, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId, const Scalar& blindingKey, const CreateTransactionType& type, const CAmount& minStake)
 {
     bulletproofs::RangeProofLogic<T> rp;
     auto ret = UnsignedOutput();

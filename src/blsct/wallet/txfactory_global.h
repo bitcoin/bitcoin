@@ -59,14 +59,15 @@ struct Amounts {
     CAmount nFromOutputs;
 };
 
-enum CreateOutputType {
+enum CreateTransactionType {
     NORMAL,
-    STAKED_COMMITMENT
+    STAKED_COMMITMENT,
+    STAKED_COMMITMENT_UNSTAKE
 };
 
 CTransactionRef
 AggregateTransactions(const std::vector<CTransactionRef>& txs);
-UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const Scalar& blindingKey = Scalar::Rand(), const CreateOutputType& type = NORMAL, const CAmount& minStake = 0);
+UnsignedOutput CreateOutput(const blsct::DoublePublicKey& destination, const CAmount& nAmount, std::string sMemo, const TokenId& tokenId = TokenId(), const Scalar& blindingKey = Scalar::Rand(), const CreateTransactionType& type = NORMAL, const CAmount& minStake = 0);
 } // namespace blsct
 
 #endif // TXFACTORY_GLOBAL_H

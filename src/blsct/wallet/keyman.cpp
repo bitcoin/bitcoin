@@ -833,7 +833,7 @@ bool KeyMan::OutputIsChange(const CTxOut& out) const
     blsct::SubAddressIdentifier subAddId;
 
     if (GetSubAddressId(id, subAddId)) {
-        return subAddId.account == -1;
+        return subAddId.account == CHANGE_ACCOUNT;
     }
 
     return false;

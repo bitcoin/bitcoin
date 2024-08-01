@@ -218,7 +218,7 @@ UniValue SendBLSCTMoney(CWallet& wallet, std::vector<CBLSCTRecipient>& recipient
     std::shuffle(recipients.begin(), recipients.end(), FastRandomContext());
 
     // Send
-    auto outputType = recipients[0].fStakeCommitment ? blsct::CreateOutputType::STAKED_COMMITMENT : blsct::CreateOutputType::NORMAL;
+    auto outputType = recipients[0].fStakeCommitment ? blsct::CreateTransactionType::STAKED_COMMITMENT : blsct::CreateTransactionType::NORMAL;
     auto minStake = recipients[0].fStakeCommitment ? minStakeIn : 0;
 
     auto res = blsct::TxFactory::CreateTransaction(&wallet, wallet.GetBLSCTKeyMan(), recipients[0].destination, recipients[0].nAmount, recipients[0].sMemo, TokenId(), outputType, minStake);
@@ -255,10 +255,10 @@ UniValue UnstakeBLSCT(CWallet& wallet, std::vector<CBLSCTRecipient>& recipients,
     std::shuffle(recipients.begin(), recipients.end(), FastRandomContext());
 
     // Send
-    auto outputType = blsct::CreateOutputType::NORMAL;
+    auto outputType = blsct::CreateTransactionType::STAKED_COMMITMENT_UNSTAKE;
     auto minStake = minStakeIn;
 
-    auto res = blsct::TxFactory::CreateTransaction(&wallet, wallet.GetBLSCTKeyMan(), recipients[0].destination, recipients[0].nAmount, recipients[0].sMemo, TokenId(), outputType, minStake, true);
+    auto res = blsct::TxFactory::CreateTransaction(&wallet, wallet.GetBLSCTKeyMan(), recipients[0].destination, recipients[0].nAmount, recipients[0].sMemo, TokenId(), outputType, minStake);
 
     if (!res) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Not enough funds available");

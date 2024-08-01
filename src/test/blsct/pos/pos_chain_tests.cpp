@@ -25,7 +25,7 @@ BOOST_FIXTURE_TEST_SUITE(pos_chain_tests, WalletTestingSetup)
 Coin CreateCoin(const blsct::DoublePublicKey& recvAddress)
 {
     Coin coin;
-    auto out = blsct::CreateOutput(recvAddress, 1000 * COIN, "test", TokenId(), Scalar::Rand(), blsct::CreateOutputType::STAKED_COMMITMENT, 1000 * COIN);
+    auto out = blsct::CreateOutput(recvAddress, 1000 * COIN, "test", TokenId(), Scalar::Rand(), blsct::CreateTransactionType::STAKED_COMMITMENT, 1000 * COIN);
     coin.nHeight = 1;
     coin.out = out.out;
     return coin;
@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_CASE(StakedCommitment, TestBLSCTChain100Setup)
     Coin coin2 = CreateCoin(recvAddress);
     Coin coin3;
 
-    auto out3 = blsct::CreateOutput(recvAddress, 1000 * COIN, "test", TokenId(), Scalar::Rand(), blsct::CreateOutputType::STAKED_COMMITMENT, 999 * COIN);
+    auto out3 = blsct::CreateOutput(recvAddress, 1000 * COIN, "test", TokenId(), Scalar::Rand(), blsct::CreateTransactionType::STAKED_COMMITMENT, 999 * COIN);
     coin3.nHeight = 1;
     coin3.out = out3.out;
 
