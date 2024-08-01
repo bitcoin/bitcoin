@@ -46,16 +46,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Restore Guix cache and depends
+      - name: Cache Guix and depends
         id: guix-cache-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache@v3
         with:
           path: |
             ${{ github.workspace }}/.cache
             ${{ github.workspace }}/dash/depends/built
             ${{ github.workspace }}/dash/depends/sources
             ${{ github.workspace }}/dash/depends/work
-          key: ${{ runner.os }}-guix
+          key: ${{ runner.os }}-guix-${{ github.event.pull_request.head.sha }}
+          restore-keys: |
+            ${{ runner.os }}-guix-${{ github.event.pull_request.head.sha }}
+            ${{ runner.os }}-guix-
+
+
 
       - name: Create .cache folder if missing
         if: steps.guix-cache-restore.outputs.cache-hit != 'true'
@@ -79,17 +84,6 @@ jobs:
             echo "Guix build failed!"
             exit 1
           fi
-
-      - name: Save Guix cache and depends
-        id: guix-cache-save
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            ${{ github.workspace }}/.cache
-            ${{ github.workspace }}/dash/depends/built
-            ${{ github.workspace }}/dash/depends/sources
-            ${{ github.workspace }}/dash/depends/work
-          key: ${{ steps.guix-cache-restore.outputs.cache-primary-key }}
 
       - name: Compute SHA256 checksums
         run: |
