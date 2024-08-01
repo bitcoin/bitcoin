@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 LABEL maintainer="Dash Developers <dev@dash.org>"
 LABEL description="Dockerised DashCore"
 
@@ -32,6 +32,14 @@ RUN mach=$(uname -m) \
       && find /tmp/dashcore*/bin -type f ! -name 'dash-qt' -exec cp {} /usr/local/bin \; \
       && rm -rf /tmp/dashcore* \
       && chmod a+x /usr/local/bin/*
+
+RUN apt-get update && \
+    apt list --installed && \
+    apt-get -y purge \
+    wget \
+    ca-certificates \
+    && apt-get -y autoremove \
+    && rm -rf /var/lib/apt/lists/*
 
 USER dash
 
