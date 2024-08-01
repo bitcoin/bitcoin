@@ -6,12 +6,15 @@
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/strencodings.h>
+#include <util/transaction_identifier.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(uint256_tests)
@@ -328,6 +331,59 @@ BOOST_AUTO_TEST_CASE(parse)
         BOOST_CHECK_EQUAL(uint256S(" 0x").GetHex(), s_0);
         BOOST_CHECK_EQUAL(uint256S(" ").GetHex(), s_0);
     }
+}
+
+/**
+ * Implemented as a templated function so it can be reused by other classes that have a FromHex()
+ * method that wraps base_blob::FromHex(), such as transaction_identifier::FromHex().
+ */
+template <typename T>
+void TestFromHex()
+{
+    constexpr unsigned int num_chars{T::size() * 2};
+    static_assert(num_chars <= 64); // this test needs to be modified to allow for more than 64 hex chars
+    const std::string valid_64char_input{"0123456789abcdef0123456789ABCDEF0123456789abcdef0123456789ABCDEF"};
+    const auto valid_input{valid_64char_input.substr(0, num_chars)};
+    {
+        // check that lower and upper case hex characters are accepted
+        auto valid_result{T::FromHex(valid_input)};
+        BOOST_REQUIRE(valid_result);
+        BOOST_CHECK_EQUAL(valid_result->ToString(), ToLower(valid_input));
+    }
+    {
+        // check that only strings of size num_chars are accepted
+        BOOST_CHECK(!T::FromHex(""));
+        BOOST_CHECK(!T::FromHex("0"));
+        BOOST_CHECK(!T::FromHex(valid_input.substr(0, num_chars / 2)));
+        BOOST_CHECK(!T::FromHex(valid_input.substr(0, num_chars - 1)));
+        BOOST_CHECK(!T::FromHex(valid_input + "0"));
+    }
+    {
+        // check that non-hex characters are not accepted
+        std::string invalid_chars{R"( !"#$%&'()*+,-./:;<=>?@GHIJKLMNOPQRSTUVWXYZ[\]^_`ghijklmnopqrstuvwxyz{|}~)"};
+        for (auto c : invalid_chars) {
+            BOOST_CHECK(!T::FromHex(valid_input.substr(0, num_chars - 1) + c));
+        }
+        // 0x prefixes are invalid
+        std::string invalid_prefix{"0x" + valid_input};
+        BOOST_CHECK(!T::FromHex(std::string_view(invalid_prefix.data(), num_chars)));
+        BOOST_CHECK(!T::FromHex(invalid_prefix));
+    }
+    {
+        // check that string_view length is respected
+        std::string chars_68{valid_64char_input + "0123"};
+        BOOST_CHECK_EQUAL(T::FromHex(std::string_view(chars_68.data(), num_chars)).value().ToString(), ToLower(valid_input));
+        BOOST_CHECK(!T::FromHex(std::string_view(chars_68.data(), num_chars - 1))); // too short
+        BOOST_CHECK(!T::FromHex(std::string_view(chars_68.data(), num_chars + 1))); // too long
+    }
+}
+
+BOOST_AUTO_TEST_CASE(from_hex)
+{
+    TestFromHex<uint160>();
+    TestFromHex<uint256>();
+    TestFromHex<Txid>();
+    TestFromHex<Wtxid>();
 }
 
 BOOST_AUTO_TEST_CASE( check_ONE )

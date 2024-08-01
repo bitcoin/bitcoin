@@ -43,13 +43,6 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
     }
     return MakeTransactionRef(mtx);
 }
-
-// Create a Wtxid from a hex string
-inline Wtxid WtxidFromString(std::string_view str)
-{
-    return Wtxid::FromUint256(uint256S(str));
-}
-
 BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)
 {
     // Random real segwit transaction
@@ -74,9 +67,9 @@ BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)
     CTransactionRef ptx_3{MakeTransactionRef(tx_3)};
 
     // It's easy to see that wtxids are sorted in lexicographical order:
-    Wtxid wtxid_1{WtxidFromString("0x85cd1a31eb38f74ed5742ec9cb546712ab5aaf747de28a9168b53e846cbda17f")};
-    Wtxid wtxid_2{WtxidFromString("0xb4749f017444b051c44dfd2720e88f314ff94f3dd6d56d40ef65854fcd7fff6b")};
-    Wtxid wtxid_3{WtxidFromString("0xe065bac15f62bb4e761d761db928ddee65a47296b2b776785abb912cdec474e3")};
+    Wtxid wtxid_1{Wtxid::FromHex("85cd1a31eb38f74ed5742ec9cb546712ab5aaf747de28a9168b53e846cbda17f").value()};
+    Wtxid wtxid_2{Wtxid::FromHex("b4749f017444b051c44dfd2720e88f314ff94f3dd6d56d40ef65854fcd7fff6b").value()};
+    Wtxid wtxid_3{Wtxid::FromHex("e065bac15f62bb4e761d761db928ddee65a47296b2b776785abb912cdec474e3").value()};
     BOOST_CHECK_EQUAL(tx_1.GetWitnessHash(), wtxid_1);
     BOOST_CHECK_EQUAL(tx_2.GetWitnessHash(), wtxid_2);
     BOOST_CHECK_EQUAL(tx_3.GetWitnessHash(), wtxid_3);
@@ -85,9 +78,9 @@ BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)
     BOOST_CHECK(wtxid_2.GetHex() < wtxid_3.GetHex());
 
     // The txids are not (we want to test that sorting and hashing use wtxid, not txid):
-    Txid txid_1{TxidFromString("0xbd0f71c1d5e50589063e134fad22053cdae5ab2320db5bf5e540198b0b5a4e69")};
-    Txid txid_2{TxidFromString("0xb4749f017444b051c44dfd2720e88f314ff94f3dd6d56d40ef65854fcd7fff6b")};
-    Txid txid_3{TxidFromString("0xee707be5201160e32c4fc715bec227d1aeea5940fb4295605e7373edce3b1a93")};
+    Txid txid_1{Txid::FromHex("bd0f71c1d5e50589063e134fad22053cdae5ab2320db5bf5e540198b0b5a4e69").value()};
+    Txid txid_2{Txid::FromHex("b4749f017444b051c44dfd2720e88f314ff94f3dd6d56d40ef65854fcd7fff6b").value()};
+    Txid txid_3{Txid::FromHex("ee707be5201160e32c4fc715bec227d1aeea5940fb4295605e7373edce3b1a93").value()};
     BOOST_CHECK_EQUAL(tx_1.GetHash(), txid_1);
     BOOST_CHECK_EQUAL(tx_2.GetHash(), txid_2);
     BOOST_CHECK_EQUAL(tx_3.GetHash(), txid_3);
