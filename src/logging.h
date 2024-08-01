@@ -57,6 +57,7 @@ enum LogFlags : uint64_t {
     MEMPOOLREJ = (1 << 16),
     LIBEVENT = (1 << 17),
     COINDB = (1 << 18),
+    POPS = (1 << 19),
     LEVELDB = (1 << 20),
     VALIDATION = (1 << 21),
     I2P = (1 << 22),
@@ -70,7 +71,6 @@ enum LogFlags : uint64_t {
     SCAN = (1 << 28),
     TXPACKAGES = (1 << 29),
     DANDELION = (1 << 30),
-    POPS = (1ULL << 31),
     ALL = ~(uint64_t)0,
 };
     enum class Level {
