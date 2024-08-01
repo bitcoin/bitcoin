@@ -48,6 +48,10 @@ class P2PEvict(BitcoinTestFramework):
         # 4 by netgroup, 4 that sent us blocks, 4 that sent us transactions and 8 via lowest ping time
         self.extra_args = [['-maxconnections=32']]
 
+    def setup_network(self):
+        self.disable_mocktime()
+        super().setup_network()
+
     def run_test(self):
         protected_peers = set()  # peers that we expect to be protected from eviction
         current_peer = -1
