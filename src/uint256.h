@@ -41,6 +41,8 @@ public:
         std::copy(vch.begin(), vch.end(), m_data.begin());
     }
 
+    consteval explicit base_blob(std::string_view hex_str);
+
     constexpr bool IsNull() const
     {
         return std::all_of(m_data.begin(), m_data.end(), [](uint8_t val) {
@@ -120,6 +122,26 @@ public:
     }
 };
 
+template <unsigned int BITS>
+consteval base_blob<BITS>::base_blob(std::string_view hex_str)
+{
+    // Non-lookup table version of HexDigit().
+    auto from_hex = [](const char c) -> int8_t {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 0xA;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 0xA;
+
+        assert(false); // Reached if ctor is called with an invalid hex digit.
+    };
+
+    assert(hex_str.length() == m_data.size() * 2); // 2 hex digits per byte.
+    auto str_it = hex_str.rbegin();
+    for (auto& elem : m_data) {
+        auto lo = from_hex(*(str_it++));
+        elem = (from_hex(*(str_it++)) << 4) | lo;
+    }
+}
+
 namespace detail {
 /**
  * Writes the hex string (in reverse byte order) into a new uintN_t object
@@ -157,6 +179,7 @@ class uint256 : public base_blob<256> {
 public:
     static std::optional<uint256> FromHex(std::string_view str) { return detail::FromHex<uint256>(str); }
     constexpr uint256() = default;
+    consteval explicit uint256(std::string_view hex_str) : base_blob<256>(hex_str) {}
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
     constexpr explicit uint256(Span<const unsigned char> vch) : base_blob<256>(vch) {}
     static const uint256 ZERO;
