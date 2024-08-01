@@ -3806,30 +3806,7 @@ void PeerManagerImpl::ProcessMessage(
                 statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
-
-                if (fAlreadyHave || fImporting || fReindex || mapBlocksInFlight.count(inv.hash)) {
-                    continue;
-                }
-
-                CNodeState *state = State(pfrom.GetId());
-                if (!state) {
-                    continue;
-                }
-
-                // Download if this is a nice peer, or we have no nice peers and this one might do.
-                bool fFetch = state->fPreferredDownload || (nPreferredDownload == 0 && !pfrom.IsAddrFetchConn());
-                // Only actively request headers from a single peer, unless we're close to end of initial download.
-                if ((nSyncStarted == 0 && fFetch) || m_chainman.m_best_header->GetBlockTime() > GetAdjustedTime() - nMaxTipAge) {
-                    // Make sure to mark this peer as the one we are currently syncing with etc.
-                    state->fSyncStarted = true;
-                    state->m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
-                        (
-                            // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
-                            // to maintain precision
-                            std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
-                            (GetAdjustedTime() - m_chainman.m_best_header->GetBlockTime()) / m_chainparams.GetConsensus().nPowTargetSpacing
-                        );
-                    nSyncStarted++;
+                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
                     // Headers-first is the primary method of announcement on
                     // the network. If a node fell back to sending blocks by inv,
                     // it's probably for a re-org. The final block hash
