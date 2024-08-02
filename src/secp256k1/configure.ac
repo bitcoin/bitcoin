@@ -6,7 +6,7 @@ AC_PREREQ([2.60])
 define(_PKG_VERSION_MAJOR, 0)
 define(_PKG_VERSION_MINOR, 5)
 define(_PKG_VERSION_PATCH, 1)
-define(_PKG_VERSION_IS_RELEASE, false)
+define(_PKG_VERSION_IS_RELEASE, true)
 
 # The library version is based on libtool versioning of the ABI. The set of
 # rules for updating the version can be found here:
@@ -216,9 +216,9 @@ AC_ARG_WITH([ecmult-window], [AS_HELP_STRING([--with-ecmult-window=SIZE],
 AC_ARG_WITH([ecmult-gen-kb], [AS_HELP_STRING([--with-ecmult-gen-kb=2|22|86],
 [The size of the precomputed table for signing in multiples of 1024 bytes (on typical platforms).]
 [Larger values result in possibly better signing/keygeneration performance at the cost of a larger table.]
-[The default value is a reasonable setting for desktop machines (currently 22). [default=22]]
+[The default value is a reasonable setting for desktop machines (currently 86). [default=86]]
 )],
-[set_ecmult_gen_kb=$withval], [set_ecmult_gen_kb=22])
+[set_ecmult_gen_kb=$withval], [set_ecmult_gen_kb=86])
 
 AC_ARG_WITH([valgrind], [AS_HELP_STRING([--with-valgrind=yes|no|auto],
 [Build with extra checks for running inside Valgrind [default=auto]]

@@ -10,6 +10,7 @@ ctime_tests
 ecdh_example
 ecdsa_example
 schnorr_example
+ellswift_example
 *.exe
 *.so
 *.a
