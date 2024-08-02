@@ -16,7 +16,7 @@
 COutPoint AddTestCoin(CCoinsViewCache& coins_view)
 {
     Coin new_coin;
-    COutPoint outpoint{Txid::FromUint256(InsecureRand256()), /*nIn=*/0};
+    COutPoint outpoint{Txid::FromUint256(g_rng.rand256()), /*nIn=*/0};
     new_coin.nHeight = 1;
     new_coin.out.nValue = InsecureRandMoneyAmount();
     new_coin.out.scriptPubKey.assign(uint32_t{56}, 1);

@@ -85,26 +85,26 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
 void static RandomScript(CScript &script) {
     static const opcodetype oplist[] = {OP_FALSE, OP_1, OP_2, OP_3, OP_CHECKSIG, OP_IF, OP_VERIF, OP_RETURN, OP_CODESEPARATOR};
     script = CScript();
-    int ops = (InsecureRandRange(10));
+    int ops = (g_rng.randrange(10));
     for (int i=0; i<ops; i++)
-        script << oplist[InsecureRandRange(std::size(oplist))];
+        script << oplist[g_rng.randrange(std::size(oplist))];
 }
 
 void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
 {
-    tx.version = InsecureRand32();
+    tx.version = g_rng.rand32();
     tx.vin.clear();
     tx.vout.clear();
-    tx.nLockTime = (InsecureRandBool()) ? InsecureRand32() : 0;
-    int ins = (InsecureRandBits(2)) + 1;
-    int outs = fSingle ? ins : (InsecureRandBits(2)) + 1;
+    tx.nLockTime = (g_rng.randbool()) ? g_rng.rand32() : 0;
+    int ins = (g_rng.randbits(2)) + 1;
+    int outs = fSingle ? ins : (g_rng.randbits(2)) + 1;
     for (int in = 0; in < ins; in++) {
         tx.vin.emplace_back();
         CTxIn &txin = tx.vin.back();
-        txin.prevout.hash = Txid::FromUint256(InsecureRand256());
-        txin.prevout.n = InsecureRandBits(2);
+        txin.prevout.hash = Txid::FromUint256(g_rng.rand256());
+        txin.prevout.n = g_rng.randbits(2);
         RandomScript(txin.scriptSig);
-        txin.nSequence = (InsecureRandBool()) ? InsecureRand32() : std::numeric_limits<uint32_t>::max();
+        txin.nSequence = (g_rng.randbool()) ? g_rng.rand32() : std::numeric_limits<uint32_t>::max();
     }
     for (int out = 0; out < outs; out++) {
         tx.vout.emplace_back();
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE(sighash_test)
     int nRandomTests = 50000;
     #endif
     for (int i=0; i<nRandomTests; i++) {
-        int nHashType{int(InsecureRand32())};
+        int nHashType{int(g_rng.rand32())};
         CMutableTransaction txTo;
         RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
         CScript scriptCode;
         RandomScript(scriptCode);
-        int nIn = InsecureRandRange(txTo.vin.size());
+        int nIn = g_rng.randrange(txTo.vin.size());
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, CTransaction(txTo), nIn, nHashType);

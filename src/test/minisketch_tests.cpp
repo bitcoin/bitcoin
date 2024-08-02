@@ -19,11 +19,11 @@ BOOST_AUTO_TEST_SUITE(minisketch_tests)
 BOOST_AUTO_TEST_CASE(minisketch_test)
 {
     for (int i = 0; i < 100; ++i) {
-        uint32_t errors = 0 + InsecureRandRange(11);
-        uint32_t start_a = 1 + InsecureRandRange(1000000000);
-        uint32_t a_not_b = InsecureRandRange(errors + 1);
+        uint32_t errors = 0 + g_rng.randrange(11);
+        uint32_t start_a = 1 + g_rng.randrange(1000000000);
+        uint32_t a_not_b = g_rng.randrange(errors + 1);
         uint32_t b_not_a = errors - a_not_b;
-        uint32_t both = InsecureRandRange(10000);
+        uint32_t both = g_rng.randrange(10000);
         uint32_t end_a = start_a + a_not_b + both;
         uint32_t start_b = start_a + a_not_b;
         uint32_t end_b = start_b + both + b_not_a;

@@ -64,7 +64,7 @@ struct TestOpts {
 struct BasicTestingSetup {
     util::SignalInterrupt m_interrupt;
     node::NodeContext m_node; // keep as first member to be destructed last
-    FastRandomContext& m_rng{g_insecure_rand_ctx}; // Alias (reference) for the global, to allow easy removal of the global in the future.
+    FastRandomContext& m_rng{g_rng}; // Alias (reference) for the global, to allow easy removal of the global in the future.
 
     explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~BasicTestingSetup();
