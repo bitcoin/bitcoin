@@ -192,7 +192,7 @@ class SpendTooMuch(BadTxTemplate):
 
     def get_tx(self):
         return create_tx_with_script(
-            self.spend_tx, 0, script_pub_key=basic_p2sh, amount=(self.spend_avail + 1))
+            self.spend_tx, 0, output_script=basic_p2sh, amount=(self.spend_avail + 1))
 
 
 class CreateNegative(BadTxTemplate):
@@ -242,7 +242,7 @@ class TooManySigops(BadTxTemplate):
         lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         return create_tx_with_script(
             self.spend_tx, 0,
-            script_pub_key=lotsa_checksigs,
+            output_script=lotsa_checksigs,
             amount=1)
 
 def getDisabledOpcodeTemplate(opcode):

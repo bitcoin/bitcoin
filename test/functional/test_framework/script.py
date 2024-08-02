@@ -810,7 +810,7 @@ def BIP341_sha_sequences(txTo):
 def BIP341_sha_outputs(txTo):
     return sha256(b"".join(o.serialize() for o in txTo.vout))
 
-def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpath = False, script = CScript(), codeseparator_pos = -1, annex = None, leaf_ver = LEAF_VERSION_TAPSCRIPT):
+def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpath=False, leaf_script=None, codeseparator_pos=-1, annex=None, leaf_ver=LEAF_VERSION_TAPSCRIPT):
     assert (len(txTo.vin) == len(spent_utxos))
     assert (input_index < len(txTo.vin))
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
@@ -829,7 +829,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpat
     spend_type = 0
     if annex is not None:
         spend_type |= 1
-    if (scriptpath):
+    if scriptpath:
         spend_type |= 2
     ss += bytes([spend_type])
     if in_type == SIGHASH_ANYONECANPAY:
@@ -846,11 +846,11 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index = 0, scriptpat
             ss += sha256(txTo.vout[input_index].serialize())
         else:
             ss += bytes(0 for _ in range(32))
-    if (scriptpath):
-        ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(script))
+    if scriptpath:
+        ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(leaf_script))
         ss += bytes([0])
         ss += codeseparator_pos.to_bytes(4, "little", signed=True)
-    assert len(ss) ==  175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
+    assert len(ss) == 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
     return ss
 
 def TaprootSignatureHash(*args, **kwargs):
