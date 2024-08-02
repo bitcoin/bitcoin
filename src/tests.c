@@ -6609,14 +6609,6 @@ static void permute(size_t *arr, size_t n) {
     }
 }
 
-static void rand_pk(secp256k1_pubkey *pk) {
-    unsigned char seckey[32];
-    secp256k1_keypair keypair;
-    testrand256(seckey);
-    CHECK(secp256k1_keypair_create(CTX, &keypair, seckey) == 1);
-    CHECK(secp256k1_keypair_pub(CTX, pk, &keypair) == 1);
-}
-
 static void test_sort_api(void) {
     secp256k1_pubkey pks[2];
     const secp256k1_pubkey *pks_ptr[2];
@@ -6624,8 +6616,8 @@ static void test_sort_api(void) {
     pks_ptr[0] = &pks[0];
     pks_ptr[1] = &pks[1];
 
-    rand_pk(&pks[0]);
-    rand_pk(&pks[1]);
+    testutil_random_pubkey_test(&pks[0]);
+    testutil_random_pubkey_test(&pks[1]);
 
     CHECK(secp256k1_ec_pubkey_sort(CTX, pks_ptr, 2) == 1);
     CHECK_ILLEGAL(CTX, secp256k1_ec_pubkey_sort(CTX, NULL, 2));
@@ -6678,7 +6670,7 @@ static void test_sort(void) {
         int j;
         const secp256k1_pubkey *pk_ptr[5];
         for (j = 0; j < 5; j++) {
-            rand_pk(&pk[j]);
+            testutil_random_pubkey_test(&pk[j]);
             pk_ptr[j] = &pk[j];
         }
         secp256k1_ec_pubkey_sort(CTX, pk_ptr, 5);
