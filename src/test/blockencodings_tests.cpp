@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
 
 BOOST_AUTO_TEST_CASE(TransactionsRequestSerializationTest) {
     BlockTransactionsRequest req1;
-    req1.blockhash = InsecureRand256();
+    req1.blockhash = m_rng.rand256();
     req1.indexes.resize(4);
     req1.indexes[0] = 0;
     req1.indexes[1] = 1;
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestSerializationTest) {
 BOOST_AUTO_TEST_CASE(TransactionsRequestDeserializationMaxTest) {
     // Check that the highest legal index is decoded correctly
     BlockTransactionsRequest req0;
-    req0.blockhash = InsecureRand256();
+    req0.blockhash = m_rng.rand256();
     req0.indexes.resize(1);
     req0.indexes[0] = 0xffff;
     DataStream stream{};
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestDeserializationOverflowTest) {
     // a request cannot be created by serializing a real BlockTransactionsRequest
     // due to the overflow, so here we'll serialize from raw deltas.
     BlockTransactionsRequest req0;
-    req0.blockhash = InsecureRand256();
+    req0.blockhash = m_rng.rand256();
     req0.indexes.resize(3);
     req0.indexes[0] = 0x7000;
     req0.indexes[1] = 0x10000 - 0x7000 - 2;

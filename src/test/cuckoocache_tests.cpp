@@ -33,7 +33,7 @@ BOOST_FIXTURE_TEST_SUITE(cuckoocache_tests, BasicTestingSetup);
 
 /* Test that no values not inserted into the cache are read out of it.
  *
- * There are no repeats in the first 200000 InsecureRand256() calls
+ * There are no repeats in the first 200000 m_rng.rand256() calls
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 {
@@ -42,10 +42,10 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
     size_t megabytes = 4;
     cc.setup_bytes(megabytes << 20);
     for (int x = 0; x < 100000; ++x) {
-        cc.insert(InsecureRand256());
+        cc.insert(m_rng.rand256());
     }
     for (int x = 0; x < 100000; ++x) {
-        BOOST_CHECK(!cc.contains(InsecureRand256(), false));
+        BOOST_CHECK(!cc.contains(m_rng.rand256(), false));
     }
 };
 
@@ -66,7 +66,7 @@ double test_cache(size_t megabytes, double load)
     for (uint32_t i = 0; i < n_insert; ++i) {
         uint32_t* ptr = (uint32_t*)hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = InsecureRand32();
+            *(ptr++) = m_rng.rand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
@@ -139,7 +139,7 @@ void test_cache_erase(size_t megabytes)
     for (uint32_t i = 0; i < n_insert; ++i) {
         uint32_t* ptr = (uint32_t*)hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = InsecureRand32();
+            *(ptr++) = m_rng.rand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
@@ -204,7 +204,7 @@ void test_cache_erase_parallel(size_t megabytes)
     for (uint32_t i = 0; i < n_insert; ++i) {
         uint32_t* ptr = (uint32_t*)hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = InsecureRand32();
+            *(ptr++) = m_rng.rand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is

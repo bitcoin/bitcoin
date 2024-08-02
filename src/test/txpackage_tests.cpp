@@ -31,9 +31,9 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
     CMutableTransaction mtx = CMutableTransaction();
     mtx.vin.resize(num_inputs);
     mtx.vout.resize(num_outputs);
-    auto random_script = CScript() << ToByteVector(InsecureRand256()) << ToByteVector(InsecureRand256());
+    auto random_script = CScript() << ToByteVector(m_rng.rand256()) << ToByteVector(m_rng.rand256());
     for (size_t i{0}; i < num_inputs; ++i) {
-        mtx.vin[i].prevout.hash = Txid::FromUint256(InsecureRand256());
+        mtx.vin[i].prevout.hash = Txid::FromUint256(m_rng.rand256());
         mtx.vin[i].prevout.n = 0;
         mtx.vin[i].scriptSig = random_script;
     }
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(package_sanitization_tests)
     // Packages can't have transactions spending the same prevout
     CMutableTransaction tx_zero_1;
     CMutableTransaction tx_zero_2;
-    COutPoint same_prevout{Txid::FromUint256(InsecureRand256()), 0};
+    COutPoint same_prevout{Txid::FromUint256(m_rng.rand256()), 0};
     tx_zero_1.vin.emplace_back(same_prevout);
     tx_zero_2.vin.emplace_back(same_prevout);
     // Different vouts (not the same tx)
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(package_sanitization_tests)
     // IsConsistentPackage only cares about conflicts between transactions, not about a transaction
     // conflicting with itself (i.e. duplicate prevouts in vin).
     CMutableTransaction dup_tx;
-    const COutPoint rand_prevout{Txid::FromUint256(InsecureRand256()), 0};
+    const COutPoint rand_prevout{Txid::FromUint256(m_rng.rand256()), 0};
     dup_tx.vin.emplace_back(rand_prevout);
     dup_tx.vin.emplace_back(rand_prevout);
     Package package_with_dup_tx{MakeTransactionRef(dup_tx)};

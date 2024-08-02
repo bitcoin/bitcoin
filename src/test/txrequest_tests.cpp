@@ -64,8 +64,8 @@ struct Runner
     std::multiset<std::pair<NodeId, GenTxid>> expired;
 };
 
-std::chrono::microseconds TxRequestTest::RandomTime8s() { return std::chrono::microseconds{1 + InsecureRandBits(23)}; }
-std::chrono::microseconds TxRequestTest::RandomTime1y() { return std::chrono::microseconds{1 + InsecureRandBits(45)}; }
+std::chrono::microseconds TxRequestTest::RandomTime8s() { return std::chrono::microseconds{1 + m_rng.randbits(23)}; }
+std::chrono::microseconds TxRequestTest::RandomTime1y() { return std::chrono::microseconds{1 + m_rng.randbits(45)}; }
 
 /** A proxy for a Runner that helps build a sequence of consecutive test actions on a TxRequestTracker.
  *
@@ -213,7 +213,7 @@ public:
         uint256 ret;
         bool ok;
         do {
-            ret = InsecureRand256();
+            ret = m_rng.rand256();
             ok = true;
             for (const auto& order : orders) {
                 for (size_t pos = 1; pos < order.size(); ++pos) {
@@ -236,7 +236,7 @@ public:
     /** Generate a random GenTxid; the txhash follows NewTxHash; the is_wtxid flag is random. */
     GenTxid NewGTxid(const std::vector<std::vector<NodeId>>& orders = {})
     {
-        return InsecureRandBool() ? GenTxid::Wtxid(NewTxHash(orders)) : GenTxid::Txid(NewTxHash(orders));
+        return m_rng.randbool() ? GenTxid::Wtxid(NewTxHash(orders)) : GenTxid::Txid(NewTxHash(orders));
     }
 
     /** Generate a new random NodeId to use as peer. The same NodeId is never returned twice
@@ -246,7 +246,7 @@ public:
         bool ok;
         NodeId ret;
         do {
-            ret = InsecureRandBits(63);
+            ret = m_rng.randbits(63);
             ok = m_runner.peerset.insert(ret).second;
         } while(!ok);
         return ret;
@@ -296,7 +296,7 @@ void TxRequestTest::BuildSingleTest(Scenario& scenario, int config)
             scenario.CheckExpired(peer, gtxid);
             return;
         } else {
-            scenario.AdvanceTime(std::chrono::microseconds{InsecureRandRange(expiry.count())});
+            scenario.AdvanceTime(std::chrono::microseconds{m_rng.randrange(expiry.count())});
             scenario.Check(peer, {}, 0, 1, 0, "s9");
             if ((config >> 3) == 3) { // A response will arrive for the transaction
                 scenario.ReceivedResponse(peer, gtxid.GetHash());
@@ -333,7 +333,7 @@ void TxRequestTest::BuildPriorityTest(Scenario& scenario, int config)
 
     scenario.ReceivedInv(peer1, gtxid, pref1, MIN_TIME);
     scenario.Check(peer1, {gtxid}, 1, 0, 0, "p1");
-    if (InsecureRandBool()) {
+    if (m_rng.randbool()) {
         scenario.AdvanceTime(RandomTime8s());
         scenario.Check(peer1, {gtxid}, 1, 0, 0, "p2");
     }
@@ -349,7 +349,7 @@ void TxRequestTest::BuildPriorityTest(Scenario& scenario, int config)
     NodeId priopeer = stage2_prio ? peer2 : peer1, otherpeer = stage2_prio ? peer1 : peer2;
     scenario.Check(otherpeer, {}, 1, 0, 0, "p3");
     scenario.Check(priopeer, {gtxid}, 1, 0, 0, "p4");
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.Check(otherpeer, {}, 1, 0, 0, "p5");
     scenario.Check(priopeer, {gtxid}, 1, 0, 0, "p6");
 
@@ -358,7 +358,7 @@ void TxRequestTest::BuildPriorityTest(Scenario& scenario, int config)
         scenario.RequestedTx(priopeer, gtxid.GetHash(), MAX_TIME);
         scenario.Check(priopeer, {}, 0, 1, 0, "p7");
         scenario.Check(otherpeer, {}, 1, 0, 0, "p8");
-        if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+        if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     }
 
     // The peer which was selected (or requested from) now goes offline, or a NOTFOUND is received from them.
@@ -367,14 +367,14 @@ void TxRequestTest::BuildPriorityTest(Scenario& scenario, int config)
     } else {
         scenario.ReceivedResponse(priopeer, gtxid.GetHash());
     }
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.Check(priopeer, {}, 0, 0, !(config & 16), "p8");
     scenario.Check(otherpeer, {gtxid}, 1, 0, 0, "p9");
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
 
     // Now the other peer goes offline.
     scenario.DisconnectedPeer(otherpeer);
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.Check(peer1, {}, 0, 0, 0, "p10");
     scenario.Check(peer2, {}, 0, 0, 0, "p11");
 }
@@ -388,7 +388,7 @@ void TxRequestTest::BuildBigPriorityTest(Scenario& scenario, int peers)
     // We will have N peers announce the same transaction.
     std::map<NodeId, bool> preferred;
     std::vector<NodeId> pref_peers, npref_peers;
-    int num_pref = InsecureRandRange(peers + 1) ; // Some preferred, ...
+    int num_pref = m_rng.randrange(peers + 1) ; // Some preferred, ...
     int num_npref = peers - num_pref; // some not preferred.
     for (int i = 0; i < num_pref; ++i) {
         pref_peers.push_back(scenario.NewPeer());
@@ -406,7 +406,7 @@ void TxRequestTest::BuildBigPriorityTest(Scenario& scenario, int peers)
 
     // Determine the announcement order randomly.
     std::vector<NodeId> announce_order = request_order;
-    std::shuffle(announce_order.begin(), announce_order.end(), g_insecure_rand_ctx);
+    std::shuffle(announce_order.begin(), announce_order.end(), m_rng);
 
     // Find a gtxid whose txhash prioritization is consistent with the required ordering within pref_peers and
     // within npref_peers.
@@ -441,11 +441,11 @@ void TxRequestTest::BuildBigPriorityTest(Scenario& scenario, int peers)
     // Peers now in random order go offline, or send NOTFOUNDs. At every point in time the new to-be-requested-from
     // peer should be the best remaining one, so verify this after every response.
     for (int i = 0; i < peers; ++i) {
-        if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
-        const int pos = InsecureRandRange(request_order.size());
+        if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
+        const int pos = m_rng.randrange(request_order.size());
         const auto peer = request_order[pos];
         request_order.erase(request_order.begin() + pos);
-        if (InsecureRandBool()) {
+        if (m_rng.randbool()) {
             scenario.DisconnectedPeer(peer);
             scenario.Check(peer, {}, 0, 0, 0, "b4");
         } else {
@@ -513,17 +513,17 @@ void TxRequestTest::BuildWtxidTest(Scenario& scenario, int config)
     auto txid{GenTxid::Txid(txhash)};
     auto wtxid{GenTxid::Wtxid(txhash)};
 
-    auto reqtimeT = InsecureRandBool() ? MIN_TIME : scenario.Now() + RandomTime8s();
-    auto reqtimeW = InsecureRandBool() ? MIN_TIME : scenario.Now() + RandomTime8s();
+    auto reqtimeT = m_rng.randbool() ? MIN_TIME : scenario.Now() + RandomTime8s();
+    auto reqtimeW = m_rng.randbool() ? MIN_TIME : scenario.Now() + RandomTime8s();
 
     // Announce txid first or wtxid first.
     if (config & 1) {
         scenario.ReceivedInv(peerT, txid, config & 2, reqtimeT);
-        if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+        if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
         scenario.ReceivedInv(peerW, wtxid, !(config & 2), reqtimeW);
     } else {
         scenario.ReceivedInv(peerW, wtxid, !(config & 2), reqtimeW);
-        if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+        if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
         scenario.ReceivedInv(peerT, txid, config & 2, reqtimeT);
     }
 
@@ -566,7 +566,7 @@ void TxRequestTest::BuildWtxidTest(Scenario& scenario, int config)
 
     // If a good transaction with either that hash as wtxid or txid arrives, both
     // announcements are gone.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.ForgetTxHash(txhash);
     scenario.Check(peerT, {}, 0, 0, 0, "w13");
     scenario.Check(peerW, {}, 0, 0, 0, "w14");
@@ -591,13 +591,13 @@ void TxRequestTest::BuildTimeBackwardsTest(Scenario& scenario)
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r4");
 
     // Announce from peer1.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.ReceivedInv(peer1, gtxid, true, MAX_TIME);
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r5");
     scenario.Check(peer1, {}, 1, 0, 0, "r6");
 
     // Request from peer1.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     auto expiry = scenario.Now() + RandomTime8s();
     scenario.RequestedTx(peer1, gtxid.GetHash(), expiry);
     scenario.Check(peer1, {}, 0, 1, 0, "r7");
@@ -612,7 +612,7 @@ void TxRequestTest::BuildTimeBackwardsTest(Scenario& scenario)
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r12", -MICROSECOND);
 
     // Peer2 goes offline, meaning no viable announcements remain.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.DisconnectedPeer(peer2);
     scenario.Check(peer1, {}, 0, 0, 0, "r13");
     scenario.Check(peer2, {}, 0, 0, 0, "r14");
@@ -631,19 +631,19 @@ void TxRequestTest::BuildWeirdRequestsTest(Scenario& scenario)
     scenario.Check(peer1, {gtxid1}, 1, 0, 0, "q1");
 
     // Announce gtxid2 by peer2.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.ReceivedInv(peer2, gtxid2, true, MIN_TIME);
     scenario.Check(peer1, {gtxid1}, 1, 0, 0, "q2");
     scenario.Check(peer2, {gtxid2}, 1, 0, 0, "q3");
 
     // We request gtxid2 from *peer1* - no effect.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.RequestedTx(peer1, gtxid2.GetHash(), MAX_TIME);
     scenario.Check(peer1, {gtxid1}, 1, 0, 0, "q4");
     scenario.Check(peer2, {gtxid2}, 1, 0, 0, "q5");
 
     // Now request gtxid1 from peer1 - marks it as REQUESTED.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     auto expiryA = scenario.Now() + RandomTime8s();
     scenario.RequestedTx(peer1, gtxid1.GetHash(), expiryA);
     scenario.Check(peer1, {}, 0, 1, 0, "q6");
@@ -667,25 +667,25 @@ void TxRequestTest::BuildWeirdRequestsTest(Scenario& scenario)
     scenario.CheckExpired(peer1, gtxid1);
 
     // Requesting it yet again from peer1 doesn't do anything, as it's already COMPLETED.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.RequestedTx(peer1, gtxid1.GetHash(), MAX_TIME);
     scenario.Check(peer1, {}, 0, 0, 1, "q14");
     scenario.Check(peer2, {gtxid2, gtxid1}, 2, 0, 0, "q15");
 
     // Now announce gtxid2 from peer1.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.ReceivedInv(peer1, gtxid2, true, MIN_TIME);
     scenario.Check(peer1, {}, 1, 0, 1, "q16");
     scenario.Check(peer2, {gtxid2, gtxid1}, 2, 0, 0, "q17");
 
     // And request it from peer1 (weird as peer2 has the preference).
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.RequestedTx(peer1, gtxid2.GetHash(), MAX_TIME);
     scenario.Check(peer1, {}, 0, 1, 1, "q18");
     scenario.Check(peer2, {gtxid1}, 2, 0, 0, "q19");
 
     // If peer2 now (normally) requests gtxid2, the existing request by peer1 becomes COMPLETED.
-    if (InsecureRandBool()) scenario.AdvanceTime(RandomTime8s());
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
     scenario.RequestedTx(peer2, gtxid2.GetHash(), MAX_TIME);
     scenario.Check(peer1, {}, 0, 0, 2, "q20");
     scenario.Check(peer2, {gtxid1}, 1, 1, 0, "q21");
@@ -711,7 +711,7 @@ void TxRequestTest::TestInterleavedScenarios()
         builders.emplace_back([this](Scenario& scenario) { BuildWeirdRequestsTest(scenario); });
     }
     // Randomly shuffle all those functions.
-    std::shuffle(builders.begin(), builders.end(), g_insecure_rand_ctx);
+    std::shuffle(builders.begin(), builders.end(), m_rng);
 
     Runner runner;
     auto starttime = RandomTime1y();

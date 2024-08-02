@@ -1070,7 +1070,7 @@ public:
             bool progress{false};
             // Send bytes from m_to_send to the transport.
             if (!m_to_send.empty()) {
-                Span<const uint8_t> to_send = Span{m_to_send}.first(1 + InsecureRandRange(m_to_send.size()));
+                Span<const uint8_t> to_send = Span{m_to_send}.first(1 + m_rng.randrange(m_to_send.size()));
                 size_t old_len = to_send.size();
                 if (!m_transport.ReceivedBytes(to_send)) {
                     return std::nullopt; // transport error occurred
@@ -1081,7 +1081,7 @@ public:
                 }
             }
             // Retrieve messages received by the transport.
-            if (m_transport.ReceivedMessageComplete() && (!progress || InsecureRandBool())) {
+            if (m_transport.ReceivedMessageComplete() && (!progress || m_rng.randbool())) {
                 bool reject{false};
                 auto msg = m_transport.GetReceivedMessage({}, reject);
                 if (reject) {
@@ -1092,7 +1092,7 @@ public:
                 progress = true;
             }
             // Enqueue a message to be sent by the transport to us.
-            if (!m_msg_to_send.empty() && (!progress || InsecureRandBool())) {
+            if (!m_msg_to_send.empty() && (!progress || m_rng.randbool())) {
                 if (m_transport.SetMessageToSend(m_msg_to_send.front())) {
                     m_msg_to_send.pop_front();
                     progress = true;
@@ -1100,8 +1100,8 @@ public:
             }
             // Receive bytes from the transport.
             const auto& [recv_bytes, _more, _msg_type] = m_transport.GetBytesToSend(!m_msg_to_send.empty());
-            if (!recv_bytes.empty() && (!progress || InsecureRandBool())) {
-                size_t to_receive = 1 + InsecureRandRange(recv_bytes.size());
+            if (!recv_bytes.empty() && (!progress || m_rng.randbool())) {
+                size_t to_receive = 1 + m_rng.randrange(recv_bytes.size());
                 m_received.insert(m_received.end(), recv_bytes.begin(), recv_bytes.begin() + to_receive);
                 progress = true;
                 m_transport.MarkBytesSent(to_receive);
@@ -1123,7 +1123,7 @@ public:
     /** Send V1 version message header to the transport. */
     void SendV1Version(const MessageStartChars& magic)
     {
-        CMessageHeader hdr(magic, "version", 126 + InsecureRandRange(11));
+        CMessageHeader hdr(magic, "version", 126 + m_rng.randrange(11));
         DataStream ser{};
         ser << hdr;
         m_to_send.insert(m_to_send.end(), UCharCast(ser.data()), UCharCast(ser.data() + ser.size()));
@@ -1148,13 +1148,13 @@ public:
     void SendGarbage(size_t garbage_len)
     {
         // Generate random garbage and send it.
-        SendGarbage(g_insecure_rand_ctx.randbytes<uint8_t>(garbage_len));
+        SendGarbage(m_rng.randbytes<uint8_t>(garbage_len));
     }
 
     /** Schedule garbage (with valid random length) to be sent to the transport. */
     void SendGarbage()
     {
-         SendGarbage(InsecureRandRange(V2Transport::MAX_GARBAGE_LEN + 1));
+         SendGarbage(m_rng.randrange(V2Transport::MAX_GARBAGE_LEN + 1));
     }
 
     /** Schedule a message to be sent to us by the transport. */
@@ -1337,7 +1337,7 @@ public:
     /** Introduce a bit error in the data scheduled to be sent. */
     void Damage()
     {
-        m_to_send[InsecureRandRange(m_to_send.size())] ^= (uint8_t{1} << InsecureRandRange(8));
+        m_to_send[m_rng.randrange(m_to_send.size())] ^= (uint8_t{1} << m_rng.randrange(8));
     }
 };
 
@@ -1360,8 +1360,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
-        auto msg_data_1 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(100000));
-        auto msg_data_2 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(1000));
+        auto msg_data_1 = m_rng.randbytes<uint8_t>(m_rng.randrange(100000));
+        auto msg_data_2 = m_rng.randbytes<uint8_t>(m_rng.randrange(1000));
         tester.SendMessage(uint8_t(4), msg_data_1); // cmpctblock short id
         tester.SendMessage(0, {}); // Invalidly encoded message
         tester.SendMessage("tx", msg_data_2); // 12-character encoded message type
@@ -1381,7 +1381,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
             if (!ret) break; // failure
             BOOST_CHECK(ret->size() == 0); // no message can be delivered
             // Send another message.
-            auto msg_data_3 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(10000));
+            auto msg_data_3 = m_rng.randbytes<uint8_t>(m_rng.randrange(10000));
             tester.SendMessage(uint8_t(12), msg_data_3); // getheaders short id
         }
     }
@@ -1401,8 +1401,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
-        auto msg_data_1 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(100000));
-        auto msg_data_2 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(1000));
+        auto msg_data_1 = m_rng.randbytes<uint8_t>(m_rng.randrange(100000));
+        auto msg_data_2 = m_rng.randbytes<uint8_t>(m_rng.randrange(1000));
         tester.SendMessage(uint8_t(14), msg_data_1); // inv short id
         tester.SendMessage(uint8_t(19), msg_data_2); // pong short id
         ret = tester.Interact();
@@ -1411,7 +1411,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK((*ret)[1] && (*ret)[1]->m_type == "pong" && Span{(*ret)[1]->m_recv} == MakeByteSpan(msg_data_2));
 
         // Then send a too-large message.
-        auto msg_data_3 = g_insecure_rand_ctx.randbytes<uint8_t>(4005000);
+        auto msg_data_3 = m_rng.randbytes<uint8_t>(4005000);
         tester.SendMessage(uint8_t(11), msg_data_3); // getdata short id
         ret = tester.Interact();
         BOOST_CHECK(!ret);
@@ -1420,17 +1420,17 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     // Various valid but unusual scenarios.
     for (int i = 0; i < 50; ++i) {
         /** Whether an initiator or responder is being tested. */
-        bool initiator = InsecureRandBool();
+        bool initiator = m_rng.randbool();
         /** Use either 0 bytes or the maximum possible (4095 bytes) garbage length. */
-        size_t garb_len = InsecureRandBool() ? 0 : V2Transport::MAX_GARBAGE_LEN;
+        size_t garb_len = m_rng.randbool() ? 0 : V2Transport::MAX_GARBAGE_LEN;
         /** How many decoy packets to send before the version packet. */
-        unsigned num_ignore_version = InsecureRandRange(10);
+        unsigned num_ignore_version = m_rng.randrange(10);
         /** What data to send in the version packet (ignored by BIP324 peers, but reserved for future extensions). */
-        auto ver_data = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandBool() ? 0 : InsecureRandRange(1000));
+        auto ver_data = m_rng.randbytes<uint8_t>(m_rng.randbool() ? 0 : m_rng.randrange(1000));
         /** Whether to immediately send key and garbage out (required for responders, optional otherwise). */
-        bool send_immediately = !initiator || InsecureRandBool();
+        bool send_immediately = !initiator || m_rng.randbool();
         /** How many decoy packets to send before the first and second real message. */
-        unsigned num_decoys_1 = InsecureRandRange(1000), num_decoys_2 = InsecureRandRange(1000);
+        unsigned num_decoys_1 = m_rng.randrange(1000), num_decoys_2 = m_rng.randrange(1000);
         V2TransportTester tester(m_rng, initiator);
         if (send_immediately) {
             tester.SendKey();
@@ -1445,8 +1445,8 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.ReceiveKey();
         tester.SendGarbageTerm();
         for (unsigned v = 0; v < num_ignore_version; ++v) {
-            size_t ver_ign_data_len = InsecureRandBool() ? 0 : InsecureRandRange(1000);
-            auto ver_ign_data = g_insecure_rand_ctx.randbytes<uint8_t>(ver_ign_data_len);
+            size_t ver_ign_data_len = m_rng.randbool() ? 0 : m_rng.randrange(1000);
+            auto ver_ign_data = m_rng.randbytes<uint8_t>(ver_ign_data_len);
             tester.SendVersion(ver_ign_data, true);
         }
         tester.SendVersion(ver_data, false);
@@ -1456,16 +1456,16 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
         for (unsigned d = 0; d < num_decoys_1; ++d) {
-            auto decoy_data = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(1000));
+            auto decoy_data = m_rng.randbytes<uint8_t>(m_rng.randrange(1000));
             tester.SendPacket(/*content=*/decoy_data, /*aad=*/{}, /*ignore=*/true);
         }
-        auto msg_data_1 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(4000000));
+        auto msg_data_1 = m_rng.randbytes<uint8_t>(m_rng.randrange(4000000));
         tester.SendMessage(uint8_t(28), msg_data_1);
         for (unsigned d = 0; d < num_decoys_2; ++d) {
-            auto decoy_data = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(1000));
+            auto decoy_data = m_rng.randbytes<uint8_t>(m_rng.randrange(1000));
             tester.SendPacket(/*content=*/decoy_data, /*aad=*/{}, /*ignore=*/true);
         }
-        auto msg_data_2 = g_insecure_rand_ctx.randbytes<uint8_t>(InsecureRandRange(1000));
+        auto msg_data_2 = m_rng.randbytes<uint8_t>(m_rng.randrange(1000));
         tester.SendMessage(uint8_t(13), msg_data_2); // headers short id
         // Send invalidly-encoded message
         tester.SendMessage(std::string("blocktxn\x00\x00\x00a", CMessageHeader::COMMAND_SIZE), {});
@@ -1514,17 +1514,17 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendKey();
         tester.ReceiveKey();
         /** The number of random garbage bytes before the included first 15 bytes of terminator. */
-        size_t len_before = InsecureRandRange(V2Transport::MAX_GARBAGE_LEN - 16 + 1);
+        size_t len_before = m_rng.randrange(V2Transport::MAX_GARBAGE_LEN - 16 + 1);
         /** The number of random garbage bytes after it. */
-        size_t len_after = InsecureRandRange(V2Transport::MAX_GARBAGE_LEN - 16 - len_before + 1);
+        size_t len_after = m_rng.randrange(V2Transport::MAX_GARBAGE_LEN - 16 - len_before + 1);
         // Construct len_before + 16 + len_after random bytes.
-        auto garbage = g_insecure_rand_ctx.randbytes<uint8_t>(len_before + 16 + len_after);
+        auto garbage = m_rng.randbytes<uint8_t>(len_before + 16 + len_after);
         // Replace the designed 16 bytes in the middle with the to-be-sent garbage terminator.
         auto garb_term = MakeUCharSpan(tester.GetCipher().GetSendGarbageTerminator());
         std::copy(garb_term.begin(), garb_term.begin() + 16, garbage.begin() + len_before);
         // Introduce a bit error in the last byte of that copied garbage terminator, making only
         // the first 15 of them match.
-        garbage[len_before + 15] ^= (uint8_t(1) << InsecureRandRange(8));
+        garbage[len_before + 15] ^= (uint8_t(1) << m_rng.randrange(8));
         tester.SendGarbage(garbage);
         tester.SendGarbageTerm();
         tester.SendVersion();
@@ -1533,9 +1533,9 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.ReceiveGarbage();
         tester.ReceiveVersion();
         tester.CompareSessionIDs();
-        auto msg_data_1 = g_insecure_rand_ctx.randbytes<uint8_t>(4000000); // test that receiving 4M payload works
-        auto msg_data_2 = g_insecure_rand_ctx.randbytes<uint8_t>(4000000); // test that sending 4M payload works
-        tester.SendMessage(uint8_t(InsecureRandRange(223) + 33), {}); // unknown short id
+        auto msg_data_1 = m_rng.randbytes<uint8_t>(4000000); // test that receiving 4M payload works
+        auto msg_data_2 = m_rng.randbytes<uint8_t>(4000000); // test that sending 4M payload works
+        tester.SendMessage(uint8_t(m_rng.randrange(223) + 33), {}); // unknown short id
         tester.SendMessage(uint8_t(2), msg_data_1); // "block" short id
         tester.AddMessage("blocktxn", msg_data_2); // schedule blocktxn to be sent to us
         ret = tester.Interact();

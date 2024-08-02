@@ -112,12 +112,12 @@ void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager&
     CAddress addr;
 
     if (onion_peer) {
-        auto tor_addr{g_insecure_rand_ctx.randbytes(ADDR_TORV3_SIZE)};
+        auto tor_addr{m_rng.randbytes(ADDR_TORV3_SIZE)};
         BOOST_REQUIRE(addr.SetSpecial(OnionToString(tor_addr)));
     }
 
     while (!addr.IsRoutable()) {
-        addr = CAddress(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
+        addr = CAddress(ip(m_rng.randbits(32)), NODE_NONE);
     }
 
     vNodes.emplace_back(new CNode{id++,

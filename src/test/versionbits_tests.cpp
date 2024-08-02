@@ -131,7 +131,7 @@ public:
     {
         const CBlockIndex* tip = Tip();
         for (int i = 0; i < CHECKERS; i++) {
-            if (InsecureRandBits(i) == 0) {
+            if (m_rng.randbits(i) == 0) {
                 BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(tip) == height, strprintf("Test %i for StateSinceHeight", num));
                 BOOST_CHECK_MESSAGE(checker_delayed[i].GetStateSinceHeightFor(tip) == height_delayed, strprintf("Test %i for StateSinceHeight (delayed)", num));
                 BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(tip) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
@@ -157,7 +157,7 @@ public:
 
         const CBlockIndex* pindex = Tip();
         for (int i = 0; i < CHECKERS; i++) {
-            if (InsecureRandBits(i) == 0) {
+            if (m_rng.randbits(i) == 0) {
                 ThresholdState got = checker[i].GetStateFor(pindex);
                 ThresholdState got_delayed = checker_delayed[i].GetStateFor(pindex);
                 ThresholdState got_always = checker_always[i].GetStateFor(pindex);

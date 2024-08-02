@@ -367,7 +367,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         while (m_node.chainman->ActiveChain().Tip()->nHeight < 209999) {
             CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
             CBlockIndex* next = new CBlockIndex();
-            next->phashBlock = new uint256(InsecureRand256());
+            next->phashBlock = new uint256(m_rng.rand256());
             m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
             next->pprev = prev;
             next->nHeight = prev->nHeight + 1;
@@ -379,7 +379,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         while (m_node.chainman->ActiveChain().Tip()->nHeight < 210000) {
             CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
             CBlockIndex* next = new CBlockIndex();
-            next->phashBlock = new uint256(InsecureRand256());
+            next->phashBlock = new uint256(m_rng.rand256());
             m_node.chainman->ActiveChainstate().CoinsTip().SetBestBlock(next->GetBlockHash());
             next->pprev = prev;
             next->nHeight = prev->nHeight + 1;

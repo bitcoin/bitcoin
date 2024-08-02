@@ -52,12 +52,12 @@ void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman, Connm
     if (address.has_value()) {
         addr = CAddress{MaybeFlipIPv6toCJDNS(LookupNumeric(address.value(), Params().GetDefaultPort())), NODE_NONE};
     } else if (onion_peer) {
-        auto tor_addr{g_insecure_rand_ctx.randbytes(ADDR_TORV3_SIZE)};
+        auto tor_addr{m_rng.randbytes(ADDR_TORV3_SIZE)};
         BOOST_REQUIRE(addr.SetSpecial(OnionToString(tor_addr)));
     }
 
     while (!addr.IsLocal() && !addr.IsRoutable()) {
-        addr = CAddress{ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE};
+        addr = CAddress{ip(m_rng.randbits(32)), NODE_NONE};
     }
 
     BOOST_REQUIRE(addr.IsValid());

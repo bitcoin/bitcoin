@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
         chainstate.GetCoinsCacheSizeState(MAX_COINS_CACHE_BYTES, 0),
         CoinsCacheSizeState::CRITICAL);
 
-    view.SetBestBlock(InsecureRand256());
+    view.SetBestBlock(m_rng.rand256());
     BOOST_CHECK(view.Flush());
     print_view_mem_usage(view);
 
