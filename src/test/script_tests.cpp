@@ -1277,6 +1277,19 @@ BOOST_AUTO_TEST_CASE(sign_invalid_miniscript)
     BOOST_CHECK(!SignSignature(keystore, CTransaction(prev), curr, 0, SIGHASH_ALL, sig_data));
 }
 
+/* P2A input should be considered signed. */
+BOOST_AUTO_TEST_CASE(sign_paytoanchor)
+{
+    FillableSigningProvider keystore;
+    SignatureData sig_data;
+    CMutableTransaction prev, curr;
+    prev.vout.emplace_back(0, GetScriptForDestination(PayToAnchor{}));
+
+    curr.vin.emplace_back(COutPoint{prev.GetHash(), 0});
+
+    BOOST_CHECK(SignSignature(keystore, CTransaction(prev), curr, 0, SIGHASH_ALL, sig_data));
+}
+
 BOOST_AUTO_TEST_CASE(script_standard_push)
 {
     ScriptError err;

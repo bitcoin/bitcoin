@@ -181,6 +181,10 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 return tap;
             }
 
+            if (CScript::IsPayToAnchor(version, data)) {
+                return PayToAnchor();
+            }
+
             if (version > 16) {
                 error_str = "Invalid Bech32 address witness version";
                 return CNoDestination();

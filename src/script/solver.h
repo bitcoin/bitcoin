@@ -22,6 +22,7 @@ template <typename C> class Span;
 enum class TxoutType {
     NONSTANDARD,
     // 'standard' transaction types:
+    ANCHOR, //!< anyone can spend script
     PUBKEY,
     PUBKEYHASH,
     SCRIPTHASH,
