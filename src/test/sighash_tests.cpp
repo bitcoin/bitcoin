@@ -109,7 +109,7 @@ void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
     for (int out = 0; out < outs; out++) {
         tx.vout.emplace_back();
         CTxOut &txout = tx.vout.back();
-        txout.nValue = InsecureRandMoneyAmount();
+        txout.nValue = RandMoney(g_rng);
         RandomScript(txout.scriptPubKey);
     }
 }

@@ -174,7 +174,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
 
             if (g_rng.randrange(5) == 0 || coin.IsSpent()) {
                 Coin newcoin;
-                newcoin.out.nValue = InsecureRandMoneyAmount();
+                newcoin.out.nValue = RandMoney(g_rng);
                 newcoin.nHeight = 1;
 
                 // Infrequently test adding unspendable coins.

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,9 +27,10 @@ enum class SeedRand {
 /** Seed the RNG for testing. This affects all randomness, except GetStrongRandBytes(). */
 void SeedRandomForTest(SeedRand seed = SeedRand::SEED);
 
-static inline CAmount InsecureRandMoneyAmount()
+template <RandomNumberGenerator Rng>
+inline CAmount RandMoney(Rng&& rng)
 {
-    return static_cast<CAmount>(g_rng.randrange(MAX_MONEY + 1));
+    return CAmount{rng.randrange(MAX_MONEY + 1)};
 }
 
 #endif // BITCOIN_TEST_UTIL_RANDOM_H
