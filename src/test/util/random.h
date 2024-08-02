@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,9 +52,10 @@ static inline bool InsecureRandBool()
     return g_insecure_rand_ctx.randbool();
 }
 
-static inline CAmount InsecureRandMoneyAmount()
+template <RandomNumberGenerator Rng>
+inline CAmount RandMoney(Rng&& rng)
 {
-    return static_cast<CAmount>(InsecureRandRange(MAX_MONEY + 1));
+    return CAmount{rng.randrange(MAX_MONEY + 1)};
 }
 
 #endif // BITCOIN_TEST_UTIL_RANDOM_H
