@@ -1722,9 +1722,6 @@ static RPCHelpMan getchaintxstats()
 
     const CBlockIndex& past_block{*CHECK_NONFATAL(pindex->GetAncestor(pindex->nHeight - blockcount))};
     const int64_t nTimeDiff{pindex->GetMedianTimePast() - past_block.GetMedianTimePast()};
-    const auto window_tx_count{
-        (pindex->nChainTx != 0 && past_block.nChainTx != 0) ? std::optional{pindex->nChainTx - past_block.nChainTx} : std::nullopt,
-    };
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("time", (int64_t)pindex->nTime);
@@ -1736,10 +1733,11 @@ static RPCHelpMan getchaintxstats()
     ret.pushKV("window_block_count", blockcount);
     if (blockcount > 0) {
         ret.pushKV("window_interval", nTimeDiff);
-        if (window_tx_count) {
-            ret.pushKV("window_tx_count", *window_tx_count);
+        if (pindex->nChainTx != 0 && past_block.nChainTx != 0) {
+            const auto window_tx_count = pindex->nChainTx - past_block.nChainTx;
+            ret.pushKV("window_tx_count", window_tx_count);
             if (nTimeDiff > 0) {
-                ret.pushKV("txrate", double(*window_tx_count) / nTimeDiff);
+                ret.pushKV("txrate", double(window_tx_count) / nTimeDiff);
             }
         }
     }
