@@ -1722,7 +1722,7 @@ CPPFLAGS="$CPPFLAGS_TEMP"
 if test -n "$use_sanitizers"; then
   export SECP_CFLAGS="$SECP_CFLAGS $SANITIZER_CFLAGS"
 fi
-ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-ecmult-gen-kb=86 --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
+ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
