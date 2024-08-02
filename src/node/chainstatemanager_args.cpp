@@ -32,7 +32,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
     if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
 
     if (auto value{args.GetArg("-minimumchainwork")}) {
-        if (!IsHexNumber(*value)) {
+        if (!TrySanitizeHexNumber(*value)) {
             return util::Error{strprintf(Untranslated("Invalid non-hex (%s) minimum chain work value specified"), *value)};
         }
         opts.minimum_chain_work = UintToArith256(uint256S(*value));

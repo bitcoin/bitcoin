@@ -8,6 +8,7 @@
 #include <crypto/hex_base.h>
 #include <span.h>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstring>
@@ -46,14 +47,17 @@ bool IsHex(std::string_view str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
-bool IsHexNumber(std::string_view str)
+std::optional<std::string> TrySanitizeHexNumber(std::string_view input, int result_size)
 {
-    if (str.substr(0, 2) == "0x") str.remove_prefix(2);
-    for (char c : str) {
-        if (HexDigit(c) < 0) return false;
+    input = util::RemovePrefixView(input, "0x");
+    const auto final_size{(result_size < 0) ? input.size() : static_cast<size_t>(result_size)};
+    if (input.empty() || (input.size() > final_size)) return std::nullopt;
+    for (char c : input) {
+        if (HexDigit(c) < 0) return std::nullopt;
     }
-    // Return false for empty string or "0x".
-    return str.size() > 0;
+    std::string result(final_size, '0');
+    std::copy(input.begin(), input.end(), result.begin() + (final_size - input.size()));
+    return result;
 }
 
 template <typename Byte>
