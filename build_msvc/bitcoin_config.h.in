@@ -73,9 +73,6 @@
 /* Define this symbol if the qt platform is windows */
 #define QT_QPA_PLATFORM_WINDOWS 1
 
-/* Define this symbol if qt plugins are static */
-#define QT_STATICPLUGIN 1
-
 /* Windows Universal Platform constraints */
 #if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
 /* Either a desktop application without API restrictions, or and older system
