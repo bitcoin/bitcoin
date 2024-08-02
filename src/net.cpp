@@ -3550,6 +3550,13 @@ size_t CConnman::GetNodeCount(ConnectionDirection flags) const
     return nNum;
 }
 
+
+std::map<CNetAddr, LocalServiceInfo> CConnman::getNetLocalAddresses() const
+{
+    LOCK(g_maplocalhost_mutex);
+    return mapLocalHost;
+}
+
 uint32_t CConnman::GetMappedAS(const CNetAddr& addr) const
 {
     return m_netgroupman.GetMappedAS(addr);
