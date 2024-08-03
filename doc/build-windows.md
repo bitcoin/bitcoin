@@ -29,7 +29,7 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils cmake curl git
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
