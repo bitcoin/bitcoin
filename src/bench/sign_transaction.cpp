@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <uint256.h>
+#include <test/util/random.h>
 #include <util/translation.h>
 
 enum class InputType {
@@ -66,5 +67,33 @@ static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_
 static void SignTransactionECDSA(benchmark::Bench& bench)   { SignTransactionSingleInput(bench, InputType::P2WPKH); }
 static void SignTransactionSchnorr(benchmark::Bench& bench) { SignTransactionSingleInput(bench, InputType::P2TR);   }
 
+static void SignSchnorrTapTweakBenchmark(benchmark::Bench& bench, bool use_null_merkle_root)
+{
+    ECC_Context ecc_context{};
+
+    auto key = GenerateRandomKey();
+    auto msg = InsecureRand256();
+    auto merkle_root = use_null_merkle_root ? uint256() : InsecureRand256();
+    auto aux = InsecureRand256();
+    std::vector<unsigned char> sig(64);
+
+    bench.minEpochIterations(100).run([&] {
+        bool success = key.SignSchnorr(msg, sig, &merkle_root, aux);
+        assert(success);
+    });
+}
+
+static void SignSchnorrWithMerkleRoot(benchmark::Bench& bench)
+{
+    SignSchnorrTapTweakBenchmark(bench, /*use_null_merkle_root=*/false);
+}
+
+static void SignSchnorrWithNullMerkleRoot(benchmark::Bench& bench)
+{
+    SignSchnorrTapTweakBenchmark(bench, /*use_null_merkle_root=*/true);
+}
+
 BENCHMARK(SignTransactionECDSA, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SignTransactionSchnorr, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SignSchnorrWithMerkleRoot, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SignSchnorrWithNullMerkleRoot, benchmark::PriorityLevel::HIGH);
