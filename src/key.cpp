@@ -414,9 +414,9 @@ KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)
     bool success = secp256k1_keypair_create(secp256k1_context_sign, keypair, UCharCast(key.data()));
     if (success && merkle_root) {
         secp256k1_xonly_pubkey pubkey;
-        if (!secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, keypair)) return;
         unsigned char pubkey_bytes[32];
-        if (!secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey)) return;
+        assert(secp256k1_keypair_xonly_pub(secp256k1_context_sign, &pubkey, nullptr, keypair));
+        assert(secp256k1_xonly_pubkey_serialize(secp256k1_context_sign, pubkey_bytes, &pubkey));
         uint256 tweak = XOnlyPubKey(pubkey_bytes).ComputeTapTweakHash(merkle_root->IsNull() ? nullptr : merkle_root);
         success = secp256k1_keypair_xonly_tweak_add(secp256k1_context_static, keypair, tweak.data());
     }
