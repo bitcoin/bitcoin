@@ -604,10 +604,7 @@ static bool PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CR
 
 PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig)
 {
-    {
-        LOCK(cs_main);
-        EraseObjectRequest(pfrom.GetId(), CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash()));
-    }
+    WITH_LOCK(::cs_main, Assert(m_peerman)->EraseObjectRequest(pfrom.GetId(), CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash())));
 
     bool ban = false;
     if (!PreVerifyRecoveredSig(qman, *recoveredSig, ban)) {

@@ -72,8 +72,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, PeerManager* peerman, 
     uint256 hash = hw.GetHash();
 
     if (from != -1) {
-        LOCK(cs_main);
-        EraseObjectRequest(from, CInv(invType, hash));
+        WITH_LOCK(::cs_main, Assert(m_peerman.load())->EraseObjectRequest(from, CInv(invType, hash)));
     }
 
     LOCK(cs_messages);

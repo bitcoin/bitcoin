@@ -157,10 +157,7 @@ PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, Pe
 
         uint256 nHash = govobj.GetHash();
 
-        {
-            LOCK(cs_main);
-            EraseObjectRequest(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash));
-        }
+        WITH_LOCK(::cs_main, peerman.EraseObjectRequest(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT, nHash)));
 
         if (!m_mn_sync->IsBlockchainSynced()) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
@@ -223,11 +220,7 @@ PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, Pe
         vRecv >> vote;
 
         uint256 nHash = vote.GetHash();
-
-        {
-            LOCK(cs_main);
-            EraseObjectRequest(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT_VOTE, nHash));
-        }
+        WITH_LOCK(::cs_main, peerman.EraseObjectRequest(peer.GetId(), CInv(MSG_GOVERNANCE_OBJECT_VOTE, nHash)));
 
         // Ignore such messages until masternode list is synced
         if (!m_mn_sync->IsBlockchainSynced()) {
@@ -1222,13 +1215,13 @@ void CGovernanceManager::RequestGovernanceObject(CNode* pfrom, const uint256& nH
     connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, nHash, filter));
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman) const
+int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& connman, const PeerManager& peerman) const
 {
     const std::vector<CNode*> vNodeCopy{&peer};
-    return RequestGovernanceObjectVotes(vNodeCopy, connman);
+    return RequestGovernanceObjectVotes(vNodeCopy, connman, peerman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman) const
+int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman, const PeerManager& peerman) const
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 
@@ -1304,7 +1297,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // stop early to prevent setAskFor overflow
             {
                 LOCK(cs_main);
-                size_t nProjectedSize = GetRequestedObjectCount(pnode->GetId()) + nProjectedVotes;
+                size_t nProjectedSize = peerman.GetRequestedObjectCount(pnode->GetId()) + nProjectedVotes;
                 if (nProjectedSize > MAX_INV_SZ) continue;
                 // to early to ask the same node
                 if (mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;

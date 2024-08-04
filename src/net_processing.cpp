@@ -421,6 +421,10 @@ public:
                         const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
     bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
+    void EraseObjectRequest(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
+                       bool is_masternode, bool fForce = false) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    size_t GetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
 private:
@@ -1350,27 +1354,20 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     }
 }
 
-void EraseObjectRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::EraseObjectRequest(NodeId nodeid, const CInv& inv)
 {
     AssertLockHeld(cs_main);
+
+    CNodeState* state = State(nodeid);
+    if (state == nullptr)
+        return;
+
     LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
     g_already_asked_for.erase(inv.hash);
     g_erased_object_requests.insert(std::make_pair(inv.hash, GetTime<std::chrono::microseconds>()));
 
-    if (nodestate) {
-        nodestate->m_object_download.m_object_announced.erase(inv);
-        nodestate->m_object_download.m_object_in_flight.erase(inv);
-    }
-}
-
-void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
-        return;
-    }
-    EraseObjectRequest(state, inv);
+    state->m_object_download.m_object_announced.erase(inv);
+    state->m_object_download.m_object_in_flight.erase(inv);
 }
 
 std::chrono::microseconds GetObjectRequestTime(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1443,9 +1440,15 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
     return process_time;
 }
 
-void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool fForce = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
+                                    bool is_masternode, bool fForce)
 {
     AssertLockHeld(cs_main);
+
+    CNodeState* state = State(nodeid);
+    if (state == nullptr)
+        return;
+
     CNodeState::ObjectDownloadState& peer_download_state = state->m_object_download;
     if (peer_download_state.m_object_announced.size() >= MAX_PEER_OBJECT_ANNOUNCEMENTS ||
             peer_download_state.m_object_process_time.size() >= MAX_PEER_OBJECT_ANNOUNCEMENTS ||
@@ -1471,23 +1474,14 @@ void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds
     LogPrint(BCLog::NET, "%s -- inv=(%s), current_time=%d, process_time=%d, delta=%d\n", __func__, inv.ToString(), current_time.count(), process_time.count(), (process_time - current_time).count());
 }
 
-void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool fForce) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+size_t PeerManagerImpl::GetRequestedObjectCount(NodeId nodeid) const
 {
     AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
-        return;
-    }
-    RequestObject(state, inv, current_time, is_masternode, fForce);
-}
 
-size_t GetRequestedObjectCount(NodeId nodeId)
-{
-    AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
+    CNodeState* state = State(nodeid);
+    if (state == nullptr)
         return 0;
-    }
+
     return state->m_object_download.m_object_process_time.size();
 }
 
@@ -3795,7 +3789,7 @@ void PeerManagerImpl::ProcessMessage(
                     }
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
-                        RequestObject(State(pfrom.GetId()), inv, current_time, is_masternode);
+                        RequestObject(pfrom.GetId(), inv, current_time, is_masternode);
                     }
                 }
             }
@@ -4183,11 +4177,11 @@ void PeerManagerImpl::ProcessMessage(
                 for (const uint256& parent_txid : unique_parents) {
                     CInv _inv(MSG_TX, parent_txid);
                     AddKnownInv(*peer, _inv.hash);
-                    if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time, is_masternode);
+                    if (!AlreadyHave(_inv)) RequestObject(pfrom.GetId(), _inv, current_time, is_masternode);
                     // We don't know if the previous tx was a regular or a mixing one, try both
                     CInv _inv2(MSG_DSTX, parent_txid);
                     AddKnownInv(*peer, _inv2.hash);
-                    if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time, is_masternode);
+                    if (!AlreadyHave(_inv2)) RequestObject(pfrom.GetId(), _inv2, current_time, is_masternode);
                 }
 
                 if (m_orphanage.AddTx(ptx, pfrom.GetId())) {

@@ -115,8 +115,7 @@ PeerMsgRet CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq
     CInv clsigInv(MSG_CLSIG, hash);
 
     if (from != -1) {
-        LOCK(cs_main);
-        EraseObjectRequest(from, clsigInv);
+        WITH_LOCK(::cs_main, Assert(m_peerman)->EraseObjectRequest(from, clsigInv));
     }
 
     {

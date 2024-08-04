@@ -60,7 +60,7 @@ PeerMsgRet CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_
     CFinalCommitment qc;
     vRecv >> qc;
 
-    WITH_LOCK(cs_main, EraseObjectRequest(peer.GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc))));
+    WITH_LOCK(::cs_main, Assert(m_peerman)->EraseObjectRequest(peer.GetId(), CInv(MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc))));
 
     if (qc.IsNull()) {
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, peer.GetId());
