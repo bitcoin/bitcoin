@@ -127,6 +127,9 @@ public:
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                                 const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
 
+    /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
+
     virtual bool IsBanned(NodeId pnode) = 0;
 
     virtual void EraseObjectRequest(NodeId nodeid, const CInv& inv) = 0;
