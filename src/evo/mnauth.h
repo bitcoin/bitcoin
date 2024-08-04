@@ -24,6 +24,8 @@ class CNode;
 
 class UniValue;
 
+enum ServiceFlags : uint64_t;
+
 /**
  * This class handles the p2p message MNAUTH. MNAUTH is sent directly after VERACK and authenticates the sender as a
  * masternode. It is only sent when the sender is actually a masternode.
@@ -59,7 +61,7 @@ public:
      * @pre CMasternodeMetaMan's database must be successfully loaded before
      *      attempting to call this function regardless of sync state
      */
-    static PeerMsgRet ProcessMessage(CNode& peer, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
+    static PeerMsgRet ProcessMessage(CNode& peer, ServiceFlags node_services, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
                                      const CChain& active_chain, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list,
                                      std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
