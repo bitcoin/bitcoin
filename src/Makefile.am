@@ -252,6 +252,7 @@ BITCOIN_CORE_H = \
   policy/settings.h \
   policy/truc_policy.h \
   pow.h \
+  private_broadcast.h \
   protocol.h \
   psbt.h \
   random.h \
@@ -453,6 +454,7 @@ libbitcoin_node_a_SOURCES = \
   policy/settings.cpp \
   policy/truc_policy.cpp \
   pow.cpp \
+  private_broadcast.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/fees.cpp \

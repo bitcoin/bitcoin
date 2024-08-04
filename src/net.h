@@ -71,6 +71,8 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
+/** Maximum number of private broadcast connections */
+static constexpr size_t MAX_PRIVATE_BROADCAST_CONNECTIONS{64};
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain. */
@@ -81,6 +83,8 @@ static const std::string DEFAULT_MAX_UPLOAD_TARGET{"0M"};
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
 static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
+/** Default for -privatebroadcast. */
+static constexpr bool DEFAULT_PRIVATE_BROADCAST{false};
 /** Number of file descriptors required for message capture **/
 static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 /** Interval for ASMap Health Check **/
@@ -763,6 +767,7 @@ public:
             case ConnectionType::MANUAL:
             case ConnectionType::ADDR_FETCH:
             case ConnectionType::FEELER:
+            case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         } // no default case, so the compiler can warn about missing cases
 
@@ -784,6 +789,7 @@ public:
         case ConnectionType::FEELER:
         case ConnectionType::BLOCK_RELAY:
         case ConnectionType::ADDR_FETCH:
+        case ConnectionType::PRIVATE_BROADCAST:
                 return false;
         case ConnectionType::OUTBOUND_FULL_RELAY:
         case ConnectionType::MANUAL:
@@ -805,6 +811,10 @@ public:
         return m_conn_type == ConnectionType::ADDR_FETCH;
     }
 
+    bool IsPrivateBroadcastConn() const {
+        return m_conn_type == ConnectionType::PRIVATE_BROADCAST;
+    }
+
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
     }
@@ -818,6 +828,7 @@ public:
             case ConnectionType::OUTBOUND_FULL_RELAY:
             case ConnectionType::BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
+            case ConnectionType::PRIVATE_BROADCAST:
                 return true;
         } // no default case, so the compiler can warn about missing cases
 
@@ -1118,6 +1129,69 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant&& grant_outbound, const char* strDest, ConnectionType conn_type, bool use_v2transport) EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+
+    /// Group of private broadcast related members.
+    class PrivateBroadcast
+    {
+    public:
+        /**
+         * Remember if we ever established at least one outbound connection to a
+         * Tor peer, including sending and receiving P2P messages. If this is
+         * true then the Tor proxy indeed works and is a proxy to the Tor network,
+         * not a misconfigured ordinary SOCKS5 proxy as -proxy or -onion. If that
+         * is the case, then we assume that connecting to an IPv4 or IPv6 address
+         * via that proxy will be done trough the Tor network and a Tor exit node.
+         */
+        std::atomic_bool m_outbound_tor_ok_at_least_once{false};
+
+        /**
+         * Check if private broadcast can be done to IPv4 or IPv6 peers and if so via which proxy.
+         * If private broadcast connections should not be opened to IPv4 or IPv6, then this will
+         * return an empty optional.
+         */
+        std::optional<Proxy> ProxyForIPv4or6() const;
+
+        /**
+         * Decide whether to open a private broadcast connection and if yes, to which network.
+         * We try to open a connection of this type only if there are transactions pending, but
+         * up to a limit.
+         * @param[in] num_opened Number of private broadcast connections that are currently opened.
+         * @retval !std::nullopt The network to which to open the private broadcast connection.
+         * @retval std::nullopt Yield to non-"private broadcast" connection types.
+         */
+        std::optional<Network> ShouldOpen(size_t num_opened) const;
+
+        /**
+         * Get the number of `ConnectionType::PRIVATE_BROADCAST` connections
+         * that need to be opened by `CConnman::ThreadOpenConnections()`.
+         * @return Number of connections.
+         */
+        size_t NumToOpen() const;
+
+        /**
+         * Increment the number of new connections of type `ConnectionType::PRIVATE_BROADCAST`
+         * to be opened by `CConnman::ThreadOpenConnections()`.
+         * @param[in] n Increment by this number.
+         */
+        void NumToOpenAdd(size_t n);
+
+        /**
+         * Decrement the number of new connections of type `ConnectionType::PRIVATE_BROADCAST`
+         * to be opened by `CConnman::ThreadOpenConnections()`. Will not go negative, for example a
+         * value of 4 is ok to be decremented by 5 and will result in 0.
+         * @param[in] n Decrement by this number.
+         * @return The value preceding this operation.
+         */
+        size_t NumToOpenSub(size_t n);
+
+    private:
+        /**
+         * Number of `ConnectionType::PRIVATE_BROADCAST` connections to open.
+         * Whenever such a connection is opened this is decremented with 1.
+         */
+        std::atomic_size_t m_num_to_open{0};
+    } m_private_broadcast;
+
     bool CheckIncomingNonce(uint64_t nonce);
     void ASMapHealthCheck();
 
