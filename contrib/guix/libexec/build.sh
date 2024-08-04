@@ -276,13 +276,6 @@ mkdir -p "$DISTSRC"
 
     mkdir -p "$OUTDIR"
 
-    # Make the os-specific installers
-    case "$HOST" in
-        *mingw*)
-            make deploy ${V:+V=1} BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
-            ;;
-    esac
-
     # Setup the directory where our Bitcoin Core build for HOST will be
     # installed. This directory will also later serve as the input for our
     # binary tarballs.
@@ -298,26 +291,6 @@ mkdir -p "$DISTSRC"
             ;;
     esac
 
-    case "$HOST" in
-        *darwin*)
-            make osx_volname ${V:+V=1}
-            make deploydir ${V:+V=1}
-            mkdir -p "unsigned-app-${HOST}"
-            cp  --target-directory="unsigned-app-${HOST}" \
-                osx_volname \
-                contrib/macdeploy/detached-sig-create.sh
-            mv --target-directory="unsigned-app-${HOST}" dist
-            (
-                cd "unsigned-app-${HOST}"
-                find . -print0 \
-                    | sort --zero-terminated \
-                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" && exit 1 )
-            )
-            make deploy ${V:+V=1} OSX_ZIP="${OUTDIR}/${DISTNAME}-${HOST}-unsigned.zip"
-            ;;
-    esac
     (
         cd installed
 
@@ -398,22 +371,6 @@ mkdir -p "$DISTSRC"
                 ;;
         esac
     )  # $DISTSRC/installed
-
-    case "$HOST" in
-        *mingw*)
-            cp -rf --target-directory=. contrib/windeploy
-            (
-                cd ./windeploy
-                mkdir -p unsigned
-                cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
-                find . -print0 \
-                    | sort --zero-terminated \
-                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-win64-unsigned.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-win64-unsigned.tar.gz" && exit 1 )
-            )
-            ;;
-    esac
 )  # $DISTSRC
 
 rm -rf "$ACTUAL_OUTDIR"
