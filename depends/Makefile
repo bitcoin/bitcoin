@@ -41,7 +41,7 @@ NO_ZMQ ?=
 NO_UPNP ?=
 NO_NATPMP ?=
 MULTIPROCESS ?=
-FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
+FALLBACK_DOWNLOAD_PATH ?= http://dash-depends-sources.s3-website-us-west-2.amazonaws.com
 
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
