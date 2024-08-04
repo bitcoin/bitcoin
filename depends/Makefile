@@ -51,7 +51,6 @@ C_STANDARD ?= c11
 CXX_STANDARD ?= c++20
 
 BUILD = $(shell ./config.guess)
-HOST ?= $(BUILD)
 PATCHES_PATH = $(BASEDIR)/patches
 BASEDIR = $(CURDIR)
 HASH_LENGTH:=11
@@ -59,11 +58,6 @@ DOWNLOAD_CONNECT_TIMEOUT:=30
 DOWNLOAD_RETRIES:=3
 HOST_ID_SALT ?= salt
 BUILD_ID_SALT ?= salt
-
-host:=$(BUILD)
-ifneq ($(HOST),)
-host:=$(HOST)
-endif
 
 ifneq ($(DEBUG),)
 release_type=debug
@@ -74,8 +68,14 @@ endif
 base_build_dir=$(WORK_PATH)/build
 base_staging_dir=$(WORK_PATH)/staging
 base_download_dir=$(WORK_PATH)/download
-canonical_host:=$(shell ./config.sub $(HOST))
 build:=$(shell ./config.sub $(BUILD))
+
+host:=$(build)
+ifneq ($(HOST),)
+host:=$(HOST)
+endif
+HOST ?= $(BUILD)
+canonical_host:=$(shell ./config.sub $(HOST))
 
 build_arch =$(firstword $(subst -, ,$(build)))
 build_vendor=$(word 2,$(subst -, ,$(build)))
