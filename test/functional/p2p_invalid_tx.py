@@ -194,7 +194,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             for j in range(110):
                 orphan_tx_pool[i].vout.append(CTxOut(nValue=COIN // 10, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
-        with node.assert_debug_log(['mapOrphan overflow, removed 1 tx']):
+        with node.assert_debug_log(['orphanage overflow, removed 1 tx']):
             node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False)
 
         rejected_parent = CTransaction()

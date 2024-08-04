@@ -328,6 +328,7 @@ BITCOIN_CORE_H = \
   torcontrol.h \
   txdb.h \
   txmempool.h \
+  txorphanage.h \
   undo.h \
   unordered_lru_cache.h \
   util/bip32.h \
@@ -527,6 +528,7 @@ libbitcoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
+  txorphanage.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
