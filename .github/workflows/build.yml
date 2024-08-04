@@ -13,8 +13,8 @@ env:
   FAST_MODE: false
 
 jobs:
-  builder-image:
-    name: Builder Image
+  build-image:
+    name: Build Image
     runs-on: ubuntu-20.04
     outputs:
       image-tag: ${{ steps.prepare.outputs.image-tag }}
@@ -48,14 +48,14 @@ jobs:
           file: ./contrib/containers/ci/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ steps.prepare.outputs.repo-name }}/builder:${{ steps.prepare.outputs.image-tag }}
-            ghcr.io/${{ steps.prepare.outputs.repo-name }}/builder:latest
-          cache-from: type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo-name }}/builder:latest
+            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:${{ steps.prepare.outputs.image-tag }}
+            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:latest
+          cache-from: type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-ci-runner:latest
           cache-to: type=inline
 
   build-depends:
     name: Build Dependencies
-    needs: builder-image
+    needs: build-image
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -63,7 +63,7 @@ jobs:
         - build_target: arm-linux
           host: arm-linux-gnueabihf
     container:
-      image: ghcr.io/${{ needs.builder-image.outputs.repo-name }}/builder:${{ needs.builder-image.outputs.image-tag }}
+      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
       options: --user root
     steps:
       - name: Checkout code
@@ -88,7 +88,7 @@ jobs:
 
   build:
     name: Build
-    needs: [builder-image, build-depends]
+    needs: [build-image, build-depends]
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -97,7 +97,7 @@ jobs:
             host: arm-linux-gnueabihf
             dep_opts: DEBUG=1
     container:
-      image: ghcr.io/${{ needs.builder-image.outputs.repo-name }}/builder:${{ needs.builder-image.outputs.image-tag }}
+      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
       options: --user root
     steps:
       - name: Checkout code
@@ -152,10 +152,10 @@ jobs:
 # Come back to this later and implement tests :)
 #  test:
 #    name: Test
-#    needs: [builder-image, build]
+#    needs: [build-image, build]
 #    runs-on: ubuntu-20.04
 #    container:
-#      image: ghcr.io/${{ needs.builder-image.outputs.repo-name }}/builder:${{ needs.builder-image.outputs.image-tag }}
+#      image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
 #      options: --user root
 #    steps:
 #      - name: Checkout code
