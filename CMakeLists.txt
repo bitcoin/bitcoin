@@ -85,6 +85,8 @@ target_link_libraries(core_interface INTERFACE
   $<$<CONFIG:Debug>:core_interface_debug>
 )
 
+include(ProcessConfigurations)
+
 include(TryAppendCXXFlags)
 include(TryAppendLinkerFlag)
 
