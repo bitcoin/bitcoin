@@ -78,8 +78,8 @@ FUZZ_TARGET(integer, .init = initialize_integer)
     } else {
         (void)CompressAmount(u64);
     }
-    static const uint256 u256_min(uint256S("0000000000000000000000000000000000000000000000000000000000000000"));
-    static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    constexpr uint256 u256_min{"0000000000000000000000000000000000000000000000000000000000000000"};
+    constexpr uint256 u256_max{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
     const std::vector<uint256> v256{u256, u256_min, u256_max};
     (void)ComputeMerkleRoot(v256);
     (void)DecompressAmount(u64);

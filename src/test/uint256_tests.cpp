@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
     // Ensure last element comparisons give a different result (swapped params):
     BOOST_CHECK_LT(*(R1L.end()-1), *(R2L.end()-1));
     // Hex strings represent reverse-encoded bytes, with lexicographic ordering:
-    BOOST_CHECK_LT(uint256S("1000000000000000000000000000000000000000000000000000000000000000"),
-                   uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
+    BOOST_CHECK_LT(uint256{"1000000000000000000000000000000000000000000000000000000000000000"},
+                   uint256{"0000000000000000000000000000000000000000000000000000000000000001"});
 }
 
 BOOST_AUTO_TEST_CASE(methods) // GetHex SetHexDeprecated FromHex begin() end() size() GetLow64 GetSerializeSize, Serialize, Unserialize
@@ -395,8 +395,15 @@ BOOST_AUTO_TEST_CASE(from_hex)
 
 BOOST_AUTO_TEST_CASE( check_ONE )
 {
-    uint256 one = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+    uint256 one = uint256{"0000000000000000000000000000000000000000000000000000000000000001"};
     BOOST_CHECK_EQUAL(one, uint256::ONE);
+}
+
+BOOST_AUTO_TEST_CASE(FromHex_vs_uint256)
+{
+    auto runtime_uint{uint256::FromHex("4A5E1E4BAAB89F3A32518A88C31BC87F618f76673e2cc77ab2127b7afdeda33b").value()};
+    constexpr uint256 consteval_uint{  "4a5e1e4baab89f3a32518a88c31bc87f618F76673E2CC77AB2127B7AFDEDA33B"};
+    BOOST_CHECK_EQUAL(consteval_uint, runtime_uint);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

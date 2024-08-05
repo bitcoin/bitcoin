@@ -138,7 +138,7 @@ echo
 echo "-- Now: add the following to CMainParams::m_assumeutxo_data"
 echo "   in src/kernel/chainparams.cpp, and recompile:"
 echo
-echo "   {${RPC_BASE_HEIGHT}, AssumeutxoHash{uint256S(\"0x${RPC_AU}\")}, ${RPC_NCHAINTX}, uint256S(\"0x${RPC_BLOCKHASH}\")},"
+echo "   {.height = ${RPC_BASE_HEIGHT}, .hash_serialized = AssumeutxoHash{uint256{\"${RPC_AU}\"}}, .m_chain_tx_count = ${RPC_NCHAINTX}, .blockhash = consteval_ctor(uint256{\"${RPC_BLOCKHASH}\"})},"
 echo
 echo
 echo "-- IBDing more blocks to the server node (height=$FINAL_HEIGHT) so there is a diff between snapshot and tip..."
