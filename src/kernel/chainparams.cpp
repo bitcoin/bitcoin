@@ -26,6 +26,16 @@
 #include <cstring>
 #include <type_traits>
 
+// Workaround MSVC bug triggering C7595 when calling consteval constructors in
+// initializer lists.
+// A fix may be on the way:
+// https://developercommunity.visualstudio.com/t/consteval-conversion-function-fails/1579014
+#if defined(_MSC_VER)
+auto consteval_ctor(auto&& input) { return input; }
+#else
+#define consteval_ctor(input) (input)
+#endif
+
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -273,7 +283,7 @@ public:
                 .height = 2'500'000,
                 .hash_serialized = AssumeutxoHash{uint256S("0xf841584909f68e47897952345234e37fcd9128cd818f41ee6c3ca68db8071be7")},
                 .m_chain_tx_count = 66484552,
-                .blockhash = uint256S("0x0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f")
+                .blockhash = consteval_ctor(uint256{"0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f"}),
             }
         };
 
@@ -383,7 +393,7 @@ public:
                 .height = 160'000,
                 .hash_serialized = AssumeutxoHash{uint256S("0xfe0a44309b74d6b5883d246cb419c6221bcccf0b308c9b59b7d70783dbdf928a")},
                 .m_chain_tx_count = 2289496,
-                .blockhash = uint256S("0x0000003ca3c99aff040f2563c2ad8f8ec88bd0fd6b8f0895cfaf1ef90353a62c")
+                .blockhash = consteval_ctor(uint256{"0000003ca3c99aff040f2563c2ad8f8ec88bd0fd6b8f0895cfaf1ef90353a62c"}),
             }
         };
 
@@ -499,21 +509,21 @@ public:
                 .height = 110,
                 .hash_serialized = AssumeutxoHash{uint256S("0x6657b736d4fe4db0cbc796789e812d5dba7f5c143764b1b6905612f1830609d1")},
                 .m_chain_tx_count = 111,
-                .blockhash = uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c")
+                .blockhash = consteval_ctor(uint256{"696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c"}),
             },
             {
                 // For use by fuzz target src/test/fuzz/utxo_snapshot.cpp
                 .height = 200,
                 .hash_serialized = AssumeutxoHash{uint256S("0x4f34d431c3e482f6b0d67b64609ece3964dc8d7976d02ac68dd7c9c1421738f2")},
                 .m_chain_tx_count = 201,
-                .blockhash = uint256S("0x5e93653318f294fb5aa339d00bbf8cf1c3515488ad99412c37608b139ea63b27"),
+                .blockhash = consteval_ctor(uint256{"5e93653318f294fb5aa339d00bbf8cf1c3515488ad99412c37608b139ea63b27"}),
             },
             {
                 // For use by test/functional/feature_assumeutxo.py
                 .height = 299,
                 .hash_serialized = AssumeutxoHash{uint256S("0xa4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27")},
                 .m_chain_tx_count = 334,
-                .blockhash = uint256S("0x3bb7ce5eba0be48939b7a521ac1ba9316afee2c7bada3a0cca24188e6d7d96c0")
+                .blockhash = consteval_ctor(uint256{"3bb7ce5eba0be48939b7a521ac1ba9316afee2c7bada3a0cca24188e6d7d96c0"}),
             },
         };
 

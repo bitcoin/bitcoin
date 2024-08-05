@@ -1692,17 +1692,17 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 
 BOOST_AUTO_TEST_CASE(compute_tapbranch)
 {
-    uint256 hash1 = uint256S("8ad69ec7cf41c2a4001fd1f738bf1e505ce2277acdcaa63fe4765192497f47a7");
-    uint256 hash2 = uint256S("f224a923cd0021ab202ab139cc56802ddb92dcfc172b9212261a539df79a112a");
-    uint256 result = uint256S("a64c5b7b943315f9b805d7a7296bedfcfd08919270a1f7a1466e98f8693d8cd9");
+    constexpr uint256 hash1{"8ad69ec7cf41c2a4001fd1f738bf1e505ce2277acdcaa63fe4765192497f47a7"};
+    constexpr uint256 hash2{"f224a923cd0021ab202ab139cc56802ddb92dcfc172b9212261a539df79a112a"};
+    constexpr uint256 result{"a64c5b7b943315f9b805d7a7296bedfcfd08919270a1f7a1466e98f8693d8cd9"};
     BOOST_CHECK_EQUAL(ComputeTapbranchHash(hash1, hash2), result);
 }
 
 BOOST_AUTO_TEST_CASE(compute_tapleaf)
 {
-    const uint8_t script[6] = {'f','o','o','b','a','r'};
-    uint256 tlc0 = uint256S("edbc10c272a1215dcdcc11d605b9027b5ad6ed97cd45521203f136767b5b9c06");
-    uint256 tlc2 = uint256S("8b5c4f90ae6bf76e259dbef5d8a59df06359c391b59263741b25eca76451b27a");
+    constexpr uint8_t script[6] = {'f','o','o','b','a','r'};
+    constexpr uint256 tlc0{"edbc10c272a1215dcdcc11d605b9027b5ad6ed97cd45521203f136767b5b9c06"};
+    constexpr uint256 tlc2{"8b5c4f90ae6bf76e259dbef5d8a59df06359c391b59263741b25eca76451b27a"};
 
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, Span(script)), tlc0);
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, Span(script)), tlc2);
