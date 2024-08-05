@@ -169,6 +169,38 @@ void BenchLinearizeNoItersWorstCaseLIMO(ClusterIndex ntx, benchmark::Bench& benc
     });
 }
 
+template<typename SetType>
+void BenchPostLinearizeWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
+{
+    DepGraph<SetType> depgraph = MakeWideGraph<SetType>(ntx);
+    std::vector<ClusterIndex> lin(ntx);
+    bench.run([&] {
+        for (ClusterIndex i = 0; i < ntx; ++i) lin[i] = i;
+        PostLinearize(depgraph, lin);
+    });
+}
+
+template<typename SetType>
+void BenchMergeLinearizationsWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
+{
+    DepGraph<SetType> depgraph;
+    for (ClusterIndex i = 0; i < ntx; ++i) {
+        depgraph.AddTransaction({i, 1});
+        if (i) depgraph.AddDependency(0, i);
+    }
+    std::vector<ClusterIndex> lin1;
+    std::vector<ClusterIndex> lin2;
+    lin1.push_back(0);
+    lin2.push_back(0);
+    for (ClusterIndex i = 1; i < ntx; ++i) {
+        lin1.push_back(i);
+        lin2.push_back(ntx - i);
+    }
+    bench.run([&] {
+        MergeLinearizations(depgraph, lin1, lin2);
+    });
+}
+
 } // namespace
 
 static void LinearizePerIter16TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<16>>(16, bench); }
@@ -192,6 +224,20 @@ static void LinearizeNoIters64TxWorstCaseLIMO(benchmark::Bench& bench) { BenchLi
 static void LinearizeNoIters75TxWorstCaseLIMO(benchmark::Bench& bench) { BenchLinearizeNoItersWorstCaseLIMO<BitSet<75>>(75, bench); }
 static void LinearizeNoIters99TxWorstCaseLIMO(benchmark::Bench& bench) { BenchLinearizeNoItersWorstCaseLIMO<BitSet<99>>(99, bench); }
 
+static void PostLinearize16TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<16>>(16, bench); }
+static void PostLinearize32TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<32>>(32, bench); }
+static void PostLinearize48TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<48>>(48, bench); }
+static void PostLinearize64TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<64>>(64, bench); }
+static void PostLinearize75TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<75>>(75, bench); }
+static void PostLinearize99TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<99>>(99, bench); }
+
+static void MergeLinearizations16TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<16>>(16, bench); }
+static void MergeLinearizations32TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<32>>(32, bench); }
+static void MergeLinearizations48TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<48>>(48, bench); }
+static void MergeLinearizations64TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<64>>(64, bench); }
+static void MergeLinearizations75TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<75>>(75, bench); }
+static void MergeLinearizations99TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<99>>(99, bench); }
+
 BENCHMARK(LinearizePerIter16TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizePerIter32TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizePerIter48TxWorstCase, benchmark::PriorityLevel::HIGH);
@@ -212,3 +258,17 @@ BENCHMARK(LinearizeNoIters48TxWorstCaseLIMO, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters64TxWorstCaseLIMO, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters75TxWorstCaseLIMO, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters99TxWorstCaseLIMO, benchmark::PriorityLevel::HIGH);
+
+BENCHMARK(PostLinearize16TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize32TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize48TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize64TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize75TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PostLinearize99TxWorstCase, benchmark::PriorityLevel::HIGH);
+
+BENCHMARK(MergeLinearizations16TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MergeLinearizations32TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MergeLinearizations48TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MergeLinearizations64TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MergeLinearizations75TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MergeLinearizations99TxWorstCase, benchmark::PriorityLevel::HIGH);
