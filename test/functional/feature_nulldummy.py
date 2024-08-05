@@ -65,7 +65,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.pubkey = w0.getaddressinfo(self.address)['pubkey']
         self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey])['address']
         if not self.options.descriptors:
-            # Legacy wallets need to import these so that they are watched by the wallet. This is unnecssary (and does not need to be tested) for descriptor wallets
+            # Legacy wallets need to import these so that they are watched by the wallet. This is unnecessary (and does not need to be tested) for descriptor wallets
             wmulti.importaddress(self.ms_address)
 
         self.coinbase_blocks = self.nodes[0].generate(2)  # block height = 2
