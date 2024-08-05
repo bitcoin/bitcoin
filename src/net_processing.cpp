@@ -4562,6 +4562,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (!pfrom.HasPermission(NetPermissionFlags::Relay) && pfrom.GetCommonVersion() >= REJECT_UNSOLICITED_TX_VERSION &&
             !is_expected) {
             LogPrint(BCLog::NET, "unrequested transaction from peer=%d\n", pfrom.GetId());
+            Misbehaving(*peer, "unsolicited txn from peer");
             return;
         }
 
