@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -5681,7 +5681,7 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
         }
 
         if (!m_best_header || m_best_header->GetAncestor(base_blockheight) != snapshot_start_block) {
-            return util::Error{_("A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo.")};
+            return util::Error{Untranslated("A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo.")};
         }
 
         auto mempool{m_active_chainstate->GetMempool()};
@@ -5735,7 +5735,7 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
             static_cast<size_t>(current_coinstip_cache_size * SNAPSHOT_CACHE_PERC));
     }
 
-    auto cleanup_bad_snapshot = [&](bilingual_str&& reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    auto cleanup_bad_snapshot = [&](bilingual_str reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         this->MaybeRebalanceCaches();
 
         // PopulateAndValidateSnapshot can return (in error) before the leveldb datadir
@@ -5754,9 +5754,9 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
         return util::Error{std::move(reason)};
     };
 
-    if (!this->PopulateAndValidateSnapshot(*snapshot_chainstate, coins_file, metadata)) {
+    if (auto res{this->PopulateAndValidateSnapshot(*snapshot_chainstate, coins_file, metadata)}; !res) {
         LOCK(::cs_main);
-        return cleanup_bad_snapshot(Untranslated("population failed"));
+        return cleanup_bad_snapshot(strprintf(Untranslated("Population failed: %s"), util::ErrorString(res)));
     }
 
     LOCK(::cs_main);  // cs_main required for rest of snapshot activation.
@@ -5821,7 +5821,7 @@ static void SnapshotUTXOHashBreakpoint(const util::SignalInterrupt& interrupt)
     if (interrupt) throw StopHashingException();
 }
 
-bool ChainstateManager::PopulateAndValidateSnapshot(
+util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     Chainstate& snapshot_chainstate,
     AutoFile& coins_file,
     const SnapshotMetadata& metadata)
@@ -5837,18 +5837,16 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     if (!snapshot_start_block) {
         // Needed for ComputeUTXOStats to determine the
         // height and to avoid a crash when base_blockhash.IsNull()
-        LogPrintf("[snapshot] Did not find snapshot start blockheader %s\n",
-                  base_blockhash.ToString());
-        return false;
+        return util::Error{strprintf(Untranslated("Did not find snapshot start blockheader %s"),
+                  base_blockhash.ToString())};
     }
 
     int base_height = snapshot_start_block->nHeight;
     const auto& maybe_au_data = GetParams().AssumeutxoForHeight(base_height);
 
     if (!maybe_au_data) {
-        LogPrintf("[snapshot] assumeutxo height in snapshot metadata not recognized "
-                  "(%d) - refusing to load snapshot\n", base_height);
-        return false;
+        return util::Error{strprintf(Untranslated("Assumeutxo height in snapshot metadata not recognized "
+                  "(%d) - refusing to load snapshot"), base_height)};
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
@@ -5857,8 +5855,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     // ActivateSnapshot(), but is done so that we avoid doing the long work of staging
     // a snapshot that isn't actually usable.
     if (WITH_LOCK(::cs_main, return !CBlockIndexWorkComparator()(ActiveTip(), snapshot_start_block))) {
-        LogPrintf("[snapshot] activation failed - work does not exceed active chainstate\n");
-        return false;
+        return util::Error{Untranslated("Work does not exceed active chainstate")};
     }
 
     const uint64_t coins_count = metadata.m_coins_count;
@@ -5875,8 +5872,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
             coins_per_txid = ReadCompactSize(coins_file);
 
             if (coins_per_txid > coins_left) {
-                LogPrintf("[snapshot] mismatch in coins count in snapshot metadata and actual snapshot data\n");
-                return false;
+                return util::Error{Untranslated("Mismatch in coins count in snapshot metadata and actual snapshot data")};
             }
 
             for (size_t i = 0; i < coins_per_txid; i++) {
@@ -5888,14 +5884,12 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                 if (coin.nHeight > base_height ||
                     outpoint.n >= std::numeric_limits<decltype(outpoint.n)>::max() // Avoid integer wrap-around in coinstats.cpp:ApplyHash
                 ) {
-                    LogPrintf("[snapshot] bad snapshot data after deserializing %d coins\n",
-                              coins_count - coins_left);
-                    return false;
+                    return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins"),
+                              coins_count - coins_left)};
                 }
                 if (!MoneyRange(coin.out.nValue)) {
-                    LogPrintf("[snapshot] bad snapshot data after deserializing %d coins - bad tx out value\n",
-                              coins_count - coins_left);
-                    return false;
+                    return util::Error{strprintf(Untranslated("Bad snapshot data after deserializing %d coins - bad tx out value"),
+                              coins_count - coins_left)};
                 }
                 coins_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
 
@@ -5915,7 +5909,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                 // means <5MB of memory imprecision.
                 if (coins_processed % 120000 == 0) {
                     if (m_interrupt) {
-                        return false;
+                        return util::Error{Untranslated("Aborting after an interrupt was requested")};
                     }
 
                     const auto snapshot_cache_state = WITH_LOCK(::cs_main,
@@ -5933,9 +5927,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                 }
             }
         } catch (const std::ios_base::failure&) {
-            LogPrintf("[snapshot] bad snapshot format or truncated snapshot after deserializing %d coins\n",
-                      coins_processed);
-            return false;
+            return util::Error{strprintf(Untranslated("Bad snapshot format or truncated snapshot after deserializing %d coins"),
+                      coins_processed)};
         }
     }
 
@@ -5955,9 +5948,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         out_of_coins = true;
     }
     if (!out_of_coins) {
-        LogPrintf("[snapshot] bad snapshot - coins left over after deserializing %d coins\n",
-            coins_count);
-        return false;
+        return util::Error{strprintf(Untranslated("Bad snapshot - coins left over after deserializing %d coins"),
+            coins_count)};
     }
 
     LogPrintf("[snapshot] loaded %d (%.2f MB) coins from snapshot %s\n",
@@ -5980,18 +5972,16 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         maybe_stats = ComputeUTXOStats(
             CoinStatsHashType::HASH_SERIALIZED, snapshot_coinsdb, m_blockman, [&interrupt = m_interrupt] { SnapshotUTXOHashBreakpoint(interrupt); });
     } catch (StopHashingException const&) {
-        return false;
+        return util::Error{Untranslated("Aborting after an interrupt was requested")};
     }
     if (!maybe_stats.has_value()) {
-        LogPrintf("[snapshot] failed to generate coins stats\n");
-        return false;
+        return util::Error{Untranslated("Failed to generate coins stats")};
     }
 
     // Assert that the deserialized chainstate contents match the expected assumeutxo value.
     if (AssumeutxoHash{maybe_stats->hashSerialized} != au_data.hash_serialized) {
-        LogPrintf("[snapshot] bad snapshot content hash: expected %s, got %s\n",
-            au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString());
-        return false;
+        return util::Error{strprintf(Untranslated("Bad snapshot content hash: expected %s, got %s"),
+            au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString())};
     }
 
     snapshot_chainstate.m_chain.SetTip(*snapshot_start_block);
@@ -6031,7 +6021,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     LogPrintf("[snapshot] validated snapshot (%.2f MB)\n",
         coins_cache.DynamicMemoryUsage() / (1000 * 1000));
-    return true;
+    return {};
 }
 
 // Currently, this function holds cs_main for its duration, which could be for
