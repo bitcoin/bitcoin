@@ -9,6 +9,7 @@ from test_framework.blocktools import (
 )
 from test_framework.address import (
     address_to_scriptpubkey,
+    p2a,
     script_to_p2sh,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -100,6 +101,18 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         for tx_type in ['P2PKH', 'P2PK']:  # these tests are order-independent
             self.verify_txn_with_witness_script(tx_type)
 
+    def keyless_signing_test(self):
+        self.log.info("Test that keyless 'signing' of pay-to-anchor input succeeds")
+        funding_txid = self.send_to_address(p2a(), 49.999)
+        spending_tx = self.nodes[0].createrawtransaction(
+            [{"txid": funding_txid, "vout": 0}],
+            [{getnewdestination()[2]: Decimal("49.998")}])
+        spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [], [])
+        self.assert_signing_completed_successfully(spending_tx_signed)
+        assert self.nodes[0].testmempoolaccept([spending_tx_signed["hex"]])[0]["allowed"]
+        # 'signing' a P2A prevout is a no-op, so signed and unsigned txs shouldn't differ
+        assert_equal(spending_tx, spending_tx_signed["hex"])
+
     def verify_txn_with_witness_script(self, tx_type):
         self.log.info("Test with a {} script as the witnessScript".format(tx_type))
         embedded_privkey, embedded_pubkey = generate_keypair(wif=True)
@@ -138,6 +151,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
     def run_test(self):
         self.successful_signing_test()
         self.witness_script_test()
+        self.keyless_signing_test()
         self.invalid_sighashtype_test()
         self.invalid_private_key_and_tx()
 
