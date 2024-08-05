@@ -748,19 +748,23 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
         const uint256 gov_sb_hash = trigger_opt.value().GetHash();
         if (vote_rec_t voteRecord; trigger_opt.value().GetCurrentMNVotes(mn_activeman.GetOutPoint(), voteRecord)) {
             const auto& strFunc = __func__;
-            ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair){
+            ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair) {
                 if (voteInstancePair.first == VOTE_SIGNAL_FUNDING) {
                     if (voteInstancePair.second.eOutcome == VOTE_OUTCOME_YES) {
                         votedFundingYesTriggerHash = gov_sb_hash;
                     }
-                    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Not voting YES-FUNDING for trigger:%s, we voted %s for it already\n",
-                            strFunc, gov_sb_hash.ToString(), CGovernanceVoting::ConvertOutcomeToString(voteInstancePair.second.eOutcome));
+                    LogPrint(BCLog::GOBJECT, /* Continued */
+                             "CGovernanceManager::%s "
+                             "Not voting YES-FUNDING for trigger:%s, we voted %s for it already\n",
+                             strFunc, gov_sb_hash.ToString(),
+                             CGovernanceVoting::ConvertOutcomeToString(voteInstancePair.second.eOutcome));
                     return true;
                 }
                 return false;
             });
         } else if (VoteFundingTrigger(gov_sb_hash, VOTE_OUTCOME_YES, connman, peerman, mn_activeman)) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s success\n", __func__, gov_sb_hash.ToString());
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s success\n", __func__,
+                     gov_sb_hash.ToString());
             votedFundingYesTriggerHash = gov_sb_hash;
         } else {
             LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n", __func__, gov_sb_hash.ToString());
@@ -786,14 +790,17 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
         }
         if (vote_rec_t voteRecord; govobj->GetCurrentMNVotes(mn_activeman.GetOutPoint(), voteRecord)) {
             const auto& strFunc = __func__;
-            if (ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair){
-                if (voteInstancePair.first == VOTE_SIGNAL_FUNDING) {
-                    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Not voting NO-FUNDING for trigger:%s, we voted %s for it already\n",
-                            strFunc, trigger_hash.ToString(), CGovernanceVoting::ConvertOutcomeToString(voteInstancePair.second.eOutcome));
-                    return true;
-                }
-                return false;
-            })) {
+            if (ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair) {
+                    if (voteInstancePair.first == VOTE_SIGNAL_FUNDING) {
+                        LogPrint(BCLog::GOBJECT, /* Continued */
+                                 "CGovernanceManager::%s "
+                                 "Not voting NO-FUNDING for trigger:%s, we voted %s for it already\n",
+                                 strFunc, trigger_hash.ToString(),
+                                 CGovernanceVoting::ConvertOutcomeToString(voteInstancePair.second.eOutcome));
+                        return true;
+                    }
+                    return false;
+                })) {
                 continue;
             }
         }
