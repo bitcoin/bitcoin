@@ -240,6 +240,8 @@ private:
 
     const bool m_prune_mode;
 
+    const std::vector<std::byte> m_xor_key;
+
     /** Dirty block index entries. */
     std::set<CBlockIndex*> m_dirty_blockindex;
 
@@ -264,12 +266,7 @@ private:
 public:
     using Options = kernel::BlockManagerOpts;
 
-    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts)
-        : m_prune_mode{opts.prune_target > 0},
-          m_opts{std::move(opts)},
-          m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
-          m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
-          m_interrupt{interrupt} {}
+    explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
 
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};
