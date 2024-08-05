@@ -1810,13 +1810,11 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                              });
     pnode->AddRef();
     m_msgproc->InitializeNode(*pnode, nLocalServices);
-
-    LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
-
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
     }
+    LogDebug(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
 
     // We received a new connection, harvest entropy from the time (and our peer count)
     RandAddEvent((uint32_t)id);
