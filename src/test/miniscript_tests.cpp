@@ -48,9 +48,9 @@ struct TestData {
     TestData()
     {
         // All our signatures sign (and are required to sign) this constant message.
-        auto const MESSAGE_HASH = uint256S("f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065");
+        constexpr uint256 MESSAGE_HASH{"0000000000000000f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065"};
         // We don't pass additional randomness when creating a schnorr signature.
-        auto const EMPTY_AUX{uint256S("")};
+        const auto EMPTY_AUX{uint256::ZERO};
 
         // We generate 255 public keys and 255 hashes of each type.
         for (int i = 1; i <= 255; ++i) {

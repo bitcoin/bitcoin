@@ -22,7 +22,7 @@ static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch
 {
     return UintToArith256(uint256(vch));
 }
-static inline arith_uint256 arith_uint256S(const std::string& str) { return UintToArith256(uint256S(str)); }
+static inline arith_uint256 arith_uint256S(std::string_view str) { return UintToArith256(uint256S(str)); }
 
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"

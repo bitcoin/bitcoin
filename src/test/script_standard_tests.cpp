@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(script_standard_taproot_builder)
     XOnlyPubKey key_2{ParseHex("f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9")};
     CScript script_1 = CScript() << ToByteVector(key_1) << OP_CHECKSIG;
     CScript script_2 = CScript() << ToByteVector(key_2) << OP_CHECKSIG;
-    uint256 hash_3 = uint256S("31fe7061656bea2a36aa60a2f7ef940578049273746935d296426dc0afd86b68");
+    constexpr uint256 hash_3{"31fe7061656bea2a36aa60a2f7ef940578049273746935d296426dc0afd86b68"};
 
     TaprootBuilder builder;
     BOOST_CHECK(builder.IsValid() && builder.IsComplete());

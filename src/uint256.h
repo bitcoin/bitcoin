@@ -41,6 +41,8 @@ public:
         std::copy(vch.begin(), vch.end(), m_data.begin());
     }
 
+    consteval explicit base_blob(std::string_view str);
+
     constexpr bool IsNull() const
     {
         return std::all_of(m_data.begin(), m_data.end(), [](uint8_t val) {
@@ -91,6 +93,27 @@ public:
     }
 };
 
+template<unsigned int BITS>
+consteval base_blob<BITS>::base_blob(std::string_view str)
+{
+    // Non-lookup table version of HexDigit().
+    auto from_hex = [](const char c) -> int8_t {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - ('a' - 0xA);
+        if (c >= 'A' && c <= 'F') return c - ('A' - 0xA);
+
+        assert(false);
+    };
+
+    // 2 chars per byte.
+    assert(str.length() == m_data.size() * 2);
+    auto write_it = m_data.begin();
+    for (auto str_it = str.rbegin(); str_it != str.rend(); ++str_it, ++write_it) {
+        *write_it = from_hex(*(str_it));
+        *write_it |= from_hex(*(++str_it)) << 4;
+    }
+}
+
 namespace detail {
 /**
  * Writes the hex string (treated as little-endian) into a new uintN_t object
@@ -127,6 +150,10 @@ public:
 class uint256 : public base_blob<256> {
 public:
     static std::optional<uint256> FromHex(std::string_view str) { return detail::FromHex<uint256>(str); }
+    /** For this consteval constructor we always require a string literal of
+      * hexadecimal characters followed by an implicit null terminator.
+      * 256 bits => 32 bytes wide => 64 hexadecimal chars, +1 null term => 65 */
+    consteval explicit uint256(const char (&hex_str)[(WIDTH*2)+1]) : base_blob<256>(hex_str) {}
     constexpr uint256() = default;
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
     constexpr explicit uint256(Span<const unsigned char> vch) : base_blob<256>(vch) {}

@@ -23,7 +23,7 @@ FUZZ_TARGET(block_header)
     }
     {
         const uint256 hash = block_header->GetHash();
-        static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+        constexpr uint256 u256_max{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         assert(hash != u256_max);
         assert(block_header->GetBlockTime() == block_header->nTime);
         assert(block_header->IsNull() == (block_header->nBits == 0));
