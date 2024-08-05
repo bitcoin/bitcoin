@@ -883,8 +883,14 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("capabilities", std::move(aCaps));
 
     UniValue aRules(UniValue::VARR);
+    // See getblocktemplate changes in BIP 9:
+    // ! indicates a more subtle change to the block structure or generation transaction
+    // Otherwise clients may assume the rule will not impact usage of the template as-is.
     aRules.push_back("csv");
-    if (!fPreSegWit) aRules.push_back("!segwit");
+    if (!fPreSegWit) {
+        aRules.push_back("!segwit");
+        aRules.push_back("taproot");
+    }
     if (consensusParams.signet_blocks) {
         // indicate to miner that they must understand signet rules
         // when attempting to mine with this template
