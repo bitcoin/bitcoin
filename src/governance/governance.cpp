@@ -462,7 +462,8 @@ void CGovernanceManager::CheckAndRemove()
         }
     }
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s, m_requested_hash_time size=%d\n", ToString(), m_requested_hash_time.size());
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::UpdateCachesAndClean -- %s, m_requested_hash_time size=%d\n",
+             ToString(), m_requested_hash_time.size());
 }
 
 const CGovernanceObject* CGovernanceManager::FindConstGovernanceObject(const uint256& nHash) const
@@ -846,10 +847,13 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
         return false;
     }
 
-    const auto& [_itr, inserted] = m_requested_hash_time.emplace(inv.hash, GetTime<std::chrono::seconds>().count() + RELIABLE_PROPAGATION_TIME);
+    const auto valid_until = GetTime<std::chrono::seconds>().count() + RELIABLE_PROPAGATION_TIME;
+    const auto& [_itr, inserted] = m_requested_hash_time.emplace(inv.hash, valid_until);
 
     if (inserted) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest added %s inv hash to m_requested_hash_time, size=%d\n", MSG_GOVERNANCE_OBJECT ? "object" : "vote", m_requested_hash_time.size());
+        LogPrint(BCLog::GOBJECT, /* Continued */
+                 "CGovernanceManager::ConfirmInventoryRequest added %s inv hash to m_requested_hash_time, size=%d\n",
+                 MSG_GOVERNANCE_OBJECT ? "object" : "vote", m_requested_hash_time.size());
     }
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest reached end, returning true\n");
