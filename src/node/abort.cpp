@@ -21,7 +21,7 @@ void AbortNode(util::SignalInterrupt* shutdown, std::atomic<int>& exit_status, c
     InitError(_("A fatal internal error occurred, see debug.log for details: ") + message);
     exit_status.store(EXIT_FAILURE);
     if (shutdown && !(*shutdown)()) {
-        LogError("Failed to send shutdown signal\n");
+        LogAlert("Failed to send shutdown signal\n");
     };
 }
 } // namespace node

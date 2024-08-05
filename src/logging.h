@@ -76,8 +76,7 @@ namespace BCLog {
         Trace = 0, // High-volume or detailed logging for development/debugging
         Debug,     // Reasonably noisy logging, but still usable in production
         Info,      // Default
-        Warning,
-        Error,
+        Alert,
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
@@ -267,8 +266,7 @@ static inline void LogPrintf_(std::string_view logging_function, std::string_vie
 
 // Log unconditionally.
 #define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
+#define LogAlert(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Alert, __VA_ARGS__)
 
 // Deprecated unconditional logging.
 #define LogPrintf(...) LogInfo(__VA_ARGS__)

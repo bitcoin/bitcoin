@@ -415,10 +415,10 @@ static void libevent_log_cb(int severity, const char *msg)
         level = BCLog::Level::Info;
         break;
     case EVENT_LOG_WARN:
-        level = BCLog::Level::Warning;
+        level = BCLog::Level::Alert;
         break;
     default: // EVENT_LOG_ERR and others are mapped to error
-        level = BCLog::Level::Error;
+        level = BCLog::Level::Alert;
         break;
     }
     LogPrintLevel(BCLog::LIBEVENT, level, "%s\n", msg);

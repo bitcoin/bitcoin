@@ -28,11 +28,11 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
         strCaption = "Error: ";
-        if (!fSecure) LogError("%s\n", message.original);
+        if (!fSecure) LogAlert("%s%s\n", strCaption, message.original);
         break;
     case CClientUIInterface::MSG_WARNING:
         strCaption = "Warning: ";
-        if (!fSecure) LogWarning("%s\n", message.original);
+        if (!fSecure) LogAlert("%s%s\n", strCaption, message.original);
         break;
     case CClientUIInterface::MSG_INFORMATION:
         strCaption = "Information: ";

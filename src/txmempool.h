@@ -561,7 +561,7 @@ public:
      * Same as CalculateMemPoolAncestors, but always returns a (non-optional) setEntries.
      * Should only be used when it is assumed CalculateMemPoolAncestors would not fail. If
      * CalculateMemPoolAncestors does unexpectedly fail, an empty setEntries is returned and the
-     * error is logged to BCLog::MEMPOOL with level BCLog::Level::Error. In debug builds, failure
+     * error is logged to BCLog::MEMPOOL with level BCLog::Level::Alert. In debug builds, failure
      * of CalculateMemPoolAncestors will lead to shutdown due to assertion failure.
      *
      * @param[in]   calling_fn_name     Name of calling function so we can properly log the call site
