@@ -1201,6 +1201,8 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
             retryChildrenCount++;
         }
     }
+    // don't try to lock it anymore
+    WITH_LOCK(cs_pendingRetry, pendingRetryTxs.erase(txid));
 
     if (info.tx) {
         for (const auto& in : info.tx->vin) {
