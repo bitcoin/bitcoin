@@ -196,6 +196,7 @@ public:
         return ret;
     }
 
+    /** Numeric ordering (unlike \ref base_blob::Compare) */
     int CompareTo(const base_uint& b) const;
     bool EqualTo(uint64_t b) const;
 
@@ -218,6 +219,7 @@ public:
     friend inline bool operator==(const base_uint& a, uint64_t b) { return a.EqualTo(b); }
     friend inline bool operator!=(const base_uint& a, uint64_t b) { return !a.EqualTo(b); }
 
+    /** Hex encoding of the number (with the most significant digits first). */
     std::string GetHex() const;
     std::string ToString() const;
 
