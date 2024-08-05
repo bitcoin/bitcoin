@@ -113,9 +113,9 @@ FUZZ_TARGET(utxo_snapshot, .init = initialize_chain)
             if (index->nHeight == chainman.GetSnapshotBaseHeight()) {
                 auto params{chainman.GetParams().AssumeutxoForHeight(index->nHeight)};
                 Assert(params.has_value());
-                Assert(params.value().nChainTx == index->nChainTx);
+                Assert(params.value().m_chain_tx_count == index->m_chain_tx_count);
             } else {
-                Assert(index->nChainTx == 0);
+                Assert(index->m_chain_tx_count == 0);
             }
         }
         Assert(g_chain->size() == coinscache.GetCacheSize());

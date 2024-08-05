@@ -410,11 +410,11 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
         m_snapshot_height = au_data.height;
         CBlockIndex* base{LookupBlockIndex(*snapshot_blockhash)};
 
-        // Since nChainTx (responsible for estimated progress) isn't persisted
+        // Since m_chain_tx_count (responsible for estimated progress) isn't persisted
         // to disk, we must bootstrap the value for assumedvalid chainstates
         // from the hardcoded assumeutxo chainparams.
-        base->nChainTx = au_data.nChainTx;
-        LogPrintf("[snapshot] set nChainTx=%d for %s\n", au_data.nChainTx, snapshot_blockhash->ToString());
+        base->m_chain_tx_count = au_data.m_chain_tx_count;
+        LogPrintf("[snapshot] set m_chain_tx_count=%d for %s\n", au_data.m_chain_tx_count, snapshot_blockhash->ToString());
     } else {
         // If this isn't called with a snapshot blockhash, make sure the cached snapshot height
         // is null. This is relevant during snapshot completion, when the blockman may be loaded
@@ -449,15 +449,15 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
                 if (m_snapshot_height && pindex->nHeight == *m_snapshot_height &&
                         pindex->GetBlockHash() == *snapshot_blockhash) {
                     // Should have been set above; don't disturb it with code below.
-                    Assert(pindex->nChainTx > 0);
-                } else if (pindex->pprev->nChainTx > 0) {
-                    pindex->nChainTx = pindex->pprev->nChainTx + pindex->nTx;
+                    Assert(pindex->m_chain_tx_count > 0);
+                } else if (pindex->pprev->m_chain_tx_count > 0) {
+                    pindex->m_chain_tx_count = pindex->pprev->m_chain_tx_count + pindex->nTx;
                 } else {
-                    pindex->nChainTx = 0;
+                    pindex->m_chain_tx_count = 0;
                     m_blocks_unlinked.insert(std::make_pair(pindex->pprev, pindex));
                 }
             } else {
-                pindex->nChainTx = pindex->nTx;
+                pindex->m_chain_tx_count = pindex->nTx;
             }
         }
         if (!(pindex->nStatus & BLOCK_FAILED_MASK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_MASK)) {

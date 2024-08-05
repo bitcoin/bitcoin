@@ -99,7 +99,7 @@ CreateAndActivateUTXOSnapshot(
                 assert(pindex->IsValid(BlockStatus::BLOCK_VALID_TREE));
                 pindex->nStatus = BlockStatus::BLOCK_VALID_TREE;
                 pindex->nTx = 0;
-                pindex->nChainTx = 0;
+                pindex->m_chain_tx_count = 0;
                 pindex->nSequenceId = 0;
                 pindex = pindex->pprev;
             }
