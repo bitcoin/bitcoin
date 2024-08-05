@@ -409,10 +409,19 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             maxfeerate=0,
         )
 
-        # Clear witness stuffing
-        anchor_spend = anchor_nonempty_wit_spend
-        anchor_spend.wit.vtxinwit[0].scriptWitness.stack = []
-        anchor_spend.rehash()
+        # but is consensus-legal
+        self.generateblock(node, self.wallet.get_address(), [anchor_nonempty_wit_spend.serialize().hex()])
+
+        # Without witness elements it is standard
+        create_anchor_tx = self.wallet.send_to(from_node=node, scriptPubKey=PAY_TO_ANCHOR, amount=anchor_value)
+        self.generate(node, 1)
+
+        anchor_spend = CTransaction()
+        anchor_spend.vin.append(CTxIn(COutPoint(int(create_anchor_tx["txid"], 16), create_anchor_tx["sent_vout"]), b""))
+        anchor_spend.vout.append(CTxOut(anchor_value - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
+        anchor_spend.wit.vtxinwit.append(CTxInWitness())
+        # It's "segwit" but txid == wtxid since there is no witness data
+        assert_equal(anchor_spend.rehash(), anchor_spend.getwtxid())
 
         self.check_mempool_result(
             result_expected=[{'txid': anchor_spend.rehash(), 'allowed': True, 'vsize': anchor_spend.get_vsize(), 'fees': { 'base': Decimal('0.00000700')}}],
