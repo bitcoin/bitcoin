@@ -155,6 +155,7 @@ BITCOIN_TESTS =\
   test/streams_tests.cpp \
   test/sync_tests.cpp \
   test/system_tests.cpp \
+  test/threadpool_tests.cpp \
   test/timeoffsets_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \

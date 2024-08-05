@@ -120,12 +120,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
     // Ignore genesis block
     if (block.height > 0) {
-        // pindex variable gives indexing code access to node internals. It
-        // will be removed in upcoming commit
-        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
-        if (!m_chainstate->m_blockman.UndoReadFromDisk(block_undo, *pindex)) {
-            return false;
-        }
+        block_undo = *Assert(block.undo_data);
 
         std::pair<uint256, DBVal> read_out;
         if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
@@ -150,7 +145,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
             const auto& tx{block.data->vtx.at(i)};
 
             // Skip duplicate txid coinbase transactions (BIP30).
-            if (IsBIP30Unspendable(*pindex) && tx->IsCoinBase()) {
+            if (IsBIP30Unspendable(block.hash, block.height) && tx->IsCoinBase()) {
                 m_total_unspendable_amount += block_subsidy;
                 m_total_unspendables_bip30 += block_subsidy;
                 continue;

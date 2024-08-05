@@ -60,7 +60,12 @@ protected:
 
     bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
 
+    bool RequiresBlockUndoData() const override { return true; }
+
     BaseIndex::DB& GetDB() const LIFETIMEBOUND override { return *m_db; }
+
+    std::any CustomProcessBlock(const interfaces::BlockInfo& block) override;
+    bool CustomPostProcessBlocks(const std::any& obj) override;
 
 public:
     /** Constructs the index, which becomes available to be queried. */
@@ -68,6 +73,8 @@ public:
                               size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
+
+    bool AllowParallelSync() override { return true; }
 
     /** Get a single filter by block. */
     bool LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const;
