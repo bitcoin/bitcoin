@@ -143,6 +143,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint& outpoint, Coin* moveout)
 {
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
+
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     TRACE5(utxocache, spent,
            outpoint.hash.data(),
@@ -154,8 +155,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint& outpoint, Coin* moveout)
         *moveout = std::move(it->second.coin);
     }
     if (it->second.coin.out.IsStakedCommitment()) {
-        LogPrint(BCLog::POPS, "%s: Removing staked commitment %s at height %d\n", __func__, HexStr(it->second.coin.out.blsctData.rangeProof.Vs[0].GetVch()), (uint32_t)it->second.coin.nHeight);
-        cacheStakedCommitments.Remove(it->second.coin.out.blsctData.rangeProof.Vs[0]);
+        RemoveStakedCommitment(it->second.coin.out.blsctData.rangeProof.Vs[0]);
     }
     if (it->second.flags & CCoinsCacheEntry::FRESH) {
         cacheCoins.erase(it);
@@ -164,6 +164,11 @@ bool CCoinsViewCache::SpendCoin(const COutPoint& outpoint, Coin* moveout)
         it->second.coin.Clear();
     }
     return true;
+}
+
+void CCoinsViewCache::RemoveStakedCommitment(const MclG1Point& commitment) {
+    LogPrint(BCLog::POPS, "%s: Removing staked commitment %s\n", __func__, HexStr(commitment.GetVch()));
+    cacheStakedCommitments.Remove(commitment);
 }
 
 const Coin& CCoinsViewCache::AccessCoin(const COutPoint& outpoint) const

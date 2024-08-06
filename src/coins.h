@@ -275,6 +275,8 @@ public:
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
 
+    void RemoveStakedCommitment(const MclG1Point& commitment);
+
     /**
      * Check if we have the given utxo already loaded in this cache.
      * The semantics are the same as HaveCoin(), but no calls to

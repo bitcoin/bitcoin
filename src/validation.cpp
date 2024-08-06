@@ -2067,6 +2067,9 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
         // Check that all outputs are available and match the outputs in the block itself
         // exactly.
         for (size_t o = 0; o < tx.vout.size(); o++) {
+            if (tx.vout[o].IsStakedCommitment()) {
+                view.RemoveStakedCommitment(tx.vout[o].blsctData.rangeProof.Vs[0]);
+            }
             if (!tx.vout[o].scriptPubKey.IsUnspendable()) {
                 COutPoint out(hash, o);
                 Coin coin;

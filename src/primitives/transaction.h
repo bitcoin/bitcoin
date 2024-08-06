@@ -307,8 +307,7 @@ public:
             return false;
         if (!tokenId.IsNull())
             return false;
-        if (!(*(scriptPubKey.begin()) == OP_STAKED_COMMITMENT && *(scriptPubKey.begin() + 1) == OP_PUSHDATA2 && *(scriptPubKey.end() - 1) == OP_TRUE))
-            return false;
+        if (!(*(scriptPubKey.begin()) == OP_STAKED_COMMITMENT && *(scriptPubKey.begin() + 1) == OP_PUSHDATA2 && *(scriptPubKey.end() - 1) == OP_TRUE)) return false;
         try {
             auto commitment = std::vector<unsigned char>(scriptPubKey.begin() + 4, scriptPubKey.end());
 
