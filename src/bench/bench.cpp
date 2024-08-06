@@ -10,6 +10,7 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <regex>
 
@@ -23,7 +24,7 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
         // nothing to write, bail out
         return;
     }
-    fsbridge::ofstream fout{fs::PathFromString(filename)};
+    std::ofstream fout{fs::PathFromString(filename)};
     if (fout.is_open()) {
         ankerl::nanobench::render(tpl, benchmarkResults, fout);
     } else {

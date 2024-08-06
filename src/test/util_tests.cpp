@@ -5,6 +5,7 @@
 #include <util/system.h>
 
 #include <clientversion.h>
+#include <fs.h>
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
 #include <sync.h>
@@ -72,9 +73,12 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
+#ifndef WIN32
+    // Windows does not consider "datadir/.//" to be a valid directory path.
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.//");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
+#endif
 }
 
 namespace {

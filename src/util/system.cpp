@@ -74,9 +74,14 @@
 #include <malloc.h>
 #endif
 
+#include <univalue.h>
+
+#include <fstream>
+#include <map>
+#include <memory>
+#include <string>
 #include <thread>
 #include <typeinfo>
-#include <univalue.h>
 
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -167,7 +172,7 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 }
 
 std::streampos GetFileSize(const char* path, std::streamsize max) {
-    fsbridge::ifstream file{path, std::ios::binary};
+    std::ifstream file{path, std::ios::binary};
     file.ignore(max);
     return file.gcount();
 }
@@ -259,7 +264,7 @@ namespace {
 fs::path StripRedundantLastElementsOfPath(const fs::path& path)
 {
     auto result = path;
-    while (fs::PathToString(result.filename()) == ".") {
+    while (result.filename().empty() || fs::PathToString(result.filename()) == ".") {
         result = result.parent_path();
     }
 
@@ -424,7 +429,7 @@ const fs::path& ArgsManager::GetBlocksDirPath() const
     if (!path.empty()) return path;
 
     if (IsArgSet("-blocksdir")) {
-        path = fs::system_complete(fs::PathFromString(GetArg("-blocksdir", "")));
+        path = fs::absolute(fs::PathFromString(GetArg("-blocksdir", "")));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -436,7 +441,6 @@ const fs::path& ArgsManager::GetBlocksDirPath() const
     path /= fs::PathFromString(BaseParams().DataDir());
     path /= "blocks";
     fs::create_directories(path);
-    path = StripRedundantLastElementsOfPath(path);
     return path;
 }
 
@@ -451,7 +455,7 @@ const fs::path& ArgsManager::GetDataDir(bool net_specific) const
 
     std::string datadir = GetArg("-datadir", "");
     if (!datadir.empty()) {
-        path = fs::system_complete(fs::PathFromString(datadir));
+        path = fs::absolute(StripRedundantLastElementsOfPath(fs::PathFromString(datadir)));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -863,7 +867,7 @@ fs::path GetBackupsDir()
 bool CheckDataDirOption()
 {
     std::string datadir = gArgs.GetArg("-datadir", "");
-    return datadir.empty() || fs::is_directory(fs::system_complete(fs::PathFromString(datadir)));
+    return datadir.empty() || fs::is_directory(fs::absolute(fs::PathFromString(datadir)));
 }
 
 fs::path GetConfigFile(const std::string& confPath)
@@ -954,7 +958,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
-    fsbridge::ifstream stream(GetConfigFile(confPath));
+    std::ifstream stream{GetConfigFile(confPath)};
 
     // not ok to have a config file specified that cannot be opened
     if (IsArgSet("-conf") && !stream.good()) {
@@ -1001,7 +1005,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
-                fsbridge::ifstream conf_file_stream(GetConfigFile(conf_file_name));
+                std::ifstream conf_file_stream{GetConfigFile(conf_file_name)};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
@@ -1028,9 +1032,10 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         }
     } else {
         // Create an empty dash.conf if it does not exist
-        FILE* configFile = fsbridge::fopen(GetConfigFile(confPath), "a");
-        if (configFile != nullptr)
-            fclose(configFile);
+        std::ofstream configFile{GetConfigFile(confPath), std::ios_base::app};
+        if (!configFile.good())
+            return false;
+        configFile.close();
         return true; // Nothing to read, so just return
     }
 
@@ -1138,7 +1143,7 @@ bool RenameOver(fs::path src, fs::path dest)
 }
 
 /**
- * Ignores exceptions thrown by Boost's create_directories if the requested directory exists.
+ * Ignores exceptions thrown by create_directories if the requested directory exists.
  * Specifically handles case where path p exists, but it wasn't possible for the user to
  * write to the parent directory.
  */
@@ -1417,16 +1422,6 @@ void SetupEnvironment()
     // Set the default input/output charset is utf-8
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
-#endif
-    // The path locale is lazy initialized and to avoid deinitialization errors
-    // in multithreading environments, it is set explicitly by the main thread.
-    // A dummy locale is used to extract the internal default locale, used by
-    // fs::path, which is then used to explicitly imbue the path.
-    std::locale loc = fs::path::imbue(std::locale::classic());
-#ifndef WIN32
-    fs::path::imbue(loc);
-#else
-    fs::path::imbue(std::locale(loc, new std::codecvt_utf8_utf16<wchar_t>()));
 #endif
 }
 

@@ -20,7 +20,8 @@
 #include <script/bitcoinconsensus.h>
 #endif
 
-#include <stdint.h>
+#include <cstdint>
+#include <fstream>
 #include <string>
 #include <vector>
 

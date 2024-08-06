@@ -6,6 +6,7 @@
 #include <chain.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <fs.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>
@@ -21,11 +22,12 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
-
 #include <wallet/rpcwallet.h>
 
-#include <stdint.h>
+#include <cstdint>
+#include <fstream>
 #include <tuple>
+#include <string>
 
 #include <univalue.h>
 
@@ -509,7 +511,7 @@ RPCHelpMan importwallet()
 
         EnsureWalletIsUnlocked(*pwallet);
 
-        fsbridge::ifstream file;
+        std::ifstream file;
         file.open(fs::u8path(request.params[0].get_str()), std::ios::in | std::ios::ate);
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
@@ -662,7 +664,7 @@ RPCHelpMan importelectrumwallet()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    fsbridge::ifstream file;
+    std::ifstream file;
     std::string strFileName = request.params[0].get_str();
     size_t nDotPos = strFileName.find_last_of(".");
     if(nDotPos == std::string::npos)
@@ -948,7 +950,7 @@ RPCHelpMan dumpwallet()
         throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
-    fsbridge::ofstream file;
+    std::ofstream file;
     file.open(filepath);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
