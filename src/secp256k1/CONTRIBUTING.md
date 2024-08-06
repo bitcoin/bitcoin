@@ -49,6 +49,7 @@ In addition, libsecp256k1 tries to maintain the following coding conventions:
 * Operations involving secret data should be tested for being constant time with respect to the secrets (see [src/ctime_tests.c](src/ctime_tests.c)).
 * Local variables containing secret data should be cleared explicitly to try to delete secrets from memory.
 * Use `secp256k1_memcmp_var` instead of `memcmp` (see [#823](https://github.com/bitcoin-core/secp256k1/issues/823)).
+* As a rule of thumb, the default values for configuration options should target standard desktop machines and align with Bitcoin Core's defaults, and the tests should mostly exercise the default configuration (see [#1549](https://github.com/bitcoin-core/secp256k1/issues/1549#issuecomment-2200559257)).
 
 #### Style conventions
 

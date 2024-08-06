@@ -107,6 +107,12 @@ static void testutil_random_gej_test(secp256k1_gej *gej) {
     testutil_random_ge_jacobian_test(gej, &ge);
 }
 
+static void testutil_random_pubkey_test(secp256k1_pubkey *pk) {
+    secp256k1_ge ge;
+    testutil_random_ge_test(&ge);
+    secp256k1_pubkey_save(pk, &ge);
+}
+
 static void testutil_random_scalar_order_test(secp256k1_scalar *num) {
     do {
         unsigned char b32[32];
