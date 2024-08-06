@@ -40,6 +40,10 @@ unsupported systems.
 Notable changes
 ===============
 
+### Policy
+
+- #30493 policy: enable full-rbf by default
+
 ### P2P
 
 - #30394 net: fix race condition in self-connect detection
@@ -55,6 +59,10 @@ Notable changes
 ### PSBT
 
 - #29855 psbt: Check non witness utxo outpoint early
+
+### Test
+
+- #30552 test: fix constructor of msg_tx
 
 ### Build
 
@@ -74,6 +82,7 @@ Thanks to everyone who directly contributed to this release:
 - Cory Fields
 - Martin Zumsande
 - Max Edwards
+- Peter Todd
 - Sebastian Falbesoner
 - willcl-ark
 
