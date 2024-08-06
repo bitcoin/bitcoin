@@ -10,6 +10,7 @@ $(package)_patches += builtin_sha1.patch
 $(package)_patches += fix_have_windows.patch
 $(package)_patches += openbsd_kqueue_headers.patch
 $(package)_patches += cmake_minimum.patch
+$(package)_patches += cacheline_undefined.patch
 $(package)_patches += no_librt.patch
 
 define $(package)_set_vars
@@ -25,6 +26,7 @@ define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/remove_libstd_link.patch && \
   patch -p1 < $($(package)_patch_dir)/macos_mktemp_check.patch && \
   patch -p1 < $($(package)_patch_dir)/builtin_sha1.patch && \
+  patch -p1 < $($(package)_patch_dir)/cacheline_undefined.patch && \
   patch -p1 < $($(package)_patch_dir)/fix_have_windows.patch && \
   patch -p1 < $($(package)_patch_dir)/openbsd_kqueue_headers.patch && \
   patch -p1 < $($(package)_patch_dir)/cmake_minimum.patch && \
