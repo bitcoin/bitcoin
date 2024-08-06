@@ -31,6 +31,9 @@ add_dependencies(bitcoin_clientversion generate_build_info)
 add_subdirectory(crypto)
 add_subdirectory(univalue)
 add_subdirectory(util)
+if(WITH_MULTIPROCESS)
+  add_subdirectory(ipc)
+endif()
 
 #=============================
 # secp256k1 subtree
@@ -294,6 +297,18 @@ if(BUILD_DAEMON)
   target_link_libraries(bitcoind
     core_interface
     bitcoin_node
+    $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+  )
+endif()
+if(WITH_MULTIPROCESS)
+  add_executable(bitcoin-node
+    bitcoind.cpp
+    init/bitcoin-node.cpp
+  )
+  target_link_libraries(bitcoin-node
+    core_interface
+    bitcoin_node
+    bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
 endif()

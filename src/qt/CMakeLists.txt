@@ -243,6 +243,23 @@ if(WIN32)
   set_target_properties(bitcoin-qt PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
+if(WITH_MULTIPROCESS)
+  add_executable(bitcoin-gui
+    main.cpp
+    ../init/bitcoin-gui.cpp
+  )
+  target_link_libraries(bitcoin-gui
+    core_interface
+    bitcoinqt
+    bitcoin_node
+    bitcoin_ipc
+  )
+  import_plugins(bitcoin-gui)
+  if(WIN32)
+    set_target_properties(bitcoin-gui PROPERTIES WIN32_EXECUTABLE TRUE)
+  endif()
+endif()
+
 if(BUILD_GUI_TESTS)
   add_subdirectory(test)
 endif()
