@@ -159,6 +159,12 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=[rpcauth_user1, '-rpcauth=', rpcauth_user2])
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error, extra_args=['-rpcauth=', rpcauth_user1, rpcauth_user2])
 
+        self.log.info('Check -norpcauth disables previous -rpcauth params')
+        self.restart_node(0, extra_args=[rpcauth_user1, rpcauth_user2, '-norpcauth'])
+        assert_equal(401, call_with_auth(self.nodes[0], 'user1', 'bitcoin').status)
+        assert_equal(401, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        self.stop_node(0)
+
         self.log.info('Check that failure to write cookie file will abort the node gracefully')
         (self.nodes[0].chain_path / ".cookie.tmp").mkdir()
         self.nodes[0].assert_start_raises_init_error(expected_msg=init_error)
