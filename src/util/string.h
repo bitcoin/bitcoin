@@ -81,6 +81,14 @@ std::vector<T> Split(const Span<const char>& sp, char sep)
     return std::string(TrimStringView(str, pattern));
 }
 
+[[nodiscard]] inline std::string_view RemoveSuffixView(std::string_view str, std::string_view suffix)
+{
+    if (str.ends_with(suffix)) {
+        return str.substr(0, str.size() - suffix.size());
+    }
+    return str;
+}
+
 [[nodiscard]] inline std::string_view RemovePrefixView(std::string_view str, std::string_view prefix)
 {
     if (str.substr(0, prefix.size()) == prefix) {
