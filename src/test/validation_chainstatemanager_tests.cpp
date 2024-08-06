@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/disconnected_transactions.h>
+#include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
@@ -16,6 +17,8 @@
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <uint256.h>
+#include <util/result.h>
+#include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -767,6 +770,57 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
         LOCK(::cs_main);
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+/** Helper function to parse args into args_man and return the result of applying them to opts */
+template <typename Options>
+util::Result<Options> SetOptsFromArgs(ArgsManager& args_man, Options opts,
+                                      const std::vector<const char*>& args)
+{
+    const auto argv{Cat({"ignore"}, args)};
+    std::string error{};
+    if (!args_man.ParseParameters(argv.size(), argv.data(), error)) {
+        return util::Error{Untranslated("ParseParameters failed with error: " + error)};
+    }
+    const auto result{node::ApplyArgsManOptions(args_man, opts)};
+    if (!result) return util::Error{util::ErrorString(result)};
+    return opts;
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
+{
+    //! Try to apply the provided args to a ChainstateManager::Options
+    auto get_opts = [&](const std::vector<const char*>& args) {
+        static kernel::Notifications notifications{};
+        static const ChainstateManager::Options options{
+            .chainparams = ::Params(),
+            .datadir = {},
+            .notifications = notifications};
+        return SetOptsFromArgs(*this->m_node.args, options, args);
+    };
+    //! Like get_opts, but requires the provided args to be valid and unwraps the result
+    auto get_valid_opts = [&](const std::vector<const char*>& args) {
+        const auto result{get_opts(args)};
+        BOOST_REQUIRE_MESSAGE(result, util::ErrorString(result).original);
+        return *result;
+    };
+
+    // test -assumevalid
+    BOOST_CHECK(!get_valid_opts({}).assumed_valid_block.has_value());
+    BOOST_CHECK(get_valid_opts({"-assumevalid="}).assumed_valid_block.value().IsNull());
+    BOOST_CHECK(get_valid_opts({"-assumevalid=0"}).assumed_valid_block.value().IsNull());
+    BOOST_CHECK(get_valid_opts({"-noassumevalid"}).assumed_valid_block.value().IsNull());
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid=0x1234"}).assumed_valid_block.value().ToString(), std::string(60, '0') + "1234");
+    const std::string cmd{"-assumevalid=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
+    BOOST_CHECK_EQUAL(get_valid_opts({cmd.c_str()}).assumed_valid_block.value().ToString(), cmd.substr(13, cmd.size()));
+
+    // test -minimumchainwork
+    BOOST_CHECK(!get_valid_opts({}).minimum_chain_work.has_value());
+    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0"}).minimum_chain_work.value().GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-nominimumchainwork"}).minimum_chain_work.value().GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0x1234"}).minimum_chain_work.value().GetCompact(), 0x02123400U);
+
+    BOOST_CHECK(!get_opts({"-minimumchainwork=xyz"})); // invalid hex characters
 }
 
 BOOST_AUTO_TEST_SUITE_END()
