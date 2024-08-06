@@ -365,12 +365,12 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
     return wallet;
 }
 
-std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
     options.require_existing = true;
 
-    if (!fs::exists(fs::u8path(backup_file))) {
+    if (!fs::exists(backup_file)) {
         error = Untranslated("Backup file does not exist");
         status = DatabaseStatus::FAILED_INVALID_BACKUP_FILE;
         return nullptr;
@@ -5232,7 +5232,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         }
         if(fs::exists(sourceFile)) {
             try {
-                fs::copy_file(sourceFile, backupFile);
+                fs::copy_file(sourceFile, backupFile, fs::copy_option::fail_if_exists);
                 WalletLogPrintf("Creating backup of %s -> %s\n", fs::PathToString(sourceFile), fs::PathToString(backupFile));
             } catch(fs::filesystem_error &error) {
                 warnings.push_back(strprintf(_("Failed to create backup, error: %s"), fsbridge::get_filesystem_error_message(error)));

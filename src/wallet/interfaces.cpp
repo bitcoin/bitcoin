@@ -607,7 +607,7 @@ public:
         assert(m_context.m_coinjoin_loader);
         return MakeWallet(LoadWallet(*m_context.chain, *m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
     }
-    std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
         assert(m_context.m_coinjoin_loader);
