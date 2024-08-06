@@ -58,10 +58,26 @@ jobs:
     needs: build-image
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
         - build_target: arm-linux
           host: arm-linux-gnueabihf
+        - build_target: linux64
+          host: x86_64-pc-linux-gnu
+        - build_target: linux64_tsan
+          host: x86_64-pc-linux-gnu
+        - build_target: linux64_ubsan
+          host: x86_64-pc-linux-gnu
+        - build_target: linux64_fuzz
+          host: x86_64-pc-linux-gnu
+        - build_target: linux64_cxx20
+          host: x86_64-pc-linux-gnu
+        - build_target: linux64_sqlite
+          host: x86_64-pc-linux-gnu
+        - build_target: linux64_nowallet
+          host: x86_64-pc-linux-gnu
+
     container:
       image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
       options: --user root
@@ -91,11 +107,25 @@ jobs:
     needs: [build-image, build-depends]
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - build_target: arm-linux
             host: arm-linux-gnueabihf
-            dep_opts: DEBUG=1
+          - build_target: linux64
+            host: x86_64-pc-linux-gnu
+          - build_target: linux64_tsan
+            host: x86_64-pc-linux-gnu
+          - build_target: linux64_ubsan
+            host: x86_64-pc-linux-gnu
+          - build_target: linux64_fuzz
+            host: x86_64-pc-linux-gnu
+          - build_target: linux64_cxx20
+            host: x86_64-pc-linux-gnu
+          - build_target: linux64_sqlite
+            host: x86_64-pc-linux-gnu
+          - build_target: linux64_nowallet
+            host: x86_64-pc-linux-gnu
     container:
       image: ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-ci-runner:${{ needs.build-image.outputs.image-tag }}
       options: --user root
@@ -144,7 +174,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: build-artifacts-${{ matrix.build_target }}
           path: |
             /output
 
