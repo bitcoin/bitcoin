@@ -43,7 +43,7 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
 
 void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
 {
-    if (auto value = args.GetBoolArg("-fastprune")) options.fastprune = *value;
+    if (auto value = GetTestOptionBool(args, "fastprune")) options.fastprune = *value;
 
     for (const std::string& arg : args.GetArgs("-testactivationheight")) {
         const auto found{arg.find('@')};

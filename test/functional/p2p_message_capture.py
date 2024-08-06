@@ -54,7 +54,7 @@ def mini_parser(dat_file: str) -> None:
 class MessageCaptureTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-capturemessages"]]
+        self.extra_args = [["-test=capturemessages"]]
         self.setup_clean_chain = True
 
     def run_test(self):

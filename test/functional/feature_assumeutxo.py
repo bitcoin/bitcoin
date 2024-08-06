@@ -42,7 +42,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.rpc_timeout = 120
         self.extra_args = [
             [],
-            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            ["-test=fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             []
         ]

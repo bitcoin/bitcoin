@@ -180,7 +180,7 @@ In previous versions of Bitcoin Core, a portion of each block could be reserved 
 - The `getmempoolancestors`, `getmempooldescendants`, `getmempoolentry` and `getrawmempool` RPCs no longer return `startingpriority` and `currentpriority`.
 - The `prioritisetransaction` RPC no longer takes a `priority_delta` argument, which is replaced by a `dummy` argument for backwards compatibility with clients using positional arguments. The RPC is still used to change the apparent fee-rate of the transaction by using the `fee_delta` argument.
 - `-minrelaytxfee` can now be set to 0. If `minrelaytxfee` is set, then fees smaller than `minrelaytxfee` (per kB) are rejected from relaying, mining and transaction creation. This defaults to 1000 satoshi/kB.
-- The `-printpriority` option has been updated to only output the fee rate and hash of transactions included in a block by the mining code.
+- The `-test=printpriority` option has been updated to only output the fee rate and hash of transactions included in a block by the mining code.
 
 Mempool Persistence Across Restarts
 -----------------------------------

@@ -28,7 +28,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.extra_args = [
             [],
             [],
-            ["-fastprune", "-prune=1"]
+            ["-test=fastprune", "-prune=1"]
         ]
 
     def setup_network(self):

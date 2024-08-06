@@ -32,7 +32,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Op
     }
     opts.prune_target = nPruneTarget;
 
-    if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
+    if (auto value{GetTestOptionBool(args, "fastprune")}) opts.fast_prune = *value;
 
     return {};
 }

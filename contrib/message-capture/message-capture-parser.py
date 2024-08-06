@@ -2,7 +2,7 @@
 # Copyright (c) 2020-2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Parse message capture binary files.  To be used in conjunction with -capturemessages."""
+"""Parse message capture binary files.  To be used in conjunction with -test=capturemessages."""
 
 import argparse
 import os

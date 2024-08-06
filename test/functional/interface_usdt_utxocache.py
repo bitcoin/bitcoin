@@ -379,7 +379,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         assert_equal(0, len(expected_flushes))
 
         self.log.info("restart the node with -prune")
-        self.start_node(0, ["-fastprune=1", "-prune=1"])
+        self.start_node(0, ["-test=fastprune=1", "-prune=1"])
 
         BLOCKS_TO_MINE = 350
         self.log.info(f"mine {BLOCKS_TO_MINE} blocks to be able to prune")

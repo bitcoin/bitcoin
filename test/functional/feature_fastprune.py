@@ -13,10 +13,10 @@ from test_framework.wallet import MiniWallet
 class FeatureFastpruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-fastprune"]]
+        self.extra_args = [["-test=fastprune"]]
 
     def run_test(self):
-        self.log.info("ensure that large blocks don't crash or freeze in -fastprune")
+        self.log.info("ensure that large blocks don't crash or freeze in -test=fastprune")
         wallet = MiniWallet(self.nodes[0])
         tx = wallet.create_self_transfer()['tx']
         annex = b"\x50" + b"\xff" * 0x10000

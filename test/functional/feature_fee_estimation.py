@@ -386,8 +386,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         last_modified_time = time.time() - (MAX_FILE_AGE + 1) * SECONDS_PER_HOUR
         os.utime(fee_dat, (last_modified_time, last_modified_time))
 
-        # Restart node with -acceptstalefeeestimates option to ensure fee_estimate.dat file is read
-        self.start_node(0,extra_args=["-acceptstalefeeestimates"])
+        # Restart node with -test=acceptstalefeeestimates option to ensure fee_estimate.dat file is read
+        self.start_node(0,extra_args=["-test=acceptstalefeeestimates"])
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
 
     def clear_estimates(self):

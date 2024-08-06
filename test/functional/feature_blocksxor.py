@@ -21,7 +21,7 @@ class BlocksXORTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             '-blocksxor=1',
-            '-fastprune=1',             # use smaller block files
+            '-test=fastprune=1',        # use smaller block files
             '-datacarriersize=100000',  # needed to pad transaction with MiniWallet
         ]]
 

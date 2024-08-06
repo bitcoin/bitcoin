@@ -16,7 +16,7 @@ class BlockstoreReindexTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-fastprune"]]
+        self.extra_args = [["-test=fastprune"]]
 
     def reindex_readonly(self):
         self.log.debug("Generate block big enough to start second block file")
@@ -76,7 +76,7 @@ class BlockstoreReindexTest(BitcoinTestFramework):
         if undo_immutable:
             self.log.debug("Attempt to restart and reindex the node with the unwritable block file")
             with self.nodes[0].assert_debug_log(["Reindexing finished"], timeout=60):
-                self.start_node(0, extra_args=['-reindex', '-fastprune'])
+                self.start_node(0, extra_args=['-reindex', '-test=fastprune'])
             assert block_count == self.nodes[0].getblockcount()
             undo_immutable()
 
