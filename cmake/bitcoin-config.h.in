@@ -1,0 +1,44 @@
+// Copyright (c) 2023-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit/.
+
+#ifndef BITCOIN_CONFIG_H
+#define BITCOIN_CONFIG_H
+
+/* Version Build */
+#define CLIENT_VERSION_BUILD @CLIENT_VERSION_BUILD@
+
+/* Version is release */
+#define CLIENT_VERSION_IS_RELEASE @CLIENT_VERSION_IS_RELEASE@
+
+/* Major version */
+#define CLIENT_VERSION_MAJOR @CLIENT_VERSION_MAJOR@
+
+/* Minor version */
+#define CLIENT_VERSION_MINOR @CLIENT_VERSION_MINOR@
+
+/* Copyright holder(s) before %s replacement */
+#define COPYRIGHT_HOLDERS "@COPYRIGHT_HOLDERS@"
+
+/* Copyright holder(s) */
+#define COPYRIGHT_HOLDERS_FINAL "@COPYRIGHT_HOLDERS_FINAL@"
+
+/* Replacement for %s in copyright holders string */
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "@PACKAGE_NAME@"
+
+/* Copyright year */
+#define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "@PACKAGE_NAME@"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL "@PROJECT_HOMEPAGE_URL@"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@PACKAGE_VERSION@"
+
+#endif //BITCOIN_CONFIG_H
