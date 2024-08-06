@@ -5645,17 +5645,18 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return destroyed && !fs::exists(db_path);
 }
 
-util::Result<void> ChainstateManager::ActivateSnapshot(
+util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
         bool in_memory)
 {
     uint256 base_blockhash = metadata.m_base_blockhash;
-    int base_blockheight = metadata.m_base_blockheight;
 
     if (this->SnapshotBlockhash()) {
         return util::Error{Untranslated("Can't activate a snapshot-based chainstate more than once")};
     }
+
+    CBlockIndex* snapshot_start_block{};
 
     {
         LOCK(::cs_main);
@@ -5663,13 +5664,12 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
         if (!GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
             auto available_heights = GetParams().GetAvailableSnapshotHeights();
             std::string heights_formatted = util::Join(available_heights, ", ", [&](const auto& i) { return util::ToString(i); });
-            return util::Error{strprintf(Untranslated("assumeutxo block hash in snapshot metadata not recognized (hash: %s, height: %s). The following snapshot heights are available: %s"),
+            return util::Error{strprintf(Untranslated("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s"),
                 base_blockhash.ToString(),
-                base_blockheight,
                 heights_formatted)};
         }
 
-        CBlockIndex* snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
+        snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
         if (!snapshot_start_block) {
             return util::Error{strprintf(Untranslated("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again"),
                           base_blockhash.ToString())};
@@ -5680,7 +5680,7 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
             return util::Error{strprintf(Untranslated("The base block header (%s) is part of an invalid chain"), base_blockhash.ToString())};
         }
 
-        if (!m_best_header || m_best_header->GetAncestor(base_blockheight) != snapshot_start_block) {
+        if (!m_best_header || m_best_header->GetAncestor(snapshot_start_block->nHeight) != snapshot_start_block) {
             return util::Error{Untranslated("A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo.")};
         }
 
@@ -5794,7 +5794,7 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
         m_snapshot_chainstate->CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
 
     this->MaybeRebalanceCaches();
-    return {};
+    return snapshot_start_block;
 }
 
 static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
