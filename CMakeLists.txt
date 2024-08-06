@@ -351,6 +351,15 @@ try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK
 # -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
 try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 
+find_package(Python3 3.9 COMPONENTS Interpreter)
+if(Python3_EXECUTABLE)
+  set(PYTHON_COMMAND ${Python3_EXECUTABLE})
+else()
+  list(APPEND configure_warnings
+    "Minimum required Python not found. Utils and rpcauth tests are disabled."
+  )
+endif()
+
 if(BUILD_TESTS)
   enable_testing()
 endif()
@@ -362,10 +371,14 @@ endif()
 # - https://github.com/bitcoin/bitcoin/pull/30312#issuecomment-2191235833
 set(CMAKE_SKIP_BUILD_RPATH TRUE)
 set(CMAKE_SKIP_INSTALL_RPATH TRUE)
+add_subdirectory(test)
+
 include(cmake/crc32c.cmake)
 include(cmake/leveldb.cmake)
 include(cmake/minisketch.cmake)
 add_subdirectory(src)
+
+include(cmake/tests.cmake)
 
 message("\n")
 message("Configure summary")
