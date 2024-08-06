@@ -48,7 +48,7 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
     const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
     bool force_read_and_write_to_err{false};
     if (start_with_corrupted_banlist) {
-        assert(WriteBinaryFile(banlist_file.string() + ".json",
+        assert(WriteBinaryFile(banlist_file + ".json",
                                fuzzed_data_provider.ConsumeRandomLengthString()));
     } else {
         force_read_and_write_to_err = fuzzed_data_provider.ConsumeBool();
@@ -111,5 +111,5 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
             assert(banmap == banmap_read);
         }
     }
-    fs::remove(banlist_file.string() + ".json");
+    fs::remove(fs::PathToString(banlist_file + ".json"));
 }

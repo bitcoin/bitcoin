@@ -814,7 +814,7 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
         // The only loaded wallet
         ui->btn_rescan1->setEnabled(true);
         ui->btn_rescan2->setEnabled(true);
-        QString wallet_path = QString::fromStdString(GetWalletDir().string() + QDir::separator().toLatin1());
+        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
         QString wallet_name = walletModel->getWalletName().isEmpty() ? "wallet.dat" : walletModel->getWalletName();
         ui->wallet_path->setText(wallet_path + wallet_name);
     } else {
@@ -837,7 +837,7 @@ void RPCConsole::removeWallet(WalletModel * const walletModel)
         ui->btn_rescan1->setEnabled(true);
         ui->btn_rescan2->setEnabled(true);
         WalletModel* wallet_model = ui->WalletSelector->itemData(1).value<WalletModel*>();
-        QString wallet_path = QString::fromStdString(GetWalletDir().string() + QDir::separator().toLatin1());
+        QString wallet_path = GUIUtil::PathToQString(GetWalletDir()) + QDir::separator().toLatin1();
         QString wallet_name = wallet_model->getWalletName().isEmpty() ? "wallet.dat" : wallet_model->getWalletName();
         ui->wallet_path->setText(wallet_path + wallet_name);
     } else {

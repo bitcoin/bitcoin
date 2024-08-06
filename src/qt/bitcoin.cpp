@@ -758,8 +758,8 @@ int GuiMain(int argc, char* argv[])
     }
     // Validate/set custom css directory
     if (gArgs.IsArgSet("-custom-css-dir")) {
-        fs::path customDir = fs::path(gArgs.GetArg("-custom-css-dir", ""));
-        QString strCustomDir = QString::fromStdString(customDir.string());
+        fs::path customDir = fs::PathFromString(gArgs.GetArg("-custom-css-dir", ""));
+        QString strCustomDir = GUIUtil::PathToQString(customDir);
         std::vector<QString> vecRequiredFiles = GUIUtil::listStyleSheets();
         QString strFile;
 
@@ -771,7 +771,7 @@ int GuiMain(int argc, char* argv[])
 
         for (auto itCustomDir = fs::directory_iterator(customDir); itCustomDir != fs::directory_iterator(); ++itCustomDir) {
             if (fs::is_regular_file(*itCustomDir) && itCustomDir->path().extension() == ".css") {
-                strFile = QString::fromStdString(itCustomDir->path().filename().string());
+                strFile = GUIUtil::PathToQString(itCustomDir->path().filename());
                 auto itFile = std::find(vecRequiredFiles.begin(), vecRequiredFiles.end(), strFile);
                 if (itFile != vecRequiredFiles.end()) {
                     vecRequiredFiles.erase(itFile);
