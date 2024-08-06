@@ -100,8 +100,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("No error");
         case TransactionError::MISSING_INPUTS:
             return Untranslated("Inputs missing or spent");
-        case TransactionError::ALREADY_IN_CHAIN:
-            return Untranslated("Transaction already in block chain");
+        case TransactionError::ALREADY_IN_UTXO_SET:
+            return Untranslated("Transaction outputs already in utxo set");
         case TransactionError::MEMPOOL_REJECTED:
             return Untranslated("Transaction rejected by mempool");
         case TransactionError::MEMPOOL_ERROR:
