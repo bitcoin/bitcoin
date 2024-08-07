@@ -1793,8 +1793,9 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
         // Get threshold
         int next_comma = FindNextChar(in, ',');
         if (next_comma < 1) return false;
-        int64_t k;
-        if (!ParseInt64(std::string(in.begin(), in.begin() + next_comma), &k)) return false;
+        const auto k_to_integral{ToIntegral<int64_t>(std::string_view(in.begin(), next_comma))};
+        if (!k_to_integral.has_value()) return false;
+        const int64_t k{k_to_integral.value()};
         in = in.subspan(next_comma + 1);
         // Get keys. It is compatible for both compressed and x-only keys.
         std::vector<Key> keys;
@@ -1948,21 +1949,19 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("after(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
-                int64_t num;
-                if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
-                if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::AFTER, num));
+                const auto num{ToIntegral<int64_t>(std::string_view(in.begin(), arg_size))};
+                if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::AFTER, *num));
                 in = in.subspan(arg_size + 1);
-                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
+                script_size += 1 + (*num > 16) + (*num > 0x7f) + (*num > 0x7fff) + (*num > 0x7fffff);
             } else if (Const("older(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
-                int64_t num;
-                if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
-                if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::OLDER, num));
+                const auto num{ToIntegral<int64_t>(std::string_view(in.begin(), arg_size))};
+                if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::OLDER, *num));
                 in = in.subspan(arg_size + 1);
-                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
+                script_size += 1 + (*num > 16) + (*num > 0x7f) + (*num > 0x7fff) + (*num > 0x7fffff);
             } else if (Const("multi(", in)) {
                 if (!parse_multi_exp(in, /* is_multi_a = */false)) return {};
             } else if (Const("multi_a(", in)) {
@@ -1970,13 +1969,13 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("thresh(", in)) {
                 int next_comma = FindNextChar(in, ',');
                 if (next_comma < 1) return {};
-                if (!ParseInt64(std::string(in.begin(), in.begin() + next_comma), &k)) return {};
-                if (k < 1) return {};
+                const auto k{ToIntegral<int64_t>(std::string_view(in.begin(), next_comma))};
+                if (!k.has_value() || *k < 1) return {};
                 in = in.subspan(next_comma + 1);
                 // n = 1 here because we read the first WRAPPED_EXPR before reaching THRESH
-                to_parse.emplace_back(ParseContext::THRESH, 1, k);
+                to_parse.emplace_back(ParseContext::THRESH, 1, *k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
-                script_size += 2 + (k > 16) + (k > 0x7f) + (k > 0x7fff) + (k > 0x7fffff);
+                script_size += 2 + (*k > 16) + (*k > 0x7f) + (*k > 0x7fff) + (*k > 0x7fffff);
             } else if (Const("andor(", in)) {
                 to_parse.emplace_back(ParseContext::ANDOR, -1, -1);
                 to_parse.emplace_back(ParseContext::CLOSE_BRACKET, -1, -1);
