@@ -942,6 +942,62 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
     assert(chunking.NumChunksLeft() == 0);
 }
 
+FUZZ_TARGET(clusterlin_simple_linearize)
+{
+    // Verify the behavior of SimpleLinearize(). Note that SimpleLinearize is only used in tests;
+    // the purpose of this fuzz test is to establish confidence in SimpleLinearize, so that it can
+    // be used to test the real Linearize function in the fuzz test below.
+
+    // Retrieve an iteration count and a depgraph from the fuzz input.
+    SpanReader reader(buffer);
+    uint64_t iter_count{0};
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    iter_count %= MAX_SIMPLE_ITERATIONS;
+
+    // Invoke SimpleLinearize().
+    auto [linearization, optimal] = SimpleLinearize(depgraph, iter_count);
+    SanityCheck(depgraph, linearization);
+    auto simple_chunking = ChunkLinearization(depgraph, linearization);
+
+    // If the iteration count is sufficiently high, an optimal linearization must be found.
+    // SimpleLinearize on k transactions can take up to 2^(k-1) iterations (one per non-empty
+    // connected topologically valid subset), which sums over k=1..n to (2^n)-1.
+    const uint64_t n = depgraph.TxCount();
+    if (n <= 63 && (iter_count >> n)) {
+        assert(optimal);
+    }
+
+    // If SimpleLinearize claims optimal result, and the cluster is sufficiently small (there are
+    // n! linearizations), test that the result is as good as every valid linearization.
+    if (optimal && depgraph.TxCount() <= 7) {
+        std::vector<DepGraphIndex> perm_linearization;
+        // Initialize with the lexicographically-first linearization.
+        for (DepGraphIndex i : depgraph.Positions()) perm_linearization.push_back(i);
+        // Iterate over all valid permutations.
+        do {
+            // Determine whether perm_linearization is topological.
+            TestBitSet perm_done;
+            bool perm_is_topo{true};
+            for (auto i : perm_linearization) {
+                perm_done.Set(i);
+                if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) {
+                    perm_is_topo = false;
+                    break;
+                }
+            }
+            // If so, verify that the obtained linearization is as good as the permutation.
+            if (perm_is_topo) {
+                auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
+                auto cmp = CompareChunks(simple_chunking, perm_chunking);
+                assert(cmp >= 0);
+            }
+        } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
+    }
+}
+
 FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
@@ -1017,31 +1073,6 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
-
-        // Only for very small clusters, test every topologically-valid permutation.
-        if (depgraph.TxCount() <= 7) {
-            std::vector<DepGraphIndex> perm_linearization;
-            for (DepGraphIndex i : depgraph.Positions()) perm_linearization.push_back(i);
-            // Iterate over all valid permutations.
-            do {
-                // Determine whether perm_linearization is topological.
-                TestBitSet perm_done;
-                bool perm_is_topo{true};
-                for (auto i : perm_linearization) {
-                    perm_done.Set(i);
-                    if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) {
-                        perm_is_topo = false;
-                        break;
-                    }
-                }
-                // If so, verify that the obtained linearization is as good as the permutation.
-                if (perm_is_topo) {
-                    auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
-                    auto cmp = CompareChunks(chunking, perm_chunking);
-                    assert(cmp >= 0);
-                }
-            } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
-        }
     }
 }
 
