@@ -178,7 +178,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         // Creating blocks by different ways
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
     }
-    for ([[maybe_unused]] auto _ : irange::range(1999)) {
+    for ([[maybe_unused]] auto _ : irange::range(499)) {
         CreateAndProcessBlock({}, coinbaseKey);
         LOCK(cs_main);
         dmnman.UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
@@ -221,9 +221,9 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
-        BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 122209530);
+        BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 28847249686);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
-        BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 61104762); // 0.4999999755
+        BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 14423624841); // 0.4999999999
     }
 
     // Reallocation should kick-in with the superblock mined at height = 2010,
@@ -252,15 +252,15 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const CAmount block_subsidy = GetBlockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         const CAmount block_subsidy_sb = GetSuperblockSubsidyInner(tip->nBits, tip->nHeight, consensus_params, isV20Active);
         CAmount block_subsidy_potential = block_subsidy + block_subsidy_sb;
-        BOOST_CHECK_EQUAL(block_subsidy_potential, 84437941);
+        BOOST_CHECK_EQUAL(block_subsidy_potential, 177167660);
         CAmount expected_block_reward = block_subsidy_potential - block_subsidy_potential / 5;
 
         const CAmount masternode_payment = GetMasternodePayment(tip->nHeight, block_subsidy, isV20Active);
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), expected_block_reward);
-        BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 67550353);
+        BOOST_CHECK_EQUAL(pblocktemplate->block.vtx[0]->GetValueOut(), 141734128);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
-        BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 50662764); // 0.75
+        BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, 106300596); // 0.75
     }
     BOOST_CHECK(!DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), consensus_params, Consensus::DEPLOYMENT_MN_RR));
 
@@ -307,8 +307,8 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
 
         CAmount block_subsidy_potential = block_subsidy + block_subsidy_sb;
-        BOOST_CHECK_EQUAL(tip->nHeight, 3858);
-        BOOST_CHECK_EQUAL(block_subsidy_potential, 78406660);
+        BOOST_CHECK_EQUAL(tip->nHeight, 2358);
+        BOOST_CHECK_EQUAL(block_subsidy_potential, 164512828);
         // Treasury is 20% since MNRewardReallocation
         CAmount expected_block_reward = block_subsidy_potential - block_subsidy_potential / 5;
         // Since MNRewardReallocation, MN reward share is 75% of the block reward
