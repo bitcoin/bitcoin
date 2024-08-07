@@ -13,6 +13,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <stdexcept>
+#include <test/util/random.h>
 #include <util/chaintype.h> // IWYU pragma: export
 #include <util/check.h>
 #include <util/fs.h>
@@ -64,6 +65,7 @@ struct TestOpts {
 struct BasicTestingSetup {
     util::SignalInterrupt m_interrupt;
     node::NodeContext m_node; // keep as first member to be destructed last
+    FastRandomContext& m_rng{g_insecure_rand_ctx}; // Alias (reference) for the global, to allow easy removal of the global in the future.
 
     explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~BasicTestingSetup();
