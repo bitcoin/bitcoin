@@ -81,7 +81,7 @@ sudo apt-get install build-essential libtool autotools-dev automake pkg-config b
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
 ```sh
-sudo apt-get install libevent-dev libboost-dev libboost-test-dev
+sudo apt-get install libevent-dev libboost-dev
 ```
 
 SQLite is required for the descriptor wallet:

@@ -35,6 +35,9 @@ deadlock:src/qt/test/*
 deadlock:libdb
 race:libzmq
 
+# Race in headers only Boost Test
+race:std::__1::ios_base::flags
+
 # Intermittent issues
 # -------------------
 #

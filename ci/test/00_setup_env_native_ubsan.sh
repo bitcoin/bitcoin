@@ -8,7 +8,7 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_ubsan
-export PACKAGES="clang-16 llvm-16 python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev"
+export PACKAGES="clang-16 llvm-16 python3-zmq qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev"
 export DEP_OPTS="NO_UPNP=1 DEBUG=1"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-zmq --enable-reduce-exports --enable-crash-hooks --with-sanitizers=undefined CC=clang-16 CXX=clang++-16"
