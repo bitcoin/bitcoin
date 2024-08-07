@@ -51,10 +51,10 @@ private:
         ssObj << hash;
 
         // open output file, and associate with CAutoFile
-        FILE *file = fopen(pathDB.string().c_str(), "wb");
+        FILE *file = fsbridge::fopen(pathDB, "wb");
         CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
         if (fileout.IsNull())
-            return error("%s: Failed to open file %s", __func__, pathDB.string());
+            return error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
 
         // Write and commit header, data
         try {
@@ -77,11 +77,11 @@ private:
 
         int64_t nStart = GetTimeMillis();
         // open input file, and associate with CAutoFile
-        FILE *file = fopen(pathDB.string().c_str(), "rb");
+        FILE *file = fsbridge::fopen(pathDB, "rb");
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
         if (filein.IsNull())
         {
-            error("%s: Failed to open file %s", __func__, pathDB.string());
+            error("%s: Failed to open file %s", __func__, fs::PathToString(pathDB));
             return FileError;
         }
 

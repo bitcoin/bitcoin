@@ -72,15 +72,18 @@ AC_ARG_ENABLE([c++20],
   [use_cxx20=$enableval],
   [use_cxx20=no])
 
-dnl Require C++17 or C++20 compiler (no GNU extensions)
-if test "x$use_cxx20" = xyes; then
-  AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
-else
+dnl Require C++17 compiler (no GNU extensions)
+if test "$use_cxx20" = "no"; then
   AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
+else
+  AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
 fi
 
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
+
+dnl check if additional link flags are required for std::filesystem
+CHECK_FILESYSTEM
 
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
@@ -1472,8 +1475,6 @@ dnl and will generate warnings with newer compilers.
 dnl See: https://github.com/boostorg/container_hash/issues/22.
 BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"
 
-AX_BOOST_FILESYSTEM
-
 dnl Opt-in to Boost Process
 if test "x$boost_process" != xno; then
 AC_MSG_CHECKING(for Boost Process)
@@ -1488,7 +1489,7 @@ if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
 fi
 
-BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
+BOOST_LIBS="$BOOST_LDFLAGS"
 fi
 
 dnl Check for reduced exports

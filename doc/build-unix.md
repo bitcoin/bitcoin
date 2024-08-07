@@ -45,11 +45,11 @@ Optional dependencies:
  gmp         | Optimized math routines | Arbitrary precision arithmetic library
  miniupnpc   | UPnP Support     | Firewall-jumping support
  libnatpmp   | NAT-PMP Support  | Firewall-jumping support
- libdb4.8    | Berkeley DB      | Optional, wallet storage (only needed when wallet enabled)
+ libdb4.8    | Berkeley DB      | Wallet storage (only needed when legacy wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
- libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
- libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
- sqlite3     | SQLite DB        | Wallet storage (only needed when wallet enabled)
+ libqrencode | QR codes in GUI  | QR code generation (only needed when GUI enabled)
+ libzmq3     | ZMQ notification | ZMQ notifications (requires ZMQ version >= 4.0.0)
+ sqlite3     | SQLite DB        | Wallet storage (only needed when descriptor wallet enabled)
 
 For the versions used, see [dependencies.md](dependencies.md)
 
@@ -81,23 +81,19 @@ sudo apt-get install build-essential libtool autotools-dev automake pkg-config b
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
 ```sh
-sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+sudo apt-get install libevent-dev libboost-dev libboost-test-dev
 ```
 
-Berkeley DB is required for the wallet.
-
-Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
-Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
-are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
-pass `--with-incompatible-bdb` to configure.
-
-Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
-SQLite is required for the wallet:
+SQLite is required for the descriptor wallet:
 
 ```sh
 sudo apt-get install libsqlite3-dev
 ```
+
+Berkeley DB is required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
+but these will install Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed
+executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass
+`--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
 To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
@@ -163,7 +159,13 @@ Now, you can either build from self-compiled [depends](/depends/README.md) or in
 sudo dnf install libevent-devel boost-devel
 ```
 
-Berkeley DB is required for the wallet:
+SQLite is required for the descriptor wallet:
+
+```sh
+sudo dnf install sqlite-devel
+```
+
+Berkeley DB is required for the legacy wallet:
 
 ```sh
 sudo dnf install libdb4-devel libdb4-cxx-devel
@@ -172,15 +174,7 @@ sudo dnf install libdb4-devel libdb4-cxx-devel
 Newer Fedora releases, since Fedora 33, have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
 Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
-pass `--with-incompatible-bdb` to configure.
-
-Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
-SQLite is required for the wallet:
-
-```sh
-sudo dnf install sqlite-devel
-```
+pass `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
 To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
@@ -251,8 +245,10 @@ turned off by default.
 
 Berkeley DB
 -----------
-It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
-you can use [the installation script included in contrib/](contrib/install_db4.sh)
+
+The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
+recommended to use Berkeley DB 4.8. If you have to build it yourself, you can
+use [the installation script included in contrib/](/contrib/install_db4.sh)
 like so:
 
 ```sh
@@ -264,15 +260,6 @@ from the root of the repository.
 Otherwise, you can build Dash Core from self-compiled [depends](/depends/README.md).
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
-
-Boost
------
-If you need to build Boost yourself:
-
-    sudo su
-    ./bootstrap.sh
-    ./bjam install
-
 
 Security
 --------

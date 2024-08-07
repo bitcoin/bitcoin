@@ -2684,7 +2684,7 @@ static RPCHelpMan listwalletdir()
     UniValue wallets(UniValue::VARR);
     for (const auto& path : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
-        wallet.pushKV("name", path.string());
+        wallet.pushKV("name", path.u8string());
         wallets.push_back(wallet);
     }
 
@@ -3083,7 +3083,7 @@ static RPCHelpMan restorewallet()
 
     WalletContext& context = EnsureWalletContext(request.context);
 
-    std::string backup_file = request.params[1].get_str();
+    auto backup_file = fs::u8path(request.params[1].get_str());
 
     std::string wallet_name = request.params[0].get_str();
 

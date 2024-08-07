@@ -6,6 +6,7 @@
 
 #include <clientversion.h>
 #include <crypto/common.h>
+#include <fs.h>
 #include <logging.h>
 #include <streams.h>
 
@@ -201,7 +202,7 @@ std::vector<bool> DecodeAsmap(fs::path path)
     }
     fseek(filestr, 0, SEEK_END);
     int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
+    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
     fseek(filestr, 0, SEEK_SET);
     uint8_t cur_byte;
     for (int i = 0; i < length; ++i) {
@@ -211,7 +212,7 @@ std::vector<bool> DecodeAsmap(fs::path path)
         }
     }
     if (!SanityCheckASMap(bits, 128)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", path);
+        LogPrintf("Sanity check of asmap file %s failed\n", fs::quoted(fs::PathToString(path)));
         return {};
     }
     return bits;

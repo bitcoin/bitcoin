@@ -6,6 +6,7 @@
 #include <chain.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <fs.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>
@@ -21,11 +22,12 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
-
 #include <wallet/rpcwallet.h>
 
-#include <stdint.h>
+#include <cstdint>
+#include <fstream>
 #include <tuple>
+#include <string>
 
 #include <univalue.h>
 
@@ -509,8 +511,8 @@ RPCHelpMan importwallet()
 
         EnsureWalletIsUnlocked(*pwallet);
 
-        fsbridge::ifstream file;
-        file.open(request.params[0].get_str(), std::ios::in | std::ios::ate);
+        std::ifstream file;
+        file.open(fs::u8path(request.params[0].get_str()), std::ios::in | std::ios::ate);
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
         }
@@ -662,7 +664,7 @@ RPCHelpMan importelectrumwallet()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    fsbridge::ifstream file;
+    std::ifstream file;
     std::string strFileName = request.params[0].get_str();
     size_t nDotPos = strFileName.find_last_of(".");
     if(nDotPos == std::string::npos)
@@ -936,7 +938,7 @@ RPCHelpMan dumpwallet()
 
     EnsureWalletIsUnlocked(wallet);
 
-    fs::path filepath = request.params[0].get_str();
+    fs::path filepath = fs::u8path(request.params[0].get_str());
     filepath = fs::absolute(filepath);
 
     /* Prevent arbitrary files from being overwritten. There have been reports
@@ -945,10 +947,10 @@ RPCHelpMan dumpwallet()
      * It may also avoid other security issues.
      */
     if (fs::exists(filepath)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.u8string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
-    fsbridge::ofstream file;
+    std::ofstream file;
     file.open(filepath);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
@@ -1067,7 +1069,7 @@ RPCHelpMan dumpwallet()
 
     std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str());
     obj.pushKV("keys", int(vKeyBirth.size()));
-    obj.pushKV("filename", filepath.string());
+    obj.pushKV("filename", filepath.u8string());
     obj.pushKV("warning", strWarning);
 
     return obj;

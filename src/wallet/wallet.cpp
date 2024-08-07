@@ -365,7 +365,7 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
     return wallet;
 }
 
-std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const std::string& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
     options.require_existing = true;
@@ -376,16 +376,16 @@ std::shared_ptr<CWallet> RestoreWallet(interfaces::Chain& chain, interfaces::Coi
         return nullptr;
     }
 
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), wallet_name);
+    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
 
     if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-        error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", wallet_path.string()));
+        error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
         status = DatabaseStatus::FAILED_ALREADY_EXISTS;
         return nullptr;
     }
 
     auto wallet_file = wallet_path / "wallet.dat";
-    fs::copy_file(backup_file, wallet_file, fs::copy_option::fail_if_exists);
+    fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
 
     auto wallet = LoadWallet(chain, coinjoin_loader, wallet_name, load_on_start, options, status, error, warnings);
 
@@ -4660,16 +4660,16 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     // 2. Path to an existing directory.
     // 3. Path to a symlink to a directory.
     // 4. For backwards compatibility, the name of a data file in -walletdir.
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), name);
+    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(name));
     fs::file_type path_type = fs::symlink_status(wallet_path).type();
-    if (!(path_type == fs::file_not_found || path_type == fs::directory_file ||
-          (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
-          (path_type == fs::regular_file && fs::path(name).filename() == name))) {
+    if (!(path_type == fs::file_type::not_found || path_type == fs::file_type::directory ||
+          (path_type == fs::file_type::symlink && fs::is_directory(wallet_path)) ||
+          (path_type == fs::file_type::regular && fs::PathFromString(name).filename() == fs::PathFromString(name)))) {
         error_string = Untranslated(strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "
               "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)",
-              name, GetWalletDir()));
+              name, fs::quoted(fs::PathToString(GetWalletDir()))));
         status = DatabaseStatus::FAILED_BAD_PATH;
         return nullptr;
     }
@@ -4689,7 +4689,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
     // should be possible to use std::allocate_shared.
     std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, &coinjoin_loader, name, std::move(database)), ReleaseWallet);
     // TODO: refactor this condition: validation of error looks like workaround
-    if (!walletInstance->AutoBackupWallet(walletFile, error, warnings) && !error.original.empty()) {
+    if (!walletInstance->AutoBackupWallet(fs::PathFromString(walletFile), error, warnings) && !error.original.empty()) {
         return nullptr;
     }
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
@@ -5168,17 +5168,17 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
     if (!fs::exists(backupsDir))
     {
         // Always create backup folder to not confuse the operating system's file browser
-        WalletLogPrintf("Creating backup folder %s\n", backupsDir.string());
+        WalletLogPrintf("Creating backup folder %s\n", fs::PathToString(backupsDir));
         if(!fs::create_directories(backupsDir)) {
             // something is wrong, we shouldn't continue until it's resolved
-            error_string = strprintf(_("Wasn't able to create wallet backup folder %s!"), backupsDir.string());
+            error_string = strprintf(_("Wasn't able to create wallet backup folder %s!"), fs::PathToString(backupsDir));
             WalletLogPrintf("%s\n", error_string.translated);
             nWalletBackups = -1;
             return false;
         }
     } else if (!fs::is_directory(backupsDir)) {
         // something is wrong, we shouldn't continue until it's resolved
-        error_string = strprintf(_("%s is not a valid backup folder!"), backupsDir.string());
+        error_string = strprintf(_("%s is not a valid backup folder!"), fs::PathToString(backupsDir));
         WalletLogPrintf("%s\n", error_string.translated);
         nWalletBackups = -1;
         return false;
@@ -5200,8 +5200,8 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         LOCK(cs_wallet);
         fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
         backupFile.make_preferred();
-        if (!BackupWallet(backupFile.string())) {
-            warnings.push_back(strprintf(_("Failed to create backup %s!"), backupFile.string()));
+        if (!BackupWallet(fs::PathToString(backupFile))) {
+            warnings.push_back(strprintf(_("Failed to create backup %s!"), fs::PathToString(backupFile)));
             WalletLogPrintf("%s\n", Join(warnings, Untranslated("\n")).original);
             nWalletBackups = -1;
             return false;
@@ -5220,7 +5220,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         // ... strWalletName file
         fs::path strSourceFile = BDBDataFile(wallet_path);
         std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(strSourceFile.parent_path());
-        fs::path sourceFile = env->Directory() / strSourceFile.filename().string();
+        fs::path sourceFile = env->Directory() / strSourceFile;
         fs::path backupFile = backupsDir / (strWalletName + dateTimeStr);
         sourceFile.make_preferred();
         backupFile.make_preferred();
@@ -5232,8 +5232,8 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         }
         if(fs::exists(sourceFile)) {
             try {
-                fs::copy_file(sourceFile, backupFile);
-                WalletLogPrintf("Creating backup of %s -> %s\n", sourceFile.string(), backupFile.string());
+                fs::copy_file(sourceFile, backupFile, fs::copy_options::none);
+                WalletLogPrintf("Creating backup of %s -> %s\n", fs::PathToString(sourceFile), fs::PathToString(backupFile));
             } catch(fs::filesystem_error &error) {
                 warnings.push_back(strprintf(_("Failed to create backup, error: %s"), fsbridge::get_filesystem_error_message(error)));
                 WalletLogPrintf("%s\n", Join(warnings, Untranslated("\n")).original);
@@ -5256,8 +5256,17 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
         {
             currentFile = dir_iter->path().filename();
             // Only add the backups for the current wallet, e.g. wallet.dat.*
-            if (dir_iter->path().stem().string() == strWalletName) {
-                folder_set.insert(folder_set_t::value_type(fs::last_write_time(dir_iter->path()), *dir_iter));
+            if (fs::PathToString(dir_iter->path().stem()) == strWalletName) {
+                folder_set.insert(folder_set_t::value_type(
+                    // TODO: C++17 compliant time conversion code is abominable, switch to C++20
+                    //       compliant code when C++17 support is dropped
+                    std::chrono::system_clock::to_time_t(
+                        std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+                            fs::last_write_time(dir_iter->path()) - fs::file_time_type::clock::now() + std::chrono::system_clock::now()
+                        )
+                    ),
+                    *dir_iter
+                ));
             }
         }
     }
@@ -5272,7 +5281,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
             // More than nWalletBackups backups: delete oldest one(s)
             try {
                 fs::remove(file.second);
-                WalletLogPrintf("Old backup deleted: %s\n", file.second);
+                WalletLogPrintf("Old backup deleted: %s\n", fs::PathToString(file.second));
             } catch(fs::filesystem_error &error) {
                 warnings.push_back(strprintf(_("Failed to delete backup, error: %s"), fsbridge::get_filesystem_error_message(error)));
                 WalletLogPrintf("%s\n", Join(warnings, Untranslated("\n")).original);

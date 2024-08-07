@@ -269,7 +269,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
      * (to be consistent with dashd behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
-        gArgs.SoftSetArg("-datadir", GUIUtil::QStringToPath(dataDir).string()); // use OS locale for path setting
+        gArgs.SoftSetArg("-datadir", fs::PathToString(GUIUtil::QStringToPath(dataDir))); // use OS locale for path setting
     }
     return true;
 }

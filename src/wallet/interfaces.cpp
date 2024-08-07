@@ -608,7 +608,7 @@ public:
         assert(m_context.m_coinjoin_loader);
         return MakeWallet(LoadWallet(*m_context.chain, *m_context.m_coinjoin_loader, name, true /* load_on_start */, options, status, error, warnings));
     }
-    std::unique_ptr<Wallet> restoreWallet(const std::string& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
         assert(m_context.m_coinjoin_loader);
@@ -616,13 +616,13 @@ public:
     }
     std::string getWalletDir() override
     {
-        return GetWalletDir().string();
+        return fs::PathToString(GetWalletDir());
     }
     std::vector<std::string> listWalletDir() override
     {
         std::vector<std::string> paths;
         for (auto& path : ListDatabases(GetWalletDir())) {
-            paths.push_back(path.string());
+            paths.push_back(fs::PathToString(path));
         }
         return paths;
     }

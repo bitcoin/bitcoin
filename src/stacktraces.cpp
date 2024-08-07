@@ -117,7 +117,7 @@ static std::string GetExeFileName()
 }
 
 static std::string g_exeFileName = GetExeFileName();
-static std::string g_exeFileBaseName = fs::path(g_exeFileName).filename().string();
+static std::string g_exeFileBaseName = fs::PathToString(fs::PathFromString(g_exeFileName).filename());
 
 #ifdef ENABLE_STACKTRACES
 static void my_backtrace_error_callback (void *data, const char *msg,
@@ -485,7 +485,7 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
     for (const auto& si : ci.stackframeInfos) {
         std::string lstr;
         if (!si.filename.empty()) {
-            lstr += fs::path(si.filename).filename().string();
+            lstr += fs::PathToString(fs::PathFromString(si.filename).filename());
         } else {
             lstr += "<unknown-file>";
         }
