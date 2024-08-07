@@ -334,7 +334,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
-        consensus.nMinimumChainWork = uint256{};
+        consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000056faca98a0cd9bdf5f"};
         consensus.defaultAssumeValid = uint256{};
 
         pchMessageStart[0] = 0x1c;
