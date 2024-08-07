@@ -754,6 +754,20 @@ bool GetTestOptionBool(const ArgsManager& args, const std::string& test_option, 
     return GetTestOptionBool(args, test_option).value_or(default_value);
 }
 
+std::optional<std::string> GetTestOptionString(const ArgsManager& args, const std::string& test_option)
+{
+    const auto options = args.GetArgs("-test");
+    for (const auto& option : options) {
+        if (option.find(test_option) == 0) {
+            size_t eq_index = option.find('=');
+            if (eq_index != std::string::npos) {
+                return option.substr(eq_index + 1);
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 fs::path GetDefaultDataDir()
 {
     // Windows:

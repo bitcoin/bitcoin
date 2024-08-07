@@ -26,7 +26,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
 {
     if (auto value{GetTestOptionInt(args, "checkblockindex")}) {
         // Interpret bare -test=checkblockindex argument as 1 instead of 0.
-        opts.check_block_index = args.GetArg("-checkblockindex")->empty() ? 1 : *value; // @todo
+        opts.check_block_index = GetTestOptionString(args, "checkblockindex")->empty() ? 1 : *value;
     }
 
     if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;

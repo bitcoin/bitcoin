@@ -473,6 +473,14 @@ bool GetTestOptionBool(const ArgsManager& args, const std::string& test_option, 
 std::optional<bool> GetTestOptionBool(const ArgsManager& args, const std::string& test_option);
 
 /**
+ * Return string argument or default value for a test-only rpc
+ * @param args The ArgsManager object
+ * @param test_option The test option to get (e.g. "checkblockindex")
+ * @return command-line argument or default value
+ */
+std::optional<std::string> GetTestOptionString(const ArgsManager& args, const std::string& test_option);
+
+/**
  * Format a string to be used as group of options in help messages
  *
  * @param message Group name (e.g. "RPC server options:")
