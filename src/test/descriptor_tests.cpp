@@ -25,8 +25,8 @@ void CheckUnparsable(const std::string& prv, const std::string& pub, const std::
     std::string error;
     auto parse_priv = Parse(prv, keys_priv, error);
     auto parse_pub = Parse(pub, keys_pub, error);
-    BOOST_CHECK_MESSAGE(!parse_priv, prv);
-    BOOST_CHECK_MESSAGE(!parse_pub, pub);
+    BOOST_CHECK_MESSAGE(parse_priv.empty(), prv);
+    BOOST_CHECK_MESSAGE(parse_pub.empty(), pub);
     BOOST_CHECK_EQUAL(error, expected_error);
 }
 
@@ -139,19 +139,22 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     std::set<std::vector<uint32_t>> left_paths = paths;
     std::string error;
 
-    std::unique_ptr<Descriptor> parse_priv;
-    std::unique_ptr<Descriptor> parse_pub;
+    std::vector<std::unique_ptr<Descriptor>> parse_privs;
+    std::vector<std::unique_ptr<Descriptor>> parse_pubs;
     // Check that parsing succeeds.
     if (replace_apostrophe_with_h_in_prv) {
         prv = UseHInsteadOfApostrophe(prv);
     }
-    parse_priv = Parse(prv, keys_priv, error);
-    BOOST_CHECK_MESSAGE(parse_priv, error);
+    parse_privs = Parse(prv, keys_priv, error);
+    BOOST_CHECK_MESSAGE(!parse_privs.empty(), error);
     if (replace_apostrophe_with_h_in_pub) {
         pub = UseHInsteadOfApostrophe(pub);
     }
-    parse_pub = Parse(pub, keys_pub, error);
-    BOOST_CHECK_MESSAGE(parse_pub, error);
+    parse_pubs = Parse(pub, keys_pub, error);
+    BOOST_CHECK_MESSAGE(!parse_pubs.empty(), error);
+
+    auto& parse_priv = parse_privs.at(0);
+    auto& parse_pub = parse_pubs.at(0);
 
     // We must be able to estimate the max satisfaction size for any solvable descriptor top descriptor (but combo).
     const bool is_nontop_or_nonsolvable{!parse_priv->IsSolvable() || !parse_priv->GetOutputType()};

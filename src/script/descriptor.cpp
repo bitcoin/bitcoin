@@ -2364,14 +2364,21 @@ bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string& err
     return true;
 }
 
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
+std::vector<std::unique_ptr<Descriptor>> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
 {
     Span<const char> sp{descriptor};
-    if (!CheckChecksum(sp, require_checksum, error)) return nullptr;
+    if (!CheckChecksum(sp, require_checksum, error)) return {};
     uint32_t key_exp_index = 0;
     auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
-    if (sp.size() == 0 && !ret.empty()) return std::unique_ptr<Descriptor>(std::move(ret.at(0)));
-    return nullptr;
+    if (sp.size() == 0 && !ret.empty()) {
+        std::vector<std::unique_ptr<Descriptor>> descs;
+        descs.reserve(ret.size());
+        for (auto& r : ret) {
+            descs.emplace_back(std::unique_ptr<Descriptor>(std::move(r)));
+        }
+        return descs;
+    }
+    return {};
 }
 
 std::string GetDescriptorChecksum(const std::string& descriptor)

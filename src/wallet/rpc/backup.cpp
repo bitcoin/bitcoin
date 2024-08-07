@@ -1061,10 +1061,11 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     const std::string& descriptor = data["desc"].get_str();
     FlatSigningProvider keys;
     std::string error;
-    auto parsed_desc = Parse(descriptor, keys, error, /* require_checksum = */ true);
-    if (!parsed_desc) {
+    auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true);
+    if (parsed_descs.empty()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
+    const auto& parsed_desc = parsed_descs.at(0);
     if (parsed_desc->GetOutputType() == OutputType::BECH32M) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Bech32m descriptors cannot be imported into legacy wallets");
     }
@@ -1452,10 +1453,11 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         // Parse descriptor string
         FlatSigningProvider keys;
         std::string error;
-        auto parsed_desc = Parse(descriptor, keys, error, /* require_checksum = */ true);
-        if (!parsed_desc) {
+        auto parsed_descs = Parse(descriptor, keys, error, /* require_checksum = */ true);
+        if (parsed_descs.empty()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
         }
+        auto& parsed_desc = parsed_descs.at(0);
 
         // Range check
         int64_t range_start = 0, range_end = 1, next_index = 0;

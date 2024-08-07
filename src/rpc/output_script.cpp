@@ -175,7 +175,11 @@ static RPCHelpMan getdescriptorinfo()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys"},
+                {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys. For a multipath descriptor, only the first will be returned."},
+                {RPCResult::Type::ARR, "multipath_expansion", /*optional=*/true, "All descriptors produced by expanding multipath derivation elements. Only if the provided descriptor specifies multipath derivation elements.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
                 {RPCResult::Type::STR, "checksum", "The checksum for the input descriptor"},
                 {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                 {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
@@ -191,16 +195,25 @@ static RPCHelpMan getdescriptorinfo()
         {
             FlatSigningProvider provider;
             std::string error;
-            auto desc = Parse(request.params[0].get_str(), provider, error);
-            if (!desc) {
+            auto descs = Parse(request.params[0].get_str(), provider, error);
+            if (descs.empty()) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
 
             UniValue result(UniValue::VOBJ);
-            result.pushKV("descriptor", desc->ToString());
+            result.pushKV("descriptor", descs.at(0)->ToString());
+
+            if (descs.size() > 1) {
+                UniValue multipath_descs(UniValue::VARR);
+                for (const auto& d : descs) {
+                    multipath_descs.push_back(d->ToString());
+                }
+                result.pushKV("multipath_expansion", multipath_descs);
+            }
+
             result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
-            result.pushKV("isrange", desc->IsRange());
-            result.pushKV("issolvable", desc->IsSolvable());
+            result.pushKV("isrange", descs.at(0)->IsRange());
+            result.pushKV("issolvable", descs.at(0)->IsSolvable());
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
             return result;
         },
@@ -221,7 +234,8 @@ static RPCHelpMan deriveaddresses()
          "    tr(<pubkey>,multi_a(<n>,<pubkey>,<pubkey>,...))   P2TR-multisig outputs for the given threshold and pubkeys\n"
          "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
          "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
-         "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
+         "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"
+         "Note that only descriptors that specify a single derivation path can be derived.\n"},
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
@@ -250,11 +264,14 @@ static RPCHelpMan deriveaddresses()
 
             FlatSigningProvider key_provider;
             std::string error;
-            auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
-            if (!desc) {
+            auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+            if (descs.empty()) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
-
+            if (descs.size() > 1) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor with multipath derivation path specifiers are not allowed");
+            }
+            auto& desc = descs.at(0);
             if (!desc->IsRange() && request.params.size() > 1) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
             }

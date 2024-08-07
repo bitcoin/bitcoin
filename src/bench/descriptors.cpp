@@ -18,12 +18,12 @@ static void ExpandDescriptor(benchmark::Bench& bench)
     const std::pair<int64_t, int64_t> range = {0, 1000};
     FlatSigningProvider provider;
     std::string error;
-    auto desc = Parse(desc_str, provider, error);
+    auto descs = Parse(desc_str, provider, error);
 
     bench.run([&] {
         for (int i = range.first; i <= range.second; ++i) {
             std::vector<CScript> scripts;
-            bool success = desc->Expand(i, provider, scripts, provider);
+            bool success = descs[0]->Expand(i, provider, scripts, provider);
             assert(success);
         }
     });
