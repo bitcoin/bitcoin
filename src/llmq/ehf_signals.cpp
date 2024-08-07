@@ -93,7 +93,7 @@ void CEHFSignalsHandler::trySignEHFSignal(int bit, const CBlockIndex* const pind
     const uint256 msgHash = mnhfPayload.PrepareTx().GetHash();
 
     WITH_LOCK(cs, ids.insert(requestId));
-    sigman.AsyncSignIfMember(llmqType, shareman, requestId, msgHash);
+    sigman.AsyncSignIfMember(llmqType, shareman, requestId, msgHash, quorum->qc->quorumHash, false, true);
 }
 
 void CEHFSignalsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)

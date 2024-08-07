@@ -805,7 +805,7 @@ public:
         consensus.DIP0003EnforcementHeight = 500;
         consensus.DIP0003EnforcementHash = uint256();
         consensus.DIP0008Height = 432;
-        consensus.BRRHeight = 2500; // see block_reward_reallocation_tests
+        consensus.BRRHeight = 1000; // see block_reward_reallocation_tests
         consensus.DIP0020Height = 300;
         consensus.DIP0024Height = 900;
         consensus.DIP0024QuorumsHeight = 900;
