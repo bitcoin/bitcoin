@@ -95,7 +95,7 @@ void KernelNotifications::fatalError(const bilingual_str& message)
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications)
 {
-    if (auto value{args.GetIntArg("-stopatheight")}) notifications.m_stop_at_height = *value;
+    if (auto value{GetTestOptionInt(args, "stopatheight")}) notifications.m_stop_at_height = *value;
 }
 
 } // namespace node

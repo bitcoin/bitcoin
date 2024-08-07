@@ -55,13 +55,13 @@ static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
 static constexpr unsigned int DUST_RELAY_TX_FEE{3000};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{1000};
-/** Default for -limitancestorcount, max number of in-mempool ancestors */
+/** Default for -test=limitancestorcount, max number of in-mempool ancestors */
 static constexpr unsigned int DEFAULT_ANCESTOR_LIMIT{25};
-/** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
+/** Default for -test=limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
 static constexpr unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT_KVB{101};
-/** Default for -limitdescendantcount, max number of in-mempool descendants */
+/** Default for -test=limitdescendantcount, max number of in-mempool descendants */
 static constexpr unsigned int DEFAULT_DESCENDANT_LIMIT{25};
-/** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
+/** Default for -test=limitdescendantsize, maximum kilobytes of in-mempool descendants */
 static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;

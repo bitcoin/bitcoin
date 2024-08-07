@@ -292,9 +292,9 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     options.wipe_block_tree_db = m_args.GetBoolArg("-reindex", false);
     options.wipe_chainstate_db = m_args.GetBoolArg("-reindex", false) || m_args.GetBoolArg("-reindex-chainstate", false);
     options.prune = chainman.m_blockman.IsPruneMode();
-    options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
-    options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
-    options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");
+    options.check_blocks = GetTestOptionInt(m_args, "checkblocks", DEFAULT_CHECKBLOCKS);
+    options.check_level = GetTestOptionInt(m_args, "checklevel", DEFAULT_CHECKLEVEL);
+    options.require_full_verification = HasTestOption(m_args, "checkblocks") || HasTestOption(m_args, "checklevel");
     auto [status, error] = LoadChainstate(chainman, m_cache_sizes, options);
     assert(status == node::ChainstateLoadStatus::SUCCESS);
 

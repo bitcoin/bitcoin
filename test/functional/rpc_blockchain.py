@@ -75,8 +75,8 @@ class BlockchainTest(BitcoinTestFramework):
         self.restart_node(
             0,
             extra_args=[
-                "-stopatheight=207",
-                "-checkblocks=-1",  # Check all blocks
+                "-test=stopatheight=207",
+                "-test=checkblocks=-1",  # Check all blocks
                 "-prune=1",  # Set pruning after rescan is complete
             ],
         )
@@ -112,14 +112,14 @@ class BlockchainTest(BitcoinTestFramework):
         self.stop_node(0)
         self.log.info("A block tip of more than MAX_FUTURE_BLOCK_TIME in the future raises an error")
         self.nodes[0].assert_start_raises_init_error(
-            extra_args=[f"-mocktime={TIME_RANGE_TIP - MAX_FUTURE_BLOCK_TIME - 1}"],
+            extra_args=[f"-test=mocktime={TIME_RANGE_TIP - MAX_FUTURE_BLOCK_TIME - 1}"],
             expected_msg=": The block database contains a block which appears to be from the future."
             " This may be due to your computer's date and time being set incorrectly."
             f" Only rebuild the block database if you are sure that your computer's date and time are correct.{os.linesep}"
             "Please restart with -reindex or -reindex-chainstate to recover.",
         )
         self.log.info("A block tip of MAX_FUTURE_BLOCK_TIME in the future is fine")
-        self.start_node(0, extra_args=[f"-mocktime={TIME_RANGE_TIP - MAX_FUTURE_BLOCK_TIME}"])
+        self.start_node(0, extra_args=[f"-test=mocktime={TIME_RANGE_TIP - MAX_FUTURE_BLOCK_TIME}"])
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
@@ -157,7 +157,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['pruned']
         assert not res['automatic_pruning']
 
-        self.restart_node(0, ['-stopatheight=207'])
+        self.restart_node(0, ['-test=stopatheight=207'])
         res = self.nodes[0].getblockchaininfo()
         # should have exact keys
         assert_equal(sorted(res.keys()), keys)
@@ -176,7 +176,7 @@ class BlockchainTest(BitcoinTestFramework):
             expected_msg='Error: Invalid format () for -testactivationheight=name@height.',
         )
         self.start_node(0, extra_args=[
-            '-stopatheight=207',
+            '-test=stopatheight=207',
             '-prune=550',
         ])
 
@@ -241,7 +241,7 @@ class BlockchainTest(BitcoinTestFramework):
         })
 
     def _test_getdeploymentinfo(self):
-        # Note: continues past -stopatheight height, so must be invoked
+        # Note: continues past -test=stopatheight height, so must be invoked
         # after _test_stopatheight
 
         self.log.info("Test getdeploymentinfo")

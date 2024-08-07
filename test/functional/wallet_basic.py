@@ -590,9 +590,9 @@ class WalletTest(BitcoinTestFramework):
         self.log.info("Test -reindex")
         self.stop_nodes()
         # set lower ancestor limit for later
-        self.start_node(0, ['-reindex', "-walletrejectlongchains=0", "-limitancestorcount=" + str(chainlimit)])
-        self.start_node(1, ['-reindex', "-limitancestorcount=" + str(chainlimit)])
-        self.start_node(2, ['-reindex', "-limitancestorcount=" + str(chainlimit)])
+        self.start_node(0, ['-reindex', "-walletrejectlongchains=0", "-test=limitancestorcount=" + str(chainlimit)])
+        self.start_node(1, ['-reindex', "-test=limitancestorcount=" + str(chainlimit)])
+        self.start_node(2, ['-reindex', "-test=limitancestorcount=" + str(chainlimit)])
         # reindex will leave rpc warm up "early"; Wait for it to finish
         self.wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
         assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
@@ -633,7 +633,7 @@ class WalletTest(BitcoinTestFramework):
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass AttemptSelection
         self.stop_node(0)
-        extra_args = ["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)]
+        extra_args = ["-walletrejectlongchains", "-test=limitancestorcount=" + str(2 * chainlimit)]
         self.start_node(0, extra_args=extra_args)
 
         # wait until the wallet has submitted all transactions to the mempool

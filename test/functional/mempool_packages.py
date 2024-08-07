@@ -33,8 +33,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
             [
             ],
             [
-                "-limitancestorcount={}".format(CUSTOM_ANCESTOR_LIMIT),
-                "-limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
+                "-test=limitancestorcount={}".format(CUSTOM_ANCESTOR_LIMIT),
+                "-test=limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
             ],
         ]
 

@@ -72,7 +72,7 @@ class WalletReindexTest(BitcoinTestFramework):
 
         # Reindex and wait for it to finish
         with node.assert_debug_log(expected_msgs=["initload thread exit"]):
-            self.restart_node(0, extra_args=['-reindex=1', f'-mocktime={self.node_time}'])
+            self.restart_node(0, extra_args=['-reindex=1', f'-test=mocktime={self.node_time}'])
         node.syncwithvalidationinterfacequeue()
 
         # Verify the transaction is still 'confirmed' after reindex

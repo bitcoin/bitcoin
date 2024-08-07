@@ -608,7 +608,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         Kwargs:
             wait_for_connect: if True, block until the nodes are verified as connected. You might
-                want to disable this when using -stopatheight with one of the connected nodes,
+                want to disable this when using -test=stopatheight with one of the connected nodes,
                 since there will be a race between the actual connection and performing
                 the assertions before one node shuts down.
         """

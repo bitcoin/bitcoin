@@ -82,7 +82,7 @@ void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& optio
     if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
-    options.print_modified_fee = GetTestOptionBool(args, "printpriority" , options.print_modified_fee);
+    options.print_modified_fee = GetTestOptionBool(args, "printpriority", options.print_modified_fee);
 }
 
 void BlockAssembler::resetBlock()

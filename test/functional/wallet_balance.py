@@ -57,7 +57,7 @@ class WalletTest(BitcoinTestFramework):
         self.extra_args = [
             # Limit mempool descendants as a hack to have wallet txs rejected from the mempool.
             # Set walletrejectlongchains=0 so the wallet still creates the transactions.
-            ['-limitdescendantcount=3', '-walletrejectlongchains=0'],
+            ['-test=limitdescendantcount=3', '-walletrejectlongchains=0'],
             [],
         ]
 

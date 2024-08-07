@@ -45,7 +45,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # B: First transaction in package, RBFs A by itself under individual evaluation, which would give it +1 descendant limit
         # C: Second transaction in package, spends B. If the +1 descendant limit persisted, would make it into mempool
 
-        self.restart_node(0, extra_args=self.extra_args[0] + ["-limitancestorcount=2", "-limitdescendantcount=1"])
+        self.restart_node(0, extra_args=self.extra_args[0] + ["-test=limitancestorcount=2", "-test=limitdescendantcount=1"])
 
         # Generate a confirmed utxo we will double-spend
         rbf_utxo = self.wallet.send_self_transfer(

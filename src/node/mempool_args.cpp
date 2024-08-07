@@ -28,19 +28,19 @@ using kernel::MemPoolOptions;
 namespace {
 void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limits)
 {
-    mempool_limits.ancestor_count = argsman.GetIntArg("-limitancestorcount", mempool_limits.ancestor_count);
+    mempool_limits.ancestor_count = GetTestOptionInt(argsman, "limitancestorcount", mempool_limits.ancestor_count);
 
-    if (auto vkb = argsman.GetIntArg("-limitancestorsize")) mempool_limits.ancestor_size_vbytes = *vkb * 1'000;
+    if (auto vkb = GetTestOptionInt(argsman, "limitancestorsize")) mempool_limits.ancestor_size_vbytes = *vkb * 1'000;
 
-    mempool_limits.descendant_count = argsman.GetIntArg("-limitdescendantcount", mempool_limits.descendant_count);
+    mempool_limits.descendant_count = GetTestOptionInt(argsman, "limitdescendantcount", mempool_limits.descendant_count);
 
-    if (auto vkb = argsman.GetIntArg("-limitdescendantsize")) mempool_limits.descendant_size_vbytes = *vkb * 1'000;
+    if (auto vkb = GetTestOptionInt(argsman, "limitdescendantsize")) mempool_limits.descendant_size_vbytes = *vkb * 1'000;
 }
 }
 
 util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, MemPoolOptions& mempool_opts)
 {
-    mempool_opts.check_ratio = argsman.GetIntArg("-checkmempool", mempool_opts.check_ratio);
+    mempool_opts.check_ratio = GetTestOptionInt(argsman, "checkmempool", mempool_opts.check_ratio);
 
     if (auto mb = argsman.GetIntArg("-maxmempool")) mempool_opts.max_size_bytes = *mb * 1'000'000;
 

@@ -24,9 +24,9 @@
 namespace node {
 util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManager::Options& opts)
 {
-    if (auto value{args.GetIntArg("-checkblockindex")}) {
-        // Interpret bare -checkblockindex argument as 1 instead of 0.
-        opts.check_block_index = args.GetArg("-checkblockindex")->empty() ? 1 : *value;
+    if (auto value{GetTestOptionInt(args, "checkblockindex")}) {
+        // Interpret bare -test=checkblockindex argument as 1 instead of 0.
+        opts.check_block_index = args.GetArg("-checkblockindex")->empty() ? 1 : *value; // @todo
     }
 
     if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
@@ -40,7 +40,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
 
     if (auto value{args.GetArg("-assumevalid")}) opts.assumed_valid_block = uint256S(*value);
 
-    if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
+    if (auto value{GetTestOptionInt(args, "maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
 
     ReadDatabaseArgs(args, opts.block_tree_db);
     ReadDatabaseArgs(args, opts.coins_db);
@@ -56,7 +56,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
     opts.worker_threads_num = std::clamp(script_threads - 1, 0, MAX_SCRIPTCHECK_THREADS);
     LogPrintf("Script verification uses %d additional threads\n", opts.worker_threads_num);
 
-    if (auto max_size = args.GetIntArg("-maxsigcachesize")) {
+    if (auto max_size = GetTestOptionInt(args, "maxsigcachesize")) {
         // 1. When supplied with a max_size of 0, both the signature cache and
         //    script execution cache create the minimum possible cache (2
         //    elements). Therefore, we can use 0 as a floor here.

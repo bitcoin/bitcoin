@@ -61,7 +61,7 @@ trap finish EXIT
 
 # Need to specify these to trick client into accepting server as a peer
 # it can IBD from, otherwise the default values prevent IBD from the server node.
-EARLY_IBD_FLAGS="-maxtipage=9223372036854775207 -minimumchainwork=0x00"
+EARLY_IBD_FLAGS="-test=maxtipage=9223372036854775207 -minimumchainwork=0x00"
 
 server_rpc() {
   ./src/bitcoin-cli -rpcport=$SERVER_RPC_PORT -datadir="$SERVER_DATADIR" "$@"
@@ -112,7 +112,7 @@ echo
 echo "-- IBDing the blocks (height=$BASE_HEIGHT) required to the server node..."
 # shellcheck disable=SC2086
 ./src/bitcoind -logthreadnames=1 $SERVER_PORTS \
-    -datadir="$SERVER_DATADIR" $EARLY_IBD_FLAGS -stopatheight="$BASE_HEIGHT" >/dev/null
+    -datadir="$SERVER_DATADIR" $EARLY_IBD_FLAGS -test=stopatheight="$BASE_HEIGHT" >/dev/null
 
 echo
 echo "-- Creating snapshot at ~ height $BASE_HEIGHT ($UTXO_DAT_FILE)..."
@@ -144,7 +144,7 @@ echo
 echo "-- IBDing more blocks to the server node (height=$FINAL_HEIGHT) so there is a diff between snapshot and tip..."
 # shellcheck disable=SC2086
 ./src/bitcoind $SERVER_PORTS -logthreadnames=1 -datadir="$SERVER_DATADIR" \
-    $EARLY_IBD_FLAGS -stopatheight="$FINAL_HEIGHT" >/dev/null
+    $EARLY_IBD_FLAGS -test=stopatheight="$FINAL_HEIGHT" >/dev/null
 
 echo
 echo "-- Starting the server node to provide blocks to the client node..."

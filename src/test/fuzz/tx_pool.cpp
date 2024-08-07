@@ -76,14 +76,14 @@ struct TransactionsDelta final : public CValidationInterface {
 
 void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_provider)
 {
-    args.ForceSetArg("-limitancestorcount",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
-    args.ForceSetArg("-limitancestorsize",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
-    args.ForceSetArg("-limitdescendantcount",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
-    args.ForceSetArg("-limitdescendantsize",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
+    args.ForceSetArg("-test",
+                     "limitancestorcount=" + ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
+    args.ForceSetArg("-test",
+                     "limitancestorsize=" + ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
+    args.ForceSetArg("-test",
+                     "limitdescendantcount=" + ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 50)));
+    args.ForceSetArg("-test",
+                     "limitdescendantsize=" + ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 202)));
     args.ForceSetArg("-maxmempool",
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200)));
     args.ForceSetArg("-mempoolexpiry",

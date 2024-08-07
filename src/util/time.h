@@ -77,7 +77,7 @@ int64_t GetTime();
  */
 void SetMockTime(int64_t nMockTimeIn);
 
-/** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
+/** For testing. Set e.g. with the setmocktime rpc, or -test=mocktime argument */
 void SetMockTime(std::chrono::seconds mock_time_in);
 
 /** For testing */

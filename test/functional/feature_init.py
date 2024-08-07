@@ -48,7 +48,7 @@ class InitStressTest(BitcoinTestFramework):
 
         def start_expecting_error(err_fragment):
             node.assert_start_raises_init_error(
-                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1', '-checkblocks=200', '-checklevel=4'],
+                extra_args=['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1', '-test=checkblocks=200', '-test=checklevel=4'],
                 expected_msg=err_fragment,
                 match=ErrorMatch.PARTIAL_REGEX,
             )
@@ -134,7 +134,7 @@ class InitStressTest(BitcoinTestFramework):
             for target_file in target_files:
                 self.log.info(f"Perturbing file to ensure failure {target_file}")
                 with open(target_file, "r+b") as tf:
-                    # Since the genesis block is not checked by -checkblocks, the
+                    # Since the genesis block is not checked by -test=checkblocks, the
                     # perturbation window must be chosen such that a higher block
                     # in blk*.dat is affected.
                     tf.seek(150)

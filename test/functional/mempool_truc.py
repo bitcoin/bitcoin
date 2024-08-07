@@ -208,7 +208,7 @@ class MempoolTRUC(BitcoinTestFramework):
         node.reconsiderblock(block[0])
 
 
-    @cleanup(extra_args=["-limitdescendantsize=10", "-datacarriersize=40000"])
+    @cleanup(extra_args=["-test=limitdescendantsize=10", "-datacarriersize=40000"])
     def test_nondefault_package_limits(self):
         """
         Max standard tx size + TRUC rules imply the ancestor/descendant rules (at their default
@@ -241,7 +241,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.generate(node, 1)
 
         self.log.info("Test that a decreased limitancestorsize also applies to v3 parent")
-        self.restart_node(0, extra_args=["-limitancestorsize=10", "-datacarriersize=40000"])
+        self.restart_node(0, extra_args=["-test=limitancestorsize=10", "-datacarriersize=40000"])
         tx_v3_parent_large2 = self.wallet.send_self_transfer(
             from_node=node,
             target_weight=parent_target_weight,

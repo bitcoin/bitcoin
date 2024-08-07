@@ -19,8 +19,8 @@ A mempool entry's *descendant size* is the aggregated virtual size of in-mempool
 transactions in its descendant set, including itself.
 
 Transactions submitted to the mempool must not exceed the ancestor and descendant limits (aka
-mempool *package limits*) set by the node (see `-limitancestorcount`, `-limitancestorsize`,
-`-limitdescendantcount`, `-limitdescendantsize`).
+mempool *package limits*) set by the node (see `-test=limitancestorcount`, `-test=limitancestorsize`,
+`-test=limitdescendantcount`, `-test=limitdescendantsize`).
 
 ## Exemptions
 

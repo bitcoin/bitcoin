@@ -96,7 +96,7 @@ public:
     std::vector<int> GetAvailableSnapshotHeights() const;
 
     const CBlock& GenesisBlock() const { return genesis; }
-    /** Default value for -checkmempool and -checkblockindex argument */
+    /** Default value for -test=checkmempool and -test=checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** If this chain is exclusively used for testing */
     bool IsTestChain() const { return m_chain_type != ChainType::MAIN; }

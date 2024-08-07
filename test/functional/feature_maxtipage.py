@@ -2,10 +2,10 @@
 # Copyright (c) 2022 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test logic for setting -maxtipage on command line.
+"""Test logic for setting -test=maxtipage on command line.
 
 Nodes don't consider themselves out of "initial block download" as long as
-their best known block header time is more than -maxtipage in the past.
+their best known block header time is more than -test=maxtipage in the past.
 """
 
 import time
@@ -26,7 +26,7 @@ class MaxTipAgeTest(BitcoinTestFramework):
         node_miner = self.nodes[0]
         node_ibd = self.nodes[1]
 
-        self.restart_node(1, [f'-maxtipage={maxtipage}'] if set_parameter else None)
+        self.restart_node(1, [f'-test=maxtipage={maxtipage}'] if set_parameter else None)
         self.connect_nodes(0, 1)
         cur_time = int(time.time())
 
@@ -53,7 +53,7 @@ class MaxTipAgeTest(BitcoinTestFramework):
 
         for hours in [20, 10, 5, 2, 1]:
             maxtipage = hours * 60 * 60
-            self.log.info(f"Test IBD with maximum tip age of {hours} hours (-maxtipage={maxtipage}).")
+            self.log.info(f"Test IBD with maximum tip age of {hours} hours (-test=maxtipage={maxtipage}).")
             self.test_maxtipage(maxtipage)
 
         max_long_val = 9223372036854775807
