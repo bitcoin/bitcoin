@@ -23,7 +23,7 @@
 #include <string>
 
 using common::FeeModeFromString;
-using common::FeeModes;
+using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
 using node::NodeContext;
 
@@ -37,12 +37,7 @@ static RPCHelpMan estimatesmartfee()
         {
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
-            "Whether to return a more conservative estimate which also satisfies\n"
-            "a longer history. A conservative estimate potentially returns a\n"
-            "higher feerate and is more likely to be sufficient for the desired\n"
-            "target, but is not as responsive to short term drops in the\n"
-            "prevailing fee market. Must be one of (case insensitive):\n"
-             "\"" + FeeModes("\"\n\"") + "\""},
+              + FeeModesDetail(std::string("default mode will be used"))},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",

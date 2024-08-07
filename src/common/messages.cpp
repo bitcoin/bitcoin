@@ -53,6 +53,34 @@ const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
     return FEE_MODES;
 }
 
+std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std::string& default_info)
+{
+    switch (mode.second) {
+        case FeeEstimateMode::UNSET:
+            return strprintf("%s means no mode set (%s). \n", mode.first, default_info);
+        case FeeEstimateMode::ECONOMICAL:
+            return strprintf("%s estimates use a shorter time horizon, making them more\n"
+                   "responsive to short-term drops in the prevailing fee market. This mode\n"
+                   "potentially returns a lower fee rate estimate.\n", mode.first);
+        case FeeEstimateMode::CONSERVATIVE:
+            return strprintf("%s estimates use a longer time horizon, making them\n"
+                   "less responsive to short-term drops in the prevailing fee market. This mode\n"
+                   "potentially returns a higher fee rate estimate.\n", mode.first);
+        default:
+            // Other modes apart from the ones handled are fee rate units; they should not be clarified.
+            assert(false);
+    }
+}
+
+std::string FeeModesDetail(std::string default_info)
+{
+    std::string info;
+    for (const auto& fee_mode : FeeModeMap()) {
+        info += FeeModeInfo(fee_mode, default_info);
+    }
+    return strprintf("%s \n%s", FeeModes(", "), info);
+}
+
 std::string FeeModes(const std::string& delimiter)
 {
     return Join(FeeModeMap(), delimiter, [&](const std::pair<std::string, FeeEstimateMode>& i) { return i.first; });
