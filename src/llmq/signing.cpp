@@ -876,7 +876,9 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
     recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
-bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigSharesManager& shareman, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
+bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigSharesManager& shareman, const uint256& id,
+                                        const uint256& msgHash, const uint256& quorumHash, bool allowReSign,
+                                        bool allowDiffMsgHashSigning)
 {
     if (m_mn_activeman == nullptr) return false;
     if (m_mn_activeman->GetProTxHash().IsNull()) return false;
@@ -911,9 +913,15 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, CSigShares
             uint256 prevMsgHash;
             db.GetVoteForId(llmqType, id, prevMsgHash);
             if (msgHash != prevMsgHash) {
-                LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
-                        id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
-                return false;
+                if (allowDiffMsgHashSigning) {
+                    LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Signing for different msgHash=%s\n",
+                              __func__, id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
+                    hasVoted = false;
+                } else {
+                    LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n",
+                              __func__, id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
+                    return false;
+                }
             } else if (allowReSign) {
                 LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Resigning!\n", __func__,
                          id.ToString(), prevMsgHash.ToString());
