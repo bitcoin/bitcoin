@@ -131,6 +131,27 @@ const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wal
     return *spk_man;
 }
 
+blsct::KeyMan& EnsureBlsctKeyMan(CWallet& wallet, bool also_create)
+{
+    blsct::KeyMan* blsct_km = wallet.GetBLSCTKeyMan();
+    if (!blsct_km && also_create) {
+        blsct_km = wallet.GetOrCreateBLSCTKeyMan();
+    }
+    if (!blsct_km) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Only BLSCT wallets are supported by this command");
+    }
+    return *blsct_km;
+}
+
+const blsct::KeyMan& EnsureConstBlsctKeyMan(const CWallet& wallet)
+{
+    const blsct::KeyMan* blsct_km = wallet.GetBLSCTKeyMan();
+    if (!blsct_km) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Only BLSCT wallets are supported by this command");
+    }
+    return *blsct_km;
+}
+
 std::string LabelFromValue(const UniValue& value)
 {
     static const std::string empty_string;

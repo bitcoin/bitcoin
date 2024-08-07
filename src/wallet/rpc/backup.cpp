@@ -688,6 +688,30 @@ RPCHelpMan dumpprivkey()
 }
 
 
+RPCHelpMan getblsctseed()
+{
+    return RPCHelpMan{
+        "getblsctseed",
+        "\nDumps the BLSCT wallet seed, which can be used to reconstruct the wallet.\n"
+        "Note: This command is only compatible with BLSCT wallets.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::STR, "seed", "The BLSCT wallet seed"},
+        RPCExamples{HelpExampleCli("getblsctseed", "") + HelpExampleRpc("getblsctseed", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+
+            const CWallet& wallet = *pwallet;
+            const blsct::KeyMan& blsct_km = EnsureConstBlsctKeyMan(wallet);
+
+            auto seed = blsct_km.GetMasterSeedKey();
+
+            return seed.GetScalar().GetString();
+        },
+    };
+}
+
 RPCHelpMan dumpwallet()
 {
     return RPCHelpMan{"dumpwallet",
