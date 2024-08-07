@@ -34,7 +34,7 @@ public:
     explicit Manager(wallet::WalletStorage& storage) : m_storage(storage) {}
     virtual ~Manager(){};
 
-    virtual bool SetupGeneration(bool force = false) { return false; }
+    virtual bool SetupGeneration(const std::vector<unsigned char>& seed, bool force = false) { return false; }
 
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
@@ -72,7 +72,7 @@ public:
     KeyMan(wallet::WalletStorage& storage, int64_t keypool_size)
         : Manager(storage), KeyRing(), m_keypool_size(keypool_size) {}
 
-    bool SetupGeneration(bool force = false) override;
+    bool SetupGeneration(const std::vector<unsigned char>& seed, bool force = false) override;
     bool IsHDEnabled() const override;
 
     /* Returns true if the wallet can generate new keys */

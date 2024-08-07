@@ -261,13 +261,20 @@ void KeyMan::SetHDSeed(const PrivateKey& key)
     wallet::WalletBatch batch(m_storage.GetDatabase());
 }
 
-bool KeyMan::SetupGeneration(bool force)
+bool KeyMan::SetupGeneration(const std::vector<unsigned char>& seed, bool force)
 {
     if ((CanGenerateKeys() && !force) || m_storage.IsLocked()) {
         return false;
     }
 
-    SetHDSeed(GenerateNewSeed());
+    if (seed.size() != 32) {
+        SetHDSeed(GenerateNewSeed());
+    } else {
+        MclScalar scalarSeed;
+        scalarSeed.SetVch(seed);
+        SetHDSeed(scalarSeed);
+    }
+
     if (!NewSubAddressPool() || !NewSubAddressPool(-1) || !NewSubAddressPool(-2)) {
         return false;
     }

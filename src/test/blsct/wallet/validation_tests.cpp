@@ -25,7 +25,7 @@ BOOST_FIXTURE_TEST_CASE(validation_test, TestingSetup)
 
     LOCK(wallet->cs_wallet);
     auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
-    BOOST_CHECK(blsct_km->SetupGeneration(true));
+    BOOST_CHECK(blsct_km->SetupGeneration({}, true));
 
     auto recvAddress = std::get<blsct::DoublePublicKey>(blsct_km->GetNewDestination(0).value());
 

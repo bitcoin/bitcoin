@@ -370,7 +370,7 @@ std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& n
     return wallet;
 }
 
-std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, const std::vector<unsigned char>& seed, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -449,7 +449,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
                     auto blsct_man = wallet->GetBLSCTKeyMan();
 
                     if (blsct_man) {
-                        if (!blsct_man->SetupGeneration()) {
+                        if (!blsct_man->SetupGeneration(seed)) {
                             error = Untranslated("Unable to generate initial blsct keys");
                             status = DatabaseStatus::FAILED_CREATE;
                             return nullptr;

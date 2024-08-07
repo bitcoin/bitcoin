@@ -230,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_verif_crypted_blsct, TestingSetup)
         wallet->InitWalletFlags(wallet::WALLET_FLAG_BLSCT);
         LOCK(wallet->cs_wallet);
         auto blsct_km = wallet->GetOrCreateBLSCTKeyMan();
-        BOOST_CHECK(blsct_km->SetupGeneration(true));
+        BOOST_CHECK(blsct_km->SetupGeneration({}, true));
 
         // Get the keys in the wallet before encryption
         auto masterKeysMetadata = blsct_km->GetHDChain();

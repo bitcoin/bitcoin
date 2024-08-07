@@ -354,6 +354,7 @@ static RPCHelpMan createwallet()
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
             {"blsct", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a wallet with BLSCT keys."},
+            {"seed", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "Create the wallet from the specified seed."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
@@ -420,8 +421,11 @@ static RPCHelpMan createwallet()
             options.create_flags = flags;
             options.create_passphrase = passphrase;
             bilingual_str error;
+            std::vector<unsigned char> seed;
+            if (!request.params[9].isNull() && request.params[9].isStr())
+                seed = ParseHex(request.params[9].get_str());
             std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
-            const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+            const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), seed, load_on_start, options, status, error, warnings);
             if (!wallet) {
                 RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
                 throw JSONRPCError(code, error.original);
