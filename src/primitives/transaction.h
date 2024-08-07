@@ -264,6 +264,11 @@ public:
         return nVersion >= SPECIAL_VERSION;
     }
 
+    bool IsPlatformTransfer() const noexcept
+    {
+        return IsSpecialTxVersion() && nType == TRANSACTION_ASSET_UNLOCK;
+    }
+
     bool HasExtraPayloadField() const noexcept
     {
         return IsSpecialTxVersion() && nType != TRANSACTION_NORMAL;

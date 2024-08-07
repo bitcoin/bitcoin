@@ -408,6 +408,7 @@ struct WalletTx
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
+    bool is_platform_transfer{false};
     bool is_denominate;
 };
 

@@ -41,6 +41,7 @@ from test_framework.util import (
     get_bip9_details,
     hex_str_to_bytes,
 )
+from test_framework.wallet_util import bytes_to_wif
 
 llmq_type_test = 106 # LLMQType::LLMQ_TEST_PLATFORM
 tiny_amount = int(Decimal("0.0007") * COIN)
@@ -257,6 +258,8 @@ class AssetLocksTest(DashTestFramework):
 
         key = ECKey()
         key.generate()
+        privkey = bytes_to_wif(key.get_bytes())
+        node_wallet.importprivkey(privkey)
         pubkey = key.get_pubkey().get_bytes()
 
         self.test_asset_locks(node_wallet, node, pubkey)
@@ -478,15 +481,31 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=asset_unlock_tx_full, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
 
         txid_in_block = self.send_tx(asset_unlock_tx_full)
+        expected_balance = (Decimal(self.get_credit_pool_balance()) - Decimal(tiny_amount))
         node.generate(1)
         self.sync_all()
-        self.log.info("Check txid_in_block was mined...")
+        self.log.info("Check txid_in_block was mined")
         block = node.getblock(node.getbestblockhash())
         assert txid_in_block in block['tx']
         self.validate_credit_pool_balance(0)
 
+        self.log.info(f"Check status of withdrawal and try to spend it")
+        withdrawal_status = node_wallet.gettransaction(txid_in_block)
+        assert_equal(withdrawal_status['amount'] * COIN, expected_balance)
+        assert_equal(withdrawal_status['details'][0]['category'], 'platform-transfer')
+
+        spend_withdrawal_hex = node_wallet.createrawtransaction([{'txid': txid_in_block, 'vout' : 0}], { node_wallet.getnewaddress() : (expected_balance - Decimal(tiny_amount)) / COIN})
+        spend_withdrawal_hex = node_wallet.signrawtransactionwithwallet(spend_withdrawal_hex)['hex']
+        spend_withdrawal = tx_from_hex(spend_withdrawal_hex)
+        self.check_mempool_result(tx=spend_withdrawal, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
+        spend_txid_in_block = self.send_tx(spend_withdrawal)
+
+        node.generate(1)
+        block = node.getblock(node.getbestblockhash())
+        assert spend_txid_in_block in block['tx']
+
         self.log.info("Fast forward to the next day to reset all current unlock limits...")
-        self.slowly_generate_batch(blocks_in_one_day  + 1)
+        self.slowly_generate_batch(blocks_in_one_day)
         self.mine_quorum(llmq_type_name="llmq_test_platform", llmq_type=106)
 
         total = self.get_credit_pool_balance()

@@ -93,6 +93,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
     }
+    else if (wtx.is_platform_transfer)
+    {
+        strHTML += "<b>" + tr("Source") + ":</b> " + tr("Platform Transfer") + "<br>";
+    }
     else if (wtx.value_map.count("from") && !wtx.value_map["from"].empty())
     {
         // Online transaction
