@@ -19,7 +19,7 @@ FALSE_POSITIVES = [
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
-    ("src/validationinterface.cpp", "LogPrint(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
+    ("src/validationinterface.cpp", "LogDebug(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
     ("src/wallet/wallet.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), GetDisplayName(), parameters...)"),
     ("src/wallet/scriptpubkeyman.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
