@@ -733,11 +733,20 @@ public:
          * - pot: a subset of the "pot" value for the new work item (but a superset of inc).
          *        It does not need to be the full pot value; missing pot transactions will be added
          *        to it by add_fn.
+         * - reconsider_pot: this function will automatically add topologically-valid subsets of
+         *                   pot to inc (the jump ahead optimization). If reconsider_pot is true,
+         *                   the search for such subsets will include the transactions in the pot
+         *                   argument to the function. If reconsider_pot is false, only transactions
+         *                   that were missing from the pot argument will be considered. If no new
+         *                   transactions were added to inc since the last split (i.e., when this
+         *                   function is called for an exclusion) then there is no need to
+         *                   set this to true.
          */
-        auto add_fn = [&](SetInfo<SetType> inc, SetType und, SetInfo<SetType> pot) noexcept {
+        auto add_fn = [&](SetInfo<SetType> inc, SetType und, SetInfo<SetType> pot, bool reconsider_pot) noexcept {
             if (!inc.feerate.IsEmpty()) {
                 /** Which transactions to consider adding to inc. */
-                SetType consider_inc = pot.transactions - inc.transactions;
+                SetType consider_inc;
+                if (reconsider_pot) consider_inc = pot.transactions - inc.transactions;
                 // Add entries to pot. We iterate over all undecided transactions whose feerate is
                 // higher than best, and aren't already part of pot. While undecided transactions
                 // of lower feerate may improve, the resulting pot feerate cannot possibly exceed
@@ -876,13 +885,15 @@ public:
             const auto& desc = m_depgraph.Descendants(split);
             add_fn(/*inc=*/elem.inc,
                    /*und=*/elem.und - desc,
-                   /*pot=*/elem.pot.Remove(m_depgraph, desc));
+                   /*pot=*/elem.pot.Remove(m_depgraph, desc),
+                   /*reconsider_pot=*/false);
 
             // Add a work item corresponding to inclusion of the split transaction.
             const auto anc = m_depgraph.Ancestors(split) & m_todo;
             add_fn(/*inc=*/elem.inc.Add(m_depgraph, anc),
                    /*und=*/elem.und - anc,
-                   /*pot=*/elem.pot.Add(m_depgraph, anc));
+                   /*pot=*/elem.pot.Add(m_depgraph, anc),
+                   /*reconsider_pot=*/true);
 
             // Account for the performed split.
             --iterations_left;
