@@ -46,6 +46,7 @@ FLUSH_MODES = [
     'IF_NEEDED',
     'PERIODIC',
     'FORCE_FLUSH',
+    'FORCE_SYNC',
 ]
 
 
