@@ -26,7 +26,9 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     dkg_debugman{std::make_unique<llmq::CDKGDebugManager>()},
     quorum_block_processor{std::make_unique<llmq::CQuorumBlockProcessor>(chainstate, dmnman, evo_db, peerman)},
     qdkgsman{std::make_unique<llmq::CDKGSessionManager>(*bls_worker, chainstate, connman, dmnman, *dkg_debugman, mn_metaman, *quorum_block_processor, mn_activeman, sporkman, peerman, unit_tests, wipe)},
-    qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, chainstate, connman, dmnman, *qdkgsman, evo_db, *quorum_block_processor, mn_activeman, mn_sync, sporkman)},
+    qman{std::make_unique<llmq::CQuorumManager>(*bls_worker, chainstate, connman, dmnman, *qdkgsman, evo_db,
+                                                *quorum_block_processor, mn_activeman, mn_sync, sporkman, unit_tests,
+                                                wipe)},
     sigman{std::make_unique<llmq::CSigningManager>(connman, mn_activeman, chainstate, *qman, peerman, unit_tests, wipe)},
     shareman{std::make_unique<llmq::CSigSharesManager>(connman, *sigman, mn_activeman, *qman, sporkman, peerman)},
     clhandler{[&]() -> llmq::CChainLocksHandler* const {
