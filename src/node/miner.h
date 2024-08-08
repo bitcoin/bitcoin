@@ -169,7 +169,7 @@ public:
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
 
     /** Construct a new block template */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock();
+    std::shared_ptr<CBlockTemplate> CreateNewBlock();
 
     /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};

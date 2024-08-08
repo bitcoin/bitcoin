@@ -69,7 +69,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
 {
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
+    auto pblocktemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
     CBlock& block = pblocktemplate->block;
     block.hashPrevBlock = prev->GetBlockHash();
     block.nTime = prev->nTime + 1;
