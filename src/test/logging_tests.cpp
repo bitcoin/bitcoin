@@ -111,7 +111,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
     LogPrintf("foo5: %s\n", "bar5");
-    LogPrint(BCLog::NET, "foo6: %s\n", "bar6");
+    LogDebug(BCLog::NET, "foo6: %s\n", "bar6");
     LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
     LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
@@ -171,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 
     std::vector<std::string> expected;
     for (const auto& [category, name] : expected_category_names) {
-        LogPrint(category, "foo: %s\n", "bar");
+        LogDebug(category, "foo: %s\n", "bar");
         std::string expected_log = "[";
         expected_log += name;
         expected_log += "] foo: bar";

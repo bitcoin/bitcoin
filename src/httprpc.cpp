@@ -357,7 +357,7 @@ static bool InitRPCAuthentication()
 
 bool StartHTTPRPC(const std::any& context)
 {
-    LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
@@ -375,12 +375,12 @@ bool StartHTTPRPC(const std::any& context)
 
 void InterruptHTTPRPC()
 {
-    LogPrint(BCLog::RPC, "Interrupting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Interrupting HTTP RPC server\n");
 }
 
 void StopHTTPRPC()
 {
-    LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (g_wallet_init_interface.HasWalletSupport()) {
         UnregisterHTTPHandler("/wallet/", false);

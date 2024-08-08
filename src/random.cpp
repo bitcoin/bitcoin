@@ -602,7 +602,7 @@ void SeedPeriodic(CSHA512& hasher, RNGState& rng) noexcept
     // Dynamic environment data (performance monitoring, ...)
     auto old_size = hasher.Size();
     RandAddDynamicEnv(hasher);
-    LogPrint(BCLog::RAND, "Feeding %i bytes of dynamic environment data into RNG\n", hasher.Size() - old_size);
+    LogDebug(BCLog::RAND, "Feeding %i bytes of dynamic environment data into RNG\n", hasher.Size() - old_size);
 
     // Strengthen for 10 ms
     SeedStrengthen(hasher, rng, 10ms);
@@ -622,7 +622,7 @@ void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
 
     // Static environment data
     RandAddStaticEnv(hasher);
-    LogPrint(BCLog::RAND, "Feeding %i bytes of environment data into RNG\n", hasher.Size() - old_size);
+    LogDebug(BCLog::RAND, "Feeding %i bytes of environment data into RNG\n", hasher.Size() - old_size);
 
     // Strengthen for 100 ms
     SeedStrengthen(hasher, rng, 100ms);

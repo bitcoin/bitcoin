@@ -22,7 +22,7 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 #define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
 #define LogPrintf(...) LogPrintLevel_(LogFlags::NONE, Level::None, __VA_ARGS__)
 
-#define LogPrint(category, ...) \
+#define LogDebug(category, ...) \
     do {                        \
         LogPrintf(__VA_ARGS__); \
     } while (0)

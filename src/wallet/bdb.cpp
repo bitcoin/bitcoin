@@ -211,7 +211,7 @@ BerkeleyEnvironment::BerkeleyEnvironment() : m_use_shared_memory(false)
 {
     Reset();
 
-    LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::MakeMock\n");
+    LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::MakeMock\n");
 
     dbenv->set_cachesize(1, 0, 1);
     dbenv->set_lg_bsize(10485760 * 4);
@@ -605,7 +605,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
 {
     const auto start{SteadyClock::now()};
     // Flush log data to the actual data file on all files that are not in use
-    LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: [%s] Flush(%s)%s\n", strPath, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
+    LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: [%s] Flush(%s)%s\n", strPath, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
     if (!fDbEnvInit)
         return;
     {
@@ -616,22 +616,22 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
             int nRefCount = db_it.second.get().m_refcount;
             if (nRefCount < 0) continue;
             const std::string strFile = fs::PathToString(filename);
-            LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flushing %s (refcount = %d)...\n", strFile, nRefCount);
+            LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flushing %s (refcount = %d)...\n", strFile, nRefCount);
             if (nRefCount == 0) {
                 // Move log data to the dat file
                 CloseDb(filename);
-                LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: %s checkpoint\n", strFile);
+                LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: %s checkpoint\n", strFile);
                 dbenv->txn_checkpoint(0, 0, 0);
-                LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: %s detach\n", strFile);
+                LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: %s detach\n", strFile);
                 if (!fMockDb)
                     dbenv->lsn_reset(strFile.c_str(), 0);
-                LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: %s closed\n", strFile);
+                LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: %s closed\n", strFile);
                 nRefCount = -1;
             } else {
                 no_dbs_accessed = false;
             }
         }
-        LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+        LogDebug(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
         if (fShutdown) {
             char** listp;
             if (no_dbs_accessed) {
@@ -660,7 +660,7 @@ bool BerkeleyDatabase::PeriodicFlush()
     if (m_refcount < 0) return false;
 
     const std::string strFile = fs::PathToString(m_filename);
-    LogPrint(BCLog::WALLETDB, "Flushing %s\n", strFile);
+    LogDebug(BCLog::WALLETDB, "Flushing %s\n", strFile);
     const auto start{SteadyClock::now()};
 
     // Flush wallet file so it's self contained
@@ -668,7 +668,7 @@ bool BerkeleyDatabase::PeriodicFlush()
     env->CheckpointLSN(strFile);
     m_refcount = -1;
 
-    LogPrint(BCLog::WALLETDB, "Flushed %s %dms\n", strFile, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+    LogDebug(BCLog::WALLETDB, "Flushed %s %dms\n", strFile, Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 
     return true;
 }
