@@ -2854,7 +2854,7 @@ bool Chainstate::FlushStateToDisk(
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
         bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
         // Combine all conditions that result in a full cache flush.
-        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+        fDoFullFlush = (mode == FlushStateMode::FORCE_FLUSH) || (mode == FlushStateMode::FORCE_SYNC) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite) {
             // Ensure we can write block index
@@ -2902,7 +2902,7 @@ bool Chainstate::FlushStateToDisk(
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
             }
             // Flush the chainstate (which may refer to block index entries).
-            const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
+            const auto empty_cache{(mode == FlushStateMode::FORCE_FLUSH) || fCacheLarge || fCacheCritical};
             if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
             }
@@ -2926,10 +2926,10 @@ bool Chainstate::FlushStateToDisk(
     return true;
 }
 
-void Chainstate::ForceFlushStateToDisk()
+void Chainstate::ForceFlushStateToDisk(bool wipe_cache)
 {
     BlockValidationState state;
-    if (!this->FlushStateToDisk(state, FlushStateMode::ALWAYS)) {
+    if (!this->FlushStateToDisk(state, wipe_cache ? FlushStateMode::FORCE_FLUSH : FlushStateMode::FORCE_SYNC)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -5554,7 +5554,7 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
         ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
     } else {
         // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(state, FlushStateMode::ALWAYS);
+        ret = FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH);
     }
     return ret;
 }
@@ -6023,7 +6023,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
         // returns in `ActivateSnapshot()`, when `MaybeRebalanceCaches()` is
         // called, since we've added a snapshot chainstate and therefore will
         // have to downsize the IBD chainstate, which will result in a call to
-        // `FlushStateToDisk(ALWAYS)`.
+        // `FlushStateToDisk(FORCE_FLUSH)`.
     }
 
     assert(index);
@@ -6123,7 +6123,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     assert(this->GetAll().size() == 2);
 
     CCoinsViewDB& ibd_coins_db = m_ibd_chainstate->CoinsDB();
-    m_ibd_chainstate->ForceFlushStateToDisk();
+    m_ibd_chainstate->ForceFlushStateToDisk(/*wipe_cache=*/true);
 
     const auto& maybe_au_data = m_options.chainparams.AssumeutxoForHeight(curr_height);
     if (!maybe_au_data) {

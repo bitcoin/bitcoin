@@ -448,7 +448,8 @@ enum class FlushStateMode {
     NONE,
     IF_NEEDED,
     PERIODIC,
-    ALWAYS
+    FORCE_SYNC,
+    FORCE_FLUSH,
 };
 
 /**
@@ -678,7 +679,7 @@ public:
         int nManualPruneHeight = 0);
 
     //! Unconditionally flush all changes to disk.
-    void ForceFlushStateToDisk();
+    void ForceFlushStateToDisk(bool wipe_cache);
 
     //! Prune blockfiles from the disk if necessary and then flush chainstate changes
     //! if we pruned.
