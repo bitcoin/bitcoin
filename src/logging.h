@@ -289,7 +289,4 @@ static inline void LogPrintf_(std::string_view logging_function, std::string_vie
 #define LogDebug(category, ...) LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
 #define LogTrace(category, ...) LogPrintLevel(category, BCLog::Level::Trace, __VA_ARGS__)
 
-// Deprecated conditional logging
-#define LogPrint(category, ...)  LogDebug(category, __VA_ARGS__)
-
 #endif // BITCOIN_LOGGING_H
