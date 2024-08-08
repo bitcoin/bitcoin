@@ -100,7 +100,8 @@ FLUSHMODE_NAME = {
     0: "NONE",
     1: "IF_NEEDED",
     2: "PERIODIC",
-    3: "ALWAYS",
+    3: "FORCE_SYNC",
+    4: "FORCE_FLUSH",
 }
 
 
@@ -368,8 +369,8 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
         # A node shutdown causes two flushes. One that flushes UTXOS_IN_CACHE
         # UTXOs and one that flushes 0 UTXOs. Normally the 0-UTXO-flush is the
         # second flush, however it can happen that the order changes.
-        expected_flushes.append({"mode": "ALWAYS", "for_prune": False, "size": UTXOS_IN_CACHE})
-        expected_flushes.append({"mode": "ALWAYS", "for_prune": False, "size": 0})
+        expected_flushes.append({"mode": "FORCE_FLUSH", "for_prune": False, "size": UTXOS_IN_CACHE})
+        expected_flushes.append({"mode": "FORCE_FLUSH", "for_prune": False, "size": 0})
         self.stop_node(0)
 
         bpf.perf_buffer_poll(timeout=200)
