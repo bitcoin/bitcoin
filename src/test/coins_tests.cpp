@@ -55,10 +55,10 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock, bool erase = true) override
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
     {
-        for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = erase ? mapCoins.erase(it) : std::next(it)) {
-            if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+        for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)){
+            if (it->second.IsDirty()) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;
                 if (it->second.coin.IsSpent() && InsecureRandRange(3) == 0) {
@@ -78,7 +78,7 @@ class CCoinsViewCacheTest : public CCoinsViewCache
 public:
     explicit CCoinsViewCacheTest(CCoinsView* _base) : CCoinsViewCache(_base) {}
 
-    void SelfTest() const
+    void SelfTest(bool sanity_check = true) const
     {
         // Manually recompute the dynamic usage of the whole data, and compare it.
         size_t ret = memusage::DynamicUsage(cacheCoins);
@@ -89,9 +89,13 @@ public:
         }
         BOOST_CHECK_EQUAL(GetCacheSize(), count);
         BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
+        if (sanity_check) {
+            SanityCheck();
+        }
     }
 
     CCoinsMap& map() const { return cacheCoins; }
+    CoinsCachePair& sentinel() const { return m_sentinel; }
     size_t& usage() const { return cachedCoinsUsage; }
 };
 
@@ -576,7 +580,7 @@ static void SetCoinsValue(CAmount value, Coin& coin)
     }
 }
 
-static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
+static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, CAmount value, char flags)
 {
     if (value == ABSENT) {
         assert(flags == NO_ENTRY);
@@ -584,10 +588,10 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     }
     assert(flags != NO_ENTRY);
     CCoinsCacheEntry entry;
-    entry.flags = flags;
     SetCoinsValue(value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
+    inserted.first->second.AddFlags(flags, *inserted.first, sentinel);
     return inserted.first->second.coin.DynamicMemoryUsage();
 }
 
@@ -603,17 +607,20 @@ void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags, const C
         } else {
             value = it->second.coin.out.nValue;
         }
-        flags = it->second.flags;
+        flags = it->second.GetFlags();
         assert(flags != NO_ENTRY);
     }
 }
 
 void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
 {
+    CoinsCachePair sentinel{};
+    sentinel.second.SelfRef(sentinel);
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
-    InsertCoinsMapEntry(map, value, flags);
-    BOOST_CHECK(view.BatchWrite(map, {}));
+    auto usage{InsertCoinsMapEntry(map, sentinel, value, flags)};
+    auto cursor{CoinsViewCacheCursor(usage, sentinel, map, /*will_erase=*/true)};
+    BOOST_CHECK(view.BatchWrite(cursor, {}));
 }
 
 class SingleEntryCacheTest
@@ -622,7 +629,7 @@ public:
     SingleEntryCacheTest(CAmount base_value, CAmount cache_value, char cache_flags)
     {
         WriteCoinsViewEntry(base, base_value, base_value == ABSENT ? NO_ENTRY : DIRTY);
-        cache.usage() += InsertCoinsMapEntry(cache.map(), cache_value, cache_flags);
+        cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), cache_value, cache_flags);
     }
 
     CCoinsView root;
@@ -634,7 +641,7 @@ static void CheckAccessCoin(CAmount base_value, CAmount cache_value, CAmount exp
 {
     SingleEntryCacheTest test(base_value, cache_value, cache_flags);
     test.cache.AccessCoin(OUTPOINT);
-    test.cache.SelfTest();
+    test.cache.SelfTest(/*sanity_check=*/false);
 
     CAmount result_value;
     char result_flags;
@@ -803,7 +810,7 @@ void CheckWriteCoins(CAmount parent_value, CAmount child_value, CAmount expected
     char result_flags;
     try {
         WriteCoinsViewEntry(test.cache, child_value, child_flags);
-        test.cache.SelfTest();
+        test.cache.SelfTest(/*sanity_check=*/false);
         GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
     } catch (std::logic_error&) {
         result_value = FAIL;
@@ -916,6 +923,7 @@ void TestFlushBehavior(
         // Flush in reverse order to ensure that flushes happen from children up.
         for (auto i = all_caches.rbegin(); i != all_caches.rend(); ++i) {
             auto& cache = *i;
+            cache->SanityCheck();
             // hashBlock must be filled before flushing to disk; value is
             // unimportant here. This is normally done during connect/disconnect block.
             cache->SetBestBlock(InsecureRand256());
