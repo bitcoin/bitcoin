@@ -61,8 +61,6 @@ class LLMQEvoNodesTest(DashTestFramework):
             if i != 0:
                 self.connect_nodes(i, 0)
 
-        self.activate_dip8()
-
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 1)
         self.wait_for_sporks_same()

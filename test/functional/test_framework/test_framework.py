@@ -1079,9 +1079,6 @@ class DashTestFramework(BitcoinTestFramework):
             for i in range(0, num_nodes):
                 self.extra_args[i].append("-dip3params=30:50")
 
-        # make sure to activate dip8 after prepare_masternodes has finished its job already
-        self.set_dash_dip8_activation(200)
-
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
@@ -1092,22 +1089,6 @@ class DashTestFramework(BitcoinTestFramework):
         # This is EXPIRATION_TIMEOUT + EXPIRATION_BIAS in CQuorumDataRequest
         self.quorum_data_request_expiration_timeout = 360
 
-    def set_dash_dip8_activation(self, activate_after_block):
-        self.dip8_activation_height = activate_after_block
-        for i in range(0, self.num_nodes):
-            self.extra_args[i].append("-dip8params=%d" % (activate_after_block))
-
-    def activate_dip8(self, slow_mode=False):
-        # NOTE: set slow_mode=True if you are activating dip8 after a huge reorg
-        # or nodes might fail to catch up otherwise due to a large
-        # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.
-        self.log.info("Wait for dip0008 activation")
-        while self.nodes[0].getblockcount() < self.dip8_activation_height:
-            self.bump_mocktime(10)
-            self.nodes[0].generate(10)
-            if slow_mode:
-                self.sync_blocks()
-        self.sync_blocks()
 
     def activate_by_name(self, name, expected_activation_height=None):
         assert not softfork_active(self.nodes[0], name)

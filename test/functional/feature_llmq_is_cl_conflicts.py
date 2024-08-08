@@ -54,8 +54,6 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.supports_cli = False
 
     def run_test(self):
-        self.activate_dip8()
-
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)

@@ -86,16 +86,16 @@ class PruneTest(BitcoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-dip3params=2000:2000", "-dip8params=2000", "-maxreceivebuffer=20000", "-blockmaxsize=999000", "-checkblocks=5"]
+        self.full_node_default_args = ["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-maxreceivebuffer=20000", "-blockmaxsize=999000", "-checkblocks=5"]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [
             self.full_node_default_args,
             self.full_node_default_args,
-            ["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-prune=550"],
-            ["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
-            ["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
-            ["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance","-txindex=0","-prune=550"],
+            ["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-prune=550"],
+            ["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
+            ["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
+            ["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance","-txindex=0","-prune=550"],
         ]
         self.rpc_timeout = 120
 
@@ -283,13 +283,13 @@ class PruneTest(BitcoinTestFramework):
 
     def manual_test(self, node_number, use_timestamp):
         # at this point, node has 995 blocks and has not yet run in prune mode
-        self.start_node(node_number, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0"])
+        self.start_node(node_number, extra_args=["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance", "-txindex=0"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
-        self.restart_node(node_number, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=1"], expected_stderr=EXPECTED_STDERR_NO_GOV)
+        self.restart_node(node_number, extra_args=["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance", "-txindex=0", "-prune=1"], expected_stderr=EXPECTED_STDERR_NO_GOV)
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
 
@@ -358,14 +358,14 @@ class PruneTest(BitcoinTestFramework):
         assert not has_block(3), "blk00003.dat is still there, should be pruned by now"
 
         # stop node, start back up with auto-prune at 550 MiB, make sure still runs
-        self.restart_node(node_number, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
+        self.restart_node(node_number, extra_args=["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
         self.log.info("Success")
 
     def wallet_test(self):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
-        self.restart_node(2, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
+        self.restart_node(2, extra_args=["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
         self.log.info("Success")
 
         # check that wallet loads successfully when restarting a pruned node after IBD.
@@ -374,7 +374,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 5)
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
-        self.restart_node(5, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE) # restart to trigger rescan
+        self.restart_node(5, extra_args=["-dip3params=2000:2000", "-testactivationheight=dip0008@2000", "-disablegovernance", "-txindex=0", "-prune=550"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE) # restart to trigger rescan
         self.log.info("Success")
 
     def run_test(self):

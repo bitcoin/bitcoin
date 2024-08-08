@@ -31,8 +31,6 @@ class LLMQChainLocksTest(DashTestFramework):
             if i != 1:
                 self.connect_nodes(i, 1)
 
-        self.activate_dip8()
-
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
         self.activate_v20(expected_activation_height=1200)
