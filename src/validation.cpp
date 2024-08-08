@@ -2847,7 +2847,7 @@ bool Chainstate::FlushStateToDisk(
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow >= m_next_write;
         const auto empty_cache{(mode == FlushStateMode::FORCE_FLUSH) || fCacheLarge || fCacheCritical};
         // Combine all conditions that result in a write to disk.
-        bool should_write = empty_cache || fPeriodicWrite || fFlushForPrune;
+        bool should_write = (mode == FlushStateMode::FORCE_SYNC) || empty_cache || fPeriodicWrite || fFlushForPrune;
         // Write blocks, block index and best chain related state to disk.
         if (should_write) {
             LogDebug(BCLog::COINDB, "Writing chainstate to disk: flush mode=%s, prune=%d, large=%d, critical=%d, periodic=%d",
@@ -2925,10 +2925,10 @@ bool Chainstate::FlushStateToDisk(
     return true;
 }
 
-void Chainstate::ForceFlushStateToDisk()
+void Chainstate::ForceFlushStateToDisk(bool wipe_cache)
 {
     BlockValidationState state;
-    if (!this->FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH)) {
+    if (!this->FlushStateToDisk(state, wipe_cache ? FlushStateMode::FORCE_FLUSH : FlushStateMode::FORCE_SYNC)) {
         LogPrintf("%s: failed to flush state (%s)\n", __func__, state.ToString());
     }
 }
@@ -6168,7 +6168,7 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation()
     assert(this->GetAll().size() == 2);
 
     CCoinsViewDB& ibd_coins_db = m_ibd_chainstate->CoinsDB();
-    m_ibd_chainstate->ForceFlushStateToDisk();
+    m_ibd_chainstate->ForceFlushStateToDisk(/*wipe_cache=*/true);
 
     const auto& maybe_au_data = m_options.chainparams.AssumeutxoForHeight(curr_height);
     if (!maybe_au_data) {

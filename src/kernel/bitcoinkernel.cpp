@@ -1004,7 +1004,7 @@ void btck_chainstate_manager_destroy(btck_ChainstateManager* chainman)
         LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex());
         for (Chainstate* chainstate : btck_ChainstateManager::get(chainman).m_chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                chainstate->ForceFlushStateToDisk(/*wipe_cache=*/true);
                 chainstate->ResetCoinsViews();
             }
         }
