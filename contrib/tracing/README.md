@@ -246,10 +246,10 @@ $ python3 contrib/tracing/log_utxocache_flush.py $(pidof bitcoind)
 
 ```
 Logging utxocache flushes. Ctrl-C to end...
-Duration (µs)   Mode       Coins Count     Memory Usage    Prune
-730451          IF_NEEDED  22990           3323.54 kB      True
-637657          ALWAYS     122320          17124.80 kB     False
-81349           ALWAYS     0               1383.49 kB      False
+Duration (µs)   Mode        Coins Count     Memory Usage    Prune
+730451          IF_NEEDED   22990           3323.54 kB      True
+637657          FORCE_FLUSH 122320          17124.80 kB     False
+81349           FORCE_FLUSH 0               1383.49 kB      False
 ```
 
 ### log_utxos.bt
