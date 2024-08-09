@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Mutate the transaction so that one of the inputs is invalid
     psbtx.tx->vin[0].prevout.n = 2;
+    psbtx.inputs[0].prev_out = 2;
 
     // Try to sign the mutated input
     SignatureData sigdata;
