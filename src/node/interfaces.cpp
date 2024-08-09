@@ -15,6 +15,8 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
@@ -96,7 +98,11 @@ class NodeImpl : public Node
 {
 public:
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
-    void initLogging() override { InitLogging(args()); }
+    void initLogging() override
+    {
+        interfaces::Ipc* ipc = m_context->init->ipc();
+        InitLogging(args(), ipc ? ipc->logSuffix() : nullptr);
+    }
     void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return Join(Assert(m_context->warnings)->GetMessages(), Untranslated("<hr />")); }
     int getExitStatus() override { return Assert(m_context)->exit_status.load(); }

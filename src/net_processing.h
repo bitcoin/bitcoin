@@ -46,6 +46,9 @@ struct CNodeStateStats {
     ServiceFlags their_services;
     int64_t presync_height{-1};
     std::chrono::seconds time_offset{0};
+    // Note: If you add fields to this struct, you should also consider updating
+    // the getpeerinfo RPC in rpc/net.cpp and the NodeStateStat struct in
+    // ipc/capnp/node.capnp.
 };
 
 struct PeerManagerInfo {

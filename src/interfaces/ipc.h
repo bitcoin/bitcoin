@@ -65,6 +65,9 @@ public:
     //! IPC context struct accessor (see struct definition for more description).
     virtual ipc::Context& context() = 0;
 
+    //! Suffix for debug.log to avoid output clashes from different processes.
+    virtual const char* logSuffix() = 0;
+
 protected:
     //! Internal implementation of public addCleanup method (above) as a
     //! type-erased virtual function, since template functions can't be virtual.
@@ -72,7 +75,7 @@ protected:
 };
 
 //! Return implementation of Ipc interface.
-std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* process_argv0, Init& init);
+std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* log_suffix, const char* process_argv0, Init& init);
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_IPC_H
