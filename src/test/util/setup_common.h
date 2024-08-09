@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_SETUP_COMMON_H
 #define BITCOIN_TEST_UTIL_SETUP_COMMON_H
 
+#include <arith_uint256.h>
 #include <common/args.h> // IWYU pragma: export
 #include <kernel/context.h>
 #include <key.h>
@@ -41,9 +42,38 @@ extern const std::function<std::string()> G_TEST_GET_FULL_NAME;
 // Enable BOOST_CHECK_EQUAL for enum class types
 namespace std {
 template <typename T>
-std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+inline std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
 {
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
+
+// Enable BOOST_CHECK_EQUAL for std::optional
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
+{
+    if (v) {
+        return os << v.value();
+    } else {
+        return os << "std::nullopt";
+    }
+}
+
+// Enable BOOST_CHECK_EQUAL for arith_uint256
+inline std::ostream& operator<<(std::ostream& os, const arith_uint256& num)
+{
+    return os << num.ToString();
+}
+
+// Enable BOOST_CHECK_EQUAL for uint256
+inline std::ostream& operator<<(std::ostream& os, const uint256& num)
+{
+    return os << num.ToString();
+}
+
+// Enable BOOST_CHECK_EQUAL for uint160
+inline std::ostream& operator<<(std::ostream& os, const uint160& num)
+{
+    return os << num.ToString();
 }
 } // namespace std
 
@@ -238,11 +268,6 @@ std::unique_ptr<T> MakeNoLogFileContext(const ChainType chain_type = ChainType::
 }
 
 CBlock getBlock13b8a();
-
-// Make types usable in BOOST_CHECK_*
-std::ostream& operator<<(std::ostream& os, const arith_uint256& num);
-std::ostream& operator<<(std::ostream& os, const uint160& num);
-std::ostream& operator<<(std::ostream& os, const uint256& num);
 
 /**
  * BOOST_CHECK_EXCEPTION predicates to check the specific validation error.
