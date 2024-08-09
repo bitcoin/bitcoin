@@ -95,6 +95,7 @@ public:
     bool TxnBegin() override;
     bool TxnCommit() override;
     bool TxnAbort() override;
+    bool HasActiveTxn() override { return m_txn; }
 };
 
 /** An instance of this class represents one SQLite3 database.
