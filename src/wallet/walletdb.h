@@ -289,8 +289,8 @@ public:
     bool TxnCommit();
     //! Abort current transaction
     bool TxnAbort();
-private:
     std::unique_ptr<DatabaseBatch> m_batch;
+private:
     WalletDatabase& m_database;
 };
 
