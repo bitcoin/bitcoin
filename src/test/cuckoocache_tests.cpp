@@ -29,7 +29,7 @@
  *  using BOOST_CHECK_CLOSE to fail.
  *
  */
-BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
+BOOST_FIXTURE_TEST_SUITE(cuckoocache_tests, BasicTestingSetup)
 
 /* Test that no values not inserted into the cache are read out of it.
  *

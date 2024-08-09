@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
 
 
     // SETUP: Context
+    BCLog::Logger logger;
     kernel::Context kernel_context{};
     // We can't use a goto here, but we can use an assert since none of the
     // things instantiated so far requires running the epilogue to be torn down
@@ -121,7 +122,7 @@ int main(int argc, char* argv[])
         .notifications = chainman_opts.notifications,
     };
     util::SignalInterrupt interrupt;
-    ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
+    ChainstateManager chainman{logger, interrupt, chainman_opts, blockman_opts};
 
     node::CacheSizes cache_sizes;
     cache_sizes.block_tree_db = 2 << 20;

@@ -103,6 +103,8 @@ MAIN_FUNCTION
     std::tie(argc, argv) = winArgs.get();
 #endif
 
+    BCLog::Logger logger;
+
     int exit_status;
     std::unique_ptr<interfaces::Init> init = interfaces::MakeWalletInit(argc, argv, exit_status);
     if (!init) {

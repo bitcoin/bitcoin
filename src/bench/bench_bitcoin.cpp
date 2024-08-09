@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <common/args.h>
 #include <crypto/sha256.h>
+#include <logging.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
 
@@ -61,6 +62,7 @@ static uint8_t parsePriorityLevel(const std::string& str) {
 
 int main(int argc, char** argv)
 {
+    BCLog::Logger logger;
     ArgsManager argsman;
     SetupBenchArgs(argsman);
     SHA256AutoDetect();

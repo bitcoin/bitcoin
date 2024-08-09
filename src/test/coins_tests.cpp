@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     CCoinsViewTest base;
     SimulationTest(&base, false);
 
-    CCoinsViewDB db_base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+    CCoinsViewDB db_base{m_logger, {.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
     SimulationTest(&db_base, true);
 }
 
@@ -1078,7 +1078,7 @@ void TestFlushBehavior(
 BOOST_AUTO_TEST_CASE(ccoins_flush_behavior)
 {
     // Create two in-memory caches atop a leveldb view.
-    CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+    CCoinsViewDB base{m_logger, {.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
     std::vector<std::unique_ptr<CCoinsViewCacheTest>> caches;
     caches.push_back(std::make_unique<CCoinsViewCacheTest>(&base));
     caches.push_back(std::make_unique<CCoinsViewCacheTest>(caches.back().get()));
