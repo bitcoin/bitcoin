@@ -918,7 +918,7 @@ public:
 
     std::shared_ptr<CBlockTemplate> createNewBlock2(const CScript& script_pub_key, const BlockCreateOptions& assemble_options) override
     {
-        return BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(script_pub_key);
+        return BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options, m_node}.CreateNewBlock(script_pub_key);
     }
 
     NodeContext* context() override { return &m_node; }
