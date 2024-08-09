@@ -68,6 +68,7 @@ BITCOIN_TESTS =\
   test/amount_tests.cpp \
   test/argsman_tests.cpp \
   test/arith_uint256_tests.cpp \
+  test/bag_test.cpp \
   test/banman_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
