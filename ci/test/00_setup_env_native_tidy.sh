@@ -14,6 +14,7 @@ export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=false
+export RUN_CHECK_DEPS=true
 export RUN_TIDY=true
 export GOAL="install"
 export BITCOIN_CONFIG="CC=clang-${TIDY_LLVM_V} CXX=clang++-${TIDY_LLVM_V} --with-incompatible-bdb --disable-hardening CFLAGS='-O0 -g0' CXXFLAGS='-O0 -g0'"

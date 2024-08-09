@@ -58,6 +58,10 @@ SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z9InitE
 # rpc/external_signer.cpp adds defines node RPC methods but is built as part of the
 # common library. It should be moved to the node library instead.
 SUPPRESS["libbitcoin_common_a-external_signer.o libbitcoin_node_a-server.o _ZN9CRPCTable13appendCommandERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK11CRPCCommand"]=1
+# pubkey.cpp in consensus library currently calls ParseHex in util to set
+# NUMS_H_DATA constant, but this suppression can be dropped when runtime
+# dependency is dropped in https://github.com/bitcoin/bitcoin/issues/30377
+SUPPRESS["libbitcoin_consensus_a-pubkey.o libbitcoin_util_a-strencodings.o _Z11TryParseHexIhESt8optionalISt6vectorIT_SaIS2_EEESt17basic_string_viewIcSt11char_traitsIcEE"]=1
 
 usage() {
    echo "Usage: $(basename "${BASH_SOURCE[0]}") [BUILD_DIR]"
@@ -78,8 +82,8 @@ extract_symbols() {
     local temp_dir="$1"
     for lib in "${!LIBS[@]}"; do
         for lib_path in ${LIBS[$lib]}; do
-            nm -o "$lib_path" | grep ' T ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_exports.txt"
-            nm -o "$lib_path" | grep ' U ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_imports.txt"
+            nm -o "$lib_path" | { grep ' T \| W ' || true; } | awk '{print $3, $1}' >> "${temp_dir}/${lib}_exports.txt"
+            nm -o "$lib_path" | { grep ' U ' || true; } | awk '{print $3, $1}' >> "${temp_dir}/${lib}_imports.txt"
             awk '{print $1}' "${temp_dir}/${lib}_exports.txt" | sort -u > "${temp_dir}/${lib}_exported_symbols.txt"
             awk '{print $1}' "${temp_dir}/${lib}_imports.txt" | sort -u > "${temp_dir}/${lib}_imported_symbols.txt"
         done
