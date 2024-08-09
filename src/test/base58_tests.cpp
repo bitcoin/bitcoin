@@ -26,17 +26,18 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
     UniValue tests = read_json(json_tests::base58_encode_decode);
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
-        std::string strTest = test.write();
+        auto strTest = test.write();
         if (test.size() < 2) // Allow for extra stuff (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
             continue;
         }
-        std::vector<unsigned char> sourcedata = ParseHex(test[0].get_str());
-        std::string base58string = test[1].get_str();
+        auto encodedSource = EncodeBase58(ParseHex(test[0].get_str()));
+        auto base58string = test[1].get_str();
         BOOST_CHECK_MESSAGE(
-                    EncodeBase58(sourcedata) == base58string,
-                    strTest);
+            encodedSource == base58string,
+            strTest << ": got \"" << encodedSource << "\""
+        );
     }
 }
 
@@ -56,8 +57,12 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
         }
         std::vector<unsigned char> expected = ParseHex(test[0].get_str());
         std::string base58string = test[1].get_str();
+
         BOOST_CHECK_MESSAGE(DecodeBase58(base58string, result, 256), strTest);
-        BOOST_CHECK_MESSAGE(result.size() == expected.size() && std::equal(result.begin(), result.end(), expected.begin()), strTest);
+        BOOST_CHECK_MESSAGE(
+            result == expected,
+            strTest << ": got \"" << HexStr(result) << "\""
+        );
     }
 
     BOOST_CHECK(!DecodeBase58("invalid"s, result, 100));
@@ -71,7 +76,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
 
     // check that DecodeBase58 skips whitespace, but still fails with unexpected non-whitespace at the end.
     BOOST_CHECK(!DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t a", result, 3));
-    BOOST_CHECK( DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result, 3));
+    BOOST_CHECK(DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result, 3));
     std::vector<unsigned char> expected = ParseHex("971a55");
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 
@@ -81,19 +86,26 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     BOOST_CHECK(!DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh\0" "0IOl"s, result, 100));
 }
 
-BOOST_AUTO_TEST_CASE(base58_random_encode_decode)
+BOOST_AUTO_TEST_CASE(base58_random_encode_decode_with_optional_spaces)
 {
     for (int n = 0; n < 1000; ++n) {
-        unsigned int len = 1 + InsecureRandBits(8);
-        unsigned int zeroes = InsecureRandBool() ? InsecureRandRange(len + 1) : 0;
+        auto len = 1 + InsecureRandBits(8);
+        auto zeroes = InsecureRandBool() ? InsecureRandRange(len + 1) : 0;
         auto data = Cat(std::vector<unsigned char>(zeroes, '\000'), g_insecure_rand_ctx.randbytes(len - zeroes));
-        auto encoded = EncodeBase58Check(data);
+
+        auto leadingSpaces = InsecureRandBool() ? std::string(InsecureRandRange(10), ' ') : "";
+        auto trailingSpaces = InsecureRandBool() ? std::string(InsecureRandRange(10), ' ') : "";
+        auto encoded = leadingSpaces + EncodeBase58Check(data) + trailingSpaces;
+
         std::vector<unsigned char> decoded;
-        auto ok_too_small = DecodeBase58Check(encoded, decoded, InsecureRandRange(len));
-        BOOST_CHECK(!ok_too_small);
-        auto ok = DecodeBase58Check(encoded, decoded, len + InsecureRandRange(257 - len));
-        BOOST_CHECK(ok);
-        BOOST_CHECK(data == decoded);
+        auto invalidSmallResultLength = InsecureRandRange(len);
+        BOOST_CHECK_MESSAGE(!DecodeBase58Check(encoded, decoded, invalidSmallResultLength), "Decoding should fail for `invalidSmallResultLength` (" << invalidSmallResultLength << ")");
+        auto maxResultLength = len + InsecureRandRange(257 - len);
+        BOOST_CHECK_MESSAGE(DecodeBase58Check(encoded, decoded, maxResultLength), "Decoding should succeed within sufficiently large result length (" << maxResultLength <<")");
+        BOOST_CHECK_MESSAGE(
+            data == decoded,
+            "Decoding `" << encoded << "` as `" << HexStr(decoded) << "` should match `" << HexStr(data) << "`"
+        );
     }
 }
 
