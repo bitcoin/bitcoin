@@ -2,16 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <prevector.h>
+#include <serialize.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
-#include <prevector.h>
+#include <ranges>
 #include <vector>
-
-#include <reverse_iterator.h>
-#include <serialize.h>
-#include <streams.h>
-
 namespace {
 
 template <unsigned int N, typename T>
@@ -47,7 +45,7 @@ public:
             assert(v == real_vector[pos]);
             ++pos;
         }
-        for (const T& v : reverse_iterate(pre_vector)) {
+        for (const T& v : pre_vector | std::views::reverse) {
             --pos;
             assert(v == real_vector[pos]);
         }
@@ -55,7 +53,7 @@ public:
             assert(v == real_vector[pos]);
             ++pos;
         }
-        for (const T& v : reverse_iterate(const_pre_vector)) {
+        for (const T& v : const_pre_vector | std::views::reverse) {
             --pos;
             assert(v == real_vector[pos]);
         }
