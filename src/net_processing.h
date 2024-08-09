@@ -31,6 +31,8 @@ static const bool DEFAULT_PEERBLOOMFILTERS = false;
 static const bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
 static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
+/** Time between pings automatically sent out for latency probing and keepalive */
+static constexpr auto PING_INTERVAL{2min};
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
