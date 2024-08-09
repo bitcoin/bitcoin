@@ -143,7 +143,8 @@ static RPCHelpMan testmempoolaccept()
                             {RPCResult{RPCResult::Type::STR_HEX, "", "transaction wtxid in hex"},
                         }},
                     }},
-                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection string (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection reason (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject-details", /*optional=*/true, "Rejection details (only present when 'allowed' is false and rejection details exist)"},
                 }},
             }
         },
@@ -242,6 +243,7 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("reject-reason", "missing-inputs");
                     } else {
                         result_inner.pushKV("reject-reason", state.GetRejectReason());
+                        if (!state.GetDebugMessage().empty()) result_inner.pushKV("reject-details", state.GetDebugMessage());
                     }
                 }
                 rpc_result.push_back(std::move(result_inner));
