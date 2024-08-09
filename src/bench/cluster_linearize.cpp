@@ -41,8 +41,8 @@ DepGraph<SetType> MakeWideGraph(ClusterIndex ntx)
     return depgraph;
 }
 
-// Construct a difficult graph. These need at least sqrt(2^(n-1)) iterations in the best
-// known algorithms (purely empirically determined).
+// Construct a difficult graph. These need at least sqrt(2^(n-1)) iterations in the implemented
+// algorithm (purely empirically determined).
 template<typename SetType>
 DepGraph<SetType> MakeHardGraph(ClusterIndex ntx)
 {
