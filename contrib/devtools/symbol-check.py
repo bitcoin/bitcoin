@@ -34,11 +34,11 @@ import lief
 MAX_VERSIONS = {
 'GCC':       (4,3,0),
 'GLIBC': {
-    lief.ELF.ARCH.x86_64: (2,31),
-    lief.ELF.ARCH.ARM:    (2,31),
-    lief.ELF.ARCH.AARCH64:(2,31),
-    lief.ELF.ARCH.PPC64:  (2,31),
-    lief.ELF.ARCH.RISCV:  (2,31),
+    lief.ELF.ARCH.x86_64: (2,33),
+    lief.ELF.ARCH.ARM:    (2,33),
+    lief.ELF.ARCH.AARCH64:(2,33),
+    lief.ELF.ARCH.PPC64:  (2,33),
+    lief.ELF.ARCH.RISCV:  (2,33),
 },
 'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
