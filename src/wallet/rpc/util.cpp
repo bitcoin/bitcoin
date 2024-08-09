@@ -7,6 +7,7 @@
 #include <common/url.h>
 #include <rpc/util.h>
 #include <util/any.h>
+#include <util/date/date_parse.h>
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/wallet.h>
@@ -14,7 +15,8 @@
 #include <string_view>
 #include <univalue.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <sstream>
+#include <chrono>
 
 namespace wallet {
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
@@ -22,16 +24,21 @@ const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be 
 
 int64_t ParseISO8601DateTime(const std::string& str)
 {
-    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-    static const std::locale loc(std::locale::classic(),
-        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-    std::istringstream iss(str);
-    iss.imbue(loc);
-    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-    iss >> ptime;
-    if (ptime.is_not_a_date_time() || epoch > ptime)
+    static const auto epoch{std::chrono::system_clock::from_time_t(0)};
+    std::istringstream in{str};
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> tp;
+    in >> chrono_parse::parse("%Y-%m-%dT%H:%M:%SZ", tp);
+    if (in.fail() || tp < epoch)
         return 0;
-    return (ptime - epoch).total_seconds();
+
+    // Guard against broken implementations which can't handle very old time
+    // values. Speficically, libstdc++ (as of v14) is broken at least on x86_64
+    // with times before 1677-09-21T00:12:44Z .
+    auto ret = tp.time_since_epoch().count();
+    if (ret < 0)
+        return 0;
+
+    return ret;
 }
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
