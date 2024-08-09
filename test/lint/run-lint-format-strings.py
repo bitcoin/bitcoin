@@ -43,7 +43,7 @@ def parse_function_calls(function_name, source_code):
     0
     """
     assert type(function_name) is str and type(source_code) is str and function_name
-    lines = [re.sub("// .*", " ", line).strip()
+    lines = [re.sub("//[ !].*", " ", line).strip()
              for line in source_code.split("\n")
              if not line.strip().startswith("#")]
     return re.findall(r"[^a-zA-Z_](?=({}\(.*).*)".format(function_name), " " + " ".join(lines))
@@ -274,7 +274,7 @@ def main():
     parser = argparse.ArgumentParser(description="This program checks that the number of arguments passed "
                                      "to a variadic format string function matches the number of format "
                                      "specifiers in the format string.")
-    parser.add_argument("--skip-arguments", type=int, help="number of arguments before the format string "
+    parser.add_argument("--skip-arguments", type=lambda x: [int(i) for i in x.split('|')], help="number of arguments before the format string "
                         "argument (e.g. 1 in the case of fprintf)", default=0)
     parser.add_argument("function_name", help="function name (e.g. fprintf)", default=None)
     parser.add_argument("file", nargs="*", help="C++ source code file (e.g. foo.cpp)")
@@ -287,12 +287,18 @@ def main():
                 relevant_function_call_str = unescape("".join(parts))[:512]
                 if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
                     continue
-                if len(parts) < 3 + args.skip_arguments:
+                for skip_arguments in args.skip_arguments:
+                    if 1 + skip_arguments >= len(parts):
+                        continue
+                    format_arg = parts[1 + skip_arguments]
+                    if '"' in format_arg:
+                        break
+                if len(parts) < 3 + skip_arguments:
                     exit_code = 1
                     print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
                     continue
-                argument_count = len(parts) - 3 - args.skip_arguments
-                format_str = parse_string_content(parts[1 + args.skip_arguments])
+                argument_count = len(parts) - 3 - skip_arguments
+                format_str = parse_string_content(format_arg)
                 format_specifier_count = count_format_specifiers(format_str)
                 if format_specifier_count != argument_count:
                     exit_code = 1
