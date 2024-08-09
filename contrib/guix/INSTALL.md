@@ -671,6 +671,8 @@ More information: https://github.com/python/cpython/issues/81765
 OpenSSL includes tests that will fail once some certificate has expired.
 The workarounds from the GnuTLS section immediately below can be used.
 
+For openssl-1.1.1l use 2022-05-01 as the date.
+
 ### GnuTLS: test-suite FAIL: status-request-revoked
 
 *The derivation is likely identified by: `/gnu/store/vhphki5sg9xkdhh2pbc8gi6vhpfzryf0-gnutls-3.6.12.drv`*
@@ -705,11 +707,12 @@ authorized.
 This workaround was described [here](https://issues.guix.gnu.org/44559#5).
 
 Basically:
-2. Turn off NTP
-3. Set system time to 2020-10-01
-4. guix build --no-substitutes /gnu/store/vhphki5sg9xkdhh2pbc8gi6vhpfzryf0-gnutls-3.6.12.drv
-5. Set system time back to accurate current time
-6. Turn NTP back on
+
+1. Turn off NTP
+2. Set system time to 2020-10-01
+3. guix build --no-substitutes /gnu/store/vhphki5sg9xkdhh2pbc8gi6vhpfzryf0-gnutls-3.6.12.drv
+4. Set system time back to accurate current time
+5. Turn NTP back on
 
 For example,
 
