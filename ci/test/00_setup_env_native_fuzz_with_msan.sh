@@ -18,7 +18,11 @@ export PACKAGES="ninja-build"
 export DEP_OPTS="DEBUG=1 NO_BDB=1 NO_QT=1 CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
 # _FORTIFY_SOURCE is not compatible with MSAN.
-export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,memory CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE -U_FORTIFY_SOURCE'"
+export BITCOIN_CONFIG="\
+ -DBUILD_FOR_FUZZING=ON \
+ -DSANITIZERS=fuzzer,memory \
+ -DAPPEND_CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE -U_FORTIFY_SOURCE' \
+"
 export USE_MEMORY_SANITIZER="true"
 export RUN_UNIT_TESTS="false"
 export RUN_FUNCTIONAL_TESTS="false"

@@ -67,12 +67,12 @@ jobs:
           echo "TEST_BASE=$(git rev-list -n$((${{ env.MAX_COUNT }} + 1)) --reverse HEAD $EXCLUDE_MERGE_BASE_ANCESTORS | head -1)" >> "$GITHUB_ENV"
       - run: |
           sudo apt-get update
-          sudo apt-get install clang ccache build-essential libtool autotools-dev automake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev qtbase5-dev qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
+          sudo apt-get install clang ccache build-essential cmake pkg-config bsdmainutils python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libminiupnpc-dev libnatpmp-dev qtbase5-dev qttools5-dev qttools5-dev-tools qtwayland5 libqrencode-dev -y
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
           # Use clang++, because it is a bit faster and uses less memory than g++
-          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && ./autogen.sh && CC=clang CXX=clang++ ./configure --with-incompatible-bdb && make clean && make -j $(nproc) check && ./test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
+          git rebase --exec "echo Running test-one-commit on \$( git log -1 ) && CC=clang CXX=clang++ cmake -B build -DBUILD_GUI=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWITH_BDB=ON -DWITH_NATPMP=ON -DWITH_MINIUPNPC=ON -DWITH_USDT=ON && cmake --build build -j $(nproc) && ctest --test-dir build -j $(nproc) && ./build/test/functional/test_runner.py -j $(( $(nproc) * 2 ))" ${{ env.TEST_BASE }}
 
   macos-native-x86_64:
     name: 'macOS 13 native, x86_64, no depends, sqlite only, gui'
@@ -139,17 +139,16 @@ jobs:
     if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
 
     env:
-      CCACHE_MAXSIZE: '200M'
-      CI_CCACHE_VERSION: '4.7.5'
-      CI_QT_CONF: '-release -silent -opensource -confirm-license -opengl desktop -static -static-runtime -mp -qt-zlib -qt-pcre -qt-libpng -nomake examples -nomake tests -nomake tools -no-angle -no-dbus -no-gif -no-gtk -no-ico -no-icu -no-libjpeg -no-libudev -no-sql-sqlite -no-sql-odbc -no-sqlite -no-vulkan -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d -skip qtdeclarative -skip doc -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtimageformats -skip qtlocation -skip qtlottie -skip qtmacextras -skip qtmultimedia -skip qtnetworkauth -skip qtpurchasing -skip qtquick3d -skip qtquickcontrols -skip qtquickcontrols2 -skip qtquicktimeline -skip qtremoteobjects -skip qtscript -skip qtscxml -skip qtsensors -skip qtserialbus -skip qtserialport -skip qtspeech -skip qtsvg -skip qtvirtualkeyboard -skip qtwayland -skip qtwebchannel -skip qtwebengine -skip qtwebglplugin -skip qtwebsockets -skip qtwebview -skip qtx11extras -skip qtxmlpatterns -no-openssl -no-feature-bearermanagement -no-feature-printdialog -no-feature-printer -no-feature-printpreviewdialog -no-feature-printpreviewwidget -no-feature-sql -no-feature-sqlmodel -no-feature-textbrowser -no-feature-textmarkdownwriter -no-feature-textodfwriter -no-feature-xml'
-      CI_QT_DIR: 'qt-everywhere-src-5.15.11'
-      CI_QT_URL: 'https://download.qt.io/official_releases/qt/5.15/5.15.11/single/qt-everywhere-opensource-src-5.15.11.zip'
       PYTHONUTF8: 1
       TEST_RUNNER_TIMEOUT_FACTOR: 40
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Remove non-MSVC tool installations
+        run: |
+          Remove-Item -Path "$env:ProgramFiles/CMake" -Recurse -Force
 
       - name: Configure Developer Command Prompt for Microsoft Visual C++
         # Using microsoft/setup-msbuild is not enough.
@@ -159,94 +158,18 @@ jobs:
 
       - name: Get tool information
         run: |
+          cmake -version | Tee-Object -FilePath "cmake_version"
+          Write-Output "---"
           msbuild -version | Tee-Object -FilePath "msbuild_version"
           $env:VCToolsVersion | Tee-Object -FilePath "toolset_version"
-          $env:CI_QT_URL | Out-File -FilePath "qt_url"
-          $env:CI_QT_CONF | Out-File -FilePath "qt_conf"
           py -3 --version
           Write-Host "PowerShell version $($PSVersionTable.PSVersion.ToString())"
-
-      - name: Restore static Qt cache
-        id: static-qt-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: C:\Qt_static
-          key: ${{ github.job }}-static-qt-${{ hashFiles('msbuild_version', 'qt_url', 'qt_conf') }}
-
-      - name: Build static Qt. Download
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        shell: cmd
-        run: |
-          curl --location --output C:\qt-src.zip %CI_QT_URL%
-          choco install --yes --no-progress jom
-
-      - name: Build static Qt. Expand source archive
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        shell: cmd
-        run: tar -xf C:\qt-src.zip -C C:\
-
-      - name: Build static Qt. Create build directory
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        run: |
-          Rename-Item -Path "C:\$env:CI_QT_DIR" -NewName "C:\qt-src"
-          New-Item -ItemType Directory -Path "C:\qt-src\build"
-
-      - name: Build static Qt. Configure
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        working-directory: C:\qt-src\build
-        shell: cmd
-        run: ..\configure %CI_QT_CONF% -prefix C:\Qt_static
-
-      - name: Build static Qt. Build
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        working-directory: C:\qt-src\build
-        shell: cmd
-        run: jom
-
-      - name: Build static Qt. Install
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        working-directory: C:\qt-src\build
-        shell: cmd
-        run: jom install
-
-      - name: Save static Qt cache
-        if: steps.static-qt-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: C:\Qt_static
-          key: ${{ github.job }}-static-qt-${{ hashFiles('msbuild_version', 'qt_url', 'qt_conf') }}
-
-      - name: Ccache installation cache
-        id: ccache-installation-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:\ProgramData\chocolatey\lib\ccache
-            C:\ProgramData\chocolatey\bin\ccache.exe
-            C:\ccache\cl.exe
-          key: ${{ github.job }}-ccache-installation-${{ env.CI_CCACHE_VERSION }}
-
-      - name: Install Ccache
-        if: steps.ccache-installation-cache.outputs.cache-hit != 'true'
-        run: |
-          choco install --yes --no-progress ccache --version=$env:CI_CCACHE_VERSION
-          New-Item -ItemType Directory -Path "C:\ccache"
-          Copy-Item -Path "$env:ChocolateyInstall\lib\ccache\tools\ccache-$env:CI_CCACHE_VERSION-windows-x86_64\ccache.exe" -Destination "C:\ccache\cl.exe"
-
-      - name: Restore Ccache cache
-        id: ccache-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/AppData/Local/ccache
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-
 
       - name: Using vcpkg with MSBuild
         run: |
           Set-Location "$env:VCPKG_INSTALLATION_ROOT"
+          Add-Content -Path "triplets\x64-windows.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
           Add-Content -Path "triplets\x64-windows-static.cmake" -Value "set(VCPKG_BUILD_TYPE release)"
-          .\vcpkg.exe --vcpkg-root "$env:VCPKG_INSTALLATION_ROOT" integrate install
-          git rev-parse HEAD | Tee-Object -FilePath "$env:GITHUB_WORKSPACE\vcpkg_commit"
 
       - name: vcpkg tools cache
         uses: actions/cache@v4
@@ -254,46 +177,41 @@ jobs:
           path: C:/vcpkg/downloads/tools
           key: ${{ github.job }}-vcpkg-tools
 
-      - name: vcpkg binary cache
-        uses: actions/cache@v4
+      - name: Restore vcpkg binary cache
+        uses: actions/cache/restore@v4
+        id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('vcpkg_commit', 'msbuild_version', 'toolset_version', 'build_msvc/vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
-      - name: Generate project files
-        run: py -3 build_msvc\msvc-autogen.py
+      - name: Generate build system
+        run: |
+          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWERROR=ON
+
+      - name: Save vcpkg binary cache
+        uses: actions/cache/save@v4
+        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
       - name: Build
-        shell: cmd
+        working-directory: build
         run: |
-          ccache --zero-stats
-          msbuild build_msvc\bitcoin.sln -property:CLToolPath=C:\ccache;CLToolExe=cl.exe;UseMultiToolTask=true;Configuration=Release -maxCpuCount -verbosity:minimal -noLogo
+          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
 
-      - name: Ccache stats
-        run: ccache --show-stats
-
-      - name: Save Ccache cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
-        with:
-          path: ~/AppData/Local/ccache
-          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-
-      - name: Run unit tests
-        run: src\test_bitcoin.exe -l test_suite
-
-      - name: Run benchmarks
-        run: src\bench_bitcoin.exe -sanity-check
-
-      - name: Run util tests
-        run: py -3 test\util\test_runner.py
-
-      - name: Run rpcauth test
-        run: py -3 test\util\rpcauth-test.py
+      - name: Run test suite
+        working-directory: build
+        run: |
+          ctest -j $env:NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
+        working-directory: build
         env:
+          BITCOIND: '${{ github.workspace }}\build\src\Release\bitcoind.exe'
+          BITCOINCLI: '${{ github.workspace }}\build\src\Release\bitcoin-cli.exe'
+          BITCOINUTIL: '${{ github.workspace }}\build\src\Release\bitcoin-util.exe'
+          BITCOINWALLET: '${{ github.workspace }}\build\src\Release\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         shell: cmd
         run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
@@ -306,8 +224,9 @@ jobs:
           git log -1
 
       - name: Run fuzz binaries
+        working-directory: build
         env:
-          BITCOINFUZZ: "${{ github.workspace}}\\src\\fuzz.exe"
+          BITCOINFUZZ: '${{ github.workspace }}\build\src\test\fuzz\Release\fuzz.exe'
         shell: cmd
         run: py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_seed_corpus
 

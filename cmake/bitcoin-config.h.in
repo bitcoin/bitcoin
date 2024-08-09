@@ -1,0 +1,153 @@
+// Copyright (c) 2023-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit/.
+
+#ifndef BITCOIN_CONFIG_H
+#define BITCOIN_CONFIG_H
+
+/* Version Build */
+#define CLIENT_VERSION_BUILD @CLIENT_VERSION_BUILD@
+
+/* Version is release */
+#define CLIENT_VERSION_IS_RELEASE @CLIENT_VERSION_IS_RELEASE@
+
+/* Major version */
+#define CLIENT_VERSION_MAJOR @CLIENT_VERSION_MAJOR@
+
+/* Minor version */
+#define CLIENT_VERSION_MINOR @CLIENT_VERSION_MINOR@
+
+/* Copyright holder(s) before %s replacement */
+#define COPYRIGHT_HOLDERS "@COPYRIGHT_HOLDERS@"
+
+/* Copyright holder(s) */
+#define COPYRIGHT_HOLDERS_FINAL "@COPYRIGHT_HOLDERS_FINAL@"
+
+/* Replacement for %s in copyright holders string */
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "@PACKAGE_NAME@"
+
+/* Copyright year */
+#define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
+
+/* Define this symbol to build code that uses ARMv8 SHA-NI intrinsics */
+#cmakedefine ENABLE_ARM_SHANI 1
+
+/* Define this symbol to build code that uses AVX2 intrinsics */
+#cmakedefine ENABLE_AVX2 1
+
+/* Define if external signer support is enabled */
+#cmakedefine ENABLE_EXTERNAL_SIGNER 1
+
+/* Define this symbol to build code that uses SSE4.1 intrinsics */
+#cmakedefine ENABLE_SSE41 1
+
+/* Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing
+   */
+#cmakedefine ENABLE_TRACING 1
+
+/* Define to 1 to enable wallet functions. */
+#cmakedefine ENABLE_WALLET 1
+
+/* Define this symbol to build code that uses x86 SHA-NI intrinsics */
+#cmakedefine ENABLE_X86_SHANI 1
+
+/* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
+   */
+#cmakedefine01 HAVE_DECL_FORK
+
+/* Define to 1 if you have the declaration of `freeifaddrs', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_FREEIFADDRS
+
+/* Define to 1 if you have the declaration of `getifaddrs', and to 0 if you
+   don't. */
+#cmakedefine01 HAVE_DECL_GETIFADDRS
+
+/* Define to 1 if you have the declaration of `pipe2', and to 0 if you don't.
+   */
+#cmakedefine01 HAVE_DECL_PIPE2
+
+/* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
+   */
+#cmakedefine01 HAVE_DECL_SETSID
+
+/* Define this symbol if evhttp_connection_get_peer expects const char** */
+#cmakedefine HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR 1
+
+/* Define to 1 if fdatasync is available. */
+#cmakedefine HAVE_FDATASYNC 1
+
+/* Define this symbol if the BSD getentropy system call is available with
+   sys/random.h */
+#cmakedefine HAVE_GETENTROPY_RAND 1
+
+/* Define this symbol if the Linux getrandom function call is available */
+#cmakedefine HAVE_GETRANDOM 1
+
+/* Define this symbol if you have malloc_info */
+#cmakedefine HAVE_MALLOC_INFO 1
+
+/* Define this symbol if you have mallopt with M_ARENA_MAX */
+#cmakedefine HAVE_MALLOPT_ARENA_MAX 1
+
+/* Define to 1 if O_CLOEXEC flag is available. */
+#cmakedefine01 HAVE_O_CLOEXEC
+
+/* Define this symbol if you have posix_fallocate */
+#cmakedefine HAVE_POSIX_FALLOCATE 1
+
+/* Define this symbol if platform supports unix domain sockets */
+#cmakedefine HAVE_SOCKADDR_UN 1
+
+/* Define this symbol to build code that uses getauxval */
+#cmakedefine HAVE_STRONG_GETAUXVAL 1
+
+/* Define this symbol if the BSD sysctl() is available */
+#cmakedefine HAVE_SYSCTL 1
+
+/* Define this symbol if the BSD sysctl(KERN_ARND) is available */
+#cmakedefine HAVE_SYSCTL_ARND 1
+
+/* Define to 1 if std::system or ::wsystem is available. */
+#cmakedefine HAVE_SYSTEM 1
+
+/* Define to 1 if you have the <sys/prctl.h> header file. */
+#cmakedefine HAVE_SYS_PRCTL_H 1
+
+/* Define to 1 if you have the <sys/resources.h> header file. */
+#cmakedefine HAVE_SYS_RESOURCES_H 1
+
+/* Define to 1 if you have the <sys/vmmeter.h> header file. */
+#cmakedefine HAVE_SYS_VMMETER_H 1
+
+/* Define to 1 if you have the <vm/vm_param.h> header file. */
+#cmakedefine HAVE_VM_VM_PARAM_H 1
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "@PACKAGE_NAME@"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL "@PROJECT_HOMEPAGE_URL@"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@PACKAGE_VERSION@"
+
+/* Define to 1 if strerror_r returns char *. */
+#cmakedefine STRERROR_R_CHAR_P 1
+
+/* Define if BDB support should be compiled in */
+#cmakedefine USE_BDB 1
+
+/* Define if dbus support should be compiled in */
+#cmakedefine USE_DBUS 1
+
+/* Define if QR support should be compiled in */
+#cmakedefine USE_QRCODE 1
+
+/* Define if sqlite support should be compiled in */
+#cmakedefine USE_SQLITE 1
+
+#endif //BITCOIN_CONFIG_H

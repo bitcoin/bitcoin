@@ -10,9 +10,7 @@ This guide describes how to build bitcoind, command-line utilities, and GUI on O
 Run the following as root to install the base dependencies for building.
 
 ```bash
-pkg_add bash git gmake libevent libtool boost
-# Select the newest version of the following packages:
-pkg_add autoconf automake python
+pkg_add git cmake boost libevent
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.
@@ -31,7 +29,7 @@ It is not necessary to build wallet functionality to run either `bitcoind` or `b
 
 ###### Descriptor Wallet Support
 
-`sqlite3` is required to support [descriptor wallets](descriptors.md).
+SQLite is required to support [descriptor wallets](descriptors.md).
 
 ``` bash
 pkg_add sqlite3
@@ -48,19 +46,20 @@ Refer to [depends/README.md](/depends/README.md) for detailed instructions.
 ```bash
 gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
 ...
-to: /path/to/bitcoin/depends/x86_64-unknown-openbsd
+to: /path/to/bitcoin/depends/*-unknown-openbsd*
 ```
 
 Then set `BDB_PREFIX`:
 
 ```bash
-export BDB_PREFIX="/path/to/bitcoin/depends/x86_64-unknown-openbsd"
+export BDB_PREFIX="[path displayed above]"
 ```
 
 #### GUI Dependencies
 ###### Qt5
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, Qt 5 is required.
+Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
 pkg_add qtbase qttools
@@ -68,10 +67,14 @@ pkg_add qtbase qttools
 
 ###### libqrencode
 
-The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install `libqrencode`. Skip if not using the GUI or don't want QR code functionality.
+The GUI will be able to encode addresses in QR codes unless this feature is explicitly disabled. To install libqrencode, run:
+
 ```bash
 pkg_add libqrencode
 ```
+
+Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
+
 ---
 
 #### Notifications
@@ -82,47 +85,41 @@ Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, 
 pkg_add zeromq
 ```
 
-## Building Bitcoin Core
+#### Test Suite Dependencies
+There is an included test suite that is useful for testing code changes when developing.
+To run the test suite (recommended), you will need to have Python 3 installed:
 
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
-
-Preparation:
 ```bash
-
-# Adapt the following for the version you installed (major.minor only):
-export AUTOCONF_VERSION=2.71
-export AUTOMAKE_VERSION=1.16
-
-./autogen.sh
+pkg_add install python  # Select the newest version of the package.
 ```
+
+## Building Bitcoin Core
 
 ### 1. Configuration
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
 ##### Descriptor Wallet and GUI:
-This enables the GUI and descriptor wallet support, assuming `sqlite` and `qt5` are installed.
+This enables descriptor wallet support and the GUI, assuming SQLite and Qt 5 are installed.
 
 ```bash
-./configure MAKE=gmake
+cmake -B build -DWITH_SQLITE=ON -DBUILD_GUI=ON
 ```
 
+Run `cmake -B build -LH` to see the full list of available options.
+
 ##### Descriptor & Legacy Wallet. No GUI:
-This enables support for both wallet types and disables the GUI:
+This enables support for both wallet types:
 
 ```bash
-./configure --with-gui=no \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
-    BDB_CFLAGS="-I${BDB_PREFIX}/include" \
-    MAKE=gmake
+cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include"
 ```
 
 ### 2. Compile
-**Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
 ```bash
-gmake # use "-j N" for N parallel jobs
-gmake check # Run tests if Python 3 is available
+cmake --build build     # Use "-j N" for N parallel jobs.
+ctest --test-dir build  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 ```
 
 ## Resource limits

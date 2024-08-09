@@ -1,0 +1,174 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+# This file is expected to be highly volatile and may still change substantially.
+
+# If CMAKE_SYSTEM_NAME is set within a toolchain file, CMake will also
+# set CMAKE_CROSSCOMPILING to TRUE, even if CMAKE_SYSTEM_NAME matches
+# CMAKE_HOST_SYSTEM_NAME. To avoid potential misconfiguration of CMake,
+# it is best not to touch CMAKE_SYSTEM_NAME unless cross-compiling is
+# intended.
+if(@depends_crosscompiling@)
+  set(CMAKE_SYSTEM_NAME @host_system_name@)
+  set(CMAKE_SYSTEM_VERSION @host_system_version@)
+  set(CMAKE_SYSTEM_PROCESSOR @host_arch@)
+endif()
+
+if(NOT DEFINED CMAKE_C_FLAGS_INIT)
+  set(CMAKE_C_FLAGS_INIT "@CFLAGS@")
+endif()
+if(NOT DEFINED CMAKE_C_FLAGS_RELWITHDEBINFO_INIT)
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO_INIT "@CFLAGS_RELEASE@")
+endif()
+if(NOT DEFINED CMAKE_C_FLAGS_DEBUG_INIT)
+  set(CMAKE_C_FLAGS_DEBUG_INIT "@CFLAGS_DEBUG@")
+endif()
+
+if(NOT DEFINED CMAKE_C_COMPILER)
+  set(CMAKE_C_COMPILER @CC@)
+endif()
+
+if(NOT DEFINED CMAKE_CXX_FLAGS_INIT)
+  set(CMAKE_CXX_FLAGS_INIT "@CXXFLAGS@")
+  set(CMAKE_OBJCXX_FLAGS_INIT "@CXXFLAGS@")
+endif()
+if(NOT DEFINED CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT)
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "@CXXFLAGS_RELEASE@")
+  set(CMAKE_OBJCXX_FLAGS_RELWITHDEBINFO_INIT "@CXXFLAGS_RELEASE@")
+endif()
+if(NOT DEFINED CMAKE_CXX_FLAGS_DEBUG_INIT)
+  set(CMAKE_CXX_FLAGS_DEBUG_INIT "@CXXFLAGS_DEBUG@")
+  set(CMAKE_OBJCXX_FLAGS_DEBUG_INIT "@CXXFLAGS_DEBUG@")
+endif()
+
+if(NOT DEFINED CMAKE_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER @CXX@)
+  set(CMAKE_OBJCXX_COMPILER ${CMAKE_CXX_COMPILER})
+endif()
+
+# The DEPENDS_COMPILE_DEFINITIONS* variables are to be treated as lists.
+set(DEPENDS_COMPILE_DEFINITIONS @CPPFLAGS@)
+set(DEPENDS_COMPILE_DEFINITIONS_RELWITHDEBINFO @CPPFLAGS_RELEASE@)
+set(DEPENDS_COMPILE_DEFINITIONS_DEBUG @CPPFLAGS_DEBUG@)
+
+if(NOT DEFINED CMAKE_EXE_LINKER_FLAGS_INIT)
+  set(CMAKE_EXE_LINKER_FLAGS_INIT "@LDFLAGS@")
+endif()
+if(NOT DEFINED CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO_INIT)
+  set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO_INIT "@LDFLAGS_RELEASE@")
+endif()
+if(NOT DEFINED CMAKE_EXE_LINKER_FLAGS_DEBUG_INIT)
+  set(CMAKE_EXE_LINKER_FLAGS_DEBUG_INIT "@LDFLAGS_DEBUG@")
+endif()
+
+set(CMAKE_AR "@AR@")
+set(CMAKE_RANLIB "@RANLIB@")
+set(CMAKE_STRIP "@STRIP@")
+set(CMAKE_OBJCOPY "@OBJCOPY@")
+set(CMAKE_OBJDUMP "@OBJDUMP@")
+
+# Using our own built dependencies should not be
+# affected by a potentially random environment.
+set(CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH OFF)
+
+set(CMAKE_FIND_ROOT_PATH "@depends_prefix@")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+set(QT_TRANSLATIONS_DIR "@depends_prefix@/translations")
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
+  # The find_package(Qt ...) function internally uses find_library()
+  # calls for all dependencies to ensure their availability.
+  # In turn, the find_library() inspects the well-known locations
+  # on the file system; therefore, a hint is required.
+  set(CMAKE_FRAMEWORK_PATH "@OSX_SDK@/System/Library/Frameworks")
+endif()
+
+
+# Customize pkg-config behaviour.
+cmake_path(APPEND CMAKE_FIND_ROOT_PATH "lib" "pkgconfig" OUTPUT_VARIABLE pkg_config_path)
+set(ENV{PKG_CONFIG_PATH} ${pkg_config_path})
+set(ENV{PKG_CONFIG_LIBDIR} ${pkg_config_path})
+unset(pkg_config_path)
+set(PKG_CONFIG_ARGN --static)
+
+
+# Set configuration options for the main build system.
+set(qt_packages @qt_packages@)
+if("${qt_packages}" STREQUAL "")
+  set(BUILD_GUI OFF CACHE BOOL "")
+else()
+  set(BUILD_GUI ON CACHE BOOL "")
+endif()
+
+set(qrencode_packages @qrencode_packages@)
+if("${qrencode_packages}" STREQUAL "")
+  set(WITH_QRENCODE OFF CACHE BOOL "")
+else()
+  set(WITH_QRENCODE ON CACHE BOOL "")
+endif()
+
+set(zmq_packages @zmq_packages@)
+if("${zmq_packages}" STREQUAL "")
+  set(WITH_ZMQ OFF CACHE BOOL "")
+else()
+  set(WITH_ZMQ ON CACHE BOOL "")
+endif()
+
+set(wallet_packages @wallet_packages@)
+if("${wallet_packages}" STREQUAL "")
+  set(ENABLE_WALLET OFF CACHE BOOL "")
+else()
+  set(ENABLE_WALLET ON CACHE BOOL "")
+endif()
+
+set(bdb_packages @bdb_packages@)
+if("${wallet_packages}" STREQUAL "" OR "${bdb_packages}" STREQUAL "")
+  set(WITH_BDB OFF CACHE BOOL "")
+else()
+  set(WITH_BDB ON CACHE BOOL "")
+endif()
+
+set(sqlite_packages @sqlite_packages@)
+if("${wallet_packages}" STREQUAL "" OR "${sqlite_packages}" STREQUAL "")
+  set(WITH_SQLITE OFF CACHE BOOL "")
+else()
+  set(WITH_SQLITE ON CACHE BOOL "")
+endif()
+
+set(upnp_packages @upnp_packages@)
+if("${upnp_packages}" STREQUAL "")
+  set(WITH_MINIUPNPC OFF CACHE BOOL "")
+else()
+  set(WITH_MINIUPNPC ON CACHE BOOL "")
+endif()
+
+set(natpmp_packages @natpmp_packages@)
+if("${natpmp_packages}" STREQUAL "")
+  set(WITH_NATPMP OFF CACHE BOOL "")
+else()
+  set(WITH_NATPMP ON CACHE BOOL "")
+endif()
+
+set(usdt_packages @usdt_packages@)
+if("${usdt_packages}" STREQUAL "")
+  set(WITH_USDT OFF CACHE BOOL "")
+else()
+  set(WITH_USDT ON CACHE BOOL "")
+endif()
+
+if("@no_harden@")
+  set(ENABLE_HARDENING OFF CACHE BOOL "")
+else()
+  set(ENABLE_HARDENING ON CACHE BOOL "")
+endif()
+
+if("@multiprocess@" STREQUAL "1")
+  set(WITH_MULTIPROCESS ON CACHE BOOL "")
+  set(LibmultiprocessNative_DIR "${CMAKE_FIND_ROOT_PATH}/native/lib/cmake/Libmultiprocess" CACHE PATH "")
+else()
+  set(WITH_MULTIPROCESS OFF CACHE BOOL "")
+endif()
