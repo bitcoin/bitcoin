@@ -316,7 +316,14 @@ static RPCHelpMan addnode()
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
                     {"v2transport", RPCArg::Type::BOOL, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
                 },
-                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "operation", "The operation called (onetry/add/remove)"},
+                        {RPCResult::Type::STR, "result", "The result of the operation (success/failed)"},
+                        {RPCResult::Type::STR, "address", "The address of the peer"},
+                    }
+                },
                 RPCExamples{
                     HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\" true")
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\" true")
@@ -325,42 +332,41 @@ static RPCHelpMan addnode()
 {
     const auto command{self.Arg<std::string>("command")};
     if (command != "onetry" && command != "add" && command != "remove") {
-        throw std::runtime_error(
-            self.ToString());
+        throw std::runtime_error(self.ToString());
     }
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
-
     const auto node_arg{self.Arg<std::string>("node")};
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
     bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
 
-    if (use_v2transport && !node_v2transport) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: v2transport requested but not enabled (see -v2transport)");
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("address", node_arg);
+    result.pushKV("operation", command);
+
+    if (command != "remove" && use_v2transport && !node_v2transport) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Adding v2transport connections requires -v2transport init flag to be set.");
     }
 
-    if (command == "onetry")
-    {
-        CAddress addr;
-        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, node_arg.c_str(), ConnectionType::MANUAL, use_v2transport);
-        return UniValue::VNULL;
-    }
+    std::string error_message;
 
-    if (command == "add")
-    {
+    if (command == "onetry") {
+        if (!connman.OpenNetworkConnection(CAddress(), false, {}, node_arg.c_str(), ConnectionType::MANUAL, use_v2transport)) {
+            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Unable to open connection");
+        }
+    } else if (command == "add") {
         if (!connman.AddNode({node_arg, use_v2transport})) {
-            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
+            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Node already added");
         }
-    }
-    else if (command == "remove")
-    {
+    } else if (command == "remove") {
         if (!connman.RemoveAddedNode(node_arg)) {
-            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node could not be removed. It has not been added previously.");
+            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Node could not be removed. It has not been added previously.");
         }
     }
 
-    return UniValue::VNULL;
+    result.pushKV("result", "success");
+    return result;
 },
     };
 }
@@ -415,7 +421,7 @@ static RPCHelpMan addconnection()
 
     const bool success = connman.AddConnection(address, conn_type, use_v2transport);
     if (!success) {
-        throw JSONRPCError(RPC_CLIENT_NODE_CAPACITY_REACHED, "Error: Already at capacity for specified connection type.");
+        throw JSONRPCError(RPC_CLIENT_PEER_NOT_CONNECTED, "Error: Unable to open connection");
     }
 
     UniValue info(UniValue::VOBJ);
