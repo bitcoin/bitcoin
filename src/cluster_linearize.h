@@ -563,10 +563,31 @@ class SearchCandidateFinder
 {
     /** Internal RNG. */
     InsecureRandomContext m_rng;
-    /** Internal dependency graph for the cluster. */
-    const DepGraph<SetType>& m_depgraph;
-    /** Which transactions are left to do (sorted indices). */
+    /** m_sorted_to_original[i] is the original position that sorted transaction position i had. */
+    std::vector<ClusterIndex> m_sorted_to_original;
+    /** m_original_to_sorted[i] is the sorted position original transaction position i has. */
+    std::vector<ClusterIndex> m_original_to_sorted;
+    /** Internal dependency graph for the cluster (with transactions in decreasing individual
+     *  feerate order). */
+    DepGraph<SetType> m_sorted_depgraph;
+    /** Which transactions are left to do (indices in m_sorted_depgraph's order). */
     SetType m_todo;
+
+    /** Given a set of transactions with sorted indices, get their original indices. */
+    SetType SortedToOriginal(const SetType& arg) const noexcept
+    {
+        SetType ret;
+        for (auto pos : arg) ret.Set(m_sorted_to_original[pos]);
+        return ret;
+    }
+
+    /** Given a set of transactions with original indices, get their sorted indices. */
+    SetType OriginalToSorted(const SetType& arg) const noexcept
+    {
+        SetType ret;
+        for (auto pos : arg) ret.Set(m_original_to_sorted[pos]);
+        return ret;
+    }
 
 public:
     /** Construct a candidate finder for a graph.
@@ -574,12 +595,28 @@ public:
      * @param[in] depgraph   Dependency graph for the to-be-linearized cluster.
      * @param[in] rng_seed   A random seed to control the search order.
      *
-     * Complexity: O(1).
+     * Complexity: O(N^2) where N=depgraph.Count().
      */
-    SearchCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND, uint64_t rng_seed) noexcept :
+    SearchCandidateFinder(const DepGraph<SetType>& depgraph, uint64_t rng_seed) noexcept :
         m_rng(rng_seed),
-        m_depgraph(depgraph),
-        m_todo(SetType::Fill(depgraph.TxCount())) {}
+        m_sorted_to_original(depgraph.TxCount()),
+        m_original_to_sorted(depgraph.TxCount()),
+        m_todo(SetType::Fill(depgraph.TxCount()))
+    {
+        // Determine reordering mapping, by sorting by decreasing feerate.
+        std::iota(m_sorted_to_original.begin(), m_sorted_to_original.end(), ClusterIndex{0});
+        std::sort(m_sorted_to_original.begin(), m_sorted_to_original.end(), [&](auto a, auto b) {
+            auto feerate_cmp = depgraph.FeeRate(a) <=> depgraph.FeeRate(b);
+            if (feerate_cmp == 0) return a < b;
+            return feerate_cmp > 0;
+        });
+        // Compute reverse mapping.
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            m_original_to_sorted[m_sorted_to_original[i]] = i;
+        }
+        // Compute reordered dependency graph.
+        m_sorted_depgraph = DepGraph(depgraph, m_original_to_sorted);
+    }
 
     /** Check whether any unlinearized transactions remain. */
     bool AllDone() const noexcept
@@ -607,6 +644,9 @@ public:
     std::pair<SetInfo<SetType>, uint64_t> FindCandidateSet(uint64_t max_iterations, SetInfo<SetType> best) noexcept
     {
         Assume(!AllDone());
+
+        // Convert the provided best to internal sorted indices.
+        best.transactions = OriginalToSorted(best.transactions);
 
         /** Type for work queue items. */
         struct WorkItem
@@ -641,12 +681,12 @@ public:
         // span multiple components.
         auto to_cover = m_todo;
         do {
-            auto component = m_depgraph.FindConnectedComponent(to_cover);
+            auto component = m_sorted_depgraph.FindConnectedComponent(to_cover);
             to_cover -= component;
             // If best is not provided, set it to the first component, so that during the work
             // processing loop below, and during the add_fn/split_fn calls, we do not need to deal
             // with the best=empty case.
-            if (best.feerate.IsEmpty()) best = SetInfo(m_depgraph, component);
+            if (best.feerate.IsEmpty()) best = SetInfo(m_sorted_depgraph, component);
             queue.emplace_back(/*inc=*/SetInfo<SetType>{}, /*und=*/std::move(component));
         } while (to_cover.Any());
 
@@ -695,13 +735,13 @@ public:
             const ClusterIndex split = elem.und.First();
 
             // Add a work item corresponding to exclusion of the split transaction.
-            const auto& desc = m_depgraph.Descendants(split);
+            const auto& desc = m_sorted_depgraph.Descendants(split);
             add_fn(/*inc=*/elem.inc,
                    /*und=*/elem.und - desc);
 
             // Add a work item corresponding to inclusion of the split transaction.
-            const auto anc = m_depgraph.Ancestors(split) & m_todo;
-            add_fn(/*inc=*/elem.inc.Add(m_depgraph, anc),
+            const auto anc = m_sorted_depgraph.Ancestors(split) & m_todo;
+            add_fn(/*inc=*/elem.inc.Add(m_sorted_depgraph, anc),
                    /*und=*/elem.und - anc);
 
             // Account for the performed split.
@@ -744,7 +784,9 @@ public:
             split_fn(std::move(elem));
         }
 
-        // Return the found best set and the number of iterations performed.
+        // Return the found best set (converted to the original transaction indices), and the
+        // number of iterations performed.
+        best.transactions = SortedToOriginal(best.transactions);
         return {std::move(best), max_iterations - iterations_left};
     }
 
@@ -754,9 +796,10 @@ public:
      */
     void MarkDone(const SetType& done) noexcept
     {
-        Assume(done.Any());
-        Assume(done.IsSubsetOf(m_todo));
-        m_todo -= done;
+        const auto done_sorted = OriginalToSorted(done);
+        Assume(done_sorted.Any());
+        Assume(done_sorted.IsSubsetOf(m_todo));
+        m_todo -= done_sorted;
     }
 };
 
