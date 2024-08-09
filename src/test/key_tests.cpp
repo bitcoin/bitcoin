@@ -312,11 +312,11 @@ BOOST_AUTO_TEST_CASE(bip340_test_vectors)
         // In iteration i=0 we tweak with empty Merkle tree.
         for (int i = 0; i < 10; ++i) {
             uint256 merkle_root;
-            if (i) merkle_root = InsecureRand256();
+            if (i) merkle_root = m_rng.rand256();
             auto tweaked = pubkey.CreateTapTweak(i ? &merkle_root : nullptr);
             BOOST_CHECK(tweaked);
             XOnlyPubKey tweaked_key = tweaked->first;
-            aux256 = InsecureRand256();
+            aux256 = m_rng.rand256();
             bool ok = key.SignSchnorr(msg256, sig64, &merkle_root, aux256);
             BOOST_CHECK(ok);
             BOOST_CHECK(tweaked_key.VerifySchnorr(msg256, sig64));
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(key_ellswift)
         CKey key = DecodeSecret(secret);
         BOOST_CHECK(key.IsValid());
 
-        uint256 ent32 = InsecureRand256();
+        uint256 ent32 = m_rng.rand256();
         auto ellswift = key.EllSwiftCreate(AsBytes(Span{ent32}));
 
         CPubKey decoded_pubkey = ellswift.Decode();
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(key_schnorr_tweak_smoke_test)
 
     CKey key;
     key.MakeNewKey(true);
-    uint256 merkle_root = InsecureRand256();
+    uint256 merkle_root = m_rng.rand256();
 
     // secp256k1 functions
     secp256k1_keypair keypair;

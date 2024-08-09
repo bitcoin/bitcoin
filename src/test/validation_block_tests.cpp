@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -133,8 +133,8 @@ void MinerTestingSetup::BuildChain(const uint256& root, int height, const unsign
 {
     if (height <= 0 || blocks.size() >= max_size) return;
 
-    bool gen_invalid = InsecureRandRange(100) < invalid_rate;
-    bool gen_fork = InsecureRandRange(100) < branch_rate;
+    bool gen_invalid = m_rng.randrange(100U) < invalid_rate;
+    bool gen_fork = m_rng.randrange(100U) < branch_rate;
 
     const std::shared_ptr<const CBlock> pblock = gen_invalid ? BadBlock(root) : GoodBlock(root);
     blocks.push_back(pblock);

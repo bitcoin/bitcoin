@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     BOOST_ERROR("Tx unexpectedly failed with flag " << name << " unset: " << strTest);
                 }
                 // Removing random combinations of flags
-                flags = TrimFlags(~(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size())));
+                flags = TrimFlags(~(verify_flags | (unsigned int)m_rng.randbits(mapFlagNames.size())));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Tx unexpectedly failed with random flags " << ToString(flags) << ": " << strTest);
                 }
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     BOOST_ERROR("Tx unexpectedly passed with flag " << name << " set: " << strTest);
                 }
                 // Adding random combinations of flags
-                flags = FillFlags(verify_flags | (unsigned int)InsecureRandBits(mapFlagNames.size()));
+                flags = FillFlags(verify_flags | (unsigned int)m_rng.randbits(mapFlagNames.size()));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Tx unexpectedly passed with random flags " << name << ": " << strTest);
                 }

@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
 {
     XOnlyPubKey x_not_on_curve;
     do {
-        x_not_on_curve = XOnlyPubKey(g_insecure_rand_ctx.randbytes(32));
+        x_not_on_curve = XOnlyPubKey(m_rng.randbytes(32));
     } while (x_not_on_curve.IsFullyValid());
 
     // Check that P2PK script with uncompressed pubkey [=> OP_PUSH65 <0x04 .....> OP_CHECKSIG]

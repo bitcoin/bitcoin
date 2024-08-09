@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <string>
 
-FastRandomContext g_insecure_rand_ctx;
+FastRandomContext g_rng;
 
 extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
@@ -34,5 +34,5 @@ void SeedRandomForTest(SeedRand seedtype)
     const uint256& seed{seedtype == SeedRand::SEED ? ctx_seed : uint256::ZERO};
     LogPrintf("%s: Setting random seed for current tests to %s=%s\n", __func__, RANDOM_CTX_SEED, seed.GetHex());
     MakeRandDeterministicDANGEROUS(seed);
-    g_insecure_rand_ctx.Reseed(GetRandHash());
+    g_rng.Reseed(GetRandHash());
 }
