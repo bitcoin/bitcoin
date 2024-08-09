@@ -366,6 +366,8 @@ struct WalletAddress
     wallet::AddressPurpose purpose;
     std::string name;
 
+    WalletAddress() = default;
+
     WalletAddress(CTxDestination dest, wallet::isminetype is_mine, wallet::AddressPurpose purpose, std::string name)
         : dest(std::move(dest)), is_mine(is_mine), purpose(std::move(purpose)), name(std::move(name))
     {

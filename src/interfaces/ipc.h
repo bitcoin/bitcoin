@@ -41,6 +41,11 @@ class Init;
 //!    to make other proxy objects calling other remote interfaces. It can also
 //!    destroy the initial interfaces::Init object to close the connection and
 //!    shut down the spawned process.
+//!
+//! When connecting to an existing process, the steps are similar to spawning a
+//! new process, except a socket is created instead of a socketpair, and
+//! destroying an Init interface doesn't end the process, since there can be
+//! multiple connections.
 class Ipc
 {
 public:
@@ -54,6 +59,17 @@ public:
     //! true. If this is not a spawned child process, return false.
     virtual bool startSpawnedProcess(int argc, char* argv[], int& exit_status) = 0;
 
+    //! Connect to a socket address and make a client interface proxy object
+    //! using provided callback. connectAddress returns true if a connection was
+    //! established, returns false if a connection was refused but not required
+    //! ("auto" address), and throws an exception if there was an unexpected
+    //! error.
+    virtual std::unique_ptr<Init> connectAddress(std::string& address) = 0;
+
+    //! Connect to a socket address and make a client interface proxy object
+    //! using provided callback.
+    virtual bool listenAddress(std::string& address, std::string& error) = 0;
+
     //! Add cleanup callback to remote interface that will run when the
     //! interface is deleted.
     template<typename Interface>
@@ -65,6 +81,9 @@ public:
     //! IPC context struct accessor (see struct definition for more description).
     virtual ipc::Context& context() = 0;
 
+    //! Suffix for debug.log to avoid output clashes from different processes.
+    virtual const char* logSuffix() = 0;
+
 protected:
     //! Internal implementation of public addCleanup method (above) as a
     //! type-erased virtual function, since template functions can't be virtual.
@@ -72,7 +91,7 @@ protected:
 };
 
 //! Return implementation of Ipc interface.
-std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* process_argv0, Init& init);
+std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* log_suffix, const char* process_argv0, Init& init);
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_IPC_H

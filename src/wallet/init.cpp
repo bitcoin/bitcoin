@@ -9,6 +9,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <interfaces/wallet.h>
 #include <net.h>
 #include <node/context.h>
@@ -130,6 +131,13 @@ void WalletInit::Construct(NodeContext& node) const
         return;
     }
     auto wallet_loader = node.init->makeWalletLoader(*node.chain);
+    if (!wallet_loader) {
+        // If the current process doesn't have wallet support linked in, spawn
+        // a new wallet process.
+        auto init = node.init->ipc()->spawnProcess("bitcoin-wallet");
+        wallet_loader = init->makeWalletLoader(*node.chain);
+        node.init->ipc()->addCleanup(*wallet_loader, [init = init.release()] { delete init; });
+    }
     node.wallet_loader = wallet_loader.get();
     node.chain_clients.emplace_back(std::move(wallet_loader));
 }

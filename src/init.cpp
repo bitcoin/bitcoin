@@ -29,6 +29,7 @@
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <kernel/context.h>
@@ -441,7 +442,7 @@ static void OnRPCStopped()
     LogPrint(BCLog::RPC, "RPC stopped.\n");
 }
 
-void SetupServerArgs(ArgsManager& argsman)
+void SetupServerArgs(ArgsManager& argsman, bool can_connect_ipc, bool can_listen_ipc)
 {
     SetupHelpOptions(argsman);
     argsman.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // server-only for now
@@ -676,6 +677,12 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcwhitelistdefault", "Sets default behavior for rpc whitelisting. Unless rpcwhitelistdefault is set to 0, if any -rpcwhitelist is set, the rpc server acts as if all rpc users are subject to empty-unless-otherwise-specified whitelists. If rpcwhitelistdefault is set to 1 and no -rpcwhitelist is set, rpc server acts as if all rpc users are subject to empty whitelists.", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    if (can_connect_ipc) {
+        argsman.AddArg("-ipcconnect=<address>", "Instead of starting a bitcoin-node process in the background, connect to the an existing process listening at the specified address. Valid <address> values are 'auto' to try connecting to default socket in <datadir>/sockets/node.sock, but start a bitcoin-node process if it isn't available, 'unix' to connect to the default socket and fail if it isn't available, 'unix:<socket path>' to connect to a socket at a nonstandard path, and -noipcconnect to not try to connect. Default value: auto", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+    }
+    if (can_listen_ipc) {
+        argsman.AddArg("-ipcbind=<address>", "Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path.", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+    }
 
 #if HAVE_DECL_FORK
     argsman.AddArg("-daemon", strprintf("Run in the background as a daemon and accept commands (default: %d)", DEFAULT_DAEMON), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -825,9 +832,9 @@ void InitParameterInteraction(ArgsManager& args)
  * Note that this is called very early in the process lifetime, so you should be
  * careful about what global state you rely on here.
  */
-void InitLogging(const ArgsManager& args)
+void InitLogging(const ArgsManager& args, const char* log_suffix)
 {
-    init::SetLoggingOptions(args);
+    init::SetLoggingOptions(args, log_suffix);
     init::LogPackageVersion();
 }
 
@@ -1199,6 +1206,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // when load() and start() interface methods are called below.
     g_wallet_init_interface.Construct(node);
     uiInterface.InitWallet();
+
+    if (interfaces::Ipc* ipc = node.init->ipc()) {
+        for (std::string address : gArgs.GetArgs("-ipcbind")) {
+            std::string error;
+            if (!ipc->listenAddress(address, error)) {
+                return InitError(strprintf(Untranslated("Unable to bind to IPC address '%s'. %s"), address, error));
+            }
+            LogPrintf("Listening for IPC requests on address %s\n", address);
+        }
+    }
 
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
