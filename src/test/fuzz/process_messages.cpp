@@ -65,7 +65,8 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 
         CNode& random_node = *PickValue(fuzzed_data_provider, peers);
 
-        (void)connman.ReceiveMsgFrom(random_node, net_msg);
+        connman.FlushSendBuffer(random_node);
+        (void)connman.ReceiveMsgFrom(random_node, std::move(net_msg));
         random_node.fPauseSend = false;
 
         try {

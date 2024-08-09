@@ -89,8 +89,11 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     {
         LOCK(dummyNode1.cs_vSend);
         BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
-        dummyNode1.vSendMsg.clear();
-        dummyNode1.nSendMsgSize = 0;
+    }
+    connman.FlushSendBuffer(dummyNode1);
+    {
+        LOCK(dummyNode1.cs_vSend);
+        BOOST_CHECK(dummyNode1.vSendMsg.empty());
     }
 
     int64_t nStartTime = GetTime();
