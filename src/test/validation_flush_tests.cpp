@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(getcoinscachesizestate)
     // (prevector<28, unsigned char>) when assigned 56 bytes of data per above.
     //
     // See also: Coin::DynamicMemoryUsage().
-    constexpr unsigned int COIN_SIZE = is_64_bit ? 80 : 64;
+    constexpr size_t COIN_SIZE{64};
 
     auto print_view_mem_usage = [](CCoinsViewCache& view) {
         BOOST_TEST_MESSAGE("CCoinsViewCache memory usage: " << view.DynamicMemoryUsage());
