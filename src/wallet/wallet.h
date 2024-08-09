@@ -29,6 +29,7 @@
 #include <util/ui_change_type.h>
 #include <wallet/crypter.h>
 #include <wallet/db.h>
+#include <wallet/logging.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
@@ -392,6 +393,9 @@ private:
     /** Wallet name: relative directory name or "" for default wallet. */
     std::string m_name;
 
+    /** Custom log source which adds the wallet name to all log messages */
+    WalletLogSource m_log;
+
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> m_database;
 
@@ -462,6 +466,7 @@ public:
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
           m_name(name),
+          m_log{GetDisplayName()},
           m_database(std::move(database))
     {
     }
@@ -927,13 +932,7 @@ public:
         std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
         return strprintf("[%s]", wallet_name);
     };
-
-    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
-    template <typename... Params>
-    void WalletLogPrintf(const char* fmt, Params... parameters) const
-    {
-        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
-    };
+    const WalletLogSource& Log() const override { return m_log; }
 
     /** Upgrade the wallet */
     bool UpgradeWallet(int version, bilingual_str& error);
