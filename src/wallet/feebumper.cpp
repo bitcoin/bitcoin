@@ -387,5 +387,103 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
     return Result::OK;
 }
 
+Result CreateRateBumpDeniabilizationTransaction(CWallet& wallet, const uint256& txid, unsigned int confirm_target, bool sign, bilingual_str& error, CAmount& old_fee, CAmount& new_fee, CTransactionRef& new_tx)
+{
+    CCoinControl coin_control = SetupDeniabilizationCoinControl(confirm_target);
+    coin_control.m_feerate = CalculateDeniabilizationFeeRate(wallet, confirm_target);
+
+    LOCK(wallet.cs_wallet);
+
+    auto it = wallet.mapWallet.find(txid);
+    if (it == wallet.mapWallet.end()) {
+        error = Untranslated("Invalid or non-wallet transaction id");
+        return Result::INVALID_ADDRESS_OR_KEY;
+    }
+    const CWalletTx& wtx = it->second;
+
+    // Retrieve all of the UTXOs and add them to coin control
+    // While we're here, calculate the input amount
+    std::map<COutPoint, Coin> coins;
+    CAmount input_value = 0;
+    for (const CTxIn& txin : wtx.tx->vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    wallet.chain().findCoins(coins);
+    for (const CTxIn& txin : wtx.tx->vin) {
+        const Coin& coin = coins.at(txin.prevout);
+        if (coin.out.IsNull()) {
+            error = Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n));
+            return Result::MISC_ERROR;
+        }
+        if (!wallet.IsMine(txin.prevout)) {
+            error = Untranslated("All inputs must be from our wallet.");
+            return Result::MISC_ERROR;
+        }
+        coin_control.Select(txin.prevout);
+        input_value += coin.out.nValue;
+    }
+
+    std::vector<bilingual_str> dymmy_errors;
+    Result result = PreconditionChecks(wallet, wtx, /*require_mine=*/true, dymmy_errors);
+    if (result != Result::OK) {
+        error = dymmy_errors.front();
+        return result;
+    }
+
+    // Calculate the old output amount.
+    CAmount output_value = 0;
+    for (const auto& old_output : wtx.tx->vout) {
+        output_value += old_output.nValue;
+    }
+
+    old_fee = input_value - output_value;
+
+    std::vector<CRecipient> recipients;
+    for (const auto& output : wtx.tx->vout) {
+        CTxDestination destination = CNoDestination();
+        ExtractDestination(output.scriptPubKey, destination);
+        CRecipient recipient = {destination, output.nValue, false};
+        recipients.push_back(recipient);
+    }
+    // the last recipient gets the old fee
+    recipients.back().nAmount += old_fee;
+    // and pays the new fee
+    recipients.back().fSubtractFeeFromAmount = true;
+    // we don't expect to get change, but we provide the address to prevent CreateTransactionInternal from generating a change address
+    coin_control.destChange = recipients.back().dest;
+
+    for (const auto& inputs : wtx.tx->vin) {
+        coin_control.Select(COutPoint(inputs.prevout));
+    }
+
+    auto res = CreateTransaction(wallet, recipients, std::nullopt, coin_control, /*sign=*/false);
+    if (!res) {
+        error = util::ErrorString(res);
+        return Result::WALLET_ERROR;
+    }
+
+    // make sure we didn't get a change position assigned (we don't expect to use the channge address)
+    Assert(!res->change_pos.has_value());
+
+    // spoof the transaction fingerprint to increase the transaction privacy
+    {
+        FastRandomContext rng_fast;
+        CMutableTransaction spoofedTx(*res->tx);
+        SpoofTransactionFingerprint(spoofedTx, rng_fast, coin_control.m_signal_bip125_rbf);
+        if (sign && !wallet.SignTransaction(spoofedTx)) {
+            error = Untranslated("Signing the deniabilization fee bump transaction failed.");
+            return Result::MISC_ERROR;
+        }
+        // store the spoofed transaction in the result
+        res->tx = MakeTransactionRef(std::move(spoofedTx));
+    }
+
+    // write back the new fee
+    new_fee = res->fee;
+    // write back the transaction
+    new_tx = res->tx;
+    return Result::OK;
+}
+
 } // namespace feebumper
 } // namespace wallet

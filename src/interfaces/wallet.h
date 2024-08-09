@@ -158,6 +158,16 @@ public:
         WalletValueMap value_map,
         WalletOrderForm order_form) = 0;
 
+    virtual std::pair<unsigned int, bool> calculateDeniabilizationCycles(const COutPoint& outpoint) = 0;
+
+    virtual util::Result<CTransactionRef> createDeniabilizationTransaction(const std::set<COutPoint>& inputs,
+                                                                           const std::optional<OutputType>& opt_output_type,
+                                                                           unsigned int confirm_target,
+                                                                           unsigned int deniabilization_cycles,
+                                                                           bool sign,
+                                                                           bool& insufficient_amount,
+                                                                           CAmount& fee) = 0;
+
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
 
@@ -183,6 +193,13 @@ public:
         CMutableTransaction&& mtx,
         std::vector<bilingual_str>& errors,
         uint256& bumped_txid) = 0;
+
+    //! Create a fee bump transaction for a deniabilization transaction
+    virtual util::Result<CTransactionRef> createBumpDeniabilizationTransaction(const uint256& txid,
+                                                                               unsigned int confirm_target,
+                                                                               bool sign,
+                                                                               CAmount& old_fee,
+                                                                               CAmount& new_fee) = 0;
 
     //! Get a transaction.
     virtual CTransactionRef getTx(const uint256& txid) = 0;
@@ -254,6 +271,9 @@ public:
         const wallet::CCoinControl& coin_control,
         int* returned_target,
         FeeReason* reason) = 0;
+
+    //! Get the fee rate for deniabilization
+    virtual CFeeRate getDeniabilizationFeeRate(unsigned int confirm_target) = 0;
 
     //! Get tx confirm target.
     virtual unsigned int getConfirmTarget() = 0;

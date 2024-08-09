@@ -299,6 +299,28 @@ public:
         LOCK(m_wallet->cs_wallet);
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
+    std::pair<unsigned int, bool> calculateDeniabilizationCycles(const COutPoint& outpoint) override
+    {
+        LOCK(m_wallet->cs_wallet); // TODO - Do we need a lock here?
+        return CalculateDeniabilizationCycles(*m_wallet, outpoint);
+    }
+    util::Result<CTransactionRef> createDeniabilizationTransaction(const std::set<COutPoint>& inputs,
+                                                                   const std::optional<OutputType>& opt_output_type,
+                                                                   unsigned int confirm_target,
+                                                                   unsigned int deniabilization_cycles,
+                                                                   bool sign,
+                                                                   bool& insufficient_amount,
+                                                                   CAmount& fee) override
+    {
+        LOCK(m_wallet->cs_wallet); // TODO - Do we need a lock here?
+        auto res = CreateDeniabilizationTransaction(*m_wallet, inputs, opt_output_type, confirm_target, deniabilization_cycles, sign, insufficient_amount);
+        if (!res) {
+            return util::Error{util::ErrorString(res)};
+        }
+        const auto& txr = *res;
+        fee = txr.fee;
+        return txr.tx;
+    }
     bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const uint256& txid) override
     {
@@ -327,6 +349,20 @@ public:
     {
         return feebumper::CommitTransaction(*m_wallet.get(), txid, std::move(mtx), errors, bumped_txid) ==
                feebumper::Result::OK;
+    }
+    util::Result<CTransactionRef> createBumpDeniabilizationTransaction(const uint256& txid,
+                                                                       unsigned int confirm_target,
+                                                                       bool sign,
+                                                                       CAmount& old_fee,
+                                                                       CAmount& new_fee) override
+    {
+        bilingual_str error;
+        CTransactionRef new_tx;
+        auto res = feebumper::CreateRateBumpDeniabilizationTransaction(*m_wallet.get(), txid, confirm_target, sign, error, old_fee, new_fee, new_tx);
+        if (res != feebumper::Result::OK) {
+            return util::Error{error};
+        }
+        return new_tx;
     }
     CTransactionRef getTx(const uint256& txid) override
     {
@@ -509,6 +545,10 @@ public:
         if (returned_target) *returned_target = fee_calc.returnedTarget;
         if (reason) *reason = fee_calc.reason;
         return result;
+    }
+    CFeeRate getDeniabilizationFeeRate(unsigned int confirm_target) override
+    {
+        return CalculateDeniabilizationFeeRate(*m_wallet, confirm_target);
     }
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
