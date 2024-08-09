@@ -64,6 +64,8 @@ enum class OptionsCategory {
     COMMANDS,
     REGISTER_COMMANDS,
 
+    COMMAND_OPTIONS, // Specific to one or more commands
+
     HIDDEN // Always the last option to avoid printing these in the help
 };
 
@@ -135,6 +137,7 @@ protected:
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+    std::map<std::string, std::set<std::string>> m_command_args GUARDED_BY(cs_args);
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
     std::optional<fs::path> m_config_path GUARDED_BY(cs_args);
@@ -209,6 +212,11 @@ protected:
      * Get the command and command args (returns std::nullopt if no command provided)
      */
     std::optional<const Command> GetCommand() const;
+
+    /**
+     * Check for invalid command options
+     */
+    bool CheckCommandOptions(const std::string& command, std::vector<std::string>* errors = nullptr) const;
 
     /**
      * Get blocks directory path
@@ -345,9 +353,9 @@ protected:
     void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
 
     /**
-     * Add subcommand
+     * Add command
      */
-    void AddCommand(const std::string& cmd, const std::string& help);
+    void AddCommand(const std::string& cmd, const std::string& help, std::set<std::string>&& options={});
 
     /**
      * Add many hidden arguments
@@ -463,11 +471,23 @@ std::string HelpMessageGroup(const std::string& message);
 /**
  * Format a string to be used as option description in help messages
  *
- * @param option Option message (e.g. "-rpcuser=<user>")
+ * @param option Option name (e.g. "-rpcuser")
+ * @param help_param Help parameter (e.g. "=<user>" or "")
+ * @param message Option description (e.g. "Username for JSON-RPC connections")
+ * @param indent Additional indentation
+ * @return the formatted string
+ */
+std::string HelpMessageOpt(const std::string& option, const std::string& help_param, const std::string& message, int indent=0);
+
+/**
+ * Same as HelpMessageOpt, but indents for command-specific options
+ *
+ * @param option Option name (e.g. "-rpcuser")
+ * @param help_param Help parameter (e.g. "=<user>" or "")
  * @param message Option description (e.g. "Username for JSON-RPC connections")
  * @return the formatted string
  */
-std::string HelpMessageOpt(const std::string& option, const std::string& message);
+std::string HelpMessageSubOpt(const std::string& option, const std::string& help_param, const std::string& message);
 
 namespace common {
 #ifdef WIN32
