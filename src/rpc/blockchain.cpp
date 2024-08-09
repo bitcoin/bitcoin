@@ -2741,7 +2741,7 @@ UniValue CreateUTXOSnapshot(
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), tip->nHeight, maybe_stats->coins_count};
+    SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), maybe_stats->coins_count};
 
     afile << metadata;
 
@@ -2865,10 +2865,12 @@ static RPCHelpMan loadtxoutset()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
     }
 
+    CBlockIndex& snapshot_index{*CHECK_NONFATAL(*activation_result)};
+
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_loaded", metadata.m_coins_count);
-    result.pushKV("tip_hash", metadata.m_base_blockhash.ToString());
-    result.pushKV("base_height", metadata.m_base_blockheight);
+    result.pushKV("tip_hash", snapshot_index.GetBlockHash().ToString());
+    result.pushKV("base_height", snapshot_index.nHeight);
     result.pushKV("path", fs::PathToString(path));
     return result;
 },
