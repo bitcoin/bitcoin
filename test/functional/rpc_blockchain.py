@@ -88,6 +88,8 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
+        self._test_waitfornewblock()
+        self._test_waitforblock()
         self._test_waitforblockheight()
         self._test_getblock()
         self._test_getdeploymentinfo()
@@ -239,6 +241,12 @@ class BlockchainTest(BitcoinTestFramework):
             }
           }
         })
+
+    def solve_and_send_block(self, peer, prevhash, height, time):
+        b = create_block(prevhash, create_coinbase(height), time)
+        b.solve()
+        peer.send_and_ping(msg_block(b))
+        return b
 
     def _test_getdeploymentinfo(self):
         # Note: continues past -stopatheight height, so must be invoked
@@ -505,6 +513,56 @@ class BlockchainTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 7)
 
+    def _test_waitfornewblock(self):
+        self.log.info("Test waitfornewblock")
+        node = self.nodes[0]
+        peer = node.add_p2p_connection(P2PInterface())
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+        current_hash = node.getblock(node.getbestblockhash())['hash']
+
+        # Create a fork somewhere below our current height, invalidate and
+        # then reconsider the longest chain.
+        #
+        fork_height = current_height - 100 # choose something vaguely near our tip
+        fork_hash = node.getblockhash(fork_height)
+        fork_block = node.getblock(fork_hash)
+
+        b1 = self.solve_and_send_block(peer, int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
+        b2 = self.solve_and_send_block(peer, b1.sha256, fork_height+2, b1.nTime + 1)
+
+        node.invalidateblock(b2.hash)
+        node.reconsiderblock(b2.hash)
+
+        assert_equal(
+            node.waitfornewblock(timeout=2)['hash'],
+            current_hash)
+
+    def _test_waitforblock(self):
+        self.log.info("Test waitforblock")
+        node = self.nodes[0]
+        peer = node.add_p2p_connection(P2PInterface())
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+        current_hash = node.getblock(node.getbestblockhash())['hash']
+
+        # Create a fork somewhere below our current height, invalidate and
+        # then reconsider the longest chain.
+        #
+        fork_height = current_height - 100 # choose something vaguely near our tip
+        fork_hash = node.getblockhash(fork_height)
+        fork_block = node.getblock(fork_hash)
+
+        b1 = self.solve_and_send_block(peer, int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
+        b2 = self.solve_and_send_block(peer, b1.sha256, fork_height+2, b1.nTime + 1)
+
+        node.invalidateblock(b2.hash)
+        node.reconsiderblock(b2.hash)
+
+        assert_equal(
+            node.waitforblock(blockhash=current_hash, timeout=2)['hash'],
+            current_hash)
+
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
         node = self.nodes[0]
@@ -523,14 +581,8 @@ class BlockchainTest(BitcoinTestFramework):
         fork_hash = node.getblockhash(fork_height)
         fork_block = node.getblock(fork_hash)
 
-        def solve_and_send_block(prevhash, height, time):
-            b = create_block(prevhash, create_coinbase(height), time)
-            b.solve()
-            peer.send_and_ping(msg_block(b))
-            return b
-
-        b1 = solve_and_send_block(int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
-        b2 = solve_and_send_block(b1.sha256, fork_height+2, b1.nTime + 1)
+        b1 = self.solve_and_send_block(peer, int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
+        b2 = self.solve_and_send_block(peer, b1.sha256, fork_height+2, b1.nTime + 1)
 
         node.invalidateblock(b2.hash)
 
