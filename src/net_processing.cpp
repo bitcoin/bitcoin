@@ -1518,9 +1518,20 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
         return;
     }
 
-    if (state->pindexLastCommonBlock == nullptr) {
-        // Bootstrap quickly by guessing a parent of our best tip is the forking point.
-        // Guessing wrong in either direction is not a problem.
+    // When we sync with AssumeUtxo and discover the snapshot is not in the peer's best chain, abort:
+    // We can't reorg to this chain due to missing undo data until the background sync has finished,
+    // so downloading blocks from it would be futile.
+    const CBlockIndex* snap_base{m_chainman.GetSnapshotBaseBlock()};
+    if (snap_base && state->pindexBestKnownBlock->GetAncestor(snap_base->nHeight) != snap_base) {
+        LogDebug(BCLog::NET, "Not downloading blocks from peer=%d, which doesn't have the snapshot block in its best chain.\n", peer.m_id);
+        return;
+    }
+
+    // Bootstrap quickly by guessing a parent of our best tip is the forking point.
+    // Guessing wrong in either direction is not a problem.
+    // Also reset pindexLastCommonBlock after a snapshot was loaded, so that blocks after the snapshot will be prioritised for download.
+    if (state->pindexLastCommonBlock == nullptr ||
+        (snap_base && state->pindexLastCommonBlock->nHeight < snap_base->nHeight)) {
         state->pindexLastCommonBlock = m_chainman.ActiveChain()[std::min(state->pindexBestKnownBlock->nHeight, m_chainman.ActiveChain().Height())];
     }
 
