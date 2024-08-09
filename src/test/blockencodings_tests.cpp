@@ -5,6 +5,7 @@
 #include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
+#include <primitives/transaction.h>
 #include <pow.h>
 #include <streams.h>
 #include <test/util/random.h>
@@ -89,7 +90,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         BOOST_CHECK_EQUAL(pool.get(block.vtx[2]->GetHash()).use_count(), SHARED_TX_OFFSET + 1);
 
         size_t poolSize = pool.size();
-        pool.removeRecursive(*block.vtx[2], MemPoolRemovalReason::REPLACED);
+        pool.removeRecursive(*block.vtx[2], ReplacedReason(MakeTransactionRef(CTransaction(CMutableTransaction()))));
         BOOST_CHECK_EQUAL(pool.size(), poolSize - 1);
 
         CBlock block2;

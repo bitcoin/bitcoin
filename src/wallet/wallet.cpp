@@ -1237,6 +1237,18 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             }
         }
 
+        if (auto* conf = std::get_if<TxStateBlockConflicted>(&state)) {
+            WalletLogPrintf("A transaction in block %s conflicts with wallet transaction %s\n", conf->conflicting_block_hash.ToString(), ptx->GetHash().ToString());
+            auto try_updating_state = [&](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                if (std::get_if<TxStateBlockConflicted>(&wtx.m_state)) return TxUpdate::UNCHANGED;
+
+                wtx.m_state = TxStateBlockConflicted(conf->conflicting_block_hash, conf->conflicting_block_height);
+                return TxUpdate::CHANGED;
+            };
+            // Iterate over all its outputs, and mark transactions in the wallet that spend them conflicted too.
+            RecursiveUpdateTxState(ptx->GetHash(), try_updating_state);
+        }
+
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;
         if (fExisted || IsMine(tx) || IsFromMe(tx))
@@ -1446,40 +1458,40 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
     }
 }
 
-void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {
+void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, const MemPoolRemovalReason& reason) {
     LOCK(cs_wallet);
     auto it = mapWallet.find(tx->GetHash());
     if (it != mapWallet.end()) {
         RefreshMempoolStatus(it->second, chain());
     }
+
+    auto* replaced_reason = std::get_if<ReplacedReason>(&reason);
+
+    // Check if wallet transaction is being replaced by an unrelated parent transaction
+    if (replaced_reason != nullptr && IsFromMe(*tx) && !IsFromMe(*(replaced_reason->replacement_tx))) {
+        m_unrelated_conflict_tx_watchlist.insert(std::make_pair(replaced_reason->replacement_tx->GetHash(), tx));
+    }
+
+    {
+        auto it = m_unrelated_conflict_tx_watchlist.find(tx->GetHash());
+        if (it != m_unrelated_conflict_tx_watchlist.end()) {
+            // The replacement tx was removed from the mempool, remove it from map
+            // This new replacement tx may not conflict with the original tx
+            // so leave wallet tx to remain as TxStateInactive
+            m_unrelated_conflict_tx_watchlist.erase(it);
+        }
+    }
+
+    auto* conflict_reason = std::get_if<ConflictReason>(&reason);
+
     // Handle transactions that were removed from the mempool because they
     // conflict with transactions in a newly connected block.
-    if (reason == MemPoolRemovalReason::CONFLICT) {
-        // Trigger external -walletnotify notifications for these transactions.
-        // Set Status::UNCONFIRMED instead of Status::CONFLICTED for a few reasons:
-        //
-        // 1. The transactionRemovedFromMempool callback does not currently
-        //    provide the conflicting block's hash and height, and for backwards
-        //    compatibility reasons it may not be not safe to store conflicted
-        //    wallet transactions with a null block hash. See
-        //    https://github.com/bitcoin/bitcoin/pull/18600#discussion_r420195993.
-        // 2. For most of these transactions, the wallet's internal conflict
-        //    detection in the blockConnected handler will subsequently call
-        //    MarkConflicted and update them with CONFLICTED status anyway. This
-        //    applies to any wallet transaction that has inputs spent in the
-        //    block, or that has ancestors in the wallet with inputs spent by
-        //    the block.
-        // 3. Longstanding behavior since the sync implementation in
-        //    https://github.com/bitcoin/bitcoin/pull/9371 and the prior sync
-        //    implementation before that was to mark these transactions
-        //    unconfirmed rather than conflicted.
-        //
-        // Nothing described above should be seen as an unchangeable requirement
-        // when improving this code in the future. The wallet's heuristics for
+    if (conflict_reason != nullptr && IsFromMe(*tx)) {
+        // The wallet's heuristics for
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
         // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
-        SyncTransaction(tx, TxStateInactive{});
+        SyncTransaction(tx, TxStateBlockConflicted(conflict_reason->conflicting_block_hash, conflict_reason->conflicting_block_height));
     }
 
     const Txid& txid = tx->GetHash();
@@ -1515,8 +1527,15 @@ void CWallet::blockConnected(ChainstateRole role, const interfaces::BlockInfo& b
 
     // Scan block
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
+        auto it = m_unrelated_conflict_tx_watchlist.find(block.data->vtx[index]->GetHash());
+        if (it != m_unrelated_conflict_tx_watchlist.end()) {
+            // A conflicting unrelated parent transaction was confirmed in a block
+            // Mark child wallet tx as conflicted
+            SyncTransaction(it->second, TxStateBlockConflicted(block.hash, block.height));
+        }
+
         SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
-        transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
+        transactionRemovedFromMempool(block.data->vtx[index], BlockReason{});
     }
 }
 
