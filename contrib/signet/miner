@@ -138,9 +138,6 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None, poolid=None):
 
 def get_poolid(args):
     if args.poolid is not None:
-        if args.poolnum is not None:
-             logging.error("Can only specify one of --poolid and --poolnum")
-             raise Exception("bad arguments")
         return args.poolid.encode('utf8')
     elif args.poolnum is not None:
         return b"/signet:%d/" % (args.poolnum)
@@ -336,12 +333,11 @@ class Generate:
         return finish_block(block, signet_solution, grind_cmd)
 
 def do_generate(args):
-    if args.max_blocks is not None:
-        if args.ongoing:
-            logging.error("Cannot specify both --ongoing and --max-blocks")
-            return 1
+    if args.set_block_time is not None:
+        max_blocks = 1
+    elif args.max_blocks is not None:
         if args.max_blocks < 1:
-            logging.error("N must be a positive integer")
+            logging.error("--max_blocks must specify a positive integer")
             return 1
         max_blocks = args.max_blocks
     elif args.ongoing:
@@ -349,17 +345,11 @@ def do_generate(args):
     else:
         max_blocks = 1
 
-    if args.set_block_time is not None and max_blocks != 1:
-        logging.error("Cannot specify --ongoing or --max-blocks > 1 when using --set-block-time")
-        return 1
     if args.set_block_time is not None and args.set_block_time < 0:
         args.set_block_time = time.time()
         logging.info("Treating negative block time as current time (%d)" % (args.set_block_time))
 
     if args.min_nbits:
-        if args.nbits is not None:
-            logging.error("Cannot specify --nbits and --min-nbits")
-            return 1
         args.nbits = "1e0377ae"
         logging.info("Using nbits=%s" % (args.nbits))
 
@@ -521,35 +511,38 @@ def main():
     cmds = parser.add_subparsers(help="sub-commands")
     genpsbt = cmds.add_parser("genpsbt", help="Generate a block PSBT for signing")
     genpsbt.set_defaults(fn=do_genpsbt)
-    genpsbt.add_argument("--poolnum", default=None, type=int, help="Identify blocks that you mine")
-    genpsbt.add_argument("--poolid", default=None, type=str, help="Identify blocks that you mine (eg: /signet:1/)")
 
     solvepsbt = cmds.add_parser("solvepsbt", help="Solve a signed block PSBT")
     solvepsbt.set_defaults(fn=do_solvepsbt)
 
     generate = cmds.add_parser("generate", help="Mine blocks")
     generate.set_defaults(fn=do_generate)
-    generate.add_argument("--ongoing", action="store_true", help="Keep mining blocks")
-    generate.add_argument("--max-blocks", default=None, type=int, help="Max blocks to mine (default=1)")
-    generate.add_argument("--set-block-time", default=None, type=int, help="Set block time (unix timestamp)")
-    generate.add_argument("--nbits", default=None, type=str, help="Target nBits (specify difficulty)")
-    generate.add_argument("--min-nbits", action="store_true", help="Target minimum nBits (use min difficulty)")
+    howmany = generate.add_mutually_exclusive_group()
+    howmany.add_argument("--ongoing", action="store_true", help="Keep mining blocks")
+    howmany.add_argument("--max-blocks", default=None, type=int, help="Max blocks to mine (default=1)")
+    howmany.add_argument("--set-block-time", default=None, type=int, help="Set block time (unix timestamp); implies --max-blocks=1")
+    nbit_target = generate.add_mutually_exclusive_group()
+    nbit_target.add_argument("--nbits", default=None, type=str, help="Target nBits (specify difficulty)")
+    nbit_target.add_argument("--min-nbits", action="store_true", help="Target minimum nBits (use min difficulty)")
     generate.add_argument("--poisson", action="store_true", help="Simulate randomised block times")
     generate.add_argument("--multiminer", default=None, type=str, help="Specify which set of blocks to mine (eg: 1-40/100 for the first 40%%, 2/3 for the second 3rd)")
     generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
     generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
     generate.add_argument("--max-interval", default=1800, type=int, help="Maximum interblock interval (seconds)")
-    generate.add_argument("--poolnum", default=None, type=int, help="Identify blocks that you mine")
-    generate.add_argument("--poolid", default=None, type=str, help="Identify blocks that you mine (eg: /signet:1/)")
 
     calibrate = cmds.add_parser("calibrate", help="Calibrate difficulty")
     calibrate.set_defaults(fn=do_calibrate)
-    calibrate.add_argument("--nbits", type=str, default=None)
-    calibrate.add_argument("--seconds", type=int, default=None)
+    calibrate_by = calibrate.add_mutually_exclusive_group()
+    calibrate_by.add_argument("--nbits", type=str, default=None)
+    calibrate_by.add_argument("--seconds", type=int, default=None)
 
     for sp in [genpsbt, generate]:
-        sp.add_argument("--address", default=None, type=str, help="Address for block reward payment")
-        sp.add_argument("--descriptor", default=None, type=str, help="Descriptor for block reward payment")
+        payto = sp.add_mutually_exclusive_group(required=True)
+        payto.add_argument("--address", default=None, type=str, help="Address for block reward payment")
+        payto.add_argument("--descriptor", default=None, type=str, help="Descriptor for block reward payment")
+        pool = sp.add_mutually_exclusive_group()
+        pool.add_argument("--poolnum", default=None, type=int, help="Identify blocks that you mine")
+        pool.add_argument("--poolid", default=None, type=str, help="Identify blocks that you mine (eg: /signet:1/)")
 
     for sp in [solvepsbt, generate, calibrate]:
         sp.add_argument("--grind-cmd", default=None, type=str, required=(sp==calibrate), help="Command to grind a block header for proof-of-work")
@@ -559,12 +552,6 @@ def main():
     args.bcli = lambda *a, input=b"", **kwargs: bitcoin_cli(args.cli.split(" "), list(a), input=input, **kwargs)
 
     if hasattr(args, "address") and hasattr(args, "descriptor"):
-        if args.address is None and args.descriptor is None:
-            sys.stderr.write("Must specify --address or --descriptor\n")
-            return 1
-        elif args.address is not None and args.descriptor is not None:
-            sys.stderr.write("Only specify one of --address or --descriptor\n")
-            return 1
         args.derived_addresses = {}
 
     if args.debug:
