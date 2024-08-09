@@ -443,10 +443,19 @@ BOOST_AUTO_TEST_CASE(getaddr_unfiltered)
     CNetAddr source = ResolveIP("250.1.2.1");
     BOOST_CHECK(addrman->Add({addr1, addr2}, source));
 
+    // Tried 3 times and never a success so isTerrible = true
+    CAddress addr3 = CAddress(ResolveService("250.251.2.3", 9998), NODE_NONE);
+    addr3.nTime = Now<NodeSeconds>();
+    addrman->Good(addr3, /*time=*/Now<NodeSeconds>());
+    BOOST_CHECK(addrman->Add({addr3}, source));
+    for (size_t i = 0; i < 3; ++i) {
+        addrman->Attempt(addr3, /*fCountFailure=*/true, /*time=*/Now<NodeSeconds>() - 10h);
+    }
+
     // Filtered GetAddr should only return addr1
     BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt).size(), 1U);
-    // Unfiltered GetAddr should return addr1 and addr2
-    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 2U);
+    // Unfiltered GetAddr should return all addrs
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 3U);
 }
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
