@@ -1000,7 +1000,7 @@ public:
 
     std::unique_ptr<BlockTemplate> createNewBlock2(const BlockCreateOptions& assemble_options) override
     {
-        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        return std::make_unique<BlockTemplateImpl>(BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options, m_node}.CreateNewBlock(), m_node);
     }
 
     NodeContext* context() override { return &m_node; }

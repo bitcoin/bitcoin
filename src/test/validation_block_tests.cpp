@@ -67,7 +67,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 
     BlockAssembler::Options options;
     options.coinbase_output_script = CScript{} << i++ << OP_TRUE;
-    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
+    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options, m_node}.CreateNewBlock();
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pubKey << 1 << OP_TRUE;
     BlockAssembler::Options options;
     options.coinbase_output_script = pubKey;
-    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
+    auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options, m_node}.CreateNewBlock();
     CBlock pblock = ptemplate->block;
 
     CTxOut witness;

@@ -30,6 +30,7 @@ class Chainstate;
 class ChainstateManager;
 
 namespace Consensus { struct Params; };
+namespace node { struct NodeContext; };
 
 namespace node {
 
@@ -143,7 +144,7 @@ class BlockAssembler
 {
 private:
     // The constructed block template
-    std::unique_ptr<CBlockTemplate> pblocktemplate;
+    std::shared_ptr<CBlockTemplate> pblocktemplate;
 
     bool fNeedSizeAccounting;
 
@@ -162,11 +163,12 @@ private:
     const CChainParams& chainparams;
     const CTxMemPool* const m_mempool;
     Chainstate& m_chainstate;
+    const NodeContext& m_node;
 
 public:
     using Options = BlockCreateOptions;
 
-    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
+    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options, const NodeContext& node);
 
     /** Construct a new block template */
     std::shared_ptr<CBlockTemplate> CreateNewBlock();
