@@ -752,7 +752,7 @@ case $host in
        esac
      fi
 
-     CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
 
      dnl ignore deprecated-declarations warnings coming from objcxx code
      dnl "'NSUserNotificationCenter' is deprecated: first deprecated in macOS 11.0".
