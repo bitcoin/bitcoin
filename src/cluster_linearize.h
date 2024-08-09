@@ -118,6 +118,28 @@ public:
         }
     }
 
+    /** Construct a DepGraph object given another DepGraph and a mapping from old to new.
+     *
+     * Complexity: O(N^2) where N=depgraph.TxCount().
+     */
+    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping) noexcept : entries(depgraph.TxCount())
+    {
+        Assert(mapping.size() == depgraph.TxCount());
+        // Fill in fee, size, ancestors.
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            const auto& input = depgraph.entries[i];
+            auto& output = entries[mapping[i]];
+            output.feerate = input.feerate;
+            for (auto j : input.ancestors) output.ancestors.Set(mapping[j]);
+        }
+        // Fill in descendant information.
+        for (ClusterIndex i = 0; i < entries.size(); ++i) {
+            for (auto j : entries[i].ancestors) {
+                entries[j].descendants.Set(i);
+            }
+        }
+    }
+
     /** Get the number of transactions in the graph. Complexity: O(1). */
     auto TxCount() const noexcept { return entries.size(); }
     /** Get the feerate of a given transaction i. Complexity: O(1). */
