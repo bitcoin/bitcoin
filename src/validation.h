@@ -808,7 +808,6 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     SteadyClock::time_point m_last_write{};
-    SteadyClock::time_point m_last_flush{};
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
