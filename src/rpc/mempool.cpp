@@ -680,6 +680,8 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
     ret.pushKV("unbroadcastcount", uint64_t{pool.GetUnbroadcastTxs().size()});
     ret.pushKV("fullrbf", pool.m_opts.full_rbf);
+    ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
+    ret.pushKV("maxdatacarriersize", (pool.m_opts.max_datacarrier_bytes ? *pool.m_opts.max_datacarrier_bytes : 0));
     return ret;
 }
 
@@ -702,6 +704,8 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                 {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
                 {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection"},
+                {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
+                {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
             }},
         RPCExamples{
             HelpExampleCli("getmempoolinfo", "")
