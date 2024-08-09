@@ -13,6 +13,7 @@ src/bitcoin-chainstate
 src/bitcoin-wallet
 src/test/fuzz/fuzz
 src/test/test_bitcoin
+src/test/kernel/test_kernel
 src/qt/test/test_bitcoin-qt
 
 # autoreconf

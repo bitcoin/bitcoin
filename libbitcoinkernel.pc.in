@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE_NAME@ kernel library
+Description: Library for the Bitcoin chain validation.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lbitcoinkernel
+Cflags: -I${includedir}

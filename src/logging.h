@@ -173,6 +173,12 @@ namespace BCLog {
             m_print_callbacks.erase(it);
         }
 
+        size_t NumConnections()
+        {
+            StdLockGuard scoped_lock(m_cs);
+            return m_print_callbacks.size();
+        }
+
         /** Start logging (and flush all buffered messages) */
         bool StartLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Only for testing */
