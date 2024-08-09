@@ -176,6 +176,7 @@ static RPCHelpMan getdescriptorinfo()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "descriptor", "The descriptor in canonical form, without private keys"},
+                {RPCResult::Type::STR, "normalizeddescriptor", "The normalized descriptor, including the xpub at the last hardened step"},
                 {RPCResult::Type::STR, "checksum", "The checksum for the input descriptor"},
                 {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                 {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
@@ -196,8 +197,14 @@ static RPCHelpMan getdescriptorinfo()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
 
+            std::string normalizedDescriptor;
+            if (!desc->ToNormalizedString(provider, normalizedDescriptor)) {
+                normalizedDescriptor = desc->ToString();
+            }
+
             UniValue result(UniValue::VOBJ);
             result.pushKV("descriptor", desc->ToString());
+            result.pushKV("normalizeddescriptor", normalizedDescriptor);
             result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
             result.pushKV("isrange", desc->IsRange());
             result.pushKV("issolvable", desc->IsSolvable());

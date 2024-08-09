@@ -20,9 +20,11 @@ class DescriptorTest(BitcoinTestFramework):
         self.wallet_names = []
 
     def test_desc(self, desc, isrange, issolvable, hasprivatekeys):
+        expected_normalized_desc_with_checksum = descsum_create(desc)
         info = self.nodes[0].getdescriptorinfo(desc)
         assert_equal(info, self.nodes[0].getdescriptorinfo(descsum_create(desc)))
         assert_equal(info['descriptor'], descsum_create(desc))
+        assert_equal(info['normalizeddescriptor'], expected_normalized_desc_with_checksum)
         assert_equal(info['isrange'], isrange)
         assert_equal(info['issolvable'], issolvable)
         assert_equal(info['hasprivatekeys'], hasprivatekeys)
