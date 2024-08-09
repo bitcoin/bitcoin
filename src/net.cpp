@@ -576,16 +576,14 @@ CService CNode::GetAddrLocal() const
 {
     AssertLockNotHeld(m_addr_local_mutex);
     LOCK(m_addr_local_mutex);
-    return addrLocal;
+    return m_addr_local;
 }
 
 void CNode::SetAddrLocal(const CService& addrLocalIn) {
     AssertLockNotHeld(m_addr_local_mutex);
     LOCK(m_addr_local_mutex);
-    if (addrLocal.IsValid()) {
-        LogError("Addr local already set for node: %i. Refusing to change from %s to %s\n", id, addrLocal.ToStringAddrPort(), addrLocalIn.ToStringAddrPort());
-    } else {
-        addrLocal = addrLocalIn;
+    if (Assume(!m_addr_local.IsValid())) { // Addr local can only be set once during version msg processing
+        m_addr_local = addrLocalIn;
     }
 }
 

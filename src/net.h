@@ -963,7 +963,7 @@ private:
     size_t m_msg_process_queue_size GUARDED_BY(m_msg_process_queue_mutex){0};
 
     // Our address, as reported by the peer
-    CService addrLocal GUARDED_BY(m_addr_local_mutex);
+    CService m_addr_local GUARDED_BY(m_addr_local_mutex);
     mutable Mutex m_addr_local_mutex;
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
