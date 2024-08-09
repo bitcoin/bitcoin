@@ -4,10 +4,15 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
 
+import select
 import socket
 import threading
 import queue
 import logging
+
+from .netutil import (
+    format_addr_port
+)
 
 logger = logging.getLogger("TestFramework.socks5")
 
@@ -41,6 +46,19 @@ class Socks5Configuration():
         self.unauth = False  # Support unauthenticated
         self.auth = False  # Support authentication
         self.keep_alive = False  # Do not automatically close connections
+        # This function is called whenever a new connection arrives to the proxy
+        # and it decides where the connection is redirected to. It is passed:
+        # - the address the client requested to connect to
+        # - the port the client requested to connect to
+        # It is supposed to return an object like:
+        # {
+        #     "actual_to_addr": "127.0.0.1"
+        #     "actual_to_port": 28276
+        # }
+        # or None.
+        # If it returns an object then the connection is redirected to actual_to_addr:actual_to_port.
+        # If it returns None, or destinations_factory itself is None then the connection is closed.
+        self.destinations_factory = None
 
 class Socks5Command():
     """Information about an incoming socks5 command."""
@@ -117,6 +135,38 @@ class Socks5Connection():
             cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
             self.serv.queue.put(cmdin)
             logger.debug('Proxy: %s', cmdin)
+
+            requested_to_addr = addr.decode("utf-8")
+            requested_to = format_addr_port(requested_to_addr, port)
+
+            if self.serv.conf.destinations_factory is not None:
+                dest = self.serv.conf.destinations_factory(requested_to_addr, port)
+                if dest is not None:
+                    logger.debug(f"Serving connection to {requested_to}, will redirect it to "
+                                 f"{dest['actual_to_addr']}:{dest['actual_to_port']} instead")
+                    with socket.create_connection((dest["actual_to_addr"], dest["actual_to_port"])) as conn_to:
+                        self.conn.setblocking(False)
+                        conn_to.setblocking(False)
+                        sockets = [self.conn, conn_to]
+                        done = False
+                        while not done:
+                            rlist, _, xlist = select.select(sockets, [], sockets)
+                            if len(xlist) > 0:
+                                raise IOError("Exceptional condition on socket")
+                            for s in rlist:
+                                data = s.recv(4096)
+                                if data is None or len(data) == 0:
+                                    done = True
+                                    break
+                                if s == self.conn:
+                                    conn_to.sendall(data)
+                                else:
+                                    self.conn.sendall(data)
+                else:
+                    logger.debug(f"Closing connection to {requested_to}: the destinations factory returned None")
+            else:
+                logger.debug(f"Closing connection to {requested_to}: no destinations factory")
+
             # Fall through to disconnect
         except Exception as e:
             logger.exception("socks5 request handling failed.")
