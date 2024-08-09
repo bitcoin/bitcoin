@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,28 @@
 #include <vector>
 
 namespace util {
+/** Type to denote a format string that was checked at compile time */
+template <int num_params>
+struct ConstevalFormatString {
+    const char* const fmt;
+    consteval ConstevalFormatString(const char* str) : fmt{str} { CheckNumFormatSpecifiers(fmt); }
+    consteval static void CheckNumFormatSpecifiers(std::string_view str)
+    {
+        int count{0};
+        bool begin_f{false};
+        for (char c : str) {
+            bool perc{c == '%'};
+            if (begin_f) {
+                count += !perc;
+                begin_f = false;
+                continue;
+            }
+            if (perc) begin_f = true;
+        }
+        if (num_params != count) throw "Number of format specifiers and arguments must match";
+    }
+};
+
 void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute);
 
 /** Split a string on any char found in separators, returning a vector.
