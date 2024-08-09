@@ -21,6 +21,7 @@ class TestRPCAuth(unittest.TestCase):
         with open(config_path, encoding="utf8") as config_file:
             config.read_file(config_file)
         sys.path.insert(0, os.path.dirname(config['environment']['RPCAUTH']))
+        sys.dont_write_bytecode = True
         self.rpcauth = importlib.import_module('rpcauth')
 
     def test_generate_salt(self):
