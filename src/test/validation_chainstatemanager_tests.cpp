@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/disconnected_transactions.h>
+#include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
@@ -767,6 +768,46 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
         LOCK(::cs_main);
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+/** Helper function to parse args into args_man and return the result of applying them to opts */
+util::Result<void> SetOptsFromArgs(ArgsManager& args_man, ChainstateManager::Options& opts,
+                                   const std::vector<const char*>& args)
+{
+    std::vector<const char*> argv = {"ignore"};
+    argv.insert(argv.end(), args.begin(), args.end());
+
+    std::string error{};
+    BOOST_REQUIRE(args_man.ParseParameters(argv.size(), argv.data(), error));
+    return node::ApplyArgsManOptions(args_man, opts);
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
+{
+    kernel::Notifications notifications{};
+    const ChainstateManager::Options options{
+        .chainparams = ::Params(),
+        .datadir = {},
+        .notifications = notifications};
+
+    auto set_opts = [this, options](const std::vector<const char*>& args) {
+        auto opts{options}; // create a copy to keep the original clean and reusable
+        BOOST_REQUIRE(SetOptsFromArgs(*this->m_node.args, opts, args));
+        return opts;
+    };
+
+    // test -assumevalid
+    BOOST_CHECK(!set_opts({}).assumed_valid_block.has_value());
+    BOOST_CHECK(set_opts({"-assumevalid=0"}).assumed_valid_block.value().IsNull());
+    BOOST_CHECK(set_opts({"-noassumevalid"}).assumed_valid_block.value().IsNull());
+    const std::string cmd{"-assumevalid=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
+    BOOST_CHECK_EQUAL(set_opts({cmd.c_str()}).assumed_valid_block.value().ToString(), cmd.substr(13, cmd.size()));
+
+    // test -minimumchainwork
+    BOOST_CHECK(!set_opts({}).minimum_chain_work.has_value());
+    BOOST_CHECK_EQUAL(set_opts({"-minimumchainwork=0"}).minimum_chain_work.value().GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(set_opts({"-nominimumchainwork"}).minimum_chain_work.value().GetCompact(), 0U);
+    BOOST_CHECK_EQUAL(set_opts({"-minimumchainwork=0x1234"}).minimum_chain_work.value().GetCompact(), 0x02123400U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

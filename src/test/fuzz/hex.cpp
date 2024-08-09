@@ -6,6 +6,7 @@
 #include <primitives/block.h>
 #include <pubkey.h>
 #include <rpc/util.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
 #include <univalue.h>
@@ -19,7 +20,9 @@
 
 FUZZ_TARGET(hex)
 {
-    const std::string random_hex_string(buffer.begin(), buffer.end());
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+    const auto result_size{fdp.ConsumeIntegral<int16_t>()};
+    const std::string random_hex_string{fdp.ConsumeRemainingBytesAsString()};
     const std::vector<unsigned char> data = ParseHex(random_hex_string);
     const std::vector<std::byte> bytes{ParseHex<std::byte>(random_hex_string)};
     assert(AsBytes(Span{data}) == Span{bytes});
@@ -27,7 +30,7 @@ FUZZ_TARGET(hex)
     if (IsHex(random_hex_string)) {
         assert(ToLower(random_hex_string) == hex_data);
     }
-    (void)IsHexNumber(random_hex_string);
+    (void)TrySanitizeHexNumber(random_hex_string, result_size);
     if (uint256::FromHex(random_hex_string)) {
         assert(random_hex_string.length() == 64);
         assert(Txid::FromHex(random_hex_string));

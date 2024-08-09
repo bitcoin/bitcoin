@@ -71,9 +71,19 @@ std::vector<Byte> ParseHex(std::string_view hex_str)
  * number of hex digits.*/
 bool IsHex(std::string_view str);
 /**
-* Return true if the string is a hex number, optionally prefixed with "0x"
-*/
-bool IsHexNumber(std::string_view str);
+ * @brief Return a sanitized hex string if input is a valid hex number.
+ *        "0x" prefix is removed, and if result_size is specified, the
+ *        result is padded with leading zeroes until result_size is
+ *        reached, or std::nullopt returned if input is longer than
+ *        result_size.
+ *
+ * @param input Hex encoding of a number, optionally prefixed with 0x.
+ * @param result_size Size of the resulting string, causing zero-padding
+ *                    if input is too short, or a std::nullopt return
+ *                    value if input is too long. Disabled if <= -1.
+ *                    (default: -1)
+ */
+std::optional<std::string> TrySanitizeHexNumber(std::string_view input, int result_size = -1);
 std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str);
 std::string EncodeBase64(Span<const unsigned char> input);
 inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
