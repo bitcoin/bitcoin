@@ -771,6 +771,8 @@ public:
             arg->GetPubKeys(pubkeys, ext_pubs);
         }
     }
+
+    bool HasScripts() const override { return true; }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -1302,6 +1304,18 @@ public:
     }
 };
 
+/** A parsed unused(KEY) descriptor */
+class UnusedDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, Span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
+public:
+    UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}
+    bool IsSingleType() const final { return true; }
+    bool HasScripts() const override { return false; }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1806,6 +1820,24 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         return std::make_unique<RawTRDescriptor>(std::move(output_key));
     } else if (Func("rawtr", expr)) {
         error = "Can only have rawtr at top level";
+        return nullptr;
+    }
+    if (ctx == ParseScriptContext::TOP && Func("unused", expr)) {
+        auto arg = Expr(expr);
+        if (expr.size()) {
+            error = strprintf("unused(): only one key expected");
+            return nullptr;
+        }
+        auto key = ParsePubkey(key_exp_index, arg, ctx, out, error);
+        if (!key) return nullptr;
+        if (key->IsRange()) {
+            error = "unused(): key cannot be ranged";
+            return nullptr;
+        }
+        ++key_exp_index;
+        return std::make_unique<UnusedDescriptor>(std::move(key));
+    } else if (Func("unused", expr)) {
+        error = "Can only have unused at top level";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {

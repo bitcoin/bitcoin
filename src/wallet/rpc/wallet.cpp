@@ -1026,6 +1026,80 @@ static RPCHelpMan createwalletdescriptor()
     };
 }
 
+RPCHelpMan addhdkey()
+{
+    return RPCHelpMan{
+        "addhdkey",
+        "\nAdd a BIP 32 HD key to the wallet that can be used with 'createwalletdescriptor'\n",
+        {
+            {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"Automatically generated new key"}, "The BIP 32 extended private key to add. If none is provided, a randomly generated one will be added."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "xpub", "The xpub of the HD key that was added to the wallet"}
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", "xprv")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return UniValue::VNULL;
+
+            if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "addhdkey is not available for non-descriptor wallets");
+            }
+
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "addhdkey is not available for wallets without private keys");
+            }
+
+            EnsureWalletIsUnlocked(*wallet);
+
+            CExtKey hdkey;
+            if (request.params[0].isNull()) {
+                CKey seed_key;
+                seed_key.MakeNewKey(true);
+                hdkey.SetSeed(seed_key);
+            } else {
+                hdkey = DecodeExtKey(request.params[0].get_str());
+                if (!hdkey.key.IsValid()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not parse HD key");
+                }
+            }
+
+            LOCK(wallet->cs_wallet);
+            std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
+            FlatSigningProvider keys;
+            std::string error;
+            std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
+            WalletDescriptor w_desc(std::move(desc), GetTime(), 0, 0, 0);
+            if (wallet->GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "HD key already exists");
+            }
+
+            auto spkm = wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
+            if (!spkm) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Unable to add HD key");
+            }
+
+            UniValue response(UniValue::VOBJ);
+            const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+            LOCK(desc_spkm->cs_desc_man);
+            std::set<CPubKey> pubkeys;
+            std::set<CExtPubKey> extpubs;
+            desc_spkm->GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+            CHECK_NONFATAL(pubkeys.size() == 0);
+            CHECK_NONFATAL(extpubs.size() == 1);
+            response.pushKV("xpub", EncodeExtPubKey(*extpubs.begin()));
+
+            return response;
+        },
+    };
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -1105,6 +1179,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &abandontransaction},
         {"wallet", &abortrescan},
         {"wallet", &addmultisigaddress},
+        {"wallet", &addhdkey},
         {"wallet", &backupwallet},
         {"wallet", &bumpfee},
         {"wallet", &psbtbumpfee},
