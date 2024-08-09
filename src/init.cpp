@@ -147,11 +147,12 @@ static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
 // accessing block files don't count towards the fd_set size limit
 // anyway.
-#define MIN_CORE_FILEDESCRIPTORS 0
+#define MIN_LEVELDB_FDS 0
 #else
-#define MIN_CORE_FILEDESCRIPTORS 150
+#define MIN_LEVELDB_FDS 150
 #endif
 
+static const int MIN_CORE_FDS = MIN_LEVELDB_FDS + NUM_FDS_MESSAGE_CAPTURE;
 static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
 /**
@@ -835,7 +836,7 @@ namespace { // Variables internal to initialization process only
 
 int nMaxConnections;
 int nUserMaxConnections;
-int nFD;
+int available_fds;
 ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
 int64_t peer_connect_timeout;
 std::set<BlockFilterType> g_enabled_filter_types;
@@ -987,24 +988,30 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
     }
 
-    // Make sure enough file descriptors are available
+    // Make sure enough file descriptors are available. We need to reserve enough FDs to account for the bare minimum,
+    // plus all manual connections and all bound interfaces. Any remainder will be available for connection sockets
+
+    // Number of bound interfaces (we have at least one)
     int nBind = std::max(nUserBind, size_t(1));
+    // Maximum number of connections with other nodes, this accounts for all types of outbounds and inbounds except for manual
     nUserMaxConnections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
-    nMaxConnections = std::max(nUserMaxConnections, 0);
+    if (nUserMaxConnections < 0){
+        return InitError(Untranslated("-maxconnections must be greater or equal than zero"));
+    }
+    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces
+    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind;
 
-    nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + nBind + NUM_FDS_MESSAGE_CAPTURE);
-
-#ifdef USE_POLL
-    int fd_max = nFD;
-#else
-    int fd_max = FD_SETSIZE;
+    // Try raising the FD limit to what we need (available_fds may be smaller than the requested amount if this fails)
+    available_fds = RaiseFileDescriptorLimit(nUserMaxConnections + min_required_fds);
+    // If we are using select instead of poll, our actual limit may be even smaller
+#ifndef USE_POLL
+    available_fds = std::min(FD_SETSIZE, available_fds);
 #endif
+    if (available_fds < min_required_fds)
+        return InitError(strprintf(_("Not enough file descriptors available. %d available, %d required."), available_fds, min_required_fds));
+
     // Trim requested connection counts, to fit into system limitations
-    // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
-    nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE), 0);
-    if (nFD < MIN_CORE_FILEDESCRIPTORS)
-        return InitError(_("Not enough file descriptors available."));
-    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS - NUM_FDS_MESSAGE_CAPTURE, nMaxConnections);
+    nMaxConnections = std::min(available_fds - min_required_fds, nUserMaxConnections);
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
@@ -1155,7 +1162,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return false;
     }
 
-    LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
+    LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, available_fds);
 
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
