@@ -2,10 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
-#include <string>
-#include <vector>
-
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
@@ -21,6 +17,12 @@
 #include <script/miniscript.h>
 #include <script/script_error.h>
 #include <script/signingprovider.h>
+
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace {
 
@@ -274,7 +276,7 @@ public:
         XOnlyPubKey pk{pubkey};
         auto it = g_testdata->schnorr_signatures.find(pk);
         if (it == g_testdata->schnorr_signatures.end()) return false;
-        return sig == it->second;
+        return std::ranges::equal(sig, it->second);
     }
 
     bool CheckLockTime(const CScriptNum& locktime) const override {

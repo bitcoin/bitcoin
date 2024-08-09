@@ -75,7 +75,7 @@ public:
         bool operator>=(iterator x) const { return ptr >= x.ptr; }
         bool operator<=(iterator x) const { return ptr <= x.ptr; }
         bool operator>(iterator x) const { return ptr > x.ptr; }
-        bool operator<(iterator x) const { return ptr < x.ptr; }
+        bool operator<(const iterator x) const { return ptr < x.ptr; }
     };
 
     class reverse_iterator {
@@ -537,5 +537,12 @@ public:
         return item_ptr(0);
     }
 };
+#include <ranges>
+//    static_assert(std::random_access_iterator<prevector<4,int>::iterator>);
+//    static_assert(std::random_access_iterator<prevector<4,int>::const_iterator>);
+//    static_assert(std::random_access_iterator<prevector<4,int>::reverse_iterator>);
+//    static_assert(std::random_access_iterator<prevector<4,int>::const_reverse_iterator>);
+static_assert(std::ranges::contiguous_range<prevector<4, int>>);
+static_assert(std::ranges::sized_range<prevector<4,int>>);
 
 #endif // BITCOIN_PREVECTOR_H

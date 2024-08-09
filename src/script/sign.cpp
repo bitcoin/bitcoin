@@ -323,7 +323,7 @@ static bool SignTaprootScript(const SigningProvider& provider, const BaseSignatu
     if (leaf_version != TAPROOT_LEAF_TAPSCRIPT) return false;
 
     uint256 leaf_hash = ComputeTapleafHash(leaf_version, script_bytes);
-    CScript script = CScript(script_bytes.begin(), script_bytes.end());
+    CScript script = CScript(UCharCast(script_bytes.data()), UCharCast(script_bytes.data()+script_bytes.size()));//end());
 
     TapSatisfier ms_satisfier{provider, sigdata, creator, script, leaf_hash};
     const auto ms = miniscript::FromScript(script, ms_satisfier);

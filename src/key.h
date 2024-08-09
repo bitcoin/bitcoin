@@ -106,7 +106,7 @@ public:
             ClearKeyData();
         } else if (Check(UCharCast(&pbegin[0]))) {
             MakeKeyData();
-            memcpy(keydata->data(), (unsigned char*)&pbegin[0], keydata->size());
+            memcpy(keydata->data(), UCharCast(&pbegin[0]), keydata->size());
             fCompressed = fCompressedIn;
         } else {
             ClearKeyData();

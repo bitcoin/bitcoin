@@ -36,7 +36,7 @@ namespace wallet {
 
 static Span<const std::byte> StringBytes(std::string_view str)
 {
-    return AsBytes<const char>({str.data(), str.size()});
+    return AsBytes(std::span{str});
 }
 
 static SerializeData StringData(std::string_view str)
