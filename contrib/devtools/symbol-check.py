@@ -54,13 +54,13 @@ IGNORE_EXPORTS = {
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
 ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, str]] = {
     lief.ELF.ARCH.x86_64:  {
-        lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+        lief.ENDIANNESS.LITTLE: "",
     },
     lief.ELF.ARCH.ARM:     {
         lief.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
     },
     lief.ELF.ARCH.AARCH64: {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-aarch64.so.1",
+        lief.ENDIANNESS.LITTLE: "",
     },
     lief.ELF.ARCH.PPC64:   {
         lief.ENDIANNESS.BIG: "/lib64/ld64.so.1",
@@ -219,6 +219,13 @@ def check_RUNPATH(binary) -> bool:
 
 def check_ELF_libraries(binary) -> bool:
     ok: bool = True
+
+    if binary.header.machine_type == lief.ELF.ARCH.x86_64:
+        return len(binary.libraries) == 0
+
+    if binary.header.machine_type == lief.ELF.ARCH.AARCH64:
+        return len(binary.libraries) == 0
+
     for library in binary.libraries:
         if library not in ELF_ALLOWED_LIBRARIES:
             print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
