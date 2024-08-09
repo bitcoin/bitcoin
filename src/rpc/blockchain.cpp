@@ -1652,6 +1652,9 @@ static RPCHelpMan reconsiderblock()
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
     }
 
+    // Update best header
+    WITH_LOCK(::cs_main, chainman.m_best_header = chainman.ActiveChain().Tip());
+
     return UniValue::VNULL;
 },
     };
