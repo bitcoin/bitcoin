@@ -64,9 +64,9 @@ BlockAssembler::Options::Options()
 }
 
 BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool& mempool, const CChainParams& params, const Options& options) :
-      m_blockman(Assert(node.chainman)->m_blockman),
+      m_blockman(chainstate.m_blockman),
       m_cpoolman(*Assert(node.cpoolman)),
-      m_chain_helper(*Assert(node.chain_helper)),
+      m_chain_helper(chainstate.ChainHelper()),
       m_chainstate(chainstate),
       m_dmnman(*Assert(node.dmnman)),
       m_evoDb(*Assert(node.evodb)),
