@@ -14,6 +14,7 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
@@ -308,7 +309,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         fee_join = self.nodes[0].getmempoolentry(txid_join)["fees"]["base"]
         # Fee should be correct: assert_equal(fee_join, self.nodes[0].gettransaction(txid_join)['fee'])
         # But it is not, see for example https://github.com/bitcoin/bitcoin/issues/14136:
-        assert fee_join != self.nodes[0].gettransaction(txid_join)["fee"]
+        assert_not_equal(fee_join, self.nodes[0].gettransaction(txid_join)["fee"])
 
     def run_invalid_parameters_test(self):
         self.log.info("Test listtransactions RPC parameter validity")

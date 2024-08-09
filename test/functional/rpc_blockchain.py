@@ -42,6 +42,7 @@ from test_framework.p2p import P2PInterface
 from test_framework.script import hash256
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
@@ -379,7 +380,7 @@ class BlockchainTest(BitcoinTestFramework):
         # hash_type muhash should return a different UTXO set hash.
         res6 = node.gettxoutsetinfo(hash_type='muhash')
         assert 'muhash' in res6
-        assert res['hash_serialized_3'] != res6['muhash']
+        assert_not_equal(res['hash_serialized_3'], res6['muhash'])
 
         # muhash should not be returned unless requested.
         for r in [res, res2, res3, res4, res5]:
