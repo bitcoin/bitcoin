@@ -2527,6 +2527,343 @@
 ["0", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
 ["0x050000000001", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME",
   "CSV fails if stack top bit 1 << 31 is not set, and tx version < 2"],
+["OP_CAT tests"],
+[
+    [
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "TAPSCRIPT (CAT) Test of OP_CAT flag by calling CAT on an empty stack. This does not error because no TAPSCRIPT_OP_CAT flag is set so CAT is OP_SUCCESS"
+],
+[
+    [
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "INVALID_STACK_OPERATION",
+    "TAPSCRIPT Test of OP_CAT flag by calling CAT on an empty stack. This throws an error because TAPSCRIPT_OP_CAT flag is set so CAT is executed"
+],
+[
+    [
+        "aa",
+        "bb",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT Test of OP_CAT flag by calling CAT on two elements. TAPSCRIPT_OP_CAT flag is set so CAT is executed."
+],
+[
+    [
+        "78a11a1260c1101260",
+        "78a11a1260",
+        "c1101260",
+        "#SCRIPT# CAT EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT CATs 78a11a1260 and c1101260 together and checks it is EQUAL to stack element 78a11a1260c1101260"
+],
+[
+    [
+        "78a11a1260c1101260",
+        "78a11a1260",
+        "c1101260",
+        "#SCRIPT# CAT EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "TAPSCRIPT Test of OP_CAT flag, CATs 78a11a1260 and c1101260 together and checks it is EQUAL to stack element 78a11a1260c1101260. No TAPSCRIPT_OP_CAT set so CAT should be OP_SUCCESS."
+],
+[
+    [
+        "",
+        "78a11a1260",
+        "c1101260",
+        "#SCRIPT# CAT EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "EVAL_FALSE",
+    "TAPSCRIPT CATs 78a11a1260 and c1101260 together and checks it is EQUAL to the empty stack element"
+],
+[
+    [
+        "51",
+        "78a11a1260c1101260",
+        "78a11a1260",
+        "c1101260",
+        "#SCRIPT# CAT EQUALVERIFY",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT CATS 78a11a1260 and c1101260 together and checks it is EQUALVERIFY to stack element 78a11a1260c1101260"
+],
+[
+    [
+        "51",
+        "c110126078a11a1260",
+        "78a11a1260",
+        "c1101260",
+        "#SCRIPT# CAT EQUALVERIFY",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "EQUALVERIFY",
+    "TAPSCRIPT CATs 78a11a1260 and c1101260 together and checks it is EQUALVERIFY to stack element c110126078a11a1260"
+],
+[
+    [
+        "aa",
+        "bb",
+        "#SCRIPT# CAT 0x4c 0x02 0xaabb EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT CATs aa and bb together and checks EQUAL to aabb"
+],
+[
+    [
+        "eeffeeff",
+        "aa",
+        "bbff",
+        "#SCRIPT# CAT CAT DUP DROP 0x4c 0x07 0xeeffeeffaabbff EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT CATs aa and bbcc and eeffeff together and checks EQUAL to eeffeeffaabbcc"
+],
+[
+    [
+        "c24f2c1e363e09a5dd56f0",
+        "89a0385490a11b6dc6740f3513",
+        "#SCRIPT# CAT 0x4c 0x18 0xc24f2c1e363e09a5dd56f089a0385490a11b6dc6740f3513 EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT Tests CAT on different sized random stack elements and compares the result."
+],
+[
+    [
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93",
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT Tests CAT on two hash outputs"
+],
+[
+    [
+        "51",
+        "bbbb",
+        "01",
+        "#SCRIPT# IF CAT ELSE DROP ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT Tests CAT inside of an IF ELSE conditional (true IF)"
+],
+[
+    [
+        "51",
+        "",
+        "#SCRIPT# IF CAT ELSE DROP ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "CLEANSTACK",
+    "TAPSCRIPT Tests CAT inside of an IF ELSE conditional (false IF)"
+],
+[
+    [
+        "1a1a",
+        "#SCRIPT# DUP CAT DUP CAT DUP CAT DUP CAT DUP CAT DUP CAT DUP CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT  Runs DUP CAT seven times on 1a1a"
+],
+[
+    [
+        "1a1a1a1a1a1a1a",
+        "#SCRIPT# DUP CAT DUP CAT DUP CAT DUP CAT DUP CAT DUP CAT DUP CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "PUSH_SIZE",
+    "TAPSCRIPT Runs DUP CAT seven times on 1a1a1a1a1a1a1a triggering a stack size error as the result is larger than max stack element size"
+],
+[
+    [
+        "1ffe1234567890",
+        "00",
+        "#SCRIPT# HASH256 DUP SHA1 CAT DUP CAT TOALTSTACK HASH256 DUP CAT TOALTSTACK FROMALTSTACK",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT Tests CAT with a melange of other opcodes including FROMALTSTACK. "
+],
+[
+    [
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "INVALID_STACK_OPERATION",
+    "TAPSCRIPT ([], CAT) Tests CAT fails on empty stack"
+],
+[
+    [
+        "09ca7009ca7009ca7009ca7009ca70",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "INVALID_STACK_OPERATION",
+    "TAPSCRIPT ([09ca7009ca7009ca7009ca7009ca70], CAT) Tests CAT fails on a stack of only one element"
+],
+[
+    [
+        "",
+        "09ca7009ca7009ca7009ca7009ca70",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT (['', 09ca7009ca7009ca7009ca7009ca70], CAT) Tests CAT succeeds when one of the two values to concatenate is of size zero"
+],
+[
+    [
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93",
+        "0102030405060708",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "OK",
+    "TAPSCRIPT ([512 byte element, 09ca7009ca7009ca7009ca7009ca70], CAT)  Tests edge case where concatenated value is exactly max stack element size (520 bytes)"
+],
+[
+    [
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b930102030405060708",
+        "01",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "PUSH_SIZE",
+    "TAPSCRIPT ([520 byte element, 01], CAT) Tests edge case where concatenated value is one byte larger than max stack element size (520 bytes)"
+],
+[
+    [
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b930102030405060708",
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b930102030405060708",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "PUSH_SIZE",
+    "TAPSCRIPT ([520 byte element, 520 byte element], CAT) Tests case where each element to concatenate is exactly max stack element size (520 bytes)"
+],
+[
+    [
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b930102030405060708",
+        "f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93f821125522f9490bcd108cdd0effbb002d45c6e66e6b48aeb51c865743796b93010203040506070809",
+        "#SCRIPT# CAT",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT,OP_CAT",
+    "PUSH_SIZE",
+    "TAPSCRIPT ([520 byte element, 521 byte element], CAT) Tests edge case where one of the elements to concatenate is one byte larger than max stack element size (520 bytes)"
+],
 
 ["MINIMALIF tests"],
 ["MINIMALIF is not applied to non-segwit scripts"],
