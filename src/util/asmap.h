@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_ASMAP_H
 
 #include <util/fs.h>
+#include <span.h>
 
 #include <cstdint>
 #include <vector>
@@ -16,5 +17,7 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits);
 
 /** Read asmap from provided binary file */
 std::vector<bool> DecodeAsmap(fs::path path);
+/** Read asmap from embedded byte array */
+std::vector<bool> DecodeAsmap(Span<const uint8_t> data);
 
 #endif // BITCOIN_UTIL_ASMAP_H

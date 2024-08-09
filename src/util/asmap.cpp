@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <logging.h>
 #include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <util/fs.h>
 
@@ -194,30 +195,46 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
     return false; // Reached EOF without RETURN instruction
 }
 
-std::vector<bool> DecodeAsmap(fs::path path)
-{
+std::vector<bool> Decode(const Span<const uint8_t>& data) {
     std::vector<bool> bits;
-    FILE *filestr = fsbridge::fopen(path, "rb");
-    AutoFile file{filestr};
-    if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
+    if (data.empty()) {
         return bits;
     }
-    fseek(filestr, 0, SEEK_END);
-    int length = ftell(filestr);
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
-    fseek(filestr, 0, SEEK_SET);
-    uint8_t cur_byte;
-    for (int i = 0; i < length; ++i) {
-        file >> cur_byte;
+
+    for (auto cur_byte : data) {
         for (int bit = 0; bit < 8; ++bit) {
             bits.push_back((cur_byte >> bit) & 1);
         }
     }
+
     if (!SanityCheckASMap(bits, 128)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", fs::quoted(fs::PathToString(path)));
+        LogPrintf("Sanity check of asmap data failed\n");
         return {};
     }
     return bits;
 }
 
+std::vector<bool> DecodeAsmap(fs::path path) {
+    FILE *filestr = fsbridge::fopen(path, "rb");
+    AutoFile file{filestr};
+    if (file.IsNull()) {
+        LogPrintf("Failed to open asmap file from disk\n");
+        return {};
+    }
+
+    fseek(filestr, 0, SEEK_END);
+    int length = ftell(filestr);
+    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
+    fseek(filestr, 0, SEEK_SET);
+
+    std::vector<uint8_t> buffer(length);
+    size_t length_read = fread(buffer.data(), 1, length, file.Get());
+    assert(length_read == static_cast<size_t>(length));
+
+    return Decode(buffer);
+}
+
+std::vector<bool> DecodeAsmap(Span<const uint8_t> data) {
+    LogPrintf("Opened asmap data (%zu bytes) from embedded byte array\n", data.size());
+    return Decode(data);
+}

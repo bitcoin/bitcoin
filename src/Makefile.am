@@ -173,6 +173,7 @@ BITCOIN_CORE_H = \
   indirectmap.h \
   init.h \
   init/common.h \
+  init/ip_asn.h \
   interfaces/chain.h \
   interfaces/echo.h \
   interfaces/handler.h \

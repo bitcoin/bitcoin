@@ -27,6 +27,7 @@
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
 #include <init/common.h>
+#include <init/ip_asn.h>
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
 #include <interfaces/mining.h>
@@ -65,6 +66,7 @@
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
+#include <span.h>
 #include <sync.h>
 #include <torcontrol.h>
 #include <txdb.h>
@@ -1243,22 +1245,35 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     {
 
-        // Read asmap file if configured
+        // Read asmap file or embedded data if configured
         std::vector<bool> asmap;
         if (args.IsArgSet("-asmap")) {
+            const bool asmap_file_set{args.GetPathArg("-asmap") != ""};
             fs::path asmap_path = args.GetPathArg("-asmap", DEFAULT_ASMAP_FILENAME);
             if (!asmap_path.is_absolute()) {
                 asmap_path = args.GetDataDirNet() / asmap_path;
             }
-            if (!fs::exists(asmap_path)) {
+
+            if (!fs::exists(asmap_path) && asmap_file_set) {
                 InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            asmap = DecodeAsmap(asmap_path);
-            if (asmap.size() == 0) {
-                InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
-                return false;
+
+            if (fs::exists(asmap_path)) {
+                asmap = DecodeAsmap(asmap_path);
+                if (asmap.size() == 0) {
+                    InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
+                    return false;
+                }
+            } else {
+                Span<const unsigned char> asmap_data(reinterpret_cast<const unsigned char*>(ip_asn), static_cast<size_t>(ip_asn_len));
+                asmap = DecodeAsmap(asmap_data);
+                if (asmap.size() == 0) {
+                    InitError(strprintf(_("Could not read embedded asmap data")));
+                    return false;
+                }
             }
+
             const uint256 asmap_version = (HashWriter{} << asmap).GetHash();
             LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
