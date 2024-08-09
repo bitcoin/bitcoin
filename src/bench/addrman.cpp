@@ -127,7 +127,7 @@ static void AddrManSelectByNetwork(benchmark::Bench& bench)
     FillAddrMan(addrman);
 
     bench.run([&] {
-        (void)addrman.Select(/*new_only=*/false, NET_I2P);
+        (void)addrman.Select(/*new_only=*/false, {NET_I2P});
     });
 }
 

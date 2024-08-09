@@ -134,6 +134,13 @@ public:
         return Contains(addr.GetNetwork());
     }
 
+    [[nodiscard]] std::unordered_set<Network> All() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        return m_reachable;
+    }
+
 private:
     mutable Mutex m_mutex;
 
