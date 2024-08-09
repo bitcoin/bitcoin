@@ -9,7 +9,10 @@ on:
   # See: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push.
   push:
     branches:
-      - '**'
+      # Disable CI on branch pushes to forks. It will still run for pull requests.
+      # This prevents CI from running twice for typical pull request workflows.
+      - 'bitcoin/**'
+      - 'bitcoin-core/**'
     tags-ignore:
       - '**'
 

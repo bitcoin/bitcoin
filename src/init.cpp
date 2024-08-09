@@ -53,7 +53,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
-#include <policy/feerate.h>
+#include <node/sv2_template_provider.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
 #include <policy/policy.h>
@@ -257,6 +257,9 @@ void Interrupt(NodeContext& node)
     InterruptRPC();
     InterruptREST();
     InterruptTorControl();
+    if (node.sv2_template_provider) {
+        node.sv2_template_provider->Interrupt();
+    }
     InterruptMapPort();
     if (node.connman)
         node.connman->Interrupt();
@@ -296,6 +299,9 @@ void Shutdown(NodeContext& node)
 
     StopTorControl();
 
+    // Stop Template Provider
+    if (node.sv2_template_provider) node.sv2_template_provider->StopThreads();
+
     if (node.chainman && node.chainman->m_thread_load.joinable()) node.chainman->m_thread_load.join();
     // After everything has been shut down, but before things get flushed, stop the
     // the scheduler. After this point, SyncWithValidationInterfaceQueue() should not be called anymore
@@ -309,6 +315,7 @@ void Shutdown(NodeContext& node)
     node.banman.reset();
     node.addrman.reset();
     node.netgroupman.reset();
+    node.sv2_template_provider.reset();
 
     if (node.mempool && node.mempool->GetLoadTried() && ShouldPersistMempool(*node.args)) {
         DumpMempool(*node.mempool, MempoolPath(*node.args));
@@ -659,6 +666,9 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kvB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-sv2", "Bitcoind will act as a Stratum v2 Template Provider, see doc/stratum-v2.md (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-sv2interval", strprintf("Template Provider block template update interval (default: %d seconds)", Sv2TemplateProviderOptions().fee_check_interval.count()), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-sv2feedelta", strprintf("Minimum fee delta for Template Provider to send update upstream (default: %d sat)", uint64_t(Sv2TemplateProviderOptions().fee_delta)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
 
     argsman.AddArg("-rest", strprintf("Accept public REST requests (default: %u)", DEFAULT_REST_ENABLE), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcallowip=<ip>", "Allow JSON-RPC connections from specified source. Valid values for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0), a network/CIDR (e.g. 1.2.3.4/24), all ipv4 (0.0.0.0/0), or all ipv6 (::/0). This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
@@ -676,6 +686,8 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcwhitelistdefault", "Sets default behavior for rpc whitelisting. Unless rpcwhitelistdefault is set to 0, if any -rpcwhitelist is set, the rpc server acts as if all rpc users are subject to empty-unless-otherwise-specified whitelists. If rpcwhitelistdefault is set to 1 and no -rpcwhitelist is set, rpc server acts as if all rpc users are subject to empty whitelists.", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-sv2bind=<addr>[:<port>]", strprintf("Bind to given address and always listen on it (default: 127.0.0.1). Use [host]:port notation for IPv6."), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-sv2port=<port>", strprintf("Listen for Stratum v2 connections on <port> (default: %u, testnet: %u, signet: %u, regtest: %u)", defaultBaseParams->Sv2Port(), testnetBaseParams->Sv2Port(), signetBaseParams->Sv2Port(), regtestBaseParams->Sv2Port()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
 
 #if HAVE_DECL_FORK
     argsman.AddArg("-daemon", strprintf("Run in the background as a daemon and accept commands (default: %d)", DEFAULT_DAEMON), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1321,6 +1333,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         {"-onion",                  true},
         {"-proxy",                  true},
         {"-rpcbind",                false},
+        {"-sv2bind",                false},
         {"-torcontrol",             false},
         {"-whitebind",              false},
         {"-zmqpubhashblock",        true},
@@ -1972,6 +1985,47 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
+    }
+
+    if (args.GetBoolArg("-sv2", false)) {
+        assert(!node.sv2_template_provider);
+        assert(node.mining);
+
+        Sv2TemplateProviderOptions options{};
+
+        node.sv2_template_provider = std::make_unique<Sv2TemplateProvider>(*node.mining);
+
+        const std::string sv2_port_arg = args.GetArg("-sv2port", "");
+
+        if (sv2_port_arg.empty()) {
+            options.port = BaseParams().Sv2Port();
+        } else {
+            if (!ParseUInt16(sv2_port_arg, &options.port) || options.port == 0) {
+                return InitError(InvalidPortErrMsg("sv2port", sv2_port_arg));
+            }
+        }
+
+        if (gArgs.IsArgSet("-sv2bind")) { // Specific bind address
+            std::optional<std::string> sv2_bind{gArgs.GetArg("-sv2bind")};
+            if (sv2_bind) {
+                if (!SplitHostPort(sv2_bind.value(), options.port, options.host)) {
+                    throw std::runtime_error(strprintf("Invalid port %d", options.port));
+                }
+            }
+        }
+
+        options.fee_delta = gArgs.GetIntArg("-sv2feedelta", Sv2TemplateProviderOptions().fee_delta);
+
+        if (gArgs.IsArgSet("-sv2interval")) {
+            if (args.GetIntArg("-sv2interval", 0) < 1) {
+                return InitError(Untranslated("-sv2interval must be at least one second"));
+            }
+            options.fee_check_interval = std::chrono::seconds(gArgs.GetIntArg("-sv2interval", 0));
+        }
+
+        if (!node.sv2_template_provider->Start(options)) {
+            return InitError(_("Unable to start Stratum v2 Template Provider"));
+        }
     }
 
     // ********************************************************* Step 13: finished
