@@ -165,8 +165,8 @@ constexpr bool IsDigit(char c)
  * @param[in] c     character to test
  * @return          true if the argument is a whitespace character; otherwise false
  */
-constexpr inline bool IsSpace(char c) noexcept {
-    return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
+constexpr bool IsSpace(const char c) noexcept {
+    return c <= ' ' && (c == ' ' || (c >= '\t' && c <= '\r'));
 }
 
 /**
