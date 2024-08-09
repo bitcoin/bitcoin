@@ -20,10 +20,12 @@ class EstimateFeeTest(BitcoinTestFramework):
         # missing required params
         assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee)
         assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee)
+        assert_raises_rpc_error(-1, "estimatefee", self.nodes[0].estimatefee)
 
         # wrong type for conf_target
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimatesmartfee, 'foo')
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimaterawfee, 'foo')
+        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimatefee, 'foo')
 
         # wrong type for estimatesmartfee(estimate_mode)
         assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", self.nodes[0].estimatesmartfee, 1, 1)
@@ -35,6 +37,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # extra params
         assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', 1)
         assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1)
+        assert_raises_rpc_error(-1, "estimatefee", self.nodes[0].estimatefee, 1, 1)
 
         # max value of 1008 per src/policy/fees.h
         assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008", self.nodes[0].estimaterawfee, 1009)
@@ -49,6 +52,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)
         self.nodes[0].estimaterawfee(1, 1)
+
+        self.nodes[0].estimatefee(1)
 
 
 if __name__ == '__main__':

@@ -30,6 +30,7 @@
 #include <node/peerman_args.h>
 #include <node/warnings.h>
 #include <noui.h>
+#include <policy/fee_estimator.h>
 #include <policy/fees.h>
 #include <policy/fees_args.h>
 #include <pow.h>
@@ -236,10 +237,10 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
     }
 
-    m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
     bilingual_str error{};
     m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
     Assert(error.empty());
+    m_node.fee_estimator = std::make_unique<FeeEstimator>(FeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES, m_node.mempool.get());
     m_node.warnings = std::make_unique<node::Warnings>();
 
     m_cache_sizes = CalculateCacheSizes(m_args);
