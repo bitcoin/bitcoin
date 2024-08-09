@@ -45,6 +45,23 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
 {
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
+
+// Enable BOOST_CHECK_EQUAL for std::optional
+inline std::ostream& operator<<(std::ostream& os, const std::nullopt_t)
+{
+    return os << "std::nullopt";
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
+{
+    if (v) {
+        os << *v;
+    } else {
+        os << std::nullopt;
+    }
+    return os;
+}
 } // namespace std
 
 static constexpr CAmount CENT{1000000};
