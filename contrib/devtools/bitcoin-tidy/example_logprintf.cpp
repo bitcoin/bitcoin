@@ -20,11 +20,11 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
 }
 
 #define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
-#define LogPrintf(...) LogPrintLevel_(LogFlags::NONE, Level::None, __VA_ARGS__)
+#define LogInfo(...) LogPrintLevel_(LogFlags::NONE, Level::None, __VA_ARGS__)
 
-#define LogPrint(category, ...) \
+#define LogDebug(category, ...) \
     do {                        \
-        LogPrintf(__VA_ARGS__); \
+        LogInfo(__VA_ARGS__); \
     } while (0)
 
 
@@ -39,7 +39,7 @@ public:
     template <typename... Params>
     void WalletLogPrintf(const char* fmt, Params... parameters) const
     {
-        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
+        LogInfo(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
     };
 };
 
@@ -53,13 +53,13 @@ struct ScriptPubKeyMan
     template <typename... Params>
     void WalletLogPrintf(const char* fmt, Params... parameters) const
     {
-        LogPrintf(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
+        LogInfo(("%s " + std::string{fmt}).c_str(), GetDisplayName(), parameters...);
     };
 };
 
 void good_func()
 {
-    LogPrintf("hello world!\n");
+    LogInfo("hello world!\n");
 }
 void good_func2()
 {
@@ -77,20 +77,20 @@ void good_func2()
 }
 void bad_func()
 {
-    LogPrintf("hello world!");
+    LogInfo("hello world!");
 }
 void bad_func2()
 {
-    LogPrintf("");
+    LogInfo("");
 }
 void bad_func3()
 {
     // Ending in "..." has no special meaning.
-    LogPrintf("hello world!...");
+    LogInfo("hello world!...");
 }
 void bad_func4_ignored()
 {
-    LogPrintf("hello world!"); // NOLINT(bitcoin-unterminated-logprintf)
+    LogInfo("hello world!"); // NOLINT(bitcoin-unterminated-logprintf)
 }
 void bad_func5()
 {

@@ -53,9 +53,9 @@ public:
         const std::string full_msg = this->LogMsg(msg);
 
         if (m_log_category == BCLog::LogFlags::ALL) {
-            LogPrintf("%s\n", full_msg);
+            LogInfo("%s\n", full_msg);
         } else {
-            LogPrint(m_log_category, "%s\n", full_msg);
+            LogDebug(m_log_category, "%s\n", full_msg);
         }
     }
 
@@ -87,7 +87,7 @@ private:
     //! A descriptive message of what is being timed.
     const std::string m_title;
 
-    //! Forwarded on to LogPrint if specified - has the effect of only
+    //! Forwarded on to LogDebug if specified - has the effect of only
     //! outputting the timing log when a particular debug= category is specified.
     const BCLog::LogFlags m_log_category;
 
