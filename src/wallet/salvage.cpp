@@ -66,23 +66,27 @@ public:
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
-bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bilingual_str& error, std::vector<bilingual_str>& warnings)
+util::Result<void> RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path)
 {
+    util::Result<void> result;
     DatabaseOptions options;
-    DatabaseStatus status;
     ReadDatabaseArgs(args, options);
     options.require_existing = true;
     options.verify = false;
     options.require_format = DatabaseFormat::BERKELEY;
-    std::unique_ptr<WalletDatabase> database = MakeDatabase(file_path, options, status, error);
-    if (!database) return false;
+    auto database{MakeDatabase(file_path, options) >> result};
+    if (!database) {
+        result.Update(util::Error{});
+        return result;
+    }
 
     BerkeleyDatabase& berkeley_database = static_cast<BerkeleyDatabase&>(*database);
     std::string filename = berkeley_database.Filename();
     std::shared_ptr<BerkeleyEnvironment> env = berkeley_database.env;
 
-    if (!env->Open(error)) {
-        return false;
+    if (!(env->Open() >> result)) {
+        result.Update(util::Error{});
+        return result;
     }
 
     // Recovery procedure:
@@ -95,12 +99,12 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
     int64_t now = GetTime();
     std::string newFilename = strprintf("%s.%d.bak", filename, now);
 
-    int result = env->dbenv->dbrename(nullptr, filename.c_str(), nullptr,
-                                       newFilename.c_str(), DB_AUTO_COMMIT);
-    if (result != 0)
+    int ret = env->dbenv->dbrename(nullptr, filename.c_str(), nullptr,
+                                   newFilename.c_str(), DB_AUTO_COMMIT);
+    if (ret != 0)
     {
-        error = strprintf(Untranslated("Failed to rename %s to %s"), filename, newFilename);
-        return false;
+        result.Update(util::Error{strprintf(Untranslated("Failed to rename %s to %s"), filename, newFilename)});
+        return result;
     }
 
     /**
@@ -114,13 +118,13 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
     std::stringstream strDump;
 
     Db db(env->dbenv.get(), 0);
-    result = db.verify(newFilename.c_str(), nullptr, &strDump, DB_SALVAGE | DB_AGGRESSIVE);
-    if (result == DB_VERIFY_BAD) {
-        warnings.push_back(Untranslated("Salvage: Database salvage found errors, all data may not be recoverable."));
+    ret = db.verify(newFilename.c_str(), nullptr, &strDump, DB_SALVAGE | DB_AGGRESSIVE);
+    if (ret == DB_VERIFY_BAD) {
+        result.AddWarning(Untranslated("Salvage: Database salvage found errors, all data may not be recoverable."));
     }
-    if (result != 0 && result != DB_VERIFY_BAD) {
-        error = strprintf(Untranslated("Salvage: Database salvage failed with result %d."), result);
-        return false;
+    if (ret != 0 && ret != DB_VERIFY_BAD) {
+        result.Update(util::Error{strprintf(Untranslated("Salvage: Database salvage failed with result %d."), ret)});
+        return result;
     }
 
     // Format of bdb dump is ascii lines:
@@ -143,38 +147,36 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
                 break;
             getline(strDump, valueHex);
             if (valueHex == DATA_END) {
-                warnings.push_back(Untranslated("Salvage: WARNING: Number of keys in data does not match number of values."));
+                result.AddWarning(Untranslated("Salvage: WARNING: Number of keys in data does not match number of values."));
                 break;
             }
             salvagedData.emplace_back(ParseHex(keyHex), ParseHex(valueHex));
         }
     }
 
-    bool fSuccess;
     if (keyHex != DATA_END) {
-        warnings.push_back(Untranslated("Salvage: WARNING: Unexpected end of file while reading salvage output."));
-        fSuccess = false;
-    } else {
-        fSuccess = (result == 0);
+        result.Update({util::Error{}, util::Warning{Untranslated("Salvage: WARNING: Unexpected end of file while reading salvage output.")}});
+    } else if (ret != 0) {
+        result.Update(util::Error{});
     }
 
     if (salvagedData.empty())
     {
-        error = strprintf(Untranslated("Salvage(aggressive) found no records in %s."), newFilename);
-        return false;
+        result.Update(util::Error{strprintf(Untranslated("Salvage(aggressive) found no records in %s."), newFilename)});
+        return result;
     }
 
     std::unique_ptr<Db> pdbCopy = std::make_unique<Db>(env->dbenv.get(), 0);
-    int ret = pdbCopy->open(nullptr,               // Txn pointer
+    ret = pdbCopy->open(nullptr,                // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
                             DB_BTREE,           // Database type
                             DB_CREATE,          // Flags
                             0);
     if (ret > 0) {
-        error = strprintf(Untranslated("Cannot create database file %s"), filename);
         pdbCopy->close(0);
-        return false;
+        result.Update(util::Error{strprintf(Untranslated("Cannot create database file %s"), filename)});
+        return result;
     }
 
     DbTxn* ptxn = env->TxnBegin(DB_TXN_WRITE_NOSYNC);
@@ -203,18 +205,19 @@ bool RecoverDatabaseFile(const ArgsManager& args, const fs::path& file_path, bil
 
         if (!fReadOK)
         {
-            warnings.push_back(strprintf(Untranslated("WARNING: WalletBatch::Recover skipping %s: %s"), strType, strErr));
+            result.AddWarning(strprintf(Untranslated("WARNING: WalletBatch::Recover skipping %s: %s"), strType, strErr));
             continue;
         }
         Dbt datKey(row.first.data(), row.first.size());
         Dbt datValue(row.second.data(), row.second.size());
         int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
-        if (ret2 > 0)
-            fSuccess = false;
+        if (ret2 > 0) {
+            result.Update(util::Error{});
+        }
     }
     ptxn->commit(0);
     pdbCopy->close(0);
 
-    return fSuccess;
+    return result;
 }
 } // namespace wallet

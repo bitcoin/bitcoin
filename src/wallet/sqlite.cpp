@@ -78,21 +78,19 @@ static bool BindBlobToStatement(sqlite3_stmt* stmt,
     return true;
 }
 
-static std::optional<int> ReadPragmaInteger(sqlite3* db, const std::string& key, const std::string& description, bilingual_str& error)
+static util::Result<int> ReadPragmaInteger(sqlite3* db, const std::string& key, const std::string& description)
 {
     std::string stmt_text = strprintf("PRAGMA %s", key);
     sqlite3_stmt* pragma_read_stmt{nullptr};
     int ret = sqlite3_prepare_v2(db, stmt_text.c_str(), -1, &pragma_read_stmt, nullptr);
     if (ret != SQLITE_OK) {
         sqlite3_finalize(pragma_read_stmt);
-        error = Untranslated(strprintf("SQLiteDatabase: Failed to prepare the statement to fetch %s: %s", description, sqlite3_errstr(ret)));
-        return std::nullopt;
+        return {util::Error{Untranslated(strprintf("SQLiteDatabase: Failed to prepare the statement to fetch %s: %s", description, sqlite3_errstr(ret)))}};
     }
     ret = sqlite3_step(pragma_read_stmt);
     if (ret != SQLITE_ROW) {
         sqlite3_finalize(pragma_read_stmt);
-        error = Untranslated(strprintf("SQLiteDatabase: Failed to fetch %s: %s", description, sqlite3_errstr(ret)));
-        return std::nullopt;
+        return {util::Error{Untranslated(strprintf("SQLiteDatabase: Failed to fetch %s: %s", description, sqlite3_errstr(ret)))}};
     }
     int result = sqlite3_column_int(pragma_read_stmt, 0);
     sqlite3_finalize(pragma_read_stmt);
@@ -187,35 +185,42 @@ void SQLiteDatabase::Cleanup() noexcept
     }
 }
 
-bool SQLiteDatabase::Verify(bilingual_str& error)
+util::Result<void> SQLiteDatabase::Verify()
 {
     assert(m_db);
+    util::Result<void> result;
 
     // Check the application ID matches our network magic
-    auto read_result = ReadPragmaInteger(m_db, "application_id", "the application id", error);
-    if (!read_result.has_value()) return false;
-    uint32_t app_id = static_cast<uint32_t>(read_result.value());
+    auto read_app_id{ReadPragmaInteger(m_db, "application_id", "the application id") >> result};
+    if (!read_app_id) {
+        result.Update(util::Error{});
+        return result;
+    }
+    uint32_t app_id = static_cast<uint32_t>(*read_app_id);
     uint32_t net_magic = ReadBE32(Params().MessageStart().data());
     if (app_id != net_magic) {
-        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
-        return false;
+        result.Update(util::Error{strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id)});
+        return result;
     }
 
     // Check our schema version
-    read_result = ReadPragmaInteger(m_db, "user_version", "sqlite wallet schema version", error);
-    if (!read_result.has_value()) return false;
-    int32_t user_ver = read_result.value();
+    auto read_user_ver{ReadPragmaInteger(m_db, "user_version", "sqlite wallet schema version") >> result};
+    if (!read_user_ver) {
+        result.Update(util::Error{});
+        return result;
+    }
+    int32_t user_ver = *read_user_ver;
     if (user_ver != WALLET_SCHEMA_VERSION) {
-        error = strprintf(_("SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported"), user_ver, WALLET_SCHEMA_VERSION);
-        return false;
+        result.Update(util::Error{strprintf(_("SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported"), user_ver, WALLET_SCHEMA_VERSION)});
+        return result;
     }
 
     sqlite3_stmt* stmt{nullptr};
     int ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         sqlite3_finalize(stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare statement to verify database: %s"), sqlite3_errstr(ret));
-        return false;
+        result.Update(util::Error{strprintf(_("SQLiteDatabase: Failed to prepare statement to verify database: %s"), sqlite3_errstr(ret))});
+        return result;
     }
     while (true) {
         ret = sqlite3_step(stmt);
@@ -223,25 +228,25 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
             break;
         }
         if (ret != SQLITE_ROW) {
-            error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
+            result.Update(util::Error{strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret))});
             break;
         }
         const char* msg = (const char*)sqlite3_column_text(stmt, 0);
         if (!msg) {
-            error = strprintf(_("SQLiteDatabase: Failed to read database verification error: %s"), sqlite3_errstr(ret));
+            result.Update(util::Error{strprintf(_("SQLiteDatabase: Failed to read database verification error: %s"), sqlite3_errstr(ret))});
             break;
         }
         std::string str_msg(msg);
         if (str_msg == "ok") {
             continue;
         }
-        if (error.empty()) {
-            error = _("Failed to verify database") + Untranslated("\n");
+        if (result) {
+            result.Update(util::Error{_("Failed to verify database")});
         }
-        error += Untranslated(strprintf("%s\n", str_msg));
+        result.AddError(Untranslated(str_msg));
     }
     sqlite3_finalize(stmt);
-    return error.empty();
+    return result;
 }
 
 void SQLiteDatabase::Open()
@@ -691,22 +696,21 @@ bool SQLiteBatch::TxnAbort()
     return res == SQLITE_OK;
 }
 
-std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseError> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options)
 {
+    util::ResultPtr<std::unique_ptr<SQLiteDatabase>, DatabaseError> result;
     try {
         fs::path data_file = SQLiteDataFile(path);
         auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options);
-        if (options.verify && !db->Verify(error)) {
-            status = DatabaseStatus::FAILED_VERIFY;
-            return nullptr;
+        if (options.verify && !(db->Verify() >> result)) {
+            result.Update({util::Error{}, DatabaseError::FAILED_VERIFY});
+        } else {
+            result.Update(std::move(db));
         }
-        status = DatabaseStatus::SUCCESS;
-        return db;
     } catch (const std::runtime_error& e) {
-        status = DatabaseStatus::FAILED_LOAD;
-        error = Untranslated(e.what());
-        return nullptr;
+        result.Update({util::Error{Untranslated(e.what())}, DatabaseError::FAILED_LOAD});
     }
+    return result;
 }
 
 std::string SQLiteDatabaseVersion()
