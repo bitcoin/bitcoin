@@ -43,8 +43,8 @@ static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_co
             key.MakeNewKey(/*fCompressed=*/true);
             FlatSigningProvider keys;
             std::string error;
-            std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", keys, error, /*require_checksum=*/false);
-            WalletDescriptor w_desc(std::move(desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+            std::vector<std::unique_ptr<Descriptor>> desc = Parse("combo(" + EncodeSecret(key) + ")", keys, error, /*require_checksum=*/false);
+            WalletDescriptor w_desc(std::move(desc.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
             auto spkm = wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
             assert(spkm);
         }

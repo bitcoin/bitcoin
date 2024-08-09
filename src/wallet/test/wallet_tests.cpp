@@ -65,8 +65,9 @@ static void AddKey(CWallet& wallet, const CKey& key)
     LOCK(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
-    std::unique_ptr<Descriptor> desc = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
-    assert(desc);
+    auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+    assert(descs.size() == 1);
+    auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     if (!wallet.AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
 }
