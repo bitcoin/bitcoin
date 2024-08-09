@@ -34,6 +34,7 @@ struct CBlockLocator;
 struct FeeCalculation;
 namespace node {
 struct NodeContext;
+struct PruneLockInfo;
 } // namespace node
 
 namespace interfaces {
@@ -92,6 +93,10 @@ struct BlockInfo {
     // The maximum time in the chain up to and including this block.
     // A timestamp that can only move forward.
     unsigned int chain_time_max{0};
+    //! Block is from the tip of the chain (always true except when first calling attachChain and reading old blocks).
+    bool chain_tip{true};
+    //! Error string. If non-empty it indicates some block data could not be read and may be missing.
+    std::string error;
 
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
@@ -136,6 +141,9 @@ public:
     //! Check that the block is available on disk (i.e. has not been
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
+
+    //! Get tip information.
+    virtual bool getTip(const FoundBlock& block={}) = 0;
 
     //! Get locator for the current chain tip.
     virtual CBlockLocator getTipLocator() = 0;
@@ -281,8 +289,14 @@ public:
     //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
     virtual CFeeRate relayDustFee() = 0;
 
+    //! Set or remove a prune lock.
+    virtual void updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info) = 0;
+
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
+
+    //! Check if pruning is enabled.
+    virtual bool pruningEnabled() = 0;
 
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
@@ -318,8 +332,41 @@ public:
         virtual void chainStateFlushed(ChainstateRole role, const CBlockLocator& locator) {}
     };
 
+    //! Options specifying which chain notifications are required.
+    struct NotifyOptions
+    {
+        //! Include undo data with block connected notifications.
+        bool connect_undo_data = false;
+        //! Include undo data with block disconnected notifications.
+        bool disconnect_undo_data = false;
+        //! Name to use for attachChain sync thread.
+        std::string thread_name;
+    };
+
+    //! Prepare callback passed to attachChain, allowing the caller to perform
+    //! custom initialization after attachChain determines the starting sync
+    //! block, but before the first blockConnected notification is sent.
+    //!
+    //! @param start_block  Block where chain client is considered to be
+    //!                     currently synced. The first blockConnected or
+    //!                     blockDisconnected notification will begin from this
+    //!                     block. This is derived from the locator passed to
+    //!                     attachChain.
+    //! @return             True for success, or false to abort and not
+    //!                     attach to the chain.
+    using PrepareSyncFn = std::function<bool(const BlockInfo& start_block)>;
+
+    //! Register handler for notifications. This is similar to
+    //! handleNotifications method below, except it starts a sync thread and
+    //! sends block connected and disconnected notifications relative to a
+    //! locator, instead of relative to the current tip of the chain.
+    virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, const CBlockLocator& locator, const NotifyOptions& options, const PrepareSyncFn& prepare_sync) = 0;
+
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
+
+    //! Wait for pending notifications.
+    virtual void waitForPendingNotifications() = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.

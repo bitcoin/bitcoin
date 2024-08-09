@@ -38,18 +38,20 @@ private:
     CAmount m_total_unspendables_scripts{0};
     CAmount m_total_unspendables_unclaimed_rewards{0};
 
-    [[nodiscard]] bool ReverseBlock(const CBlock& block, const CBlockIndex* pindex);
+    [[nodiscard]] bool ReverseBlock(const interfaces::BlockInfo& block);
 
     bool AllowPrune() const override { return true; }
 
 protected:
+    interfaces::Chain::NotifyOptions CustomOptions() override;
+
     bool CustomInit(const std::optional<interfaces::BlockKey>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
-    bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
+    bool CustomRemove(const interfaces::BlockInfo& block) override;
 
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
@@ -57,8 +59,8 @@ public:
     // Constructs the index, which becomes available to be queried.
     explicit CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
-    // Look up stats for a specific block using CBlockIndex
-    std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex& block_index) const;
+    // Look up stats for a specific block using hash and height
+    std::optional<kernel::CCoinsStats> LookUpStats(const interfaces::BlockKey& block) const;
 };
 
 /// The global UTXO set hash object.

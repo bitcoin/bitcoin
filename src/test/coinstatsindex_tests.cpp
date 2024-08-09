@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     }
 
     // CoinStatsIndex should not be found before it is started.
-    BOOST_CHECK(!coin_stats_index.LookUpStats(*block_index));
+    BOOST_CHECK(!coin_stats_index.LookUpStats({block_index->GetBlockHash(), block_index->nHeight}));
 
     // BlockUntilSyncedToCurrentChain should return false before CoinStatsIndex
     // is started.
@@ -43,10 +43,10 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
         LOCK(cs_main);
         genesis_block_index = m_node.chainman->ActiveChain().Genesis();
     }
-    BOOST_CHECK(coin_stats_index.LookUpStats(*genesis_block_index));
+    BOOST_CHECK(coin_stats_index.LookUpStats({genesis_block_index->GetBlockHash(), genesis_block_index->nHeight}));
 
     // Check that CoinStatsIndex updates with new blocks.
-    BOOST_CHECK(coin_stats_index.LookUpStats(*block_index));
+    BOOST_CHECK(coin_stats_index.LookUpStats({block_index->GetBlockHash(), block_index->nHeight}));
 
     const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
     std::vector<CMutableTransaction> noTxns;
@@ -60,7 +60,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
         LOCK(cs_main);
         new_block_index = m_node.chainman->ActiveChain().Tip();
     }
-    BOOST_CHECK(coin_stats_index.LookUpStats(*new_block_index));
+    BOOST_CHECK(coin_stats_index.LookUpStats({new_block_index->GetBlockHash(), new_block_index->nHeight}));
 
     BOOST_CHECK(block_index != new_block_index);
 
@@ -105,7 +105,8 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
         // Send block connected notification, then stop the index without
         // sending a chainstate flushed notification. Prior to #24138, this
         // would cause the index to be corrupted and fail to reload.
-        ValidationInterfaceTest::BlockConnected(ChainstateRole::NORMAL, index, new_block, new_block_index);
+        m_node.validation_signals->BlockConnected(ChainstateRole::NORMAL, new_block, new_block_index);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
         index.Stop();
     }
 

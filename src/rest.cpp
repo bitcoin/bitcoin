@@ -430,7 +430,7 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
     filter_headers.reserve(*parsed_count);
     for (const CBlockIndex* pindex : headers) {
         uint256 filter_header;
-        if (!index->LookupFilterHeader(pindex, filter_header)) {
+        if (!index->LookupFilterHeader({pindex->GetBlockHash(), pindex->nHeight}, filter_header)) {
             std::string errmsg = "Filter not found.";
 
             if (!index_ready) {
@@ -528,7 +528,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
     bool index_ready = index->BlockUntilSyncedToCurrentChain();
 
     BlockFilter filter;
-    if (!index->LookupFilter(block_index, filter)) {
+    if (!index->LookupFilter({block_index->GetBlockHash(), block_index->nHeight}, filter)) {
         std::string errmsg = "Filter not found.";
 
         if (!block_was_connected) {
