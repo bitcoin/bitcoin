@@ -18,6 +18,7 @@
 #include <univalue.h>
 #include <util/check.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -210,6 +211,7 @@ struct RPCArg {
 
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
+    const std::vector<Type> m_type_per_name;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
     const std::string m_description;
@@ -228,6 +230,24 @@ struct RPCArg {
           m_opts{std::move(opts)}
     {
         CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_NAMED_PARAMS && type != Type::OBJ_USER_KEYS);
+    }
+
+    RPCArg(
+        std::string name,
+        std::vector<Type> types,
+        Fallback fallback,
+        std::string description,
+        std::vector<RPCArg> inner = {},
+        RPCArgOptions opts = {})
+        : m_names{std::move(name)},
+          m_type{types.at(0)},
+          m_type_per_name{std::move(types)},
+          m_inner{std::move(inner)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_opts{std::move(opts)}
+    {
+        CHECK_NONFATAL(m_type_per_name.size() == size_t(std::count(m_names.begin(), m_names.end(), '|')) + 1);
     }
 
     RPCArg(
