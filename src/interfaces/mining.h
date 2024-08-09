@@ -6,7 +6,9 @@
 #define BITCOIN_INTERFACES_MINING_H
 
 #include <node/types.h>
+#include <primitives/block.h>
 #include <uint256.h>
+#include <util/time.h>
 
 #include <memory>
 #include <optional>
@@ -21,6 +23,20 @@ class CBlock;
 class CScript;
 
 namespace interfaces {
+
+// Implemented in https://github.com/bitcoin/bitcoin/pull/30440
+class BlockTemplate
+{
+public:
+    virtual ~BlockTemplate() = default;
+    virtual CBlockHeader getBlockHeader() { return {}; }
+    virtual CBlock getBlock() { return {}; }
+    virtual std::vector<CAmount> getTxFees() { return {}; }
+    virtual std::vector<int64_t> getTxSigops() { return {}; }
+    virtual CTransactionRef getCoinbaseTx() { return {}; }
+    virtual std::vector<unsigned char> getCoinbaseCommitment() { return {}; }
+    virtual int getWitnessCommitmentIndex() { return {}; }
+};
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
 //! ability to create block templates.
@@ -39,6 +55,10 @@ public:
     //! Returns the hash for the tip of this chain
     virtual std::optional<uint256> getTipHash() = 0;
 
+    // Implemented in https://github.com/bitcoin/bitcoin/pull/30409
+    virtual std::optional<int> getTipHeight() { return {}; }
+    virtual std::pair<uint256, int> waitTipChanged(MillisecondsDouble timeout = MillisecondsDouble::max()) { return {}; }
+
    /**
      * Construct a new block template
      *
@@ -47,6 +67,9 @@ public:
      * @returns a block template
      */
     virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, const node::BlockCreateOptions& options={}) = 0;
+
+    // Implemented in https://github.com/bitcoin/bitcoin/pull/30440
+    virtual std::unique_ptr<BlockTemplate> createNewBlock2(const CScript& script_pub_key, const node::BlockCreateOptions& options={}) { return {}; }
 
     /**
      * Processes new block. A valid new block is automatically relayed to peers.

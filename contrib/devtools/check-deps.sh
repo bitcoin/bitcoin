@@ -49,12 +49,6 @@ declare -A SUPPRESS
 # init.cpp file currently calls Berkeley DB sanity check function on startup, so
 # there is an undocumented dependency of the node library on the wallet library.
 SUPPRESS["libbitcoin_node_a-init.o libbitcoin_wallet_a-bdb.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
-# init/common.cpp file calls InitError and InitWarning from interface_ui which
-# is currently part of the node library. interface_ui should just be part of the
-# common library instead, and is moved in
-# https://github.com/bitcoin/bitcoin/issues/10102
-SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z11InitWarningRK13bilingual_str"]=1
-SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z9InitErrorRK13bilingual_str"]=1
 # rpc/external_signer.cpp adds defines node RPC methods but is built as part of the
 # common library. It should be moved to the node library instead.
 SUPPRESS["libbitcoin_common_a-external_signer.o libbitcoin_node_a-server.o _ZN9CRPCTable13appendCommandERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK11CRPCCommand"]=1

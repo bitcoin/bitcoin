@@ -617,6 +617,9 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::RPC:
                 usage += HelpMessageGroup("RPC server options:");
                 break;
+            case OptionsCategory::IPC:
+                usage += HelpMessageGroup("IPC interprocess connection options:");
+                break;
             case OptionsCategory::WALLET:
                 usage += HelpMessageGroup("Wallet options:");
                 break;

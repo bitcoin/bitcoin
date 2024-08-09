@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <common/system.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
@@ -54,6 +55,32 @@ public:
         }
         m_protocol->serve(fd, m_exe_name, m_init);
         exit_status = EXIT_SUCCESS;
+        return true;
+    }
+    std::unique_ptr<interfaces::Init> connectAddress(std::string& address) override
+    {
+        if (address.empty() || address == "0") return nullptr;
+        int fd = -1;
+        std::string error;
+        if (address == "auto") {
+            // failure to connect with "auto" isn't an error. Caller can spawn a child process or just work offline.
+            address = "unix";
+            fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address, error);
+            if (fd < 0) return nullptr;
+        } else {
+            fd = m_process->connect(gArgs.GetDataDirNet(), "bitcoin-node", address, error);
+        }
+        if (fd < 0) {
+            throw std::runtime_error(
+                strprintf("Could not connect to bitcoin-node IPC address '%s'. %s", address, error));
+        }
+        return m_protocol->connect(fd, m_exe_name);
+    }
+    bool listenAddress(std::string& address, std::string& error) override
+    {
+        int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address, error);
+        if (fd < 0) return false;
+        m_protocol->listen(fd, m_exe_name, m_init);
         return true;
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override

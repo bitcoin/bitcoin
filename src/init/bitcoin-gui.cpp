@@ -35,6 +35,7 @@ public:
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
     node::NodeContext m_node;
+    bool canListenIpc() override { return true; }
     std::unique_ptr<interfaces::Ipc> m_ipc;
 };
 } // namespace

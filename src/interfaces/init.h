@@ -37,6 +37,7 @@ public:
     virtual std::unique_ptr<WalletLoader> makeWalletLoader(Chain& chain) { return nullptr; }
     virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
     virtual Ipc* ipc() { return nullptr; }
+    virtual bool canListenIpc() { return false; }
 };
 
 //! Return implementation of Init interface for the node process. If the argv
@@ -52,6 +53,9 @@ std::unique_ptr<Init> MakeWalletInit(int argc, char* argv[], int& exit_status);
 
 //! Return implementation of Init interface for the gui process.
 std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[]);
+
+//! Return implementation of Init interface for the bitcoin-mine process.
+std::unique_ptr<Init> MakeMineInit(int argc, char* argv[]);
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_INIT_H
