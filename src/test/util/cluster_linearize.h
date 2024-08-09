@@ -348,6 +348,122 @@ void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> lin
     }
 }
 
+
+/** A helper class to iterate over all valid linearizations of a given DepGraph.
+ *
+ * Usage: for (const auto& lin : AllValidLinearizations(depgraph)) { ... }
+ */
+template<typename SetType>
+class AllValidLinearizations
+{
+    /** The DepGraph whose valid linearizations this object is iterating over. */
+    const DepGraph<SetType>& m_depgraph;
+
+    /** Iterator type returned by end(). */
+    class IteratorEnd
+    {
+        friend class AllValidLinearizations;
+        constexpr IteratorEnd() = default;
+    public:
+        constexpr IteratorEnd(const IteratorEnd&) = default;
+    };
+
+    /** Iterator type returned by begin(). */
+    class Iterator
+    {
+        friend class AllValidLinearizations;
+
+        /** The DepGraph we are iterating over. */
+        const DepGraph<SetType>& m_depgraph;
+
+        /** m_choices_left[i] gives the remaining topologically-valid choices for
+         *  m_linearization[i]. */
+        std::vector<SetType> m_choices_left;
+        /** The current linearization. */
+        std::vector<ClusterIndex> m_linearization;
+        /** Whether all valid linearizations have been iterated over. */
+        bool m_finished{false};
+
+        /** Fill up m_linearization with the first remaining option, given a set todo of
+         *  unlinearized transactions. */
+        void CompleteLinearization(SetType todo) noexcept
+        {
+            while (m_linearization.size() < m_depgraph.TxCount()) {
+                Assume(todo.Any());
+                // If we don't have an m_choices_left entry for the next transaction to pick,
+                // compute one based on todo.
+                if (m_choices_left.size() == m_linearization.size()) {
+                    SetType choices;
+                    for (auto i : todo) {
+                        if ((m_depgraph.Ancestors(i) & todo) == SetType::Singleton(i)) {
+                            choices.Set(i);
+                        }
+                    }
+                    m_choices_left.push_back(std::move(choices));
+                }
+                Assume(m_choices_left.size() > m_linearization.size());
+                // Pick the first remaining choice.
+                auto& choices = m_choices_left[m_linearization.size()];
+                Assume(choices.Any());
+                ClusterIndex choice = choices.First();
+                choices.Reset(choice);
+                m_linearization.push_back(choice);
+                todo.Reset(choice);
+            }
+        }
+
+        Iterator(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept : m_depgraph{depgraph}
+        {
+            CompleteLinearization(SetType::Fill(depgraph.TxCount()));
+        }
+
+    public:
+        /** Do not allow external code to construct an Iterator. */
+        Iterator() = delete;
+        // Copying is allowed.
+        Iterator(const Iterator&) noexcept = default;
+        Iterator& operator=(const Iterator&) noexcept = default;
+        /** Test whether we are done (can only compare with IteratorEnd). */
+        friend bool operator==(const Iterator& a, const IteratorEnd&) noexcept
+        {
+            return a.m_finished;
+        }
+        /** Progress to the next valid linearization. */
+        Iterator& operator++() noexcept
+        {
+            // Wind back to the point where choices remain, remembering what to add back in todo.
+            SetType todo;
+            while (!m_choices_left.empty() && m_choices_left.back().None()) {
+                m_choices_left.pop_back();
+                todo.Set(m_linearization.back());
+                m_linearization.pop_back();
+            }
+            // If no positions in the linearization remain with options left, we are done.
+            if (m_choices_left.empty()) {
+                m_finished = true;
+                return *this;
+            }
+            // Remove one more element of m_linearization (the transaction we will be replacing).
+            todo.Set(m_linearization.back());
+            m_linearization.pop_back();
+            // Fill up what remains.
+            CompleteLinearization(todo);
+            return *this;
+        }
+
+        /** Access the current linearization (only if != end()). */
+        const std::vector<ClusterIndex>& operator*() const noexcept { return m_linearization; }
+    };
+
+public:
+    AllValidLinearizations(const DepGraph<SetType>& depgraph LIFETIMEBOUND) : m_depgraph{depgraph}
+    {
+    }
+
+    auto begin() const noexcept { return Iterator(m_depgraph); }
+    auto end() const noexcept { return IteratorEnd{}; }
+};
+
 } // namespace
 
 #endif // BITCOIN_TEST_UTIL_CLUSTER_LINEARIZE_H
