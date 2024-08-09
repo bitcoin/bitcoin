@@ -293,6 +293,8 @@ class ConfArgsTest(BitcoinTestFramework):
         seednode_ignored = ['-seednode is ignored when -connect is used\n']
         dnsseed_ignored = ['-dnsseed is ignored when -connect is used and -proxy is specified\n']
         addcon_thread_started = ['addcon thread start\n']
+        dnsseed_disabled = "parameter interaction: -connect or -maxconnections=0 set -> setting -dnsseed=0"
+        listen_disabled = "parameter interaction: -connect or -maxconnections=0 set -> setting -listen=0"
         self.stop_node(0)
 
         # When -connect is supplied, expanding addrman via getaddr calls to ADDR_FETCH(-seednode)
@@ -318,6 +320,25 @@ class ConfArgsTest(BitcoinTestFramework):
             with self.nodes[0].assert_debug_log(expected_msgs=addcon_thread_started,
                     unexpected_msgs=seednode_ignored):
                 self.restart_node(0, extra_args=[connect_arg, '-seednode=fakeaddress2'])
+
+            # Make sure -noconnect soft-disables -listen and -dnsseed.
+            # Need to temporarily remove these settings from the config file in
+            # order for the two log messages to appear
+            self.nodes[0].replace_in_config([("bind=", "#bind"), ("dnsseed=", "#dnsseed=")])
+            with self.nodes[0].assert_debug_log(expected_msgs=addcon_thread_started) as info:
+                self.restart_node(0, extra_args=[connect_arg])
+            self.nodes[0].replace_in_config([("#bind=", "bind"), ("#dnsseed=", "dnsseed=")])
+            for msg in [dnsseed_disabled, listen_disabled]:
+                if msg not in info.log:
+                    raise AssertionError(f"Expected {msg!r} in -noconnect log message")
+
+            # Make sure -proxy and -noconnect warn about -dnsseed setting being
+            # ignored, just like -proxy and -connect do.
+            with self.nodes[0].assert_debug_log(expected_msgs=addcon_thread_started) as info:
+                self.restart_node(0, extra_args=[connect_arg, '-dnsseed', '-proxy=localhost:1080'])
+            for msg in dnsseed_ignored:
+                if msg not in info.log:
+                    raise AssertionError(f"Expected {msg!r} in -noconnect log message")
 
     def test_ignored_conf(self):
         self.log.info('Test error is triggered when the datadir in use contains a bitcoin.conf file that would be ignored '
