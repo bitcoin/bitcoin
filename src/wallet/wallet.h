@@ -428,6 +428,13 @@ private:
     //! Cache of descriptor ScriptPubKeys used for IsMine. Maps ScriptPubKey to set of spkms
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
 
+    //! Set of both spent and unspent transaction outputs owned by this wallet
+    using TXOMap = std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher>;
+    TXOMap m_txos GUARDED_BY(cs_wallet);
+    //! Set of transaction outputs that are definitely no longer usuable
+    //! These outputs may already be spent in a confirmed tx, or are the outputs of a conflicted tx
+    TXOMap m_unusable_txos GUARDED_BY(cs_wallet);
+
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
@@ -507,6 +514,15 @@ public:
 
     std::set<uint256> GetTxConflicts(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    const TXOMap& GetTXOs() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return m_txos; };
+    std::optional<WalletTXO> GetTXO(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    void RefreshWalletTxTXOs(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void RefreshAllTXOs() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void PruneSpentTXOs() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::pair<TXOMap::iterator, TXOMap::iterator> MarkTXOUnusable(const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    std::pair<TXOMap::iterator, TXOMap::iterator> MarkTXOUsable(const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     /**
      * Return depth of transaction in blockchain:
      * <0  : conflicts with a transaction this deep in the blockchain
@@ -520,6 +536,7 @@ public:
      * the height of the last block processed, or the heights of blocks
      * referenced in transaction, and might cause assert failures.
      */
+    int GetTxStateDepthInMainChain(const TxState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     int GetTxDepthInMainChain(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
@@ -527,13 +544,16 @@ public:
      *  0 : is not a coinbase transaction, or is a mature coinbase transaction
      * >0 : is a coinbase transaction which matures in this many blocks
      */
+    int GetTxStateBlocksToMaturity(const TxState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     int GetTxBlocksToMaturity(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    int GetTXOBlocksToMaturity(const WalletTXO& txo) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTxImmatureCoinBase(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsTXOInImmatureCoinBase(const WalletTXO& txo) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! check whether we support the named feature
     bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return IsFeatureSupported(nWalletVersion, wf); }
 
-    bool IsSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsSpent(const COutPoint& outpoint, int min_depth = 0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // Whether this or any known scriptPubKey with the same single key has been spent.
     bool IsSpentKey(const CScript& scriptPubKey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

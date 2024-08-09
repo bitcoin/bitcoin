@@ -329,35 +329,6 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     }
 }
 
-// Check that GetImmatureCredit() returns a newly calculated value instead of
-// the cached value after a MarkDirty() call.
-//
-// This is a regression test written to verify a bugfix for the immature credit
-// function. Similar tests probably should be written for the other credit and
-// debit functions.
-BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
-{
-    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
-
-    LOCK(wallet.cs_wallet);
-    LOCK(Assert(m_node.chainman)->GetMutex());
-    CWalletTx wtx{m_coinbase_txns.back(), TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/0}};
-    wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-    wallet.SetupDescriptorScriptPubKeyMans();
-
-    wallet.SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
-
-    // Call GetImmatureCredit() once before adding the key to the wallet to
-    // cache the current immature credit amount, which is 0.
-    BOOST_CHECK_EQUAL(CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE), 0);
-
-    // Invalidate the cached value, add the key, and make sure a new immature
-    // credit amount is calculated.
-    wtx.MarkDirty();
-    AddKey(wallet, coinbaseKey);
-    BOOST_CHECK_EQUAL(CachedTxGetImmatureCredit(wallet, wtx, ISMINE_SPENDABLE), 50*COIN);
-}
-
 static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64_t blockTime)
 {
     CMutableTransaction tx;
@@ -379,7 +350,7 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         // Assign wtx.m_state to simplify test and avoid the need to simulate
         // reorg events. Without this, AddToWallet asserts false when the same
         // transaction is confirmed in different blocks.
-        wtx.m_state = state;
+        wtx.SetState(state);
         return true;
     })->nTimeSmart;
 }
@@ -548,7 +519,10 @@ public:
     ListCoinsTestingSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+        WalletContext context;
+        context.chain = m_node.chain.get();
+        context.args = m_node.args;
+        wallet = CreateSyncedWallet(context, coinbaseKey);
     }
 
     ~ListCoinsTestingSetup()
@@ -572,17 +546,16 @@ public:
             blocktx = CMutableTransaction(*wallet->mapWallet.at(tx->GetHash()).tx);
         }
         CreateAndProcessBlock({CMutableTransaction(blocktx)}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
         LOCK(wallet->cs_wallet);
-        LOCK(Assert(m_node.chainman)->GetMutex());
-        wallet->SetLastBlockProcessed(wallet->GetLastBlockHeight() + 1, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1};
+        BOOST_CHECK(it->second.state<TxStateConfirmed>());
         return it->second;
     }
 
-    std::unique_ptr<CWallet> wallet;
+    std::shared_ptr<CWallet> wallet;
 };
 
 BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
@@ -645,9 +618,10 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
 void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
                      std::map<OutputType, size_t>& expected_coins_sizes)
 {
-    LOCK(context.wallet->cs_wallet);
     util::Result<CTxDestination> dest = Assert(context.wallet->GetNewDestination(out_type, ""));
     CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
+
+    LOCK(context.wallet->cs_wallet);
     CoinFilterParams filter;
     filter.skip_locked = false;
     CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
@@ -925,66 +899,6 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
     }
 
     TestUnloadWallet(std::move(wallet));
-}
-
-/**
- * Checks a wallet invalid state where the inputs (prev-txs) of a new arriving transaction are not marked dirty,
- * while the transaction that spends them exist inside the in-memory wallet tx map (not stored on db due a db write failure).
- */
-BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestingSetup)
-{
-    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
-    {
-        LOCK(wallet.cs_wallet);
-        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet.SetupDescriptorScriptPubKeyMans();
-    }
-
-    // Add tx to wallet
-    const auto op_dest{*Assert(wallet.GetNewDestination(OutputType::BECH32M, ""))};
-
-    CMutableTransaction mtx;
-    mtx.vout.emplace_back(COIN, GetScriptForDestination(op_dest));
-    mtx.vin.emplace_back(Txid::FromUint256(g_insecure_rand_ctx.rand256()), 0);
-    const auto& tx_id_to_spend = wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInMempool{})->GetHash();
-
-    {
-        // Cache and verify available balance for the wtx
-        LOCK(wallet.cs_wallet);
-        const CWalletTx* wtx_to_spend = wallet.GetWalletTx(tx_id_to_spend);
-        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *wtx_to_spend), 1 * COIN);
-    }
-
-    // Now the good case:
-    // 1) Add a transaction that spends the previously created transaction
-    // 2) Verify that the available balance of this new tx and the old one is updated (prev tx is marked dirty)
-
-    mtx.vin.clear();
-    mtx.vin.emplace_back(tx_id_to_spend, 0);
-    wallet.transactionAddedToMempool(MakeTransactionRef(mtx));
-    const auto good_tx_id{mtx.GetHash()};
-
-    {
-        // Verify balance update for the new tx and the old one
-        LOCK(wallet.cs_wallet);
-        const CWalletTx* new_wtx = wallet.GetWalletTx(good_tx_id.ToUint256());
-        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *new_wtx), 1 * COIN);
-
-        // Now the old wtx
-        const CWalletTx* wtx_to_spend = wallet.GetWalletTx(tx_id_to_spend);
-        BOOST_CHECK_EQUAL(CachedTxGetAvailableCredit(wallet, *wtx_to_spend), 0 * COIN);
-    }
-
-    // Now the bad case:
-    // 1) Make db always fail
-    // 2) Try to add a transaction that spends the previously created transaction and
-    //    verify that we are not moving forward if the wallet cannot store it
-    GetMockableDatabase(wallet).m_pass = false;
-    mtx.vin.clear();
-    mtx.vin.emplace_back(good_tx_id, 0);
-    BOOST_CHECK_EXCEPTION(wallet.transactionAddedToMempool(MakeTransactionRef(mtx)),
-                          std::runtime_error,
-                          HasReason("DB error adding transaction to wallet, write failed"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

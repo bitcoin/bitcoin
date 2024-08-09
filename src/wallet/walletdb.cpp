@@ -1039,6 +1039,10 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vecto
             if (wtx.GetHash() != hash)
                 return false;
 
+            if (wtx.m_from_me.empty()) {
+                upgraded_txs.push_back(hash);
+            }
+
             // Undo serialize changes in 31600
             if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)
             {
@@ -1072,6 +1076,16 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vecto
         return result;
     });
     result = std::max(result, tx_res.m_result);
+
+    // Upgrade each CWalletTx with new m_from_me data
+    for (auto txid : upgraded_txs) {
+        auto it = pwallet->mapWallet.find(txid);
+        Assert(it != pwallet->mapWallet.end());
+        CWalletTx& wtx = it->second;
+        for (auto filter : {ISMINE_SPENDABLE, ISMINE_WATCH_ONLY}) {
+            wtx.m_from_me[filter] = pwallet->GetDebit(*wtx.tx, filter) > 0;
+        }
+    }
 
     // Load locked utxo record
     LoadResult locked_utxo_res = LoadRecords(pwallet, batch, DBKeys::LOCKED_UTXO,
@@ -1186,14 +1200,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // Load address book
         result = std::max(LoadAddressBookRecords(pwallet, *m_batch), result);
 
-        // Load tx records
-        result = std::max(LoadTxRecords(pwallet, *m_batch, upgraded_txs, any_unordered), result);
-
         // Load SPKMs
         result = std::max(LoadActiveSPKMs(pwallet, *m_batch), result);
 
         // Load decryption keys
         result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
+
+        // Load tx records
+        result = std::max(LoadTxRecords(pwallet, *m_batch, upgraded_txs, any_unordered), result);
     } catch (...) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
