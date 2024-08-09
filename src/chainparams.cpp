@@ -805,7 +805,7 @@ public:
         consensus.DIP0003EnforcementHeight = 500;
         consensus.DIP0003EnforcementHash = uint256();
         consensus.DIP0008Height = 1; // Always active unless overridden
-        consensus.BRRHeight = 1000; // see block_reward_reallocation_tests
+        consensus.BRRHeight = 1;     // Always active unless overridden
         consensus.DIP0020Height = 1;
         consensus.DIP0024Height = 900;
         consensus.DIP0024QuorumsHeight = 900;
@@ -1054,6 +1054,8 @@ static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& conse
             consensus.BIP65Height = int{height};
         } else if (name == "csv") {
             consensus.CSVHeight = int{height};
+        } else if (name == "brr") {
+            consensus.BRRHeight = int{height};
         } else if (name == "dip0008") {
             consensus.DIP0008Height = int{height};
         } else if (name == "dip0020") {
