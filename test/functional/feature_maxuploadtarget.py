@@ -38,7 +38,6 @@ class MaxUploadTest(BitcoinTestFramework):
         self.extra_args = [[
             "-maxuploadtarget=200",
             "-blockmaxsize=999000",
-            "-maxtipage="+str(2*60*60*24*7),
             "-acceptnonstdtxn=1"
         ]]
         self.supports_cli = False
@@ -149,7 +148,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].disconnect_p2ps()
 
         self.log.info("Restarting node 0 with download permission and 1MB maxuploadtarget")
-        self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000", "-maxtipage="+str(2*60*60*24*7), "-mocktime="+str(current_mocktime)])
+        self.restart_node(0, ["-whitelist=download@127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000", "-mocktime="+str(current_mocktime)])
 
         # Reconnect to self.nodes[0]
         peer = self.nodes[0].add_p2p_connection(TestP2PConn())

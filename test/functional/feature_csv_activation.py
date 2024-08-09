@@ -91,11 +91,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        # Must also set '-maxtipage=600100' to allow syncing from very old blocks
-        # and '-dip3params=2000:2000' to create pre-dip3 blocks only
+        # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
-            '-maxtipage=600100', '-dip3params=2000:2000',
+            '-dip3params=2000:2000',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False

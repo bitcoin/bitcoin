@@ -49,8 +49,6 @@ static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
 /** Pruning-related variables and constants */
-/** True if any block files have ever been pruned. */
-extern bool fHavePruned;
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
 /** Number of bytes of block files that we're trying to stay below. */
@@ -160,7 +158,9 @@ public:
     /** Clear all data members. */
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const uint256& hash, enum BlockStatus nStatus = BLOCK_VALID_TREE) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const uint256& hash, CBlockIndex*& best_header,
+                                 enum BlockStatus nStatus = BLOCK_VALID_TREE)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Create a new block index entry for a given block hash */
     CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -184,6 +184,12 @@ public:
     //! Returns last CBlockIndex* that is a checkpoint
     const CBlockIndex* GetLastCheckpoint(const CCheckpointData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /** True if any block files have ever been pruned. */
+    bool m_have_pruned = false;
+
+    //! Check whether the block associated with this index entry is pruned or not.
+    bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     /**
      * Return the spend height, which is one more than the inputs.GetBestBlock().
      * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)
@@ -196,9 +202,6 @@ public:
         Unload();
     }
 };
-
-//! Check whether the block associated with this index entry is pruned or not.
-bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 void CleanupBlockRevFiles();
 

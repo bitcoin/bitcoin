@@ -150,9 +150,6 @@ extern uint256 hashAssumeValid;
 /** Minimum work we will assume exists on some valid chain. */
 extern arith_uint256 nMinimumChainWork;
 
-/** Best header we've seen so far (used for getheaders queries' starting points). */
-extern CBlockIndex *pindexBestHeader;
-
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
@@ -858,7 +855,7 @@ public:
     std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
-    BlockManager m_blockman GUARDED_BY(::cs_main);
+    BlockManager m_blockman;
 
     /**
      * In order to efficiently track invalidity of headers, we keep the set of
@@ -880,6 +877,9 @@ public:
      * instead of putting things in this set.
      */
     std::set<CBlockIndex*> m_failed_blocks;
+
+    /** Best header we've seen so far (used for getheaders queries' starting points). */
+    CBlockIndex* m_best_header = nullptr;
 
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.

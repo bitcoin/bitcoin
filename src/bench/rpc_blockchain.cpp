@@ -45,7 +45,7 @@ static void BlockToJsonVerbose(benchmark::Bench& bench)
     TestBlockAndIndex data;
     const LLMQContext& llmq_ctx = *data.testing_setup->m_node.llmq_ctx;
     bench.run([&] {
-        auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
+        auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
         ankerl::nanobench::doNotOptimizeAway(univalue);
     });
 }
@@ -56,7 +56,7 @@ static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
     const LLMQContext& llmq_ctx = *data.testing_setup->m_node.llmq_ctx;
-    auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
+    auto univalue = blockToJSON(data.testing_setup->m_node.chainman->m_blockman, data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
     bench.run([&] {
         auto str = univalue.write();
         ankerl::nanobench::doNotOptimizeAway(str);
