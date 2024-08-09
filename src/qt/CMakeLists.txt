@@ -74,6 +74,8 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   bitcoingui.h
   bitcoinunits.cpp
   bitcoinunits.h
+  blockview.cpp
+  blockview.h
   clientmodel.cpp
   clientmodel.h
   csvmodelwriter.cpp
