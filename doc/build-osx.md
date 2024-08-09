@@ -48,7 +48,7 @@ See [dependencies.md](dependencies.md) for a complete overview.
 To install, run the following from your terminal:
 
 ``` bash
-brew install automake libtool boost pkg-config libevent
+brew install automake libtool boost pkg-config libevent capnp
 ```
 
 For macOS 11 (Big Sur) and 12 (Monterey) you need to install a more recent version of llvm.
