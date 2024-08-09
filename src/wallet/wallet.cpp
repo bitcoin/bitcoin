@@ -907,7 +907,6 @@ DBErrors CWallet::ReorderTransactions()
     // Probably a bad idea to change the output of this
 
     // First: get all CWalletTx into a sorted-by-time multimap.
-    typedef std::multimap<int64_t, CWalletTx*> TxItems;
     TxItems txByTime;
 
     for (auto& entry : mapWallet)
