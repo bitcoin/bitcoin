@@ -67,6 +67,10 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid_spent], blockhash)), [txid_spent])
         # We can't get the proof if we specify a non-existent block
         assert_raises_rpc_error(-5, "Block not found", self.nodes[0].gettxoutproof, [txid_spent], "0000000000000000000000000000000000000000000000000000000000000000")
+        # We can't get the proof if we only have the header of the specified block
+        block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
+        self.nodes[0].submitheader(block["hex"])
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].gettxoutproof, [txid_spent], block['hash'])
         # We can get the proof if the transaction is unspent
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid_unspent])), [txid_unspent])
         # We can get the proof if we provide a list of transactions and one of them is unspent. The ordering of the list should not matter.

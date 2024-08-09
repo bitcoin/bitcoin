@@ -412,7 +412,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Submit a spending transaction for a snapshot chainstate coin to the mempool")
         # spend the coinbase output of the first block that is not available on node1
         spend_coin_blockhash = n1.getblockhash(START_HEIGHT + 1)
-        assert_raises_rpc_error(-1, "Block not found on disk", n1.getblock, spend_coin_blockhash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", n1.getblock, spend_coin_blockhash)
         prev_tx = n0.getblock(spend_coin_blockhash, 3)['tx'][0]
         prevout = {"txid": prev_tx['txid'], "vout": 0, "scriptPubKey": prev_tx['vout'][0]['scriptPubKey']['hex']}
         privkey = n0.get_deterministic_priv_key().key

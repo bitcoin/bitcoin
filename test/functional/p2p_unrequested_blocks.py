@@ -119,7 +119,7 @@ class AcceptBlockTest(BitcoinTestFramework):
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
         assert tip_entry_found
-        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, block_h1f.hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, block_h1f.hash)
 
         # 4. Send another two block that build on the fork.
         block_h2f = create_block(block_h1f.sha256, create_coinbase(2), block_time)
@@ -191,7 +191,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # Blocks 1-287 should be accepted, block 288 should be ignored because it's too far ahead
         for x in all_blocks[:-1]:
             self.nodes[0].getblock(x.hash)
-        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[-1].hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, all_blocks[-1].hash)
 
         # 5. Test handling of unrequested block on the node that didn't process
         # Should still not be processed (even though it has a child that has more
@@ -230,7 +230,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockcount(), 290)
         self.nodes[0].getblock(all_blocks[286].hash)
         assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
-        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[287].hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, all_blocks[287].hash)
         self.log.info("Successfully reorged to longer chain")
 
         # 8. Create a chain which is invalid at a height longer than the
@@ -260,7 +260,7 @@ class AcceptBlockTest(BitcoinTestFramework):
                 assert_equal(x['status'], "headers-only")
                 tip_entry_found = True
         assert tip_entry_found
-        assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, block_292.hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, block_292.hash)
 
         test_node.send_message(msg_block(block_289f))
         test_node.send_and_ping(msg_block(block_290f))

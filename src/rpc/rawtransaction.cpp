@@ -405,7 +405,7 @@ static RPCHelpMan getrawtransaction()
     CBlockUndo blockUndo;
     CBlock block;
 
-    if (tx->IsCoinBase() || !blockindex || WITH_LOCK(::cs_main, return chainman.m_blockman.IsBlockPruned(*blockindex)) ||
+    if (tx->IsCoinBase() || !blockindex || WITH_LOCK(::cs_main, return !(blockindex->nStatus & BLOCK_HAVE_UNDO) || !(blockindex->nStatus & BLOCK_HAVE_DATA)) ||
         !(chainman.m_blockman.UndoReadFromDisk(blockUndo, *blockindex) && chainman.m_blockman.ReadBlockFromDisk(block, *blockindex))) {
         TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
         return result;
