@@ -62,10 +62,16 @@ If you do need the wallet enabled, it is common for devs to add `--with-incompat
 
 ### Make use of your threads with `make -j`
 
-If you have multiple threads on your machine, you can tell `make` to utilize all of them with:
+If you have multiple threads on your machine, you can tell `make` to utilize them with:
 
 ```sh
-make -j"$(($(nproc)+1))"
+make -j$(getconf _NPROCESSORS_ONLN)
+```
+
+Linux has the less verbose:
+
+```sh
+make -j$(nproc)
 ```
 
 ### Only build what you need

@@ -349,7 +349,7 @@ details.
 
 Build Guix (this will take a while):
 ```
-make -j$(nproc)
+make -j$(getconf _NPROCESSORS_ONLN)
 ```
 
 Install Guix:
