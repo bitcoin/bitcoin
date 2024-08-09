@@ -12,6 +12,7 @@
 #include <rpc/util.h>
 #include <script/script.h>
 #include <util/rbf.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <util/vector.h>
 #include <wallet/coincontrol.h>
@@ -59,8 +60,12 @@ static void InterpretFeeEstimationInstructions(const UniValue& conf_target, cons
     } else {
         options.pushKV("fee_rate", fee_rate);
     }
-    if (!options["conf_target"].isNull() && (options["estimate_mode"].isNull() || (options["estimate_mode"].get_str() == "unset"))) {
+    auto estimate_mode_set = !options["estimate_mode"].isNull() && (ToLower(options["estimate_mode"].get_str()) != "unset");
+    if (!options["conf_target"].isNull() && !estimate_mode_set) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Specify estimate_mode");
+    }
+    if (options["conf_target"].isNull() && estimate_mode_set) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "estimate_mode should be passed with conf_target");
     }
 }
 
@@ -209,7 +214,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         if (!conf_target.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
         }
-        if (!estimate_mode.isNull() && estimate_mode.get_str() != "unset") {
+        if (!estimate_mode.isNull() && ToLower(estimate_mode.get_str()) != "unset") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
         // Fee rates in sat/vB cannot represent more than 3 significant digits.
