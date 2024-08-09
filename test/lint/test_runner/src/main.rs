@@ -36,6 +36,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_markdown
         },
         &Linter {
+            description: "Check the default arguments in python",
+            name: "py_mut_arg_default",
+            lint_fn: lint_py_mut_arg_default,
+        },
+        &Linter {
             description: "Check that std::filesystem is not used directly",
             name: "std_filesystem",
             lint_fn: lint_std_filesystem
@@ -177,6 +182,35 @@ fn lint_subtree() -> LintResult {
         Ok(())
     } else {
         Err("".to_string())
+    }
+}
+
+fn lint_py_mut_arg_default() -> LintResult {
+    let bin_name = "ruff";
+    let checks = ["B006", "B008"]
+        .iter()
+        .map(|c| format!("--select={}", c))
+        .collect::<Vec<_>>();
+    let files = check_output(
+        git()
+            .args(["ls-files", "--", "*.py"])
+            .args(get_pathspecs_exclude_subtrees()),
+    )?;
+
+    let mut cmd = Command::new(bin_name);
+    cmd.arg("check").args(checks).args(files.lines());
+
+    match cmd.status() {
+        Ok(status) if status.success() => Ok(()),
+        Ok(_) => Err(format!("`{}` found errors!", bin_name)),
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            println!(
+                "`{}` was not found in $PATH, skipping those checks.",
+                bin_name
+            );
+            Ok(())
+        }
+        Err(e) => Err(format!("Error running `{}`: {}", bin_name, e)),
     }
 }
 
