@@ -24,6 +24,7 @@ FALSE_POSITIVES = [
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), GetDisplayName(), parameters...)"),
     ("src/wallet/scriptpubkeyman.h", "WalletLogPrintf(const char* fmt, Params... parameters)"),
     ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + std::string{fmt}).c_str(), m_storage.GetDisplayName(), parameters...)"),
+    ("src/rpc/net.cpp", "strprintf( R\"(Unrecognized aggregation parameter: \"%s\". The array should consist of zero or more of \"%s\", \"%s\", \"%s\", \"%s\".)\", agg, aggregate_dimensions::DIRECTION, aggregate_dimensions::NETWORK, aggregate_dimensions::CONNECTION_TYPE, aggregate_dimensions::MESSAGE_TYPE)")
 ]
 
 

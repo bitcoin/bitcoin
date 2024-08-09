@@ -139,6 +139,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getmempoolentry",
     "getmempoolinfo",
     "getmininginfo",
+    "getnetmsgstats",
     "getnettotals",
     "getnetworkhashps",
     "getnetworkinfo",
