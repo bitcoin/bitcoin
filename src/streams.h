@@ -523,6 +523,10 @@ public:
             throw std::ios_base::failure("Rewind limit must be less than buffer size");
     }
 
+    ~BufferedFile() { fclose(); }
+
+    int fclose() { return m_src.fclose(); }
+
     //! check whether we're at the end of the source file
     bool eof() const {
         return m_read_pos == nSrcPos && m_src.feof();

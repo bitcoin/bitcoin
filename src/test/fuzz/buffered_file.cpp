@@ -65,4 +65,8 @@ FUZZ_TARGET(buffered_file)
         }
         opt_buffered_file->GetPos();
     }
+    if (opt_buffered_file) {
+        opt_buffered_file->fclose();
+        opt_buffered_file.reset();
+    }
 }
