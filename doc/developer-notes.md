@@ -896,9 +896,10 @@ Strings and formatting
 
   - *Rationale*: These functions do overflow checking and avoid pesky locale issues.
 
-- Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.py`](/test/lint/lint-locale-dependence.py)
-  to check for accidental use of locale dependent functions.
+- Avoid using locale dependent functions if possible. You can use the
+ `locale_dependent` lint check (`cd test/lint/test_runner && cargo run --
+ --lint="locale_dependent"`) to check for accidental use of locale dependent
+ functions.
 
   - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.
 
