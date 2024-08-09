@@ -41,6 +41,9 @@
 /* Define this symbol to enable ZMQ functions */
 #define ENABLE_ZMQ 1
 
+/* Define if external signer support is enabled */
+#define ENABLE_EXTERNAL_SIGNER 1
+
 /* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */
 #define HAVE_DECL_FORK 0
