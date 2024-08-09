@@ -16,20 +16,20 @@ namespace internal {
 Type SanitizeType(Type e) {
     int num_types = (e << "K"_mst) + (e << "V"_mst) + (e << "B"_mst) + (e << "W"_mst);
     if (num_types == 0) return ""_mst; // No valid type, don't care about the rest
-    assert(num_types == 1); // K, V, B, W all conflict with each other
-    assert(!(e << "z"_mst) || !(e << "o"_mst)); // z conflicts with o
-    assert(!(e << "n"_mst) || !(e << "z"_mst)); // n conflicts with z
-    assert(!(e << "n"_mst) || !(e << "W"_mst)); // n conflicts with W
-    assert(!(e << "V"_mst) || !(e << "d"_mst)); // V conflicts with d
-    assert(!(e << "K"_mst) ||  (e << "u"_mst)); // K implies u
-    assert(!(e << "V"_mst) || !(e << "u"_mst)); // V conflicts with u
-    assert(!(e << "e"_mst) || !(e << "f"_mst)); // e conflicts with f
-    assert(!(e << "e"_mst) ||  (e << "d"_mst)); // e implies d
-    assert(!(e << "V"_mst) || !(e << "e"_mst)); // V conflicts with e
-    assert(!(e << "d"_mst) || !(e << "f"_mst)); // d conflicts with f
-    assert(!(e << "V"_mst) ||  (e << "f"_mst)); // V implies f
-    assert(!(e << "K"_mst) ||  (e << "s"_mst)); // K implies s
-    assert(!(e << "z"_mst) ||  (e << "m"_mst)); // z implies m
+    Assume(num_types == 1); // K, V, B, W all conflict with each other
+    Assume(!(e << "z"_mst) || !(e << "o"_mst)); // z conflicts with o
+    Assume(!(e << "n"_mst) || !(e << "z"_mst)); // n conflicts with z
+    Assume(!(e << "n"_mst) || !(e << "W"_mst)); // n conflicts with W
+    Assume(!(e << "V"_mst) || !(e << "d"_mst)); // V conflicts with d
+    Assume(!(e << "K"_mst) ||  (e << "u"_mst)); // K implies u
+    Assume(!(e << "V"_mst) || !(e << "u"_mst)); // V conflicts with u
+    Assume(!(e << "e"_mst) || !(e << "f"_mst)); // e conflicts with f
+    Assume(!(e << "e"_mst) ||  (e << "d"_mst)); // e implies d
+    Assume(!(e << "V"_mst) || !(e << "e"_mst)); // V conflicts with e
+    Assume(!(e << "d"_mst) || !(e << "f"_mst)); // d conflicts with f
+    Assume(!(e << "V"_mst) ||  (e << "f"_mst)); // V implies f
+    Assume(!(e << "K"_mst) ||  (e << "s"_mst)); // K implies s
+    Assume(!(e << "z"_mst) ||  (e << "m"_mst)); // z implies m
     return e;
 }
 
@@ -37,46 +37,46 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
                  size_t data_size, size_t n_subs, size_t n_keys, MiniscriptContext ms_ctx) {
     // Sanity check on data
     if (fragment == Fragment::SHA256 || fragment == Fragment::HASH256) {
-        assert(data_size == 32);
+        Assume(data_size == 32);
     } else if (fragment == Fragment::RIPEMD160 || fragment == Fragment::HASH160) {
-        assert(data_size == 20);
+        Assume(data_size == 20);
     } else {
-        assert(data_size == 0);
+        Assume(data_size == 0);
     }
     // Sanity check on k
     if (fragment == Fragment::OLDER || fragment == Fragment::AFTER) {
-        assert(k >= 1 && k < 0x80000000UL);
+        Assume(k >= 1 && k < 0x80000000UL);
     } else if (fragment == Fragment::MULTI || fragment == Fragment::MULTI_A) {
-        assert(k >= 1 && k <= n_keys);
+        Assume(k >= 1 && k <= n_keys);
     } else if (fragment == Fragment::THRESH) {
-        assert(k >= 1 && k <= n_subs);
+        Assume(k >= 1 && k <= n_subs);
     } else {
-        assert(k == 0);
+        Assume(k == 0);
     }
     // Sanity check on subs
     if (fragment == Fragment::AND_V || fragment == Fragment::AND_B || fragment == Fragment::OR_B ||
         fragment == Fragment::OR_C || fragment == Fragment::OR_I || fragment == Fragment::OR_D) {
-        assert(n_subs == 2);
+        Assume(n_subs == 2);
     } else if (fragment == Fragment::ANDOR) {
-        assert(n_subs == 3);
+        Assume(n_subs == 3);
     } else if (fragment == Fragment::WRAP_A || fragment == Fragment::WRAP_S || fragment == Fragment::WRAP_C ||
                fragment == Fragment::WRAP_D || fragment == Fragment::WRAP_V || fragment == Fragment::WRAP_J ||
                fragment == Fragment::WRAP_N) {
-        assert(n_subs == 1);
+        Assume(n_subs == 1);
     } else if (fragment != Fragment::THRESH) {
-        assert(n_subs == 0);
+        Assume(n_subs == 0);
     }
     // Sanity check on keys
     if (fragment == Fragment::PK_K || fragment == Fragment::PK_H) {
-        assert(n_keys == 1);
+        Assume(n_keys == 1);
     } else if (fragment == Fragment::MULTI) {
-        assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTISIG);
-        assert(!IsTapscript(ms_ctx));
+        Assume(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTISIG);
+        Assume(!IsTapscript(ms_ctx));
     } else if (fragment == Fragment::MULTI_A) {
-        assert(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTI_A);
-        assert(IsTapscript(ms_ctx));
+        Assume(n_keys >= 1 && n_keys <= MAX_PUBKEYS_PER_MULTI_A);
+        Assume(IsTapscript(ms_ctx));
     } else {
-        assert(n_keys == 0);
+        Assume(n_keys == 0);
     }
 
     // Below is the per-fragment logic for computing the expression types.
@@ -424,6 +424,46 @@ int FindNextChar(Span<const char> sp, const char m)
         if (sp[i] == ')') break;
     }
     return -1;
+}
+
+void SanityCheckSatisfaction(Type typ, const InputResult& ret)
+{
+    // Do a consistency check between the satisfaction code and the type checker
+    // (the actual satisfaction code in ProduceInputHelper does not use GetType)
+
+    // For 'z' nodes, available satisfactions/dissatisfactions must have stack size 0.
+    if (typ << "z"_mst && ret.nsat.available != Availability::NO) Assume(ret.nsat.stack.size() == 0);
+    if (typ << "z"_mst && ret.sat.available != Availability::NO) Assume(ret.sat.stack.size() == 0);
+
+    // For 'o' nodes, available satisfactions/dissatisfactions must have stack size 1.
+    if (typ << "o"_mst && ret.nsat.available != Availability::NO) Assume(ret.nsat.stack.size() == 1);
+    if (typ << "o"_mst && ret.sat.available != Availability::NO) Assume(ret.sat.stack.size() == 1);
+
+    // For 'n' nodes, available satisfactions/dissatisfactions must have stack size 1 or larger. For satisfactions,
+    // the top element cannot be 0.
+    if (typ << "n"_mst && ret.sat.available != Availability::NO) Assume(ret.sat.stack.size() >= 1);
+    if (typ << "n"_mst && ret.nsat.available != Availability::NO) Assume(ret.nsat.stack.size() >= 1);
+    if (typ << "n"_mst && ret.sat.available != Availability::NO) Assume(!ret.sat.stack.back().empty());
+
+    // For 'd' nodes, a dissatisfaction must exist, and they must not need a signature. If it is non-malleable,
+    // it must be canonical.
+    if (typ << "d"_mst) Assume(ret.nsat.available != Availability::NO);
+    if (typ << "d"_mst) Assume(!ret.nsat.has_sig);
+    if (typ << "d"_mst && !ret.nsat.malleable) Assume(!ret.nsat.non_canon);
+
+    // For 'f'/'s' nodes, dissatisfactions/satisfactions must have a signature.
+    if (typ << "f"_mst && ret.nsat.available != Availability::NO) Assume(ret.nsat.has_sig);
+    if (typ << "s"_mst && ret.sat.available != Availability::NO) Assume(ret.sat.has_sig);
+
+    // For non-malleable 'e' nodes, a non-malleable dissatisfaction must exist.
+    if (typ << "me"_mst) Assume(ret.nsat.available != Availability::NO);
+    if (typ << "me"_mst) Assume(!ret.nsat.malleable);
+
+    // For 'm' nodes, if a satisfaction exists, it must be non-malleable.
+    if (typ << "m"_mst && ret.sat.available != Availability::NO) Assume(!ret.sat.malleable);
+
+    // If a non-malleable satisfaction exists, it must be canonical.
+    if (ret.sat.available != Availability::NO && !ret.sat.malleable) Assume(!ret.sat.non_canon);
 }
 
 } // namespace internal
