@@ -138,7 +138,7 @@ PeerMsgRet CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_
     LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
              qc.quorumHash.ToString(), ToUnderlying(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), peer.GetId());
 
-    AddMineableCommitment(qc);
+    AddMineableCommitmentAndRelay(qc);
     return {};
 }
 
@@ -636,7 +636,7 @@ bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash) const
     return minableCommitments.count(hash) != 0;
 }
 
-void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
+std::optional<uint256> CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
 {
     const uint256 commitmentHash = ::SerializeHash(fqc);
 
@@ -662,9 +662,15 @@ void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
         return false;
     }();
 
+    return relay ? std::make_optional(commitmentHash) : std::nullopt;
+}
+
+void CQuorumBlockProcessor::AddMineableCommitmentAndRelay(const CFinalCommitment& fqc)
+{
+    const auto commitmentHashOpt = AddMineableCommitment(fqc);
     // We only relay the new commitment if it's new or better then the old one
-    if (relay) {
-        CInv inv(MSG_QUORUM_FINAL_COMMITMENT, commitmentHash);
+    if (commitmentHashOpt) {
+        CInv inv(MSG_QUORUM_FINAL_COMMITMENT, *commitmentHashOpt);
         Assert(m_peerman)->RelayInv(inv);
     }
 }

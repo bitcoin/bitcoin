@@ -12,7 +12,6 @@
 #include <key.h>
 #include <logging.h>
 #include <node/ui_interface.h>
-#include <pubkey.h>
 #include <random.h>
 #include <util/system.h>
 #include <util/time.h>

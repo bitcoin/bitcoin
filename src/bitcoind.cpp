@@ -13,6 +13,7 @@
 #include <compat.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <interfaces/init.h>
 #include <node/context.h>
 #include <node/ui_interface.h>
 #include <noui.h>
@@ -109,10 +110,8 @@ int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
 
 #endif
 
-static bool AppInit(int argc, char* argv[])
+static bool AppInit(NodeContext& node, int argc, char* argv[])
 {
-    NodeContext node;
-
     bool fRet = false;
 
     util::ThreadSetInternalName("init");
@@ -264,10 +263,18 @@ MAIN_FUNCTION
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
 #endif
+
+    NodeContext node;
+    int exit_status;
+    std::unique_ptr<interfaces::Init> init = interfaces::MakeNodeInit(node, argc, argv, exit_status);
+    if (!init) {
+        return exit_status;
+    }
+
     SetupEnvironment();
 
     // Connect dashd signal handlers
     noui_connect();
 
-    return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
+    return (AppInit(node, argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
