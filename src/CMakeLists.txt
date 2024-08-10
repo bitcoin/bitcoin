@@ -286,3 +286,9 @@ if(BUILD_CLI)
     $<TARGET_NAME_IF_EXISTS:libevent::libevent>
   )
 endif()
+
+
+add_subdirectory(test/util)
+if(BUILD_TESTS)
+  add_subdirectory(test)
+endif()
