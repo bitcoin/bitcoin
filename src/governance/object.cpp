@@ -22,21 +22,7 @@
 
 #include <string>
 
-CGovernanceObject::CGovernanceObject() :
-    cs(),
-    m_obj{},
-    nDeletionTime(0),
-    fCachedLocalValidity(false),
-    strLocalValidityError(),
-    fCachedFunding(false),
-    fCachedValid(true),
-    fCachedDelete(false),
-    fCachedEndorsed(false),
-    fDirtyCache(true),
-    fExpired(false),
-    fUnparsable(false),
-    mapCurrentMNVotes(),
-    fileVotes()
+CGovernanceObject::CGovernanceObject()
 {
     // PARSE JSON DATA STORAGE (VCHDATA)
     LoadData();
@@ -44,19 +30,7 @@ CGovernanceObject::CGovernanceObject() :
 
 CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const uint256& nCollateralHashIn, const std::string& strDataHexIn) :
     cs(),
-    m_obj{nHashParentIn, nRevisionIn, nTimeIn, nCollateralHashIn, strDataHexIn},
-    nDeletionTime(0),
-    fCachedLocalValidity(false),
-    strLocalValidityError(),
-    fCachedFunding(false),
-    fCachedValid(true),
-    fCachedDelete(false),
-    fCachedEndorsed(false),
-    fDirtyCache(true),
-    fExpired(false),
-    fUnparsable(false),
-    mapCurrentMNVotes(),
-    fileVotes()
+    m_obj{nHashParentIn, nRevisionIn, nTimeIn, nCollateralHashIn, strDataHexIn}
 {
     // PARSE JSON DATA STORAGE (VCHDATA)
     LoadData();
