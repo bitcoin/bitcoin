@@ -33,7 +33,7 @@ The easiest way to faster compile times is to cache compiles. `ccache` is a way 
 
 Install `ccache` through your distribution's package manager, and run `./configure` with your normal flags to pick it up.
 
-To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.samba.org/manual/latest.html#_run_modes) to set it up.
+To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.dev/manual/latest.html#_run_modes) to set it up.
 
 To get the most out of ccache, put something like this in `~/.ccache/ccache.conf`:
 
