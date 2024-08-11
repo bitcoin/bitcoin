@@ -65,8 +65,8 @@ RUN apt-get update && apt-get install $APT_ARGS \
     make \
     tk-dev \
     xz-utils
-ENV PYENV_ROOT "/usr/local/pyenv"
-ENV PATH "${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
+ENV PYENV_ROOT="/usr/local/pyenv"
+ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
 RUN curl https://pyenv.run | bash \
     && pyenv update \
     && pyenv install $PYTHON_VERSION \
@@ -92,8 +92,8 @@ ARG USER_ID=1000
 ARG GROUP_ID=1000
 
 # add user with specified (or default) user/group ids
-ENV USER_ID ${USER_ID}
-ENV GROUP_ID ${GROUP_ID}
+ENV USER_ID=${USER_ID}
+ENV GROUP_ID=${GROUP_ID}
 RUN groupadd -g ${GROUP_ID} dash
 RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash
 
@@ -117,12 +117,12 @@ RUN apt-get update && apt-get install $APT_ARGS \
 ARG CPPCHECK_VERSION=2.13.0
 RUN curl -sL "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar -xvzf - --directory /tmp/
 RUN cd /tmp/cppcheck-${CPPCHECK_VERSION} && mkdir build && cd build && cmake .. && cmake --build . -j 8
-ENV PATH "/tmp/cppcheck-${CPPCHECK_VERSION}/build/bin:${PATH}"
+ENV PATH="/tmp/cppcheck-${CPPCHECK_VERSION}/build/bin:${PATH}"
 RUN mkdir /usr/local/share/Cppcheck && ln -s /tmp/cppcheck-${CPPCHECK_VERSION}/cfg/ /usr/local/share/Cppcheck/cfg
 
 ARG SHELLCHECK_VERSION=v0.7.1
 RUN curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar --xz -xf - --directory /tmp/
-ENV PATH "/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"
+ENV PATH="/tmp/shellcheck-${SHELLCHECK_VERSION}:${PATH}"
 
 # This is a hack. It is needed because gcc-multilib and g++-multilib are conflicting with g++-arm-linux-gnueabihf. This is
 # due to gcc-multilib installing the following symbolic link, which is needed for -m32 support. However, this causes
