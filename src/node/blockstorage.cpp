@@ -394,16 +394,10 @@ bool BlockManager::LoadBlockIndexDB()
 
     // Check whether we have an address index
     m_block_tree_db->ReadFlag("addressindex", fAddressIndex);
-    LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
-
     // Check whether we have a timestamp index
     m_block_tree_db->ReadFlag("timestampindex", fTimestampIndex);
-    LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
-
     // Check whether we have a spent index
     m_block_tree_db->ReadFlag("spentindex", fSpentIndex);
-    LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
-
     return true;
 }
 

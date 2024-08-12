@@ -4535,20 +4535,25 @@ bool ChainstateManager::LoadBlockIndex()
         // needs_init.
 
         LogPrintf("Initializing databases...\n");
-
-        // Use the provided setting for -addressindex in the new database
-        fAddressIndex = gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX);
-        m_blockman.m_block_tree_db->WriteFlag("addressindex", fAddressIndex);
-
-        // Use the provided setting for -timestampindex in the new database
-        fTimestampIndex = gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
-        m_blockman.m_block_tree_db->WriteFlag("timestampindex", fTimestampIndex);
-
-        // Use the provided setting for -spentindex in the new database
-        fSpentIndex = gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX);
-        m_blockman.m_block_tree_db->WriteFlag("spentindex", fSpentIndex);
+        InitAdditionalIndexes();
     }
     return true;
+}
+
+void ChainstateManager::InitAdditionalIndexes()
+{
+    // Use the provided setting for -addressindex in the new database
+    fAddressIndex = gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX);
+    m_blockman.m_block_tree_db->WriteFlag("addressindex", fAddressIndex);
+
+    // Use the provided setting for -timestampindex in the new database
+    fTimestampIndex = gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
+    m_blockman.m_block_tree_db->WriteFlag("timestampindex", fTimestampIndex);
+
+    // Use the provided setting for -spentindex in the new database
+    fSpentIndex = gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX);
+    m_blockman.m_block_tree_db->WriteFlag("spentindex", fSpentIndex);
+
 }
 
 bool CChainState::AddGenesisBlock(const CBlock& block, BlockValidationState& state)

@@ -1965,23 +1965,31 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
                 }
 
-                // Check for changed -addressindex state
-                if (fAddressIndex != args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -addressindex");
-                    break;
+                if (!fReset && !fReindexChainState) {
+                    // Check for changed -addressindex state
+                    if (!fAddressIndex && fAddressIndex != args.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
+                        strLoadError = _("You need to rebuild the database using -reindex to enable -addressindex");
+                        break;
+                    }
+
+                    // Check for changed -timestampindex state
+                    if (!fTimestampIndex && fTimestampIndex != args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX)) {
+                        strLoadError = _("You need to rebuild the database using -reindex to enable -timestampindex");
+                        break;
+                    }
+
+                    // Check for changed -spentindex state
+                    if (!fSpentIndex && fSpentIndex != args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX)) {
+                        strLoadError = _("You need to rebuild the database using -reindex to enable -spentindex");
+                        break;
+                    }
                 }
 
-                // Check for changed -timestampindex state
-                if (fTimestampIndex != args.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -timestampindex");
-                    break;
-                }
+                chainman.InitAdditionalIndexes();
 
-                // Check for changed -spentindex state
-                if (fSpentIndex != args.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -spentindex");
-                    break;
-                }
+                LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
+                LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
+                LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
 
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
