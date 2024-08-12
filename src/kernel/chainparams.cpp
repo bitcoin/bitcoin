@@ -685,6 +685,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 {
     const auto mainnet_msg = CChainParams::Main()->MessageStart();
     const auto testnet_msg = CChainParams::TestNet()->MessageStart();
+    const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
     const auto regtest_msg = CChainParams::RegTest({})->MessageStart();
     const auto signet_msg = CChainParams::SigNet({})->MessageStart();
 
@@ -692,6 +693,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
         return ChainType::MAIN;
     } else if (std::equal(message.begin(), message.end(), testnet_msg.data())) {
         return ChainType::TESTNET;
+    } else if (std::equal(message.begin(), message.end(), testnet4_msg.data())) {
+        return ChainType::TESTNET4;
     } else if (std::equal(message.begin(), message.end(), regtest_msg.data())) {
         return ChainType::REGTEST;
     } else if (std::equal(message.begin(), message.end(), signet_msg.data())) {
