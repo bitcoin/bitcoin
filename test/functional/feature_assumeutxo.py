@@ -350,6 +350,31 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
+        self.log.info("Check that UTXO-querying RPCs operate on snapshot chainstate")
+        snapshot_hash = loaded['tip_hash']
+        snapshot_num_coins = loaded['coins_loaded']
+        # coinstatsindex might be not caught up yet and is not relevant for this test, so don't use it
+        utxo_info = n1.gettxoutsetinfo(use_index=False)
+        assert_equal(utxo_info['txouts'], snapshot_num_coins)
+        assert_equal(utxo_info['height'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(utxo_info['bestblock'], snapshot_hash)
+
+        # find coinbase output at snapshot height on node0 and scan for it on node1,
+        # where the block is not available, but the snapshot was loaded successfully
+        coinbase_tx = n0.getblock(snapshot_hash, verbosity=2)['tx'][0]
+        assert_raises_rpc_error(-1, "Block not found on disk", n1.getblock, snapshot_hash)
+        coinbase_output_descriptor = coinbase_tx['vout'][0]['scriptPubKey']['desc']
+        scan_result = n1.scantxoutset('start', [coinbase_output_descriptor])
+        assert_equal(scan_result['success'], True)
+        assert_equal(scan_result['txouts'], snapshot_num_coins)
+        assert_equal(scan_result['height'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(scan_result['bestblock'], snapshot_hash)
+        scan_utxos = [(coin['txid'], coin['vout']) for coin in scan_result['unspents']]
+        assert (coinbase_tx['txid'], 0) in scan_utxos
+
+        txout_result = n1.gettxout(coinbase_tx['txid'], 0)
+        assert_equal(txout_result['scriptPubKey']['desc'], coinbase_output_descriptor)
+
         def check_tx_counts(final: bool) -> None:
             """Check nTx and nChainTx intermediate values right after loading
             the snapshot, and final values after the snapshot is validated."""
