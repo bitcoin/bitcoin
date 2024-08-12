@@ -1,18 +1,18 @@
 name: Guix Build
 
+permissions:
+  packages: write
+
 on:
-  pull_request:
-    types: [ labeled ]
+  pull_request_target:
   push:
-    tags:
-      - '*'           # Push events to every tag not containing /
-  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
-    if: contains(github.event.pull_request.labels.*.name, 'guix-build')
-    timeout-minutes: 480
+  build-image:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.prepare.outputs.image-tag }}
+      repo-name: ${{ steps.prepare.outputs.repo-name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,26 +25,57 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Commit variables
-        id: dockerfile
+        id: prepare
         run: |
           echo "hash=$(sha256sum ./dash/contrib/containers/guix/Dockerfile | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
           echo "host_user_id=$(id -u)" >> $GITHUB_OUTPUT
           echo "host_group_id=$(id -g)" >> $GITHUB_OUTPUT
+          BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
+          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=image-tag::${BRANCH_NAME}"
+          echo "::set-output name=repo-name::${REPO_NAME}"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ github.workspace }}/dash
           build-args: |
-            USER_ID=${{ steps.dockerfile.outputs.host_user_id }}
-            GROUP_ID=${{ steps.dockerfile.outputs.host_group_id }}
+            USER_ID=${{ steps.prepare.outputs.host_user_id }}
+            GROUP_ID=${{ steps.prepare.outputs.host_group_id }}
           build-contexts: |
             docker_root=${{ github.workspace }}/dash/contrib/containers/guix
           file: ./dash/contrib/containers/guix/Dockerfile
-          load: true
-          tags: guix_ubuntu:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          push: true
+          tags: |
+            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-guix-builder:${{ steps.prepare.outputs.image-tag }}
+            ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-guix-builder:latest
+          cache-from: type=registry,ref=ghcr.io/${{ steps.prepare.outputs.repo-name }}/dashcore-guix-builder:latest
+          cache-to: type=inline,mode=max
+
+  build:
+    needs: build-image
+    # runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
+    runs-on: ubuntu-latest
+#    if: ${{ contains(github.event.pull_request.labels.*.name, 'guix-build') }}
+    strategy:
+      matrix:
+        build_target: [x86_64-linux-gnu, arm-linux-gnueabihf, aarch64-linux-gnu, riscv64-linux-gnu, x86_64-w64-mingw32, x86_64-apple-darwin, arm64-apple-darwin]
+
+    timeout-minutes: 480
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: dash
+          fetch-depth: 0
 
       - name: Cache Guix and depends
         id: guix-cache-restore
@@ -55,12 +86,11 @@ jobs:
             ${{ github.workspace }}/dash/depends/built
             ${{ github.workspace }}/dash/depends/sources
             ${{ github.workspace }}/dash/depends/work
-          key: ${{ runner.os }}-guix-${{ github.event.pull_request.head.sha }}
+            /gnu/store
+          key: ${{ runner.os }}-guix-${{ matrix.build_target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-guix-${{ github.event.pull_request.head.sha }}
+            ${{ runner.os }}-guix-${{ matrix.build_target }}
             ${{ runner.os }}-guix-
-
-
 
       - name: Create .cache folder if missing
         if: steps.guix-cache-restore.outputs.cache-hit != 'true'
@@ -75,8 +105,8 @@ jobs:
             -v ${{ github.workspace }}/dash:/src/dash \
             -v ${{ github.workspace }}/.cache:/home/ubuntu/.cache \
             -w /src/dash \
-            guix_ubuntu:latest && \
-          docker exec guix-daemon bash -c '/usr/local/bin/guix-start'
+            ghcr.io/${{ needs.build-image.outputs.repo-name }}/dashcore-guix-builder:${{ needs.build-image.outputs.image-tag }} && \
+          docker exec guix-daemon bash -c 'HOSTS=${{ matrix.build_target }} /usr/local/bin/guix-start'
 
       - name: Ensure build passes
         run: |
@@ -86,5 +116,14 @@ jobs:
           fi
 
       - name: Compute SHA256 checksums
+        continue-on-error: true # It will complain on depending on only some hosts
         run: |
           ./dash/contrib/containers/guix/scripts/guix-check ${{ github.workspace }}/dash
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: guix-artifacts-${{ matrix.build_target }}
+          path: |
+            ${{ github.workspace }}/dash/guix-build*/output/${{ matrix.build_target }}/
+
