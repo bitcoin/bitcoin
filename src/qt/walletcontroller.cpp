@@ -150,9 +150,10 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     assert(called);
 
     connect(wallet_model, &WalletModel::unload, this, [this, wallet_model] {
-        // Defer removeAndDeleteWallet when no modal widget is active.
+        // Defer removeAndDeleteWallet when no modal widget is actively waiting for an action.
         // TODO: remove this workaround by removing usage of QDialog::exec.
-        if (QApplication::activeModalWidget()) {
+        QWidget* active_dialog = QApplication::activeModalWidget();
+        if (active_dialog && dynamic_cast<QProgressDialog*>(active_dialog) == nullptr) {
             connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
                 if (!QApplication::activeModalWidget()) {
                     removeAndDeleteWallet(wallet_model);
@@ -463,8 +464,6 @@ void MigrateWalletActivity::migrate(WalletModel* wallet_model)
 
     // GUI needs to remove the wallet so that it can actually be unloaded by migration
     const std::string name = wallet_model->wallet().getWalletName();
-    m_wallet_controller->removeAndDeleteWallet(wallet_model);
-
     showProgressDialog(tr("Migrate Wallet"), tr("Migrating Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(name)));
 
     QTimer::singleShot(0, worker(), [this, name, passphrase] {
