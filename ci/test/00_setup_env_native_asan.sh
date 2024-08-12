@@ -19,14 +19,15 @@ else
 fi
 
 export CONTAINER_NAME=ci_native_asan
-export PACKAGES="systemtap-sdt-dev clang-18 llvm-18 libclang-rt-18-dev python3-zmq qtbase5-dev qttools5-dev qttools5-dev-tools libevent-dev libboost-dev libdb5.3++-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE}"
+export APT_LLVM_V="19"
+export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev python3-zmq qtbase5-dev qttools5-dev qttools5-dev-tools libevent-dev libboost-dev libdb5.3++-dev libzmq3-dev libqrencode-dev libsqlite3-dev ${BPFCC_PACKAGE}"
 export NO_DEPENDS=1
 export GOAL="install"
 export BITCOIN_CONFIG="\
  -DWITH_USDT=ON -DWITH_ZMQ=ON -DWITH_BDB=ON -DWARN_INCOMPATIBLE_BDB=OFF -DBUILD_GUI=ON \
  -DSANITIZERS=address,float-divide-by-zero,integer,undefined \
- -DCMAKE_C_COMPILER=clang-18 \
- -DCMAKE_CXX_COMPILER=clang++-18 \
+ -DCMAKE_C_COMPILER=clang-${APT_LLVM_V} \
+ -DCMAKE_CXX_COMPILER=clang++-${APT_LLVM_V} \
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern -Wno-error=deprecated-declarations' \
  -DAPPEND_CXXFLAGS='-std=c++23' \
