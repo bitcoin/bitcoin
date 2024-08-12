@@ -455,7 +455,7 @@ void CGovernanceManager::CheckAndRemove()
     // forget about expired requests
     auto r_it = m_requested_hash_time.begin();
     while (r_it != m_requested_hash_time.end()) {
-        if (r_it->second < nNow) {
+        if (r_it->second < std::chrono::seconds(nNow)) {
             m_requested_hash_time.erase(r_it++);
         } else {
             ++r_it;
@@ -847,7 +847,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
         return false;
     }
 
-    const auto valid_until = GetTime<std::chrono::seconds>().count() + RELIABLE_PROPAGATION_TIME;
+    const auto valid_until = GetTime<std::chrono::seconds>() + std::chrono::seconds(RELIABLE_PROPAGATION_TIME);
     const auto& [_itr, inserted] = m_requested_hash_time.emplace(inv.hash, valid_until);
 
     if (inserted) {
