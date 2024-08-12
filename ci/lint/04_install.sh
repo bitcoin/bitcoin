@@ -53,6 +53,7 @@ ${CI_RETRY_EXE} pip3 install \
   lief==0.13.2 \
   mypy==1.4.1 \
   pyzmq==25.1.0 \
+  ruff==0.5.5 \
   vulture==2.6
 
 SHELLCHECK_VERSION=v0.8.0
