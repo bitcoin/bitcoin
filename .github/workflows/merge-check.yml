@@ -7,7 +7,7 @@ on:
   - push
   - pull_request_target
   - pull_request_review:
-      types: [submitted]
+    types: [submitted]
 
 jobs:
   check_merge:
