@@ -2160,14 +2160,14 @@ static const auto scan_result_status_some = RPCResult{
 
 static RPCHelpMan scantxoutset()
 {
-    // scriptPubKey corresponding to mainnet address 12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S
+    // raw() descriptor corresponding to mainnet address 12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S
     const std::string EXAMPLE_DESCRIPTOR_RAW = "raw(76a91411b366edfc0a8b66feebae5c2e25a7b6a5d1cf3188ac)#fm24fxxy";
 
     return RPCHelpMan{"scantxoutset",
         "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
         "Examples of output descriptors are:\n"
-        "    addr(<address>)                      Outputs whose scriptPubKey corresponds to the specified address (does not include P2PK)\n"
-        "    raw(<hex script>)                    Outputs whose scriptPubKey equals the specified hex scripts\n"
+        "    addr(<address>)                      Outputs whose output script corresponds to the specified address (does not include P2PK)\n"
+        "    raw(<hex script>)                    Outputs whose output script equals the specified hex-encoded bytes\n"
         "    combo(<pubkey>)                      P2PK, P2PKH, P2WPKH, and P2SH-P2WPKH outputs for the given pubkey\n"
         "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
         "    sh(multi(<n>,<pubkey>,<pubkey>,...)) P2SH-multisig outputs for the given threshold and pubkeys\n"
@@ -2196,8 +2196,8 @@ static RPCHelpMan scantxoutset()
                     {
                         {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
                         {RPCResult::Type::NUM, "vout", "The vout value"},
-                        {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
-                        {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
+                        {RPCResult::Type::STR_HEX, "scriptPubKey", "The output script"},
+                        {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched output script"},
                         {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
                         {RPCResult::Type::BOOL, "coinbase", "Whether this is a coinbase output"},
                         {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
