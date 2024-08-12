@@ -95,6 +95,7 @@ struct FeeCalculation
     FeeReason reason = FeeReason::NONE;
     int desiredTarget = 0;
     int returnedTarget = 0;
+    unsigned int best_height{0};
 };
 
 /** \class CBlockPolicyEstimator
