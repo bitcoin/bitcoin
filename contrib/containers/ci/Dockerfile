@@ -92,8 +92,8 @@ ARG USER_ID=1000
 ARG GROUP_ID=1000
 
 # add user with specified (or default) user/group ids
-ENV USER_ID=${USER_ID}
-ENV GROUP_ID=${GROUP_ID}
+ENV USER_ID="${USER_ID}"
+ENV GROUP_ID="${GROUP_ID}"
 RUN groupadd -g ${GROUP_ID} dash
 RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /home/dash dash
 
