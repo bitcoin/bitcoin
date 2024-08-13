@@ -12,7 +12,7 @@ if [ -z "${LIBTOOLIZE}" ] && GLIBTOOLIZE="$(command -v glibtoolize)"; then
   export LIBTOOLIZE
 fi
 command -v autoreconf >/dev/null || \
-  (echo "configuration failed, please install autoconf first" && exit 1)
+  (echo "configuration failed, please install autoconf first" >&2 && exit 1)
 autoreconf --install --force --warnings=all
 
 if expr "'$(build-aux/config.guess --timestamp)" \< "'$(depends/config.guess --timestamp)" > /dev/null; then
