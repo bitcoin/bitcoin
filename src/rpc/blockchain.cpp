@@ -276,7 +276,8 @@ static RPCHelpMan waitfornewblock()
 {
     return RPCHelpMan{"waitfornewblock",
                 "\nWaits for any new block and returns useful info about it.\n"
-                "\nReturns the current block on timeout or exit.\n",
+                "\nReturns the current block on timeout or exit.\n"
+                "\nMake sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
                 {
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                 },
@@ -318,7 +319,8 @@ static RPCHelpMan waitforblock()
 {
     return RPCHelpMan{"waitforblock",
                 "\nWaits for a specific new block and returns useful info about it.\n"
-                "\nReturns the current block on timeout or exit.\n",
+                "\nReturns the current block on timeout or exit.\n"
+                "\nMake sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
                 {
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash to wait for."},
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
@@ -365,7 +367,8 @@ static RPCHelpMan waitforblockheight()
     return RPCHelpMan{"waitforblockheight",
                 "\nWaits for (at least) block height and returns the height and hash\n"
                 "of the current tip.\n"
-                "\nReturns the current block on timeout or exit.\n",
+                "\nReturns the current block on timeout or exit.\n"
+                "\nMake sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
                 {
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height to wait for."},
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
