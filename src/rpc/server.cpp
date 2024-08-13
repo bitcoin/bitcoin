@@ -551,7 +551,7 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     // Before executing the RPC Command, filter commands from platform rpc user
-    if (node.mn_activeman && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
+    if (node.mn_activeman && request.authUser == gArgs.GetArg("-deprecated-platform-user", defaultPlatformUser)) {
         // replace this with structured binding in c++20
         std::string command_name = command.name;
         const auto& it = mapPlatformRestrictions.equal_range(command_name);

@@ -114,24 +114,5 @@ class HTTPBasicsTest(BitcoinTestFramework):
         test_command("debug", ["1"], rpcuser_authpair_operator, 200)
 
 
-        self.log.info("Restart node with -rpcexternaluser")
-        self.restart_node(0, extra_args=["-rpcexternaluser=platform-user"])
-
-        external_log_str = "HTTP: Calling handler for external user"
-        expected_log_str = "ThreadRPCServer method="
-        with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_str, external_log_str]):
-            test_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
-        with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_str], unexpected_msgs = [external_log_str]):
-            test_command("getbestblockhash", [], rpcuser_authpair_operator, 200)
-
-        self.log.info("Restart node with multiple external users")
-        self.restart_node(0, extra_args=["-rpcexternaluser=platform-user,operator"])
-        with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_str, external_log_str]):
-            test_command("getbestblockhash", [], rpcuser_authpair_platform, 200)
-        with self.nodes[0].assert_debug_log(expected_msgs=[expected_log_str, external_log_str]):
-            test_command("getbestblockhash", [], rpcuser_authpair_operator, 200)
-
-
-
 if __name__ == '__main__':
     HTTPBasicsTest().main()
