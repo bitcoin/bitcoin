@@ -146,6 +146,12 @@ def check_PE_control_flow(binary) -> bool:
         return True
     return False
 
+def check_PE_Canary(binary) -> bool:
+    '''
+    Check for use of stack canary
+    '''
+    return binary.has_symbol('__stack_chk_fail')
+
 def check_MACHO_NOUNDEFS(binary) -> bool:
     '''
     Check for no undefined references.
@@ -203,6 +209,7 @@ BASE_PE = [
     ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION),
     ('CONTROL_FLOW', check_PE_control_flow),
+    ('Canary', check_PE_Canary),
 ]
 
 BASE_MACHO = [
