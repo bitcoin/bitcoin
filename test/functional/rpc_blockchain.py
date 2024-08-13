@@ -147,7 +147,7 @@ class BlockchainTest(BitcoinTestFramework):
             'bip65': {'type': 'buried', 'active': True, 'height': 1},
             'bip147': { 'type': 'buried', 'active': True, 'height': 1},
             'csv': {'type': 'buried', 'active': True, 'height': 1},
-            'dip0001': { 'type': 'buried', 'active': False, 'height': 2000},
+            'dip0001': { 'type': 'buried', 'active': True, 'height': 1},
             'dip0003': { 'type': 'buried', 'active': False, 'height': 432},
             'dip0008': { 'type': 'buried', 'active': True, 'height': 1},
             'dip0020': { 'type': 'buried', 'active': True, 'height': 1},

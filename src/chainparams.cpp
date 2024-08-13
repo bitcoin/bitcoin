@@ -800,7 +800,7 @@ public:
         consensus.BIP66Height = 1;   // Always active unless overridden
         consensus.BIP147Height = 1;  // Always active unless overridden
         consensus.CSVHeight = 1;     // Always active unless overridden
-        consensus.DIP0001Height = 2000;
+        consensus.DIP0001Height = 1; // Always active unless overridden
         consensus.DIP0003Height = 432;
         consensus.DIP0003EnforcementHeight = 500;
         consensus.DIP0003EnforcementHash = uint256();
@@ -1056,6 +1056,8 @@ static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& conse
             consensus.CSVHeight = int{height};
         } else if (name == "brr") {
             consensus.BRRHeight = int{height};
+        } else if (name == "dip0001") {
+            consensus.DIP0001Height = int{height};
         } else if (name == "dip0008") {
             consensus.DIP0008Height = int{height};
         } else if (name == "dip0020") {

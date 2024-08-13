@@ -27,7 +27,7 @@ from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
 from .util import assert_equal, hex_str_to_bytes
 from io import BytesIO
 
-MAX_BLOCK_SIGOPS = 20000
+MAX_BLOCK_SIGOPS = 40000
 
 # Genesis block time (regtest)
 TIME_GENESIS_BLOCK = 1417713337
