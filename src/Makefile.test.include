@@ -307,6 +307,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/psbt.cpp \
  test/fuzz/random.cpp \
  test/fuzz/rolling_bloom_filter.cpp \
+ test/fuzz/rpc.cpp \
  test/fuzz/script.cpp \
  test/fuzz/script_bitcoin_consensus.cpp \
  test/fuzz/script_descriptor_cache.cpp \

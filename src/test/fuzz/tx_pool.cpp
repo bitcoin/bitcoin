@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <miner.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -75,6 +76,30 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200)));
     args.ForceSetArg("-mempoolexpiry",
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
+}
+
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, const NodeContext& node, CChainState& chainstate)
+{
+    WITH_LOCK(::cs_main, tx_pool.check(chainstate));
+    {
+        BlockAssembler::Options options;
+        options.nBlockMaxSize = fuzzed_data_provider.ConsumeIntegralInRange(0U, MaxBlockSize(true));
+        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /* max */ COIN)};
+
+        auto assembler = BlockAssembler{chainstate, node, *static_cast<CTxMemPool*>(&tx_pool), ::Params(), options};
+        auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
+        Assert(block_template->block.vtx.size() >= 1);
+    }
+    const auto info_all = tx_pool.infoAll();
+    if (!info_all.empty()) {
+        const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
+        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, /* dummy */ MemPoolRemovalReason::BLOCK));
+        std::vector<uint256> all_txids;
+        tx_pool.queryHashes(all_txids);
+        assert(all_txids.size() < info_all.size());
+        WITH_LOCK(::cs_main, tx_pool.check(chainstate));
+    }
+    SyncWithValidationInterfaceQueue();
 }
 
 void MockTime(FuzzedDataProvider& fuzzed_data_provider, const CChainState& chainstate)
@@ -254,17 +279,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
             }
         }
     }
-    WITH_LOCK(::cs_main, tx_pool.check(chainstate));
-    const auto info_all = tx_pool.infoAll();
-    if (!info_all.empty()) {
-        const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
-        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, /* dummy */ MemPoolRemovalReason::BLOCK));
-        std::vector<uint256> all_txids;
-        tx_pool.queryHashes(all_txids);
-        assert(all_txids.size() < info_all.size());
-        WITH_LOCK(::cs_main, tx_pool.check(chainstate));
-    }
-    SyncWithValidationInterfaceQueue();
+    Finish(fuzzed_data_provider, tx_pool, node, chainstate);
 }
 
 FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
@@ -318,8 +333,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
         if (accepted) {
             txids.push_back(tx->GetHash());
         }
-
-        SyncWithValidationInterfaceQueue();
     }
+    Finish(fuzzed_data_provider, tx_pool, node, chainstate);
 }
 } // namespace

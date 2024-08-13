@@ -259,8 +259,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /* coinjoin_loader = */ nullptr, "", CreateMockWalletDatabase());
         wallet->SetupLegacyScriptPubKeyMan();
-        bool firstRun;
-        wallet->LoadWallet(firstRun);
+        wallet->LoadWallet();
         LOCK(wallet->cs_wallet);
 
         bool bnb_used;
@@ -283,8 +282,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /* coinjoin_loader = */ nullptr, "", CreateMockWalletDatabase());
-        bool firstRun;
-        wallet->LoadWallet(firstRun);
+        wallet->LoadWallet();
         wallet->SetupLegacyScriptPubKeyMan();
         LOCK(wallet->cs_wallet);
 
@@ -309,8 +307,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /* coinjoin_loader = */ nullptr, "", CreateMockWalletDatabase());
-    bool firstRun;
-    wallet->LoadWallet(firstRun);
+    wallet->LoadWallet();
     wallet->SetupLegacyScriptPubKeyMan();
     LOCK(wallet->cs_wallet);
 
@@ -591,8 +588,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
 BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /* coinjoin_loader = */ nullptr, "", CreateMockWalletDatabase());
-    bool firstRun;
-    wallet->LoadWallet(firstRun);
+    wallet->LoadWallet();
     wallet->SetupLegacyScriptPubKeyMan();
     LOCK(wallet->cs_wallet);
 
@@ -615,8 +611,7 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
 BOOST_AUTO_TEST_CASE(SelectCoins_test)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /* coinjoin_loader = */ nullptr, "", CreateMockWalletDatabase());
-    bool firstRun;
-    wallet->LoadWallet(firstRun);
+    wallet->LoadWallet();
     wallet->SetupLegacyScriptPubKeyMan();
     LOCK(wallet->cs_wallet);
 
