@@ -255,6 +255,7 @@ if(BUILD_FOR_FUZZING)
 
   target_compile_definitions(core_interface INTERFACE
     ABORT_ON_FAILED_ASSUME
+    FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   )
 endif()
 
