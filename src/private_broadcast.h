@@ -57,6 +57,11 @@ public:
     void PushedToNode(const NodeId& nodeid, const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
+     * Get the transaction that was pushed to a given node by PushedToNode().
+     */
+    std::optional<CTransactionRef> GetTxPushedToNode(const NodeId& nodeid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
      * Mark the end of a broadcast of a transaction. Either successful by receiving a PONG,
      * or unsuccessful by closing the connection to the node without getting PONG.
      * @return true if the reference by the given node id was removed

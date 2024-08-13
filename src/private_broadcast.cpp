@@ -54,6 +54,24 @@ void PrivateBroadcast::PushedToNode(const NodeId& nodeid, const Txid& txid) EXCL
     m_by_nodeid.emplace(nodeid, txid);
 }
 
+std::optional<CTransactionRef> PrivateBroadcast::GetTxPushedToNode(const NodeId& nodeid)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+
+    auto it_by_node = m_by_nodeid.find(nodeid);
+    if (it_by_node == m_by_nodeid.end()) {
+        return std::nullopt;
+    }
+    const Txid txid{it_by_node->second};
+
+    auto it_by_txid = m_by_txid.find(txid);
+    if (it_by_txid == m_by_txid.end()) {
+        return std::nullopt;
+    }
+    return it_by_txid->second.tx;
+}
+
 bool PrivateBroadcast::FinishBroadcast(const NodeId& nodeid, bool confirmed_by_node) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
