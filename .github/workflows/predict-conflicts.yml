@@ -1,8 +1,9 @@
 name: "Check Potential Conflicts"
+
 on:
-  - pull_request_target
-  - pull_request_review:
-      types: [submitted]
+  pull_request_target:
+  pull_request_review:
+    types: [submitted]
 
 permissions:
   contents: read

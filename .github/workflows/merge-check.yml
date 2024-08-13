@@ -4,10 +4,10 @@ permissions:
   pull-requests: write
 
 on:
-  - push
-  - pull_request_target
-  - pull_request_review:
-      types: [submitted]
+  push:
+  pull_request_target:
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   check_merge:
