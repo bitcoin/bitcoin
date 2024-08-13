@@ -3975,6 +3975,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     if (pnode->IsPrivateBroadcastConn() &&
         msg.m_type != NetMsgType::VERSION &&
         msg.m_type != NetMsgType::VERACK &&
+        msg.m_type != NetMsgType::INV &&
         msg.m_type != NetMsgType::TX &&
         msg.m_type != NetMsgType::PING) {
         // Ensure private broadcast connections only send the above message types.

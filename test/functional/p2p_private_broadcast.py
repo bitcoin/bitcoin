@@ -251,6 +251,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             assert_equal(peer.message_count, {
                 "version": 1,
                 "verack": 1,
+                "inv": 1,
                 "tx": 1,
                 "ping": 1
             })
