@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,6 @@
 #include <node/warnings.h>
 #include <noui.h>
 #include <policy/fees.h>
-#include <policy/fees_args.h>
 #include <pow.h>
 #include <random.h>
 #include <rpc/blockchain.h>
@@ -236,7 +235,6 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(*m_node.scheduler));
     }
 
-    m_node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(*m_node.args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
     bilingual_str error{};
     m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
     Assert(error.empty());
@@ -276,7 +274,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.netgroupman.reset();
     m_node.args = nullptr;
     m_node.mempool.reset();
-    m_node.fee_estimator.reset();
+    Assert(!m_node.fee_estimator); // Each test must create a local object, if they wish to use the fee_estimator
     m_node.chainman.reset();
     m_node.validation_signals.reset();
     m_node.scheduler.reset();
