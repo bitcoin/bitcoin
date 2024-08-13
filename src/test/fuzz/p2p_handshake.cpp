@@ -74,7 +74,7 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
     {
         CNode& connection = *PickValue(fuzzed_data_provider, peers);
         if (connection.fDisconnect || connection.fSuccessfullyConnected) {
-            // Skip if the the connection was disconnected or if the version
+            // Skip if the connection was disconnected or if the version
             // handshake was already completed.
             continue;
         }
