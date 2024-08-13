@@ -88,9 +88,9 @@ class BIP65Test(BitcoinTestFramework):
             f'-testactivationheight=cltv@{CLTV_HEIGHT}',
             '-whitelist=noban@127.0.0.1',
             '-dip3params=9000:9000',
+            '-testactivationheight=v20@9000', # disabled for this test
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
-            '-vbparams=v20:0:999999999999:0:480:384:288:5:0' # Delay v20 for this test as we don't need it
         ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 480

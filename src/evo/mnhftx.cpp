@@ -319,7 +319,7 @@ std::optional<CMNHFManager::Signals> CMNHFManager::GetFromCache(const CBlockInde
     }
     {
         LOCK(cs_cache);
-        if (ThresholdState::ACTIVE != v20_activation.State(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
+        if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) {
             mnhfCache.insert(blockHash, signals);
             return signals;
         }
@@ -340,10 +340,8 @@ void CMNHFManager::AddToCache(const Signals& signals, const CBlockIndex* const p
         LOCK(cs_cache);
         mnhfCache.insert(blockHash, signals);
     }
-    {
-        LOCK(cs_cache);
-        if (ThresholdState::ACTIVE != v20_activation.State(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
-    }
+    if (!DeploymentActiveAt(*pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
+
     m_evoDb.Write(std::make_pair(DB_SIGNALS, blockHash), signals);
 }
 
