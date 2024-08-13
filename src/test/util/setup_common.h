@@ -81,6 +81,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
     node::CacheSizes m_cache_sizes{};
     bool m_coins_db_in_memory{true};
     bool m_block_tree_db_in_memory{true};
+    std::function<void()> m_make_chainman{};
 
     explicit ChainTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~ChainTestingSetup();
