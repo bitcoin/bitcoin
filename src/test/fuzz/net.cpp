@@ -33,6 +33,11 @@ FUZZ_TARGET(net, .init = initialize_net)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     CNode node{ConsumeNode(fuzzed_data_provider)};
     node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
+    if (const auto service_opt =
+            ConsumeDeserializable<CService>(fuzzed_data_provider, ConsumeDeserializationParams<CNetAddr::SerParams>(fuzzed_data_provider)))
+    {
+        node.SetAddrLocal(*service_opt);
+    }
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -51,13 +56,6 @@ FUZZ_TARGET(net, .init = initialize_net)
                 if (node.GetRefCount() > 0) {
                     node.Release();
                 }
-            },
-            [&] {
-                const std::optional<CService> service_opt = ConsumeDeserializable<CService>(fuzzed_data_provider, ConsumeDeserializationParams<CNetAddr::SerParams>(fuzzed_data_provider));
-                if (!service_opt) {
-                    return;
-                }
-                node.SetAddrLocal(*service_opt);
             },
             [&] {
                 const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
