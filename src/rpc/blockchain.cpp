@@ -1647,6 +1647,7 @@ static RPCHelpMan reconsiderblock()
 
     BlockValidationState state;
     chainman.ActiveChainstate().ActivateBestChain(state);
+    WITH_LOCK(::cs_main, chainman.m_best_header = chainman.ActiveChain().Tip());
 
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, state.ToString());
