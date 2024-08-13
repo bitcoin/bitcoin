@@ -941,7 +941,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
 
     /**
-     * Schedule a transaction be sent to the given peer (via `PushMessage()`), unsolicited.
+     * Schedule an INV for a transaction be sent to the given peer (via `PushMessage()`).
      * The transaction is picked from the list of transactions for private broadcast.
      * It is assumed that the connection to the peer is `ConnectionType::PRIVATE_BROADCAST`.
      * Calling this for other peers will degrade privacy. Don't do that.
@@ -3532,13 +3532,14 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
 
     LogPrintLevel(BCLog::PRIVATE_BROADCAST,
                   BCLog::Level::Info,
-                  "P2P handshake completed, sending txid=%s%s, peer=%d%s",
+                  "P2P handshake completed, sending INV for txid=%s%s, peer=%d%s",
                   tx->GetHash().ToString(),
                   tx->HasWitness() ? strprintf(", wtxid=%s", tx->GetWitnessHash().ToString()) : "",
                   node.GetId(),
                   node.LogIP(fLogIPs));
 
-    MakeAndPushMessage(node, NetMsgType::TX, TX_WITH_WITNESS(*tx));
+    MakeAndPushMessage(node, NetMsgType::INV, std::vector<CInv>{{CInv{MSG_TX, tx->GetHash().ToUint256()}}});
+
     m_tx_for_private_broadcast.PushedToNode(node.GetId(), tx->GetHash());
 }
 
@@ -3862,9 +3863,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // relay logic is designed to work even in cases when the peer drops
             // the transaction (due to it being too cheap, or for other reasons).
             PushPrivateBroadcastTx(pfrom);
-
-            peer->m_ping_queued = true; // Ensure a ping will be sent: mimick a request via RPC.
-            MaybeSendPing(pfrom, *peer, GetTime<std::chrono::microseconds>());
         }
 
         return;
@@ -3990,7 +3988,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
 
     if (pfrom.IsPrivateBroadcastConn()) {
-        if (msg_type != NetMsgType::PONG) {
+        if (msg_type != NetMsgType::PONG && msg_type != NetMsgType::GETDATA) {
             LogDebug(BCLog::PRIVATE_BROADCAST,
                      "Ignoring incoming message '%s', peer=%d%s",
                      msg_type,
@@ -4201,6 +4199,41 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (vInv.size() > 0) {
             LogDebug(BCLog::NET, "received getdata for: %s peer=%d\n", vInv[0].ToString(), pfrom.GetId());
+        }
+
+        if (pfrom.IsPrivateBroadcastConn()) {
+            const auto pushed_tx_opt = m_tx_for_private_broadcast.GetTxPushedToNode(pfrom.GetId());
+            if (!pushed_tx_opt) {
+                LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                              BCLog::Level::Info,
+                              "Disconnecting: got GETDATA without sending an INV, peer=%d%s\n",
+                              pfrom.GetId(),
+                              fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                pfrom.fDisconnect = true;
+                m_connman.m_private_broadcast.NumToOpenAdd(1);
+                return;
+            }
+
+            const CTransactionRef& pushed_tx{*pushed_tx_opt};
+
+            // The GETDATA request must contain exactly one inv and it must be for the transaction
+            // that we INVed to the peer earlier.
+            if (vInv.size() == 1 && vInv[0].IsMsgTx() && vInv[0].hash == pushed_tx->GetHash()) {
+
+                MakeAndPushMessage(pfrom, NetMsgType::TX, TX_WITH_WITNESS(*pushed_tx));
+
+                peer->m_ping_queued = true; // Ensure a ping will be sent: mimick a request via RPC.
+                MaybeSendPing(pfrom, *peer, GetTime<std::chrono::microseconds>());
+            } else {
+                LogPrintLevel(BCLog::PRIVATE_BROADCAST,
+                              BCLog::Level::Info,
+                              "Disconnecting: got an unexpected GETDATA message, peer=%d%s\n",
+                              pfrom.GetId(),
+                              fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : "");
+                pfrom.fDisconnect = true;
+                m_connman.m_private_broadcast.NumToOpenAdd(1);
+            }
+            return;
         }
 
         {
