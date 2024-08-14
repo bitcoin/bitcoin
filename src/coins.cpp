@@ -197,13 +197,9 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
                 // and mark it as dirty.
                 itUs = cacheCoins.try_emplace(it->first).first;
                 CCoinsCacheEntry& entry{itUs->second};
-                if (cursor.WillErase(*it)) {
-                    // Since this entry will be erased,
-                    // we can move the coin into us instead of copying it
-                    entry.coin = std::move(it->second.coin);
-                } else {
-                    entry.coin = it->second.coin;
-                }
+                cursor.WillErase(*it)
+                    ? (entry.coin = std::move(it->second.coin))
+                    : (entry.coin = it->second.coin);
                 cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
                 entry.AddFlags(CCoinsCacheEntry::DIRTY, *itUs, m_sentinel);
                 // We can mark it FRESH in the parent if it was FRESH in the child
@@ -231,13 +227,9 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
             } else {
                 // A normal modification.
                 cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
-                if (cursor.WillErase(*it)) {
-                    // Since this entry will be erased,
-                    // we can move the coin into us instead of copying it
-                    itUs->second.coin = std::move(it->second.coin);
-                } else {
-                    itUs->second.coin = it->second.coin;
-                }
+                cursor.WillErase(*it)
+                    ? (itUs->second.coin = std::move(it->second.coin))
+                    : (itUs->second.coin = it->second.coin);
                 cachedCoinsUsage += itUs->second.coin.DynamicMemoryUsage();
                 itUs->second.AddFlags(CCoinsCacheEntry::DIRTY, *itUs, m_sentinel);
                 // NOTE: It isn't safe to mark the coin as FRESH in the parent
