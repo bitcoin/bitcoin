@@ -8,6 +8,7 @@ import json
 
 from test_framework.messages import uint256_to_string
 from test_framework.test_framework import DashTestFramework
+from test_framework.governance import have_trigger_for_height, prepare_object
 from test_framework.util import assert_equal, satoshi_round, set_node_times, wait_until_helper
 
 class DashGovernanceTest (DashTestFramework):
@@ -15,29 +16,6 @@ class DashGovernanceTest (DashTestFramework):
         self.v20_start_time = 1417713500
         # using adjusted v20 deployment params to test an edge case where superblock maturity window is equal to deployment window size
         self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10", f"-vbparams=v20:{self.v20_start_time}:999999999999:0:10:8:6:5:0"]] * 6, fast_dip3_enforcement=True)
-
-    def prepare_object(self, object_type, parent_hash, creation_time, revision, name, amount, payment_address):
-        proposal_rev = revision
-        proposal_time = int(creation_time)
-        proposal_template = {
-            "type": object_type,
-            "name": name,
-            "start_epoch": proposal_time,
-            "end_epoch": proposal_time + 24 * 60 * 60,
-            "payment_amount": float(amount),
-            "payment_address": payment_address,
-            "url": "https://dash.org"
-        }
-        proposal_hex = ''.join(format(x, '02x') for x in json.dumps(proposal_template).encode())
-        collateral_hash = self.nodes[0].gobject("prepare", parent_hash, proposal_rev, proposal_time, proposal_hex)
-        return {
-            "parentHash": parent_hash,
-            "collateralHash": collateral_hash,
-            "createdAt": proposal_time,
-            "revision": proposal_rev,
-            "hex": proposal_hex,
-            "data": proposal_template,
-        }
 
     def check_superblockbudget(self, v20_active):
         v20_state = self.nodes[0].getblockchaininfo()["softforks"]["v20"]
@@ -76,18 +54,6 @@ class DashGovernanceTest (DashTestFramework):
                     assert False
 
         assert_equal(payments_found, 2)
-
-    def have_trigger_for_height(self, sb_block_height):
-        count = 0
-        for node in self.nodes:
-            valid_triggers = node.gobject("list", "valid", "triggers")
-            for trigger in list(valid_triggers.values()):
-                if json.loads(trigger["DataString"])["event_block_height"] != sb_block_height:
-                    continue
-                if trigger['AbsoluteYesCount'] > 0:
-                    count = count + 1
-                    break
-        return count == len(self.nodes)
 
     def run_test(self):
         governance_info = self.nodes[0].getgovernanceinfo()
@@ -152,9 +118,9 @@ class DashGovernanceTest (DashTestFramework):
         self.p1_amount = satoshi_round("3.3")
         self.p2_amount = self.expected_v20_budget - self.p1_amount
 
-        p0_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_0", self.p0_amount, self.p0_payout_address)
-        p1_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_1", self.p1_amount, self.p1_payout_address)
-        p2_collateral_prepare = self.prepare_object(1, uint256_to_string(0), proposal_time, 1, "Proposal_2", self.p2_amount, self.p2_payout_address)
+        p0_collateral_prepare = prepare_object(self.nodes[0], 1, uint256_to_string(0), proposal_time, 1, "Proposal_0", self.p0_amount, self.p0_payout_address)
+        p1_collateral_prepare = prepare_object(self.nodes[0], 1, uint256_to_string(0), proposal_time, 1, "Proposal_1", self.p1_amount, self.p1_payout_address)
+        p2_collateral_prepare = prepare_object(self.nodes[0], 1, uint256_to_string(0), proposal_time, 1, "Proposal_2", self.p2_amount, self.p2_payout_address)
 
         self.nodes[0].generate(6)
         self.bump_mocktime(6)
@@ -348,7 +314,7 @@ class DashGovernanceTest (DashTestFramework):
             self.bump_mocktime(1)
             self.sync_blocks()
         # Wait for new trigger and votes
-        self.wait_until(lambda: self.have_trigger_for_height(260))
+        self.wait_until(lambda: have_trigger_for_height(self.nodes, 260))
         # Mine superblock
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
@@ -364,7 +330,7 @@ class DashGovernanceTest (DashTestFramework):
                 self.sync_blocks()
             # Wait for new trigger and votes
             sb_block_height = 260 + (i + 1) * sb_cycle
-            self.wait_until(lambda: self.have_trigger_for_height(sb_block_height))
+            self.wait_until(lambda: have_trigger_for_height(self.nodes, sb_block_height))
             # Mine superblock
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
