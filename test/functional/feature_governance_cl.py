@@ -123,7 +123,7 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
         sb_block_height = self.nodes[0].getblockcount() + 1
-        self.wait_until(lambda: self.have_trigger_for_height(sb_block_height, self.nodes[0:5]), timeout=5)
+        self.wait_until(lambda: self.have_trigger_for_height(sb_block_height, self.nodes[0:5]))
         # Mine superblock
         self.nodes[0].generate(1)
         self.bump_mocktime(156)
