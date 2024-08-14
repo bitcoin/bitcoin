@@ -35,10 +35,13 @@ bool operator==(const Coin &a, const Coin &b) {
 
 class CCoinsViewTest : public CCoinsView
 {
+    FastRandomContext& m_rng;
     uint256 hashBestBlock_;
     std::map<COutPoint, Coin> map_;
 
 public:
+    CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
+
     [[nodiscard]] bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
@@ -283,7 +286,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
 // Run the above simulation for multiple base types.
 BOOST_FIXTURE_TEST_CASE(coins_cache_simulation_test, CacheTest)
 {
-    CCoinsViewTest base;
+    CCoinsViewTest base{m_rng};
     SimulationTest(&base, false);
 
     CCoinsViewDB db_base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
@@ -322,7 +325,7 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
     std::map<COutPoint, Coin> result;
 
     // The cache stack.
-    CCoinsViewTest base; // A CCoinsViewTest at the bottom.
+    CCoinsViewTest base{m_rng}; // A CCoinsViewTest at the bottom.
     std::vector<std::unique_ptr<CCoinsViewCacheTest>> stack; // A stack of CCoinsViewCaches on top.
     stack.push_back(std::make_unique<CCoinsViewCacheTest>(&base)); // Start with one cache.
 

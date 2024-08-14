@@ -207,16 +207,16 @@ public:
         BOOST_CHECK_MESSAGE(passed, "insecure_rand: " + rand_seed.ToString());
     }
 
-    prevector_tester() {
-        rand_seed = InsecureRand256();
-        g_insecure_rand_ctx.Reseed(rand_seed);
+    prevector_tester(FastRandomContext& rng) {
+        rand_seed = rng.rand256();
+        rng.Reseed(rand_seed);
     }
 };
 
 BOOST_AUTO_TEST_CASE(PrevectorTestInt)
 {
     for (int j = 0; j < 64; j++) {
-        prevector_tester<8, int> test;
+        prevector_tester<8, int> test{m_rng};
         for (int i = 0; i < 2048; i++) {
             if (InsecureRandBits(2) == 0) {
                 test.insert(InsecureRandRange(test.size() + 1), int(InsecureRand32()));

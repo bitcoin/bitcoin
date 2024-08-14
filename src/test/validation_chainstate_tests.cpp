@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
     // Add a coin to the in-memory cache, upsize once, then downsize.
     {
         LOCK(::cs_main);
-        const auto outpoint = AddTestCoin(c1.CoinsTip());
+        const auto outpoint = AddTestCoin(m_rng, c1.CoinsTip());
 
         // Set a meaningless bestblock value in the coinsview cache - otherwise we won't
         // flush during ResizecoinsCaches() and will subsequently hit an assertion.

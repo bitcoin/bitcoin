@@ -1011,10 +1011,10 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
 
 namespace {
 
-CKey GenerateRandomTestKey() noexcept
+CKey GenerateRandomTestKey(FastRandomContext& rng) noexcept
 {
     CKey key;
-    uint256 key_data = InsecureRand256();
+    uint256 key_data = rng.rand256();
     key.Set(key_data.begin(), key_data.end(), true);
     return key;
 }
@@ -1029,6 +1029,7 @@ CKey GenerateRandomTestKey() noexcept
  */
 class V2TransportTester
 {
+    FastRandomContext& m_rng;
     V2Transport m_transport; //!< V2Transport being tested
     BIP324Cipher m_cipher; //!< Cipher to help with the other side
     bool m_test_initiator; //!< Whether m_transport is the initiator (true) or responder (false)
@@ -1042,9 +1043,10 @@ class V2TransportTester
 
 public:
     /** Construct a tester object. test_initiator: whether the tested transport is initiator. */
-    explicit V2TransportTester(bool test_initiator)
-        : m_transport{0, test_initiator},
-          m_cipher{GenerateRandomTestKey(), MakeByteSpan(InsecureRand256())},
+    explicit V2TransportTester(FastRandomContext& rng, bool test_initiator)
+        : m_rng{rng},
+          m_transport{0, test_initiator},
+          m_cipher{GenerateRandomTestKey(m_rng), MakeByteSpan(m_rng.rand256())},
           m_test_initiator(test_initiator) {}
 
     /** Data type returned by Interact:
@@ -1345,7 +1347,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 {
     // A mostly normal scenario, testing a transport in initiator mode.
     for (int i = 0; i < 10; ++i) {
-        V2TransportTester tester(true);
+        V2TransportTester tester(m_rng, true);
         auto ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->empty());
         tester.SendKey();
@@ -1386,7 +1388,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 
     // Normal scenario, with a transport in responder node.
     for (int i = 0; i < 10; ++i) {
-        V2TransportTester tester(false);
+        V2TransportTester tester(m_rng, false);
         tester.SendKey();
         tester.SendGarbage();
         auto ret = tester.Interact();
@@ -1429,7 +1431,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         bool send_immediately = !initiator || InsecureRandBool();
         /** How many decoy packets to send before the first and second real message. */
         unsigned num_decoys_1 = InsecureRandRange(1000), num_decoys_2 = InsecureRandRange(1000);
-        V2TransportTester tester(initiator);
+        V2TransportTester tester(m_rng, initiator);
         if (send_immediately) {
             tester.SendKey();
             tester.SendGarbage(garb_len);
@@ -1480,7 +1482,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 
     // Too long garbage (initiator).
     {
-        V2TransportTester tester(true);
+        V2TransportTester tester(m_rng, true);
         auto ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->empty());
         tester.SendKey();
@@ -1493,7 +1495,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 
     // Too long garbage (responder).
     {
-        V2TransportTester tester(false);
+        V2TransportTester tester(m_rng, false);
         tester.SendKey();
         tester.SendGarbage(V2Transport::MAX_GARBAGE_LEN + 1);
         auto ret = tester.Interact();
@@ -1506,7 +1508,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 
     // Send garbage that includes the first 15 garbage terminator bytes somewhere.
     {
-        V2TransportTester tester(true);
+        V2TransportTester tester(m_rng, true);
         auto ret = tester.Interact();
         BOOST_REQUIRE(ret && ret->empty());
         tester.SendKey();
@@ -1545,7 +1547,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 
     // Send correct network's V1 header
     {
-        V2TransportTester tester(false);
+        V2TransportTester tester(m_rng, false);
         tester.SendV1Version(Params().MessageStart());
         auto ret = tester.Interact();
         BOOST_CHECK(ret);
@@ -1553,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
 
     // Send wrong network's V1 header
     {
-        V2TransportTester tester(false);
+        V2TransportTester tester(m_rng, false);
         tester.SendV1Version(CChainParams::Main()->MessageStart());
         auto ret = tester.Interact();
         BOOST_CHECK(!ret);

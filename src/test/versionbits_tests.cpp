@@ -67,6 +67,7 @@ public:
 
 class VersionBitsTester
 {
+    FastRandomContext& m_rng;
     // A fake blockchain
     std::vector<CBlockIndex*> vpblock;
 
@@ -85,6 +86,8 @@ class VersionBitsTester
     int num{1000};
 
 public:
+    VersionBitsTester(FastRandomContext& rng) : m_rng{rng} {}
+
     VersionBitsTester& Reset() {
         // Have each group of tests be counted by the 1000s part, starting at 1000
         num = num - (num % 1000) + 1000;
@@ -190,7 +193,7 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
 {
     for (int i = 0; i < 64; i++) {
         // DEFINED -> STARTED after timeout reached -> FAILED
-        VersionBitsTester().TestDefined().TestStateSinceHeight(0)
+        VersionBitsTester(m_rng).TestDefined().TestStateSinceHeight(0)
                            .Mine(1, TestTime(1), 0x100).TestDefined().TestStateSinceHeight(0)
                            .Mine(11, TestTime(11), 0x100).TestDefined().TestStateSinceHeight(0)
                            .Mine(989, TestTime(989), 0x100).TestDefined().TestStateSinceHeight(0)
@@ -296,7 +299,7 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
     // LOCKED-IN, and then no longer set while ACTIVE.
-    VersionBitsTester firstChain, secondChain;
+    VersionBitsTester firstChain{m_rng}, secondChain{m_rng};
 
     int64_t nTime = nStartTime;
 

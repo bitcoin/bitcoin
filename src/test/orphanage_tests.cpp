@@ -21,6 +21,8 @@ BOOST_FIXTURE_TEST_SUITE(orphanage_tests, TestingSetup)
 class TxOrphanageTest : public TxOrphanage
 {
 public:
+    TxOrphanageTest(FastRandomContext& rng) : m_rng{rng} {}
+
     inline size_t CountOrphans() const
     {
         return m_orphans.size();
@@ -34,9 +36,11 @@ public:
             it = m_orphans.begin();
         return it->second.tx;
     }
+
+    FastRandomContext& m_rng;
 };
 
-static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx = g_insecure_rand_ctx)
+static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx)
 {
     std::vector<unsigned char> keydata;
     keydata = rand_ctx.randbytes(32);
@@ -106,9 +110,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // signature's R and S values have leading zeros.
     g_insecure_rand_ctx.Reseed(uint256{33});
 
-    TxOrphanageTest orphanage;
+    TxOrphanageTest orphanage{m_rng};
     CKey key;
-    MakeNewKeyWithFastRandomContext(key);
+    MakeNewKeyWithFastRandomContext(key, m_rng);
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 

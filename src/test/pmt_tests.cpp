@@ -17,12 +17,16 @@
 class CPartialMerkleTreeTester : public CPartialMerkleTree
 {
 public:
+    CPartialMerkleTreeTester(FastRandomContext& rng) : m_rng{rng} {}
+
     // flip one bit in one of the hashes - this should break the authentication
     void Damage() {
         unsigned int n = InsecureRandRange(vHash.size());
         int bit = InsecureRandBits(8);
         *(vHash[n].begin() + (bit>>3)) ^= 1<<(bit&7);
     }
+
+    FastRandomContext& m_rng;
 };
 
 BOOST_FIXTURE_TEST_SUITE(pmt_tests, BasicTestingSetup)
@@ -77,7 +81,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             BOOST_CHECK(ss.size() <= 10 + (258*n+7)/8);
 
             // deserialize into a tester copy
-            CPartialMerkleTreeTester pmt2;
+            CPartialMerkleTreeTester pmt2{m_rng};
             ss >> pmt2;
 
             // extract merkle root and matched txids from copy

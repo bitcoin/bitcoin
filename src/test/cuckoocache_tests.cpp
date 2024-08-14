@@ -309,7 +309,7 @@ void test_cache_generations()
     // immediately and never uses the other half.
     struct block_activity {
         std::vector<uint256> reads;
-        block_activity(uint32_t n_insert, Cache& c) : reads()
+        block_activity(uint32_t n_insert, FastRandomContext& rng, Cache& c)
         {
             std::vector<uint256> inserts;
             inserts.resize(n_insert);
@@ -317,7 +317,7 @@ void test_cache_generations()
             for (uint32_t i = 0; i < n_insert; ++i) {
                 uint32_t* ptr = (uint32_t*)inserts[i].begin();
                 for (uint8_t j = 0; j < 8; ++j)
-                    *(ptr++) = InsecureRand32();
+                    *(ptr++) = rng.rand32();
             }
             for (uint32_t i = 0; i < n_insert / 4; ++i)
                 reads.push_back(inserts[i]);
@@ -351,7 +351,7 @@ void test_cache_generations()
     for (uint32_t i = 0; i < total; ++i) {
         if (last_few.size() == WINDOW_SIZE)
             last_few.pop_front();
-        last_few.emplace_back(BLOCK_SIZE, set);
+        last_few.emplace_back(BLOCK_SIZE, m_rng, set);
         uint32_t count = 0;
         for (auto& act : last_few)
             for (uint32_t k = 0; k < POP_AMOUNT; ++k) {

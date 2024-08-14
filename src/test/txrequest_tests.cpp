@@ -78,12 +78,13 @@ std::chrono::microseconds TxRequestTest::RandomTime1y() { return std::chrono::mi
  */
 class Scenario
 {
+    FastRandomContext& m_rng;
     Runner& m_runner;
     std::chrono::microseconds m_now;
     std::string m_testname;
 
 public:
-    Scenario(Runner& runner, std::chrono::microseconds starttime) : m_runner(runner), m_now(starttime) {}
+    Scenario(FastRandomContext& rng, Runner& runner, std::chrono::microseconds starttime) : m_rng(rng), m_runner(runner), m_now(starttime) {}
 
     /** Set a name for the current test, to give more clear error messages. */
     void SetTestName(std::string testname)
@@ -719,7 +720,7 @@ void TxRequestTest::TestInterleavedScenarios()
         // Introduce some variation in the start time of each scenario, so they don't all start off
         // concurrently, but get a more random interleaving.
         auto scenario_start = starttime + RandomTime8s() + RandomTime8s() + RandomTime8s();
-        Scenario scenario(runner, scenario_start);
+        Scenario scenario(m_rng, runner, scenario_start);
         for (int j = 0; builders.size() && j < 10; ++j) {
             builders.back()(scenario);
             builders.pop_back();
