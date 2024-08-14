@@ -105,6 +105,7 @@ BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 
 static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
 
+struct CacheTest : BasicTestingSetup {
 // This is a large randomized insert/remove simulation test on a variable-size
 // stack of caches on top of CCoinsViewTest.
 //
@@ -277,9 +278,10 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
     BOOST_CHECK(uncached_an_entry);
     BOOST_CHECK(flushed_without_erase);
 }
+}; // struct CacheTest
 
 // Run the above simulation for multiple base types.
-BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
+BOOST_FIXTURE_TEST_CASE(coins_cache_simulation_test, CacheTest)
 {
     CCoinsViewTest base;
     SimulationTest(&base, false);
@@ -288,6 +290,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     SimulationTest(&db_base, true);
 }
 
+struct UpdateTest : BasicTestingSetup {
 // Store of all necessary tx and undo data for next test
 typedef std::map<COutPoint, std::tuple<CTransaction,CTxUndo,Coin>> UtxoData;
 UtxoData utxoData;
@@ -302,6 +305,7 @@ UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {
     assert(utxoDataIt != utxoData.end());
     return utxoDataIt;
 }
+}; // struct UpdateTest
 
 
 // This test is similar to the previous test
@@ -309,7 +313,7 @@ UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {
 // random txs are created and UpdateCoins is used to update the cache stack
 // In particular it is tested that spending a duplicate coinbase tx
 // has the expected effect (the other duplicate is overwritten at all cache levels)
-BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
+BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
 {
     SeedRandomForTest(SeedRand::ZEROS);
 
@@ -888,6 +892,7 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
 }
 
 
+struct FlushTest : BasicTestingSetup {
 Coin MakeCoin()
 {
     Coin coin;
@@ -919,7 +924,7 @@ void TestFlushBehavior(
     size_t cache_usage;
     size_t cache_size;
 
-    auto flush_all = [&all_caches](bool erase) {
+    auto flush_all = [this, &all_caches](bool erase) {
         // Flush in reverse order to ensure that flushes happen from children up.
         for (auto i = all_caches.rbegin(); i != all_caches.rend(); ++i) {
             auto& cache = *i;
@@ -1074,8 +1079,9 @@ void TestFlushBehavior(
     BOOST_CHECK(!all_caches[0]->HaveCoinInCache(outp));
     BOOST_CHECK(!base.HaveCoin(outp));
 }
+}; // struct FlushTest
 
-BOOST_AUTO_TEST_CASE(ccoins_flush_behavior)
+BOOST_FIXTURE_TEST_CASE(ccoins_flush_behavior, FlushTest)
 {
     // Create two in-memory caches atop a leveldb view.
     CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};

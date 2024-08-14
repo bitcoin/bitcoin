@@ -82,7 +82,8 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     return ss.GetHash();
 }
 
-void static RandomScript(CScript &script) {
+struct SigHashTest : BasicTestingSetup {
+void RandomScript(CScript &script) {
     static const opcodetype oplist[] = {OP_FALSE, OP_1, OP_2, OP_3, OP_CHECKSIG, OP_IF, OP_VERIF, OP_RETURN, OP_CODESEPARATOR};
     script = CScript();
     int ops = (InsecureRandRange(10));
@@ -90,7 +91,7 @@ void static RandomScript(CScript &script) {
         script << oplist[InsecureRandRange(std::size(oplist))];
 }
 
-void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
+void RandomTransaction(CMutableTransaction& tx, bool fSingle)
 {
     tx.version = InsecureRand32();
     tx.vin.clear();
@@ -113,8 +114,9 @@ void static RandomTransaction(CMutableTransaction& tx, bool fSingle)
         RandomScript(txout.scriptPubKey);
     }
 }
+}; // struct SigHashTest
 
-BOOST_FIXTURE_TEST_SUITE(sighash_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(sighash_tests, SigHashTest)
 
 BOOST_AUTO_TEST_CASE(sighash_test)
 {

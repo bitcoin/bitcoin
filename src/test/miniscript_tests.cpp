@@ -340,6 +340,7 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
     witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
 }
 
+struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
@@ -488,10 +489,11 @@ void Test(const std::string& ms, const std::string& hexscript, const std::string
          /*opslimit=*/-1, /*stacklimit=*/-1,
          /*max_wit_size=*/std::nullopt, /*max_tap_wit_size=*/std::nullopt, /*stack_exec=*/std::nullopt);
 }
+}; // struct MiniScriptTest
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(miniscript_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(miniscript_tests, MiniScriptTest)
 
 BOOST_AUTO_TEST_CASE(fixed_tests)
 {

@@ -34,7 +34,9 @@ struct NoLockLoggingTestingSetup : public TestingSetup {
 #endif
 };
 
-BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, NoLockLoggingTestingSetup)
+struct CheckQueueTest : NoLockLoggingTestingSetup {
+    void Correct_Queue_range(std::vector<size_t> range);
+};
 
 static const unsigned int QUEUE_BATCH_SIZE = 128;
 static const int SCRIPT_CHECK_THREADS = 3;
@@ -156,7 +158,7 @@ typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
 /** This test case checks that the CCheckQueue works properly
  * with each specified size_t Checks pushed.
  */
-static void Correct_Queue_range(std::vector<size_t> range)
+void CheckQueueTest::Correct_Queue_range(std::vector<size_t> range)
 {
     auto small_queue = std::make_unique<Correct_Queue>(QUEUE_BATCH_SIZE, SCRIPT_CHECK_THREADS);
     // Make vChecks here to save on malloc (this test can be slow...)
@@ -176,6 +178,8 @@ static void Correct_Queue_range(std::vector<size_t> range)
         BOOST_REQUIRE_EQUAL(FakeCheckCheckCompletion::n_calls, i);
     }
 }
+
+BOOST_FIXTURE_TEST_SUITE(checkqueue_tests, CheckQueueTest)
 
 /** Test that 0 checks is correct
  */

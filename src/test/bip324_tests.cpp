@@ -20,6 +20,7 @@
 
 namespace {
 
+struct BIP324Test : BasicTestingSetup {
 void TestBIP324PacketVector(
     uint32_t in_idx,
     const std::string& in_priv_ours_hex,
@@ -155,10 +156,11 @@ void TestBIP324PacketVector(
         }
     }
 }
+}; // struct BIP324Test
 
 }  // namespace
 
-BOOST_FIXTURE_TEST_SUITE(bip324_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(bip324_tests, BIP324Test)
 
 BOOST_AUTO_TEST_CASE(packet_test_vectors) {
     // BIP324 key derivation uses network magic in the HKDF process. We use mainnet params here

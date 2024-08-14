@@ -22,7 +22,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(bloom_tests, BasicTestingSetup)
+namespace bloom_tests {
+struct BloomTest : public BasicTestingSetup {
+    std::vector<unsigned char> RandomData();
+};
+} // namespace bloom_tests
+
+BOOST_FIXTURE_TEST_SUITE(bloom_tests, BloomTest)
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
 {
@@ -455,7 +461,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
     BOOST_CHECK(!filter.contains(COutPoint(Txid::FromHex("02981fa052f0481dbc5868f4fc2166035a10f27a03cfd2de67326471df5bc041").value(), 0)));
 }
 
-static std::vector<unsigned char> RandomData()
+std::vector<unsigned char> BloomTest::RandomData()
 {
     uint256 r = InsecureRand256();
     return std::vector<unsigned char>(r.begin(), r.end());

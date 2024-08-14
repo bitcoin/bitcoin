@@ -14,7 +14,7 @@
 
 using node::MakeMinisketch32;
 
-BOOST_AUTO_TEST_SUITE(minisketch_tests)
+BOOST_FIXTURE_TEST_SUITE(minisketch_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(minisketch_test)
 {

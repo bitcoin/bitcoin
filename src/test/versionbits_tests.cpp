@@ -256,8 +256,9 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
     }
 }
 
+struct BlockVersionTest : BasicTestingSetup {
 /** Check that ComputeBlockVersion will set the appropriate bit correctly */
-static void check_computeblockversion(VersionBitsCache& versionbitscache, const Consensus::Params& params, Consensus::DeploymentPos dep)
+void check_computeblockversion(VersionBitsCache& versionbitscache, const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
     // Clear the cache every time
     versionbitscache.Clear();
@@ -412,8 +413,9 @@ static void check_computeblockversion(VersionBitsCache& versionbitscache, const 
     // Check that we don't signal after activation
     BOOST_CHECK_EQUAL(versionbitscache.ComputeBlockVersion(lastBlock, params) & (1 << bit), 0);
 }
+}; // struct BlockVersionTest
 
-BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
+BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
 {
     VersionBitsCache vbcache;
 

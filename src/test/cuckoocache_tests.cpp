@@ -29,7 +29,7 @@
  *  using BOOST_CHECK_CLOSE to fail.
  *
  */
-BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
+BOOST_FIXTURE_TEST_SUITE(cuckoocache_tests, BasicTestingSetup);
 
 /* Test that no values not inserted into the cache are read out of it.
  *
@@ -49,11 +49,12 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
     }
 };
 
+struct HitRateTest : BasicTestingSetup {
 /** This helper returns the hit rate when megabytes*load worth of entries are
  * inserted into a megabytes sized cache
  */
 template <typename Cache>
-static double test_cache(size_t megabytes, double load)
+double test_cache(size_t megabytes, double load)
 {
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
@@ -104,9 +105,10 @@ static double normalize_hit_rate(double hits, double load)
 {
     return hits * std::max(load, 1.0);
 }
+}; // struct HitRateTest
 
 /** Check the hit rate on loads ranging from 0.1 to 1.6 */
-BOOST_AUTO_TEST_CASE(cuckoocache_hit_rate_ok)
+BOOST_FIXTURE_TEST_CASE(cuckoocache_hit_rate_ok, HitRateTest)
 {
     /** Arbitrarily selected Hit Rate threshold that happens to work for this test
      * as a lower bound on performance.
@@ -120,10 +122,11 @@ BOOST_AUTO_TEST_CASE(cuckoocache_hit_rate_ok)
 }
 
 
+struct EraseTest : BasicTestingSetup {
 /** This helper checks that erased elements are preferentially inserted onto and
  * that the hit rate of "fresher" keys is reasonable*/
 template <typename Cache>
-static void test_cache_erase(size_t megabytes)
+void test_cache_erase(size_t megabytes)
 {
     double load = 1;
     SeedRandomForTest(SeedRand::ZEROS);
@@ -178,15 +181,17 @@ static void test_cache_erase(size_t megabytes)
     // erased elements.
     BOOST_CHECK(hit_rate_stale > 2 * hit_rate_erased_but_contained);
 }
+}; // struct EraseTest
 
-BOOST_AUTO_TEST_CASE(cuckoocache_erase_ok)
+BOOST_FIXTURE_TEST_CASE(cuckoocache_erase_ok, EraseTest)
 {
     size_t megabytes = 4;
     test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
 }
 
+struct EraseParallelTest : BasicTestingSetup {
 template <typename Cache>
-static void test_cache_erase_parallel(size_t megabytes)
+void test_cache_erase_parallel(size_t megabytes)
 {
     double load = 1;
     SeedRandomForTest(SeedRand::ZEROS);
@@ -268,15 +273,17 @@ static void test_cache_erase_parallel(size_t megabytes)
     // erased elements.
     BOOST_CHECK(hit_rate_stale > 2 * hit_rate_erased_but_contained);
 }
-BOOST_AUTO_TEST_CASE(cuckoocache_erase_parallel_ok)
+}; // struct EraseParallelTest
+BOOST_FIXTURE_TEST_CASE(cuckoocache_erase_parallel_ok, EraseParallelTest)
 {
     size_t megabytes = 4;
     test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
 }
 
 
+struct GenerationsTest : BasicTestingSetup {
 template <typename Cache>
-static void test_cache_generations()
+void test_cache_generations()
 {
     // This test checks that for a simulation of network activity, the fresh hit
     // rate is never below 99%, and the number of times that it is worse than
@@ -365,7 +372,8 @@ static void test_cache_generations()
     // max_rate_less_than_tight_hit_rate of the time
     BOOST_CHECK(double(out_of_tight_tolerance) / double(total) < max_rate_less_than_tight_hit_rate);
 }
-BOOST_AUTO_TEST_CASE(cuckoocache_generations)
+}; // struct GenerationsTest
+BOOST_FIXTURE_TEST_CASE(cuckoocache_generations, GenerationsTest)
 {
     test_cache_generations<CuckooCache::cache<uint256, SignatureCacheHasher>>();
 }

@@ -20,11 +20,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(txpackage_tests)
 // A fee amount that is above 1sat/vB but below 5sat/vB for most transactions created within these
 // unit tests.
 static const CAmount low_fee_amt{200};
 
+struct TxPackageTest : TestChain100Setup {
 // Create placeholder transactions that have no meaning.
 inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outputs)
 {
@@ -43,7 +43,11 @@ inline CTransactionRef create_placeholder_tx(size_t num_inputs, size_t num_outpu
     }
     return MakeTransactionRef(mtx);
 }
-BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)
+}; // struct TxPackageTest
+
+BOOST_FIXTURE_TEST_SUITE(txpackage_tests, TxPackageTest)
+
+BOOST_AUTO_TEST_CASE(package_hash_tests)
 {
     // Random real segwit transaction
     DataStream stream_1{
@@ -124,7 +128,7 @@ BOOST_FIXTURE_TEST_CASE(package_hash_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(calculated_hash_123, GetPackageHash(package_321));
 }
 
-BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(package_sanitization_tests)
 {
     // Packages can't have more than 25 transactions.
     Package package_too_many;
@@ -194,7 +198,7 @@ BOOST_FIXTURE_TEST_CASE(package_sanitization_tests, TestChain100Setup)
     BOOST_CHECK(IsConsistentPackage(package_with_dup_tx));
 }
 
-BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(package_validation_tests)
 {
     LOCK(cs_main);
     unsigned int initialPoolSize = m_node.mempool->size();
@@ -249,7 +253,7 @@ BOOST_FIXTURE_TEST_CASE(package_validation_tests, TestChain100Setup)
     BOOST_CHECK_EQUAL(m_node.mempool->size(), initialPoolSize);
 }
 
-BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(noncontextual_package_tests)
 {
     // The signatures won't be verified so we can just use a placeholder
     CKey placeholder_key = GenerateRandomKey();
@@ -345,7 +349,7 @@ BOOST_FIXTURE_TEST_CASE(noncontextual_package_tests, TestChain100Setup)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(package_submission_tests)
 {
     LOCK(cs_main);
     unsigned int expected_pool_size = m_node.mempool->size();
@@ -488,7 +492,7 @@ BOOST_FIXTURE_TEST_CASE(package_submission_tests, TestChain100Setup)
 
 // Tests for packages containing transactions that have same-txid-different-witness equivalents in
 // the mempool.
-BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
 {
     // Mine blocks to mature coinbases.
     mineBlocks(5);
@@ -722,7 +726,7 @@ BOOST_FIXTURE_TEST_CASE(package_witness_swap_tests, TestChain100Setup)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(package_cpfp_tests)
 {
     mineBlocks(5);
     MockMempoolMinFee(CFeeRate(5000));
@@ -933,7 +937,7 @@ BOOST_FIXTURE_TEST_CASE(package_cpfp_tests, TestChain100Setup)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(package_rbf_tests, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(package_rbf_tests)
 {
     mineBlocks(5);
     LOCK(::cs_main);

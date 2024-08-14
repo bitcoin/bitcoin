@@ -110,8 +110,7 @@ static ScriptError_t ParseScriptError(const std::string& name)
     return SCRIPT_ERR_UNKNOWN_ERROR;
 }
 
-BOOST_FIXTURE_TEST_SUITE(script_tests, BasicTestingSetup)
-
+struct ScriptTest : BasicTestingSetup {
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, uint32_t flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
@@ -136,6 +135,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
     }
 }
+}; // struct ScriptTest
 
 void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
     // Parse the signature.
@@ -369,11 +369,11 @@ public:
         return *this;
     }
 
-    TestBuilder& Test()
+    TestBuilder& Test(ScriptTest& test)
     {
         TestBuilder copy = *this; // Make a copy so we can rollback the push.
         DoPush();
-        DoTest(creditTx->vout[0].scriptPubKey, spendTx.vin[0].scriptSig, scriptWitness, flags, comment, scriptError, nValue);
+        test.DoTest(creditTx->vout[0].scriptPubKey, spendTx.vin[0].scriptSig, scriptWitness, flags, comment, scriptError, nValue);
         *this = copy;
         return *this;
     }
@@ -424,6 +424,8 @@ std::string JSONPrettyPrint(const UniValue& univalue)
     return ret;
 }
 } // namespace
+
+BOOST_FIXTURE_TEST_SUITE(script_tests, ScriptTest)
 
 BOOST_AUTO_TEST_CASE(script_build)
 {
@@ -884,7 +886,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     std::string strGen;
 #endif
     for (TestBuilder& test : tests) {
-        test.Test();
+        test.Test(*this);
         std::string str = JSONPrettyPrint(test.GetJSON());
 #ifdef UPDATE_JSON_TESTS
         strGen += str + ",\n";
