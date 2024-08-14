@@ -22,7 +22,6 @@
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
-             (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
              (guix download)
