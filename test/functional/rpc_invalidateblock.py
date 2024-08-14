@@ -41,6 +41,8 @@ class InvalidateTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(badhash)
         assert_equal(self.nodes[0].getblockcount(), 4)
         assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
+        # Should report consistent blockchain info
+        assert_equal(self.nodes[0].getblockchaininfo()["headers"], self.nodes[0].getblockchaininfo()["blocks"])
 
         self.log.info("Make sure we won't reorg to a lower work chain:")
         self.connect_nodes(1, 2)

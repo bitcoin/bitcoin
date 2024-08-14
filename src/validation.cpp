@@ -2046,7 +2046,7 @@ void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
         m_chainman.m_best_invalid = pindexNew;
     }
     if (m_chainman.m_best_header != nullptr && m_chainman.m_best_header->GetAncestor(pindexNew->nHeight) == pindexNew) {
-        m_chainman.m_best_header = m_chain.Tip();
+        m_chainman.RecalculateBestHeader();
     }
 
     LogPrintf("%s: invalid block=%s  height=%d  log2_work=%f  date=%s\n", __func__,
