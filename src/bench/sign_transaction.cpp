@@ -69,12 +69,13 @@ static void SignTransactionSchnorr(benchmark::Bench& bench) { SignTransactionSin
 
 static void SignSchnorrTapTweakBenchmark(benchmark::Bench& bench, bool use_null_merkle_root)
 {
+    FastRandomContext rng;
     ECC_Context ecc_context{};
 
     auto key = GenerateRandomKey();
-    auto msg = InsecureRand256();
-    auto merkle_root = use_null_merkle_root ? uint256() : InsecureRand256();
-    auto aux = InsecureRand256();
+    auto msg = rng.rand256();
+    auto merkle_root = use_null_merkle_root ? uint256() : rng.rand256();
+    auto aux = rng.rand256();
     std::vector<unsigned char> sig(64);
 
     bench.minEpochIterations(100).run([&] {

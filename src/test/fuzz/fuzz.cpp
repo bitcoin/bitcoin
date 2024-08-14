@@ -107,7 +107,6 @@ void initialize()
     // - GetStrongRandBytes(), which is used for the creation of private key material.
     // - Creating a BasicTestingSetup or derived class will switch to a random seed.
     SeedRandomStateForTest(SeedRand::ZEROS);
-    g_insecure_rand_ctx.Reseed(GetRandHash());
 
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
     // Individual tests can override this by pointing CreateSock to a mocked alternative.
