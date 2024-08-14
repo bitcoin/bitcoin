@@ -746,9 +746,11 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
         assert(!votedFundingYesTriggerHash.has_value());
         // Vote YES-FUNDING for the trigger we like, unless we already did
         const uint256 gov_sb_hash = trigger_opt.value().GetHash();
+        bool voted_already{false};
         if (vote_rec_t voteRecord; trigger_opt.value().GetCurrentMNVotes(mn_activeman.GetOutPoint(), voteRecord)) {
             const auto& strFunc = __func__;
-            ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair) {
+            // Let's see if there is a VOTE_SIGNAL_FUNDING vote from us already
+            voted_already = ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair) {
                 if (voteInstancePair.first == VOTE_SIGNAL_FUNDING) {
                     if (voteInstancePair.second.eOutcome == VOTE_OUTCOME_YES) {
                         votedFundingYesTriggerHash = gov_sb_hash;
@@ -762,14 +764,19 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
                 }
                 return false;
             });
-        } else if (VoteFundingTrigger(gov_sb_hash, VOTE_OUTCOME_YES, connman, peerman, mn_activeman)) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s success\n", __func__,
-                     gov_sb_hash.ToString());
-            votedFundingYesTriggerHash = gov_sb_hash;
-        } else {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n", __func__, gov_sb_hash.ToString());
-            // this should never happen, bail out
-            return;
+        }
+        if (!voted_already) {
+            // No previous VOTE_SIGNAL_FUNDING was found, vote now
+            if (VoteFundingTrigger(gov_sb_hash, VOTE_OUTCOME_YES, connman, peerman, mn_activeman)) {
+                LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s success\n",
+                         __func__, gov_sb_hash.ToString());
+                votedFundingYesTriggerHash = gov_sb_hash;
+            } else {
+                LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s Voting YES-FUNDING for new trigger:%s failed\n",
+                         __func__, gov_sb_hash.ToString());
+                // this should never happen, bail out
+                return;
+            }
         }
     }
 
