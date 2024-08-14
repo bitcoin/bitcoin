@@ -194,10 +194,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000000000000026811d149d4d261995ec5b3f64f439a0a10e1a464af9a
-            .nTime    = 1704194835,
-            .tx_count = 946728933,
-            .dTxRate  = 6.569290261471664,
+            // Data from RPC: getchaintxstats 4096 000000000000000000011c5890365bdbe5d25b97ce0057589acaef4f1a57263f
+            .nTime    = 1723649144,
+            .tx_count = 1059312821,
+            .dTxRate  = 6.721086701157182,
         };
     }
 };
@@ -295,10 +295,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000001323071f38f21ea5aae529ece491eadaccce506a59bcc2d968917
-            .nTime    = 1703579240,
-            .tx_count = 67845391,
-            .dTxRate  = 1.464436832560951,
+            // Data from RPC: getchaintxstats 4096 000000000000000465b1a66c9f386308e8c75acef9201f3f577811da09fc90ad
+            .nTime    = 1723613341,
+            .tx_count = 187917082,
+            .dTxRate  = 3.265051477698455,
         };
     }
 };
@@ -394,9 +394,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            .nTime    = 0,
-            .tx_count = 0,
-            .dTxRate  = 0,
+            // Data from RPC: getchaintxstats 4096 000000005be348057db991fa5d89fe7c4695b667cfb311391a8db374b6f681fd
+            .nTime    = 1723651702,
+            .tx_count = 757229,
+            .dTxRate  = 0.01570402633472492,
         };
     }
 };
@@ -425,10 +426,10 @@ public:
             m_assumed_blockchain_size = 2;
             m_assumed_chain_state_size = 0;
             chainTxData = ChainTxData{
-                // Data from RPC: getchaintxstats 4096 0000000870f15246ba23c16e370a7ffb1fc8a3dcf8cb4492882ed4b0e3d4cd26
-                .nTime    = 1706331472,
-                .tx_count = 2425380,
-                .dTxRate  = 0.008277759863833788,
+                // Data from RPC: getchaintxstats 4096 0000014aad1d58dddcb964dd749b073374c6306e716b22f573a2efe68d414539
+                .nTime    = 1723655233,
+                .tx_count = 5507045,
+                .dTxRate  = 0.06271073277261494,
             };
         } else {
             bin = *options.challenge;
