@@ -74,7 +74,7 @@ void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
     // Calls SyncWithValidationInterfaceQueue
     wallet->chain().waitForNotificationsIfTipChanged({});
     wallet->m_chain_notifications_handler.reset();
-    UnloadWallet(std::move(wallet));
+    WaitForDeleteWallet(std::move(wallet));
 }
 
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)

@@ -42,7 +42,7 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
 
         // Release wallet
         RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
-        UnloadWallet(std::move(wallet));
+        WaitForDeleteWallet(std::move(wallet));
         fs::remove_all(wallet_path);
     });
 }

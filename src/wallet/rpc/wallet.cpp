@@ -495,7 +495,7 @@ static RPCHelpMan unloadwallet()
         }
     }
 
-    UnloadWallet(std::move(wallet));
+    WaitForDeleteWallet(std::move(wallet));
 
     UniValue result(UniValue::VOBJ);
     PushWarnings(warnings, result);
