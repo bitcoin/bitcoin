@@ -474,7 +474,7 @@ endif
 	  cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
 	) from $<
 	$(AM_V_at)export TEST_LOGFILE=$(abs_builddir)/$$(\
-	  echo $< | grep -E -o "(wallet/test/.*\.cpp|test/.*\.cpp)" | $(SED) -e s/\.cpp/.log/ \
+	  echo $< | grep -E -o "(wallet/test/.*\.cpp|test/.*\.cpp)" | $(SED) -e s/\.cpp/\&.log/ \
 	) && \
 	$(TEST_BINARY) --catch_system_errors=no -l test_suite -t "$$(\
 	  cat $< | \
