@@ -428,10 +428,10 @@ CBlock TestChainSetup::CreateBlock(
         auto cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
         BOOST_ASSERT(cbTx.has_value());
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, m_node.chainman->ActiveChain().Tip(), cbTx->merkleRootMNList, *m_node.dmnman, state, m_node.chainman->ActiveChainstate().CoinsTip())) {
+        if (!CalcCbTxMerkleRootMNList(block, chainstate.m_chain.Tip(), cbTx->merkleRootMNList, *m_node.dmnman, state, chainstate.CoinsTip())) {
             BOOST_ASSERT(false);
         }
-        if (!CalcCbTxMerkleRootQuorums(block, m_node.chainman->ActiveChain().Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, chainstate.m_chain.Tip(), *m_node.llmq_ctx->quorum_block_processor, cbTx->merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
         CMutableTransaction tmpTx{*block.vtx[0]};
@@ -443,7 +443,7 @@ CBlock TestChainSetup::CreateBlock(
     {
         LOCK(cs_main);
         unsigned int extraNonce = 0;
-        IncrementExtraNonce(&block, m_node.chainman->ActiveChain().Tip(), extraNonce);
+        IncrementExtraNonce(&block, chainstate.m_chain.Tip(), extraNonce);
     }
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
