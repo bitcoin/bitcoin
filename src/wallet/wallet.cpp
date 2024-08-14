@@ -250,8 +250,9 @@ void WaitForDeleteWallet(std::shared_ptr<CWallet>&& wallet)
     const std::string name = wallet->GetName();
     {
         LOCK(g_wallet_release_mutex);
-        auto it = g_unloading_wallet_set.insert(name);
-        assert(it.second);
+        g_unloading_wallet_set.insert(name);
+        // Do not expect to be the only one removing this wallet.
+        // Multiple threads could simultaneously be waiting for deletion.
     }
 
     // Time to ditch our shared_ptr and wait for ReleaseWallet call.
