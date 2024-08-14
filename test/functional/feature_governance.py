@@ -348,7 +348,7 @@ class DashGovernanceTest (DashTestFramework):
             self.bump_mocktime(1)
             self.sync_blocks()
         # Wait for new trigger and votes
-        self.wait_until(lambda: self.have_trigger_for_height(260), timeout=5)
+        self.wait_until(lambda: self.have_trigger_for_height(260))
         # Mine superblock
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
@@ -364,7 +364,7 @@ class DashGovernanceTest (DashTestFramework):
                 self.sync_blocks()
             # Wait for new trigger and votes
             sb_block_height = 260 + (i + 1) * sb_cycle
-            self.wait_until(lambda: self.have_trigger_for_height(sb_block_height), timeout=5)
+            self.wait_until(lambda: self.have_trigger_for_height(sb_block_height))
             # Mine superblock
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
