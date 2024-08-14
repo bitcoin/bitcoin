@@ -26,7 +26,7 @@ MAX_SEEDS_PER_ASN = {
     'ipv6': 10,
 }
 
-MIN_BLOCKS = 730000
+MIN_BLOCKS = 840000
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
@@ -198,6 +198,7 @@ def parse_args():
     argparser = argparse.ArgumentParser(description='Generate a list of bitcoin node seed ip addresses.')
     argparser.add_argument("-a","--asmap", help='the location of the asmap asn database file (required)', required=True)
     argparser.add_argument("-s","--seeds", help='the location of the DNS seeds file (required)', required=True)
+    argparser.add_argument("-m", "--minblocks", help="The minimum number of blocks each node must have", default=MIN_BLOCKS, type=int)
     return argparser.parse_args()
 
 def main():
@@ -224,7 +225,7 @@ def main():
     ips = dedup(ips)
     print(f'{ip_stats(ips):s} After removing duplicates', file=sys.stderr)
     # Enforce minimal number of blocks.
-    ips = [ip for ip in ips if ip['blocks'] >= MIN_BLOCKS]
+    ips = [ip for ip in ips if ip['blocks'] >= args.minblocks]
     print(f'{ip_stats(ips):s} Enforce minimal number of blocks', file=sys.stderr)
     # Require service bit 1.
     ips = [ip for ip in ips if (ip['service'] & 1) == 1]
