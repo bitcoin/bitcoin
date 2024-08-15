@@ -24,6 +24,10 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 
     result.inputs.resize(psbtx.tx->vin.size());
 
+    if (!psbtx.tx) {
+        result.SetInvalid("PSBT transaction is null");
+        return result;
+    }
     const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
 
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
