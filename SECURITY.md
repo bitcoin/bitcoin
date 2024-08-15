@@ -7,7 +7,7 @@ security updates: https://bitcoincore.org/en/lifecycle/#schedule
 
 ## Reporting a Vulnerability
 
-To report security issues send an email to security@bitcoincore.org (not for support).
+To report security issues, encrypt your email using the PGP key provided and send it to security@bitcoincore.org
 
 The following keys may be used to communicate sensitive information to developers:
 
