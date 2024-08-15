@@ -111,17 +111,18 @@ DepGraph<SetType> MakeHardGraph(ClusterIndex ntx)
     return depgraph;
 }
 
-/** Benchmark that does search-based candidate finding with 10000 iterations.
+/** Benchmark that does search-based candidate finding with a specified number of iterations.
  *
- * Its goal is measuring how much time every additional search iteration in linearization costs.
+ * Its goal is measuring how much time every additional search iteration in linearization costs,
+ * by running with a low and a high count, subtracting the results, and divided by the number
+ * iterations difference.
  */
 template<typename SetType>
-void BenchLinearizePerIterWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
+void BenchLinearizeWorstCase(ClusterIndex ntx, benchmark::Bench& bench, uint64_t iter_limit)
 {
     const auto depgraph = MakeHardGraph<SetType>(ntx);
-    const auto iter_limit = std::min<uint64_t>(10000, uint64_t{1} << (ntx / 2 - 1));
     uint64_t rng_seed = 0;
-    bench.batch(iter_limit).unit("iters").run([&] {
+    bench.run([&] {
         SearchCandidateFinder finder(depgraph, rng_seed++);
         auto [candidate, iters_performed] = finder.FindCandidateSet(iter_limit, {});
         assert(iters_performed == iter_limit);
@@ -132,11 +133,12 @@ void BenchLinearizePerIterWorstCase(ClusterIndex ntx, benchmark::Bench& bench)
  *
  * Its goal is measuring how much time linearization may take without any search iterations.
  *
- * If P is the resulting time of BenchLinearizePerIterWorstCase, and N is the resulting time of
- * BenchLinearizeNoItersWorstCase*, then an invocation of Linearize with max_iterations=m should
- * take no more than roughly N+m*P time. This may however be an overestimate, as the worst cases
- * do not coincide (the ones that are worst for linearization without any search happen to be ones
- * that do not need many search iterations).
+ * If P is the benchmarked per-iteration count (obtained by running BenchLinearizeWorstCase for a
+ * high and a low iteration count, subtracting them, and dividing by the difference in count), and
+ * N is the resulting time of BenchLinearizeNoItersWorstCase*, then an invocation of Linearize with
+ * max_iterations=m should take no more than roughly N+m*P time. This may however be an
+ * overestimate, as the worst cases do not coincide (the ones that are worst for linearization
+ * without any search happen to be ones that do not need many search iterations).
  *
  * This benchmark exercises a worst case for AncestorCandidateFinder, but for which improvement is
  * cheap.
@@ -207,12 +209,18 @@ void BenchMergeLinearizationsWorstCase(ClusterIndex ntx, benchmark::Bench& bench
 
 } // namespace
 
-static void LinearizePerIter16TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<16>>(16, bench); }
-static void LinearizePerIter32TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<32>>(32, bench); }
-static void LinearizePerIter48TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<48>>(48, bench); }
-static void LinearizePerIter64TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<64>>(64, bench); }
-static void LinearizePerIter75TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<75>>(75, bench); }
-static void LinearizePerIter99TxWorstCase(benchmark::Bench& bench) { BenchLinearizePerIterWorstCase<BitSet<99>>(99, bench); }
+static void Linearize16TxWorstCase20Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<16>>(16, bench, 20); }
+static void Linearize16TxWorstCase120Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<16>>(16, bench, 120); }
+static void Linearize32TxWorstCase5000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<32>>(32, bench, 5000); }
+static void Linearize32TxWorstCase15000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<32>>(32, bench, 15000); }
+static void Linearize48TxWorstCase5000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<48>>(48, bench, 5000); }
+static void Linearize48TxWorstCase15000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<48>>(48, bench, 15000); }
+static void Linearize64TxWorstCase5000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<64>>(64, bench, 5000); }
+static void Linearize64TxWorstCase15000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<64>>(64, bench, 15000); }
+static void Linearize75TxWorstCase5000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<75>>(75, bench, 5000); }
+static void Linearize75TxWorstCase15000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<75>>(75, bench, 15000); }
+static void Linearize99TxWorstCase5000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<99>>(99, bench, 5000); }
+static void Linearize99TxWorstCase15000Iters(benchmark::Bench& bench) { BenchLinearizeWorstCase<BitSet<99>>(99, bench, 15000); }
 
 static void LinearizeNoIters16TxWorstCaseAnc(benchmark::Bench& bench) { BenchLinearizeNoItersWorstCaseAnc<BitSet<16>>(16, bench); }
 static void LinearizeNoIters32TxWorstCaseAnc(benchmark::Bench& bench) { BenchLinearizeNoItersWorstCaseAnc<BitSet<32>>(32, bench); }
@@ -242,12 +250,18 @@ static void MergeLinearizations64TxWorstCase(benchmark::Bench& bench) { BenchMer
 static void MergeLinearizations75TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<75>>(75, bench); }
 static void MergeLinearizations99TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<99>>(99, bench); }
 
-BENCHMARK(LinearizePerIter16TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LinearizePerIter32TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LinearizePerIter48TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LinearizePerIter64TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LinearizePerIter75TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LinearizePerIter99TxWorstCase, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize16TxWorstCase20Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize16TxWorstCase120Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize32TxWorstCase5000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize32TxWorstCase15000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize48TxWorstCase5000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize48TxWorstCase15000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize64TxWorstCase5000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize64TxWorstCase15000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize75TxWorstCase5000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize75TxWorstCase15000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize99TxWorstCase5000Iters, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Linearize99TxWorstCase15000Iters, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(LinearizeNoIters16TxWorstCaseAnc, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeNoIters32TxWorstCaseAnc, benchmark::PriorityLevel::HIGH);
