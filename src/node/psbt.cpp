@@ -115,6 +115,10 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         }
 
         // Get the fee
+        if (in_amt < out_amt) {
+            result.SetInvalid("PSBT is not valid. Input amount is less than output amount");
+            return result;
+        }
         CAmount fee = in_amt - out_amt;
         result.fee = fee;
 
