@@ -51,6 +51,7 @@ void initialize_chain()
                                            TestOpts{
                                                .setup_net = false,
                                                .setup_validation_interface = false,
+                                               .min_validation_cache = true,
                                            }),
     };
     if constexpr (INVALID) {

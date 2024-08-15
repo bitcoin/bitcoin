@@ -244,9 +244,9 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 
     m_node.notifications = std::make_unique<KernelNotifications>(*Assert(m_node.shutdown), m_node.exit_status, *Assert(m_node.warnings));
 
-    m_make_chainman = [this, &chainparams] {
+    m_make_chainman = [this, &chainparams, opts] {
         Assert(!m_node.chainman);
-        const ChainstateManager::Options chainman_opts{
+        ChainstateManager::Options chainman_opts{
             .chainparams = chainparams,
             .datadir = m_args.GetDataDirNet(),
             .check_block_index = 1,
@@ -254,6 +254,10 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .signals = m_node.validation_signals.get(),
             .worker_threads_num = 2,
         };
+        if (opts.min_validation_cache) {
+            chainman_opts.script_execution_cache_bytes = 0;
+            chainman_opts.signature_cache_bytes = 0;
+        }
         const BlockManager::Options blockman_opts{
             .chainparams = chainman_opts.chainparams,
             .blocks_dir = m_args.GetBlocksDirPath(),
