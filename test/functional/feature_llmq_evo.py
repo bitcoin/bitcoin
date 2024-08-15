@@ -115,7 +115,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_evo_payments(window_analysis=48)
         self.test_masternode_winners()
 
-        self.activate_v20()
         self.activate_mn_rr()
         self.log.info("Activated MN RewardReallocation at height:" + str(self.nodes[0].getblockcount()))
 
@@ -125,24 +124,24 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.sync_blocks()
 
         self.log.info("Test that EvoNodes are paid 1 block in a row after MN RewardReallocation activation")
-        self.test_evo_payments(window_analysis=48, v20active=True)
+        self.test_evo_payments(window_analysis=48, mnrr_active=True)
         self.test_masternode_winners(mn_rr_active=True)
 
         self.log.info(self.nodes[0].masternodelist())
 
         return
 
-    def test_evo_payments(self, window_analysis, v20active=False):
+    def test_evo_payments(self, window_analysis, mnrr_active=False):
         current_evo = None
         consecutive_payments = 0
-        n_payments = 0 if v20active else 4
+        n_payments = 0 if mnrr_active else 4
         for i in range(0, window_analysis):
             payee = self.get_mn_payee_for_block(self.nodes[0].getbestblockhash())
             if payee is not None and payee.evo:
                 if current_evo is not None and payee.proTxHash == current_evo.proTxHash:
                     # same EvoNode
                     assert consecutive_payments > 0
-                    if not v20active:
+                    if not mnrr_active:
                         consecutive_payments += 1
                     consecutive_payments_rpc = self.nodes[0].protx('info', current_evo.proTxHash)['state']['consecutivePayments']
                     assert_equal(consecutive_payments, consecutive_payments_rpc)
@@ -157,7 +156,7 @@ class LLMQEvoNodesTest(DashTestFramework):
                     consecutive_payments_rpc = self.nodes[0].protx('info', payee.proTxHash)['state']['consecutivePayments']
                     # if EvoNode is the one we start "for" loop with,
                     # we have no idea how many times it was paid before - rely on rpc results here
-                    new_payment_value = 0 if v20active else 1
+                    new_payment_value = 0 if mnrr_active else 1
                     consecutive_payments = consecutive_payments_rpc if i == 0 and current_evo is None else new_payment_value
                     current_evo = payee
                     assert_equal(consecutive_payments, consecutive_payments_rpc)
