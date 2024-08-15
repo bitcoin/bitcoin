@@ -108,6 +108,10 @@ struct Params {
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
+    /**
+      * Enfore BIP94 timewarp attack mitigation. On testnet4 this also enforces
+      * the block storm mitigation.
+      */
     bool enforce_BIP94;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
