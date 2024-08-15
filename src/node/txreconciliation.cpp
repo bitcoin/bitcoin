@@ -44,7 +44,7 @@ public:
      * based on the direction of the p2p connection.
      *
      */
-    bool m_we_initiate;
+    bool m_we_initiate = false;
 
     /**
      * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
@@ -52,7 +52,7 @@ public:
      *
      * These values are used to salt short IDs, which is necessary for transaction reconciliations.
      */
-    uint64_t m_k0, m_k1;
+    uint64_t m_k0 = 0, m_k1 = 0;
 
     TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
 };
