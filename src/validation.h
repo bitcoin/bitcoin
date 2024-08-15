@@ -914,7 +914,7 @@ private:
     //! Internal helper for ActivateSnapshot().
     //!
     //! De-serialization of a snapshot that is created with
-    //! CreateUTXOSnapshot() in rpc/blockchain.cpp.
+    //! the dumptxoutset RPC.
     //! To reduce space the serialization format of the snapshot avoids
     //! duplication of tx hashes. The code takes advantage of the guarantee by
     //! leveldb that keys are lexicographically sorted.

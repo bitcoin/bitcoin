@@ -75,6 +75,22 @@ static GlobalMutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
+std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+PrepareUTXOSnapshot(
+    Chainstate& chainstate,
+    const std::function<void()>& interruption_point = {})
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+UniValue WriteUTXOSnapshot(
+    Chainstate& chainstate,
+    CCoinsViewCursor* pcursor,
+    CCoinsStats* maybe_stats,
+    const CBlockIndex* tip,
+    AutoFile& afile,
+    const fs::path& path,
+    const fs::path& temppath,
+    const std::function<void()>& interruption_point = {});
+
 /* Calculate the difficulty for a given block index.
  */
 double GetDifficulty(const CBlockIndex& blockindex)
@@ -2776,30 +2792,47 @@ static RPCHelpMan dumptxoutset()
         // would be classified as a block connecting an invalid block.
         disable_network = std::make_unique<NetworkDisable>(connman);
 
-        // Note: Unlocking cs_main before CreateUTXOSnapshot might be racy
-        // if the user interacts with any other *block RPCs.
         invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
         InvalidateBlock(*node.chainman, invalidate_index->GetBlockHash());
-        const CBlockIndex* new_tip_index{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
+    }
 
+    Chainstate* chainstate;
+    std::unique_ptr<CCoinsViewCursor> cursor;
+    CCoinsStats stats;
+    UniValue result;
+    UniValue error;
+    {
+        // Lock the chainstate before calling PrepareUtxoSnapshot, to be able
+        // to get a UTXO database cursor while the chain is pointing at the
+        // target block. After that, release the lock while calling
+        // WriteUTXOSnapshot. The cursor will remain valid and be used by
+        // WriteUTXOSnapshot to write a consistent snapshot even if the
+        // chainstate changes.
+        LOCK(node.chainman->GetMutex());
+        chainstate = &node.chainman->ActiveChainstate();
         // In case there is any issue with a block being read from disk we need
         // to stop here, otherwise the dump could still be created for the wrong
         // height.
         // The new tip could also not be the target block if we have a stale
         // sister block of invalidate_index. This block (or a descendant) would
         // be activated as the new tip and we would not get to new_tip_index.
-        if (new_tip_index != target_index) {
-            ReconsiderBlock(*node.chainman, invalidate_index->GetBlockHash());
-            throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height, reverting to tip.");
+        if (target_index != chainstate->m_chain.Tip()) {
+            LogInfo("Failed to roll back to requested height, reverting to tip.\n");
+            error = JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height.");
+        } else {
+            std::tie(cursor, stats, tip) = PrepareUTXOSnapshot(*chainstate, node.rpc_interruption_point);
         }
     }
 
-    UniValue result = CreateUTXOSnapshot(
-        node, node.chainman->ActiveChainstate(), afile, path, temppath);
-    fs::rename(temppath, path);
-
+    if (error.isNull()) {
+        result = WriteUTXOSnapshot(*chainstate, cursor.get(), &stats, tip, afile, path, temppath, node.rpc_interruption_point);
+        fs::rename(temppath, path);
+    }
     if (invalidate_index) {
         ReconsiderBlock(*node.chainman, invalidate_index->GetBlockHash());
+    }
+    if (!error.isNull()) {
+        throw error;
     }
 
     result.pushKV("path", path.utf8string());
@@ -2808,12 +2841,10 @@ static RPCHelpMan dumptxoutset()
     };
 }
 
-UniValue CreateUTXOSnapshot(
-    NodeContext& node,
+std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+PrepareUTXOSnapshot(
     Chainstate& chainstate,
-    AutoFile& afile,
-    const fs::path& path,
-    const fs::path& temppath)
+    const std::function<void()>& interruption_point)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor;
     std::optional<CCoinsStats> maybe_stats;
@@ -2823,7 +2854,7 @@ UniValue CreateUTXOSnapshot(
         // We need to lock cs_main to ensure that the coinsdb isn't written to
         // between (i) flushing coins cache to disk (coinsdb), (ii) getting stats
         // based upon the coinsdb, and (iii) constructing a cursor to the
-        // coinsdb for use below this block.
+        // coinsdb for use in WriteUTXOSnapshot.
         //
         // Cursors returned by leveldb iterate over snapshots, so the contents
         // of the pcursor will not be affected by simultaneous writes during
@@ -2832,11 +2863,11 @@ UniValue CreateUTXOSnapshot(
         // See discussion here:
         //   https://github.com/bitcoin/bitcoin/pull/15606#discussion_r274479369
         //
-        LOCK(::cs_main);
+        AssertLockHeld(::cs_main);
 
         chainstate.ForceFlushStateToDisk();
 
-        maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, node.rpc_interruption_point);
+        maybe_stats = GetUTXOStats(&chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
         if (!maybe_stats) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
@@ -2845,6 +2876,19 @@ UniValue CreateUTXOSnapshot(
         tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(maybe_stats->hashBlock));
     }
 
+    return {std::move(pcursor), *CHECK_NONFATAL(maybe_stats), tip};
+}
+
+UniValue WriteUTXOSnapshot(
+    Chainstate& chainstate,
+    CCoinsViewCursor* pcursor,
+    CCoinsStats* maybe_stats,
+    const CBlockIndex* tip,
+    AutoFile& afile,
+    const fs::path& path,
+    const fs::path& temppath,
+    const std::function<void()>& interruption_point)
+{
     LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
@@ -2880,7 +2924,7 @@ UniValue CreateUTXOSnapshot(
     pcursor->GetKey(key);
     last_hash = key.hash;
     while (pcursor->Valid()) {
-        if (iter % 5000 == 0) node.rpc_interruption_point();
+        if (iter % 5000 == 0) interruption_point();
         ++iter;
         if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
             if (key.hash != last_hash) {
@@ -2909,6 +2953,17 @@ UniValue CreateUTXOSnapshot(
     result.pushKV("txoutset_hash", maybe_stats->hashSerialized.ToString());
     result.pushKV("nchaintx", tip->m_chain_tx_count);
     return result;
+}
+
+UniValue CreateUTXOSnapshot(
+    node::NodeContext& node,
+    Chainstate& chainstate,
+    AutoFile& afile,
+    const fs::path& path,
+    const fs::path& tmppath)
+{
+    auto [cursor, stats, tip]{WITH_LOCK(::cs_main, return PrepareUTXOSnapshot(chainstate, node.rpc_interruption_point))};
+    return WriteUTXOSnapshot(chainstate, cursor.get(), &stats, tip, afile, path, tmppath, node.rpc_interruption_point);
 }
 
 static RPCHelpMan loadtxoutset()
