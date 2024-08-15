@@ -52,7 +52,6 @@ FUZZ_TARGET(utxo_snapshot, .init = initialize_chain)
             std::vector<uint8_t> metadata{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
             outfile << Span{metadata};
         } else {
-            DataStream data_stream{};
             auto msg_start = chainman.GetParams().MessageStart();
             int base_blockheight{fuzzed_data_provider.ConsumeIntegralInRange<int>(1, 2 * COINBASE_MATURITY)};
             uint256 base_blockhash{g_chain->at(base_blockheight - 1)->GetHash()};
