@@ -155,7 +155,7 @@ class BlockchainTest(BitcoinTestFramework):
             'dip0024': { 'type': 'buried', 'active': False, 'height': 900},
             'realloc': { 'type': 'buried', 'active': True, 'height': 1},
             'v19': { 'type': 'buried', 'active': False, 'height': 900},
-            'v20': { 'type': 'buried', 'active': False, 'height': 1200},
+            'v20': { 'type': 'buried', 'active': False, 'height': 900},
             'mn_rr': {
                 'type': 'bip9',
                 'bip9': {

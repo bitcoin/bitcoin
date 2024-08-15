@@ -113,9 +113,9 @@ class LLMQQuorumRotationTest(DashTestFramework):
         expectedNew = [h_100_0, h_106_0, h_104_0, h_100_1, h_106_1, h_104_1]
         quorumList = self.test_getmnlistdiff_quorums(b_h_0, b_h_1, {}, expectedDeleted, expectedNew, testQuorumsCLSigs=False)
 
-        projected_activation_height = 1200
+        projected_activation_height = 900
 
-        self.activate_v20(expected_activation_height=1200)
+        self.activate_v20(expected_activation_height=900)
         self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
         softfork_info = self.nodes[0].getblockchaininfo()['softforks']['v20']

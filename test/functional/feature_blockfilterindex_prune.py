@@ -43,7 +43,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getblockhash(2))['filter']), 0)
 
         self.log.info("start node without blockfilterindex")
-        self.restart_node(0, extra_args=["-fastprune", "-prune=1"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
+        self.restart_node(0, extra_args=["-fastprune", "-prune=1", '-testactivationheight=v20@2000'], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
         self.log.info("make sure accessing the blockfilters throws an error")
         assert_raises_rpc_error(-1, "Index is not enabled for filtertype basic", self.nodes[0].getblockfilter, self.nodes[0].getblockhash(2))
