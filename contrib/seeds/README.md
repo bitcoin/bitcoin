@@ -15,7 +15,7 @@ data. Run the following commands from the `/contrib/seeds` directory:
 curl https://bitcoin.sipa.be/seeds.txt.gz | gzip -dc > seeds_main.txt
 curl https://mainnet.achownodes.xyz/seeds.txt.gz | gzip -dc >> seeds_main.txt
 curl https://testnet.achownodes.xyz/seeds.txt.gz | gzip -dc > seeds_test.txt
-curl https://bitcoin.sipa.be/asmap-filled.dat > asmap-filled.dat
+curl https://raw.githubusercontent.com/fjahr/asmap-data/main/latest_asmap.dat > asmap-filled.dat
 python3 makeseeds.py -a asmap-filled.dat -s seeds_main.txt > nodes_main.txt
 cat nodes_main_manual.txt >> nodes_main.txt
 python3 makeseeds.py -a asmap-filled.dat -s seeds_test.txt > nodes_test.txt
