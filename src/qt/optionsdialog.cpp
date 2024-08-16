@@ -89,11 +89,11 @@ void OptionsDialog::FixTabOrder(QWidget * const o)
 {
     BitcoinAmountField * const af = qobject_cast<BitcoinAmountField *>(o);
     if (af) {
-        af->setupTabChain(prevwidget);
+        prevwidget = af->setupTabChain(prevwidget);
     } else {
         setTabOrder(prevwidget, o);
+        prevwidget = o;
     }
-    prevwidget = o;
 }
 
 void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text, QBoxLayout *horizontalLayout)
