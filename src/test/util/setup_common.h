@@ -65,7 +65,14 @@ struct TestOpts {
 struct BasicTestingSetup {
     util::SignalInterrupt m_interrupt;
     node::NodeContext m_node; // keep as first member to be destructed last
+
     FastRandomContext& m_rng{g_insecure_rand_ctx}; // Alias (reference) for the global, to allow easy removal of the global in the future.
+    /** Seed the global RNG state and m_rng for testing and log the seed value. This affects all randomness, except GetStrongRandBytes(). */
+    void SeedRandomForTest(SeedRand seed = SeedRand::SEED)
+    {
+        SeedRandomStateForTest(seed);
+        m_rng.Reseed(GetRandHash());
+    }
 
     explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~BasicTestingSetup();
