@@ -10,6 +10,10 @@
 - verify that getchaintips now returns two chain tips.
 """
 
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -57,6 +61,34 @@ class GetChainTipsTest (BitcoinTestFramework):
         tips[1]['branchlen'] = 0
         tips[1]['status'] = 'active'
         assert_equal(tips[1], shortTip)
+
+        self.log.info("Test getchaintips behavior with invalid blocks")
+        self.disconnect_nodes(0, 1)
+        n0 = self.nodes[0]
+        tip = int(n0.getbestblockhash(), 16)
+        start_height = self.nodes[0].getblockcount()
+        # Create invalid block (too high coinbase)
+        block_time = n0.getblock(n0.getbestblockhash())['time'] + 1
+        invalid_block = create_block(tip, create_coinbase(start_height+1, nValue=100), block_time)
+        invalid_block.solve()
+
+        block_time += 1
+        block2 = create_block(invalid_block.sha256, create_coinbase(2), block_time, version=4)
+        block2.solve()
+
+        self.log.info("Submit headers-only chain")
+        n0.submitheader(invalid_block.serialize().hex())
+        n0.submitheader(block2.serialize().hex())
+        tips = n0.getchaintips()
+        assert_equal(len(tips), 3)
+        assert_equal(tips[0]['status'], 'headers-only')
+
+        self.log.info("Submit invalid block that invalidates the headers-only chain")
+        n0.submitblock(invalid_block.serialize().hex())
+        tips = n0.getchaintips()
+        assert_equal(len(tips), 3)
+        assert_equal(tips[0]['status'], 'invalid')
+
 
 if __name__ == '__main__':
     GetChainTipsTest(__file__).main()
