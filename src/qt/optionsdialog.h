@@ -27,6 +27,8 @@ class QValueComboBox;
 class QWidget;
 QT_END_NAMESPACE
 
+struct CreateOptionUIOpts;
+
 /** QScrollArea, but returning reasonable size hints.
  */
 class ModScrollArea : public QScrollArea {
@@ -115,6 +117,8 @@ private:
 
     QWidget *prevwidget{nullptr};
     void FixTabOrder(QWidget *);
+    void CreateOptionUI(QBoxLayout *, const QString& text, const std::vector<QWidget *>&, const CreateOptionUIOpts&);
+    void CreateOptionUI(QBoxLayout *, const QString& text, const std::vector<QWidget *>&);
     void CreateOptionUI(QBoxLayout *, QWidget *, const QString& text, QBoxLayout *horizontalLayout = nullptr);
 
     QCheckBox *walletrbf;
