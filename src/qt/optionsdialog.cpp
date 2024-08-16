@@ -463,10 +463,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     CreateOptionUI(verticalLayout_Spamfiltering, dustrelayfee, tr("Ignore transactions with values that would cost more to spend at a fee rate of %s per kvB (\"dust\")."));
 
 
-    auto hlayout = new QHBoxLayout();
     dustdynamic_enable = new QCheckBox(groupBox_Spamfiltering);
-    dustdynamic_enable->setText(tr("Automatically adjust the dust limit upward to"));
-    hlayout->addWidget(dustdynamic_enable);
     dustdynamic_multiplier = new QDoubleSpinBox(groupBox_Spamfiltering);
     dustdynamic_multiplier->setDecimals(3);
     dustdynamic_multiplier->setStepType(QAbstractSpinBox::DefaultStepType);
@@ -474,31 +471,25 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     dustdynamic_multiplier->setMinimum(0.001);
     dustdynamic_multiplier->setMaximum(65);
     dustdynamic_multiplier->setValue(DEFAULT_DUST_RELAY_MULTIPLIER / 1000.0);
-    CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_multiplier, tr("%s times:"), hlayout);
+    CreateOptionUI(verticalLayout_Spamfiltering, tr("%1 Automatically adjust the dust limit upward to %2 times:"), {dustdynamic_enable, dustdynamic_multiplier});
 
     QStyleOptionButton styleoptbtn;
     const auto checkbox_indent = dustdynamic_enable->style()->subElementRect(QStyle::SE_CheckBoxIndicator, &styleoptbtn, dustdynamic_enable).width();
 
-    hlayout = new QHBoxLayout();
-    hlayout->addSpacing(checkbox_indent);
     dustdynamic_target = new QRadioButton(groupBox_Spamfiltering);
-    hlayout->addWidget(dustdynamic_target);
     dustdynamic_target_blocks = new QSpinBox(groupBox_Spamfiltering);
     dustdynamic_target_blocks->setMinimum(2);
     dustdynamic_target_blocks->setMaximum(1008);  // FIXME: Get this from the fee estimator
     dustdynamic_target_blocks->setValue(1008);
-    CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_target_blocks, tr("fee estimate for %s blocks."), hlayout);
+    CreateOptionUI(verticalLayout_Spamfiltering, tr("%1 fee estimate for %2 blocks."), {dustdynamic_target, dustdynamic_target_blocks}, { .indent = checkbox_indent, });
     // FIXME: Make it possible to click labels to select + focus spinbox
 
-    hlayout = new QHBoxLayout();
-    hlayout->addSpacing(checkbox_indent);
     dustdynamic_mempool = new QRadioButton(groupBox_Spamfiltering);
-    hlayout->addWidget(dustdynamic_mempool);
     dustdynamic_mempool_kvB = new QSpinBox(groupBox_Spamfiltering);
     dustdynamic_mempool_kvB->setMinimum(1);
     dustdynamic_mempool_kvB->setMaximum(std::numeric_limits<int32_t>::max());
     dustdynamic_mempool_kvB->setValue(3024000);
-    CreateOptionUI(verticalLayout_Spamfiltering, dustdynamic_mempool_kvB, tr("the lowest fee of the best known %s kvB of unconfirmed transactions."), hlayout);
+    CreateOptionUI(verticalLayout_Spamfiltering, tr("%1 the lowest fee of the best known %2 kvB of unconfirmed transactions."), {dustdynamic_mempool, dustdynamic_mempool_kvB}, { .indent = checkbox_indent, });
 
     const auto dustdynamic_enable_toggled = [this](const bool state){
         dustdynamic_multiplier->setEnabled(state);
