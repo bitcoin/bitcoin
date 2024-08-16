@@ -311,6 +311,13 @@ def sha256sum_file(filename):
     return h.digest()
 
 
+def util_xor(data, key, *, offset):
+    data = bytearray(data)
+    for i in range(len(data)):
+        data[i] ^= key[(i + offset) % len(key)]
+    return bytes(data)
+
+
 # RPC/P2P connection constants and functions
 ############################################
 
@@ -506,6 +513,12 @@ def check_node_connections(*, node, num_in, num_out):
     info = node.getnetworkinfo()
     assert_equal(info["connections_in"], num_in)
     assert_equal(info["connections_out"], num_out)
+
+
+def read_xor_key(*, node):
+    with open(node.blocks_path / "xor.dat", "rb") as xor_f:
+        NUM_XOR_BYTES = 8 # From InitBlocksdirXorKey::xor_key.size()
+        return xor_f.read(NUM_XOR_BYTES)
 
 
 # Transaction/Block functions
