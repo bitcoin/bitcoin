@@ -501,7 +501,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     QVBoxLayout * const verticalLayout_Mining = new QVBoxLayout(tabMining);
     ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), tabMining, tr("M&ining"));
 
-    verticalLayout_Mining->addWidget(new QLabel(tr("<strong>Note that mining is heavily influenced by the settings on the Mempool tab.</strong>")));
+    verticalLayout_Mining->addWidget(new QLabel(tr("<strong>Note that mining is heavily influenced by the settings on the Mempool and Spam filtering tabs.</strong>")));
 
     blockmintxfee = new BitcoinAmountField(tabMining);
     CreateOptionUI(verticalLayout_Mining, blockmintxfee, tr("Only mine transactions paying a fee of at least %s per kvB."));
