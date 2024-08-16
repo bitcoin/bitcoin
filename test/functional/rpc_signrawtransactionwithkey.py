@@ -26,6 +26,8 @@ from test_framework.script_util import (
 )
 from test_framework.wallet import (
     getnewdestination,
+    MiniWallet,
+    MiniWalletMode,
 )
 from test_framework.wallet_util import (
     generate_keypair,
@@ -48,13 +50,11 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-
+    
     def send_to_address(self, addr, amount):
-        input = {"txid": self.nodes[0].getblock(self.block_hash[self.blk_idx])["tx"][0], "vout": 0}
-        output = {addr: amount}
-        self.blk_idx += 1
-        rawtx = self.nodes[0].createrawtransaction([input], output)
-        txid = self.nodes[0].sendrawtransaction(self.nodes[0].signrawtransactionwithkey(rawtx, [self.nodes[0].get_deterministic_priv_key().key])["hex"], 0)
+        wallet = MiniWallet(self.node[0], mode=MiniWalletMode.ADDRESS_OP_TRUE)
+        result = wallet.sendrawtransaction(self.node[0], addr, amount)
+        txid = result["txid"]
         return txid
 
     def assert_signing_completed_successfully(self, signed_tx):
