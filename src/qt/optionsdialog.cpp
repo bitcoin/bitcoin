@@ -96,39 +96,78 @@ void OptionsDialog::FixTabOrder(QWidget * const o)
     }
 }
 
-void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text, QBoxLayout *horizontalLayout)
+struct CreateOptionUIOpts {
+    QBoxLayout *horizontal_layout{nullptr};
+    int stretch{1};
+    int indent{0};
+};
+
+void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, const QString& text, const std::vector<QWidget *>& objs, const CreateOptionUIOpts& opts)
 {
-    QWidget * const parent = o->parentWidget();
-    const QStringList text_parts = text.split("%s");
+    Assert(!objs.empty());
 
-    if (!horizontalLayout) horizontalLayout = new QHBoxLayout();
+    auto& first_o = objs[0];
+    QWidget * const parent = first_o->parentWidget();
 
-    if (!text_parts[0].isEmpty()) {
-        QLabel * const labelBefore = new QLabel(parent);
-        labelBefore->setText(text_parts[0]);
-        labelBefore->setTextFormat(Qt::PlainText);
-        labelBefore->setBuddy(o);
-        labelBefore->setToolTip(o->toolTip());
-        horizontalLayout->addWidget(labelBefore);
+    QBoxLayout * const horizontalLayout = opts.horizontal_layout ? opts.horizontal_layout : (new QHBoxLayout);
+
+    if (opts.indent) horizontalLayout->addSpacing(opts.indent);
+
+    int processed{0}, index_start{0};
+    QWidget *last_widget{nullptr};
+    while (true) {
+        int pos = text.indexOf('%', index_start);
+        int idx;
+        if (pos == -1) {
+            pos = text.size();
+            idx = -1;
+        } else {
+            const int pos_next{pos + 1};
+            const auto char_next = text[pos_next];
+            idx = (char_next == 's') ? 0 : (char_next.digitValue() - 1);
+            if (pos_next == text.size() || idx < 0 || idx > 8 || (unsigned)idx >= objs.size()) {
+                index_start = pos_next;
+                continue;
+            }
+        }
+        if (processed != pos) {
+            auto label_text = text.mid(processed, pos - processed);
+            if (auto last_widget_as_qcheckbox = qobject_cast<QCheckBox*>(last_widget)) {
+                if (label_text[0].isSpace()) label_text = label_text.mid(1);
+                last_widget_as_qcheckbox->setText(label_text);
+            } else {
+                const auto label = new QLabel(parent);
+                label->setText(label_text);
+                label->setTextFormat(Qt::PlainText);
+                label->setBuddy(first_o);
+                label->setToolTip(first_o->toolTip());
+                horizontalLayout->addWidget(label);
+            }
+        }
+        if (idx == -1) break;
+        last_widget = objs[idx];
+        horizontalLayout->addWidget(last_widget);
+        index_start = processed = pos + 2;
     }
 
-    horizontalLayout->addWidget(o);
-
-    QLabel * const labelAfter = new QLabel(parent);
-    labelAfter->setText(text_parts[1]);
-    labelAfter->setTextFormat(Qt::PlainText);
-    labelAfter->setBuddy(o);
-    labelAfter->setToolTip(o->toolTip());
-
-    horizontalLayout->addWidget(labelAfter);
-
-    horizontalLayout->addStretch(1);
+    if (opts.stretch) horizontalLayout->addStretch(opts.stretch);
 
     layout->addLayout(horizontalLayout);
 
-    o->setProperty("L", QVariant::fromValue((QLayout*)horizontalLayout));
+    for (auto& o : objs) {
+        o->setProperty("L", QVariant::fromValue((QLayout*)horizontalLayout));
+        FixTabOrder(o);
+    }
+}
 
-    FixTabOrder(o);
+void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, const QString& text, const std::vector<QWidget *>& objs)
+{
+    CreateOptionUI(layout, text, objs, {});
+}
+
+void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text, QBoxLayout *horizontalLayout)
+{
+    CreateOptionUI(layout, text, {o}, { .horizontal_layout = horizontalLayout, });
 }
 
 static void setSiblingsEnabled(QWidget * const o, const bool state)
