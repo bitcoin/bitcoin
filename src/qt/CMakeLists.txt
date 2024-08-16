@@ -243,6 +243,10 @@ if(WIN32)
   set_target_properties(bitcoin-qt PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
+if(BUILD_GUI_TESTS)
+  add_subdirectory(test)
+endif()
+
 
 # Gets sources to be parsed to gather translatable strings.
 function(get_translatable_sources var)
