@@ -46,7 +46,7 @@ class Ipc
 public:
     virtual ~Ipc() = default;
 
-    //! Spawn a child process returning pointer to its Init interface.
+    //! Spawn a child process returning a pointer to its Init interface.
     virtual std::unique_ptr<Init> spawnProcess(const char* exe_name) = 0;
 
     //! If this is a spawned process, block and handle requests from the parent
@@ -54,7 +54,7 @@ public:
     //! true. If this is not a spawned child process, return false.
     virtual bool startSpawnedProcess(int argc, char* argv[], int& exit_status) = 0;
 
-    //! Add cleanup callback to remote interface that will run when the
+    //! Add cleanup callback to the remote interface that will run when the
     //! interface is deleted.
     template<typename Interface>
     void addCleanup(Interface& iface, std::function<void()> cleanup)
@@ -62,17 +62,18 @@ public:
         addCleanup(typeid(Interface), &iface, std::move(cleanup));
     }
 
-    //! IPC context struct accessor (see struct definition for more description).
+    //! IPC context struct accessor (see struct definition for more details).
     virtual ipc::Context& context() = 0;
 
 protected:
-    //! Internal implementation of public addCleanup method (above) as a
+    //! Internal implementation of the public addCleanup method (above) as a
     //! type-erased virtual function, since template functions can't be virtual.
     virtual void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) = 0;
 };
 
-//! Return implementation of Ipc interface.
+//! Return implementation of the Ipc interface.
 std::unique_ptr<Ipc> MakeIpc(const char* exe_name, const char* process_argv0, Init& init);
+
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_IPC_H
