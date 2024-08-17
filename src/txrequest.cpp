@@ -677,14 +677,14 @@ public:
 
     bool ExpectedTx(NodeId peer, const uint256& txhash)
     {
-        auto it_hash = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::REQUESTED, 0});
         // We need to traverse all the REQUEST / COMPLETED announcements to verify we effectively
         // requested the txhash from this peer.
-        while (it_hash != m_index.get<ByTxHash>().end() && it_hash->m_txhash == txhash) {
-            if (it_hash->m_peer == peer) return true;
-            ++it_hash;
+        auto it = m_index.get<ByPeer>().find(ByPeerView{peer, false, txhash});
+        if (it == m_index.get<ByPeer>().end()) {
+            it = m_index.get<ByPeer>().find(ByPeerView{peer, true, txhash});
         }
-        return false;
+        if (it != m_index.get<ByPeer>().end()) { return false; }
+        return true;
     }
 
 
