@@ -45,7 +45,7 @@ class Handler;
 class WalletLoader;
 struct BlockTip;
 
-//! Block and header tip information
+//! Information about block and header tips
 struct BlockAndHeaderTipInfo
 {
     int block_height;
@@ -55,235 +55,246 @@ struct BlockAndHeaderTipInfo
     double verification_progress;
 };
 
-//! External signer interface used by the GUI.
+//! Interface for external signers used by the GUI.
 class ExternalSigner
 {
 public:
     virtual ~ExternalSigner() = default;
 
-    //! Get signer display name
+    //! Retrieve signer display name
     virtual std::string getName() = 0;
 };
 
-//! Top-level interface for a bitcoin node (bitcoind process).
+//! Primary interface for a Bitcoin node (bitcoind process).
 class Node
 {
 public:
     virtual ~Node() = default;
 
-    //! Init logging.
+    //! Initialize logging.
     virtual void initLogging() = 0;
 
-    //! Init parameter interaction.
+    //! Initialize parameter interaction.
     virtual void initParameterInteraction() = 0;
 
-    //! Get warnings.
+    //! Fetch warnings.
     virtual bilingual_str getWarnings() = 0;
 
-    //! Get exit status.
+    //! Fetch exit status.
     virtual int getExitStatus() = 0;
 
-    // Get log flags.
+    // Fetch log flags.
     virtual uint32_t getLogCategories() = 0;
 
-    //! Initialize app dependencies.
+    //! Initialize application dependencies.
     virtual bool baseInitialize() = 0;
 
-    //! Start node.
+    //! Start the node.
     virtual bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info = nullptr) = 0;
 
-    //! Stop node.
+    //! Stop the node.
     virtual void appShutdown() = 0;
 
-    //! Start shutdown.
+    //! Initiate shutdown.
     virtual void startShutdown() = 0;
 
-    //! Return whether shutdown was requested.
+    //! Determine if shutdown was requested.
     virtual bool shutdownRequested() = 0;
 
-    //! Return whether a particular setting in <datadir>/settings.json is or
-    //! would be ignored because it is also specified in the command line.
+    //! Determine if a specific setting in <datadir>/settings.json is ignored
+    //! due to being specified in the command line.
     virtual bool isSettingIgnored(const std::string& name) = 0;
 
-    //! Return setting value from <datadir>/settings.json or bitcoin.conf.
+    //! Fetch a setting value from <datadir>/settings.json or bitcoin.conf.
     virtual common::SettingsValue getPersistentSetting(const std::string& name) = 0;
 
     //! Update a setting in <datadir>/settings.json.
     virtual void updateRwSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
-    //! Force a setting value to be applied, overriding any other configuration
-    //! source, but not being persisted.
+    //! Override a setting value, not persistent, but effective immediately.
     virtual void forceSetting(const std::string& name, const common::SettingsValue& value) = 0;
 
-    //! Clear all settings in <datadir>/settings.json and store a backup of
-    //! previous settings in <datadir>/settings.json.bak.
+    //! Clear all settings in <datadir>/settings.json, backing up old settings in <datadir>/settings.json.bak.
     virtual void resetSettings() = 0;
 
-    //! Map port.
+    //! Map port using UPnP or NAT-PMP.
     virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
 
-    //! Get proxy.
+    //! Fetch proxy information.
     virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
 
-    //! Get number of connections.
+    //! Fetch the number of connections.
     virtual size_t getNodeCount(ConnectionDirection flags) = 0;
 
-    //! Get stats for connected nodes.
+    //! Retrieve stats for connected nodes.
     using NodesStats = std::vector<std::tuple<CNodeStats, bool, CNodeStateStats>>;
     virtual bool getNodesStats(NodesStats& stats) = 0;
 
-    //! Get ban map entries.
+    //! Fetch ban map entries.
     virtual bool getBanned(banmap_t& banmap) = 0;
 
-    //! Ban node.
+    //! Ban a node.
     virtual bool ban(const CNetAddr& net_addr, int64_t ban_time_offset) = 0;
 
-    //! Unban node.
+    //! Unban a node.
     virtual bool unban(const CSubNet& ip) = 0;
 
-    //! Disconnect node by address.
+    //! Disconnect a node by address.
     virtual bool disconnectByAddress(const CNetAddr& net_addr) = 0;
 
-    //! Disconnect node by id.
+    //! Disconnect a node by ID.
     virtual bool disconnectById(NodeId id) = 0;
 
-    //! Return list of external signers (attached devices which can sign transactions).
+    //! List external signers (devices capable of signing transactions).
     virtual std::vector<std::unique_ptr<ExternalSigner>> listExternalSigners() = 0;
 
-    //! Get total bytes recv.
+    //! Fetch total bytes received.
     virtual int64_t getTotalBytesRecv() = 0;
 
-    //! Get total bytes sent.
+    //! Fetch total bytes sent.
     virtual int64_t getTotalBytesSent() = 0;
 
-    //! Get mempool size.
+    //! Fetch mempool size.
     virtual size_t getMempoolSize() = 0;
 
-    //! Get mempool dynamic usage.
+    //! Fetch mempool dynamic usage.
     virtual size_t getMempoolDynamicUsage() = 0;
 
-    //! Get mempool maximum memory usage.
+    //! Fetch mempool maximum memory usage.
     virtual size_t getMempoolMaxUsage() = 0;
 
-    //! Get header tip height and time.
+    //! Fetch header tip height and time.
     virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;
 
-    //! Get num blocks.
+    //! Fetch the number of blocks.
     virtual int getNumBlocks() = 0;
 
-    //! Get network local addresses.
+    //! Fetch network local addresses.
     virtual std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() = 0;
 
-    //! Get best block hash.
+    //! Fetch the best block hash.
     virtual uint256 getBestBlockHash() = 0;
 
-    //! Get last block time.
+    //! Fetch the last block time.
     virtual int64_t getLastBlockTime() = 0;
 
-    //! Get verification progress.
+    //! Fetch verification progress.
     virtual double getVerificationProgress() = 0;
 
-    //! Is initial block download.
+    //! Check if initial block download is in progress.
     virtual bool isInitialBlockDownload() = 0;
 
-    //! Is loading blocks.
+    //! Check if blocks are being loaded.
     virtual bool isLoadingBlocks() = 0;
 
-    //! Set network active.
+    //! Set network activity.
     virtual void setNetworkActive(bool active) = 0;
 
-    //! Get network active.
+    //! Fetch network activity status.
     virtual bool getNetworkActive() = 0;
 
-    //! Get dust relay fee.
+    //! Fetch dust relay fee.
     virtual CFeeRate getDustRelayFee() = 0;
 
-    //! Execute rpc command.
+    //! Execute an RPC command.
     virtual UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) = 0;
 
-    //! List rpc commands.
+    //! List available RPC commands.
     virtual std::vector<std::string> listRpcCommands() = 0;
 
-    //! Set RPC timer interface if unset.
+    //! Set RPC timer interface if not already set.
     virtual void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) = 0;
 
-    //! Unset RPC timer interface.
+    //! Unset the RPC timer interface.
     virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
 
-    //! Get unspent output associated with a transaction.
+    //! Fetch unspent output associated with a transaction.
     virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
 
-    //! Broadcast transaction.
+    //! Broadcast a transaction.
     virtual node::TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) = 0;
 
-    //! Get wallet loader.
+    //! Fetch the wallet loader.
     virtual WalletLoader& walletLoader() = 0;
 
-    //! Register handler for init messages.
+    //! Register handler for initialization messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;
 
-    //! Register handler for message box messages.
-    using MessageBoxFn =
-        std::function<bool(const bilingual_str& message, const std::string& caption, unsigned int style)>;
+    //! Register handler for message box events.
+    using MessageBoxFn = std::function<bool(const bilingual_str& message, const std::string& caption, unsigned int style)>;
     virtual std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) = 0;
 
-    //! Register handler for question messages.
+    //! Register handler for question events.
     using QuestionFn = std::function<bool(const bilingual_str& message,
         const std::string& non_interactive_message,
         const std::string& caption,
         unsigned int style)>;
     virtual std::unique_ptr<Handler> handleQuestion(QuestionFn fn) = 0;
 
-    //! Register handler for progress messages.
+    //! Register handler for progress events.
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
 
-    //! Register handler for wallet loader constructed messages.
+    //! Register handler for wallet initialization events.
     using InitWalletFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
 
-    //! Register handler for number of connections changed messages.
+    //! Register handler for connection count change events.
     using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
     virtual std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) = 0;
 
-    //! Register handler for network active messages.
+    //! Register handler for network activity change events.
     using NotifyNetworkActiveChangedFn = std::function<void(bool network_active)>;
     virtual std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) = 0;
 
-    //! Register handler for notify alert messages.
+    //! Register handler for alert change events.
     using NotifyAlertChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) = 0;
 
-    //! Register handler for ban list messages.
+    //! Register handler for banned list change events.
     using BannedListChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) = 0;
 
-    //! Register handler for block tip messages.
-    using NotifyBlockTipFn =
-        std::function<void(SynchronizationState, interfaces::BlockTip tip, double verification_progress)>;
+    //! Register handler for block tip change events.
+    using NotifyBlockTipFn = std::function<void(SynchronizationState state, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) = 0;
 
-    //! Register handler for header tip messages.
-    using NotifyHeaderTipFn =
-        std::function<void(SynchronizationState, interfaces::BlockTip tip, bool presync)>;
+    //! Register handler for header tip change events.
+    using NotifyHeaderTipFn = std::function<void(int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
-    //! Get and set internal node context. Useful for testing, but not
-    //! accessible across processes.
-    virtual node::NodeContext* context() { return nullptr; }
-    virtual void setContext(node::NodeContext* context) { }
+    //! Register handler for transaction added to mempool events.
+    using NotifyTransactionAddedToMempoolFn = std::function<void(const CTransactionRef& tx)>;
+    virtual std::unique_ptr<Handler> handleNotifyTransactionAddedToMempool(NotifyTransactionAddedToMempoolFn fn) = 0;
+
+    //! Register handler for transaction removed from mempool events.
+    using NotifyTransactionRemovedFromMempoolFn = std::function<void(const CTransactionRef& tx, MemPoolRemovalReason reason)>;
+    virtual std::unique_ptr<Handler> handleNotifyTransactionRemovedFromMempool(NotifyTransactionRemovedFromMempoolFn fn) = 0;
+
+    //! Register handler for transaction confirmed events.
+    using NotifyTransactionConfirmedFn = std::function<void(const CTransactionRef& tx, int blocks)>;
+    virtual std::unique_ptr<Handler> handleNotifyTransactionConfirmed(NotifyTransactionConfirmedFn fn) = 0;
+
+    //! Register handler for active chain tip change events.
+    using NotifyActiveChainTipFn = std::function<void(int height, int64_t block_time)>;
+    virtual std::unique_ptr<Handler> handleNotifyActiveChainTip(NotifyActiveChainTipFn fn) = 0;
+
+    //! Register handler for keypool depletion warning events.
+    using NotifyKeypoolDrainedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyKeypoolDrained(NotifyKeypoolDrainedFn fn) = 0;
+
+    //! Register handler for block connected events.
+    using NotifyBlockConnectedFn = std::function<void(const std::shared_ptr<const CBlock>& block)>;
+    virtual std::unique_ptr<Handler> handleNotifyBlockConnected(NotifyBlockConnectedFn fn) = 0;
+
+    //! Register handler for block disconnected events.
+    using NotifyBlockDisconnectedFn = std::function<void(const std::shared_ptr<const CBlock>& block)>;
+    virtual std::unique_ptr<Handler> handleNotifyBlockDisconnected(NotifyBlockDisconnectedFn fn) = 0;
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode(node::NodeContext& context);
-
-//! Block tip (could be a header or not, depends on the subscribed signal).
-struct BlockTip {
-    int block_height;
-    int64_t block_time;
-    uint256 block_hash;
-};
+std::unique_ptr<Node> MakeNode(NodeContext& context);
 
 } // namespace interfaces
 
