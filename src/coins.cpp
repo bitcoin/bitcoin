@@ -270,7 +270,7 @@ bool CCoinsViewCache::Sync()
 void CCoinsViewCache::Uncache(const COutPoint& hash)
 {
     CCoinsMap::iterator it = cacheCoins.find(hash);
-    if (it != cacheCoins.end() && !it->second.IsDirty() && !it->second.IsFresh()) {
+    if (it != cacheCoins.end() && !it->second.IsDirty()) {
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
         TRACEPOINT(utxocache, uncache,
                hash.hash.data(),
