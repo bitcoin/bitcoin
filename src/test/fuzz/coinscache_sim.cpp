@@ -163,25 +163,13 @@ public:
     bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) final
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
-            if (it->second.IsDirty()) {
-                if (it->second.coin.IsSpent()) {
-                    m_data.erase(it->first);
-                } else if (cursor.WillErase(*it)) {
-                    m_data[it->first] = std::move(it->second.coin);
-                } else {
-                    m_data[it->first] = it->second.coin;
-                }
+            assert(it->second.IsDirty());
+            if (it->second.coin.IsSpent()) {
+                m_data.erase(it->first);
+            } else if (cursor.WillErase(*it)) {
+                m_data[it->first] = std::move(it->second.coin);
             } else {
-                /* For non-dirty entries being written, compare them with what we have. */
-                auto it2 = m_data.find(it->first);
-                if (it->second.coin.IsSpent()) {
-                    assert(it2 == m_data.end() || it2->second.IsSpent());
-                } else {
-                    assert(it2 != m_data.end());
-                    assert(it->second.coin.out == it2->second.out);
-                    assert(it->second.coin.fCoinBase == it2->second.fCoinBase);
-                    assert(it->second.coin.nHeight == it2->second.nHeight);
-                }
+                m_data[it->first] = it->second.coin;
             }
         }
         return true;
