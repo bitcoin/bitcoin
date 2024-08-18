@@ -164,7 +164,9 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                     coins_view_cache.BatchWrite(cursor, best_block);
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
-                    if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}) {
+                    if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}
+                        || e.what() == std::string{"A FRESH coin was not removed when it was spent"}
+                        || e.what() == std::string{"A non-DIRTY coin was returned from the cursor in BatchWrite"}) {
                         expected_code_path = true;
                     }
                 }
