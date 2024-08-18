@@ -158,6 +158,7 @@ class TestNode():
         self.rpc = None
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
+        self.expected_ret_code = 0 # EXIT_SUCCESS
         self.cleanup_on_exit = True # Whether to kill the node when this object goes away
         # Cache perf subprocesses here by their data output filename.
         self.perf_subprocesses = {}
@@ -204,7 +205,7 @@ class TestNode():
             # Should only happen on test failure
             # Avoid using logger, as that may have already been shutdown when
             # this destructor is called.
-            print(self._node_msg("Cleaning up leftover process"))
+            print(self._node_msg(f"Cleaning up leftover process {self.process.pid}"))
             self.process.kill()
 
     def __getattr__(self, name):
@@ -257,7 +258,7 @@ class TestNode():
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        self.log.debug(f"bitcoind started with PID {self.process.pid}, waiting for RPC to come up")
 
         if self.start_perf:
             self._start_perf()
@@ -448,7 +449,9 @@ class TestNode():
 
     def wait_until_stopped(self, *, timeout=BITCOIND_PROC_WAIT_TIMEOUT, expect_error=False, **kwargs):
         if "expected_ret_code" not in kwargs:
-            kwargs["expected_ret_code"] = 1 if expect_error else 0  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
+            # Whether node shutdown is expected to return EXIT_FAILURE (1) or
+            # EXIT_SUCCESS (self.expected_ret_code).
+            kwargs["expected_ret_code"] = 1 if expect_error else self.expected_ret_code
         self.wait_until(lambda: self.is_node_stopped(**kwargs), timeout=timeout)
 
     def replace_in_config(self, replacements):
