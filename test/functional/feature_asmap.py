@@ -41,7 +41,7 @@ class AsmapTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # Do addrman checks on all operations and use deterministic addrman
-        self.extra_args = [["-checkaddrman=1", "-test=addrman"]]
+        self.extra_args = [["-test=checkaddrman=1", "-test=addrman"]]
 
     def fill_addrman(self, node_id):
         """Add 2 tried addresses to the addrman, followed by 2 new addresses."""
@@ -86,9 +86,9 @@ class AsmapTest(BitcoinTestFramework):
         self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
         self.stop_node(0)
         shutil.copyfile(self.asmap_raw, self.default_asmap)
-        self.start_node(0, ["-asmap", "-checkaddrman=1", "-test=addrman"])
+        self.start_node(0, ["-asmap", "-test=checkaddrman=1", "-test=addrman"])
         self.fill_addrman(node_id=0)
-        self.restart_node(0, ["-asmap", "-checkaddrman=1", "-test=addrman"])
+        self.restart_node(0, ["-asmap", "-test=checkaddrman=1", "-test=addrman"])
         with self.node.assert_debug_log(
             expected_msgs=[
                 "CheckAddrman: new 2, tried 2, total 4 started",

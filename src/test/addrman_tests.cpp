@@ -29,7 +29,7 @@ static const bool DETERMINISTIC{true};
 
 static int32_t GetCheckRatio(const NodeContext& node_ctx)
 {
-    return std::clamp<int32_t>(node_ctx.args->GetIntArg("-checkaddrman", 100), 0, 1000000);
+    return std::clamp<int32_t>(GetTestOptionInt(*node_ctx.args, "checkaddrman", 100), 0, 1000000);
 }
 
 static CNetAddr ResolveIP(const std::string& ip)

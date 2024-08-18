@@ -63,7 +63,7 @@ class AddrmanTest(BitcoinTestFramework):
         self.stop_node(0)
         write_addrman(peers_dat)
         with self.nodes[0].assert_debug_log(["Loaded 0 addresses from peers.dat"]):
-            self.start_node(0, extra_args=["-checkaddrman=1"])
+            self.start_node(0, extra_args=["-test=checkaddrman=1"])
         assert_equal(self.nodes[0].getnodeaddresses(), [])
 
         self.log.info("Check that addrman with negative lowest_compatible cannot be read")

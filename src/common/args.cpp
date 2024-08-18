@@ -714,6 +714,25 @@ bool HasTestOption(const ArgsManager& args, const std::string& test_option)
     });
 }
 
+std::optional<uint64_t> GetTestOptionInt(const ArgsManager& args, const std::string& test_option)
+{
+    const auto options = args.GetArgs("-test");
+    for (const auto& option : options) {
+        if (option.find(test_option) == 0) {
+            size_t eq_index = option.find('=');
+            if (eq_index != std::string::npos) {
+                return LocaleIndependentAtoi<uint64_t>(option.substr(eq_index + 1));
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+uint64_t GetTestOptionInt(const ArgsManager& args, const std::string& test_option, uint64_t default_value)
+{
+    return GetTestOptionInt(args, test_option).value_or(default_value);
+}
+
 std::optional<bool> GetTestOptionBool(const ArgsManager& args, const std::string& test_option)
 {
     const auto options = args.GetArgs("-test");

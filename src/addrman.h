@@ -27,7 +27,7 @@ public:
 class AddrManImpl;
 class AddrInfo;
 
-/** Default for -checkaddrman */
+/** Default for -test=checkaddrman */
 static constexpr int32_t DEFAULT_ADDRMAN_CONSISTENCY_CHECKS{0};
 
 /** Location information for an address in AddrMan */
@@ -81,7 +81,7 @@ struct AddressPosition {
  *        attempt was unsuccessful.
  *    * Bucket selection is based on cryptographic hashing, using a randomly-generated 256-bit key, which should not
  *      be observable by adversaries.
- *    * Several indexes are kept for high performance. Setting m_consistency_check_ratio with the -checkaddrman
+ *    * Several indexes are kept for high performance. Setting m_consistency_check_ratio with the -test=checkaddrman
  *      configuration option will introduce (expensive) consistency checks for the entire data structure.
  */
 class AddrMan
