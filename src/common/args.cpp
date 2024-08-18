@@ -685,6 +685,11 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
 
 const std::vector<std::string> TEST_OPTIONS_DOC{
     "addrman (use deterministic addrman)",
+    "fastprune (Use smaller block files and lower minimum prune height for testing purposes)",
+    "stopafterblockimport (Stop running after importing blocks from disk )",
+    "capturemessages (Capture all P2P messages to disk)",
+    "printpriority (Log transaction fee rate per kB when mining blocks)",
+    "acceptstalefeeestimates (Read fee estimates even if they are stale)",
 };
 
 bool HasTestOption(const ArgsManager& args, const std::string& test_option)
