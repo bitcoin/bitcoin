@@ -375,12 +375,12 @@ There are a few possible fixes:
 
 1. Configure source file mapping.
 
-For `gdb` create or append to `.gdbinit` file:
+For `gdb` create or append to [`.gdbinit` file](https://sourceware.org/gdb/current/onlinedocs/gdb#gdbinit-man):
 ```
 set substitute-path ./src /path/to/project/root/src
 ```
 
-For `lldb` create or append to `.lldbinit` file:
+For `lldb` create or append to [`.lldbinit` file](https://lldb.llvm.org/man/lldb.html#configuration-files):
 ```
 settings set target.source-map ./src /path/to/project/root/src
 ```
