@@ -17,7 +17,7 @@ during the generation of the Bitcoin Core build system
 and tests weren't explicitly disabled.
 
 Assuming the build directory is named `build`, the unit tests can be run
-with `ctests --test-dir build`, which includes unit tests from subtrees.
+with `ctest --test-dir build`, which includes unit tests from subtrees.
 
 To run the unit tests manually, launch `build/src/test/test_bitcoin`. To recompile
 after a test file was modified, run `cmake --build build` and then run the test again. If you
@@ -83,7 +83,7 @@ so no leftover state is used.)
 
 ```bash
 $ build/src/test/test_bitcoin --run_test=getarg_tests/doubledash -- -testdatadir=/somewhere/mydatadir
-Test directory (will not be deleted): "/somewhere/mydatadir/test_common_Bitcoin Core/getarg_tests/doubledash/datadir
+Test directory (will not be deleted): "/somewhere/mydatadir/test_common_Bitcoin Core/getarg_tests/doubledash/datadir"
 Running 1 test case...
 
 *** No errors detected
@@ -112,8 +112,8 @@ see `uint256_tests.cpp`.
 
 ### Logging and debugging in unit tests
 
-`ctest --test-dir build` will write to a log file `build/Testing/Temporary/LastTest.log`. You can
-additionaly use the `--output-on-failure` option to display logs of the failed tests automatically
+`ctest --test-dir build` will write to the log file `build/Testing/Temporary/LastTest.log`. You can
+additionally use the `--output-on-failure` option to display logs of the failed tests automatically
 on failure. For running individual tests verbosely, refer to the section
 [above](#running-individual-tests).
 
@@ -150,5 +150,5 @@ You can then explore the core dump using
 ```bash
 gdb build/src/test/test_bitcoin core
 
-(gbd) bt  # produce a backtrace for where a segfault occurred
+(gdb) bt  # produce a backtrace for where a segfault occurred
 ```
