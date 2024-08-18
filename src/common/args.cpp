@@ -700,6 +700,27 @@ bool HasTestOption(const ArgsManager& args, const std::string& test_option)
     });
 }
 
+std::optional<bool> GetTestOptionBool(const ArgsManager& args, const std::string& test_option)
+{
+    const auto options = args.GetArgs("-test");
+    for (const auto& option : options) {
+        if (option.find(test_option) == 0) {
+            size_t eq_index = option.find('=');
+            if (eq_index != std::string::npos) {
+                return InterpretBool(option.substr(eq_index + 1));
+            } else {
+                return true;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+bool GetTestOptionBool(const ArgsManager& args, const std::string& test_option, bool default_value)
+{
+    return GetTestOptionBool(args, test_option).value_or(default_value);
+}
+
 fs::path GetDefaultDataDir()
 {
     // Windows:

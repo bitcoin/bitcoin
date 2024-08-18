@@ -617,7 +617,6 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-checkmempool=<n>", strprintf("Run mempool consistency checks every <n> transactions. Use 0 to disable. (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-checkpoints", strprintf("Enable rejection of any forks from the known historical chain until block %s (default: %u)", defaultChainParams->Checkpoints().GetHeight(), DEFAULT_CHECKPOINTS_ENABLED), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-deprecatedrpc=<method>", "Allows deprecated RPC method(s) to be used", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", DEFAULT_STOPAFTERBLOCKIMPORT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-stopatheight", strprintf("Stop running after reaching the given height in the main chain (default: %u)", DEFAULT_STOPATHEIGHT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitancestorcount=<n>", strprintf("Do not accept transactions if number of in-mempool ancestors is <n> or more (default: %u)", DEFAULT_ANCESTOR_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT_KVB), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -1049,7 +1048,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         for (const std::string& option : options) {
             auto it = std::find_if(TEST_OPTIONS_DOC.begin(), TEST_OPTIONS_DOC.end(), [&option](const std::string& doc_option) {
                 size_t pos = doc_option.find(" (");
-                return (pos != std::string::npos) && (doc_option.substr(0, pos) == option);
+                std::string option_name = (pos != std::string::npos) ? doc_option.substr(0, pos) : doc_option;
+                size_t opt_pos = option.find("=");
+                std::string option_without_argument = (opt_pos != std::string::npos) ? option.substr(0, opt_pos) : option;
+                return option_without_argument == option_name;
             });
             if (it == TEST_OPTIONS_DOC.end()) {
                 InitWarning(strprintf(_("Unrecognised option \"%s\" provided in -test=<option>."), option));
@@ -1762,7 +1764,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         ScheduleBatchPriority();
         // Import blocks
         ImportBlocks(chainman, vImportFiles);
-        if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
+        if (GetTestOptionBool(args, "stopafterblockimport",DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogPrintf("Stopping after block import\n");
             if (!(*Assert(node.shutdown))()) {
                 LogError("Failed to send shutdown signal after finishing block import\n");
