@@ -268,8 +268,7 @@ bool CCoinsViewCache::Sync()
 
 void CCoinsViewCache::Uncache(const COutPoint& hash)
 {
-    CCoinsMap::iterator it = cacheCoins.find(hash);
-    if (it != cacheCoins.end() && !it->second.IsDirty() && !it->second.IsFresh()) {
+    if (auto it{cacheCoins.find(hash)}; it != cacheCoins.end() && !it->second.IsDirty()) {
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
         TRACEPOINT(utxocache, uncache,
                hash.hash.data(),
@@ -316,14 +315,14 @@ void CCoinsViewCache::SanityCheck() const
         if (entry.IsDirty()) attr |= 1;
         if (entry.IsFresh()) attr |= 2;
         if (entry.coin.IsSpent()) attr |= 4;
-        // Only 5 combinations are possible.
-        assert(attr != 2 && attr != 4 && attr != 7);
+        // Only 4 combinations are possible.
+        assert(attr != 2 && attr != 4 && attr != 6 && attr != 7);
 
         // Recompute cachedCoinsUsage.
         recomputed_usage += entry.coin.DynamicMemoryUsage();
 
         // Count the number of entries we expect in the linked list.
-        if (entry.IsDirty() || entry.IsFresh()) ++count_flagged;
+        if (entry.IsDirty()) ++count_flagged;
     }
     // Iterate over the linked list of flagged entries.
     size_t count_linked = 0;
@@ -332,7 +331,7 @@ void CCoinsViewCache::SanityCheck() const
         assert(it->second.Next()->second.Prev() == it);
         assert(it->second.Prev()->second.Next() == it);
         // Verify they are actually flagged.
-        assert(it->second.IsDirty() || it->second.IsFresh());
+        assert(it->second.IsDirty());
         // Count the number of entries actually in the list.
         ++count_linked;
     }
