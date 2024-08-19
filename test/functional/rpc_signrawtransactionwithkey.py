@@ -52,8 +52,9 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         self.num_nodes = 2
     
     def send_to_address(self, addr, amount):
+        script_pub_key = address_to_scriptpubkey(addr).hex()
         wallet = MiniWallet(self.node[0], mode=MiniWalletMode.ADDRESS_OP_TRUE)
-        result = wallet.sendrawtransaction(self.node[0], addr, amount)
+        result = wallet.sendrawtransaction(self.node[0], script_pub_key, amount)
         txid = result["txid"]
         return txid
 
