@@ -689,10 +689,6 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
         throw std::logic_error(strprintf("Bug: bad %s flags. ALLOW_INT flag is incompatible with ALLOW_STRING "
                                          "(any valid integer is also a valid string)", arg_name));
     }
-    if ((flags & ALLOW_BOOL) && (flags & (ALLOW_INT | ALLOW_STRING))) {
-        throw std::logic_error(strprintf("Bug: bad %s flags. ALLOW_BOOL flag may not currently be specified with ALLOW_INT or ALLOW_STRING "
-                                         "(integer and string argument values cannot currently be omitted)", arg_name));
-    }
 }
 
 void ArgsManager::AddHiddenArgs(const std::vector<std::string>& names)
