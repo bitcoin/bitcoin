@@ -75,13 +75,13 @@ private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchIV;
     bool fKeySet;
 
-    int BytesToKeySHA512AES(const std::vector<unsigned char>& salt, const SecureString& key_data, int count, unsigned char* key, unsigned char* iv) const;
+    int BytesToKeySHA512AES(std::span<const unsigned char> salt, const SecureString& key_data, int count, unsigned char* key, unsigned char* iv) const;
 
 public:
-    bool SetKeyFromPassphrase(const SecureString& key_data, const std::vector<unsigned char>& salt, const unsigned int rounds, const unsigned int derivation_method);
+    bool SetKeyFromPassphrase(const SecureString& key_data, std::span<const unsigned char> salt, const unsigned int rounds, const unsigned int derivation_method);
     bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
-    bool Decrypt(const std::vector<unsigned char>& ciphertext, CKeyingMaterial& plaintext) const;
-    bool SetKey(const CKeyingMaterial& new_key, const std::vector<unsigned char>& new_iv);
+    bool Decrypt(std::span<const unsigned char> ciphertext, CKeyingMaterial& plaintext) const;
+    bool SetKey(const CKeyingMaterial& new_key, std::span<const unsigned char> new_iv);
 
     void CleanKey()
     {
@@ -104,8 +104,8 @@ public:
 };
 
 bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
-bool DecryptSecret(const CKeyingMaterial& master_key, const std::vector<unsigned char>& ciphertext, const uint256& iv, CKeyingMaterial& plaintext);
-bool DecryptKey(const CKeyingMaterial& master_key, const std::vector<unsigned char>& crypted_secret, const CPubKey& pub_key, CKey& key);
+bool DecryptSecret(const CKeyingMaterial& master_key, std::span<const unsigned char> ciphertext, const uint256& iv, CKeyingMaterial& plaintext);
+bool DecryptKey(const CKeyingMaterial& master_key, std::span<const unsigned char> crypted_secret, const CPubKey& pub_key, CKey& key);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_CRYPTER_H

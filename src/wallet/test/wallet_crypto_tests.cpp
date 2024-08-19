@@ -17,9 +17,9 @@ BOOST_FIXTURE_TEST_SUITE(wallet_crypto_tests, BasicTestingSetup)
 class TestCrypter
 {
 public:
-static void TestPassphraseSingle(const std::vector<unsigned char>& salt, const SecureString& passphrase, uint32_t rounds,
-                                 const std::vector<unsigned char>& correct_key = {},
-                                 const std::vector<unsigned char>& correct_iv = {})
+static void TestPassphraseSingle(const std::span<const unsigned char> salt, const SecureString& passphrase, uint32_t rounds,
+                                 const std::span<const unsigned char> correct_key = {},
+                                 const std::span<const unsigned char> correct_iv = {})
 {
     CCrypter crypt;
     crypt.SetKeyFromPassphrase(passphrase, salt, rounds, 0);
@@ -34,9 +34,9 @@ static void TestPassphraseSingle(const std::vector<unsigned char>& salt, const S
     }
 }
 
-static void TestPassphrase(const std::vector<unsigned char>& salt, const SecureString& passphrase, uint32_t rounds,
-                           const std::vector<unsigned char>& correct_key = {},
-                           const std::vector<unsigned char>& correct_iv = {})
+static void TestPassphrase(const std::span<const unsigned char> salt, const SecureString& passphrase, uint32_t rounds,
+                           const std::span<const unsigned char> correct_key = {},
+                           const std::span<const unsigned char> correct_iv = {})
 {
     TestPassphraseSingle(salt, passphrase, rounds, correct_key, correct_iv);
     for (SecureString::const_iterator it{passphrase.begin()}; it != passphrase.end(); ++it) {
@@ -44,8 +44,8 @@ static void TestPassphrase(const std::vector<unsigned char>& salt, const SecureS
     }
 }
 
-static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>& ciphertext,
-                        const std::vector<unsigned char>& correct_plaintext = {})
+static void TestDecrypt(const CCrypter& crypt, const std::span<const unsigned char> ciphertext,
+                        const std::span<const unsigned char> correct_plaintext = {})
 {
     CKeyingMaterial decrypted;
     crypt.Decrypt(ciphertext, decrypted);
@@ -55,7 +55,7 @@ static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>&
 }
 
 static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& plaintext,
-                              const std::vector<unsigned char>& correct_ciphertext = {})
+                              const std::span<const unsigned char> correct_ciphertext = {})
 {
     std::vector<unsigned char> ciphertext;
     crypt.Encrypt(plaintext, ciphertext);
@@ -64,12 +64,11 @@ static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& plai
         BOOST_CHECK_EQUAL_COLLECTIONS(ciphertext.begin(), ciphertext.end(), correct_ciphertext.begin(), correct_ciphertext.end());
     }
 
-    const std::vector<unsigned char> plaintext2(plaintext.begin(), plaintext.end());
-    TestDecrypt(crypt, ciphertext, /*correct_plaintext=*/plaintext2);
+    TestDecrypt(crypt, ciphertext, /*correct_plaintext=*/plaintext);
 }
 
-static void TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>& plaintext,
-                        const std::vector<unsigned char>& correct_ciphertext = {})
+static void TestEncrypt(const CCrypter& crypt, const std::span<const unsigned char> plaintext,
+                        const std::span<const unsigned char> correct_ciphertext = {})
 {
     TestEncryptSingle(crypt, CKeyingMaterial{plaintext.begin(), plaintext.end()}, correct_ciphertext);
     for (auto it{plaintext.begin()}; it != plaintext.end(); ++it) {
@@ -105,7 +104,7 @@ BOOST_AUTO_TEST_CASE(encrypt) {
     for (int i = 0; i != 100; i++)
     {
         uint256 hash(GetRandHash());
-        TestCrypter::TestEncrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end()));
+        TestCrypter::TestEncrypt(crypt, std::span<unsigned char>{hash.begin(), hash.end()});
     }
 
 }
