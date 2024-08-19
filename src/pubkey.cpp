@@ -193,12 +193,6 @@ int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned
 static const std::vector<unsigned char> NUMS_H_DATA{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
 const XOnlyPubKey XOnlyPubKey::NUMS_H{NUMS_H_DATA};
 
-XOnlyPubKey::XOnlyPubKey(Span<const unsigned char> bytes)
-{
-    assert(bytes.size() == 32);
-    std::copy(bytes.begin(), bytes.end(), m_keydata.begin());
-}
-
 std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
 {
     std::vector<CKeyID> out;
