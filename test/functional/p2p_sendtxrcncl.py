@@ -217,7 +217,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
 
         self.log.info('SENDTXRCNCL without WTXIDRELAY is ignored (recon state is erased after VERACK)')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(wtxidrelay=False), send_version=True, wait_for_verack=False)
-        with self.nodes[0].assert_debug_log(['Forget txreconciliation state of peer']):
+        with self.nodes[0].assert_debug_log(['Register peer', 'Forget txreconciliation state of peer']):
             peer.send_message(create_sendtxrcncl_msg())
             peer.send_message(msg_verack())
         self.nodes[0].disconnect_p2ps()
