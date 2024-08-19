@@ -62,8 +62,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         for n in self.nodes:
             n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
 
+        # Create a wallet that we will create a backup for later (at snapshot height)
         n0.createwallet('w')
         w = n0.get_wallet_rpc("w")
+
+        # Create another wallet and backup now (before snapshot height)
+        n0.createwallet('w2')
+        w2 = n0.get_wallet_rpc("w2")
+        w2.backupwallet("backup_w2.dat")
 
         # Generate a series of blocks that `n0` will have in the snapshot,
         # but that n1 doesn't yet see. In order for the snapshot to activate,
@@ -84,6 +90,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_equal(n.getblockchaininfo()[
                          "headers"], SNAPSHOT_BASE_HEIGHT)
 
+        # This backup is created at the snapshot height, so it's
+        # not part of the background sync anymore
         w.backupwallet("backup_w.dat")
 
         self.log.info("-- Testing assumeutxo")
@@ -126,8 +134,11 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
-        self.log.info("Backup can't be loaded during background sync")
-        assert_raises_rpc_error(-4, "Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height 299", n1.restorewallet, "w", "backup_w.dat")
+        self.log.info("Backup from the snapshot height can be loaded during background sync")
+        n1.restorewallet("w", "backup_w.dat")
+
+        self.log.info("Backup from before the snapshot height can't be loaded during background sync")
+        assert_raises_rpc_error(-4, "Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height 299", n1.restorewallet, "w2", "backup_w2.dat")
 
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
@@ -159,8 +170,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Ensuring background validation completes")
         self.wait_until(lambda: len(n1.getchainstates()['chainstates']) == 1)
 
-        self.log.info("Ensuring wallet can be restored from backup")
-        n1.restorewallet("w", "backup_w.dat")
+        self.log.info("Ensuring wallet can be restored from a backup that was created before the snapshot height")
+        n1.restorewallet("w2", "backup_w2.dat")
 
 
 if __name__ == '__main__':
