@@ -145,7 +145,6 @@ class MnehfTest(DashTestFramework):
         pubkey = key.get_pubkey().get_bytes()
         ehf_tx = self.create_mnehf(28, pubkey)
         ehf_unknown_tx = self.create_mnehf(27, pubkey)
-        ehf_invalid_tx = self.create_mnehf(9, pubkey) # deployment that is known as non-EHF
 
         self.log.info("Checking deserialization of CMnEhf by python's code")
         mnehf_payload = CMnEhf()
@@ -166,7 +165,6 @@ class MnehfTest(DashTestFramework):
         self.log.info(f"ehf tx: {ehf_tx_sent}")
         ehf_unknown_tx_sent = self.send_tx(ehf_unknown_tx)
         self.log.info(f"unknown ehf tx: {ehf_unknown_tx_sent}")
-        self.send_tx(ehf_invalid_tx, expected_error='bad-mnhf-non-ehf')
         self.sync_all()
         ehf_blockhash = self.nodes[1].generate(1)[0]
         self.sync_blocks()

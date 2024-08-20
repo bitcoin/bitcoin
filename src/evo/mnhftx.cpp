@@ -116,6 +116,10 @@ bool CheckMNHFTx(const ChainstateManager& chainman, const llmq::CQuorumManager& 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
     }
 
+    if (!Params().IsValidMNActivation(mnhfTx.signal.versionBit, pindexPrev->GetMedianTimePast())) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-non-ehf");
+    }
+
     const CBlockIndex* pindexQuorum = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(mnhfTx.signal.quorumHash));
     if (!pindexQuorum) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-quorum-hash");
@@ -137,10 +141,6 @@ bool CheckMNHFTx(const ChainstateManager& chainman, const llmq::CQuorumManager& 
     if (!mnhfTx.signal.Verify(qman, mnhfTx.signal.quorumHash, mnhfTx.GetRequestId(), msgHash, state)) {
         // set up inside Verify
         return false;
-    }
-
-    if (!Params().IsValidMNActivation(mnhfTx.signal.versionBit, pindexPrev->GetMedianTimePast())) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-non-ehf");
     }
 
     return true;
