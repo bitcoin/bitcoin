@@ -466,6 +466,10 @@ class TestNode():
         return self.chain_path / "blocks"
 
     @property
+    def blocks_key_path(self) -> Path:
+        return self.blocks_path / "xor.dat"
+
+    @property
     def wallets_path(self) -> Path:
         return self.chain_path / "wallets"
 

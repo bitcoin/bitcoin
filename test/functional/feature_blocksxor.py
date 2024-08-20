@@ -54,7 +54,7 @@ class BlocksXORTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX)
 
         self.log.info("Delete XOR key, restart node with '-blocksxor=0', check blk*.dat/rev*.dat file integrity")
-        os.remove(node.blocks_path / 'xor.dat')
+        os.remove(node.blocks_key_path)
         self.start_node(0, extra_args=['-blocksxor=0'])
         # checklevel=2 -> verify block validity + undo data
         # nblocks=0    -> verify all blocks
