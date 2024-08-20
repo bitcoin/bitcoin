@@ -71,10 +71,6 @@ public:
      * recent to least recent. */
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const;
 
-    /** Get all children that spend from this tx but were not received from nodeid. Also return
-     * which peer provided each tx. */
-    std::vector<std::pair<CTransactionRef, NodeId>> GetChildrenFromDifferentPeer(const CTransactionRef& parent, NodeId nodeid) const;
-
     /** Get an orphan's parent_txids, or std::nullopt if the orphan is not present. */
     std::optional<std::vector<Txid>> GetParentTxids(const Wtxid& wtxid);
 
