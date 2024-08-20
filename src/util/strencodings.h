@@ -70,10 +70,6 @@ std::vector<Byte> ParseHex(std::string_view hex_str)
 /* Returns true if each character in str is a hex character, and has an even
  * number of hex digits.*/
 bool IsHex(std::string_view str);
-/**
-* Return true if the string is a hex number, optionally prefixed with "0x"
-*/
-bool IsHexNumber(std::string_view str);
 std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str);
 std::string EncodeBase64(Span<const unsigned char> input);
 inline std::string EncodeBase64(Span<const std::byte> input) { return EncodeBase64(MakeUCharSpan(input)); }
