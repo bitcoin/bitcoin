@@ -88,12 +88,6 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                     return input.prevout.hash == ptx_potential_parent->GetHash();
                 }));
             }
-            for (const auto& [child, peer] : orphanage.GetChildrenFromDifferentPeer(ptx_potential_parent, peer_id)) {
-                assert(std::any_of(child->vin.cbegin(), child->vin.cend(), [&](const auto& input) {
-                    return input.prevout.hash == ptx_potential_parent->GetHash();
-                }));
-                assert(peer != peer_id);
-            }
         }
 
         // trigger orphanage functions
