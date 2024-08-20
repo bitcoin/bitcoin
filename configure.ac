@@ -1471,9 +1471,11 @@ if test x$want_boost = xno; then
 fi
 
 dnl Prevent use of std::unary_function, which was removed in C++17,
-dnl and will generate warnings with newer compilers.
-dnl See: https://github.com/boostorg/container_hash/issues/22.
-BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"
+dnl and will generate warnings with newer compilers for Boost
+dnl older than 1.80.
+dnl See: https://github.com/boostorg/config/pull/430.
+AX_CHECK_PREPROC_FLAG([-DBOOST_NO_CXX98_FUNCTION_BASE], [BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"], [], [$CXXFLAG_WERROR],
+                      [AC_LANG_PROGRAM([[#include <boost/config.hpp>]])])
 
 dnl Opt-in to Boost Process
 if test "x$boost_process" != xno; then
@@ -1488,8 +1490,6 @@ fi
 if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
 fi
-
-BOOST_LIBS="$BOOST_LDFLAGS"
 fi
 
 dnl Check for reduced exports
@@ -1503,30 +1503,6 @@ if test x$use_tests = xyes; then
 
   if test x$HEXDUMP = x; then
     AC_MSG_ERROR(hexdump is required for tests)
-  fi
-
-  if test x$use_boost = xyes; then
-
-  AX_BOOST_UNIT_TEST_FRAMEWORK
-
-  dnl Determine if -DBOOST_TEST_DYN_LINK is needed
-  AC_MSG_CHECKING([for dynamic linked boost test])
-  TEMP_LIBS="$LIBS"
-  LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
-  TEMP_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-  AC_LINK_IFELSE([AC_LANG_SOURCE([
-       #define BOOST_TEST_DYN_LINK
-       #define BOOST_TEST_MAIN
-        #include <boost/test/unit_test.hpp>
-
-       ])],
-    [AC_MSG_RESULT(yes)]
-    [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
-    [AC_MSG_RESULT(no)])
-  LIBS="$TEMP_LIBS"
-  CPPFLAGS="$TEMP_CPPFLAGS"
-
   fi
 fi
 
@@ -1892,7 +1868,6 @@ AC_SUBST(USE_SQLITE)
 AC_SUBST(USE_BDB)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
-AC_SUBST(BOOST_LIBS)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
@@ -1929,14 +1904,6 @@ dnl Until this is fixed upstream and we've synced, we'll just un-export them.
 CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
 CPPFLAGS="$CPPFLAGS_TEMP"
-
-LDFLAGS_TEMP="$LDFLAGS"
-unset LDFLAGS
-LDFLAGS="$LDFLAGS_TEMP"
-
-LIBS_TEMP="$LIBS"
-unset LIBS
-LIBS="$LIBS_TEMP"
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --disable-module-ecdh"
 AC_CONFIG_SUBDIRS([src/dashbls src/secp256k1])

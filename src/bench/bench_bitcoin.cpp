@@ -5,6 +5,7 @@
 #include <bench/bench.h>
 
 #include <crypto/sha256.h>
+#include <fs.h>
 #include <stacktraces.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -57,8 +58,8 @@ int main(int argc, char** argv)
     args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
     args.is_list_only = argsman.GetBoolArg("-list", false);
     args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
-    args.output_csv = argsman.GetArg("-output_csv", "");
-    args.output_json = argsman.GetArg("-output_json", "");
+    args.output_csv = fs::PathFromString(argsman.GetArg("-output_csv", ""));
+    args.output_json = fs::PathFromString(argsman.GetArg("-output_json", ""));
 
     benchmark::BenchRunner::RunAll(args);
 
