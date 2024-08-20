@@ -6,6 +6,7 @@
 
 import json
 
+from test_framework.governance import have_trigger_for_height
 from test_framework.messages import uint256_to_string
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, force_finish_mnsync, satoshi_round
@@ -36,20 +37,6 @@ class DashGovernanceTest (DashTestFramework):
             "hex": proposal_hex,
             "data": proposal_template,
         }
-
-    def have_trigger_for_height(self, sb_block_height, nodes = None):
-        if nodes is None:
-            nodes = self.nodes
-        count = 0
-        for node in nodes:
-            valid_triggers = node.gobject("list", "valid", "triggers")
-            for trigger in list(valid_triggers.values()):
-                if json.loads(trigger["DataString"])["event_block_height"] != sb_block_height:
-                    continue
-                if trigger['AbsoluteYesCount'] > 0:
-                    count = count + 1
-                    break
-        return count == len(nodes)
 
     def run_test(self):
         sb_cycle = 20
@@ -123,7 +110,7 @@ class DashGovernanceTest (DashTestFramework):
 
         self.log.info("Wait for new trigger and votes on non-isolated nodes")
         sb_block_height = self.nodes[0].getblockcount() + 1
-        self.wait_until(lambda: self.have_trigger_for_height(sb_block_height, self.nodes[0:5]), timeout=5)
+        self.wait_until(lambda: have_trigger_for_height(self.nodes[0:5], sb_block_height))
         # Mine superblock
         self.nodes[0].generate(1)
         self.bump_mocktime(156)

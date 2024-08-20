@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests around dash governance objects."""
 
-import json
 import time
 
+from test_framework.governance import prepare_object
 from test_framework.messages import uint256_to_string
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error
@@ -21,33 +21,13 @@ def validate_object(prepared, rpc_prepared):
     del rpc_prepared["data"]["hex"]
     assert_equal(prepared["data"], rpc_prepared["data"])
 
-
 class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(2, 1)
 
     def prepare_object(self, object_type, parent_hash, creation_time, revision, name, amount):
-        proposal_rev = revision
-        proposal_time = int(creation_time)
-        proposal_template = {
-            "type": object_type,
-            "name": name,
-            "start_epoch": proposal_time,
-            "end_epoch": proposal_time + 24 * 60 * 60,
-            "payment_amount": amount,
-            "payment_address": self.nodes[0].getnewaddress(),
-            "url": "https://dash.org"
-        }
-        proposal_hex = ''.join(format(x, '02x') for x in json.dumps(proposal_template).encode())
-        collateral_hash = self.nodes[0].gobject("prepare", parent_hash, proposal_rev, proposal_time, proposal_hex)
-        return {
-            "parentHash": parent_hash,
-            "collateralHash": collateral_hash,
-            "createdAt": proposal_time,
-            "revision": proposal_rev,
-            "hex": proposal_hex,
-            "data": proposal_template,
-        }
+        payment_address = self.nodes[0].getnewaddress()
+        return prepare_object(self.nodes[0], object_type, parent_hash, creation_time, revision, name, amount, payment_address)
 
     def run_test(self):
 
