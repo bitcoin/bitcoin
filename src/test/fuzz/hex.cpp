@@ -32,6 +32,10 @@ FUZZ_TARGET(hex)
         assert(random_hex_string.length() == 64);
         assert(Txid::FromHex(random_hex_string));
         assert(Wtxid::FromHex(random_hex_string));
+        assert(uint256::FromUserHex(random_hex_string));
+    }
+    if (const auto result{uint256::FromUserHex(random_hex_string)}) {
+        assert(uint256::FromHex(result->ToString()));
     }
     (void)uint256S(random_hex_string);
     try {

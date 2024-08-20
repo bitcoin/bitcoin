@@ -9,6 +9,7 @@
 #include <crypto/common.h>
 #include <span.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 
 #include <algorithm>
 #include <array>
@@ -17,6 +18,7 @@
 #include <cstring>
 #include <optional>
 #include <string>
+#include <string_view>
 
 /** Template base class for fixed-sized opaque blobs. */
 template<unsigned int BITS>
@@ -106,6 +108,25 @@ std::optional<uintN_t> FromHex(std::string_view str)
     rv.SetHexDeprecated(str);
     return rv;
 }
+/**
+ * @brief Like FromHex(std::string_view str), but allows an "0x" prefix
+ *        and pads the input with leading zeroes if it is shorter than
+ *        the expected length of uintN_t::size()*2.
+ *
+ *        Designed to be used when dealing with user input.
+ */
+template <class uintN_t>
+std::optional<uintN_t> FromUserHex(std::string_view input)
+{
+    input = util::RemovePrefixView(input, "0x");
+    constexpr auto expected_size{uintN_t::size() * 2};
+    if (input.size() < expected_size) {
+        auto padded = std::string(expected_size, '0');
+        std::copy(input.begin(), input.end(), padded.begin() + expected_size - input.size());
+        return FromHex<uintN_t>(padded);
+    }
+    return FromHex<uintN_t>(input);
+}
 } // namespace detail
 
 /** 160-bit opaque blob.
@@ -127,6 +148,7 @@ public:
 class uint256 : public base_blob<256> {
 public:
     static std::optional<uint256> FromHex(std::string_view str) { return detail::FromHex<uint256>(str); }
+    static std::optional<uint256> FromUserHex(std::string_view str) { return detail::FromUserHex<uint256>(str); }
     constexpr uint256() = default;
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
     constexpr explicit uint256(Span<const unsigned char> vch) : base_blob<256>(vch) {}
