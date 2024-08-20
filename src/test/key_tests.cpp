@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(bip341_test_h)
 BOOST_AUTO_TEST_CASE(key_schnorr_tweak_smoke_test)
 {
     // Sanity check to ensure we get the same tweak using CPubKey vs secp256k1 functions
-    secp256k1_context* secp256k1_context_sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context* secp256k1_context_sign = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
 
     CKey key;
     key.MakeNewKey(true);
