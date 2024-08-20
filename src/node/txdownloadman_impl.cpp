@@ -300,9 +300,11 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
 
     Assume(RecentRejectsReconsiderableFilter().contains(parent_wtxid.ToUint256()));
 
-    // Prefer children from this peer. This helps prevent censorship attempts in which an attacker
+    // Only consider children from this peer. This helps prevent censorship attempts in which an attacker
     // sends lots of fake children for the parent, and we (unluckily) keep selecting the fake
-    // children instead of the real one provided by the honest peer.
+    // children instead of the real one provided by the honest peer. Since we track all announcers
+    // of an orphan, this does not exclude parent + orphan pairs that we happened to request from
+    // different peers.
     const auto cpfp_candidates_same_peer{m_orphanage.GetChildrenFromSamePeer(ptx, nodeid)};
 
     // These children should be sorted from newest to oldest. In the (probably uncommon) case
@@ -313,34 +315,6 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
         if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
             !RecentRejectsFilter().contains(child->GetHash().ToUint256())) {
             return PackageToValidate{ptx, child, nodeid, nodeid};
-        }
-    }
-
-    // If no suitable candidate from the same peer is found, also try children that were provided by
-    // a different peer. This is useful because sometimes multiple peers announce both transactions
-    // to us, and we happen to download them from different peers (we wouldn't have known that these
-    // 2 transactions are related). We still want to find 1p1c packages then.
-    //
-    // If we start tracking all announcers of orphans, we can restrict this logic to parent + child
-    // pairs in which both were provided by the same peer, i.e. delete this step.
-    const auto cpfp_candidates_different_peer{m_orphanage.GetChildrenFromDifferentPeer(ptx, nodeid)};
-
-    // Find the first 1p1c that hasn't already been rejected. We randomize the order to not
-    // create a bias that attackers can use to delay package acceptance.
-    //
-    // Create a random permutation of the indices.
-    std::vector<size_t> tx_indices(cpfp_candidates_different_peer.size());
-    std::iota(tx_indices.begin(), tx_indices.end(), 0);
-    std::shuffle(tx_indices.begin(), tx_indices.end(), m_opts.m_rng);
-
-    for (const auto index : tx_indices) {
-        // If we already tried a package and failed for any reason, the combined hash was
-        // cached in m_lazy_recent_rejects_reconsiderable.
-        const auto [child_tx, child_sender] = cpfp_candidates_different_peer.at(index);
-        Package maybe_cpfp_package{ptx, child_tx};
-        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
-            !RecentRejectsFilter().contains(child_tx->GetHash().ToUint256())) {
-            return PackageToValidate{ptx, child_tx, nodeid, child_sender};
         }
     }
     return std::nullopt;

@@ -287,38 +287,6 @@ std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransac
     return children_found;
 }
 
-std::vector<std::pair<CTransactionRef, NodeId>> TxOrphanage::GetChildrenFromDifferentPeer(const CTransactionRef& parent, NodeId nodeid) const
-{
-    // First construct vector of iterators to ensure we do not return duplicates of the same tx.
-    std::vector<OrphanMap::iterator> iters;
-
-    // For each output, get all entries spending this prevout, filtering for ones not from the specified peer.
-    for (unsigned int i = 0; i < parent->vout.size(); i++) {
-        const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(parent->GetHash(), i));
-        if (it_by_prev != m_outpoint_to_orphan_it.end()) {
-            for (const auto& elem : it_by_prev->second) {
-                if (!elem->second.announcers.contains(nodeid)) {
-                    iters.emplace_back(elem);
-                }
-            }
-        }
-    }
-
-    // Erase duplicates
-    std::sort(iters.begin(), iters.end(), IteratorComparator());
-    iters.erase(std::unique(iters.begin(), iters.end()), iters.end());
-
-    // Convert iterators to pair<CTransactionRef, NodeId>
-    std::vector<std::pair<CTransactionRef, NodeId>> children_found;
-    children_found.reserve(iters.size());
-    for (const auto& child_iter : iters) {
-        // Use first peer in announcers list
-        auto peer = *(child_iter->second.announcers.begin());
-        children_found.emplace_back(child_iter->second.tx, peer);
-    }
-    return children_found;
-}
-
 std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() const
 {
     std::vector<OrphanTxBase> ret;
