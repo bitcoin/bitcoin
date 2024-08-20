@@ -8,6 +8,7 @@
 #include <crypto/aes.h>
 #include <crypto/sha512.h>
 
+#include <type_traits>
 #include <vector>
 
 namespace wallet {
@@ -24,7 +25,7 @@ int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, cons
     unsigned char buf[CSHA512::OUTPUT_SIZE];
     CSHA512 di;
 
-    di.Write((const unsigned char*)strKeyData.data(), strKeyData.size());
+    di.Write(UCharCast(strKeyData.data()), strKeyData.size());
     di.Write(chSalt.data(), chSalt.size());
     di.Finalize(buf);
 
@@ -93,12 +94,10 @@ bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingM
         return false;
 
     // plaintext will always be equal to or lesser than length of ciphertext
-    int nLen = vchCiphertext.size();
-
-    vchPlaintext.resize(nLen);
+    vchPlaintext.resize(vchCiphertext.size());
 
     AES256CBCDecrypt dec(vchKey.data(), vchIV.data(), true);
-    nLen = dec.Decrypt(vchCiphertext.data(), vchCiphertext.size(), vchPlaintext.data());
+    int nLen = dec.Decrypt(vchCiphertext.data(), vchCiphertext.size(), vchPlaintext.data());
     if(nLen == 0)
         return false;
     vchPlaintext.resize(nLen);
@@ -118,8 +117,8 @@ bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vch
 bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext)
 {
     CCrypter cKeyCrypter;
-    std::vector<unsigned char> chIV(WALLET_CRYPTO_IV_SIZE);
-    memcpy(chIV.data(), &nIV, WALLET_CRYPTO_IV_SIZE);
+    static_assert(WALLET_CRYPTO_IV_SIZE <= std::remove_reference_t<decltype(nIV)>::size());
+    std::vector<unsigned char> chIV{nIV.begin(), nIV.begin() + WALLET_CRYPTO_IV_SIZE};
     if(!cKeyCrypter.SetKey(vMasterKey, chIV))
         return false;
     return cKeyCrypter.Decrypt(vchCiphertext, vchPlaintext);

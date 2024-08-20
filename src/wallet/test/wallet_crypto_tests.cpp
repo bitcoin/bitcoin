@@ -18,14 +18,14 @@ class TestCrypter
 {
 public:
 static void TestPassphraseSingle(const std::vector<unsigned char>& vchSalt, const SecureString& passphrase, uint32_t rounds,
-                 const std::vector<unsigned char>& correctKey = std::vector<unsigned char>(),
-                 const std::vector<unsigned char>& correctIV=std::vector<unsigned char>())
+                                 const std::vector<unsigned char>& correctKey = {},
+                                 const std::vector<unsigned char>& correctIV = {})
 {
     CCrypter crypt;
     crypt.SetKeyFromPassphrase(passphrase, vchSalt, rounds, 0);
 
     if(!correctKey.empty())
-        BOOST_CHECK_MESSAGE(memcmp(crypt.vchKey.data(), correctKey.data(), crypt.vchKey.size()) == 0, \
+        BOOST_CHECK_MESSAGE(memcmp(crypt.vchKey.data(), correctKey.data(), crypt.vchKey.size()) == 0,
             HexStr(crypt.vchKey) + std::string(" != ") + HexStr(correctKey));
     if(!correctIV.empty())
         BOOST_CHECK_MESSAGE(memcmp(crypt.vchIV.data(), correctIV.data(), crypt.vchIV.size()) == 0,
@@ -33,40 +33,40 @@ static void TestPassphraseSingle(const std::vector<unsigned char>& vchSalt, cons
 }
 
 static void TestPassphrase(const std::vector<unsigned char>& vchSalt, const SecureString& passphrase, uint32_t rounds,
-                 const std::vector<unsigned char>& correctKey = std::vector<unsigned char>(),
-                 const std::vector<unsigned char>& correctIV=std::vector<unsigned char>())
+                           const std::vector<unsigned char>& correctKey = {},
+                           const std::vector<unsigned char>& correctIV = {})
 {
     TestPassphraseSingle(vchSalt, passphrase, rounds, correctKey, correctIV);
     for(SecureString::const_iterator i(passphrase.begin()); i != passphrase.end(); ++i)
         TestPassphraseSingle(vchSalt, SecureString(i, passphrase.end()), rounds);
 }
 
-static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchCiphertext, \
-                        const std::vector<unsigned char>& vchPlaintext = std::vector<unsigned char>())
+static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchCiphertext,
+                        const std::vector<unsigned char>& vchCorrectPlaintext = {})
 {
     CKeyingMaterial vchDecrypted;
     crypt.Decrypt(vchCiphertext, vchDecrypted);
     if (vchPlaintext.size())
-        BOOST_CHECK(CKeyingMaterial(vchPlaintext.begin(), vchPlaintext.end()) == vchDecrypted);
+        BOOST_CHECK_EQUAL_COLLECTIONS(vchDecrypted.begin(), vchDecrypted.end(), vchCorrectPlaintext.begin(), vchCorrectPlaintext.end());
 }
 
 static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& vchPlaintext,
-                       const std::vector<unsigned char>& vchCiphertextCorrect = std::vector<unsigned char>())
+                              const std::vector<unsigned char>& vchCiphertextCorrect = {})
 {
     std::vector<unsigned char> vchCiphertext;
     crypt.Encrypt(vchPlaintext, vchCiphertext);
 
     if (!vchCiphertextCorrect.empty())
-        BOOST_CHECK(vchCiphertext == vchCiphertextCorrect);
+        BOOST_CHECK_EQUAL_COLLECTIONS(vchCiphertext.begin(), vchCiphertext.end(), vchCiphertextCorrect.begin(), vchCiphertextCorrect.end());
 
     const std::vector<unsigned char> vchPlaintext2(vchPlaintext.begin(), vchPlaintext.end());
     TestDecrypt(crypt, vchCiphertext, vchPlaintext2);
 }
 
-static void TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchPlaintextIn, \
-                       const std::vector<unsigned char>& vchCiphertextCorrect = std::vector<unsigned char>())
+static void TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchPlaintextIn,
+                        const std::vector<unsigned char>& vchCiphertextCorrect = {})
 {
-    TestEncryptSingle(crypt, CKeyingMaterial(vchPlaintextIn.begin(), vchPlaintextIn.end()), vchCiphertextCorrect);
+    TestEncryptSingle(crypt, CKeyingMaterial{vchPlaintextIn.begin(), vchPlaintextIn.end()}, vchCiphertextCorrect);
     for(std::vector<unsigned char>::const_iterator i(vchPlaintextIn.begin()); i != vchPlaintextIn.end(); ++i)
         TestEncryptSingle(crypt, CKeyingMaterial(i, vchPlaintextIn.end()));
 }
@@ -76,8 +76,8 @@ static void TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>&
 BOOST_AUTO_TEST_CASE(passphrase) {
     // These are expensive.
 
-    TestCrypter::TestPassphrase(ParseHex("0000deadbeef0000"), "test", 25000, \
-                                ParseHex("fc7aba077ad5f4c3a0988d8daa4810d0d4a0e3bcb53af662998898f33df0556a"), \
+    TestCrypter::TestPassphrase(ParseHex("0000deadbeef0000"), "test", 25000,
+                                ParseHex("fc7aba077ad5f4c3a0988d8daa4810d0d4a0e3bcb53af662998898f33df0556a"),
                                 ParseHex("cf2f2691526dd1aa220896fb8bf7c369"));
 
     std::string hash(GetRandHash().ToString());
