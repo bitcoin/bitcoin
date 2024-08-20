@@ -40,7 +40,6 @@ bip112tx_emptystack - test empty stack (= no argument) OP_CSV
 from itertools import product
 
 from test_framework.blocktools import (
-    CSV_ACTIVATION_HEIGHT,
     create_block,
     create_coinbase,
     TIME_GENESIS_BLOCK,
@@ -89,6 +88,9 @@ def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
 
+CSV_ACTIVATION_HEIGHT = 432
+
+
 class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -98,6 +100,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             '-peertimeout=999999',  # bump because mocktime might cause a disconnect otherwise
             '-whitelist=noban@127.0.0.1',
             '-dip3params=2000:2000',
+            f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False

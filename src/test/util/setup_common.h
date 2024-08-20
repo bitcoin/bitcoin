@@ -177,7 +177,7 @@ struct TestChainSetup : public RegTestingSetup
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestChainSetup {
-    TestChain100Setup() : TestChainSetup(100) {}
+    TestChain100Setup(const std::vector<const char*>& extra_args = {});
 };
 
 struct TestChainDIP3Setup : public TestChainSetup

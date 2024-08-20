@@ -12,7 +12,6 @@ from test_framework.blocktools import (
     create_coinbase,
     create_tx_with_script,
     get_legacy_sigopcount_block,
-    MAX_BLOCK_SIGOPS,
 )
 from test_framework.key import ECKey
 from test_framework.messages import (
@@ -22,7 +21,6 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    MAX_BLOCK_SIZE,
     uint256_from_compact,
     uint256_from_str,
 )
@@ -52,6 +50,11 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from data import invalid_txs
+
+# This functional test assumes DIP0001 is disabled
+# Blocks after activation DIP0001 can not have a transaction bigger than 100k bytes
+MAX_BLOCK_SIZE = 1000000
+MAX_BLOCK_SIGOPS = 20000
 
 #  Use this class for tests that require behavior other than normal p2p behavior.
 #  For now, it is used to serialize a bloated varint (b64).
@@ -83,7 +86,12 @@ class FullBlockTest(BitcoinTestFramework):
         # which causes RPC to hang, so we need to increase RPC timeouts
         self.rpc_timeout = 180
         # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
-        self.extra_args = [['-dip3params=2000:2000', '-acceptnonstdtxn=1']]  # This is a consensus block test, we don't care about tx policy
+        self.extra_args = [[
+            '-dip3params=2000:2000',
+            '-acceptnonstdtxn=1',  # This is a consensus block test, we don't care about tx policy
+            '-testactivationheight=bip34@2',
+            '-testactivationheight=dip0001@2000',
+        ]]
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, self.extra_args)

@@ -8,7 +8,6 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates.
 """
 
 from test_framework.blocktools import (
-    CLTV_HEIGHT,
     create_block,
     create_coinbase,
 )
@@ -79,10 +78,14 @@ def cltv_validate(tx, height):
     cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
+CLTV_HEIGHT = 111
+
+
 class BIP65Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
+            f'-testactivationheight=cltv@{CLTV_HEIGHT}',
             '-whitelist=noban@127.0.0.1',
             '-dip3params=9000:9000',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing

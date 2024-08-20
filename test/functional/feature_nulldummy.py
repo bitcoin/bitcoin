@@ -50,7 +50,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.extra_args = [[
             '-whitelist=127.0.0.1',
             '-dip3params=105:105',
-            '-bip147height=105',
+            f'-testactivationheight=bip147@{COINBASE_MATURITY + 5}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]] * 2
 

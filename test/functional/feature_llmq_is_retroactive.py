@@ -25,8 +25,6 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
 
     def run_test(self):
-        self.activate_dip8()
-
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         # Turn mempool IS signing off
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 1)

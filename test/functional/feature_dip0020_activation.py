@@ -16,10 +16,14 @@ This test checks activation of DIP0020 opcodes
 DISABLED_OPCODE_ERROR = "non-mandatory-script-verify-flag (Attempted to use a disabled opcode)"
 
 
+DIP0020_HEIGHT = 300
 class DIP0020ActivationTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [["-acceptnonstdtxn=1"]]
+        self.extra_args = [[
+            f'-testactivationheight=dip0020@{DIP0020_HEIGHT}',
+            "-acceptnonstdtxn=1",
+        ]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

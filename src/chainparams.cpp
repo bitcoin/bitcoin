@@ -794,19 +794,19 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 100;
         consensus.nMasternodeMinimumConfirmations = 1;
-        consensus.BIP34Height = 2; // BIP34 activated on regtest (Block at height 1 not enforced for testing purposes)
+        consensus.BIP34Height = 1;   // Always active unless overridden
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 111; // BIP65 activated on regtest (Block at height 110 and earlier not enforced for testing purposes)
-        consensus.BIP66Height = 102; // BIP66 activated on regtest (Block at height 101 and earlier not enforced for testing purposes)
-        consensus.BIP147Height = 432; // BIP147 activated on regtest (Used in functional tests)
-        consensus.CSVHeight = 432; // CSV activated on regtest (Used in rpc activation tests)
-        consensus.DIP0001Height = 2000;
+        consensus.BIP65Height = 1;   // Always active unless overridden
+        consensus.BIP66Height = 1;   // Always active unless overridden
+        consensus.BIP147Height = 1;  // Always active unless overridden
+        consensus.CSVHeight = 1;     // Always active unless overridden
+        consensus.DIP0001Height = 1; // Always active unless overridden
         consensus.DIP0003Height = 432;
         consensus.DIP0003EnforcementHeight = 500;
         consensus.DIP0003EnforcementHash = uint256();
-        consensus.DIP0008Height = 432;
-        consensus.BRRHeight = 1000; // see block_reward_reallocation_tests
-        consensus.DIP0020Height = 300;
+        consensus.DIP0008Height = 1; // Always active unless overridden
+        consensus.BRRHeight = 1;     // Always active unless overridden
+        consensus.DIP0020Height = 1;
         consensus.DIP0024Height = 900;
         consensus.DIP0024QuorumsHeight = 900;
         consensus.V19Height = 900;
@@ -1031,8 +1031,47 @@ public:
     void UpdateLLMQInstantSendDIP0024FromArgs(const ArgsManager& args);
 };
 
+static void MaybeUpdateHeights(const ArgsManager& args, Consensus::Params& consensus)
+{
+    for (const std::string& arg : args.GetArgs("-testactivationheight")) {
+        const auto found{arg.find('@')};
+        if (found == std::string::npos) {
+            throw std::runtime_error(strprintf("Invalid format (%s) for -testactivationheight=name@height.", arg));
+        }
+        const auto name{arg.substr(0, found)};
+        const auto value{arg.substr(found + 1)};
+        int32_t height;
+        if (!ParseInt32(value, &height) || height < 0 || height >= std::numeric_limits<int>::max()) {
+            throw std::runtime_error(strprintf("Invalid height value (%s) for -testactivationheight=name@height.", arg));
+        }
+        if (name == "bip147") {
+            consensus.BIP147Height = int{height};
+        } else if (name == "bip34") {
+            consensus.BIP34Height = int{height};
+        } else if (name == "dersig") {
+            consensus.BIP66Height = int{height};
+        } else if (name == "cltv") {
+            consensus.BIP65Height = int{height};
+        } else if (name == "csv") {
+            consensus.CSVHeight = int{height};
+        } else if (name == "brr") {
+            consensus.BRRHeight = int{height};
+        } else if (name == "dip0001") {
+            consensus.DIP0001Height = int{height};
+        } else if (name == "dip0008") {
+            consensus.DIP0008Height = int{height};
+        } else if (name == "dip0020") {
+            consensus.DIP0020Height = int{height};
+        } else {
+            throw std::runtime_error(strprintf("Invalid name (%s) for -testactivationheight=name@height.", arg));
+        }
+    }
+}
+
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    MaybeUpdateHeights(args, consensus);
+
     if (!args.IsArgSet("-vbparams")) return;
 
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {

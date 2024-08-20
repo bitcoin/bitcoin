@@ -57,8 +57,6 @@ class DIP3V19Test(DashTestFramework):
             if i != 0:
                 self.connect_nodes(i, 0)
 
-        self.activate_dip8()
-
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 

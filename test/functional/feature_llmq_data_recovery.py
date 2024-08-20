@@ -144,7 +144,6 @@ class QuorumDataRecoveryTest(DashTestFramework):
         node.sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         node.sporkupdate("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
-        self.activate_dip8()
 
         logger.info("Test automated DGK data recovery")
         # This two nodes will remain the only ones with valid DKG data

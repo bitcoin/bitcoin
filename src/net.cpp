@@ -33,7 +33,6 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <util/wpipe.h>
-#include <validation.h> // for fDIP0001ActiveAtTip
 
 #include <masternode/meta.h>
 #include <masternode/sync.h>
@@ -4079,7 +4078,7 @@ bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit) const
     {
         // keep a large enough buffer to at least relay each block once
         const std::chrono::seconds timeLeftInCycle = GetMaxOutboundTimeLeftInCycle_();
-        const uint64_t buffer = timeLeftInCycle / std::chrono::minutes{10} * MaxBlockSize(fDIP0001ActiveAtTip);
+        const uint64_t buffer = timeLeftInCycle / std::chrono::minutes{10} * MaxBlockSize();
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
             return true;
     }

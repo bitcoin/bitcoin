@@ -27,18 +27,13 @@ from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
 from .util import assert_equal, hex_str_to_bytes
 from io import BytesIO
 
-MAX_BLOCK_SIGOPS = 20000
+MAX_BLOCK_SIGOPS = 40000
 
 # Genesis block time (regtest)
 TIME_GENESIS_BLOCK = 1417713337
 
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
-
-# Soft-fork activation heights
-DERSIG_HEIGHT = 102  # BIP 66
-CLTV_HEIGHT = 111  # BIP 65
-CSV_ACTIVATION_HEIGHT = 432
 
 NORMAL_GBT_REQUEST_PARAMS = {"rules": []} # type: ignore[var-annotated]
 
@@ -260,12 +255,13 @@ def filter_tip_keys(chaintips):
     return filtered_tips
 
 # Identical to GetMasternodePayment in C++ code
+# TODO: remove it or make **proper** tests for various height
 def get_masternode_payment(nHeight, blockValue, fV20Active):
     ret = int(blockValue / 5)
 
     nMNPIBlock = 350
     nMNPIPeriod = 10
-    nReallocActivationHeight = 2500
+    nReallocActivationHeight = 1
 
     if nHeight > nMNPIBlock:
         ret += int(blockValue / 20)
@@ -290,7 +286,7 @@ def get_masternode_payment(nHeight, blockValue, fV20Active):
         # Block Reward Realocation is not activated yet, nothing to do
         return ret
 
-    nSuperblockCycle = 10
+    nSuperblockCycle = 20
     # Actual realocation starts in the cycle next to one activation happens in
     nReallocStart = nReallocActivationHeight - nReallocActivationHeight % nSuperblockCycle + nSuperblockCycle
 

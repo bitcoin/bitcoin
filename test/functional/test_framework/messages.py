@@ -37,7 +37,7 @@ MY_SUBVERSION = "/python-p2p-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_LOCATOR_SZ = 101
-MAX_BLOCK_SIZE = 1000000
+MAX_BLOCK_SIZE = 2000000
 MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 

@@ -28,7 +28,6 @@ class RPCVerifyChainLockTest(DashTestFramework):
     def run_test(self):
         node0 = self.nodes[0]
         node1 = self.nodes[1]
-        self.activate_dip8()
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
         self.mine_quorum()

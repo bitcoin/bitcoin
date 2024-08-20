@@ -36,9 +36,8 @@ class MaxUploadTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-maxuploadtarget=200",
-            "-blockmaxsize=999000",
-            "-acceptnonstdtxn=1"
+            "-maxuploadtarget=400",
+            "-acceptnonstdtxn=1",
         ]]
         self.supports_cli = False
 
@@ -95,7 +94,7 @@ class MaxUploadTest(BitcoinTestFramework):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(MSG_BLOCK, big_old_block))
 
-        max_bytes_per_day = 200*1024*1024
+        max_bytes_per_day = 400*1024*1024
         daily_buffer = 144 * MAX_BLOCK_SIZE
         max_bytes_available = max_bytes_per_day - daily_buffer
         success_count = max_bytes_available // old_block_size
