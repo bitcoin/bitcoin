@@ -832,7 +832,7 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
 
 BOOST_AUTO_TEST_CASE(chacha20_midblock)
 {
-    auto key = ParseHex<std::byte>("0000000000000000000000000000000000000000000000000000000000000000");
+    auto key = "0000000000000000000000000000000000000000000000000000000000000000"_hex;
     ChaCha20 c20{key};
     // get one block of keystream
     std::byte block[64];
@@ -928,7 +928,7 @@ BOOST_AUTO_TEST_CASE(poly1305_testvector)
     {
         // mac of the macs of messages of length 0 to 256, where the key and messages have all
         // their values set to the length.
-        auto total_key = ParseHex<std::byte>("01020304050607fffefdfcfbfaf9ffffffffffffffffffffffffffff00000000");
+        auto total_key = "01020304050607fffefdfcfbfaf9ffffffffffffffffffffffffffff00000000"_hex;
         Poly1305 total_ctx(total_key);
         for (unsigned i = 0; i < 256; ++i) {
             std::vector<std::byte> key(32, std::byte{uint8_t(i)});

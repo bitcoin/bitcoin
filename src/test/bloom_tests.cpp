@@ -36,17 +36,17 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
 {
     CBloomFilter filter(3, 0.01, 0, BLOOM_UPDATE_ALL);
 
-    BOOST_CHECK_MESSAGE( !filter.contains(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8")), "Bloom filter should be empty!");
-    filter.insert(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8"));
-    BOOST_CHECK_MESSAGE( filter.contains(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8")), "Bloom filter doesn't contain just-inserted object!");
+    BOOST_CHECK_MESSAGE( !filter.contains("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter should be empty!");
+    filter.insert("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8);
+    BOOST_CHECK_MESSAGE( filter.contains("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter doesn't contain just-inserted object!");
     // One bit different in first byte
-    BOOST_CHECK_MESSAGE(!filter.contains(ParseHex("19108ad8ed9bb6274d3980bab5a85c048f0950c8")), "Bloom filter contains something it shouldn't!");
+    BOOST_CHECK_MESSAGE(!filter.contains("19108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter contains something it shouldn't!");
 
-    filter.insert(ParseHex("b5a2c786d9ef4658287ced5914b37a1b4aa32eee"));
-    BOOST_CHECK_MESSAGE(filter.contains(ParseHex("b5a2c786d9ef4658287ced5914b37a1b4aa32eee")), "Bloom filter doesn't contain just-inserted object (2)!");
+    filter.insert("b5a2c786d9ef4658287ced5914b37a1b4aa32eee"_hex_u8);
+    BOOST_CHECK_MESSAGE(filter.contains("b5a2c786d9ef4658287ced5914b37a1b4aa32eee"_hex_u8), "Bloom filter doesn't contain just-inserted object (2)!");
 
-    filter.insert(ParseHex("b9300670b4c5366e95b2699e8b18bc75e5f729c5"));
-    BOOST_CHECK_MESSAGE(filter.contains(ParseHex("b9300670b4c5366e95b2699e8b18bc75e5f729c5")), "Bloom filter doesn't contain just-inserted object (3)!");
+    filter.insert("b9300670b4c5366e95b2699e8b18bc75e5f729c5"_hex_u8);
+    BOOST_CHECK_MESSAGE(filter.contains("b9300670b4c5366e95b2699e8b18bc75e5f729c5"_hex_u8), "Bloom filter doesn't contain just-inserted object (3)!");
 
     DataStream stream{};
     stream << filter;
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
     constexpr auto expected{"03614e9b050000000000000001"_hex};
     BOOST_CHECK_EQUAL_COLLECTIONS(stream.begin(), stream.end(), expected.begin(), expected.end());
 
-    BOOST_CHECK_MESSAGE( filter.contains(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8")), "Bloom filter doesn't contain just-inserted object!");
+    BOOST_CHECK_MESSAGE( filter.contains("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter doesn't contain just-inserted object!");
 }
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
@@ -62,16 +62,16 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
     // Same test as bloom_create_insert_serialize, but we add a nTweak of 100
     CBloomFilter filter(3, 0.01, 2147483649UL, BLOOM_UPDATE_ALL);
 
-    filter.insert(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8"));
-    BOOST_CHECK_MESSAGE( filter.contains(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8")), "Bloom filter doesn't contain just-inserted object!");
+    filter.insert("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8);
+    BOOST_CHECK_MESSAGE( filter.contains("99108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter doesn't contain just-inserted object!");
     // One bit different in first byte
-    BOOST_CHECK_MESSAGE(!filter.contains(ParseHex("19108ad8ed9bb6274d3980bab5a85c048f0950c8")), "Bloom filter contains something it shouldn't!");
+    BOOST_CHECK_MESSAGE(!filter.contains("19108ad8ed9bb6274d3980bab5a85c048f0950c8"_hex_u8), "Bloom filter contains something it shouldn't!");
 
-    filter.insert(ParseHex("b5a2c786d9ef4658287ced5914b37a1b4aa32eee"));
-    BOOST_CHECK_MESSAGE(filter.contains(ParseHex("b5a2c786d9ef4658287ced5914b37a1b4aa32eee")), "Bloom filter doesn't contain just-inserted object (2)!");
+    filter.insert("b5a2c786d9ef4658287ced5914b37a1b4aa32eee"_hex_u8);
+    BOOST_CHECK_MESSAGE(filter.contains("b5a2c786d9ef4658287ced5914b37a1b4aa32eee"_hex_u8), "Bloom filter doesn't contain just-inserted object (2)!");
 
-    filter.insert(ParseHex("b9300670b4c5366e95b2699e8b18bc75e5f729c5"));
-    BOOST_CHECK_MESSAGE(filter.contains(ParseHex("b9300670b4c5366e95b2699e8b18bc75e5f729c5")), "Bloom filter doesn't contain just-inserted object (3)!");
+    filter.insert("b9300670b4c5366e95b2699e8b18bc75e5f729c5"_hex_u8);
+    BOOST_CHECK_MESSAGE(filter.contains("b9300670b4c5366e95b2699e8b18bc75e5f729c5"_hex_u8), "Bloom filter doesn't contain just-inserted object (3)!");
 
     DataStream stream{};
     stream << filter;
@@ -119,24 +119,24 @@ BOOST_AUTO_TEST_CASE(bloom_match)
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // byte-reversed tx hash
-    filter.insert(ParseHex("6bff7fcd4f8565ef406dd5d63d4ff94f318fe82027fd4dc451b04474019f74b4"));
+    filter.insert("6bff7fcd4f8565ef406dd5d63d4ff94f318fe82027fd4dc451b04474019f74b4"_hex_u8);
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match manually serialized tx hash");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(ParseHex("30450220070aca44506c5cef3a16ed519d7c3c39f8aab192c4e1c90d065f37b8a4af6141022100a8e160b856c2d43d27d8fba71e5aef6405b8643ac4cb7cb3c462aced7f14711a01"));
+    filter.insert("30450220070aca44506c5cef3a16ed519d7c3c39f8aab192c4e1c90d065f37b8a4af6141022100a8e160b856c2d43d27d8fba71e5aef6405b8643ac4cb7cb3c462aced7f14711a01"_hex_u8);
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match input signature");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(ParseHex("046d11fee51b0e60666d5049a9101a72741df480b96ee26488a4d3466b95c9a40ac5eeef87e10a5cd336c19a84565f80fa6c547957b7700ff4dfbdefe76036c339"));
+    filter.insert("046d11fee51b0e60666d5049a9101a72741df480b96ee26488a4d3466b95c9a40ac5eeef87e10a5cd336c19a84565f80fa6c547957b7700ff4dfbdefe76036c339"_hex_u8);
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match input pub key");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(ParseHex("04943fdd508053c75000106d3bc6e2754dbcff19"));
+    filter.insert("04943fdd508053c75000106d3bc6e2754dbcff19"_hex_u8);
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match output address");
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(spendingTx), "Simple Bloom filter didn't add output");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(ParseHex("a266436d2965547608b9e15d9032a7b9d64fa431"));
+    filter.insert("a266436d2965547608b9e15d9032a7b9d64fa431"_hex_u8);
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match output address");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched random tx hash");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
-    filter.insert(ParseHex("0000006d2965547608b9e15d9032a7b9d64fa431"));
+    filter.insert("0000006d2965547608b9e15d9032a7b9d64fa431"_hex_u8);
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched random address");
 
     filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
     // Match an output from the second transaction (the pubkey for address 1DZTzaBHUDM7T3QvUKBz4qXMRpkg8jsfB5)
     // This should match the third transaction because it spends the output matched
     // It also matches the fourth transaction, which spends to the pubkey again
-    filter.insert(ParseHex("044a656f065871a353f216ca26cef8dde2f03e8c16202d2e8ad769f02032cb86a5eb5e56842e92e19141d60a01928f8dd2c875a390f67c1f6c94cfc617c0ea45af"));
+    filter.insert("044a656f065871a353f216ca26cef8dde2f03e8c16202d2e8ad769f02032cb86a5eb5e56842e92e19141d60a01928f8dd2c875a390f67c1f6c94cfc617c0ea45af"_hex_u8);
 
     merkleBlock = CMerkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
     // Match an output from the second transaction (the pubkey for address 1DZTzaBHUDM7T3QvUKBz4qXMRpkg8jsfB5)
     // This should not match the third transaction though it spends the output matched
     // It will match the fourth transaction, which has another pay-to-pubkey output to the same address
-    filter.insert(ParseHex("044a656f065871a353f216ca26cef8dde2f03e8c16202d2e8ad769f02032cb86a5eb5e56842e92e19141d60a01928f8dd2c875a390f67c1f6c94cfc617c0ea45af"));
+    filter.insert("044a656f065871a353f216ca26cef8dde2f03e8c16202d2e8ad769f02032cb86a5eb5e56842e92e19141d60a01928f8dd2c875a390f67c1f6c94cfc617c0ea45af"_hex_u8);
 
     merkleBlock = CMerkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -418,9 +418,9 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_p2pubkey_only)
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_P2PUBKEY_ONLY);
     // Match the generation pubkey
-    filter.insert(ParseHex("04eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91"));
+    filter.insert("04eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91"_hex_u8);
     // ...and the output address of the 4th transaction
-    filter.insert(ParseHex("b6efd80d99179f4f4ff6f4dd0a007d018c385d21"));
+    filter.insert("b6efd80d99179f4f4ff6f4dd0a007d018c385d21"_hex_u8);
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -443,9 +443,9 @@ BOOST_AUTO_TEST_CASE(merkle_block_4_test_update_none)
 
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
     // Match the generation pubkey
-    filter.insert(ParseHex("04eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91"));
+    filter.insert("04eaafc2314def4ca98ac970241bcab022b9c1e1f4ea423a20f134c876f2c01ec0f0dd5b2e86e7168cefe0d81113c3807420ce13ad1357231a2252247d97a46a91"_hex_u8);
     // ...and the output address of the 4th transaction
-    filter.insert(ParseHex("b6efd80d99179f4f4ff6f4dd0a007d018c385d21"));
+    filter.insert("b6efd80d99179f4f4ff6f4dd0a007d018c385d21"_hex_u8);
 
     CMerkleBlock merkleBlock(block, filter);
     BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
