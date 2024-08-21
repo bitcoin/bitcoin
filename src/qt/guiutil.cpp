@@ -345,6 +345,11 @@ void setupAppearance(QWidget* parent, OptionsModel* model)
     }
 }
 
+void AddButtonShortcut(QAbstractButton* button, const QKeySequence& shortcut)
+{
+    QObject::connect(new QShortcut(shortcut, button), &QShortcut::activated, [button]() { button->animateClick(); });
+}
+
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no dash: URI

@@ -22,7 +22,7 @@ To Build
 ```sh
 ./autogen.sh
 ./configure
-make
+make # use "-j N" for N parallel jobs
 make install # optional
 ```
 

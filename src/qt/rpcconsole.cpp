@@ -12,12 +12,13 @@
 
 #include <evo/deterministicmns.h>
 
-#include <qt/bantablemodel.h>
-#include <qt/clientmodel.h>
-#include <qt/walletmodel.h>
 #include <chainparams.h>
 #include <interfaces/node.h>
 #include <netbase.h>
+#include <qt/bantablemodel.h>
+#include <qt/clientmodel.h>
+#include <qt/peertablesortproxy.h>
+#include <qt/walletmodel.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
@@ -694,7 +695,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
 
 
         // set up peer table
-        ui->peerWidget->setModel(model->getPeerTableModel());
+        ui->peerWidget->setModel(model->peerTableSortProxy());
         ui->peerWidget->verticalHeader()->hide();
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->peerWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -705,36 +706,18 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
         ui->peerWidget->setItemDelegateForColumn(PeerTableModel::NetNodeId, new PeerIdViewDelegate(this));
 
-        // create peer table context menu actions
-        QAction* disconnectAction = new QAction(tr("&Disconnect"), this);
-        QAction* banAction1h = new QAction(ts.ban_for + " " + tr("1 &hour"), this);
-        QAction* banAction24h = new QAction(ts.ban_for + " " + tr("1 &day"), this);
-        QAction* banAction7d = new QAction(ts.ban_for + " " + tr("1 &week"), this);
-        QAction* banAction365d = new QAction(ts.ban_for + " " + tr("1 &year"), this);
-
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
-        peersTableContextMenu->addAction(disconnectAction);
-        peersTableContextMenu->addAction(banAction1h);
-        peersTableContextMenu->addAction(banAction24h);
-        peersTableContextMenu->addAction(banAction7d);
-        peersTableContextMenu->addAction(banAction365d);
-
-        connect(banAction1h, &QAction::triggered, [this] { banSelectedNode(60 * 60); });
-        connect(banAction24h, &QAction::triggered, [this] { banSelectedNode(60 * 60 * 24); });
-        connect(banAction7d, &QAction::triggered, [this] { banSelectedNode(60 * 60 * 24 * 7); });
-        connect(banAction365d, &QAction::triggered, [this] { banSelectedNode(60 * 60 * 24 * 365); });
-
-        // peer table context menu signals
+        peersTableContextMenu->addAction(tr("&Disconnect"), this, &RPCConsole::disconnectSelectedNode);
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &hour"), [this] { banSelectedNode(60 * 60); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 d&ay"), [this] { banSelectedNode(60 * 60 * 24); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &week"), [this] { banSelectedNode(60 * 60 * 24 * 7); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 &year"), [this] { banSelectedNode(60 * 60 * 24 * 365); });
         connect(ui->peerWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showPeersTableContextMenu);
-        connect(disconnectAction, &QAction::triggered, this, &RPCConsole::disconnectSelectedNode);
 
         // peer table signal handling - update peer details when selecting new node
         connect(ui->peerWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &RPCConsole::updateDetailWidget);
-        // peer table signal handling - update peer details when new nodes are added to the model
-        connect(model->getPeerTableModel(), &PeerTableModel::layoutChanged, this, &RPCConsole::peerLayoutChanged);
-        // peer table signal handling - cache selected node ids
-        connect(model->getPeerTableModel(), &PeerTableModel::layoutAboutToBeChanged, this, &RPCConsole::peerLayoutAboutToChange);
+        connect(model->getPeerTableModel(), &PeerTableModel::layoutChanged, this, &RPCConsole::updateDetailWidget);
 
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
@@ -746,16 +729,10 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
-        // create ban table context menu action
-        QAction* unbanAction = new QAction(tr("&Unban"), this);
-
         // create ban table context menu
         banTableContextMenu = new QMenu(this);
-        banTableContextMenu->addAction(unbanAction);
-
-        // ban table context menu signals
+        banTableContextMenu->addAction(tr("&Unban"), this, &RPCConsole::unbanSelectedNode);
         connect(ui->banlistWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showBanTableContextMenu);
-        connect(unbanAction, &QAction::triggered, this, &RPCConsole::unbanSelectedNode);
 
         // ban table signal handling - clear peer details when clicking a peer in the ban table
         connect(ui->banlistWidget, &QTableView::clicked, this, &RPCConsole::clearSelectedNode);
@@ -959,20 +936,23 @@ void RPCConsole::clear(bool keep_prompt)
             ).arg(consoleFontSize)
         );
 
-#ifdef Q_OS_MAC
-    QString clsKey = "(⌘)-L";
-#else
-    QString clsKey = "Ctrl-L";
-#endif
-
-    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) + "<br>" +
-                        tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
-                        tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
-                        tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
-                        "<br><span class=\"secwarning\"><br>" +
-                        tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.") +
-                        "</span>"),
-                        true);
+    message(CMD_REPLY,
+            tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) +
+                "<br>" +
+                tr("Use up and down arrows to navigate history, and %1 to clear screen.")
+                    .arg("<b>" + ui->clearButton->shortcut().toString(QKeySequence::NativeText) + "</b>") +
+                "<br>" +
+                tr("Use %1 and %2 to increase or decrease the font size.")
+                    .arg("<b>" + ui->fontBiggerButton->shortcut().toString(QKeySequence::NativeText) + "</b>")
+                    .arg("<b>" + ui->fontSmallerButton->shortcut().toString(QKeySequence::NativeText) + "</b>") +
+                "<br>" +
+                tr("Type %1 for an overview of available commands.").arg("<b>help</b>") +
+                "<br>" +
+                tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
+                "<br><span class=\"secwarning\"><br>" +
+                tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.") +
+                "</span>",
+            true);
 }
 
 void RPCConsole::keyPressEvent(QKeyEvent *event)
@@ -1174,7 +1154,7 @@ void RPCConsole::startExecutor()
     executor->moveToThread(&thread);
 
     // Replies from executor object must go to this object
-    connect(executor, &RPCExecutor::reply, this, static_cast<void (RPCConsole::*)(int, const QString&)>(&RPCConsole::message));
+    connect(executor, &RPCExecutor::reply, this, qOverload<int, const QString&>(&RPCConsole::message));
 
     // Requests from this object must go to executor
     connect(this, &RPCConsole::cmdRequest, executor, &RPCExecutor::request);
@@ -1217,67 +1197,6 @@ void RPCConsole::setTrafficGraphRange(TrafficGraphData::GraphRange range)
 {
     ui->trafficGraph->setGraphRangeMins(range);
     ui->lblGraphRange->setText(GUIUtil::formatDurationStr(std::chrono::minutes{TrafficGraphData::RangeMinutes[range]}));
-}
-
-void RPCConsole::peerLayoutAboutToChange()
-{
-    cachedNodeids.clear();
-    for (const QModelIndex& peer : GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId)) {
-        const auto stats = peer.data(PeerTableModel::StatsRole).value<CNodeCombinedStats*>();
-        cachedNodeids.append(stats->nodeStats.nodeid);
-    }
-}
-
-void RPCConsole::peerLayoutChanged()
-{
-    if (!clientModel || !clientModel->getPeerTableModel())
-        return;
-
-    bool fUnselect = false;
-    bool fReselect = false;
-
-    if (cachedNodeids.empty()) // no node selected yet
-        return;
-
-    // find the currently selected row
-    int selectedRow = -1;
-    QModelIndexList selectedModelIndex = ui->peerWidget->selectionModel()->selectedIndexes();
-    if (!selectedModelIndex.isEmpty()) {
-        selectedRow = selectedModelIndex.first().row();
-    }
-
-    // check if our detail node has a row in the table (it may not necessarily
-    // be at selectedRow since its position can change after a layout change)
-    int detailNodeRow = clientModel->getPeerTableModel()->getRowByNodeId(cachedNodeids.first());
-
-    if (detailNodeRow < 0)
-    {
-        // detail node disappeared from table (node disconnected)
-        fUnselect = true;
-    }
-    else
-    {
-        if (detailNodeRow != selectedRow)
-        {
-            // detail node moved position
-            fUnselect = true;
-            fReselect = true;
-        }
-    }
-
-    if (fUnselect && selectedRow >= 0) {
-        clearSelectedNode();
-    }
-
-    if (fReselect)
-    {
-        for(int i = 0; i < cachedNodeids.size(); i++)
-        {
-            ui->peerWidget->selectRow(clientModel->getPeerTableModel()->getRowByNodeId(cachedNodeids.at(i)));
-        }
-    }
-
-    updateDetailWidget();
 }
 
 void RPCConsole::updateDetailWidget()
@@ -1369,8 +1288,18 @@ void RPCConsole::setButtonIcons()
 {
     const QSize consoleButtonsSize(BUTTON_ICONSIZE * 0.8, BUTTON_ICONSIZE * 0.8);
     GUIUtil::setIcon(ui->clearButton, "remove", GUIUtil::ThemedColor::RED, consoleButtonsSize);
+
     GUIUtil::setIcon(ui->fontBiggerButton, "fontbigger", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
+    //: Main shortcut to increase the RPC console font size.
+    ui->fontBiggerButton->setShortcut(tr("Ctrl++"));
+    //: Secondary shortcut to increase the RPC console font size.
+    GUIUtil::AddButtonShortcut(ui->fontBiggerButton, tr("Ctrl+="));
+
     GUIUtil::setIcon(ui->fontSmallerButton, "fontsmaller", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
+    //: Main shortcut to decrease the RPC console font size.
+    ui->fontSmallerButton->setShortcut(tr("Ctrl+-"));
+    //: Secondary shortcut to decrease the RPC console font size.
+    GUIUtil::AddButtonShortcut(ui->fontSmallerButton, tr("Ctrl+_"));
 }
 
 void RPCConsole::reloadThemedWidgets()

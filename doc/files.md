@@ -65,7 +65,7 @@ Subdirectory       | File(s)               | Description
 `./`               | `governance.dat`      | stores data for governance objects
 `./`               | `mncache.dat`         | stores data for masternode list
 `./`               | `netfulfilled.dat`    | stores data about recently made network requests
-`./`               | `fee_estimates.dat`   | Stores statistics used to estimate minimum transaction fees and priorities required for confirmation
+`./`               | `fee_estimates.dat`   | Stores statistics used to estimate minimum transaction fees required for confirmation
 `./`               | `guisettings.ini.bak` | Backup of former [GUI settings](#gui-settings) after `-resetguisettings` option is used
 `./`               | `ip_asn.map`          | IP addresses to Autonomous System Numbers (ASNs) mapping used for bucketing of the peers; path can be specified with the `-asmap` option
 `./`               | `mempool.dat`         | Dump of the mempool's transactions
