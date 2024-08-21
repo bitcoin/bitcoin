@@ -581,12 +581,12 @@ private:
     bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
     /** Handle a transaction whose result was not MempoolAcceptResult::ResultType::VALID.
-     * @param[in]   maybe_add_extra_compact_tx    Whether this tx should be added to vExtraTxnForCompact.
+     * @param[in]   first_time_failure            Whether this tx should be added to vExtraTxnForCompact.
      *                                            Set to false if the tx has already been rejected before,
      *                                            e.g. is an orphan, to avoid adding duplicate entries.
      * Updates m_txrequest, m_lazy_recent_rejects, m_lazy_recent_rejects_reconsiderable, m_orphanage, and vExtraTxnForCompact. */
     void ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const TxValidationState& result,
-                          bool maybe_add_extra_compact_tx)
+                          bool first_time_failure)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
 
     /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
@@ -3052,7 +3052,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 }
 
 void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx, const TxValidationState& state,
-                                       bool maybe_add_extra_compact_tx)
+                                       bool first_time_failure)
 {
     AssertLockNotHeld(m_peer_mutex);
     AssertLockHeld(g_msgproc_mutex);
@@ -3106,7 +3106,7 @@ void PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx
             RecentRejectsFilter().insert(ptx->GetHash().ToUint256());
             m_txrequest.ForgetTxHash(ptx->GetHash());
         }
-        if (maybe_add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
+        if (first_time_failure && RecursiveDynamicUsage(*ptx) < 100000) {
             AddToCompactExtraTransactions(ptx);
         }
     }
@@ -3191,7 +3191,7 @@ void PeerManagerImpl::ProcessPackageResult(const PackageToValidate& package_to_v
                     // added there when added to the orphanage or rejected for TX_RECONSIDERABLE.
                     // This should be updated if package submission is ever used for transactions
                     // that haven't already been validated before.
-                    ProcessInvalidTx(nodeid, tx, tx_result.m_state, /*maybe_add_extra_compact_tx=*/false);
+                    ProcessInvalidTx(nodeid, tx, tx_result.m_state, /*first_time_failure=*/false);
                     break;
                 }
                 case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
@@ -3290,7 +3290,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                        state.GetResult() != TxValidationResult::TX_UNKNOWN &&
                        state.GetResult() != TxValidationResult::TX_NO_MEMPOOL &&
                        state.GetResult() != TxValidationResult::TX_RESULT_UNSET)) {
-                ProcessInvalidTx(peer.m_id, porphanTx, state, /*maybe_add_extra_compact_tx=*/false);
+                ProcessInvalidTx(peer.m_id, porphanTx, state, /*first_time_failure=*/false);
             }
             return true;
         }
@@ -4574,7 +4574,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
         }
         if (state.IsInvalid()) {
-            ProcessInvalidTx(pfrom.GetId(), ptx, state, /*maybe_add_extra_compact_tx=*/true);
+            ProcessInvalidTx(pfrom.GetId(), ptx, state, /*first_time_failure=*/true);
         }
         // When a transaction fails for TX_RECONSIDERABLE, look for a matching child in the
         // orphanage, as it is possible that they succeed as a package.
