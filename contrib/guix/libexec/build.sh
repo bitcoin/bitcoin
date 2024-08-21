@@ -230,6 +230,10 @@ case "$HOST" in
     *mingw*)  HOST_LDFLAGS="-Wl,--no-insert-timestamp" ;;
 esac
 
+case "$HOST" in
+    x86_64-linux-gnu)  HARDENED_LDFLAGS="-Wl,-z,cet-report=error" ;;
+esac
+
 # Make $HOST-specific native binaries from depends available in $PATH
 export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
 mkdir -p "$DISTSRC"
@@ -251,7 +255,8 @@ mkdir -p "$DISTSRC"
                     ${CONFIGFLAGS} \
                     ${HOST_CFLAGS:+CFLAGS="${HOST_CFLAGS}"} \
                     ${HOST_CXXFLAGS:+CXXFLAGS="${HOST_CXXFLAGS}"} \
-                    ${HOST_LDFLAGS:+LDFLAGS="${HOST_LDFLAGS}"}
+                    ${HOST_LDFLAGS:+LDFLAGS="${HOST_LDFLAGS}"} \
+                    ${HARDENED_LDFLAGS:+HARDENED_LDFLAGS="${HARDENED_LDFLAGS}"}
 
     sed -i.old 's/-lstdc++ //g' config.status libtool
 
