@@ -54,6 +54,8 @@ CMNHFManager::~CMNHFManager()
 
 CMNHFManager::Signals CMNHFManager::GetSignalsStage(const CBlockIndex* const pindexPrev)
 {
+    if (!DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return {};
+
     Signals signals = GetForBlock(pindexPrev);
     if (pindexPrev == nullptr) return {};
     const int height = pindexPrev->nHeight + 1;
