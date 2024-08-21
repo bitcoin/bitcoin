@@ -5,7 +5,10 @@
 """Test support for XORed block data and undo files (`-blocksxor` option)."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.test_node import ErrorMatch
+from test_framework.test_node import (
+    ErrorMatch,
+    NULL_BLK_XOR_KEY,
+)
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -57,6 +60,8 @@ class BlocksXORTest(BitcoinTestFramework):
         # checklevel=2 -> verify block validity + undo data
         # nblocks=0    -> verify all blocks
         node.verifychain(checklevel=2, nblocks=0)
+        self.log.info("Check that blocks XOR key is recreated")
+        assert_equal(node.read_xor_key(), NULL_BLK_XOR_KEY)
 
 
 if __name__ == '__main__':
