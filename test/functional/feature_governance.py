@@ -17,16 +17,16 @@ class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(6, 5, [[
             "-budgetparams=10:10:10",
-            '-testactivationheight=v20@240',
+            '-testactivationheight=v20@160',
         ]] * 6, fast_dip3_enforcement=True)
 
     def check_superblockbudget(self, v20_active):
         v20_state = self.nodes[0].getblockchaininfo()["softforks"]["v20"]
         assert_equal(v20_state["active"], v20_active)
-        assert_equal(self.nodes[0].getsuperblockbudget(200), self.expected_old_budget)
-        assert_equal(self.nodes[0].getsuperblockbudget(220), self.expected_old_budget)
-        assert_equal(self.nodes[0].getsuperblockbudget(240), self.expected_v20_budget)
-        assert_equal(self.nodes[0].getsuperblockbudget(260), self.expected_v20_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(120), self.expected_old_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(140), self.expected_old_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(160), self.expected_v20_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(180), self.expected_v20_budget)
 
     def check_superblock(self):
         # Make sure Superblock has only payments that fit into the budget
@@ -78,7 +78,7 @@ class DashGovernanceTest (DashTestFramework):
         sb_cycle = 20
         sb_maturity_window = 10
         sb_immaturity_window = sb_cycle - sb_maturity_window
-        self.expected_old_budget = satoshi_round("928.57142840")
+        self.expected_old_budget = satoshi_round("1000")
         self.expected_v20_budget = satoshi_round("18.57142860")
 
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
@@ -87,23 +87,17 @@ class DashGovernanceTest (DashTestFramework):
 
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 0)
 
-        # TODO: drop these extra 80 blocks - doesn't work without them
-        for _ in range(8):
-            self.bump_mocktime(10)
-            self.nodes[0].generate(10)
-            self.sync_blocks()
-
         self.nodes[0].generate(3)
         self.bump_mocktime(3)
         self.sync_blocks()
-        assert_equal(self.nodes[0].getblockcount(), 210)
+        assert_equal(self.nodes[0].getblockcount(), 130)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
 
         self.nodes[0].generate(10)
         self.bump_mocktime(10)
         self.sync_blocks()
-        assert_equal(self.nodes[0].getblockcount(), 220)
+        assert_equal(self.nodes[0].getblockcount(), 140)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
 
@@ -164,8 +158,8 @@ class DashGovernanceTest (DashTestFramework):
 
         # Move until 1 block before the Superblock maturity window starts
         n = sb_immaturity_window - block_count % sb_cycle
-        # v20 is expected to be activate since block 240
-        assert block_count + n < 240
+        # v20 is expected to be activate since block 160
+        assert block_count + n < 160
         for _ in range(n - 1):
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
@@ -207,7 +201,7 @@ class DashGovernanceTest (DashTestFramework):
         # Move 1 block enabling the Superblock maturity window on non-isolated nodes
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
-        assert_equal(self.nodes[0].getblockcount(), 230)
+        assert_equal(self.nodes[0].getblockcount(), 150)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
 
@@ -303,8 +297,8 @@ class DashGovernanceTest (DashTestFramework):
             self.nodes[0].generate(1)
             self.bump_mocktime(1)
             self.sync_blocks()
-            # comparing to 239 because bip9 forks are active when the tip is one block behind the activation height
-            self.check_superblockbudget(block_count + i + 1 >= 239)
+            # comparing to 159 because bip9 forks are active when the tip is one block behind the activation height
+            self.check_superblockbudget(block_count + i + 1 >= 159)
 
         self.check_superblockbudget(True)
         self.check_superblock()
@@ -328,12 +322,12 @@ class DashGovernanceTest (DashTestFramework):
             self.bump_mocktime(1)
             self.sync_blocks()
         # Wait for new trigger and votes
-        self.wait_until(lambda: have_trigger_for_height(self.nodes, 260))
+        self.wait_until(lambda: have_trigger_for_height(self.nodes, 180))
         # Mine superblock
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
         self.sync_blocks()
-        assert_equal(self.nodes[0].getblockcount(), 260)
+        assert_equal(self.nodes[0].getblockcount(), 180)
         assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], True)
 
         # Mine and check a couple more superblocks
@@ -343,7 +337,7 @@ class DashGovernanceTest (DashTestFramework):
                 self.bump_mocktime(1)
                 self.sync_blocks()
             # Wait for new trigger and votes
-            sb_block_height = 260 + (i + 1) * sb_cycle
+            sb_block_height = 180 + (i + 1) * sb_cycle
             self.wait_until(lambda: have_trigger_for_height(self.nodes, sb_block_height))
             # Mine superblock
             self.nodes[0].generate(1)
