@@ -80,6 +80,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <thread>
 #include <typeinfo>
 
@@ -268,7 +269,7 @@ fs::path StripRedundantLastElementsOfPath(const fs::path& path)
         result = result.parent_path();
     }
 
-    assert(fs::equivalent(result, path));
+    assert(fs::equivalent(result, path.lexically_normal()));
     return result;
 }
 } // namespace
@@ -1137,13 +1138,9 @@ std::vector<util::SettingsValue> ArgsManager::GetSettingsList(const std::string&
 
 bool RenameOver(fs::path src, fs::path dest)
 {
-#ifdef WIN32
-    return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
-                       MOVEFILE_REPLACE_EXISTING) != 0;
-#else
-    int rc = std::rename(src.c_str(), dest.c_str());
-    return (rc == 0);
-#endif /* WIN32 */
+    std::error_code error;
+    fs::rename(src, dest, error);
+    return !error;
 }
 
 /**

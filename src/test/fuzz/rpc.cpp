@@ -41,13 +41,17 @@ struct RPCFuzzTestingSetup : public TestingSetup {
     {
     }
 
-    UniValue CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
+    void CallRPC(const std::string& rpc_method, const std::vector<std::string>& arguments)
     {
         JSONRPCRequest request;
         request.context = m_node;
         request.strMethod = rpc_method;
-        request.params = RPCConvertValues(rpc_method, arguments);
-        return tableRPC.execute(request);
+        try {
+            request.params = RPCConvertValues(rpc_method, arguments);
+        } catch (const std::runtime_error&) {
+            return;
+        }
+        tableRPC.execute(request);
     }
 
     std::vector<std::string> GetRPCCommands() const
@@ -353,7 +357,13 @@ FUZZ_TARGET_INIT(rpc, initialize_rpc)
     }
     try {
         rpc_testing_setup->CallRPC(rpc_command, arguments);
-    } catch (const UniValue&) {
-    } catch (const std::runtime_error&) {
+    } catch (const UniValue& json_rpc_error) {
+        const std::string error_msg{find_value(json_rpc_error, "message").get_str()};
+        // Once c++20 is allowed, starts_with can be used.
+        // if (error_msg.starts_with("Internal bug detected")) {
+        if (0 == error_msg.rfind("Internal bug detected", 0)) {
+            // Only allow the intentional internal bug
+            assert(error_msg.find("trigger_internal_bug") != std::string::npos);
+        }
     }
 }
