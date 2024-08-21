@@ -46,7 +46,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQEvoNodesTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, evo_count=5)
+        self.set_dash_test_params(5, 4, [["-testactivationheight=mn_rr@1200"]] * 5, evo_count=5)
         self.set_dash_llmq_test_params(4, 4)
 
     def run_test(self):
@@ -112,11 +112,11 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_evo_protx_are_in_mnlist(evo_protxhash_list)
 
         self.log.info("Test that EvoNodes are paid 4x blocks in a row")
-        self.test_evo_payments(window_analysis=48)
+        self.test_evo_payments(window_analysis=48, mnrr_active=False)
         self.test_masternode_winners()
 
         self.activate_mn_rr()
-        self.log.info("Activated MN RewardReallocation at height:" + str(self.nodes[0].getblockcount()))
+        self.log.info("Activated MN RewardReallocation, current height:" + str(self.nodes[0].getblockcount()))
 
         # Generate a few blocks to make EvoNode/MN analysis on a pure MN RewardReallocation window
         self.bump_mocktime(1)
@@ -131,7 +131,7 @@ class LLMQEvoNodesTest(DashTestFramework):
 
         return
 
-    def test_evo_payments(self, window_analysis, mnrr_active=False):
+    def test_evo_payments(self, window_analysis, mnrr_active):
         current_evo = None
         consecutive_payments = 0
         n_payments = 0 if mnrr_active else 4

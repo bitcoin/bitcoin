@@ -47,7 +47,11 @@ blocks_in_one_day = 576
 
 class AssetLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(4, 2, [["-whitelist=127.0.0.1", "-llmqtestinstantsenddip0024=llmq_test_instantsend"]] * 4, evo_count=2)
+        self.set_dash_test_params(4, 2, [[
+                "-whitelist=127.0.0.1",
+                "-llmqtestinstantsenddip0024=llmq_test_instantsend",
+                "-testactivationheight=mn_rr@2500",
+        ]] * 4, evo_count=2)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -626,8 +630,7 @@ class AssetLocksTest(DashTestFramework):
     def test_mn_rr(self, node_wallet, node, pubkey):
         self.log.info("Activate mn_rr...")
         locked = self.get_credit_pool_balance()
-        node.generate(12 - node.getblockcount() % 12)
-        self.activate_mn_rr(expected_activation_height=node.getblockcount() + 12 * 3)
+        self.activate_mn_rr(expected_activation_height=2500)
         self.log.info(f'height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(locked, self.get_credit_pool_balance())
 
@@ -639,7 +642,7 @@ class AssetLocksTest(DashTestFramework):
         all_mn_rewards = platform_reward + owner_reward + operator_reward
         assert_equal(all_mn_rewards, bt['coinbasevalue'] * 3 // 4)  # 75/25 mn/miner reward split
         assert_equal(platform_reward, all_mn_rewards * 375 // 1000)  # 0.375 platform share
-        assert_equal(platform_reward, 37015386)
+        assert_equal(platform_reward, 34371430)
         assert_equal(locked, self.get_credit_pool_balance())
         node.generate(1)
         self.sync_all()
