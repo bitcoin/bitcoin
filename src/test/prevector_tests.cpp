@@ -27,7 +27,6 @@ class prevector_tester {
 
     typedef typename pretype::size_type Size;
     bool passed = true;
-    FastRandomContext rand_cache;
     uint256 rand_seed;
 
 
@@ -209,9 +208,8 @@ public:
     }
 
     prevector_tester() {
-        SeedRandomForTest();
         rand_seed = InsecureRand256();
-        rand_cache.Reseed(rand_seed);
+        g_insecure_rand_ctx.Reseed(rand_seed);
     }
 };
 
