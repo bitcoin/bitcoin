@@ -14,7 +14,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAGIC_BYTES
 from test_framework.util import (
     assert_equal,
-    read_xor_key,
     util_xor,
 )
 
@@ -43,7 +42,7 @@ class ReindexTest(BitcoinTestFramework):
         # we're generating them rather than getting them from peers), so to
         # test out-of-order handling, swap blocks 1 and 2 on disk.
         blk0 = self.nodes[0].blocks_path / "blk00000.dat"
-        xor_dat = read_xor_key(node=self.nodes[0])
+        xor_dat = self.nodes[0].read_xor_key()
 
         with open(blk0, 'r+b') as bf:
             # Read at least the first few blocks (including genesis)

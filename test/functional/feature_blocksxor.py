@@ -9,7 +9,6 @@ from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    read_xor_key,
     util_xor,
 )
 from test_framework.wallet import MiniWallet
@@ -39,7 +38,7 @@ class BlocksXORTest(BitcoinTestFramework):
 
         self.log.info("Shut down node and un-XOR block/undo files manually")
         self.stop_node(0)
-        xor_key = read_xor_key(node=node)
+        xor_key = node.read_xor_key()
         for data_file in sorted(block_files + undo_files):
             self.log.debug(f"Rewriting file {data_file}...")
             with open(data_file, 'rb+') as f:

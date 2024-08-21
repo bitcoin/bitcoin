@@ -469,6 +469,11 @@ class TestNode():
     def blocks_key_path(self) -> Path:
         return self.blocks_path / "xor.dat"
 
+    def read_xor_key(self) -> bytes:
+        with open(self.blocks_key_path, "rb") as xor_f:
+            NUM_XOR_BYTES = 8 # From InitBlocksdirXorKey::xor_key.size()
+            return xor_f.read(NUM_XOR_BYTES)
+
     @property
     def wallets_path(self) -> Path:
         return self.chain_path / "wallets"

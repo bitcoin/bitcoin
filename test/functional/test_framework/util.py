@@ -515,12 +515,6 @@ def check_node_connections(*, node, num_in, num_out):
     assert_equal(info["connections_out"], num_out)
 
 
-def read_xor_key(*, node):
-    with open(node.blocks_key_path, "rb") as xor_f:
-        NUM_XOR_BYTES = 8 # From InitBlocksdirXorKey::xor_key.size()
-        return xor_f.read(NUM_XOR_BYTES)
-
-
 # Transaction/Block functions
 #############################
 
