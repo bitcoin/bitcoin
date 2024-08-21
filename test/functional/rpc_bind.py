@@ -6,6 +6,7 @@
 
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_proxy, rpc_port, rpc_url
 
 class RPCBindTest(BitcoinTestFramework):
@@ -44,6 +45,19 @@ class RPCBindTest(BitcoinTestFramework):
         pid = self.nodes[0].process.pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
         self.stop_nodes()
+
+    def run_invalid_bind_test(self, allow_ips, addresses):
+        '''
+        Attempt to start a node with requested rpcallowip and rpcbind
+        parameters, expecting that the node will fail.
+        '''
+        self.log.info(f'Invalid bind test for {addresses}')
+        base_args = ['-disablewallet', '-nolisten']
+        if allow_ips:
+            base_args += ['-rpcallowip=' + x for x in allow_ips]
+        init_error = 'Error' # generic error will be adjusted in next commit
+        for addr in addresses:
+            self.nodes[0].assert_start_raises_init_error(base_args + [f'-rpcbind={addr}'], init_error, ErrorMatch.PARTIAL_REGEX)
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
@@ -84,6 +98,10 @@ class RPCBindTest(BitcoinTestFramework):
 
         if not self.options.run_nonloopback:
             self._run_loopback_tests()
+            if self.options.run_ipv4:
+                self.run_invalid_bind_test(['127.0.0.1'], ['127.0.0.1:notaport', '127.0.0.1:-18443', '127.0.0.1:0', '127.0.0.1:65536'])
+            if self.options.run_ipv6:
+                self.run_invalid_bind_test(['[::1]'], ['[::1]:notaport', '[::1]:-18443', '[::1]:0', '[::1]:65536'])
         if not self.options.run_ipv4 and not self.options.run_ipv6:
             self._run_nonloopback_tests()
 
