@@ -1039,21 +1039,20 @@ bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
         return true;
     }
 
-    LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) return false;
-
-    for (const auto& keyid : GetAffectedKeys(scriptPubKey, *spk_man)) {
-        WitnessV0KeyHash wpkh_dest(keyid);
-        if (IsAddressPreviouslySpent(wpkh_dest)) {
-            return true;
-        }
-        ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
-        if (IsAddressPreviouslySpent(sh_wpkh_dest)) {
-            return true;
-        }
-        PKHash pkh_dest(keyid);
-        if (IsAddressPreviouslySpent(pkh_dest)) {
-            return true;
+    if (LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan()) {
+        for (const auto& keyid : GetAffectedKeys(scriptPubKey, *spk_man)) {
+            WitnessV0KeyHash wpkh_dest(keyid);
+            if (IsAddressPreviouslySpent(wpkh_dest)) {
+                return true;
+            }
+            ScriptHash sh_wpkh_dest(GetScriptForDestination(wpkh_dest));
+            if (IsAddressPreviouslySpent(sh_wpkh_dest)) {
+                return true;
+            }
+            PKHash pkh_dest(keyid);
+            if (IsAddressPreviouslySpent(pkh_dest)) {
+                return true;
+            }
         }
     }
     return false;
