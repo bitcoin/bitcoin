@@ -159,6 +159,15 @@ class MiningTest(BitcoinTestFramework):
         bad_block.solve()
         assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
+        self.log.info("Test timewarp protection boundary")
+        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP - 1
+        bad_block.solve()
+        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
+
+        bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
+        bad_block.solve()
+        node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex())
+
     def run_test(self):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
