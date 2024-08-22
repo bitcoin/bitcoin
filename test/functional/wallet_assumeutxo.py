@@ -7,11 +7,11 @@ See feature_assumeutxo.py for background.
 
 ## Possible test improvements
 
-- TODO: test import descriptors while background sync is in progress
 - TODO: test loading a wallet (backup) on a pruned node
 
 """
 from test_framework.address import address_to_scriptpubkey
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN
 from test_framework.util import (
@@ -20,6 +20,7 @@ from test_framework.util import (
     ensure_for,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.wallet_util import get_generate_key
 
 START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
@@ -48,6 +49,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         including blocks the other hasn't yet seen."""
         self.add_nodes(3)
         self.start_nodes(extra_args=self.extra_args)
+
+    def import_descriptor(self, node, wallet_name, key, timestamp):
+        import_request = [{"desc": descsum_create("pkh(" + key.pubkey + ")"),
+                           "timestamp": timestamp,
+                           "label": "Descriptor import test"}]
+        wrpc = node.get_wallet_rpc(wallet_name)
+        return wrpc.importdescriptors(import_request)
 
     def run_test(self):
         """
@@ -157,6 +165,17 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Backup from before the snapshot height can't be loaded during background sync")
         assert_raises_rpc_error(-4, "Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height 299", n1.restorewallet, "w2", "backup_w2.dat")
 
+        self.log.info("Test loading descriptors during background sync")
+        wallet_name = "w1"
+        n1.createwallet(wallet_name, disable_private_keys=True)
+        key = get_generate_key()
+        time = n1.getblockchaininfo()['time']
+        timestamp = 0
+        expected_error_message = f"Rescan failed for descriptor with timestamp {timestamp}. There was an error reading a block from time {time}, which is after or within 7200 seconds of key creation, and could contain transactions pertaining to the desc. As a result, transactions and coins using this desc may not appear in the wallet. This error is likely caused by an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later."
+        result = self.import_descriptor(n1, wallet_name, key, timestamp)
+        assert_equal(result[0]['error']['code'], -1)
+        assert_equal(result[0]['error']['message'], expected_error_message)
+
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
         self.log.info("Restarting node to stop at height %d", PAUSE_HEIGHT)
@@ -203,6 +222,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.connect_nodes(0, 2)
         self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
         ensure_for(duration=1, f=lambda: (n2.getbalance() == 34))
+
+        self.log.info("Ensuring descriptors can be loaded after background sync")
+        n1.loadwallet(wallet_name)
+        result = self.import_descriptor(n1, wallet_name, key, timestamp)
+        assert_equal(result[0]['success'], True)
 
 
 if __name__ == '__main__':
