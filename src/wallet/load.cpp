@@ -77,6 +77,11 @@ bool VerifyWallets(WalletContext& context)
     std::set<fs::path> wallet_paths;
 
     for (const auto& wallet : chain.getSettingsList("wallet")) {
+        if (!wallet.isStr()) {
+            chain.initError(_("Invalid value detected for '-wallet' or '-nowallet'. "
+                              "'-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets"));
+            return false;
+        }
         const auto& wallet_file = wallet.get_str();
         const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(wallet_file));
 
@@ -110,6 +115,11 @@ bool LoadWallets(WalletContext& context)
     try {
         std::set<fs::path> wallet_paths;
         for (const auto& wallet : chain.getSettingsList("wallet")) {
+            if (!wallet.isStr()) {
+                chain.initError(_("Invalid value detected for '-wallet' or '-nowallet'. "
+                                  "'-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets"));
+                return false;
+            }
             const auto& name = wallet.get_str();
             if (!wallet_paths.insert(fs::PathFromString(name)).second) {
                 continue;
