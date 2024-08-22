@@ -284,6 +284,7 @@ BASE_SCRIPTS = [
     'mempool_package_limits.py',
     'mempool_package_rbf.py',
     'feature_versionbits_warning.py',
+    'feature_blocksxor.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py --legacy-wallet',
     'wallet_importprunedfunds.py --descriptors',

@@ -30,9 +30,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for "
 "details and a full list."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"A forked headers-chain with more work than the chain with the snapshot base "
-"block header exists. Please proceed to sync without AssumeUtxo."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot downgrade wallet from version %i to version %i. Wallet version "
 "unchanged."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""

@@ -112,15 +112,7 @@ static constexpr int PRUNE_LOCK_BUFFER{10};
  * block of a difficulty adjustment period is allowed to
  * be earlier than the last block of the previous period (BIP94).
  */
-static constexpr int64_t MAX_TIMEWARP{MAX_FUTURE_BLOCK_TIME};
-
-/**
- * If the timestamp of the last block in a difficulty period is set
- * MAX_FUTURE_BLOCK_TIME seconds in the future, an honest miner should
- * be able to mine the first block using the current time. This is not
- * a consensus rule, but changing MAX_TIMEWARP should be done with caution.
- */
-static_assert(MAX_FUTURE_BLOCK_TIME <= MAX_TIMEWARP);
+static constexpr int64_t MAX_TIMEWARP = 600;
 
 GlobalMutex g_best_block_mutex;
 std::condition_variable g_best_block_cv;

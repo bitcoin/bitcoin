@@ -247,6 +247,9 @@ public:
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
 
+    // Returns true if wallet stores encryption keys
+    bool IsEncrypted();
+
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
     bool ReadPool(int64_t nPool, CKeyPool& keypool);
