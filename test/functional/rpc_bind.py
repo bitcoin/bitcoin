@@ -6,7 +6,6 @@
 
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
-from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_proxy, rpc_port, rpc_url
 
 class RPCBindTest(BitcoinTestFramework):
@@ -55,9 +54,9 @@ class RPCBindTest(BitcoinTestFramework):
         base_args = ['-disablewallet', '-nolisten']
         if allow_ips:
             base_args += ['-rpcallowip=' + x for x in allow_ips]
-        init_error = 'Error' # generic error will be adjusted in next commit
+        init_error = 'Error: Invalid port specified in -rpcbind: '
         for addr in addresses:
-            self.nodes[0].assert_start_raises_init_error(base_args + [f'-rpcbind={addr}'], init_error, ErrorMatch.PARTIAL_REGEX)
+            self.nodes[0].assert_start_raises_init_error(base_args + [f'-rpcbind={addr}'], init_error + f"'{addr}'")
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''

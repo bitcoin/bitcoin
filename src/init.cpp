@@ -1279,6 +1279,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     RegisterZMQRPCCommands(tableRPC);
 #endif
 
+    // Check port numbers
+    if (!CheckHostPortOptions(args)) return false;
+
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
      * that the server is there and will be ready later).  Warmup mode will
@@ -1368,9 +1371,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         scheduler.scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
         validation_signals.RegisterValidationInterface(fee_estimator);
     }
-
-    // Check port numbers
-    if (!CheckHostPortOptions(args)) return false;
 
     for (const std::string& socket_addr : args.GetArgs("-bind")) {
         std::string host_out;
