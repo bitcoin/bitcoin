@@ -853,7 +853,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
     if (inserted) {
         LogPrint(BCLog::GOBJECT, /* Continued */
                  "CGovernanceManager::ConfirmInventoryRequest added %s inv hash to m_requested_hash_time, size=%d\n",
-                 MSG_GOVERNANCE_OBJECT ? "object" : "vote", m_requested_hash_time.size());
+                 inv.type == MSG_GOVERNANCE_OBJECT ? "object" : "vote", m_requested_hash_time.size());
     }
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::ConfirmInventoryRequest reached end, returning true\n");
