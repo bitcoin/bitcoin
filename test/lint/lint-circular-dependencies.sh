@@ -102,6 +102,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/chainlocks -> net_processing -> llmq/context -> llmq/chainlocks"
     "coinjoin/client -> coinjoin/coinjoin -> llmq/chainlocks -> net_processing -> coinjoin/client"
     "rpc/blockchain -> rpc/server -> rpc/blockchain"
+    "core_io -> evo/assetlocktx -> core_io"
 )
 
 EXIT_CODE=0
