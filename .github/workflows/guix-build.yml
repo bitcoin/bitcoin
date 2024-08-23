@@ -32,8 +32,8 @@ jobs:
           echo "host_group_id=$(id -g)" >> $GITHUB_OUTPUT
           BRANCH_NAME=$(echo "${GITHUB_REF##*/}" | tr '[:upper:]' '[:lower:]')
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "::set-output name=image-tag::${BRANCH_NAME}"
-          echo "::set-output name=repo-name::${REPO_NAME}"
+          echo "image-tag=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "repo-name=${REPO_NAME}" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
