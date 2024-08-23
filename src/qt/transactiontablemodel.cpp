@@ -219,7 +219,7 @@ public:
 
             // If a status update is needed (blocks came in since last check),
             // try to update the status of this transaction from the wallet.
-            // Otherwise, simply reuse the cached status.
+            // Otherwise, simply re-use the cached status.
             interfaces::WalletTxStatus wtx;
             int numBlocks;
             int64_t block_time;
@@ -277,7 +277,7 @@ void TransactionTableModel::updateAmountColumnTitle()
 void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction)
 {
     uint256 updated;
-    updated.SetHexDeprecated(hash.toStdString());
+    updated.SetHex(hash.toStdString());
 
     priv->updateWallet(walletModel->wallet(), updated, status, showTransaction);
 }

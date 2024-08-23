@@ -187,10 +187,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Supplied passrases ma u dhigma.</translation>
     </message>
     <message>
-        <source>Wallet unlock failed</source>
-        <translation type="unfinished">Wallet Unlock failed</translation>
-    </message>
-    <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation type="unfinished">Passrase soo galay for decryption jeebka ahaa mid khaldan.</translation>
     </message>

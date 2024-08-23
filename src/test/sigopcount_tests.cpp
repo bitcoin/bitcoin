@@ -50,7 +50,8 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     std::vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
     {
-        CKey k = GenerateRandomKey();
+        CKey k;
+        k.MakeNewKey(true);
         keys.push_back(k.GetPubKey());
     }
     CScript s2 = GetScriptForMultisig(1, keys);
@@ -86,7 +87,7 @@ static ScriptError VerifyWithFlag(const CTransaction& output, const CMutableTran
  */
 static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CMutableTransaction& creationTx, const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& witness)
 {
-    creationTx.version = 1;
+    creationTx.nVersion = 1;
     creationTx.vin.resize(1);
     creationTx.vin[0].prevout.SetNull();
     creationTx.vin[0].scriptSig = CScript();
@@ -94,7 +95,7 @@ static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CM
     creationTx.vout[0].nValue = 1;
     creationTx.vout[0].scriptPubKey = scriptPubKey;
 
-    spendingTx.version = 1;
+    spendingTx.nVersion = 1;
     spendingTx.vin.resize(1);
     spendingTx.vin[0].prevout.hash = creationTx.GetHash();
     spendingTx.vin[0].prevout.n = 0;
@@ -119,7 +120,8 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     // Create key
-    CKey key = GenerateRandomKey();
+    CKey key;
+    key.MakeNewKey(true);
     CPubKey pubkey = key.GetPubKey();
     // Default flags
     const uint32_t flags{SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH};

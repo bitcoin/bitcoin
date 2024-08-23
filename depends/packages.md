@@ -74,6 +74,7 @@ These variables may be set to override or append their default values.
     $(package)_objcxx
     $(package)_ar
     $(package)_ranlib
+    $(package)_libtool
     $(package)_nm
     $(package)_cflags
     $(package)_cxxflags
@@ -161,9 +162,6 @@ From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assura
 >  Libtool pulls in all direct and indirect dependencies into the .la files it
 >  creates. This leads to massive overlinking, which is toxic to the Gentoo
 >  ecosystem, as it leads to a massive number of unnecessary rebuilds.
-
-Where possible, packages are built with Position Independent Code. Either using
-the Autotools `--with-pic` flag, or `CMAKE_POSITION_INDEPENDENT_CODE` with CMake.
 
 ## Secondary dependencies:
 

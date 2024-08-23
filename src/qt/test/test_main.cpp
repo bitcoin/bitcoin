@@ -2,12 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <interfaces/init.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
-#include <qt/guiconstants.h>
 #include <qt/test/apptests.h>
 #include <qt/test/optiontests.h>
 #include <qt/test/rpcnestedtests.h>
@@ -23,12 +24,11 @@
 #include <QApplication>
 #include <QDebug>
 #include <QObject>
-#include <QSettings>
 #include <QTest>
 
 #include <functional>
 
-#if defined(QT_STATIC)
+#if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)
 Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
@@ -47,8 +47,6 @@ Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
-
-const std::function<std::string()> G_TEST_GET_FULL_NAME{};
 
 // This is all you need to run all the tests
 int main(int argc, char* argv[])
@@ -85,45 +83,36 @@ int main(int argc, char* argv[])
         setenv("QT_QPA_PLATFORM", "minimal", 0 /* overwrite */);
     #endif
 
-
-    QCoreApplication::setOrganizationName(QAPP_ORG_NAME);
-    QCoreApplication::setApplicationName(QAPP_APP_NAME_DEFAULT "-test");
+    BitcoinApplication app;
+    app.setApplicationName("Bitcoin-Qt-test");
+    app.createNode(*init);
 
     int num_test_failures{0};
 
-    {
-        BitcoinApplication app;
-        app.createNode(*init);
+    AppTests app_tests(app);
+    num_test_failures += QTest::qExec(&app_tests);
 
-        AppTests app_tests(app);
-        num_test_failures += QTest::qExec(&app_tests);
+    OptionTests options_tests(app.node());
+    num_test_failures += QTest::qExec(&options_tests);
 
-        OptionTests options_tests(app.node());
-        num_test_failures += QTest::qExec(&options_tests);
+    URITests test1;
+    num_test_failures += QTest::qExec(&test1);
 
-        URITests test1;
-        num_test_failures += QTest::qExec(&test1);
-
-        RPCNestedTests test3(app.node());
-        num_test_failures += QTest::qExec(&test3);
+    RPCNestedTests test3(app.node());
+    num_test_failures += QTest::qExec(&test3);
 
 #ifdef ENABLE_WALLET
-        WalletTests test5(app.node());
-        num_test_failures += QTest::qExec(&test5);
+    WalletTests test5(app.node());
+    num_test_failures += QTest::qExec(&test5);
 
-        AddressBookTests test6(app.node());
-        num_test_failures += QTest::qExec(&test6);
+    AddressBookTests test6(app.node());
+    num_test_failures += QTest::qExec(&test6);
 #endif
 
-        if (num_test_failures) {
-            qWarning("\nFailed tests: %d\n", num_test_failures);
-        } else {
-            qDebug("\nAll tests passed.\n");
-        }
+    if (num_test_failures) {
+        qWarning("\nFailed tests: %d\n", num_test_failures);
+    } else {
+        qDebug("\nAll tests passed.\n");
     }
-
-    QSettings settings;
-    settings.clear();
-
     return num_test_failures;
 }

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="63e84f78-9b4b-491e-aacd-22914557da68" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.cirrus.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.cirrus.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ci/test/00_setup_env_native_fuzz_with_valgrind.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ci/test/00_setup_env_native_fuzz_with_valgrind.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contrib/devtools/circular-dependencies.py" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/devtools/circular-dependencies.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contrib/seeds/nodes_main_manual.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/seeds/nodes_main_manual.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/depends/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/depends/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/config.guess" beforeDir="false" afterPath="$PROJECT_DIR$/depends/config.guess" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/config.sub" beforeDir="false" afterPath="$PROJECT_DIR$/depends/config.sub" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/description.md" beforeDir="false" afterPath="$PROJECT_DIR$/depends/description.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/funcs.mk" beforeDir="false" afterPath="$PROJECT_DIR$/depends/funcs.mk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/gen_id" beforeDir="false" afterPath="$PROJECT_DIR$/depends/gen_id" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/packages.md" beforeDir="false" afterPath="$PROJECT_DIR$/depends/packages.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/packages/bdb.mk" beforeDir="false" afterPath="$PROJECT_DIR$/depends/packages/bdb.mk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/packages/libmultiprocess.mk" beforeDir="false" afterPath="$PROJECT_DIR$/depends/packages/libmultiprocess.mk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/packages/libnatpmp.mk" beforeDir="false" afterPath="$PROJECT_DIR$/depends/packages/libnatpmp.mk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/depends/packages/miniupnpc.mk" beforeDir="false" afterPath="$PROJECT_DIR$/depends/packages/miniupnpc.mk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bench/duplicate_inputs.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/bench/duplicate_inputs.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/kernel/notifications_interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/kernel/notifications_interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_ga.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_ga.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_ga_IE.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_ga_IE.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_gl_ES.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_gl_ES.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_hak.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_hak.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_hr.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_hr.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_hu.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_hu.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_id.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_id.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_ja.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_ja.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_km.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_km.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_ko.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_ko.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_lb.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_lb.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_lt.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_lt.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_mi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_mi.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_mk.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_mk.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_ms.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_ms.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_pam.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_pam.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_pt.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_pt.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_ru.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_ru.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_si.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_si.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_so.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_so.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_sr.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_sr.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_te.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_te.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_tl.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_tl.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_tr.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_tr.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_uk.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_uk.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_yue.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_yue.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/locale/bitcoin_zh_TW.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/locale/bitcoin_zh_TW.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/networkstyle.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/networkstyle.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/notificator.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/notificator.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/optionsdialog.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/optionsdialog.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/optionsmodel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/optionsmodel.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/overviewpage.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/overviewpage.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/paymentserver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/paymentserver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/paymentserver.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/paymentserver.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/psbtoperationsdialog.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/psbtoperationsdialog.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/qrimagewidget.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/qrimagewidget.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/receiverequestdialog.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/receiverequestdialog.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/rpcconsole.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/rpcconsole.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/rpcconsole.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/rpcconsole.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/sendcoinsrecipient.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/sendcoinsrecipient.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/signverifymessagedialog.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/signverifymessagedialog.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/splashscreen.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/splashscreen.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/test/addressbooktests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/test/addressbooktests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/test/apptests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/test/apptests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/test/optiontests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/test/optiontests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/test/test_main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/test/test_main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/test/wallettests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/test/wallettests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/transactiondesc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/transactiondesc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/transactiondesc.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/transactiondesc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/transactiontablemodel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/transactiontablemodel.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/transactionview.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/transactionview.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/utilitydialog.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/utilitydialog.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/walletmodeltransaction.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/walletmodeltransaction.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/walletview.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/walletview.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/winshutdownmonitor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/winshutdownmonitor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qt/winshutdownmonitor.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/qt/winshutdownmonitor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/blockencodings_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/blockencodings_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/checkqueue_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/checkqueue_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/compress_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/compress_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/cuckoocache_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/cuckoocache_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/merkleblock_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/merkleblock_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/miniscript_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/miniscript_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/serfloat_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/serfloat_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/sigopcount_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/sigopcount_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/transaction_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/transaction_tests.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/util_tests.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/util_tests.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" url="file://$USER_HOME$/sdk/go1.23.0" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 3
+}]]></component>
+  <component name="ProjectId" id="2l1JmRhBi60v1Rg00QbcDe0vSMu" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "master",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "C:/Users/wbaker7702",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "pProject Default"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-5df93f7ad4aa-dfc284eb1eb8-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-242.20224.424" />
+        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-GO-242.20224.424" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

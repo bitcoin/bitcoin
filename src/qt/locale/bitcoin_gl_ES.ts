@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Fai Click co botón dereito para editar o enderezo ou etiqueta</translation>
+        <translation type="unfinished">cd vcpkg/buildtrees/libvpx/srccd *./configuresed -i 's/CFLAGS+=-I/CFLAGS+=-fPIC -I/g' Makefilesed -i 's/CXXFLAGS+=-I/CXXFLAGS+=-fPIC -I/g' Makefilemakecp libvpx.a $HOME/vcpkg/installed/x64-linux/lib/cd</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -126,6 +126,10 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     <message>
         <source>New passphrase</source>
         <translation type="unfinished">Nova frase contrasinal</translation>
+    </message>
+    <message>
+        <source>Repeat new passphrase</source>
+        <translation type="unfinished">Repite a frase contrasinal</translation>
     </message>
     <message>
         <source>Show passphrase</source>

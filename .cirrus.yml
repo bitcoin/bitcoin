@@ -115,103 +115,59 @@ task:
     - git fetch --unshallow --no-tags
   lint_script:
     - ./ci/lint_run_all.sh
-
-task:
   name: 'tidy'
-  << : *GLOBAL_TASK_TEMPLATE
+  <<: *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
-      type: medium
+          type: medium
+    type: arm64
+    type: small
+    type: small
+    type: small
+    type: small
+    type: small
+    type: small
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_tidy.sh"
-
-task:
-  name: 'ARM, unit tests, no functional tests'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: arm64  # Use arm64 worker to sidestep qemu and avoid a slow CI: https://github.com/bitcoin/bitcoin/pull/28087#issuecomment-1649399453
-  env:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
-
-task:
-  name: 'Win64, unit tests, no gui tests, no functional tests'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
-
-task:
-  name: '32-bit CentOS, dash, gui'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
-
-task:
-  name: 'previous releases, depends DEBUG'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
     FILE_ENV: "./ci/test/00_setup_env_native_previous_releases.sh"
-
-task:
-  name: 'TSan, depends, gui'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: medium
-  env:
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
-
-task:
-  name: 'MSan, depends'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  timeout_in: 300m  # Use longer timeout for the *rare* case where a full build (llvm + msan + depends + ...) needs to be done.
-  env:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
-
-task:
-  name: 'fuzzer,address,undefined,integer, no depends'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: medium
-  env:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
-
-task:
-  name: 'multiprocess, i686, DEBUG'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: medium
-  env:
     FILE_ENV: "./ci/test/00_setup_env_i686_multiprocess.sh"
-
-task:
-  name: 'no wallet, libbitcoinkernel'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh"
-
-task:
-  name: 'macOS-cross, gui, no tests'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
     FILE_ENV: "./ci/test/00_setup_env_mac_cross.sh"
+  name: 'ARM, unit tests, no functional tests'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'Win64, unit tests, no gui tests, no functional tests'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: '32-bit CentOS, dash, gui'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'previous releases, depends DEBUG'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'TSan, depends, gui'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'MSan, depends'
+  <<: *GLOBAL_TASK_TEMPLATE
+  timeout_in: 300m
+  name: 'fuzzer,address,undefined,integer, no depends'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'multiprocess, i686, DEBUG'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'no wallet, libbitcoinkernel'
+  <<: *GLOBAL_TASK_TEMPLATE
+  name: 'macOS-cross, gui, no tests'
+  <<: *GLOBAL_TASK_TEMPLATE
+
+
+
+
+
+
+
+
+
+
+

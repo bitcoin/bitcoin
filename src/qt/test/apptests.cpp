@@ -11,8 +11,13 @@
 #include <qt/bitcoingui.h>
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
+#include <shutdown.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
+
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <QAction>
 #include <QLineEdit>

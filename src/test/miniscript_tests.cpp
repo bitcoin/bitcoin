@@ -48,9 +48,9 @@ struct TestData {
     TestData()
     {
         // All our signatures sign (and are required to sign) this constant message.
-        constexpr uint256 MESSAGE_HASH{"0000000000000000f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065"};
+        auto const MESSAGE_HASH = uint256S("f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065");
         // We don't pass additional randomness when creating a schnorr signature.
-        const auto EMPTY_AUX{uint256::ZERO};
+        auto const EMPTY_AUX{uint256S("")};
 
         // We generate 255 public keys and 255 hashes of each type.
         for (int i = 1; i <= 255; ++i) {
@@ -288,13 +288,15 @@ public:
     }
 };
 
+//! Public key to be used as internal key for dummy Taproot spends.
+const std::vector<unsigned char> NUMS_PK{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
+
 using Fragment = miniscript::Fragment;
 using NodeRef = miniscript::NodeRef<CPubKey>;
 using miniscript::operator"" _mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
-// NOLINTNEXTLINE(misc-no-recursion)
 std::set<Challenge> FindChallenges(const NodeRef& ref) {
     std::set<Challenge> chal;
     for (const auto& key : ref->keys) {
@@ -327,7 +329,7 @@ CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script, T
 
     // For Taproot outputs we always use a tree with a single script and a dummy internal key.
     builder.Add(0, script, TAPROOT_LEAF_TAPSCRIPT);
-    builder.Finalize(XOnlyPubKey::NUMS_H);
+    builder.Finalize(XOnlyPubKey{NUMS_PK});
     return GetScriptForDestination(builder.GetOutput());
 }
 
@@ -346,7 +348,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
     auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
-        std::shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
+        Shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
         Satisfier satisfier(converter.MsContext());
         TestSignatureChecker checker(satisfier);
         bool prev_mal_success = false, prev_nonmal_success = false;
@@ -367,7 +369,7 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
             CScriptWitness witness_nonmal;
             const bool nonmal_success = node->Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
             // Compute witness size (excluding script push, control block, and witness count encoding).
-            const size_t wit_size = GetSerializeSize(witness_nonmal.stack) - GetSizeOfCompactSize(witness_nonmal.stack.size());
+            const size_t wit_size = GetSerializeSize(witness_nonmal.stack, PROTOCOL_VERSION) - GetSizeOfCompactSize(witness_nonmal.stack.size());
             SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
 
             if (nonmal_success) {
@@ -698,12 +700,6 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     BOOST_CHECK(ms_ins && ms_ins->IsValid() && !ms_ins->IsSane());
     const auto insane_sub = ms_ins->FindInsaneSub();
     BOOST_CHECK(insane_sub && *insane_sub->ToString(wsh_converter) == "and_b(after(1),a:after(1000000000))");
-
-    // Numbers can't be prefixed by a sign.
-    BOOST_CHECK(!miniscript::FromString("after(-1)", wsh_converter));
-    BOOST_CHECK(!miniscript::FromString("after(+1)", wsh_converter));
-    BOOST_CHECK(!miniscript::FromString("thresh(-1,pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204))", wsh_converter));
-    BOOST_CHECK(!miniscript::FromString("multi(+1,03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204)", wsh_converter));
 
     // Timelock tests
     Test("after(100)", "?", "?", TESTMODE_VALID | TESTMODE_NONMAL); // only heightlock

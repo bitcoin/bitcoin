@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
+        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1036,7 +1036,7 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Migration failed</source>
-        <translation type="unfinished">Taşıma başarısız oldu.</translation>
+        <translation type="unfinished">Taşıma başarısız oldu</translation>
     </message>
     <message>
         <source>Migration Successful</source>
@@ -3153,6 +3153,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Çıktı indeksi</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation type="unfinished">(Sertifika doğrulanmadı)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation type="unfinished">Tüccar</translation>
     </message>
@@ -3855,6 +3859,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Transaction change output index out of range</source>
         <translation type="unfinished">İşlem değişikliği çıktı endeksi aralık dışında</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished">İşlem çok uzun bir mempool zincirine sahip</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

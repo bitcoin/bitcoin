@@ -2,7 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
 
 #include <qt/optionsdialog.h>
 #include <qt/forms/ui_optionsdialog.h>
@@ -15,84 +17,25 @@
 
 #include <common/system.h>
 #include <interfaces/node.h>
-#include <node/chainstatemanager_args.h>
 #include <netbase.h>
 #include <txdb.h>
-#include <util/strencodings.h>
+#include <validation.h>
 
 #include <chrono>
 
-#include <QApplication>
 #include <QDataWidgetMapper>
 #include <QDir>
-#include <QFontDialog>
 #include <QIntValidator>
 #include <QLocale>
 #include <QMessageBox>
 #include <QSystemTrayIcon>
 #include <QTimer>
 
-int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
-{
-    int i;
-    for (i = cb->count(); --i >= 0; ) {
-        QVariant item_data = cb->itemData(i);
-        if (!item_data.canConvert<OptionsModel::FontChoice>()) continue;
-        if (item_data.value<OptionsModel::FontChoice>() == fc) {
-            break;
-        }
-    }
-    if (i == -1) {
-        // New item needed
-        QFont chosen_font = OptionsModel::getFontForChoice(fc);
-        QSignalBlocker block_currentindexchanged_signal(cb);  // avoid triggering QFontDialog
-        cb->insertItem(0, QFontInfo(chosen_font).family(), QVariant::fromValue(fc));
-        i = 0;
-    }
-
-    cb->setCurrentIndex(i);
-    return i;
-}
-
-void setupFontOptions(QComboBox* cb, QLabel* preview)
-{
-    QFont embedded_font{GUIUtil::fixedPitchFont(true)};
-    QFont system_font{GUIUtil::fixedPitchFont(false)};
-    cb->addItem(QObject::tr("Embedded \"%1\"").arg(QFontInfo(embedded_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::EmbeddedFont}));
-    cb->addItem(QObject::tr("Default system font \"%1\"").arg(QFontInfo(system_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::BestSystemFont}));
-    cb->addItem(QObject::tr("Custom…"));
-
-    const auto& on_font_choice_changed = [cb, preview](int index) {
-        static int previous_index = -1;
-        QVariant item_data = cb->itemData(index);
-        QFont f;
-        if (item_data.canConvert<OptionsModel::FontChoice>()) {
-            f = OptionsModel::getFontForChoice(item_data.value<OptionsModel::FontChoice>());
-        } else {
-            bool ok;
-            f = QFontDialog::getFont(&ok, GUIUtil::fixedPitchFont(false), cb->parentWidget());
-            if (!ok) {
-                cb->setCurrentIndex(previous_index);
-                return;
-            }
-            index = setFontChoice(cb, OptionsModel::FontChoice{f});
-        }
-        if (preview) {
-            preview->setFont(f);
-        }
-        previous_index = index;
-    };
-    QObject::connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), on_font_choice_changed);
-    on_font_choice_changed(cb->currentIndex());
-}
-
 OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
-    : QDialog(parent, GUIUtil::dialog_flags | Qt::WindowMaximizeButtonHint),
+    : QDialog(parent, GUIUtil::dialog_flags),
       ui(new Ui::OptionsDialog)
 {
     ui->setupUi(this);
-
-    ui->verticalLayout->setStretchFactor(ui->tabWidget, 1);
 
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
@@ -205,7 +148,19 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
         ui->minimizeToTray->setEnabled(false);
     }
 
-    setupFontOptions(ui->moneyFont, ui->moneyFont_preview);
+    QFont embedded_font{GUIUtil::fixedPitchFont(true)};
+    ui->embeddedFont_radioButton->setText(ui->embeddedFont_radioButton->text().arg(QFontInfo(embedded_font).family()));
+    embedded_font.setWeight(QFont::Bold);
+    ui->embeddedFont_label_1->setFont(embedded_font);
+    ui->embeddedFont_label_9->setFont(embedded_font);
+
+    QFont system_font{GUIUtil::fixedPitchFont(false)};
+    ui->systemFont_radioButton->setText(ui->systemFont_radioButton->text().arg(QFontInfo(system_font).family()));
+    system_font.setWeight(QFont::Bold);
+    ui->systemFont_label_1->setFont(system_font);
+    ui->systemFont_label_9->setFont(system_font);
+    // Checking the embeddedFont_radioButton automatically unchecks the systemFont_radioButton.
+    ui->systemFont_radioButton->setChecked(true);
 
     GUIUtil::handleCloseWindowShortcut(this);
 }
@@ -242,9 +197,6 @@ void OptionsDialog::setModel(OptionsModel *_model)
         mapper->setModel(_model);
         setMapper();
         mapper->toFirst();
-
-        const auto& font_for_money = _model->data(_model->index(OptionsModel::FontForMoney, 0), Qt::EditRole).value<OptionsModel::FontChoice>();
-        setFontChoice(ui->moneyFont, font_for_money);
 
         updateDefaultProxyNets();
     }
@@ -323,6 +275,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
+    mapper->addMapping(ui->embeddedFont_radioButton, OptionsModel::UseEmbeddedMonospacedFont);
 }
 
 void OptionsDialog::setOkButtonState(bool fState)
@@ -384,8 +337,6 @@ void OptionsDialog::on_openBitcoinConfButton_clicked()
 
 void OptionsDialog::on_okButton_clicked()
 {
-    model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
-
     mapper->submit();
     accept();
     updateDefaultProxyNets();
@@ -442,7 +393,7 @@ void OptionsDialog::updateProxyValidationState()
     QValidatedLineEdit *otherProxyWidget = (pUiProxyIp == ui->proxyIpTor) ? ui->proxyIp : ui->proxyIpTor;
     if (pUiProxyIp->isValid() && (!ui->proxyPort->isEnabled() || ui->proxyPort->text().toInt() > 0) && (!ui->proxyPortTor->isEnabled() || ui->proxyPortTor->text().toInt() > 0))
     {
-        setOkButtonState(otherProxyWidget->isValid()); //only enable ok button if both proxies are valid
+        setOkButtonState(otherProxyWidget->isValid()); //only enable ok button if both proxys are valid
         clearStatusLabel();
     }
     else
@@ -455,24 +406,20 @@ void OptionsDialog::updateProxyValidationState()
 
 void OptionsDialog::updateDefaultProxyNets()
 {
-    std::string proxyIpText{ui->proxyIp->text().toStdString()};
-    if (!IsUnixSocketPath(proxyIpText)) {
-        const std::optional<CNetAddr> ui_proxy_netaddr{LookupHost(proxyIpText, /*fAllowLookup=*/false)};
-        const CService ui_proxy{ui_proxy_netaddr.value_or(CNetAddr{}), ui->proxyPort->text().toUShort()};
-        proxyIpText = ui_proxy.ToStringAddrPort();
-    }
+    const std::optional<CNetAddr> ui_proxy_netaddr{LookupHost(ui->proxyIp->text().toStdString(), /*fAllowLookup=*/false)};
+    const CService ui_proxy{ui_proxy_netaddr.value_or(CNetAddr{}), ui->proxyPort->text().toUShort()};
 
     Proxy proxy;
     bool has_proxy;
 
     has_proxy = model->node().getProxy(NET_IPV4, proxy);
-    ui->proxyReachIPv4->setChecked(has_proxy && proxy.ToString() == proxyIpText);
+    ui->proxyReachIPv4->setChecked(has_proxy && proxy.proxy == ui_proxy);
 
     has_proxy = model->node().getProxy(NET_IPV6, proxy);
-    ui->proxyReachIPv6->setChecked(has_proxy && proxy.ToString() == proxyIpText);
+    ui->proxyReachIPv6->setChecked(has_proxy && proxy.proxy == ui_proxy);
 
     has_proxy = model->node().getProxy(NET_ONION, proxy);
-    ui->proxyReachTor->setChecked(has_proxy && proxy.ToString() == proxyIpText);
+    ui->proxyReachTor->setChecked(has_proxy && proxy.proxy == ui_proxy);
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
@@ -483,10 +430,7 @@ QValidator(parent)
 QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    uint16_t port{0};
-    std::string hostname;
-    if (!SplitHostPort(input.toStdString(), port, hostname) || port != 0) return QValidator::Invalid;
-
+    // Validate the proxy
     CService serv(LookupNumeric(input.toStdString(), DEFAULT_GUI_PROXY_PORT));
     Proxy addrProxy = Proxy(serv, true);
     if (addrProxy.IsValid())
