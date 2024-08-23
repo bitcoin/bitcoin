@@ -209,7 +209,7 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 bool CZMQPublishHashChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
     uint256 hash = pindex->GetBlockHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashchainlock %s\n", hash.GetHex());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashchainlock %s to %s\n", hash.GetHex(), this->address);
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
@@ -229,7 +229,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
 bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
 {
     uint256 hash = transaction->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashtxlock %s\n", hash.GetHex());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashtxlock %s to %s\n", hash.GetHex(), this->address);
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
@@ -239,7 +239,7 @@ bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransa
 bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote)
 {
     uint256 hash = vote->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernancevote %s\n", hash.GetHex());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernancevote %s to %s\n", hash.GetHex(), this->address);
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
@@ -249,7 +249,7 @@ bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const CDetermin
 bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object)
 {
     uint256 hash = object->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernanceobject %s\n", hash.GetHex());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernanceobject %s to %s\n", hash.GetHex(), this->address);
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
@@ -259,7 +259,7 @@ bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const std::
 bool CZMQPublishHashInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx)
 {
     uint256 currentHash = currentTx->GetHash(), previousHash = previousTx->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashinstantsenddoublespend %s conflicts against %s\n", currentHash.ToString(), previousHash.ToString());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashinstantsenddoublespend %s conflicts against %s to %s\n", currentHash.ToString(), previousHash.ToString(), this->address);
     char dataCurrentHash[32], dataPreviousHash[32];
     for (unsigned int i = 0; i < 32; i++) {
         dataCurrentHash[31 - i] = currentHash.begin()[i];
@@ -271,7 +271,7 @@ bool CZMQPublishHashInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpend
 
 bool CZMQPublishHashRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish hashrecoveredsig %s\n", sig->getMsgHash().ToString());
+    LogPrint(BCLog::ZMQ, "zmq: Publish hashrecoveredsig %s to %s\n", sig->getMsgHash().ToString(), this->address);
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = sig->getMsgHash().begin()[i];
@@ -301,7 +301,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
 bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawchainlock %s\n", pindex->GetBlockHash().GetHex());
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawchainlock %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -322,7 +322,7 @@ bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex,
 
 bool CZMQPublishRawChainLockSigNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawchainlocksig %s\n", pindex->GetBlockHash().GetHex());
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawchainlocksig %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -373,7 +373,7 @@ bool CZMQPublishRawTransactionLockSigNotifier::NotifyTransactionLock(const CTran
 bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote)
 {
     uint256 nHash = vote->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s to %s, vote = %d\n", nHash.ToString(), this->address, vote->ToString(tip_mn_list));
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject %s with vote %d to %s\n", nHash.ToString(), vote->ToString(tip_mn_list), this->address);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *vote;
     return SendZmqMessage(MSG_RAWGVOTE, &(*ss.begin()), ss.size());
@@ -382,7 +382,7 @@ bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const CDetermini
 bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& govobj)
 {
     uint256 nHash = govobj->GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s to %s, type = %d\n", nHash.ToString(), this->address, ToUnderlying(govobj->type));
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject %s with type %d to %s\n", nHash.ToString(), ToUnderlying(govobj->type), this->address);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *govobj;
     return SendZmqMessage(MSG_RAWGOBJ, &(*ss.begin()), ss.size());
@@ -390,7 +390,7 @@ bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const std::s
 
 bool CZMQPublishRawInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawinstantsenddoublespend %s conflicts with %s\n", currentTx->GetHash().ToString(), previousTx->GetHash().ToString());
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawinstantsenddoublespend %s conflicts with %s to %s\n", currentTx->GetHash().ToString(), previousTx->GetHash().ToString(), this->address);
     CDataStream ssCurrent(SER_NETWORK, PROTOCOL_VERSION), ssPrevious(SER_NETWORK, PROTOCOL_VERSION);
     ssCurrent << *currentTx;
     ssPrevious << *previousTx;
@@ -400,7 +400,7 @@ bool CZMQPublishRawInstantSendDoubleSpendNotifier::NotifyInstantSendDoubleSpendA
 
 bool CZMQPublishRawRecoveredSigNotifier::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig)
 {
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawrecoveredsig %s\n", sig->getMsgHash().ToString());
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawrecoveredsig %s to %s\n", sig->getMsgHash().ToString(), this->address);
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *sig;
