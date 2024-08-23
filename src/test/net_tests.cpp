@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
                    /*addrIn=*/CAddress{CService{peer_out_in_addr, 8333}, NODE_NETWORK},
                    /*nKeyedNetGroupIn=*/0,
                    /*nLocalHostNonceIn=*/0,
-                   /*addrBindIn=*/CAddress{},
+                   /*addrBindIn=*/CService{},
                    /*addrNameIn=*/std::string{},
                    /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
                    /*inbound_onion=*/false};
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
                   /*addrIn=*/CAddress{CService{peer_in_in_addr, 8333}, NODE_NETWORK},
                   /*nKeyedNetGroupIn=*/0,
                   /*nLocalHostNonceIn=*/0,
-                  /*addrBindIn=*/CAddress{},
+                  /*addrBindIn=*/CService{},
                   /*addrNameIn=*/std::string{},
                   /*conn_type_in=*/ConnectionType::INBOUND,
                   /*inbound_onion=*/false};
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
                /*addrIn=*/CAddress{CService{peer_in_addr, 8333}, NODE_NETWORK},
                /*nKeyedNetGroupIn=*/0,
                /*nLocalHostNonceIn=*/0,
-               /*addrBindIn=*/CAddress{},
+               /*addrBindIn=*/CService{},
                /*addrNameIn=*/std::string{},
                /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
                /*inbound_onion=*/false};
