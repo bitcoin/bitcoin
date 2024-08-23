@@ -123,6 +123,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/run_command.cpp
   common/settings.cpp
   common/signmessage.cpp
+  common/sockman.cpp
   common/system.cpp
   common/url.cpp
   compressor.cpp

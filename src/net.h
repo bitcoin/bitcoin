@@ -9,6 +9,7 @@
 #include <bip324.h>
 #include <chainparams.h>
 #include <common/bloom.h>
+#include <common/sockman.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
@@ -1032,7 +1033,7 @@ protected:
     ~NetEventsInterface() = default;
 };
 
-class CConnman
+class CConnman : private SockMan
 {
 public:
 
@@ -1257,24 +1258,10 @@ public:
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
 private:
-    struct ListenSocket {
-    public:
-        std::shared_ptr<Sock> sock;
-        inline void AddSocketPermissionFlags(NetPermissionFlags& flags) const { NetPermissions::AddFlag(flags, m_permissions); }
-        ListenSocket(std::shared_ptr<Sock> sock_, NetPermissionFlags permissions_)
-            : sock{sock_}, m_permissions{permissions_}
-        {
-        }
-
-    private:
-        NetPermissionFlags m_permissions;
-    };
-
     //! returns the time left in the current max outbound cycle
     //! in case of no limit, it will always return 0
     std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
 
-    bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
@@ -1284,7 +1271,7 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect, Span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
-    void AcceptConnection(const ListenSocket& hListenSocket);
+    void AcceptConnection(const Sock& listen_sock);
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
@@ -1414,7 +1401,11 @@ private:
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
 
-    std::vector<ListenSocket> vhListenSocket;
+    /**
+     * Permissions that incoming peers get based on our listening address they connected to.
+     */
+    std::unordered_map<CService, NetPermissionFlags, CServiceHash> m_listen_permissions;
+
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
     AddrMan& addrman;
