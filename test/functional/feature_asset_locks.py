@@ -30,11 +30,7 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_CHECKSIG,
-    OP_DUP,
-    OP_EQUALVERIFY,
-    OP_HASH160,
     OP_RETURN,
-    hash160,
 )
 from test_framework.script_util import key_to_p2pkh_script
 from test_framework.test_framework import DashTestFramework
@@ -67,8 +63,8 @@ class AssetLocksTest(DashTestFramework):
         tmp_amount = amount
         if tmp_amount > COIN:
             tmp_amount -= COIN
-            credit_outputs.append(CTxOut(COIN, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
-        credit_outputs.append(CTxOut(tmp_amount, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
+            credit_outputs.append(CTxOut(COIN, key_to_p2pkh_script(pubkey)))
+        credit_outputs.append(CTxOut(tmp_amount, key_to_p2pkh_script(pubkey)))
 
         lockTx_payload = CAssetLockTx(1, credit_outputs)
 
