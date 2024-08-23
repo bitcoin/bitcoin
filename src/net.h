@@ -9,6 +9,7 @@
 #include <bip324.h>
 #include <chainparams.h>
 #include <common/bloom.h>
+#include <common/sockman.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
 #include <crypto/siphash.h>
@@ -1055,7 +1056,7 @@ protected:
     ~NetEventsInterface() = default;
 };
 
-class CConnman
+class CConnman : private SockMan
 {
 public:
 
@@ -1321,7 +1322,6 @@ private:
     //! in case of no limit, it will always return 0
     std::chrono::seconds GetMaxOutboundTimeLeftInCycle_() const EXCLUSIVE_LOCKS_REQUIRED(m_total_bytes_sent_mutex);
 
-    bool BindListenPort(const CService& bindAddr, bilingual_str& strError);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
@@ -1491,11 +1491,6 @@ private:
 
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
-
-    /**
-     * List of listening sockets.
-     */
-    std::vector<std::shared_ptr<Sock>> m_listen;
 
     /**
      * Permissions that incoming peers get based on our listening address they connected to.
