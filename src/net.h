@@ -1293,8 +1293,8 @@ private:
      */
     void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                       NetPermissionFlags permission_flags,
-                                      const CAddress& addr_bind,
-                                      const CAddress& addr);
+                                      const CService& addr_bind,
+                                      const CService& addr);
 
     void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
     void NotifyNumConnectionsChanged();
@@ -1331,7 +1331,7 @@ private:
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
 
-    uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
+    uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
 
     CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const std::string& addrName);
