@@ -133,20 +133,9 @@ def download_binary(tag, args) -> int:
 
     print('Fetching: {tarballUrl}'.format(tarballUrl=tarballUrl))
 
-    header, status = subprocess.Popen(
-        ['curl', '--head', tarballUrl], stdout=subprocess.PIPE).communicate()
-    if re.search("404 Not Found", header.decode("utf-8")):
-        print("Binary tag was not found")
-        return 1
-
-    curlCmds = [
-        ['curl', '--remote-name', tarballUrl]
-    ]
-
-    for cmd in curlCmds:
-        ret = subprocess.run(cmd).returncode
-        if ret:
-            return ret
+    ret = subprocess.run(['curl', '--fail', '--remote-name', tarballUrl]).returncode
+    if ret:
+        return ret
 
     hasher = hashlib.sha256()
     with open(tarball, "rb") as afile:
