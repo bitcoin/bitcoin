@@ -154,9 +154,6 @@ public:
     bool WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /** Clear all data members. */
-    void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, const uint256& hash, CBlockIndex*& best_header,
                                  enum BlockStatus nStatus = BLOCK_VALID_TREE)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -195,11 +192,6 @@ public:
      * This is also true for mempool checks.
      */
     int GetSpendHeight(const CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    ~BlockManager()
-    {
-        Unload();
-    }
 };
 
 void CleanupBlockRevFiles();
