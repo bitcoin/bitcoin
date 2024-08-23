@@ -313,7 +313,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
         // Only process a new orphan if this is a first time failure, as otherwise it must be either
         // already in orphanage or from 1p1c processing.
-        if (first_time_failure) {
+        if (first_time_failure && !RecentRejectsFilter().contains(ptx->GetWitnessHash().ToUint256())) {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
 
             // Deduplicate parent txids, so that we don't have to loop over
