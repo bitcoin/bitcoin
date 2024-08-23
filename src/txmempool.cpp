@@ -1369,3 +1369,23 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     std::sort(new_chunks.begin(), new_chunks.end(), std::greater());
     return std::make_pair(old_chunks, new_chunks);
 }
+
+CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
+{
+    auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
+    m_entry_vec.push_back(newit);
+    return newit;
+}
+
+void CTxMemPool::ChangeSet::Apply()
+{
+    LOCK(m_pool->cs);
+    m_pool->RemoveStaged(m_to_remove, false, MemPoolRemovalReason::REPLACED);
+    for (size_t i=0; i<m_entry_vec.size(); ++i) {
+        auto tx_entry = m_entry_vec[i];
+        m_pool->addUnchecked(*tx_entry);
+    }
+    m_to_add.clear();
+    m_to_remove.clear();
+    m_entry_vec.clear();
+}
