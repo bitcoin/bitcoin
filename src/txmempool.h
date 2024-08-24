@@ -832,8 +832,15 @@ public:
 
         util::Result<CTxMemPool::setEntries> CalculateMemPoolAncestors(TxHandle tx, const Limits& limits)
         {
+            // Look up transaction in our cache first
+            auto it = m_ancestors.find(tx);
+            if (it != m_ancestors.end()) return it->second;
+
+            // If not found, try to have the mempool calculate it, and cache
+            // for later.
             LOCK(m_pool->cs);
             auto ret{m_pool->CalculateMemPoolAncestors(*tx, limits)};
+            if (ret) m_ancestors.try_emplace(tx, *ret);
             return ret;
         }
 
@@ -843,6 +850,8 @@ public:
         CTxMemPool* m_pool;
         CTxMemPool::indexed_transaction_set m_to_add;
         std::vector<CTxMemPool::txiter> m_entry_vec; // track the added transactions' insertion order
+        // map from the m_to_add index to the ancestors for the transaction
+        std::map<CTxMemPool::txiter, CTxMemPool::setEntries, CompareIteratorByHash> m_ancestors;
         CTxMemPool::setEntries m_to_remove;
     };
 

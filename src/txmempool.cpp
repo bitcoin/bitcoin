@@ -1383,9 +1383,16 @@ void CTxMemPool::ChangeSet::Apply()
     m_pool->RemoveStaged(m_to_remove, false, MemPoolRemovalReason::REPLACED);
     for (size_t i=0; i<m_entry_vec.size(); ++i) {
         auto tx_entry = m_entry_vec[i];
-        m_pool->addUnchecked(*tx_entry);
+        if (i == 0 && m_ancestors.count(tx_entry)) {
+            m_pool->addUnchecked(*tx_entry, m_ancestors[tx_entry]);
+        } else {
+            // We always recalculate ancestors from scratch if we're dealing
+            // with transactions which may have parents in the same package.
+            m_pool->addUnchecked(*tx_entry);
+        }
     }
     m_to_add.clear();
     m_to_remove.clear();
     m_entry_vec.clear();
+    m_ancestors.clear();
 }
