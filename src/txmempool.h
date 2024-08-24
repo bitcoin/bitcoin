@@ -844,6 +844,18 @@ public:
             return ret;
         }
 
+        std::vector<CTransactionRef> GetAddedTxns() const {
+            std::vector<CTransactionRef> ret;
+            ret.reserve(m_entry_vec.size());
+            for (const auto& entry : m_entry_vec) {
+                ret.emplace_back(entry->GetSharedTx());
+            }
+            return ret;
+        }
+
+        size_t GetTxCount() const { return m_entry_vec.size(); }
+        const CTransaction& GetAddedTxn(size_t index) const { return m_entry_vec.at(index)->GetTx(); }
+
         void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     private:
