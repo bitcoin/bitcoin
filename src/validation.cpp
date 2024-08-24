@@ -688,9 +688,7 @@ private:
     bool ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Try to add the transaction to the mempool, removing any conflicts first.
-    // Returns true if the transaction is in the mempool after any size
-    // limiting is performed, false otherwise.
-    bool FinalizeSubpackage(const ATMPArgs& args, std::vector<Workspace>& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+    void FinalizeSubpackage(const ATMPArgs& args, std::vector<Workspace>& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Submit all transactions to the mempool and call ConsensusScriptChecks to add to the script
     // cache - should only be called after successful validation of all transactions in the package.
@@ -1285,14 +1283,12 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     return true;
 }
 
-bool MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args, std::vector<Workspace>& workspaces)
+void MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args, std::vector<Workspace>& workspaces)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
     const CTransaction& tx = *workspaces.front().m_ptx;
     const uint256& hash = workspaces.front().m_hash;
-    TxValidationState& state = workspaces.front().m_state;
-    const bool bypass_limits = args.m_bypass_limits;
 
     if (!m_subpackage.m_all_conflicts.empty()) Assume(args.m_allow_replacement);
     // Remove conflicting transactions from the mempool
@@ -1323,18 +1319,6 @@ bool MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args, std::vector<Workspa
     // Don't attempt to process the same conflicts repeatedly during subpackage evaluation:
     // they no longer exist on subsequent calls to Finalize() post-Apply()
     m_subpackage.m_all_conflicts.clear();
-
-    // trim mempool and check if tx was trimmed
-    // If we are validating a package, don't trim here because we could evict a previous transaction
-    // in the package. LimitMempoolSize() should be called at the very end to make sure the mempool
-    // is still within limits and package submission happens atomically.
-    if (!args.m_package_submission && !bypass_limits) {
-        LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
-        if (!m_pool.exists(GenTxid::Txid(hash)))
-            // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
-            return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
-    }
-    return true;
 }
 
 bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& workspaces,
@@ -1467,11 +1451,19 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
                                             ws.m_base_fees, effective_feerate, single_wtxid);
     }
 
-    if (!FinalizeSubpackage(args, workspaces)) {
-        // The only possible failure reason is fee-related (mempool full).
-        // Failed for fee reasons. Provide the effective feerate and which txns were included.
-        Assume(ws.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE);
-        return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), {ws.m_ptx->GetWitnessHash()});
+    FinalizeSubpackage(args, workspaces);
+
+    // trim mempool and check if tx was trimmed
+    // If we are validating a package, don't trim here because we could evict a previous transaction
+    // in the package. LimitMempoolSize() should be called at the very end to make sure the mempool
+    // is still within limits and package submission happens atomically.
+    if (!args.m_package_submission && !args.m_bypass_limits) {
+        LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+        if (!m_pool.exists(GenTxid::Txid(ws.m_hash))) {
+            // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
+            ws.m_state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
+            return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), {ws.m_ptx->GetWitnessHash()});
+        }
     }
 
     if (m_pool.m_opts.signals) {
