@@ -24,6 +24,7 @@ These are the dependencies currently used by Dash Core. You can find instruction
 | Qt | [5.15.11](https://download.qt.io/official_releases/qt/) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No | |  |
 | SQLite | [3.32.1](https://sqlite.org/download.html) | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) |  |  |  |
 | XCB |  |  |  |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) (Linux only) |
+| systemtap ([tracing](tracing.md))|  |  |  |  | |
 | xkbcommon |  |  |  |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) (Linux only) |
 | ZeroMQ | [4.3.1](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
 | zlib |  |  |  |  | [Yes](https://github.com/dashpay/dash/blob/develop/depends/packages/qt.mk) |
@@ -41,6 +42,7 @@ Some dependencies are not needed in all configurations. The following are some f
 * libnatpmp is not needed with `--without-natpmp`.
 * Qt is not needed with `--without-gui`.
 * If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass `--with-qrencode`.
+* If the systemtap dependency is absent, USDT support won't compiled in.
 * ZeroMQ is needed only with the `--with-zmq` option.
 
 #### Other
