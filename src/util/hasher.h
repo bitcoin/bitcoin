@@ -30,7 +30,7 @@ private:
     const uint64_t k0, k1;
 
 public:
-    SaltedOutpointHasher();
+    SaltedOutpointHasher(bool deterministic = false);
 
     /**
      * This *must* return size_t. With Boost 1.46 on 32-bit systems the

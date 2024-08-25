@@ -254,10 +254,8 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.args = nullptr;
-    UnloadBlockIndex(m_node.mempool.get(), *m_node.chainman);
     m_node.mempool.reset();
     m_node.scheduler.reset();
-    m_node.chainman->Reset();
     m_node.chainman.reset();
 }
 
@@ -269,14 +267,18 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);
 
-    m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
-    m_node.chainman->ActiveChainstate().InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
-    assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
-    m_node.chainman->ActiveChainstate().InitCoinsCache(1 << 23);
-    assert(m_node.chainman->ActiveChainstate().CanFlushToDisk());
-    if (!m_node.chainman->ActiveChainstate().LoadGenesisBlock()) {
-        throw std::runtime_error("LoadGenesisBlock failed.");
+    {
+        LOCK(::cs_main);
+
+        m_node.chainman->InitializeChainstate(m_node.mempool.get(), *m_node.evodb, m_node.chain_helper, llmq::chainLocksHandler, llmq::quorumInstantSendManager);
+        m_node.chainman->ActiveChainstate().InitCoinsDB(
+            /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        assert(!m_node.chainman->ActiveChainstate().CanFlushToDisk());
+        m_node.chainman->ActiveChainstate().InitCoinsCache(1 << 23);
+        assert(m_node.chainman->ActiveChainstate().CanFlushToDisk());
+        if (!m_node.chainman->ActiveChainstate().LoadGenesisBlock()) {
+            throw std::runtime_error("LoadGenesisBlock failed.");
+        }
     }
 
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);

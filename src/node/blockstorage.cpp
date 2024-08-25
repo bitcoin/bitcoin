@@ -23,6 +23,8 @@
 #include <validation.h>
 #include <walletinitinterface.h>
 
+#include <map>
+
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fPruneMode = false;
@@ -312,21 +314,6 @@ bool BlockManager::LoadBlockIndex(const Consensus::Params& consensus_params)
     }
 
     return true;
-}
-
-void BlockManager::Unload()
-{
-    m_blocks_unlinked.clear();
-
-    m_block_index.clear();
-    m_prev_block_index.clear();
-
-    m_blockfile_info.clear();
-    m_last_blockfile = 0;
-    m_dirty_blockindex.clear();
-    m_dirty_fileinfo.clear();
-
-    m_have_pruned = false;
 }
 
 bool BlockManager::WriteBlockIndexDB()
@@ -833,6 +820,9 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
         // -reindex
         if (fReindex) {
             int nFile = 0;
+            // Map of disk positions for blocks with unknown parent (only used for reindex);
+            // parent hash -> child disk position, multiple children can have the same parent.
+            std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
             while (true) {
                 FlatFilePos pos(nFile, 0);
                 if (!fs::exists(GetBlockPosFilename(pos))) {
@@ -843,7 +833,7 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
                     break; // This error is logged in OpenBlockFile
                 }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos);
+                chainman.ActiveChainstate().LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
