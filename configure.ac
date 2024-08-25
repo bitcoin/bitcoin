@@ -1419,6 +1419,7 @@ if test x$use_usdt != xno; then
     [AC_MSG_RESULT(no); use_usdt=no;]
   )
 fi
+AM_CONDITIONAL([ENABLE_USDT_TRACEPOINTS], [test "$use_usdt" = "yes"])
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
