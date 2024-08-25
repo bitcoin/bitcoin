@@ -6,6 +6,7 @@ target_sources(fuzz
   PRIVATE
     coincontrol.cpp
     coinselection.cpp
+    crypter.cpp
     fees.cpp
     $<$<BOOL:${USE_SQLITE}>:${CMAKE_CURRENT_LIST_DIR}/notifications.cpp>
     parse_iso8601.cpp
