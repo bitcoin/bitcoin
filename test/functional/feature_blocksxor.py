@@ -3,7 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test support for XORed block data and undo files (`-blocksxor` option)."""
-import os
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
@@ -54,7 +53,7 @@ class BlocksXORTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX)
 
         self.log.info("Delete XOR key, restart node with '-blocksxor=0', check blk*.dat/rev*.dat file integrity")
-        os.remove(node.blocks_key_path)
+        node.blocks_key_path.unlink()
         self.start_node(0, extra_args=['-blocksxor=0'])
         # checklevel=2 -> verify block validity + undo data
         # nblocks=0    -> verify all blocks
