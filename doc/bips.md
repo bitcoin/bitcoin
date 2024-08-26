@@ -62,6 +62,7 @@ BIPs that are implemented by Bitcoin Core:
   [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
 * [`BIP 371`](https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki): Taproot fields for PSBT as of **v24.0** ([PR 22558](https://github.com/bitcoin/bitcoin/pull/22558)).
+* [`BIP 379`](https://github.com/bitcoin/bips/blob/master/bip-0379.md): Miniscript was partially implemented in **v24.0** ([PR 24148](https://github.com/bitcoin/bitcoin/pull/24148)), and fully implemented as of **v26.0** ([PR 27255](https://github.com/bitcoin/bitcoin/pull/27255)).
 * [`BIP 380`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki)
   [`381`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki)
   [`382`](https://github.com/bitcoin/bips/blob/master/bip-0382.mediawiki)
@@ -70,4 +71,5 @@ BIPs that are implemented by Bitcoin Core:
   [`385`](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki):
   Output Script Descriptors, and most of Script Expressions are implemented as of **v0.17.0** ([PR 13697](https://github.com/bitcoin/bitcoin/pull/13697)).
 * [`BIP 386`](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki): tr() Output Script Descriptors are implemented as of **v22.0** ([PR 22051](https://github.com/bitcoin/bitcoin/pull/22051)).
+* [`BIP 387`](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki): Tapscript Multisig Output Script Descriptors are implemented as of **v24.0** ([PR 24043](https://github.com/bitcoin/bitcoin/pull/24043)).
 * [`BIP 431`](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki): transactions with nVersion=3 are standard and treated as Topologically Restricted Until Confirmation as of **v28.0** ([PR 29496](https://github.com/bitcoin/bitcoin/pull/29496)).
