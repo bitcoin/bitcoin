@@ -72,11 +72,10 @@ struct ConnmanTestMsg : public CConnman {
     }
 
     void CreateNodeFromAcceptedSocketPublic(std::unique_ptr<Sock> sock,
-                                            NetPermissionFlags permissions,
                                             const CAddress& addr_bind,
                                             const CAddress& addr_peer)
     {
-        CreateNodeFromAcceptedSocket(std::move(sock), permissions, addr_bind, addr_peer);
+        CreateNodeFromAcceptedSocket(std::move(sock), addr_bind, addr_peer);
     }
 
     bool InitBindsPublic(const CConnman::Options& options)
