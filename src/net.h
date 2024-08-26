@@ -1268,18 +1268,15 @@ private:
     void ThreadOpenConnections(std::vector<std::string> connect, Span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
-    void AcceptConnection(const Sock& listen_sock);
 
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
      * the `m_nodes` member.
      * @param[in] sock Connected socket to communicate with the peer.
-     * @param[in] permission_flags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
      * @param[in] addr The address and port at the peer's side of the connection.
      */
     void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                      NetPermissionFlags permission_flags,
                                       const CService& addr_bind,
                                       const CService& addr);
 

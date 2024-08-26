@@ -1698,43 +1698,17 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::AcceptConnection(const Sock& listen_sock) {
-    struct sockaddr_storage sockaddr;
-    socklen_t len = sizeof(sockaddr);
-    auto sock = listen_sock.Accept((struct sockaddr*)&sockaddr, &len);
-
-    if (!sock) {
-        const int nErr = WSAGetLastError();
-        if (nErr != WSAEWOULDBLOCK) {
-            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
-        }
-        return;
-    }
-
-    CService addr;
-    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr)) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
-    } else {
-        addr = MaybeFlipIPv6toCJDNS(addr);
-    }
-
-    const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
+void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
+                                            const CService& addr_bind,
+                                            const CService& addr)
+{
+    int nInbound = 0;
 
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
     auto it{m_listen_permissions.find(addr_bind)};
     if (it != m_listen_permissions.end()) {
         NetPermissions::AddFlag(permission_flags, it->second);
     }
-
-    CreateNodeFromAcceptedSocket(std::move(sock), permission_flags, addr_bind, addr);
-}
-
-void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                            NetPermissionFlags permission_flags,
-                                            const CService& addr_bind,
-                                            const CService& addr)
-{
-    int nInbound = 0;
 
     AddWhitelistPermissionFlags(permission_flags, addr, vWhitelistedRangeIncoming);
 
@@ -2158,7 +2132,16 @@ void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock
         }
         const auto it = events_per_sock.find(sock);
         if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
-            AcceptConnection(*sock);
+            CService addr_accepted;
+
+            auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
+
+            if (sock_accepted) {
+                addr_accepted = MaybeFlipIPv6toCJDNS(addr_accepted);
+                const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
+
+                CreateNodeFromAcceptedSocket(std::move(sock_accepted), addr_bind, addr_accepted);
+            }
         }
     }
 }
@@ -3040,7 +3023,7 @@ void CConnman::ThreadI2PAcceptIncoming()
             continue;
         }
 
-        CreateNodeFromAcceptedSocket(std::move(conn.sock), NetPermissionFlags::None, conn.me, conn.peer);
+        CreateNodeFromAcceptedSocket(std::move(conn.sock), conn.me, conn.peer);
 
         err_wait = err_wait_begin;
     }
