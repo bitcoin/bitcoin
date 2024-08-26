@@ -301,7 +301,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>%n jaroj</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">defaŭlta monujo</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -475,10 +479,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Close all wallets</source>
         <translation type="unfinished">Fermi ĉiujn monujojn</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">defaŭlta monujo</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -702,10 +702,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Malfermi monujon averto</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">defaŭlta monujo</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1342,6 +1338,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Malekzili</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Neniu</translation>
+    </message>
+    <message>
         <source>To</source>
         <translation type="unfinished">Al</translation>
     </message>
@@ -1722,10 +1722,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Bonvolu kontroli la adreson kaj reprovi.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">La adreso, kiun vi enmetis, referencas neniun ŝlosilon.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Malŝloso de monujo estas nuligita.</translation>
     </message>
@@ -2057,11 +2053,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Send Coins</source>
         <translation type="unfinished">Sendi Bitmonon</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">defaŭlta monujo</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>

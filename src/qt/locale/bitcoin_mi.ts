@@ -244,7 +244,7 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     </message>
     <message>
         <source>Runaway exception</source>
-        <translation type="unfinished">&lt;text_to_translate&gt;Tūkino whakawhiti&lt;/text_to_translate&gt;</translation>
+        <translation type="unfinished">Tūkino whakawhiti</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
@@ -630,10 +630,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">He whakawhitiwhitinga nui rawa te whakapau kaha</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Kāore e taea te whakararuraru i te mahere mō te -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

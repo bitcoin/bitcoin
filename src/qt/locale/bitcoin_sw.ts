@@ -243,6 +243,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Faili ya mipangilio ya asilimia %1 inaweza kuwa mbovu au batili.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Ubaguzi wa kukimbia</translation>
     </message>
@@ -383,7 +387,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation type="unfinished">Proxy imeamilishwa: %1</translation>
+        <translation type="unfinished">Proxy &lt;b&gt;imeamilishwa&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -487,7 +491,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Onyesha orodha ya anuani za kutuma na chapa</translation>
+        <translation type="unfinished">Onyesha orodha ya anuani za kutuma zilizotumika na chapa</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -510,7 +514,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Onyo</translation>
+        <translation type="unfinished">Kosa</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -526,7 +530,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Funga Pochi</translation>
+        <translation type="unfinished">Funga pochi</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -552,7 +556,8 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">Chapa: %1</translation>
+        <translation type="unfinished">Chapa: %1
+</translation>
     </message>
     </context>
 <context>

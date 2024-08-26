@@ -1468,10 +1468,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Palun kontrolli aadressi ja proovi uuesti.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Sisestatud aadress ei viita võtmele.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Rahakoti lahtilukustamine on katkestatud.</translation>
     </message>

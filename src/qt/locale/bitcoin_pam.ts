@@ -803,10 +803,6 @@
         <translation type="unfinished">Maliaring pakilawe pasibayu ing address at pasibayuan ya iti.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Ing milub a address ali ya mag-refer king metung a key.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Me-kansela ya ing pamag-unlock king wallet.</translation>
     </message>

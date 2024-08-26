@@ -287,6 +287,10 @@
         <translation type="unfinished">&amp;Par %1</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation type="unfinished">Rādīt informāciju par %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation type="unfinished">Par &amp;Qt</translation>
     </message>

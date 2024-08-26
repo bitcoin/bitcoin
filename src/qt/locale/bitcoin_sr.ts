@@ -184,6 +184,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Унеси стару лозинку и нову лозинку новчаника.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Nastavi</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Упамти, шифрирање новчаника не може у потуности заштити твоје биткоине од крађе од стране малвера инфицира твој рачунар.</translation>
     </message>
@@ -413,7 +417,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 kB</source>
         <translation type="unfinished">%1 килобајта</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">подразумевани новчаник</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -717,10 +725,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Филтрирај вредности у картици за преглед</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">подразумевани новчаник</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -1059,10 +1063,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Упозорење приликом отварања новчаника</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">подразумевани новчаник</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -2380,6 +2380,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Активност мреже онемогућена</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Nijedan</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Извршење команде без новчаника</translation>
     </message>
@@ -3051,8 +3055,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Потписи - Потпиши / Потврди поруку</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Можете потписати поруку/споразум са вашом адресом да би сте доказали да можете примити биткоин послат ка њима. Будите опрезни да не потписујете ништа нејасно или случајно, јер се може десити напад крађе идентитета, да потпишете ваш идентитет нападачу. Потпишите само потпуно детаљне изјаве са којима се слажете.</translation>
+        <source>&amp;Sign Message</source>
+        <translation type="unfinished">&amp;Потпиши поруку</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -3139,10 +3143,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Молим проверите адресу и покушајте поново.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Унесена адреса се не односи на кључ.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Откључавање новчаника је отказано.</translation>
     </message>
@@ -3199,6 +3199,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>conflicted with a transaction with %1 confirmations</source>
+        <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
+        <translation type="unfinished">постоји неусаглашеност са трансакцијом са %1 потврда</translation>
+    </message>
     <message>
         <source>abandoned</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an abandoned transaction.</extracomment>
@@ -3679,11 +3684,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>Could not commit transaction</source>
         <translation type="unfinished">Трансакција није могућа</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">подразумевани новчаник</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3737,10 +3738,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Дистрибуирано под MIT софтверском лиценцом, погледајте придружени документ %s или %s</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Молим проверите да су време и датум на вашем рачунару тачни. Уколико је сат нетачан, %s неће радити исправно.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>

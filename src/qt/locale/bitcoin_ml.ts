@@ -89,6 +89,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">കോമയാൽ വേർതിരിച്ച ഫയൽ (* .csv)</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">സ്വീകരിക്കുന്ന വിലാസങ്ങൾ - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">കയറ്റുമതി പരാജയപ്പെട്ടു</translation>
     </message>
@@ -338,7 +346,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -395,7 +407,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">പണസഞ്ചി </translation>
+        <translation type="unfinished">വാലറ്റ്:</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
@@ -597,10 +609,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">അവലോകന ടാബിൽ മൂല്യങ്ങൾ മാസ്ക് ചെയ്യുക</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -856,10 +864,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -1476,13 +1480,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">പിശക് </translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">സ്ഥിരം ആയ വാലറ്റ്</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

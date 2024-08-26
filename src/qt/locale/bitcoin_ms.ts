@@ -36,8 +36,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">
-Alihkan fail data ke dalam tab semasa</translation>
+        <translation type="unfinished">Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -81,8 +80,12 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">Terdapat ralat semasa cubaan menyimpan senarai alamat kepada %1. Sila cuba lagi.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Alamat Kirim  - %1</translation>
+    </message>
+    <message>
         <source>Receiving addresses - %1</source>
-        <translation type="unfinished">Alamat Terima - %1</translation>
+        <translation type="unfinished">Alamat Penerima - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -228,7 +231,12 @@ Alihkan fail data ke dalam tab semasa</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">dompet lalai
+</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -373,11 +381,6 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Close wallet</source>
         <translation type="unfinished">Tutup Wallet</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">dompet lalai
-</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -395,11 +398,6 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">dompet lalai
-</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -548,14 +546,6 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     </context>
 <context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">dompet lalai
-</translation>
-    </message>
-</context>
-<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -563,8 +553,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">
-Alihkan fail data ke dalam tab semasa</translation>
+        <translation type="unfinished">Alihkan fail data ke dalam tab semasa</translation>
     </message>
     </context>
 <context>

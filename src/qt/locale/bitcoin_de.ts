@@ -184,6 +184,14 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <translation type="unfinished">Geben Sie die alte und die neue Wallet-Passphrase ein.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Weiter</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Zurück</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Beachten Sie, dass das Verschlüsseln Ihrer Wallet nicht komplett vor Diebstahl Ihrer Bitcoins durch Malware schützt, die Ihren Computer infiziert hat.</translation>
     </message>
@@ -289,6 +297,10 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
         <translation type="unfinished">Ein schwerwiegender Fehler ist aufgetreten. Überprüfen Sie, ob die Einstellungsdatei beschreibbar ist, oder versuchen Sie, mit -nosettings zu starten.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Fehler: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
@@ -423,7 +435,11 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
             <numerusform>%n Jahre</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">Standard-Wallet</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -501,7 +517,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished">Die Passphrase ändern, die für die Wallet-Verschlüsselung benutzt wird</translation>
+        <translation type="unfinished">Ändert die Passphrase, die für die Wallet-Verschlüsselung benutzt wird</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -521,7 +537,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished">Die zu Ihrer Wallet gehörenden privaten Schlüssel verschlüsseln</translation>
+        <translation type="unfinished">Verschlüsselt die zu Ihrer Wallet gehörenden privaten Schlüssel</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
@@ -533,7 +549,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Sign &amp;message…</source>
-        <translation type="unfinished">&amp;Nachricht signieren</translation>
+        <translation type="unfinished">&amp;Nachricht unterzeichnen…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -557,11 +573,11 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">Wallet schließen</translation>
+        <translation type="unfinished">Schließe Wallet…</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">Wallet erstellen…</translation>
+        <translation type="unfinished">Erstelle Wallet…</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
@@ -585,7 +601,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Synchronisiere Header (%1%)…</translation>
+        <translation type="unfinished">Synchronisiere Headers (%1%)…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
@@ -599,126 +615,12 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Verarbeite Blöcke auf Datenträger...</translation>
     </message>
-    <message>
-        <source>Connecting to peers…</source>
-        <translation type="unfinished">Verbinde mit Gegenstellen...</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Zahlungen anfordern (erzeugt QR-Codes und bitcoin: URIs)</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Liste verwendeter Zahlungsadressen und Bezeichnungen anzeigen</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Liste verwendeter Empfangsadressen und Bezeichnungen anzeigen</translation>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Kommandozeilenoptionen</translation>
-    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform> %n Block der Transaktionshistorie verarbeitet.</numerusform>
-            <numerusform> %n Blöcke der Transaktionshistorie verarbeitet.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation type="unfinished">%1 im Rückstand</translation>
-    </message>
-    <message>
-        <source>Catching up…</source>
-        <translation type="unfinished">Hole auf…</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished">Zuletzt empfangener Block wurde generiert vor %1 .</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished">Transaktionen hiernach werden noch nicht angezeigt.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Fehler</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation type="unfinished">Warnung</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation type="unfinished">Informationen</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation type="unfinished">Auf aktuellem Stand</translation>
-    </message>
-    <message>
-        <source>Ctrl+Q</source>
-        <translation type="unfinished">STRG+B</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Lade teilsignierte Bitcoin-Transaktion</translation>
-    </message>
-    <message>
-        <source>Load PSBT from &amp;clipboard…</source>
-        <translation type="unfinished">Lade PSBT aus Zwischenablage…</translation>
-    </message>
-    <message>
-        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Lade teilsignierte Bitcoin-Transaktion aus Zwischenablage</translation>
-    </message>
-    <message>
-        <source>Node window</source>
-        <translation type="unfinished">Node-Fenster</translation>
-    </message>
-    <message>
-        <source>Open node debugging and diagnostic console</source>
-        <translation type="unfinished">Öffne Node-Konsole für Fehlersuche und Diagnose</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses</source>
-        <translation type="unfinished">&amp;Versandadressen</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Empfangsadressen</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Öffne bitcoin: URI</translation>
-    </message>
-    <message>
-        <source>Open Wallet</source>
-        <translation type="unfinished">Wallet öffnen</translation>
-    </message>
-    <message>
-        <source>Open a wallet</source>
-        <translation type="unfinished">Eine Wallet öffnen</translation>
-    </message>
-    <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">Wallet schließen</translation>
-    </message>
-    <message>
-        <source>Restore Wallet…</source>
-        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
-        <translation type="unfinished">Wallet wiederherstellen...</translation>
-    </message>
-    <message>
-        <source>Restore a wallet from a backup file</source>
-        <extracomment>Status tip for Restore Wallet menu item</extracomment>
-        <translation type="unfinished">Wiederherstellen einer Wallet aus einer Sicherungsdatei</translation>
-    </message>
-    <message>
-        <source>Close all wallets</source>
-        <translation type="unfinished">Schließe alle Wallets</translation>
     </message>
     <message>
         <source>Migrate Wallet</source>
@@ -739,10 +641,6 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Blende die Werte im Übersichtsreiter aus</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Standard-Wallet</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -800,8 +698,8 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
-            <numerusform>%n aktive Verbindung(en) zum Bitcoin-Netzwerk</numerusform>
+            <numerusform>%n aktive Verbindung zum Bitcoin-Netzwerk</numerusform>
+            <numerusform>%n aktive Verbindungen zum Bitcoin-Netzwerk</numerusform>
         </translation>
     </message>
     <message>
@@ -826,7 +724,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
-        <translation type="unfinished">Synchronisiere Header vorab (%1%)…</translation>
+        <translation type="unfinished">Synchronisiere Header (%1%)…</translation>
     </message>
     <message>
         <source>Error creating wallet</source>
@@ -1147,10 +1045,6 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Wallet öffnen Warnung</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Standard-Wallet</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -2325,10 +2219,6 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">Die Transportschicht-Version: %1</translation>
     </message>
     <message>
-        <source>The BIP324 session ID string in hex, if any.</source>
-        <translation type="unfinished">Die BIP324-Sitzungs-ID-Zeichenfolge in hexadezimaler Form, falls vorhanden.</translation>
-    </message>
-    <message>
         <source>Whether we relay transactions to this peer.</source>
         <translation type="unfinished">Ob wir Adressen an diese Gegenstelle weiterleiten.</translation>
     </message>
@@ -2395,10 +2285,6 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">User-Agent</translation>
     </message>
     <message>
-        <source>Node window</source>
-        <translation type="unfinished">Node-Fenster</translation>
-    </message>
-    <message>
         <source>Current block height</source>
         <translation type="unfinished">Aktuelle Blockhöhe</translation>
     </message>
@@ -2425,6 +2311,10 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Direction/Type</source>
         <translation type="unfinished">Richtung/Typ</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">Die BIP324-Sitzungs-ID-Zeichenfolge in hexadezimaler Form.</translation>
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
@@ -2637,6 +2527,10 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">Netzwerkaktivität deaktiviert</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">Keine</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -3369,8 +3263,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <translation type="unfinished">Nachricht &amp;signieren</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Sie können Nachrichten/Vereinbarungen mit Hilfe Ihrer Adressen signieren, um zu beweisen, dass Sie Bitcoins empfangen können, die an diese Adressen überwiesen werden. Seien Sie vorsichtig und signieren Sie nichts Vages oder Willkürliches, um Ihre Indentität vor Phishingangriffen zu schützen. Signieren Sie nur vollständig-detaillierte Aussagen, mit denen Sie auch einverstanden sind.</translation>
+        <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">Du kannst Nachrichten/Vereinbarungen mit Deinen Legacy-(P2PKH)-Adressen unterzeichnen, um zu beweisen, dass Du Bitcoins empfangen kannst, die an sie gesendet werden. Achte darauf, nichts Vages oder Zufälliges zu signieren, da Phishing-Angriffe versuchen könnten, Dich dazu zu verleiten, Deine Identität zu unterschreiben. Unterschreibe nur ausführliche Erklärungen, denen Du zustimmst.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -3457,8 +3351,8 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
         <translation type="unfinished">Bitte überprüfen Sie die Adresse und versuchen Sie es erneut.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Die eingegebene Adresse verweist nicht auf einen Schlüssel.</translation>
+        <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
+        <translation type="unfinished">Die eingegebene Adresse bezieht sich nicht auf einen Legacy-Schlüssel (P2PKH). Die Nachrichtensignierung für SegWit und andere Adresstypen, die nicht zu P2PKH gehören, wird in dieser Version von %1 nicht unterstützt. Bitte überprüfe die Adresse und versuche es erneut.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -4026,9 +3920,8 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
         <translation type="unfinished">PSBT kopiert</translation>
     </message>
     <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">In die Zwischenablage kopiert </translation>
+        <source>Fee-bump PSBT copied to clipboard</source>
+        <translation type="unfinished">Fee-Bump PSBT in die Zwischenablage kopiert</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -4039,12 +3932,12 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
         <translation type="unfinished">Konnte Transaktion nicht übergeben</translation>
     </message>
     <message>
-        <source>Can't display address</source>
-        <translation type="unfinished">Die Adresse kann nicht angezeigt werden</translation>
+        <source>Signer error</source>
+        <translation type="unfinished">Fehler beim Signieren</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Standard-Wallet</translation>
+        <source>Can't display address</source>
+        <translation type="unfinished">Die Adresse kann nicht angezeigt werden</translation>
     </message>
 </context>
 <context>
@@ -4178,10 +4071,6 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
         <translation type="unfinished">Kein Format der Wallet-Datei angegeben. Um createfromdump zu nutzen, muss -format=&lt;format&gt; angegeben werden.</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da %s ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
-    </message>
-    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation type="unfinished">Wenn sie %s nützlich finden, sind Helfer sehr gern gesehen. Besuchen Sie %s um mehr über das Softwareprojekt zu erfahren.</translation>
     </message>
@@ -4287,10 +4176,6 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">-maxmempool muss mindestens %d MB betragen</translation>
     </message>
     <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Ein fataler interner Fehler ist aufgetreten, siehe debug.log für Details</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">Kann Adresse in -%s nicht auflösen: '%s'</translation>
     </message>
@@ -4339,6 +4224,12 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">Es war nicht möglich, die Bump-Gebühren zu berechnen, da unbestätigte UTXOs von einem enormen Cluster unbestätigter Transaktionen abhängen.</translation>
     </message>
     <message>
+        <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
+</source>
+        <translation type="unfinished">Fehler beim Entfernen des Snapshot-Chainstate-Verzeichnisses (%s). Entferne es manuell, bevor dem Neustart.
+</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Kann ungültige Datei peers.dat nicht umbenennen. Bitte Verschieben oder Löschen und noch einmal versuchen.</translation>
     </message>
@@ -4347,12 +4238,28 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
         <translation type="unfinished">Gebührenschätzung fehlgeschlagen. Fallbackgebühr ist deaktiviert. Warten Sie ein paar Blöcke oder aktivieren Sie %s.</translation>
     </message>
     <message>
+        <source>Flushing block file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">Fehler beim Leeren der Blockdatei auf die Festplatte. Dies ist wahrscheinlich das Ergebnis eines E/A-Fehlers.</translation>
+    </message>
+    <message>
+        <source>Flushing undo file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">Fehler beim Leeren der Undo-Datei auf den Datenträger. Dies ist wahrscheinlich das Ergebnis eines E/A-Fehlers.</translation>
+    </message>
+    <message>
         <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
         <translation type="unfinished">Inkompatible Optionen: -dnsseed=1 wurde explizit angegeben, aber -onlynet verbietet Verbindungen zu IPv4/IPv6</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation type="unfinished">Ungültiger Betrag für %s=&lt;amount&gt;: '%s' (muss mindestens die MinRelay-Gebühr von %s betragen, um festhängende Transaktionen zu verhindern)</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is less than transaction weight without inputs</source>
+        <translation type="unfinished">Das maximale Transaktionsgewicht ist kleiner als das Transaktionsgewicht ohne Inputs</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is too low, can not accommodate change output</source>
+        <translation type="unfinished">Das maximale Transaktionsgewicht ist zu niedrig und kann den Change-Output nicht aufnehmen</translation>
     </message>
     <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
@@ -4369,6 +4276,14 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     <message>
         <source>Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not provided</source>
         <translation type="unfinished">Ausgehende Verbindungen sind auf i2p (-onlynet=i2p) beschränkt, aber -i2psam ist nicht angegeben</translation>
+    </message>
+    <message>
+        <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
+        <translation type="unfinished">Die Umbenennung von '%s' -&gt; '%s' ist fehlgeschlagen. Das Hintergrund-Verzeichnis chainstate leveldb kann nicht bereinigt werden.</translation>
+    </message>
+    <message>
+        <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">Die Kombination aus den vorausgewählten Inputs und der automatischen Auswahl der Wallet-Inputs überschreitet das maximale Transaktionsgewicht. Bitte versuche, einen kleineren Betrag zu senden oder die UTXOs der Wallet manuell zu konsolidieren.</translation>
     </message>
     <message>
         <source>The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
@@ -4413,6 +4328,10 @@ Bitte mit der neuesten Softwareversion versuchen.
 </translation>
     </message>
     <message>
+        <source>Your computer's date and time appear to be more than %d minutes out of sync with the network, this may lead to consensus failure. After you've confirmed your computer's clock, this message should no longer appear when you restart your node. Without a restart, it should stop showing automatically after you've connected to a sufficient number of new outbound peers, which may take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` RPC methods to get more info.</source>
+        <translation type="unfinished">Das Datum und die Uhrzeit des Computers scheinen mehr als %d Minuten nicht mit dem Netzwerk synchronisiert zu sein, was zu einem Konsensus-Fehler führen kann. Nachdem die Uhr des Computers überprüft wurde und der Node neu gestatet wurde, sollte diese Meldung nicht mehr angezeigt werden. Ohne Neustart sollte es nicht mehr automatisch angezeigt werden, nachdem eine Verbindung mit einer ausreichenden Anzahl neuer ausgehender Peers hergestellt wurde, was einige Zeit dauern kann. Das Feld 'timeoffset' der RPC-Methoden 'getpeerinfo' und 'getnetworkinfo' kann überprüft werden, um weitere Informationen zu erhalten.</translation>
+    </message>
+    <message>
         <source>
 Unable to cleanup failed migration</source>
         <translation type="unfinished">
@@ -4425,12 +4344,28 @@ Unable to restore backup of wallet.</source>
 Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
     </message>
     <message>
+        <source>whitebind may only be used for incoming connections ("out" was passed)</source>
+        <translation type="unfinished">whitebind darf nur für eingehende Verbindungen verwendet werden ("out" wurde übergeben)</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details: </source>
+        <translation type="unfinished">Es ist ein schwerwiegender interner Fehler aufgetreten, siehe debug.log für Details:</translation>
+    </message>
+    <message>
+        <source>Assumeutxo data not found for the given blockhash '%s'.</source>
+        <translation type="unfinished">Für den angegebenen Blockhash '%s' wurden keine Assumeutxo-Daten gefunden.</translation>
+    </message>
+    <message>
         <source>Block verification was interrupted</source>
         <translation type="unfinished">Blocküberprüfung wurde unterbrochen</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Konfigurationseinstellungen für %s sind nur auf %s network gültig, wenn in Sektion [%s]</translation>
+    </message>
+    <message>
+        <source>Corrupt block found indicating potential hardware failure.</source>
+        <translation type="unfinished">Beschädigter Block gefunden, was auf einen möglichen Hardwarefehler hinweist.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -4459,6 +4394,10 @@ Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
     <message>
         <source>Dump file %s does not exist.</source>
         <translation type="unfinished">Speicherauszugsdatei %sexistiert nicht.</translation>
+    </message>
+    <message>
+        <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
+        <translation type="unfinished">Fehler bei der Plausibilitätsprüfung der Elliptischen Kurvenkryptografie. %s wird heruntergefahren.</translation>
     </message>
     <message>
         <source>Error committing db txn for wallet transactions removal</source>
@@ -4610,8 +4549,20 @@ Berechnet: %s, erwartet: %s</translation>
         <translation type="unfinished">Fehler: Datenbank-Transaktion kann für Wallet %s nicht ausgeführt werden.</translation>
     </message>
     <message>
+        <source>Failed to connect best block (%s).</source>
+        <translation type="unfinished">Verbindung zum besten Block (%s) konnte nicht hergestellt werden.</translation>
+    </message>
+    <message>
+        <source>Failed to disconnect block.</source>
+        <translation type="unfinished">Block konnte nicht getrennt werden.</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Fehler: Konnte auf keinem Port hören. Wenn dies so gewünscht wird -listen=0 verwenden.</translation>
+    </message>
+    <message>
+        <source>Failed to read block.</source>
+        <translation type="unfinished">Block konnte nicht gelesen werden.</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
@@ -4624,6 +4575,22 @@ Berechnet: %s, erwartet: %s</translation>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Verifizierung der Datenbank fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>Failed to write block.</source>
+        <translation type="unfinished">Block konnte nicht geschrieben werden.</translation>
+    </message>
+    <message>
+        <source>Failed to write to block index database.</source>
+        <translation type="unfinished">Schreiben in die Blockindex-Datenbank fehlgeschlagen.</translation>
+    </message>
+    <message>
+        <source>Failed to write to coin database.</source>
+        <translation type="unfinished">Schreiben in die Coin-Datenbank fehlgeschlagen.</translation>
+    </message>
+    <message>
+        <source>Failed to write undo data.</source>
+        <translation type="unfinished">Das Schreiben der Undo-Daten ist fehlgeschlagen.</translation>
     </message>
     <message>
         <source>Failure removing transaction: %s</source>
@@ -4722,6 +4689,10 @@ Berechnet: %s, erwartet: %s</translation>
         <translation type="unfinished">Lade Wallet...</translation>
     </message>
     <message>
+        <source>Maximum transaction weight must be between %d and %d</source>
+        <translation type="unfinished">Das maximale Transaktionsgewicht muss zwischen %d und %d liegen.</translation>
+    </message>
+    <message>
         <source>Missing amount</source>
         <translation type="unfinished">Fehlender Betrag</translation>
     </message>
@@ -4748,6 +4719,10 @@ Berechnet: %s, erwartet: %s</translation>
     <message>
         <source>Not solvable pre-selected input %s</source>
         <translation type="unfinished">Nicht auflösbare vorausgewählter Input %s</translation>
+    </message>
+    <message>
+        <source>Only direction was set, no permissions: '%s'</source>
+        <translation type="unfinished">Nur Richtung wurde festgelegt, keine Genehmigungen: '%s'</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4795,6 +4770,18 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Sektion [%s] ist nicht delegiert.</translation>
     </message>
     <message>
+        <source>Signer did not echo address</source>
+        <translation type="unfinished">Der Signierer hat die Adresse nicht wiederholt</translation>
+    </message>
+    <message>
+        <source>Signer echoed unexpected address %s</source>
+        <translation type="unfinished">Unterzeichner wiederholte unerwartete Adresse %s</translation>
+    </message>
+    <message>
+        <source>Signer returned error: %s</source>
+        <translation type="unfinished">Der Signierer hat einen Fehler zurückgegeben: %s</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation type="unfinished">Signierung der Transaktion fehlgeschlagen</translation>
     </message>
@@ -4823,6 +4810,18 @@ Verifikations-Error: %s</translation>
         <translation type="unfinished">Starte Netzwerk-Threads...</translation>
     </message>
     <message>
+        <source>System error while flushing: %s</source>
+        <translation type="unfinished">Systemfehler beim Leeren: %s</translation>
+    </message>
+    <message>
+        <source>System error while loading external block file: %s</source>
+        <translation type="unfinished">Systemfehler beim Laden der externen Blockdatei: %s</translation>
+    </message>
+    <message>
+        <source>System error while saving block to disk: %s</source>
+        <translation type="unfinished">Systemfehler beim Speichern des Blocks auf der Festplatte: %s</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">Der Quellcode ist auf %s verfügbar.</translation>
     </message>
@@ -4837,6 +4836,10 @@ Verifikations-Error: %s</translation>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation type="unfinished">Das Wallet verhindert Zahlungen, die die Mindesttransaktionsgebühr nicht berücksichtigen.</translation>
+    </message>
+    <message>
+        <source>There is no ScriptPubKeyManager for this address</source>
+        <translation type="unfinished">Für diese Adresse gibt es keinen ScriptPubKeyManager</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -4877,10 +4880,6 @@ Verifikations-Error: %s</translation>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transaktion zu groß</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Speicher kann für -maxsigcachesize: '%s' MiB nicht zugewiesen werden:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -4941,6 +4940,10 @@ Verifikations-Error: %s</translation>
     <message>
         <source>Unknown new rules activated (versionbit %i)</source>
         <translation type="unfinished">Unbekannte neue Regeln aktiviert (Versionsbit %i)</translation>
+    </message>
+    <message>
+        <source>Unrecognised option "%s" provided in -test=&lt;option&gt;.</source>
+        <translation type="unfinished">Nicht erkannte Option "%s" in -test=&lt;option&gt; angegeben.</translation>
     </message>
     <message>
         <source>Unsupported global logging level %s=%s. Valid values: %s.</source>

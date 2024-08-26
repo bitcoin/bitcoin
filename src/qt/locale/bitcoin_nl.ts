@@ -180,6 +180,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
         <translation type="unfinished">Voer de oude wachtwoordzin en de nieuwe wachtwoordzin in voor de portemonnee.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Doorgaan</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Onthoud dat het versleutelen van uw portemonnee uw bitcoins niet volledig kan beschermen tegen diefstal, bijvoorbeeld door malware die uw computer infecteert.</translation>
     </message>
@@ -418,6 +422,10 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>%1 GB</source>
         <translation type="unfinished">%1 Gb</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">standaard portemonnee</translation>
     </message>
 </context>
 <context>
@@ -731,10 +739,6 @@ Ondertekenen is alleen mogelijk met adressen van het type 'legacy'.</translation
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Maskeer de waarden op het tabblad Overzicht</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">standaard portemonnee</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -1115,10 +1119,6 @@ Het migratieproces maakt voorafgaand aan het migreren een backup van de wallet. 
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Wallet openen waarschuwing</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">standaard portemonnee</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -2277,10 +2277,6 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21-compatib
         <translation type="unfinished">De transport layer versie: %1</translation>
     </message>
     <message>
-        <source>The BIP324 session ID string in hex, if any.</source>
-        <translation type="unfinished">De BIP324 sessie ID string in hex, indien aanwezig.</translation>
-    </message>
-    <message>
         <source>Session ID</source>
         <translation type="unfinished">Sessie ID</translation>
     </message>
@@ -2381,6 +2377,10 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21-compatib
     <message>
         <source>Direction/Type</source>
         <translation type="unfinished">Richting/Type</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">De BIP324 sessie ID string in hex.</translation>
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
@@ -2553,6 +2553,10 @@ Als je deze fout ziet zou je de aanbieder moeten verzoeken om een BIP21-compatib
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">Netwerkactiviteit uitgeschakeld</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">Geen</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -3237,10 +3241,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation type="unfinished">&amp;Onderteken bericht</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">U kunt berichten/overeenkomsten ondertekenen met uw adres om te bewijzen dat u Bitcoins kunt versturen. Wees voorzichtig met het ondertekenen van iets vaags of willekeurigs, omdat phishingaanvallen u kunnen proberen te misleiden tot het ondertekenen van overeenkomsten om uw identiteit aan hen toe te vertrouwen. Onderteken alleen volledig gedetailleerde verklaringen voordat u akkoord gaat.</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to sign the message with</source>
         <translation type="unfinished">Het Bitcoin adres om bericht mee te ondertekenen</translation>
     </message>
@@ -3323,10 +3323,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">Controleer het adres en probeer het opnieuw.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Het opgegeven adres verwijst niet naar een sleutel.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -3862,11 +3858,6 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">PSBT is gekopieerd</translation>
     </message>
     <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">Gekopieerd naar het klembord</translation>
-    </message>
-    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">Kan transactie niet ondertekenen.</translation>
     </message>
@@ -3877,10 +3868,6 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
     <message>
         <source>Can't display address</source>
         <translation type="unfinished">Adres kan niet weergegeven worden</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">standaard portemonnee</translation>
     </message>
 </context>
 <context>
@@ -4014,10 +4001,6 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
         <translation type="unfinished">Geen walletbestandsformaat opgegeven. Om createfromdump te gebruiken, moet -format=&lt;format&gt; opgegeven worden.</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Waarschuwing: Controleer dat de datum en tijd van uw computer correct zijn ingesteld! Bij een onjuist ingestelde klok zal %s niet goed werken.</translation>
-    </message>
-    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation type="unfinished">Gelieve bij te dragen als je %s nuttig vindt. Bezoek %s voor meer informatie over de software.</translation>
     </message>
@@ -4124,10 +4107,6 @@ Ga naar Bestand &gt; Wallet openen om een wallet te laden.
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation type="unfinished">-maxmempool moet minstens %d MB zijn</translation>
-    </message>
-    <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Een fatale interne fout heeft zich voor gedaan, zie debug.log voor details</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4712,10 +4691,6 @@ Kan mislukte migratie niet opschonen</translation>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transactie te groot</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Kan geen geheugen toekennen voor -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

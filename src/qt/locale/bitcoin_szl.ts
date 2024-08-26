@@ -260,7 +260,11 @@
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">wychodny portmanyj</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -425,10 +429,6 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Pokŏż pōmoc %1 coby zobŏczyć wykŏz wszyjskich ôpcyji piski nakŏzań.</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">wychodny portmanyj</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -621,13 +621,6 @@
         <translation type="unfinished">(wydŏwka)</translation>
     </message>
 </context>
-<context>
-    <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">wychodny portmanyj</translation>
-    </message>
-    </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -1593,11 +1586,7 @@
         <source>New fee:</source>
         <translation type="unfinished">Nowŏ ôpłŏcka:</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">wychodny portmanyj</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
