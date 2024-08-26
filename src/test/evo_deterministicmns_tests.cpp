@@ -814,6 +814,38 @@ void FuncVerifyDB(TestChainSetup& setup)
 
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
+struct TestChainDIP3Setup : public TestChainSetup
+{
+    TestChainDIP3Setup() : TestChainSetup(431) {}
+};
+
+struct TestChainDIP3BeforeActivationSetup : public TestChainSetup
+{
+    TestChainDIP3BeforeActivationSetup() : TestChainSetup(430) {}
+};
+
+struct TestChainV19BeforeActivationSetup : public TestChainSetup
+{
+    TestChainV19BeforeActivationSetup();
+};
+
+struct TestChainV19Setup : public TestChainSetup
+{
+    TestChainV19Setup() : TestChainSetup(899)
+    {
+        bool v19_just_activated{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19) &&
+                                !DeploymentActiveAt(*m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+        assert(v19_just_activated);
+    }
+};
+
+// 5 blocks earlier
+TestChainV19BeforeActivationSetup::TestChainV19BeforeActivationSetup() : TestChainSetup(894)
+{
+    bool v19_active{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    assert(!v19_active);
+}
+
 // DIP3 can only be activated with legacy scheme (v19 is activated later)
 BOOST_AUTO_TEST_CASE(dip3_activation_legacy)
 {

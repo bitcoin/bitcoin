@@ -571,16 +571,3 @@ CBlock getBlock13b8a()
     return block;
 }
 
-TestChainV19Setup::TestChainV19Setup() : TestChainSetup(899)
-{
-    bool v19_just_activated{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19) &&
-                            !DeploymentActiveAt(*m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    assert(v19_just_activated);
-}
-
-// 5 blocks earlier
-TestChainV19BeforeActivationSetup::TestChainV19BeforeActivationSetup() : TestChainSetup(894)
-{
-    bool v19_active{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    assert(!v19_active);
-}
