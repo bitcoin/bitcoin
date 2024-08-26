@@ -12,6 +12,7 @@
 #include <primitives/transaction.h> // for CTransactionRef
 #include <stdint.h>                 // for int64_t
 #include <uint256.h>                // for uint256
+#include <util/time.h>              // for MillisecondsDouble
 
 #include <memory>   // for unique_ptr, shared_ptr
 #include <optional> // for optional
@@ -60,6 +61,17 @@ public:
     virtual std::optional<BlockRef> getTip() = 0;
 
     /**
+     * Waits for the tip to change
+     *
+     * @param[in] current_tip block hash of the current chain tip. Function waits
+     *                        for the chain tip to change if this matches, otherwise
+     *                        it returns right away.
+     * @param[in] timeout     how long to wait for a new tip
+     * @returns               Hash and height of the current chain tip after this call.
+     */
+    virtual BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
+
+   /**
      * Construct a new block template
      *
      * @param[in] script_pub_key the coinbase output
