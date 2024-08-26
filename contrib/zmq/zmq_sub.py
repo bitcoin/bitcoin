@@ -11,7 +11,8 @@
                 -zmqpubrawtx=tcp://127.0.0.1:28332 \
                 -zmqpubrawblock=tcp://127.0.0.1:28332 \
                 -zmqpubhashtx=tcp://127.0.0.1:28332 \
-                -zmqpubhashblock=tcp://127.0.0.1:28332
+                -zmqpubhashblock=tcp://127.0.0.1:28332 \
+                -zmqpubsequence=tcp://127.0.0.1:28332
 
     We use the asyncio library here.  `self.handle()` installs itself as a
     future at the end of the function.  Since it never returns with the event
@@ -58,18 +59,14 @@ class ZMQHandler():
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernancevote")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernanceobject")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawinstantsenddoublespend")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "sequence")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
     async def handle(self) :
-        msg = await self.zmqSubSocket.recv_multipart()
-        topic = msg[0]
-        body = msg[1]
+        topic, body, seq = await self.zmqSubSocket.recv_multipart()
         sequence = "Unknown"
-
-        if len(msg[-1]) == 4:
-          msgSequence = struct.unpack('<I', msg[-1])[-1]
-          sequence = str(msgSequence)
-
+        if len(seq) == 4:
+            sequence = str(struct.unpack('<I', seq)[-1])
         if topic == b"hashblock":
             print('- HASH BLOCK ('+sequence+') -')
             print(body.hex())
@@ -118,6 +115,12 @@ class ZMQHandler():
         elif topic == b"rawinstantsenddoublespend":
             print('- RAW IS DOUBLE SPEND ('+sequence+') -')
             print(body.hex())
+        elif topic == b"sequence":
+            hash = body[:32].hex()
+            label = chr(body[32])
+            mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
+            print('- SEQUENCE ('+sequence+') -')
+            print(hash, label, mempool_sequence)
         # schedule ourselves to receive the next message
         asyncio.ensure_future(self.handle())
 

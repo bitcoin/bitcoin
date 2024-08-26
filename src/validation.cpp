@@ -889,7 +889,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     const int64_t nAcceptTime = args.m_accept_time;
-    GetMainSignals().TransactionAddedToMempool(ptx, nAcceptTime);
+    GetMainSignals().TransactionAddedToMempool(ptx, nAcceptTime, m_pool.GetAndIncrementSequence());
 
     const CTransaction& tx = *ptx;
     auto finish = Now<SteadyMilliseconds>();
