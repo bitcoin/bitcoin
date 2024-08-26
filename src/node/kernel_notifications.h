@@ -7,6 +7,10 @@
 
 #include <kernel/notifications_interface.h>
 
+#include <sync.h>
+#include <threadsafety.h>
+#include <uint256.h>
+
 #include <atomic>
 #include <cstdint>
 
@@ -34,7 +38,7 @@ public:
     KernelNotifications(util::SignalInterrupt& shutdown, std::atomic<int>& exit_status, node::Warnings& warnings)
         : m_shutdown(shutdown), m_exit_status{exit_status}, m_warnings{warnings} {}
 
-    [[nodiscard]] kernel::InterruptResult blockTip(SynchronizationState state, CBlockIndex& index) override;
+    [[nodiscard]] kernel::InterruptResult blockTip(SynchronizationState state, CBlockIndex& index) override EXCLUSIVE_LOCKS_REQUIRED(!m_tip_block_mutex);
 
     void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) override;
 
@@ -52,6 +56,12 @@ public:
     int m_stop_at_height{DEFAULT_STOPATHEIGHT};
     //! Useful for tests, can be set to false to avoid shutdown on fatal error.
     bool m_shutdown_on_fatal_error{true};
+
+    Mutex m_tip_block_mutex;
+    std::condition_variable m_tip_block_cv;
+    //! The block for which the last blockTip notification was received for.
+    uint256 m_tip_block;
+
 private:
     util::SignalInterrupt& m_shutdown;
     std::atomic<int>& m_exit_status;

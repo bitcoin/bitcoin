@@ -139,7 +139,7 @@ public:
         // Stop RPC for clean shutdown if any of waitfor* commands is executed.
         if (args().GetBoolArg("-server", false)) {
             InterruptRPC();
-            StopRPC();
+            StopRPC(m_context);
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); };

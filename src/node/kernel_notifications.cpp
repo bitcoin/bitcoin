@@ -50,6 +50,12 @@ namespace node {
 
 kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state, CBlockIndex& index)
 {
+    {
+        LOCK(m_tip_block_mutex);
+        m_tip_block = index.GetBlockHash();
+        m_tip_block_cv.notify_all();
+    }
+
     uiInterface.NotifyBlockTip(state, &index);
     if (m_stop_at_height && index.nHeight >= m_stop_at_height) {
         if (!m_shutdown()) {
