@@ -3,14 +3,15 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test support for XORed block data and undo files (`-blocksxor` option)."""
-import os
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.test_node import ErrorMatch
+from test_framework.test_node import (
+    ErrorMatch,
+    NULL_BLK_XOR_KEY,
+)
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    read_xor_key,
     util_xor,
 )
 from test_framework.wallet import MiniWallet
@@ -40,7 +41,7 @@ class BlocksXORTest(BitcoinTestFramework):
 
         self.log.info("Shut down node and un-XOR block/undo files manually")
         self.stop_node(0)
-        xor_key = read_xor_key(node=node)
+        xor_key = node.read_xor_key()
         for data_file in sorted(block_files + undo_files):
             self.log.debug(f"Rewriting file {data_file}...")
             with open(data_file, 'rb+') as f:
@@ -54,11 +55,13 @@ class BlocksXORTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX)
 
         self.log.info("Delete XOR key, restart node with '-blocksxor=0', check blk*.dat/rev*.dat file integrity")
-        os.remove(node.blocks_path / 'xor.dat')
+        node.blocks_key_path.unlink()
         self.start_node(0, extra_args=['-blocksxor=0'])
         # checklevel=2 -> verify block validity + undo data
         # nblocks=0    -> verify all blocks
         node.verifychain(checklevel=2, nblocks=0)
+        self.log.info("Check that blocks XOR key is recreated")
+        assert_equal(node.read_xor_key(), NULL_BLK_XOR_KEY)
 
 
 if __name__ == '__main__':

@@ -43,6 +43,11 @@ from .util import (
 )
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
+# The size of the blocks xor key
+# from InitBlocksdirXorKey::xor_key.size()
+NUM_XOR_BYTES = 8
+# The null blocks key (all 0s)
+NULL_BLK_XOR_KEY = bytes([0] * NUM_XOR_BYTES)
 
 
 class FailedToStartError(Exception):
@@ -464,6 +469,14 @@ class TestNode():
     @property
     def blocks_path(self) -> Path:
         return self.chain_path / "blocks"
+
+    @property
+    def blocks_key_path(self) -> Path:
+        return self.blocks_path / "xor.dat"
+
+    def read_xor_key(self) -> bytes:
+        with open(self.blocks_key_path, "rb") as xor_f:
+            return xor_f.read(NUM_XOR_BYTES)
 
     @property
     def wallets_path(self) -> Path:
