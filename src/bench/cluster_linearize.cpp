@@ -3,9 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
-#include <util/bitset.h>
 #include <cluster_linearize.h>
+#include <util/bitset.h>
+
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <vector>
 
 using namespace cluster_linearize;
 

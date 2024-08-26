@@ -7,9 +7,11 @@
 #include <common/system.h>
 #include <key.h>
 #include <prevector.h>
-#include <pubkey.h>
 #include <random.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 static const size_t BATCHES = 101;

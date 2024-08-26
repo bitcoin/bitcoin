@@ -4,10 +4,15 @@
 
 #include <bench/bench.h>
 #include <coins.h>
+#include <consensus/amount.h>
+#include <key.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
 #include <test/util/transaction_utils.h>
 
+#include <cassert>
 #include <vector>
 
 // Microbenchmark for simple accesses to a CCoinsViewCache database. Note from

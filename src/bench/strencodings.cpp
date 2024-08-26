@@ -4,7 +4,10 @@
 
 #include <bench/bench.h>
 #include <bench/data.h>
+#include <span.h>
 #include <util/strencodings.h>
+
+#include <vector>
 
 static void HexStrBench(benchmark::Bench& bench)
 {

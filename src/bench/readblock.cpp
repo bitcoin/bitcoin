@@ -4,13 +4,20 @@
 
 #include <bench/bench.h>
 #include <bench/data.h>
-
-#include <consensus/validation.h>
+#include <flatfile.h>
 #include <node/blockstorage.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
-#include <util/chaintype.h>
 #include <validation.h>
+
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 static FlatFilePos WriteBlockToDisk(ChainstateManager& chainman)
 {

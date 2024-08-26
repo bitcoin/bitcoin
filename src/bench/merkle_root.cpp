@@ -3,10 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
 #include <consensus/merkle.h>
 #include <random.h>
 #include <uint256.h>
+
+#include <vector>
 
 static void MerkleRoot(benchmark::Bench& bench)
 {

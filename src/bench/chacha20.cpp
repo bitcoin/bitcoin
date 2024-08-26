@@ -6,6 +6,11 @@
 #include <bench/bench.h>
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
+#include <span.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 /* Number of bytes to process per iteration */
 static const uint64_t BUFFER_SIZE_TINY  = 64;

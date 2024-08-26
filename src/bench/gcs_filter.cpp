@@ -4,6 +4,11 @@
 
 #include <bench/bench.h>
 #include <blockfilter.h>
+#include <uint256.h>
+
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 static GCSFilter::ElementSet GenerateGCSTestElements()
 {

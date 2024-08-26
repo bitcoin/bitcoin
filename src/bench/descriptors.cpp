@@ -4,11 +4,16 @@
 
 #include <bench/bench.h>
 #include <key.h>
-#include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/script.h>
+#include <script/signingprovider.h>
 
+#include <cassert>
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 static void ExpandDescriptor(benchmark::Bench& bench)
 {

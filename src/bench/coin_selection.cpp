@@ -3,15 +3,28 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <outputtype.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <random.h>
+#include <sync.h>
+#include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
-#include <wallet/wallet.h>
 #include <wallet/test/util.h>
+#include <wallet/transaction.h>
+#include <wallet/wallet.h>
 
+#include <cassert>
+#include <map>
+#include <memory>
 #include <set>
+#include <utility>
+#include <vector>
 
 using node::NodeContext;
 using wallet::AttemptSelection;

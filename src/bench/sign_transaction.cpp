@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
 #include <addresstype.h>
+#include <bench/bench.h>
 #include <coins.h>
 #include <key.h>
 #include <primitives/transaction.h>
@@ -11,9 +11,15 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <script/sign.h>
-#include <uint256.h>
+#include <script/signingprovider.h>
+#include <span.h>
 #include <test/util/random.h>
+#include <uint256.h>
 #include <util/translation.h>
+
+#include <cassert>
+#include <map>
+#include <vector>
 
 enum class InputType {
     P2WPKH, // segwitv0, witness-pubkey-hash (ECDSA signature)
