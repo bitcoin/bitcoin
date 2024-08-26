@@ -5,26 +5,45 @@
 #ifndef BITCOIN_INTERFACES_MINING_H
 #define BITCOIN_INTERFACES_MINING_H
 
-#include <node/types.h>
-#include <uint256.h>
+#include <consensus/amount.h>       // for CAmount
+#include <node/types.h>             // for BlockCreateOptions
+#include <primitives/block.h>       // for CBlock, CBlockHeader
+#include <primitives/transaction.h> // for CTransactionRef
+#include <stdint.h>                 // for int64_t
+#include <uint256.h>                // for uint256
 
-#include <memory>
-#include <optional>
+#include <memory>   // for unique_ptr, shared_ptr
+#include <optional> // for optional
+#include <vector>   // for vector
 
 namespace node {
-struct CBlockTemplate;
 struct NodeContext;
 } // namespace node
 
 class BlockValidationState;
-class CBlock;
 class CScript;
 
 namespace interfaces {
 
+//! Block template interface
+class BlockTemplate
+{
+public:
+    virtual ~BlockTemplate() = default;
+
+    virtual CBlockHeader getBlockHeader() = 0;
+    virtual CBlock getBlock() = 0;
+
+    virtual std::vector<CAmount> getTxFees() = 0;
+    virtual std::vector<int64_t> getTxSigops() = 0;
+
+    virtual CTransactionRef getCoinbaseTx() = 0;
+    virtual std::vector<unsigned char> getCoinbaseCommitment() = 0;
+    virtual int getWitnessCommitmentIndex() = 0;
+};
+
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
 //! ability to create block templates.
-
 class Mining
 {
 public:
@@ -39,14 +58,14 @@ public:
     //! Returns the hash for the tip of this chain
     virtual std::optional<uint256> getTipHash() = 0;
 
-   /**
+    /**
      * Construct a new block template
      *
      * @param[in] script_pub_key the coinbase output
      * @param[in] options options for creating the block
      * @returns a block template
      */
-    virtual std::unique_ptr<node::CBlockTemplate> createNewBlock(const CScript& script_pub_key, const node::BlockCreateOptions& options={}) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock(const CScript& script_pub_key, const node::BlockCreateOptions& options = {}) = 0;
 
     /**
      * Processes new block. A valid new block is automatically relayed to peers.
