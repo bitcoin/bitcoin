@@ -466,6 +466,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ঠিকানা কপি করুন</translation>
     </message>
     <message>
+        <source>via %1</source>
+        <translation type="unfinished">এর মাধ্যমে %1</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation type="unfinished">অজানা</translation>
     </message>

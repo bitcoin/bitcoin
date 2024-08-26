@@ -184,6 +184,10 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Introduce a frase contrasinal anterior mais a nova frase contrasinal para a carteira.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Recorda que encriptar a tua carteira non protexe completamente que os teus bitcoins poidan ser roubados por malware que afecte ó teu computador.</translation>
     </message>
@@ -334,7 +338,11 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">moedeiro por defecto</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -556,10 +564,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Mostra a %1 mensaxe de axuda para obter unha lista cas posibles opcións de línea de comando de Bitcoin </translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">moedeiro por defecto</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -792,10 +796,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">moedeiro por defecto</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -1652,10 +1652,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Por favor comproba a dirección e proba de novo.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">A dirección introducida non se refire a ninguna clave.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Cancelouse o desbloqueo do moedeiro.</translation>
     </message>
@@ -1999,11 +1995,7 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <source>Send Coins</source>
         <translation type="unfinished">Moedas Enviadas</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">moedeiro por defecto</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>

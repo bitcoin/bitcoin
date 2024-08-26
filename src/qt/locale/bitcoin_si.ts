@@ -294,7 +294,11 @@
             <numerusform>%n year(s)</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">පෙරනිමි පසුම්බිය</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -368,7 +372,7 @@
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;පසුම්බිය උපස්ථය…</translation>
+        <translation type="unfinished">&amp;පසුම්බිය උපස්ථකරන්න…</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
@@ -396,7 +400,7 @@
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">(%1%) ශ්‍රීර්ෂ සමමුහූර්ත වෙමින්…</translation>
+        <translation type="unfinished">(%1%) ශීර්ෂ සමමුහූර්ත වෙමින්…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
@@ -422,6 +426,10 @@
         <translation type="unfinished">තොරතුර</translation>
     </message>
     <message>
+        <source>Up to date</source>
+        <translation type="unfinished">යාවත්කාලීනයි</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation type="unfinished">&amp;යවන ලිපින</translation>
     </message>
@@ -431,11 +439,11 @@
     </message>
     <message>
         <source>Open Wallet</source>
-        <translation type="unfinished">පසුම්බිය බලන්න</translation>
+        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation type="unfinished">පසුම්බියක් බලන්න</translation>
+        <translation type="unfinished">පසුම්බියක් විවෘත කරන්න</translation>
     </message>
     <message>
         <source>Close wallet</source>
@@ -449,10 +457,6 @@
     <message>
         <source>Close all wallets</source>
         <translation type="unfinished">සියළු පසුම්බි වසන්න</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">පෙරනිමි පසුම්බිය</translation>
     </message>
     <message>
         <source>Wallet Data</source>
@@ -630,10 +634,6 @@
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">පෙරනිමි පසුම්බිය</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -1231,11 +1231,7 @@
         <source>Send Coins</source>
         <translation type="unfinished">කාසි යවන්න</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">පෙරනිමි පසුම්බිය</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>

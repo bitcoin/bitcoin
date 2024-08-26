@@ -299,7 +299,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>%n year(s)</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">መደበኛ ዋሌት</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -402,10 +406,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ዋሌት ዝጋ</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">መደበኛ ዋሌት</translation>
-    </message>
-    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">ዋሌት ስም</translation>
@@ -486,10 +486,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">መደበኛ ዋሌት</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -745,13 +741,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ስህተት</translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">መደበኛ ዋሌት</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

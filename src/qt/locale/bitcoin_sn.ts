@@ -247,6 +247,10 @@
         <source>N/A</source>
         <translation type="unfinished">Hapana</translation>
     </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">Hapana</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>

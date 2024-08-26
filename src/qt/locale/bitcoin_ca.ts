@@ -184,6 +184,10 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Introduïu la contrasenya antiga i la contrasenya nova a la cartera.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continua</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Recorda que tot i xifrant la teva cartera, els teus bitcoins no estan completament protegits de robatori a través de programari maliciós que estigui infectant el teu ordinador.</translation>
     </message>
@@ -273,7 +277,11 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <source>Internal error</source>
         <translation type="unfinished">Error intern</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">S'ha produït un error intern. %1 intentarà continuar amb seguretat. Es tracta d’un error inesperat que es pot informar tal com es descriu a continuació.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -396,7 +404,11 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
             <numerusform>%n anys</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">cartera predeterminada</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -704,10 +716,6 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Emmascara els valors en la pestanya Visió general</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">cartera predeterminada</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -1116,10 +1124,6 @@ El procés de migració crearà una còpia de seguretat de la cartera abans de m
         <translation type="unfinished">Avís en l'obertura de la cartera</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">cartera predeterminada</translation>
-    </message>
-    <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">Obre la cartera</translation>
@@ -1189,7 +1193,7 @@ El procés de migració crearà una còpia de seguretat de la cartera abans de m
     </message>
     <message>
         <source>You are one step away from creating your new wallet!</source>
-        <translation type="unfinished">Només et queda un pas per a crear la teva nova cartera</translation>
+        <translation type="unfinished">A un pas de crear la teva nova cartera</translation>
     </message>
     <message>
         <source>Please provide a name and, if desired, enable any advanced options</source>
@@ -1550,6 +1554,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Nombre de fils de &amp;verificació d'scripts</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Camí complet a %1 script compatible amb Bitcoin Core (per exemple, C:\Downloads\hwi.exe o /Users/you/Downloads/hwi.py). Aneu amb compte: el programari maliciós pot robar-vos les monedes!</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2443,6 +2451,10 @@ Si rebeu aquest error, haureu de sol·licitar al comerciant que proporcioni un U
         <translation type="unfinished">Activitat de xarxa inhabilitada</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Cap</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">S'està executant l'ordre sense cap cartera</translation>
     </message>
@@ -2640,8 +2652,7 @@ No utilitzeu aquesta consola sense entendre completament les ramificacions d'una
     </message>
     <message>
         <source>&amp;Verify</source>
-        <translation type="unfinished">&amp;Verifica
-</translation>
+        <translation type="unfinished">&amp;Verifica</translation>
     </message>
     <message>
         <source>Verify this address on e.g. a hardware wallet screen</source>
@@ -3116,10 +3127,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
         <translation type="unfinished">&amp;Signa el missatge</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Podeu signar missatges/acords amb les vostres adreces per a provar que rebeu les bitcoins que s'hi envien. Aneu amb compte no signar res que sigui vague o aleatori, perquè en alguns atacs de suplantació es pot provar que hi signeu la vostra identitat. Només signeu aquelles declaracions completament detallades en què hi esteu d'acord. </translation>
-    </message>
-    <message>
         <source>The Bitcoin address to sign the message with</source>
         <translation type="unfinished">L'adreça Bitcoin amb què signar el missatge</translation>
     </message>
@@ -3206,10 +3213,6 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">Comproveu l'adreça i torneu-ho a provar.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">L'adreça introduïda no referencia a cap clau.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -3328,10 +3331,8 @@ Nota: atès que la tarifa es calcula per byte, una tarifa de "100 satoshis per k
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform>madura en %n bloc més
-</numerusform>
-            <numerusform>madura en %n blocs més
-</numerusform>
+            <numerusform>madura en %n bloc més</numerusform>
+            <numerusform>madura en %n blocs més</numerusform>
         </translation>
     </message>
     <message>
@@ -3752,11 +3753,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">PSBT copiada</translation>
     </message>
     <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">Copiat al portaretalls</translation>
-    </message>
-    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">No es pot signar la transacció.</translation>
     </message>
@@ -3767,10 +3763,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Can't display address</source>
         <translation type="unfinished">No es pot mostrar l'adreça</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">cartera predeterminada</translation>
     </message>
 </context>
 <context>
@@ -3876,10 +3868,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">No s'ha proporcionat cap format de fitxer de cartera. Per a utilitzar createfromdump, s'ha de proporcionar&lt;format&gt;.</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Comproveu que la data i hora de l'ordinador són correctes. Si el rellotge és incorrecte, %s no funcionarà correctament.</translation>
-    </message>
-    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation type="unfinished">Contribueix si trobes %s útil. Visita %s per a obtenir més informació sobre el programari.</translation>
     </message>
@@ -3964,10 +3952,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">-maxmempool ha de tenir almenys %d MB</translation>
     </message>
     <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">S'ha produït un error intern fatal. Consulteu debug.log per a més detalls</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">No es pot resoldre -%s adreça: '%s'</translation>
     </message>
@@ -3981,8 +3965,7 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     </message>
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">%s especificat molt alt! Tarifes tan grans podrien pagar-se en una única transacció.
-</translation>
+        <translation type="unfinished">%s especificat molt alt! Tarifes tan grans podrien pagar-se en una única transacció.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
@@ -3994,7 +3977,7 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished">Import no vàlid per a %s=&lt;amount&gt;: '%s' (cal que sigui com a mínim la comissió de minrelay de %s per evitar que les comissions s'encallin)</translation>
+        <translation type="unfinished">Import no vàlid per a %s=&lt;amount&gt;: '%s' (cal que sigui com a mínim la tarifa de minrelay de %s per evi tar que les tarifes s'encallin)</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>

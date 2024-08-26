@@ -329,7 +329,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">zadani novčanik</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -598,10 +602,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Maskirajte vrijednosti na kartici Pregled</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">zadani novčanik</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">Nema dostupnih novčanika</translation>
     </message>
@@ -850,10 +850,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">zadani novčanik</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -1514,13 +1510,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Greška</translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">zadani novčanik</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

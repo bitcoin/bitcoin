@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">पता या लेबल संपादित करने के लिए राइट-क्लिक करें</translation>
+        <translation type="unfinished">पते या लेबल में बदलाव करने के लिए राइट-क्लिक करें</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">मौजूदा चयनित पते को सिस्टम क्लिपबोर्ड पर कॉपी करें</translation>
+        <translation type="unfinished">चुने गए मौजूदा पते को सिस्टम क्लिपबोर्ड पर कॉपी करें</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">सूची से मौजूदा चयनित पता हटाएं</translation>
+        <translation type="unfinished">सूची से अभी चुना गया पता डिलीट करें</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">मौजूदा टैब में डेटा को फ़ाइल में निर्यात करें</translation>
+        <translation type="unfinished">मौजूदा टैब में डेटा को फ़ाइल में एक्सपोर्ट करें</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -43,7 +43,7 @@
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">मिटाना</translation>
+        <translation type="unfinished">डिलीट करें</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">&amp;चुज़</translation>
+        <translation type="unfinished">&amp;चुनें</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -69,19 +69,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;कॉपी पता</translation>
+        <translation type="unfinished">&amp;पता कॉपी करें</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">कॉपी और लेबल</translation>
+        <translation type="unfinished">&amp;लेबल कॉपी करें</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;एडीट</translation>
+        <translation type="unfinished">&amp;बदलाव करें</translation>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">पता की सूची को निर्यात करें</translation>
+        <translation type="unfinished">पते की सूची को एक्सपोर्ट करें</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -94,8 +94,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">पता सूची को %1यहां सहेजने का प्रयास करते समय एक त्रुटि हुई . कृपया पुन: प्रयास करें।</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">पते भेजे जा रहे हैं - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">निर्यात विफल हो गया है</translation>
+        <translation type="unfinished">एक्सपोर्ट नहीं हो पाया</translation>
     </message>
 </context>
 <context>
@@ -121,7 +125,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished">पासफ़्रेज़ मे प्रवेश करें</translation>
+        <translation type="unfinished">पासफ्रेज़ दर्ज करें</translation>
     </message>
     <message>
         <source>New passphrase</source>
@@ -405,10 +409,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">किसी अन्य स्थान पर वॉलेट  बैकअप करे |</translation>
     </message>
     <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished">वॉलेट एन्क्रिप्शन के लिए उपयोग किए जाने वाले पासफ़्रेज़ को बदलें</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation type="unfinished">&amp;भेजें</translation>
     </message>
@@ -422,99 +422,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
  </translation>
     </message>
     <message>
-        <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">&amp;एन्क्रिप्ट वॉलेट…</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished">अपने वॉलेट से संबंधित निजी कुंजियों को एन्क्रिप्ट करें</translation>
-    </message>
-    <message>
-        <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;बैकअप वॉलेट…</translation>
-    </message>
-    <message>
-        <source>&amp;Change Passphrase…</source>
-        <translation type="unfinished">&amp;पासफ़्रेज़ बदलें…</translation>
-    </message>
-    <message>
-        <source>Sign &amp;message…</source>
-        <translation type="unfinished">साइन &amp;मैसेज...</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">अपने बिटकॉइन पतों के साथ संदेशों पर हस्ताक्षर करके साबित करें कि वे आपके हैं |</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message…</source>
-        <translation type="unfinished">&amp;संदेश सत्यापित करें…</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">यह सुनिश्चित करने के लिए संदेशों को सत्यापित करें कि वे निर्दिष्ट बिटकॉइन पते के साथ हस्ताक्षरित थे |</translation>
-    </message>
-    <message>
-        <source>&amp;Load PSBT from file…</source>
-        <translation type="unfinished">फ़ाइल से पीएसबीटी &amp;लोड करें…</translation>
-    </message>
-    <message>
-        <source>Open &amp;URI…</source>
-        <translation type="unfinished"> &amp;यूआरआई खोलिये…</translation>
-    </message>
-    <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">वॉलेट बंद करें…</translation>
+        <translation type="unfinished">बटुआ बंद करें...</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">वॉलेट बनाएं</translation>
+        <translation type="unfinished">वॉलेट बनाएं...</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
-        <translation type="unfinished">सभी वॉलेट बंद करें…</translation>
-    </message>
-    <message>
-        <source>&amp;File</source>
-        <translation type="unfinished">&amp;फ़ाइल</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;सेटिंग्स</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation type="unfinished">&amp;हेल्प</translation>
-    </message>
-    <message>
-        <source>Tabs toolbar</source>
-        <translation type="unfinished">टैब टूलबार</translation>
-    </message>
-    <message>
-        <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">हेडर सिंक किया जा रहा है  (%1%)…</translation>
-    </message>
-    <message>
-        <source>Synchronizing with network…</source>
-        <translation type="unfinished">नेटवर्क के साथ सिंक्रोनाइज़ किया जा रहा है…</translation>
-    </message>
-    <message>
-        <source>Indexing blocks on disk…</source>
-        <translation type="unfinished">डिस्क पर ब्लॉक का सूचीकरण किया जा रहा है…</translation>
-    </message>
-    <message>
-        <source>Processing blocks on disk…</source>
-        <translation type="unfinished">डिस्क पर ब्लॉक संसाधित किए जा रहे हैं…</translation>
+        <translation type="unfinished">सारे बटुएँ बंद करें...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform>Processed %n block(s) of transaction history.</numerusform>
-            <numerusform>ट्रानजेक्शन हिस्ट्री के ब्लॉक संसाधित किए गए है %n .</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Load PSBT from &amp;clipboard…</source>
-        <translation type="unfinished">पीएसबीटी को &amp;क्लिपबोर्ड से लोड करें…</translation>
     </message>
     <message>
         <source>Migrate Wallet</source>
@@ -531,6 +455,26 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Click for more actions.</source>
+        <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
+        <translation type="unfinished">अधिक विकल्पों के लिए क्लिक करें</translation>
+    </message>
+    <message>
+        <source>Show Peers tab</source>
+        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
+        <translation type="unfinished">पीयर्स टैब दिखाएं</translation>
+    </message>
+    <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">नेटवर्क गतिविधि अक्षम करें</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">नेटवर्क गतिविधि सक्षम करें</translation>
     </message>
     <message>
         <source>Error creating wallet</source>
@@ -612,7 +556,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">तारीख़</translation>
+        <translation type="unfinished">डेट</translation>
     </message>
     <message>
         <source>Confirmations</source>
@@ -655,12 +599,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">कॉपी बाइट्स</translation>
     </message>
     <message>
+        <source>Copy change</source>
+        <translation type="unfinished">कॉपी चैंज</translation>
+    </message>
+    <message>
         <source>(no label)</source>
-        <translation type="unfinished">(कोई लेबल नहीं)</translation>
+        <translation type="unfinished">(नो लेबल)</translation>
     </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
+    <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">वॉलेट बनाएं</translation>
+    </message>
     <message>
         <source>Create wallet failed</source>
         <translation type="unfinished">वॉलेट बनाना विफल</translation>
@@ -1388,10 +1341,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">मेसेज</translation>
     </message>
     <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(कोई लेबल नहीं)</translation>
-    </message>
-    <message>
         <source>(no message)</source>
         <translation type="unfinished">(नो मेसेज)</translation>
     </message>
@@ -1571,6 +1520,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">कॉपी बाइट्स</translation>
     </message>
     <message>
+        <source>Copy change</source>
+        <translation type="unfinished">कॉपी चैंज</translation>
+    </message>
+    <message>
         <source>%1 (%2 blocks)</source>
         <translation type="unfinished">%1 (%2 ब्लाकस)</translation>
     </message>
@@ -1747,11 +1700,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
         <translation type="unfinished">आपके द्वारा परिवर्तन के लिए चुना गया पता इस वॉलेट का हिस्सा नहीं है। आपके वॉलेट में कोई भी या सभी धनराशि इस पते पर भेजी जा सकती है। क्या आपको यकीन है?</translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(कोई लेबल नहीं)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1839,10 +1788,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>&amp;Sign Message</source>
         <translation type="unfinished">&amp;संदेश पर हस्ताक्षर करें</translation>
-    </message>
-    <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">आप अपने पते के साथ संदेशों/समझौतों पर हस्ताक्षर करके यह साबित कर सकते हैं कि आप उन्हें भेजे गए बिटकॉइन प्राप्त कर सकते हैं। सावधान रहें कि कुछ भी अस्पष्ट या यादृच्छिक पर हस्ताक्षर न करें, क्योंकि फ़िशिंग हमले आपको अपनी पहचान पर हस्ताक्षर करने के लिए छल करने का प्रयास कर सकते हैं। केवल पूरी तरह से विस्तृत बयानों पर हस्ताक्षर करें जिनसे आप सहमत हैं।</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -1935,10 +1880,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">कृपया पते की जांच करें और पुनः प्रयास करें।</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">दर्ज किया गया पता एक कुंजी को संदर्भित नहीं करता है।</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2232,10 +2173,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">(असंबंधित)</translation>
     </message>
     <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(कोई लेबल नहीं)</translation>
-    </message>
-    <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation type="unfinished">लेनदेन की जानकारी. इस फ़ील्ड पर कर्सर लाएं ताकि कन्फ़र्मेशन की संख्या पता चले.</translation>
     </message>
@@ -2361,11 +2298,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>Send Coins</source>
         <translation type="unfinished">सेन्ड कॉइन्स</translation>
     </message>
-    <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">क्लिपबोर्ड में कापी किया गया</translation>
-    </message>
     </context>
 <context>
     <name>WalletView</name>
@@ -2380,6 +2312,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%s अनुरोध %u पोर्ट पर सुनने का. इस बंदरगाह को "खराब" माना जाता है और इस प्रकार यह संभावना नहीं है कि कोई भी सहकर्मी इससे जुड़ेगा। विवरण और पूरी सूची के लिए doc/p2p-bad-ports.md देखें।</translation>
+    </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
         <translation type="unfinished">%s के लिए डिस्क स्थान ब्लॉक फ़ाइलों को समायोजित नहीं कर सकता है। इस निर्देशिका में लगभग %u GB डेटा संग्रहीत किया जाएगा।</translation>
@@ -2415,7 +2351,8 @@ The wallet might have been tampered with or created with malicious intent.
 </source>
         <translation type="unfinished">डिस्क्रिप्टर वॉलेट में अप्रत्याशित विरासत प्रविष्टि मिली। %s बटुआ लोड हो रहा है
 
-हो सकता है कि वॉलेट से छेड़छाड़ की गई हो या दुर्भावनापूर्ण इरादे से बनाया गया हो।</translation>
+हो सकता है कि वॉलेट से छेड़छाड़ की गई हो या दुर्भावनापूर्ण इरादे से बनाया गया हो।
+</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>

@@ -1,5 +1,4 @@
 QT_TS = \
-  qt/locale/bitcoin_af.ts \
   qt/locale/bitcoin_am.ts \
   qt/locale/bitcoin_ar.ts \
   qt/locale/bitcoin_az.ts \
@@ -103,6 +102,7 @@ QT_TS = \
   qt/locale/bitcoin_szl.ts \
   qt/locale/bitcoin_ta.ts \
   qt/locale/bitcoin_te.ts \
+  qt/locale/bitcoin_th.ts \
   qt/locale/bitcoin_tk.ts \
   qt/locale/bitcoin_tl.ts \
   qt/locale/bitcoin_tr.ts \

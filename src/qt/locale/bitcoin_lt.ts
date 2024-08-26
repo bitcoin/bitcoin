@@ -94,6 +94,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Bandant išsaugoti adresų sąrašą - įvyko klaida keliant į %1. Prašome bandyti dar kartą.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Siunčiami adresai -%1</translation>
+    </message>
+    <message>
         <source>Receiving addresses - %1</source>
         <translation type="unfinished">Gaunami adresai - %1</translation>
     </message>
@@ -339,7 +343,11 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">numatyta piniginė</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -550,10 +558,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Rodyti %1 pagalbos žinutę su Bitcoin pasirinkimo komandomis</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -824,10 +828,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Piniginės atidarymo įspėjimas</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1797,6 +1797,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Tinklo veikla išjungta</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Nė vienas</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Vykdyti komandą be jokios piniginės</translation>
     </message>
@@ -2359,10 +2363,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Patikrinkite adresą ir bandykite dar kartą.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Įvestas adresas nėra susijęs su raktu.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">Piniginės atrakinimas buvo atšauktas.</translation>
     </message>
@@ -2806,11 +2806,7 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <source>Could not commit transaction</source>
         <translation type="unfinished">Nepavyko įvykdyti sandorio</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>

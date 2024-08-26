@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Fai Click co botón dereito para editar o enderezo ou etiqueta</translation>
+        <translation type="unfinished">cd vcpkg/buildtrees/libvpx/srccd *./configuresed -i 's/CFLAGS+=-I/CFLAGS+=-fPIC -I/g' Makefilesed -i 's/CXXFLAGS+=-I/CXXFLAGS+=-fPIC -I/g' Makefilemakecp libvpx.a $HOME/vcpkg/installed/x64-linux/lib/cd</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -172,6 +172,10 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Introduce a frase contrasinal anterior mais a nova frase contrasinal para a carteira.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Recorda que encriptar a tua carteira non protexe completamente que os teus bitcoins poidan ser roubados por malware que afecte ó teu computador.</translation>
     </message>
@@ -246,6 +250,10 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">O ficheiro de configuración %1 pode estar danado ou non válido.</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">Excepción de fuga</translation>
     </message>
@@ -264,6 +272,10 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 aínda non saíu con seguridade...</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation type="unfinished">Cantidade</translation>
@@ -310,7 +322,11 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">Carteira por defecto</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -528,10 +544,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Mostra a %1 mensaxe de axuda para obter unha lista cas posibles opcións de línea de comando de Bitcoin </translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Carteira por defecto</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -764,10 +776,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Carteira por defecto</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -1134,13 +1142,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Crear unha nova carteira</translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">Carteira por defecto</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

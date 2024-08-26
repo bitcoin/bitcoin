@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">નવું</translation>
+        <translation type="unfinished">&amp; નવું</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -177,11 +177,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">વૉલેટ માટે નવો પાસફ્રેઝ દાખલ કરો. 1 કૃપા કરીને  2 દસ અથવા વધુ અજાન્યા અક્ષરો 2 અથવા 3 આઠ અથવા વધુ શબ્દોના પાસફ્રેઝનો ઉપયોગ કરો 3 .</translation>
+        <translation type="unfinished">વૉલેટ માટે નવો પાસફ્રેઝ દાખલ કરો. &lt;br&gt; કૃપા કરીને  &lt;b&gt; દસ અથવા વધુ અજાન્યા અક્ષરો &lt;/2&gt; અથવા &lt;b&gt; આઠ અથવા વધુ શબ્દોના પાસફ્રેઝનો ઉપયોગ કરો &lt;/b&gt; .</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation type="unfinished">પાકીટ માટે જુના શબ્દસમૂહ અને નવા શબ્દસમૂહ દાખલ કરો.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">ચાલુ રાખો</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -217,7 +221,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">વૉલેટ અનલૉક નિષ્ફળ થયું</translation>
+        <translation type="unfinished">વૉલેટ ખોલવુ નિષ્ફળ થયું</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
@@ -226,6 +230,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
         <translation type="unfinished">વૉલેટ ડિક્રિપ્શન માટે દાખલ કરેલ પાસફ્રેઝ ખોટો છે. તેમાં નલ અક્ષર (એટલે ​​કે - શૂન્ય બાઈટ) છે. જો પાસફ્રેઝ 25.0 પહેલા આ સૉફ્ટવેરના સંસ્કરણ સાથે સેટ કરવામાં આવ્યો હોય, તો કૃપા કરીને ફક્ત પ્રથમ શૂન્ય અક્ષર સુધીના અક્ષરો સાથે ફરી પ્રયાસ કરો — પરંતુ તેમાં શામેલ નથી. જો આ સફળ થાય, તો ભવિષ્યમાં આ સમસ્યાને ટાળવા માટે કૃપા કરીને નવો પાસફ્રેઝ સેટ કરો.</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished">વૉલેટ પાસફ્રેઝ સફળતાપૂર્વક બદલવામાં આવ્યો</translation>
     </message>
     <message>
         <source>Passphrase change failed</source>
@@ -237,7 +245,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished">ચેતવણી: ( Caps Lock ) કી ચાલુ છે!</translation>
+        <translation type="unfinished">ચેતવણી:  કેપ્સલોક કી ચાલુ છે!</translation>
     </message>
 </context>
 <context>
@@ -413,7 +421,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">મૂળભૂત વૉલેટ</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -727,10 +739,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">વિહંગાવલોકન ટેબમાં મૂલ્યોને માસ્ક કરો</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">મૂળભૂત વૉલેટ</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">કોઈ પાકીટ ઉપલબ્ધ નથી</translation>
     </message>
@@ -896,6 +904,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>UnitDisplayStatusBarControl</name>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation type="unfinished">રકમ બતાવવા માટે એકમ. અન્ય એકમ પસંદ કરવા માટે ક્લિક કરો.</translation>
+    </message>
+</context>
+<context>
     <name>CoinControlDialog</name>
     <message>
         <source>Coin Selection</source>
@@ -927,15 +942,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished">બધા (na)પસંદ કરો</translation>
+        <translation type="unfinished">બધા (ના)પસંદ કરો</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation type="unfinished">ટ્રી મોડ</translation>
+        <translation type="unfinished">ટ્રી પદ્ધતિ</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation type="unfinished">સૂચિ મોડ</translation>
+        <translation type="unfinished">સૂચિ પદ્ધતિ</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -971,7 +986,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">કૉપિ કરો &amp;લેબલ બનાવો</translation>
+        <translation type="unfinished">કૉપિ કરો &amp;લેબલ</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -1069,7 +1084,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Loading wallets…</source>
         <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
-        <translation type="unfinished">પાકીટ લોડ કરી રહ્યું છે...</translation>
+        <translation type="unfinished">પાકીટ લોડ થઈ રહ્યું છે...</translation>
     </message>
 </context>
 <context>
@@ -1132,10 +1147,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">ઓપન વૉલેટ ચેતવણી</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ડિફૉલ્ટ વૉલેટ</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1433,6 +1444,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">જીબી (GB)</translation>
     </message>
     <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">આ પ્રારંભિક સિંક્રનાઇઝેશન ખૂબ જ માગણી કરે છે, અને તમારા કમ્પ્યુટર સાથેની હાર્ડવેર સમસ્યાઓનો પર્દાફાશ કરી શકે છે જે અગાઉ કોઈનું ધ્યાન ગયું ન હતું. દરેક વખતે જ્યારે તમે ચાલુ કરો %1, ત્યારે તે ડાઉનલોડ કરવાનું ચાલુ રાખશે જ્યાંથી તેણે છોડ્યું હતું.</translation>
+    </message>
+    <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
         <translation type="unfinished">જ્યારે તમે ઓકે ક્લિક કરો છો,%1સંપૂર્ણ ડાઉનલોડ અને પ્રક્રિયા કરવાનું શરૂ કરશે%4બ્લોક ચેન (સાંકળ) (%2GB) માં સૌથી પહેલાના વ્યવહારોથી શરૂ થાય છે%3જ્યારે%4શરૂઆતમાં લોન્ચ કર્યું.</translation>
     </message>
@@ -1503,7 +1518,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Last block time</source>
-        <translation type="unfinished">છેલ્લો બ્લોક નો સમય</translation>
+        <translation type="unfinished">છેલ્લા બ્લોક નો સમય</translation>
     </message>
     <message>
         <source>Progress</source>
@@ -2351,10 +2366,6 @@ BIP70 માં વ્યાપક સુરક્ષા ખામીઓને �
         <translation type="unfinished">પરિવહન</translation>
     </message>
     <message>
-        <source>The BIP324 session ID string in hex, if any.</source>
-        <translation type="unfinished">હેક્સમાં BIP324 સત્ર ID સ્ટ્રિંગ, જો કોઈ હોય તો.</translation>
-    </message>
-    <message>
         <source>Session ID</source>
         <translation type="unfinished">પ્રક્રિયા નંબર</translation>
     </message>
@@ -2523,7 +2534,7 @@ BIP70 માં વ્યાપક સુરક્ષા ખામીઓને �
     </message>
     <message>
         <source>Last block time</source>
-        <translation type="unfinished">છેલ્લો બ્લોક નો સમય</translation>
+        <translation type="unfinished">છેલ્લા બ્લોક નો સમય</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -2639,6 +2650,10 @@ BIP70 માં વ્યાપક સુરક્ષા ખામીઓને �
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">નેટવર્ક પ્રવૃત્તિ અક્ષમ છે</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">કોઈ નહિ</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -2807,7 +2822,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">કૉપિ કરો &amp;લેબલ બનાવો</translation>
+        <translation type="unfinished">કૉપિ કરો &amp;લેબલ</translation>
     </message>
     <message>
         <source>Copy &amp;message</source>
@@ -2850,7 +2865,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished">&amp;URI કૉપિ કરો</translation>
+        <translation type="unfinished">કૉપિ &amp;URI </translation>
     </message>
     <message>
         <source>&amp;Save Image…</source>
@@ -3038,7 +3053,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">કૉપિ કરો &amp;લેબલ બનાવો</translation>
+        <translation type="unfinished">કૉપિ કરો &amp;લેબલ</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -3085,13 +3100,6 @@ For more information on using this console, type %6.
         <translation type="unfinished">ભૂલ</translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ડિફૉલ્ટ વૉલેટ</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

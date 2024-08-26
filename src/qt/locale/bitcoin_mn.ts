@@ -243,6 +243,10 @@
         <translation type="unfinished">Програмаас Гарах</translation>
     </message>
     <message>
+        <source>&amp;About %1</source>
+        <translation type="unfinished">&amp;Тухай %1</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation type="unfinished">&amp;Клиентийн тухай</translation>
     </message>

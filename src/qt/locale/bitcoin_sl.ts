@@ -176,6 +176,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Vnesite staro geslo in novo geslo za denarnico.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Nadaljuj</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Pomnite, da šifriranje denarnice ne more preprečiti morebitnim virusom na vašem računalniku, da bi ukradli vaše bitcoine.</translation>
     </message>
@@ -271,8 +275,7 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
-        <translation type="unfinished">Želite ponastaviti nastavitve na privzete vrednosti ali prekiniti urejanje brez sprememb?
-</translation>
+        <translation type="unfinished">Želite ponastaviti nastavitve na privzete vrednosti ali prekiniti urejanje brez sprememb?</translation>
     </message>
     <message>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
@@ -400,7 +403,11 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
             <numerusform>%n let</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">privzeta denarnica</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -529,24 +536,60 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">&amp;Naloži DPBT iz datoteke...</translation>
     </message>
     <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Odpri &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Close Wallet…</source>
+        <translation type="unfinished">Zapri denarnico...</translation>
+    </message>
+    <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">Ustvari denarnico...</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Zapri vse denarnice...</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation type="unfinished">&amp;Datoteka</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation type="unfinished">&amp;Nastavitve</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation type="unfinished">&amp;Pomoč</translation>
+    </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation type="unfinished">Orodna vrstica zavihkov</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)…</source>
+        <translation type="unfinished">Sinhroniziram zaglavja (%1%)...</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network…</source>
+        <translation type="unfinished">Dohitevam omrežje ...</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk…</source>
+        <translation type="unfinished">Izdelujem kazalo blokov na disku...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk…</source>
+        <translation type="unfinished">Procesiram bloke na disku...</translation>
+    </message>
+    <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Povezujem se s soležniki...</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Zahtevajte plačilo (ustvarite zahtevek s QR-kodo in URI tipa bitcoin:)</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Prikaži seznam naslovov in oznak, na katere ste kdaj poslali plačila</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Prikaži seznam naslovov in oznak, na katere ste kdaj prejeli plačila</translation>
+        <translation type="unfinished">Povezujem se s soležniki…</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">Možnosti &amp;ukazne vrstice</translation>
+        <translation type="unfinished">&amp;Možnosti iz ukazne vrstice</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -558,36 +601,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         </translation>
     </message>
     <message>
-        <source>%1 behind</source>
-        <translation type="unfinished">%1 zaostanka</translation>
-    </message>
-    <message>
-        <source>Catching up…</source>
-        <translation type="unfinished">Dohitevam...</translation>
-    </message>
-    <message>
-        <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished">Zadnji prejeti blok je star %1.</translation>
-    </message>
-    <message>
-        <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished">Novejše transakcije še ne bodo vidne.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Napaka</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation type="unfinished">Opozorilo</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation type="unfinished">Informacije</translation>
-    </message>
-    <message>
-        <source>Up to date</source>
-        <translation type="unfinished">Ažurno</translation>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation type="unfinished">Naloži delno podpisano bitcoin-transakcijo</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -656,10 +671,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Zamaskiraj vrednosti v zavihku Pregled</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">privzeta denarnica</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">Ni denarnic na voljo</translation>
     </message>
@@ -686,6 +697,18 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">O&amp;kno</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation type="unfinished">Povečava</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation type="unfinished">Glavno okno</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation type="unfinished">Odjemalec %1</translation>
     </message>
     <message>
         <source>&amp;Hide</source>
@@ -932,6 +955,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Kopiraj vračilo</translation>
     </message>
     <message>
+        <source>(%1 locked)</source>
+        <translation type="unfinished">(%1 zaklenjeno)</translation>
+    </message>
+    <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
         <translation type="unfinished">Lahko se razlikuje za +/- %1 sat na vhod.</translation>
     </message>
@@ -999,10 +1026,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Opozorilo pri odpiranju denarnice</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">privzeta denarnica</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -2473,6 +2496,10 @@ Svetujemo, da prodajalca prosite, naj vam priskrbi URI na podlagi BIP21.</transl
         <translation type="unfinished">Omrežna aktivnost onemogočena.</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Jih ni</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Izvajam ukaz brez denarnice</translation>
     </message>
@@ -3189,10 +3216,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">&amp;Podpiši sporočilo</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">S svojimi naslovi lahko podpisujete sporočila ali dogovore in s tem dokazujete, da na teh naslovih lahko prejemate kovance. Bodite previdni in ne podpisujte ničesar nejasnega ali naključnega, ker vas zlikovci preko ribarjenja (phishing) lahko prelisičijo, da na njih prepišete svojo identiteto. Podpisujte samo podrobno opisane izjave, s katerimi se strinjate.</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to sign the message with</source>
         <translation type="unfinished">Bitcoin-naslov, s katerim podpisujete sporočilo</translation>
     </message>
@@ -3275,10 +3298,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">Prosimo, preverite naslov in poskusite znova.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Vnešeni naslov se ne nanaša na ključ.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -3848,11 +3867,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">DPBT kopirana</translation>
     </message>
     <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">Kopirano na odložišče</translation>
-    </message>
-    <message>
         <source>Can't sign transaction.</source>
         <translation type="unfinished">Ne morem podpisati transakcije.</translation>
     </message>
@@ -3863,10 +3877,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
     <message>
         <source>Can't display address</source>
         <translation type="unfinished">Ne morem prikazati naslova</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">privzeta denarnica</translation>
     </message>
 </context>
 <context>
@@ -3988,10 +3998,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">Potrebno je določiti obliko izvozne (dump) datoteke. Z ukazom createfromdump morate uporabiti možnost -format=&lt;format&gt;.</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Opozorilo: Preverite, če sta datum in ura na vašem računalniku točna! %s ne bo deloval pravilno, če je nastavljeni čas nepravilen.</translation>
-    </message>
-    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation type="unfinished">Prosimo, prispevajte, če se vam zdi %s uporaben. Za dodatne informacije o programski opremi obiščite %s.</translation>
     </message>
@@ -4088,10 +4094,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">-maxmempool mora biti vsaj %d MB</translation>
     </message>
     <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Prišlo je do usodne notranje napake. Za podrobnosti glejte datoteko debug.log.</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">Naslova -%s ni mogoče razrešiti: '%s'</translation>
     </message>
@@ -4102,6 +4104,10 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">Nastavitev -peerblockfilters ni veljavna brez nastavitve -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation type="unfinished">Nimam dostopa za pisanje v podatkovni mapi '%s'; preveri dovoljenja.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4217,7 +4223,7 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     </message>
     <message>
         <source>Error reading configuration file: %s</source>
-        <translation type="unfinished">Napaka pri branju nastavitvene datoteke: 1%s</translation>
+        <translation type="unfinished">Napaka pri branju nastavitvene datoteke: %s</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -4514,10 +4520,6 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transkacija je prevelika</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Spodletelo je dodeljevanje pomnilnika za -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
