@@ -387,6 +387,15 @@ class ConfArgsTest(BitcoinTestFramework):
         # Testnet3 node will log the warning
         self.nodes[0].chain = 'testnet3'
         self.nodes[0].replace_in_config([('regtest=', 'testnet='), ('[regtest]', '[test]')])
+
+        # Get the path to the debug.log file
+        log_dir = self.nodes[0].datadir_path / self.nodes[0].chain
+        log_file = log_dir / 'debug.log'
+
+        # Create the debug.log file if it doesn't exist
+        os.makedirs(log_dir, exist_ok=True)
+        open(log_file, 'w').close()
+
         with self.nodes[0].assert_debug_log([t3_warning_log]):
             self.start_node(0)
         # Some CI environments will have limited space and some others won't
@@ -402,6 +411,15 @@ class ConfArgsTest(BitcoinTestFramework):
         # Testnet4 node will not log the warning
         self.nodes[0].chain = 'testnet4'
         self.nodes[0].replace_in_config([('testnet=', 'testnet4='), ('[test]', '[testnet4]')])
+
+        # Get the path to the debug.log file
+        log_dir = self.nodes[0].datadir_path / self.nodes[0].chain
+        log_file = log_dir / 'debug.log'
+
+        # Create the debug.log file if it doesn't exist
+        os.makedirs(log_dir, exist_ok=True)
+        open(log_file, 'w').close()
+        
         with self.nodes[0].assert_debug_log([], unexpected_msgs=[t3_warning_log]):
             self.start_node(0)
         self.stop_node(0)
