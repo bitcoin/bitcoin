@@ -303,7 +303,6 @@ void StopRPC(const std::any& context)
         LogDebug(BCLog::RPC, "Stopping RPC\n");
         WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
         DeleteAuthCookie();
-        g_best_block_cv.notify_all();
         node::NodeContext& node = EnsureAnyNodeContext(context);
         // The notifications interface doesn't exist between initialization step 4a and 7.
         if (node.notifications) node.notifications->m_tip_block_cv.notify_all();

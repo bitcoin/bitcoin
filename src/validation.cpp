@@ -108,10 +108,6 @@ const std::vector<std::string> CHECKLEVEL_DOC {
  * */
 static constexpr int PRUNE_LOCK_BUFFER{10};
 
-GlobalMutex g_best_block_mutex;
-std::condition_variable g_best_block_cv;
-uint256 g_best_block;
-
 const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
     AssertLockHeld(cs_main);
@@ -2986,12 +2982,6 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     // New best block
     if (m_mempool) {
         m_mempool->AddTransactionsUpdated(1);
-    }
-
-    {
-        LOCK(g_best_block_mutex);
-        g_best_block = pindexNew->GetBlockHash();
-        g_best_block_cv.notify_all();
     }
 
     std::vector<bilingual_str> warning_messages;
