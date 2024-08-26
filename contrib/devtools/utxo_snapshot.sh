@@ -36,6 +36,16 @@ if (( GENERATE_AT_HEIGHT < PRUNED )); then
   exit 1
 fi
 
+# Check current block height to ensure the node has synchronized past the required block
+CURRENT_BLOCK_HEIGHT=$(${BITCOIN_CLI_CALL} getblockcount)
+PIVOT_BLOCK_HEIGHT=$(( GENERATE_AT_HEIGHT + 1 ))
+
+if (( PIVOT_BLOCK_HEIGHT > CURRENT_BLOCK_HEIGHT )); then
+  (>&2 echo "Error: The node has not yet synchronized to block height ${PIVOT_BLOCK_HEIGHT}.")
+  (>&2 echo "Please wait until the node has synchronized past this block height and try again.")
+  exit 1
+fi
+
 # Early exit if file at OUTPUT_PATH already exists
 if [[ -e "$OUTPUT_PATH" ]]; then
   (>&2 echo "Error: $OUTPUT_PATH already exists or is not a valid path.")
