@@ -9,7 +9,6 @@
 #include <primitives/transaction.h>
 #include <gsl/pointers.h>
 
-#include <core_io.h>
 #include <serialize.h>
 #include <univalue.h>
 
@@ -22,6 +21,10 @@ class TxValidationState;
 namespace llmq {
 class CQuorumManager;
 } // namespace llmq
+
+// Forward declaration from core_io to get rid of circular dependency
+UniValue ValueFromAmount(const CAmount amount);
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_addresses);
 
 class CAssetLockPayload
 {
