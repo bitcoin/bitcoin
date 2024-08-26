@@ -4398,6 +4398,11 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
             return util::Error{_("Error: This wallet is already a descriptor wallet")};
         }
 
+        // Flush chain state before unloading wallet
+        CBlockLocator locator;
+        WITH_LOCK(wallet->cs_wallet, context.chain->findBlock(wallet->GetLastBlockHash(), FoundBlock().locator(locator)));
+        if (!locator.IsNull()) wallet->chainStateFlushed(ChainstateRole::NORMAL, locator);
+
         if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
             return util::Error{_("Unable to unload the wallet before migrating")};
         }
