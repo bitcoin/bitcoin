@@ -738,7 +738,6 @@ static RPCHelpMan getblocktemplate()
     {
         // Wait to respond until either the best block changes, OR a minute has passed and there are more transactions
         uint256 hashWatchedChain;
-        std::chrono::steady_clock::time_point checktxtime;
         unsigned int nTransactionsUpdatedLastLP;
 
         if (lpval.isStr())
@@ -759,19 +758,14 @@ static RPCHelpMan getblocktemplate()
         // Release lock while waiting
         LEAVE_CRITICAL_SECTION(cs_main);
         {
-            checktxtime = std::chrono::steady_clock::now() + std::chrono::minutes(1);
-
-            WAIT_LOCK(g_best_block_mutex, lock);
-            while (g_best_block == hashWatchedChain && IsRPCRunning())
-            {
-                if (g_best_block_cv.wait_until(lock, checktxtime) == std::cv_status::timeout)
-                {
-                    // Timeout: Check transactions for update
-                    // without holding the mempool lock to avoid deadlocks
-                    if (miner.getTransactionsUpdated() != nTransactionsUpdatedLastLP)
-                        break;
-                    checktxtime += std::chrono::seconds(10);
-                }
+            MillisecondsDouble checktxtime{std::chrono::minutes(1)};
+            while (tip == hashWatchedChain && IsRPCRunning()) {
+                tip = miner.waitTipChanged(hashWatchedChain, checktxtime).hash;
+                // Timeout: Check transactions for update
+                // without holding the mempool lock to avoid deadlocks
+                if (miner.getTransactionsUpdated() != nTransactionsUpdatedLastLP)
+                    break;
+                checktxtime = std::chrono::seconds(10);
             }
         }
         ENTER_CRITICAL_SECTION(cs_main);
