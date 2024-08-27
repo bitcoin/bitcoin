@@ -2506,6 +2506,12 @@ bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
     return m_network_conn_counts[net] > 1;
 }
 
+bool CConnman::RequiresV2ForOutbound(const CNetAddr &addr) const
+{
+    const Network net = addr.GetNetClass();
+    return m_v2only_clearnet && isClearnet(net);
+}
+
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 {
     std::array<Network, 5> nets{NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS};
