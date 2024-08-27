@@ -77,6 +77,8 @@ static const int MAX_FEELER_CONNECTIONS = 1;
 static constexpr size_t MAX_PRIVATE_BROADCAST_CONNECTIONS{64};
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
+/** -v2onlyclearnet default */
+static constexpr bool DEFAULT_V2_ONLY_CLEARNET{false};
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
@@ -1096,6 +1098,7 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        bool m_v2only_clearnet = DEFAULT_V2_ONLY_CLEARNET;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1134,6 +1137,7 @@ public:
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
+        m_v2only_clearnet = connOptions.m_v2only_clearnet;
     }
 
     // test only
@@ -1560,6 +1564,24 @@ private:
      */
     bool MaybePickPreferredNetwork(std::optional<Network>& network);
 
+    /**
+     * Whether an outbound connection to this destination must be v2 only.
+     *
+     * Returns true when -v2onlyclearnet is set AND either:
+     *   - the resolved address is clearnet (IPv4/IPv6) OR
+     *   - the address is unresolved and a destination string was supplied.
+     *     if bitcoind delegates DNS to a name proxy (ex: Tor), we can't tell
+     *     locally whether the name resolves to clearnet or not, so we assume
+     *     the worst case and require v2 to avoid sending plaintext.
+     *
+     * Connections to non-routable (local/loopback) addresses can be v1 since
+     * their traffic never leaves the LAN.
+     *
+     * @param addr      target address (maybe unresolved)
+     * @param dest_name destination string (or empty if connecting by resolved address)
+     */
+    bool RequiresV2ForOutbound(const CNetAddr& addr, std::string_view dest_name) const;
+
     // Whether the node should be passed out in ForEach* callbacks
     static bool NodeFullyConnected(const CNode* pnode);
 
@@ -1752,6 +1774,13 @@ private:
      * flag for whether messages are captured
      */
     bool m_capture_messages{false};
+
+    /**
+     * option for restricting outbound clearnet connections (IPv4/IPv6) to v2 only.
+     * outbound connections to IPv4/IPv6 need to be v2 connections.
+     * outbound connections to Tor/I2P/CJDNS can be v1 or v2 connections.
+     */
+    bool m_v2only_clearnet{DEFAULT_V2_ONLY_CLEARNET};
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
