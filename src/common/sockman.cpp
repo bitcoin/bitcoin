@@ -113,6 +113,11 @@ std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CServic
     return sock;
 }
 
+NodeId SockMan::GetNewNodeId()
+{
+    return m_next_node_id.fetch_add(1, std::memory_order_relaxed);
+}
+
 void SockMan::CloseSockets()
 {
     m_listen.clear();
