@@ -45,7 +45,6 @@ or `--help`:
 
 | Lint test | Dependency |
 |-----------|:----------:|
-| [`lint-python.py`](/test/lint/lint-python.py) | [flake8](https://github.com/PyCQA/flake8)
 | [`lint-python.py`](/test/lint/lint-python.py) | [lief](https://github.com/lief-project/LIEF)
 | [`lint-python.py`](/test/lint/lint-python.py) | [mypy](https://github.com/python/mypy)
 | [`lint-python.py`](/test/lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
