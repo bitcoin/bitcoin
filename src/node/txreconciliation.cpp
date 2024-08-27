@@ -87,7 +87,7 @@ public:
         LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Pre-register peer=%d\n", peer_id);
         const uint64_t local_salt{FastRandomContext().rand64()};
 
-        // We do this exactly once per peer (which are unique by NodeId, see GetNewNodeId) so it's
+        // We do this exactly once per peer (which are unique by id, see SockMan::GetNewId()) so it's
         // safe to assume we don't have this record yet.
         Assume(m_states.emplace(peer_id, local_salt).second);
         return local_salt;

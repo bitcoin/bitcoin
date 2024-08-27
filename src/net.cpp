@@ -511,7 +511,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         AddWhitelistPermissionFlags(permission_flags, target_addr, whitelist_permissions);
 
         // Add node
-        NodeId id = GetNewNodeId();
+        NodeId id = GetNewId();
         uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
         if (!addr_bind.IsValid()) {
             addr_bind = GetBindAddress(*sock);
@@ -1795,7 +1795,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
         }
     }
 
-    NodeId id = GetNewNodeId();
+    NodeId id = GetNewId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
@@ -3160,11 +3160,6 @@ CConnman::CConnman(uint64_t nSeed0In,
     Options connOptions;
     Init(connOptions);
     SetNetworkActive(network_active);
-}
-
-NodeId CConnman::GetNewNodeId()
-{
-    return nLastNodeId.fetch_add(1, std::memory_order_relaxed);
 }
 
 uint16_t CConnman::GetDefaultPort(Network net) const

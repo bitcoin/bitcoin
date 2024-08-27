@@ -9,6 +9,7 @@
 #include <util/sock.h>
 #include <util/translation.h>
 
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -22,6 +23,11 @@
 class SockMan
 {
 public:
+    /**
+     * Each connection is assigned an unique id of this type.
+     */
+    using Id = int64_t;
+
     /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
      * @param[in] to Where to bind.
@@ -40,6 +46,11 @@ public:
     std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, CService& addr);
 
     /**
+     * Generate an id for a newly created connection.
+     */
+    Id GetNewId();
+
+    /**
      * Stop listening by closing all listening sockets.
      */
     void StopListening();
@@ -48,6 +59,13 @@ public:
      * List of listening sockets.
      */
     std::vector<std::shared_ptr<Sock>> m_listen;
+
+private:
+
+    /**
+     * The id to assign to the next created connection. Used to generate ids of connections.
+     */
+    std::atomic<Id> m_next_id{0};
 };
 
 #endif // BITCOIN_COMMON_SOCKMAN_H
