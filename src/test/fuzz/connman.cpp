@@ -184,10 +184,10 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
                 const auto peer = ConsumeAddress(fuzzed_data_provider);
-                connman.CreateNodeFromAcceptedSocketPublic(
+                connman.EventNewConnectionAcceptedPublic(
                     /*sock=*/CreateSock(AF_INET, SOCK_STREAM, IPPROTO_TCP),
-                    /*addr_bind=*/ConsumeAddress(fuzzed_data_provider),
-                    /*addr_peer=*/peer);
+                    /*me=*/ConsumeAddress(fuzzed_data_provider),
+                    /*them=*/peer);
             },
             [&] {
                 CConnman::Options options;
