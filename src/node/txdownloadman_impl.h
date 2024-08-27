@@ -128,7 +128,7 @@ public:
         return *m_lazy_recent_confirmed_transactions;
     }
 
-    TxDownloadManagerImpl(const TxDownloadOptions& options) : m_opts{options} {}
+    TxDownloadManagerImpl(const TxDownloadOptions& options) : m_opts{options}, m_txrequest{options.m_deterministic_txrequest} {}
 
     struct PeerInfo {
         /** Information relevant to scheduling tx requests. */
