@@ -3106,11 +3106,6 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, AddrMan& addrman_in,
     SetNetworkActive(network_active);
 }
 
-NodeId CConnman::GetNewNodeId()
-{
-    return nLastNodeId.fetch_add(1, std::memory_order_relaxed);
-}
-
 uint16_t CConnman::GetDefaultPort(Network net) const
 {
     return net == NET_I2P ? I2P_SAM31_PORT : m_params.GetDefaultPort();

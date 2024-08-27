@@ -95,8 +95,6 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr bool DEFAULT_V2_TRANSPORT{true};
 
-typedef int64_t NodeId;
-
 struct AddedNodeParams {
     std::string m_added_node;
     bool m_use_v2transport;
@@ -1333,8 +1331,6 @@ private:
 
     void DeleteNode(CNode* pnode);
 
-    NodeId GetNewNodeId();
-
     /** (Try to) send data from node's vSendMsg. Returns (bytes_sent, data_left). */
     std::pair<size_t, bool> SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
 
@@ -1414,7 +1410,6 @@ private:
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
-    std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
     // Stores number of full-tx connections (outbound and manual) per network
