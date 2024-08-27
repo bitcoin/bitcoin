@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+using namespace util::hex_literals;
+
 namespace {
 
 /** TestData groups various kinds of precomputed data necessary in this test. */
@@ -645,12 +647,12 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
 
     // Misc unit tests
     // A Script with a non minimal push is invalid
-    std::vector<unsigned char> nonminpush = ParseHex("0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000");
+    constexpr auto nonminpush{"0000210232780000feff00ffffffffffff21ff005f00ae21ae00000000060602060406564c2102320000060900fe00005f00ae21ae00100000060606060606000000000000000000000000000000000000000000000000000000000000000000"_hex_u8};
     const CScript nonminpush_script(nonminpush.begin(), nonminpush.end());
     BOOST_CHECK(miniscript::FromScript(nonminpush_script, wsh_converter) == nullptr);
     BOOST_CHECK(miniscript::FromScript(nonminpush_script, tap_converter) == nullptr);
     // A non-minimal VERIFY (<key> CHECKSIG VERIFY 1)
-    std::vector<unsigned char> nonminverify = ParseHex("2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951");
+    constexpr auto nonminverify{"2103a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7ac6951"_hex_u8};
     const CScript nonminverify_script(nonminverify.begin(), nonminverify.end());
     BOOST_CHECK(miniscript::FromScript(nonminverify_script, wsh_converter) == nullptr);
     BOOST_CHECK(miniscript::FromScript(nonminverify_script, tap_converter) == nullptr);

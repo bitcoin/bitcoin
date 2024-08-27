@@ -11,6 +11,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using namespace util::hex_literals;
+
 namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(wallet_crypto_tests, BasicTestingSetup)
 
@@ -95,10 +97,9 @@ BOOST_AUTO_TEST_CASE(passphrase) {
 }
 
 BOOST_AUTO_TEST_CASE(encrypt) {
-    std::vector<unsigned char> vchSalt = ParseHex("0000deadbeef0000");
-    BOOST_CHECK(vchSalt.size() == WALLET_CRYPTO_SALT_SIZE);
+    constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase("passphrase", vchSalt, 25000, 0);
+    crypt.SetKeyFromPassphrase("passphrase", salt, 25000, 0);
     TestCrypter::TestEncrypt(crypt, ParseHex("22bcade09ac03ff6386914359cfe885cfeb5f77ff0d670f102f619687453b29d"));
 
     for (int i = 0; i != 100; i++)
@@ -110,10 +111,9 @@ BOOST_AUTO_TEST_CASE(encrypt) {
 }
 
 BOOST_AUTO_TEST_CASE(decrypt) {
-    std::vector<unsigned char> vchSalt = ParseHex("0000deadbeef0000");
-    BOOST_CHECK(vchSalt.size() == WALLET_CRYPTO_SALT_SIZE);
+    constexpr std::array<uint8_t, WALLET_CRYPTO_SALT_SIZE> salt{"0000deadbeef0000"_hex_u8};
     CCrypter crypt;
-    crypt.SetKeyFromPassphrase("passphrase", vchSalt, 25000, 0);
+    crypt.SetKeyFromPassphrase("passphrase", salt, 25000, 0);
 
     // Some corner cases the came up while testing
     TestCrypter::TestDecrypt(crypt,ParseHex("795643ce39d736088367822cdc50535ec6f103715e3e48f4f3b1a60a08ef59ca"));

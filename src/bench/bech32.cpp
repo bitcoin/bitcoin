@@ -8,12 +8,13 @@
 
 #include <vector>
 
+using namespace util::hex_literals;
 
 static void Bech32Encode(benchmark::Bench& bench)
 {
-    std::vector<uint8_t> v = ParseHex("c97f5a67ec381b760aeaf67573bc164845ff39a3bb26a1cee401ac67243b48db");
+    constexpr std::array<uint8_t, 32> v{"c97f5a67ec381b760aeaf67573bc164845ff39a3bb26a1cee401ac67243b48db"_hex_u8};
     std::vector<unsigned char> tmp = {0};
-    tmp.reserve(1 + 32 * 8 / 5);
+    tmp.reserve(1 + v.size() * 8 / 5);
     ConvertBits<8, 5, true>([&](unsigned char c) { tmp.push_back(c); }, v.begin(), v.end());
     bench.batch(v.size()).unit("byte").run([&] {
         bech32::Encode(bech32::Encoding::BECH32, "bc", tmp);

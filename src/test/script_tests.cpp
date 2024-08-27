@@ -35,6 +35,8 @@
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS
 
+using namespace util::hex_literals;
+
 static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(std::string strFlags);
@@ -1413,7 +1415,7 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     // prefix, leaving 02ff03 which is push-two-bytes:
     s = ScriptFromHex("0302ff030302ff03");
     d = ScriptFromHex("03");
-    expect = CScript() << ParseHex("ff03") << ParseHex("ff03");
+    expect = CScript() << "ff03"_hex_v_u8 << "ff03"_hex_v_u8;
     BOOST_CHECK_EQUAL(FindAndDelete(s, d), 2);
     BOOST_CHECK(s == expect);
 
