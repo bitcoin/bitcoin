@@ -2435,6 +2435,11 @@ bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
     return m_network_conn_counts[net] > 1;
 }
 
+bool CConnman::DisableV1OnClearnet(Network net) const
+{
+    return disable_v1conn_clearnet && (net == NET_IPV4 || net == NET_IPV6);
+}
+
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 {
     std::array<Network, 5> nets{NET_IPV4, NET_IPV6, NET_ONION, NET_I2P, NET_CJDNS};
