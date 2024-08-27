@@ -25,6 +25,13 @@ typedef int64_t NodeId;
 class SockMan
 {
 public:
+
+    virtual ~SockMan() = default;
+
+    //
+    // Non-virtual functions, to be reused by children classes.
+    //
+
     /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
      * @param[in] to Where to bind.
@@ -58,6 +65,26 @@ public:
     std::vector<std::shared_ptr<Sock>> m_listen;
 
 private:
+
+    //
+    // Pure virtual functions must be implemented by children classes.
+    //
+
+    //
+    // Non-pure virtual functions can be overridden by children classes or left
+    // alone to use the default implementation from SockMan.
+    //
+
+    /**
+     * Be notified of a change in the state of listening for incoming I2P connections.
+     * The default behavior, implemented by `SockMan`, is to ignore this event.
+     * @param[in] addr Our listening address.
+     * @param[in] success If true then the listen succeeded and we are now
+     * listening for incoming I2P connections at `addr`. If false then the
+     * call failed and now we are not listening (even if this was invoked
+     * before with `true`).
+     */
+    virtual void EventI2PListen(const CService& addr, bool success);
 
     /**
      * The id to assign to the next created node. Used to generate ids of nodes.
