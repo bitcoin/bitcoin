@@ -4,16 +4,24 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
-#include <node/chainstate.h>
-#include <node/context.h>
+#include <kernel/chainparams.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <sync.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
-#include <validationinterface.h>
+#include <uint256.h>
+#include <util/time.h>
+#include <validation.h>
 #include <wallet/receive.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
 
+#include <cassert>
+#include <memory>
 #include <optional>
+#include <string>
 
 namespace wallet {
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)

@@ -4,6 +4,8 @@
 
 #include <bench/data.h>
 
+#include <iterator>
+
 namespace benchmark {
 namespace data {
 

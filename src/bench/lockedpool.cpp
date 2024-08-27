@@ -3,9 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
 #include <support/lockedpool.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #define ASIZE 2048

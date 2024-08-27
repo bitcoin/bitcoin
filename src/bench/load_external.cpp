@@ -5,10 +5,21 @@
 #include <bench/bench.h>
 #include <bench/data.h>
 #include <chainparams.h>
-#include <clientversion.h>
+#include <flatfile.h>
+#include <node/blockstorage.h>
+#include <span.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
-#include <util/chaintype.h>
+#include <uint256.h>
+#include <util/fs.h>
 #include <validation.h>
+
+#include <cstdint>
+#include <cstdio>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 /**
  * The LoadExternalBlockFile() function is used during -reindex and -loadblock.

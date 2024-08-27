@@ -6,6 +6,8 @@
 #include <test/util/setup_common.h>
 #include <validation.h>
 
+#include <memory>
+
 static void CheckBlockIndex(benchmark::Bench& bench)
 {
     auto testing_setup{MakeNoLogFileContext<TestChain100Setup>()};

@@ -2,19 +2,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <addresstype.h>
 #include <bench/bench.h>
-#include <interfaces/chain.h>
+#include <config/bitcoin-config.h> // IWYU pragma: keep
 #include <key.h>
 #include <key_io.h>
-#include <node/context.h>
+#include <script/descriptor.h>
+#include <script/script.h>
+#include <script/signingprovider.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
-#include <util/translation.h>
-#include <validationinterface.h>
 #include <wallet/context.h>
+#include <wallet/db.h>
 #include <wallet/test/util.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace wallet {
 static void WalletIsMine(benchmark::Bench& bench, bool legacy_wallet, int num_combo = 0)

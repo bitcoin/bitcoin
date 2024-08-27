@@ -2,17 +2,42 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <bench/bench.h>
+#include <chain.h>
 #include <chainparams.h>
-#include <wallet/coincontrol.h>
+#include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <interfaces/chain.h>
 #include <kernel/chain.h>
-#include <node/context.h>
+#include <node/blockstorage.h>
+#include <outputtype.h>
+#include <policy/feerate.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
+#include <util/result.h>
+#include <util/time.h>
 #include <validation.h>
+#include <versionbits.h>
+#include <wallet/coincontrol.h>
+#include <wallet/coinselection.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
+
+#include <cassert>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 using wallet::CWallet;
 using wallet::CreateMockableWalletDatabase;

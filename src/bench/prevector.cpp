@@ -3,11 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <prevector.h>
-#include <serialize.h>
-#include <streams.h>
-#include <type_traits>
 
 #include <bench/bench.h>
+#include <serialize.h>
+#include <streams.h>
+
+#include <type_traits>
+#include <vector>
 
 struct nontrivial_t {
     int x{-1};

@@ -2,21 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
-
+#include <addresstype.h>
 #include <bench/bench.h>
-#include <interfaces/chain.h>
-#include <node/context.h>
-#include <test/util/mining.h>
+#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <consensus/amount.h>
+#include <outputtype.h>
+#include <primitives/transaction.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
-#include <util/translation.h>
-#include <validationinterface.h>
+#include <util/check.h>
 #include <wallet/context.h>
-#include <wallet/receive.h>
+#include <wallet/db.h>
+#include <wallet/test/util.h>
+#include <wallet/transaction.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
 
-#include <optional>
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace wallet{
 static void AddTx(CWallet& wallet)

@@ -5,7 +5,9 @@
 #include <bench/bench.h>
 #include <logging.h>
 #include <test/util/setup_common.h>
-#include <util/chaintype.h>
+
+#include <functional>
+#include <vector>
 
 // All but 2 of the benchmarks should have roughly similar performance:
 //

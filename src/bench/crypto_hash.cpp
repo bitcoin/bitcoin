@@ -11,10 +11,13 @@
 #include <crypto/sha3.h>
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
-#include <hash.h>
 #include <random.h>
+#include <span.h>
 #include <tinyformat.h>
 #include <uint256.h>
+
+#include <cstdint>
+#include <vector>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;

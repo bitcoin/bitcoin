@@ -4,16 +4,21 @@
 
 #include <bench/bench.h>
 
-#include <test/util/setup_common.h>
+#include <test/util/setup_common.h> // IWYU pragma: keep
+#include <tinyformat.h>
 #include <util/fs.h>
 #include <util/string.h>
 
 #include <chrono>
+#include <compare>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
+#include <ratio>
 #include <regex>
+#include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
