@@ -181,7 +181,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         # 5. aps_create_tx_internal (type 4)
         wallet.sendtoaddress(wallet.getnewaddress(), 10)
         events = self.get_tracepoints([1, 2, 3, 1, 4])
-        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
         assert_greater_than(change_pos, -1)
 
@@ -190,7 +190,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         # 1. normal_create_tx_internal (type 2)
         assert_raises_rpc_error(-6, "Insufficient funds", wallet.sendtoaddress, wallet.getnewaddress(), 102 * 50)
         events = self.get_tracepoints([2])
-        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, False)
 
         self.log.info("Explicitly enabling APS results in 2 tracepoints")
@@ -200,7 +200,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         wallet.setwalletflag("avoid_reuse")
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=10, avoid_reuse=True)
         events = self.get_tracepoints([1, 2])
-        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
         assert_equal(use_aps, None)
 
@@ -213,7 +213,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         # 5. aps_create_tx_internal (type 4)
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True, avoid_reuse=False)
         events = self.get_tracepoints([1, 2, 3, 1, 4])
-        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
         assert_equal(change_pos, -1)
 
@@ -223,7 +223,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         # 2. normal_create_tx_internal (type 2)
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True)
         events = self.get_tracepoints([1, 2])
-        success, use_aps, algo, waste, change_pos = self.determine_selection_from_usdt(events)
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
         assert_equal(change_pos, -1)
 

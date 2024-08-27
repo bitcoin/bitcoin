@@ -47,7 +47,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         return node.get_wallet_rpc(wallet_name)
 
     def run_test(self):
-        node0, node1, node2 = self.nodes
+        node0, node1, _node2 = self.nodes
         self.wallet = MiniWallet(test_node=node0)
 
         if self.is_wallet_compiled():
@@ -122,7 +122,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             assert_raises_rpc_error(-4, "Unsupported multisig script size for legacy wallet. Upgrade to descriptors to overcome this limitation for p2sh-segwit or bech32 scripts", wallet_multi.addmultisigaddress, 16, pubkeys, '', 'bech32')
 
     def do_multisig(self, nkeys, nsigs, output_type, wallet_multi):
-        node0, node1, node2 = self.nodes
+        node0, _node1, node2 = self.nodes
         pub_keys = self.pub[0: nkeys]
         priv_keys = self.priv[0: nkeys]
 
