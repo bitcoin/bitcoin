@@ -1889,7 +1889,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
-      m_txdownloadman(node::TxDownloadOptions{pool, m_rng, opts.max_orphan_txs}),
+      m_txdownloadman(node::TxDownloadOptions{pool, m_rng, opts.max_orphan_txs, opts.deterministic_rng}),
       m_warnings{warnings},
       m_opts{opts}
 {
