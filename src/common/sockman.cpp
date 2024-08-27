@@ -8,6 +8,7 @@
 #include <logging.h>
 #include <netbase.h>
 #include <util/sock.h>
+#include <util/thread.h>
 
 bool SockMan::BindAndStartListening(const CService& to, bilingual_str& errmsg)
 {
@@ -88,6 +89,24 @@ bool SockMan::BindAndStartListening(const CService& to, bilingual_str& errmsg)
     return true;
 }
 
+void SockMan::StartSocketsThreads(const Options& options)
+{
+    if (options.i2p.has_value()) {
+        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(
+            options.i2p->private_key_file, options.i2p->sam_proxy, &interruptNet);
+
+        m_thread_i2p_accept =
+            std::thread(&util::TraceThread, "i2paccept", [this] { ThreadI2PAccept(); });
+    }
+}
+
+void SockMan::JoinSocketsThreads()
+{
+    if (m_thread_i2p_accept.joinable()) {
+        m_thread_i2p_accept.join();
+    }
+}
+
 std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
 {
     sockaddr_storage storage;
@@ -124,3 +143,39 @@ void SockMan::CloseSockets()
 }
 
 void SockMan::EventI2PListen(const CService&, bool) {}
+
+void SockMan::ThreadI2PAccept()
+{
+    static constexpr auto err_wait_begin = 1s;
+    static constexpr auto err_wait_cap = 5min;
+    auto err_wait = err_wait_begin;
+
+    i2p::Connection conn;
+
+    auto SleepOnFailure = [&]() {
+        interruptNet.sleep_for(err_wait);
+        if (err_wait < err_wait_cap) {
+            err_wait += 1s;
+        }
+    };
+
+    while (!interruptNet) {
+
+        if (!m_i2p_sam_session->Listen(conn)) {
+            EventI2PListen(conn.me, /*success=*/false);
+            SleepOnFailure();
+            continue;
+        }
+
+        EventI2PListen(conn.me, /*success=*/true);
+
+        if (!m_i2p_sam_session->Accept(conn)) {
+            SleepOnFailure();
+            continue;
+        }
+
+        EventNewConnectionAccepted(std::move(conn.sock), conn.me, conn.peer);
+
+        err_wait = err_wait_begin;
+    }
+}
