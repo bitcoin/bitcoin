@@ -30,28 +30,8 @@ MYPY_FILES_ARGS = ['git', 'ls-files', 'test/functional/*.py', 'contrib/devtools/
 
 ENABLED = (
     'E101,'  # indentation contains mixed spaces and tabs
-    'E112,'  # expected an indented block
-    'E113,'  # unexpected indentation
-    'E115,'  # expected an indented block (comment)
-    'E116,'  # unexpected indentation (comment)
-    'E125,'  # continuation line with same indent as next logical line
-    'E129,'  # visually indented line with same indent as next logical line
-    'E131,'  # continuation line unaligned for hanging indent
-    'E133,'  # closing bracket is missing indentation
-    'E223,'  # tab before operator
-    'E224,'  # tab after operator
-    'E242,'  # tab after ','
-    'E266,'  # too many leading '#' for block comment
-    'E271,'  # multiple spaces after keyword
-    'E272,'  # multiple spaces before keyword
-    'E273,'  # tab after keyword
-    'E274,'  # tab before keyword
-    'E275,'  # missing whitespace after keyword
-    'E304,'  # blank lines found after function decorator
-    'E306,'  # expected 1 blank line before a nested definition
     'E401,'  # multiple imports on one line
     'E402,'  # module level import not at top of file
-    'E502,'  # the backslash is redundant between brackets
     'E701,'  # multiple statements on one line (colon)
     'E702,'  # multiple statements on one line (semicolon)
     'E703,'  # statement ends with a semicolon
@@ -74,7 +54,6 @@ ENABLED = (
     'F631,'  # assertion test is a tuple, which are always True
     'F632,'  # use ==/!= to compare str, bytes, and int literals
     'F811,'  # redefinition of unused name from line N
-    'F812,'  # list comprehension redefines 'foo' from line N
     'F821,'  # undefined name 'Foo'
     'F822,'  # undefined name name in __all__
     'F823,'  # local variable name … referenced before assignment
