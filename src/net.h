@@ -1265,6 +1265,12 @@ private:
     void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
     void ThreadOpenConnections(std::vector<std::string> connect, Span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+
+    /// Whether we are currently advertising our I2P address (via `AddLocal()`).
+    bool m_i2p_advertising_listen_addr{false};
+
+    virtual void EventI2PListen(const CService& addr, bool success) override;
+
     void ThreadI2PAcceptIncoming();
 
     /**

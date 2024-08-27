@@ -122,3 +122,5 @@ void SockMan::CloseSockets()
 {
     m_listen.clear();
 }
+
+void SockMan::EventI2PListen(const CService&, bool) {}

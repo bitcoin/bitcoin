@@ -2986,13 +2986,28 @@ void CConnman::ThreadMessageHandler()
     }
 }
 
+void CConnman::EventI2PListen(const CService& addr, bool success)
+{
+    if (success) {
+        if (!m_i2p_advertising_listen_addr) {
+            AddLocal(addr, LOCAL_MANUAL);
+            m_i2p_advertising_listen_addr = true;
+        }
+        return;
+    }
+    // a failure to listen
+    if (m_i2p_advertising_listen_addr && addr.IsValid()) {
+        RemoveLocal(addr);
+        m_i2p_advertising_listen_addr = false;
+    }
+}
+
 void CConnman::ThreadI2PAcceptIncoming()
 {
     static constexpr auto err_wait_begin = 1s;
     static constexpr auto err_wait_cap = 5min;
     auto err_wait = err_wait_begin;
 
-    bool advertising_listen_addr = false;
     i2p::Connection conn;
 
     auto SleepOnFailure = [&]() {
@@ -3005,18 +3020,12 @@ void CConnman::ThreadI2PAcceptIncoming()
     while (!interruptNet) {
 
         if (!m_i2p_sam_session->Listen(conn)) {
-            if (advertising_listen_addr && conn.me.IsValid()) {
-                RemoveLocal(conn.me);
-                advertising_listen_addr = false;
-            }
+            EventI2PListen(conn.me, /*success=*/false);
             SleepOnFailure();
             continue;
         }
 
-        if (!advertising_listen_addr) {
-            AddLocal(conn.me, LOCAL_MANUAL);
-            advertising_listen_addr = true;
-        }
+        EventI2PListen(conn.me, /*success=*/true);
 
         if (!m_i2p_sam_session->Accept(conn)) {
             SleepOnFailure();
