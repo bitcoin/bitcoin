@@ -5,12 +5,16 @@
 #ifndef BITCOIN_COMMON_SOCKMAN_H
 #define BITCOIN_COMMON_SOCKMAN_H
 
+#include <i2p.h>
 #include <netaddress.h>
+#include <netbase.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/translation.h>
 
 #include <atomic>
 #include <memory>
+#include <thread>
 #include <vector>
 
 /**
@@ -18,6 +22,7 @@
  * To use this class, inherit from it and implement the pure virtual methods.
  * Handled operations:
  * - binding and listening on sockets
+ * - starting of necessary threads to process socket operations
  * - accepting incoming connections
  */
 class SockMan
@@ -39,6 +44,12 @@ public:
         STOP_LISTENING,
     };
 
+    /**
+     * Constructor.
+     * @param[in] interrupt_net Singal this to tell SockMan to cease network activity.
+     */
+    explicit SockMan(std::shared_ptr<CThreadInterrupt> interrupt_net);
+
     virtual ~SockMan() = default;
 
     //
@@ -47,12 +58,45 @@ public:
 
     /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
+     * Should be called before `StartSocketsThreads()`.
      * @param[in] to Where to bind.
      * @param[out] err_msg Error string if an error occurs.
      * @retval true Success.
      * @retval false Failure, `err_msg` will be set.
      */
     bool BindAndStartListening(const CService& to, bilingual_str& err_msg);
+
+    /**
+     * Options to influence `StartSocketsThreads()`.
+     */
+    struct Options {
+        struct I2P {
+            explicit I2P(const fs::path& file, const Proxy& proxy, std::string_view accept_thread_name)
+                : private_key_file{file},
+                  sam_proxy{proxy},
+                  accept_thread_name{accept_thread_name}
+            {}
+
+            const fs::path private_key_file;
+            const Proxy sam_proxy;
+            const std::string_view accept_thread_name;
+        };
+
+        /**
+         * I2P options. If set then a thread will be started that will accept incoming I2P connections.
+         */
+        std::optional<I2P> i2p;
+    };
+
+    /**
+     * Start the necessary threads for sockets IO.
+     */
+    void StartSocketsThreads(const Options& options);
+
+    /**
+     * Join (wait for) the threads started by `StartSocketsThreads()` to exit.
+     */
+    void JoinSocketsThreads();
 
     /**
      * Accept a connection.
@@ -73,6 +117,19 @@ public:
     void StopListening();
 
     /**
+     * This is signaled when network activity should cease.
+     * A copy of this is saved in `m_i2p_sam_session`.
+     */
+    const std::shared_ptr<CThreadInterrupt> m_interrupt_net;
+
+    /**
+     * I2P SAM session.
+     * Used to accept incoming and make outgoing I2P connections from a persistent
+     * address.
+     */
+    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
+
+    /**
      * List of listening sockets.
      */
     std::vector<std::shared_ptr<Sock>> m_listen;
@@ -82,6 +139,16 @@ private:
     //
     // Pure virtual functions must be implemented by children classes.
     //
+
+    /**
+     * Be notified when a new connection has been accepted.
+     * @param[in] sock Connected socket to communicate with the peer.
+     * @param[in] me The address and port at our side of the connection.
+     * @param[in] them The address and port at the peer's side of the connection.
+     */
+    virtual void EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
+                                            const CService& me,
+                                            const CService& them) = 0;
 
     //
     // Non-pure virtual functions can be overridden by children classes or left
@@ -97,9 +164,20 @@ private:
     virtual void EventI2PStatus(const CService& addr, I2PStatus new_status);
 
     /**
+     * Accept incoming I2P connections in a loop and call
+     * `EventNewConnectionAccepted()` for each new connection.
+     */
+    void ThreadI2PAccept();
+
+    /**
      * The id to assign to the next created connection. Used to generate ids of connections.
      */
     std::atomic<Id> m_next_id{0};
+
+    /**
+     * Thread that accepts incoming I2P connections in a loop, can be stopped via `m_interrupt_net`.
+     */
+    std::thread m_thread_i2p_accept;
 };
 
 #endif // BITCOIN_COMMON_SOCKMAN_H
