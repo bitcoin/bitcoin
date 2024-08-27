@@ -36,9 +36,9 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_markdown
         },
         &Linter {
-            description: "Check the default arguments in python",
-            name: "py_mut_arg_default",
-            lint_fn: lint_py_mut_arg_default,
+            description: "Lint Python code",
+            name: "py_lint",
+            lint_fn: lint_py_lint,
         },
         &Linter {
             description: "Check that std::filesystem is not used directly",
@@ -185,7 +185,7 @@ fn lint_subtree() -> LintResult {
     }
 }
 
-fn lint_py_mut_arg_default() -> LintResult {
+fn lint_py_lint() -> LintResult {
     let bin_name = "ruff";
     let checks = ["B006", "B008"]
         .iter()

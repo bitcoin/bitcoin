@@ -52,6 +52,7 @@ or `--help`:
 | [`lint-python-dead-code.py`](/test/lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)
 | [`lint-shell.py`](/test/lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
 | [`lint-spelling.py`](/test/lint/lint-spelling.py) | [codespell](https://github.com/codespell-project/codespell)
+| `py_lint` | [ruff](https://github.com/astral-sh/ruff)
 | markdown link check | [mlc](https://github.com/becheran/mlc)
 
 In use versions and install instructions are available in the [CI setup](../../ci/lint/04_install.sh).
