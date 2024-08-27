@@ -31,20 +31,6 @@ class HeadersSyncTest(BitcoinTestFramework):
         self.disable_mocktime = True
         self.num_nodes = 1
 
-    def setup_chain(self):
-        # This test operates under the assumption that the adjusted time is well ahead of block
-        # time.
-        #
-        # By default when we setup a new chain, we also adjust the mocktime (this is not done in
-        # Bitcoin's test suite), which violates this test's assumption and causes it to fail. We
-        # remedy this by ensuring the test's assumptions are met (i.e. we don't adjust mocktime)
-        #
-        self.log.info("Initializing test directory " + self.options.tmpdir)
-        if self.setup_clean_chain:
-            self._initialize_chain_clean()
-        else:
-            self._initialize_chain()
-
     def announce_random_block(self, peers):
         new_block_announcement = msg_inv(inv=[CInv(MSG_BLOCK, random.randrange(1<<256))])
         for p in peers:
