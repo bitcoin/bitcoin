@@ -21,6 +21,7 @@ public:
         msg.m_type = std::move(msg_type);
         msg.data.reserve(4 * 1024);
         CVectorWriter{ SER_NETWORK, nFlags | nVersion, msg.data, 0, std::forward<Args>(args)... };
+        msg.data.shrink_to_fit();
         return msg;
     }
 
