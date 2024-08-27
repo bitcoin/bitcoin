@@ -1387,8 +1387,11 @@ private:
 
     NodeId GetNewNodeId();
 
-    size_t SocketSendData(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
+    /** (Try to) send data from node's vSendMsg. Returns (bytes_sent, data_left). */
+    std::pair<size_t, bool> SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
+
     size_t SocketRecvData(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
+
     void DumpAddresses();
 
     // Network stats
