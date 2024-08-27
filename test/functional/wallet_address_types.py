@@ -104,6 +104,7 @@ class AddressTypeTest(BitcoinTestFramework):
         info = self.nodes[node].getaddressinfo(address)
         assert self.nodes[node].validateaddress(address)['isvalid']
         assert_equal(info.get('solvable'), True)
+        assert_equal(info['address_type'], "legacy" if typ == "p2sh-segwit" else typ)
 
         if not multisig and typ == 'legacy':
             # P2PKH
@@ -163,6 +164,7 @@ class AddressTypeTest(BitcoinTestFramework):
         info = self.nodes[node].getaddressinfo(address)
         assert 'desc' in info
         assert_equal(info['desc'], utxo['desc'])
+        assert_equal(info['address_type'], "legacy" if typ == "p2sh-segwit" else typ)
         assert self.nodes[node].validateaddress(address)['isvalid']
 
         # Use a ridiculously roundabout way to find the key origin info through
