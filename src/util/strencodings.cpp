@@ -46,16 +46,6 @@ bool IsHex(std::string_view str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
-bool IsHexNumber(std::string_view str)
-{
-    if (str.substr(0, 2) == "0x") str.remove_prefix(2);
-    for (char c : str) {
-        if (HexDigit(c) < 0) return false;
-    }
-    // Return false for empty string or "0x".
-    return str.size() > 0;
-}
-
 template <typename Byte>
 std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
 {

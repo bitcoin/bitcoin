@@ -27,11 +27,14 @@ FUZZ_TARGET(hex)
     if (IsHex(random_hex_string)) {
         assert(ToLower(random_hex_string) == hex_data);
     }
-    (void)IsHexNumber(random_hex_string);
     if (uint256::FromHex(random_hex_string)) {
         assert(random_hex_string.length() == 64);
         assert(Txid::FromHex(random_hex_string));
         assert(Wtxid::FromHex(random_hex_string));
+        assert(uint256::FromUserHex(random_hex_string));
+    }
+    if (const auto result{uint256::FromUserHex(random_hex_string)}) {
+        assert(uint256::FromHex(result->ToString()));
     }
     (void)uint256S(random_hex_string);
     try {
