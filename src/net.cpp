@@ -1698,9 +1698,9 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                            const CService& addr_bind,
-                                            const CService& addr)
+void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
+                                          const CService& addr_bind,
+                                          const CService& addr)
 {
     int nInbound = 0;
 
@@ -2140,7 +2140,7 @@ void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock
                 addr_accepted = MaybeFlipIPv6toCJDNS(addr_accepted);
                 const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
 
-                CreateNodeFromAcceptedSocket(std::move(sock_accepted), addr_bind, addr_accepted);
+                EventNewConnectionAccepted(std::move(sock_accepted), addr_bind, addr_accepted);
             }
         }
     }
@@ -3002,42 +3002,6 @@ void CConnman::EventI2PListen(const CService& addr, bool success)
     }
 }
 
-void CConnman::ThreadI2PAcceptIncoming()
-{
-    static constexpr auto err_wait_begin = 1s;
-    static constexpr auto err_wait_cap = 5min;
-    auto err_wait = err_wait_begin;
-
-    i2p::Connection conn;
-
-    auto SleepOnFailure = [&]() {
-        interruptNet.sleep_for(err_wait);
-        if (err_wait < err_wait_cap) {
-            err_wait += 1s;
-        }
-    };
-
-    while (!interruptNet) {
-
-        if (!m_i2p_sam_session->Listen(conn)) {
-            EventI2PListen(conn.me, /*success=*/false);
-            SleepOnFailure();
-            continue;
-        }
-
-        EventI2PListen(conn.me, /*success=*/true);
-
-        if (!m_i2p_sam_session->Accept(conn)) {
-            SleepOnFailure();
-            continue;
-        }
-
-        CreateNodeFromAcceptedSocket(std::move(conn.sock), conn.me, conn.peer);
-
-        err_wait = err_wait_begin;
-    }
-}
-
 void Discover()
 {
     if (!fDiscover)
@@ -3198,12 +3162,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
-    Proxy i2p_sam;
-    if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
-        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
-                                                                i2p_sam, &interruptNet);
-    }
-
     // Randomize the order in which we may query seednode to potentially prevent connecting to the same one every restart (and signal that we have restarted)
     std::vector<std::string> seed_nodes = connOptions.vSeedNodes;
     if (!seed_nodes.empty()) {
@@ -3249,6 +3207,15 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
 
+    SockMan::Options sockman_options;
+
+    Proxy i2p_sam;
+    if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
+        sockman_options.i2p.emplace(gArgs.GetDataDirNet() / "i2p_private_key", i2p_sam);
+    }
+
+    StartSocketsThreads(sockman_options);
+
     if (!gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED))
         LogPrintf("DNS seeding disabled\n");
     else
@@ -3273,11 +3240,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     // Process messages
     threadMessageHandler = std::thread(&util::TraceThread, "msghand", [this] { ThreadMessageHandler(); });
-
-    if (m_i2p_sam_session) {
-        threadI2PAcceptIncoming =
-            std::thread(&util::TraceThread, "i2paccept", [this] { ThreadI2PAcceptIncoming(); });
-    }
 
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpAddresses(); }, DUMP_PEERS_INTERVAL);
@@ -3332,9 +3294,8 @@ void CConnman::Interrupt()
 
 void CConnman::StopThreads()
 {
-    if (threadI2PAcceptIncoming.joinable()) {
-        threadI2PAcceptIncoming.join();
-    }
+    JoinSocketsThreads();
+
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
     if (threadOpenConnections.joinable())
