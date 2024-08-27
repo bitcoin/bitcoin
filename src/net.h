@@ -1292,18 +1292,15 @@ private:
 
     virtual void EventI2PStatus(const CService& addr, SockMan::I2PStatus new_status) override;
 
-    void ThreadI2PAcceptIncoming();
-
     /**
-     * Create a `CNode` object from a socket that has just been accepted and add the node to
-     * the `m_nodes` member.
+     * Create a `CNode` object and add it to the `m_nodes` member.
      * @param[in] sock Connected socket to communicate with the peer.
-     * @param[in] addr_bind The address and port at our side of the connection.
-     * @param[in] addr The address and port at the peer's side of the connection.
+     * @param[in] me The address and port at our side of the connection.
+     * @param[in] them The address and port at the peer's side of the connection.
      */
-    void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                      const CService& addr_bind,
-                                      const CService& addr);
+    virtual void EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
+                                            const CService& me,
+                                            const CService& them) override;
 
     void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
     void NotifyNumConnectionsChanged();
@@ -1531,27 +1528,11 @@ private:
     Mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc{false};
 
-    /**
-     * This is signaled when network activity should cease.
-     * A pointer to it is saved in `m_i2p_sam_session`, so make sure that
-     * the lifetime of `interruptNet` is not shorter than
-     * the lifetime of `m_i2p_sam_session`.
-     */
-    CThreadInterrupt interruptNet;
-
-    /**
-     * I2P SAM session.
-     * Used to accept incoming and make outgoing I2P connections from a persistent
-     * address.
-     */
-    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
-
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
-    std::thread threadI2PAcceptIncoming;
 
     /** flag for deciding to connect to an extra outbound peer,
      *  in excess of m_max_outbound_full_relay
