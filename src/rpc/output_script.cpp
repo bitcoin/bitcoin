@@ -25,6 +25,8 @@
 #include <tuple>
 #include <vector>
 
+using util::Join;
+
 static RPCHelpMan validateaddress()
 {
     return RPCHelpMan{
@@ -96,7 +98,7 @@ static RPCHelpMan createmultisig()
                 {
                     {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                 }},
-            {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+            {"address_type", RPCArg::Type::STR, RPCArg::Default{"legacy"}, "The address type to use. Options are " + Join(GetLegacyOutputTypes(), ", ") + "."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",

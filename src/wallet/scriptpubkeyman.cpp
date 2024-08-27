@@ -22,6 +22,7 @@
 #include <optional>
 
 using common::PSBTError;
+using util::Join;
 using util::ToString;
 
 namespace wallet {
@@ -31,7 +32,7 @@ const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
 util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination(const OutputType type)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        return util::Error{_("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types")};
+        return util::Error{strprintf(_("Error: Legacy wallets only support the %s address types"), Join(GetLegacyOutputTypes(), ", "))};
     }
     assert(type != OutputType::BECH32M);
 
@@ -305,7 +306,7 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
 util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index, CKeyPool& keypool)
 {
     if (LEGACY_OUTPUT_TYPES.count(type) == 0) {
-        return util::Error{_("Error: Legacy wallets only support the \"legacy\", \"p2sh-segwit\", and \"bech32\" address types")};
+        return util::Error{strprintf(_("Error: Legacy wallets only support the %s address types"), Join(GetLegacyOutputTypes(), ", "))};
     }
     assert(type != OutputType::BECH32M);
 
