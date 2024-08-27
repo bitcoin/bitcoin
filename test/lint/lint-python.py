@@ -61,8 +61,6 @@ ENABLED = (
     'E722,'  # do not use bare 'except'
     'E742,'  # do not define classes named "l", "O", or "I"
     'E743,'  # do not define functions named "l", "O", or "I"
-    'E901,'  # SyntaxError: invalid syntax
-    'E902,'  # TokenError: EOF in multi-line string
     'F401,'  # module imported but unused
     'F402,'  # import module from line N shadowed by loop variable
     'F403,'  # 'from foo_module import *' used; unable to detect undefined names
@@ -73,33 +71,19 @@ ENABLED = (
     'F601,'  # dictionary key name repeated with different values
     'F602,'  # dictionary key variable name repeated with different values
     'F621,'  # too many expressions in an assignment with star-unpacking
-    'F622,'  # two or more starred expressions in an assignment (a, *b, *c = d)
     'F631,'  # assertion test is a tuple, which are always True
     'F632,'  # use ==/!= to compare str, bytes, and int literals
-    'F701,'  # a break statement outside of a while or for loop
-    'F702,'  # a continue statement outside of a while or for loop
-    'F703,'  # a continue statement in a finally block in a loop
-    'F704,'  # a yield or yield from statement outside of a function
-    'F705,'  # a return statement with arguments inside a generator
-    'F706,'  # a return statement outside of a function/method
-    'F707,'  # an except: block as not the last exception handler
     'F811,'  # redefinition of unused name from line N
     'F812,'  # list comprehension redefines 'foo' from line N
     'F821,'  # undefined name 'Foo'
     'F822,'  # undefined name name in __all__
     'F823,'  # local variable name … referenced before assignment
-    'F831,'  # duplicate argument name in function definition
     'F841,'  # local variable 'foo' is assigned to but never used
     'W191,'  # indentation contains tabs
     'W291,'  # trailing whitespace
     'W292,'  # no newline at end of file
     'W293,'  # blank line contains whitespace
-    'W601,'  # .has_key() is deprecated, use "in"
-    'W602,'  # deprecated form of raising exception
-    'W603,'  # "<>" is deprecated, use "!="
-    'W604,'  # backticks are deprecated, use "repr()"
     'W605,'  # invalid escape sequence "x"
-    'W606,'  # 'async' and 'await' are reserved keywords starting with Python 3.7
 )
 
 
