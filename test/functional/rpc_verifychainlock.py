@@ -19,7 +19,7 @@ Test the following RPC:
 class RPCVerifyChainLockTest(DashTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(5, 3, [["-whitelist=127.0.0.1"], [], [], [], []], fast_dip3_enforcement=True)
+        self.set_dash_test_params(5, 3, [["-whitelist=127.0.0.1"], [], [], [], []])
         self.set_dash_llmq_test_params(3, 2)
 
     def cl_helper(self, height, chainlock, mempool):

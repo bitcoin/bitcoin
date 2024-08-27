@@ -17,7 +17,7 @@ Tests mnauth RPC command
 
 class FakeMNAUTHTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(2, 1, fast_dip3_enforcement=True)
+        self.set_dash_test_params(2, 1)
 
     def run_test(self):
 

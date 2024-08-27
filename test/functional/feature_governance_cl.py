@@ -14,7 +14,7 @@ from test_framework.util import assert_equal, satoshi_round
 
 class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10"]] * 6, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10"]] * 6)
 
     def prepare_object(self, object_type, parent_hash, creation_time, revision, name, amount, payment_address):
         proposal_rev = revision

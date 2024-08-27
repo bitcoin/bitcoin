@@ -49,7 +49,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQ_IS_CL_Conflicts(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, fast_dip3_enforcement=True)
+        self.set_dash_test_params(5, 4)
         self.set_dash_llmq_test_params(4, 4)
         self.supports_cli = False
 

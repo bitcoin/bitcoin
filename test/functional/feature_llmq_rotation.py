@@ -51,7 +51,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQQuorumRotationTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(9, 8, fast_dip3_enforcement=True)
+        self.set_dash_test_params(9, 8)
         self.set_dash_llmq_test_params(4, 4)
 
     def run_test(self):
