@@ -1356,10 +1356,16 @@ BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
     BOOST_CHECK_EQUAL(derSig + "83 " + pubKey, ScriptToAsmStr(CScript() << ToByteVector(ParseHex(derSig + "83")) << vchPubKey));
 }
 
+template <typename T>
+CScript ToScript(const T& byte_container)
+{
+    auto span{MakeUCharSpan(byte_container)};
+    return {span.begin(), span.end()};
+}
+
 static CScript ScriptFromHex(const std::string& str)
 {
-    std::vector<unsigned char> data = ParseHex(str);
-    return CScript(data.begin(), data.end());
+    return ToScript(*Assert(TryParseHex(str)));
 }
 
 BOOST_AUTO_TEST_CASE(script_FindAndDelete)
@@ -1393,7 +1399,7 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     BOOST_CHECK_EQUAL(FindAndDelete(s, d), 1);
     BOOST_CHECK(s == expect);
 
-    s = ScriptFromHex("0302ff030302ff03"); // PUSH 0x2ff03 PUSH 0x2ff03
+    s = ToScript("0302ff030302ff03"_hex); // PUSH 0x02ff03 PUSH 0x02ff03
     d = ScriptFromHex("0302ff03");
     expect = CScript();
     BOOST_CHECK_EQUAL(FindAndDelete(s, d), 2);

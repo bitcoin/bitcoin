@@ -16,6 +16,7 @@
 
 #include <univalue.h>
 
+using namespace util::hex_literals;
 
 BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
