@@ -2574,6 +2574,11 @@ bool CConnman::MultipleManualOrFullOutboundConns(Network net) const
     return m_network_conn_counts[net] > 1;
 }
 
+bool CConnman::RequiresV2Peer(Network net) const
+{
+    return m_v2only_clearnet && IsClearnet(net);
+}
+
 bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 {
     AssertLockNotHeld(m_nodes_mutex);
