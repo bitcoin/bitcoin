@@ -29,6 +29,23 @@ public:
     using Id = int64_t;
 
     /**
+     * Possible status changes that can be passed to `EventI2PStatus()`.
+     */
+    enum class I2PStatus : uint8_t {
+        /// The listen succeeded and we are now listening for incoming I2P connections.
+        START_LISTENING,
+
+        /// The listen failed and now we are not listening (even if START_LISTENING was signaled before).
+        STOP_LISTENING,
+    };
+
+    virtual ~SockMan() = default;
+
+    //
+    // Non-virtual functions, to be reused by children classes.
+    //
+
+    /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
      * @param[in] to Where to bind.
      * @param[out] err_msg Error string if an error occurs.
@@ -61,6 +78,23 @@ public:
     std::vector<std::shared_ptr<Sock>> m_listen;
 
 private:
+
+    //
+    // Pure virtual functions must be implemented by children classes.
+    //
+
+    //
+    // Non-pure virtual functions can be overridden by children classes or left
+    // alone to use the default implementation from SockMan.
+    //
+
+    /**
+     * Be notified of a change in the state of the I2P connectivity.
+     * The default behavior, implemented by `SockMan`, is to ignore this event.
+     * @param[in] addr The address we started or stopped listening on.
+     * @param[in] new_status New status.
+     */
+    virtual void EventI2PStatus(const CService& addr, I2PStatus new_status);
 
     /**
      * The id to assign to the next created connection. Used to generate ids of connections.

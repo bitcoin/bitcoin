@@ -125,3 +125,5 @@ void SockMan::StopListening()
 {
     m_listen.clear();
 }
+
+void SockMan::EventI2PStatus(const CService&, I2PStatus) {}
