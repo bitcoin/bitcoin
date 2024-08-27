@@ -189,7 +189,6 @@ public:
         consensus.DIP0008Height = 1088640; // 00000000000000112e41e4b3afda8b233b8cc07c532d2eac5de097b68358c43e
         consensus.BRRHeight = 1374912; // 000000000000000c5a124f3eccfbe6e17876dca79cec9e63dfa70d269113c926
         consensus.DIP0020Height = 1516032; // 000000000000000f64ed3bd9af1078177ac026f6aa2677aa4d8beeae43be56cc
-        consensus.DIP0024Height = 1737792; // 0000000000000001342be9c0b75ad40c276beaad91616423c4d9cb101b3db438
         consensus.DIP0024QuorumsHeight = 1738698; // 000000000000001aa25181e4c466e593992c98f9eb21c69ee757b8bb0af50244
         consensus.V19Height = 1899072; // 0000000000000015e32e73052d663626327004c81c5c22cb8b42c361015c0eae
         consensus.V20Height = 1987776; // 000000000000001bf41cff06b76780050682ca29e61a91c391893d4745579777
@@ -387,7 +386,6 @@ public:
         consensus.DIP0008Height = 78800; // 000000000e9329d964d80e7dab2e704b43b6bd2b91fea1e9315d38932e55fb55
         consensus.BRRHeight = 387500; // 0000001537dbfd09dea69f61c1f8b2afa27c8dc91c934e144797761c9f10367b
         consensus.DIP0020Height = 414100; // 000000cf961868662fbfbb5d1af6f1caa1809f6a4e390efe5f8cd3031adea668
-        consensus.DIP0024Height = 769700; // 0000008d84e4efd890ae95c70a7a6126a70a80e5c19e4cb264a5b3469aeef172
         consensus.DIP0024QuorumsHeight = 770730; // 0000003c43b3ae7fffe61278ca5537a0e256ebf4d709d45f0ab040271074d51e
         consensus.V19Height = 850100; // 000004728b8ff2a16b9d4eebb0fd61eeffadc9c7fe4b0ec0b5a739869401ab5b
         consensus.V20Height = 905100; // 0000020c5e0f86f385cbf8e90210de9a9fd63633f01433bf47a6b3227a2851fd
@@ -560,12 +558,11 @@ public:
         consensus.DIP0008Height = 2; // DIP0008 activated immediately on devnet
         consensus.BRRHeight = 2;     // BRR (realloc) activated immediately on devnet
         consensus.DIP0020Height = 2; // DIP0020 activated immediately on devnet
-        consensus.DIP0024Height = 2; // DIP0024 activated immediately on devnet
         consensus.DIP0024QuorumsHeight = 2; // DIP0024 activated immediately on devnet
         consensus.V19Height = 2;     // V19 activated immediately on devnet
         consensus.V20Height = 2;     // V20 activated immediately on devnet
         consensus.MN_RRHeight = 2;   // MN_RR activated immediately on devnet
-        consensus.MinBIP9WarningHeight = 2 + 2016; // v19 activation height + miner confirmation window
+        consensus.MinBIP9WarningHeight = 2 + 2016; // mn_rr activation height + miner confirmation window
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
@@ -797,7 +794,6 @@ public:
         consensus.DIP0008Height = 1; // Always active unless overridden
         consensus.BRRHeight = 1;     // Always active unless overridden
         consensus.DIP0020Height = 1; // Always active unless overridden
-        consensus.DIP0024Height = 900;
         consensus.DIP0024QuorumsHeight = 900;
         consensus.V19Height = 900;
         consensus.V20Height = 900;
