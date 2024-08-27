@@ -1,4 +1,0 @@
-# manually updated 2023-04 for minimal cjdns bootstrap support
-[fc32:17ea:e415:c3bf:9808:149d:b5a2:c9aa]:8333
-[fcc7:be49:ccd1:dc91:3125:f0da:457d:8ce]:8333
-[fcdc:73ae:b1a9:1bf8:d4c2:811:a4c7:c34e]:8333
