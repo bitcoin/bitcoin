@@ -5,7 +5,7 @@
 # Ubuntu 22.04 LTS Jammy Jellyfish, https://wiki.ubuntu.com/Releases, EOSS in June 2027:
 #  - CMake 3.22.1, https://packages.ubuntu.com/jammy/cmake
 #
-# Centos Stream 9, EOL in May 2027:
+# Centos Stream 9, https://www.centos.org/cl-vs-cs/#end-of-life, EOL in May 2027:
 #  - CMake 3.26.5, https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/
 cmake_minimum_required(VERSION 3.22)
 if(POLICY CMP0141)
