@@ -718,10 +718,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     CCoinsViewCache& ibd_coins = WITH_LOCK(::cs_main,
         return validation_chainstate.CoinsTip());
     Coin badcoin;
-    badcoin.out.nValue = InsecureRand32();
+    badcoin.out.nValue = m_rng.rand32();
     badcoin.nHeight = 1;
-    badcoin.out.scriptPubKey.assign(InsecureRandBits(6), 0);
-    Txid txid = Txid::FromUint256(InsecureRand256());
+    badcoin.out.scriptPubKey.assign(m_rng.randbits(6), 0);
+    Txid txid = Txid::FromUint256(m_rng.rand256());
     ibd_coins.AddCoin(COutPoint(txid, 0), std::move(badcoin), false);
 
     fs::path snapshot_chainstate_dir = gArgs.GetDataDirNet() / "chainstate_snapshot";

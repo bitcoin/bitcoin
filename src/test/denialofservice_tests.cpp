@@ -106,17 +106,18 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerman.FinalizeNode(dummyNode1);
 }
 
-static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType, bool onion_peer = false)
+struct OutboundTest : TestingSetup {
+void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerManager& peerLogic, ConnmanTestMsg& connman, ConnectionType connType, bool onion_peer = false)
 {
     CAddress addr;
 
     if (onion_peer) {
-        auto tor_addr{g_insecure_rand_ctx.randbytes(ADDR_TORV3_SIZE)};
+        auto tor_addr{m_rng.randbytes(ADDR_TORV3_SIZE)};
         BOOST_REQUIRE(addr.SetSpecial(OnionToString(tor_addr)));
     }
 
     while (!addr.IsRoutable()) {
-        addr = CAddress(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
+        addr = CAddress(ip(m_rng.randbits(32)), NODE_NONE);
     }
 
     vNodes.emplace_back(new CNode{id++,
@@ -136,8 +137,9 @@ static void AddRandomOutboundPeer(NodeId& id, std::vector<CNode*>& vNodes, PeerM
 
     connman.AddTestNode(node);
 }
+}; // struct OutboundTest
 
-BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
+BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
 {
     NodeId id{0};
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
@@ -235,7 +237,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     connman->ClearTestNodes();
 }
 
-BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
+BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
 {
     NodeId id{0};
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());

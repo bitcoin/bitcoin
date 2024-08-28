@@ -106,7 +106,7 @@ void initialize()
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
     // - Creating a BasicTestingSetup or derived class will switch to a random seed.
-    SeedRandomForTest(SeedRand::ZEROS);
+    SeedRandomStateForTest(SeedRand::ZEROS);
 
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
     // Individual tests can override this by pointing CreateSock to a mocked alternative.

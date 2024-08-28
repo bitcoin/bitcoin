@@ -341,13 +341,14 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
     witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
 }
 
+struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
     auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
-        std::shuffle(challist.begin(), challist.end(), g_insecure_rand_ctx);
+        std::shuffle(challist.begin(), challist.end(), m_rng);
         Satisfier satisfier(converter.MsContext());
         TestSignatureChecker checker(satisfier);
         bool prev_mal_success = false, prev_nonmal_success = false;
@@ -489,10 +490,11 @@ void Test(const std::string& ms, const std::string& hexscript, const std::string
          /*opslimit=*/-1, /*stacklimit=*/-1,
          /*max_wit_size=*/std::nullopt, /*max_tap_wit_size=*/std::nullopt, /*stack_exec=*/std::nullopt);
 }
+}; // struct MiniScriptTest
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(miniscript_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(miniscript_tests, MiniScriptTest)
 
 BOOST_AUTO_TEST_CASE(fixed_tests)
 {

@@ -21,6 +21,7 @@
 
 namespace {
 
+struct BIP324Test : BasicTestingSetup {
 void TestBIP324PacketVector(
     uint32_t in_idx,
     const std::string& in_priv_ours_hex,
@@ -116,7 +117,7 @@ void TestBIP324PacketVector(
 
         // Seek to the numbered packet.
         if (in_idx == 0 && error == 12) continue;
-        uint32_t dec_idx = in_idx ^ (error == 12 ? (1U << InsecureRandRange(16)) : 0);
+        uint32_t dec_idx = in_idx ^ (error == 12 ? (1U << m_rng.randrange(16)) : 0);
         for (uint32_t i = 0; i < dec_idx; ++i) {
             unsigned use_idx = i < in_idx ? i : 0;
             bool dec_ignore{false};
@@ -128,7 +129,7 @@ void TestBIP324PacketVector(
         // Decrypt length
         auto to_decrypt = ciphertext;
         if (error >= 2 && error <= 9) {
-            to_decrypt[InsecureRandRange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
+            to_decrypt[m_rng.randrange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
         }
 
         // Decrypt length and resize ciphertext to accommodate.
@@ -139,7 +140,7 @@ void TestBIP324PacketVector(
         auto dec_aad = in_aad;
         if (error == 10) {
             if (in_aad.size() == 0) continue;
-            dec_aad[InsecureRandRange(dec_aad.size())] ^= std::byte(1U << InsecureRandRange(8));
+            dec_aad[m_rng.randrange(dec_aad.size())] ^= std::byte(1U << m_rng.randrange(8));
         }
         if (error == 11) dec_aad.push_back({});
 
@@ -156,10 +157,11 @@ void TestBIP324PacketVector(
         }
     }
 }
+}; // struct BIP324Test
 
 }  // namespace
 
-BOOST_FIXTURE_TEST_SUITE(bip324_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(bip324_tests, BIP324Test)
 
 BOOST_AUTO_TEST_CASE(packet_test_vectors) {
     // BIP324 key derivation uses network magic in the HKDF process. We use mainnet params here

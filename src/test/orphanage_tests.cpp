@@ -21,6 +21,8 @@ BOOST_FIXTURE_TEST_SUITE(orphanage_tests, TestingSetup)
 class TxOrphanageTest : public TxOrphanage
 {
 public:
+    TxOrphanageTest(FastRandomContext& rng) : m_rng{rng} {}
+
     inline size_t CountOrphans() const
     {
         return m_orphans.size();
@@ -29,14 +31,16 @@ public:
     CTransactionRef RandomOrphan()
     {
         std::map<Wtxid, OrphanTx>::iterator it;
-        it = m_orphans.lower_bound(Wtxid::FromUint256(InsecureRand256()));
+        it = m_orphans.lower_bound(Wtxid::FromUint256(m_rng.rand256()));
         if (it == m_orphans.end())
             it = m_orphans.begin();
         return it->second.tx;
     }
+
+    FastRandomContext& m_rng;
 };
 
-static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx = g_insecure_rand_ctx)
+static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx)
 {
     std::vector<unsigned char> keydata;
     keydata = rand_ctx.randbytes(32);
@@ -104,11 +108,11 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // ecdsa_signature_parse_der_lax are executed during this test.
     // Specifically branches that run only when an ECDSA
     // signature's R and S values have leading zeros.
-    g_insecure_rand_ctx.Reseed(uint256{33});
+    m_rng.Reseed(uint256{33});
 
-    TxOrphanageTest orphanage;
+    TxOrphanageTest orphanage{m_rng};
     CKey key;
-    MakeNewKeyWithFastRandomContext(key);
+    MakeNewKeyWithFastRandomContext(key, m_rng);
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
@@ -122,7 +126,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CMutableTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
-        tx.vin[0].prevout.hash = Txid::FromUint256(InsecureRand256());
+        tx.vin[0].prevout.hash = Txid::FromUint256(m_rng.rand256());
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;

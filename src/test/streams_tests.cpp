@@ -440,14 +440,14 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
     fs::path streams_test_filename = m_args.GetDataDirBase() / "streams_test_tmp";
     for (int rep = 0; rep < 50; ++rep) {
         AutoFile file{fsbridge::fopen(streams_test_filename, "w+b")};
-        size_t fileSize = InsecureRandRange(256);
+        size_t fileSize = m_rng.randrange(256);
         for (uint8_t i = 0; i < fileSize; ++i) {
             file << i;
         }
         std::rewind(file.Get());
 
-        size_t bufSize = InsecureRandRange(300) + 1;
-        size_t rewindSize = InsecureRandRange(bufSize);
+        size_t bufSize = m_rng.randrange(300) + 1;
+        size_t rewindSize = m_rng.randrange(bufSize);
         BufferedFile bf{file, bufSize, rewindSize};
         size_t currentPos = 0;
         size_t maxPos = 0;
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             // sizes; the boundaries of the objects can interact arbitrarily
             // with the CBufferFile's internal buffer. These first three
             // cases simulate objects of various sizes (1, 2, 5 bytes).
-            switch (InsecureRandRange(6)) {
+            switch (m_rng.randrange(6)) {
             case 0: {
                 uint8_t a[1];
                 if (currentPos + 1 > fileSize)
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             case 3: {
                 // SkipTo is similar to the "read" cases above, except
                 // we don't receive the data.
-                size_t skip_length{static_cast<size_t>(InsecureRandRange(5))};
+                size_t skip_length{static_cast<size_t>(m_rng.randrange(5))};
                 if (currentPos + skip_length > fileSize) continue;
                 bf.SetLimit(currentPos + skip_length);
                 bf.SkipTo(currentPos + skip_length);
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             }
             case 4: {
                 // Find a byte value (that is at or ahead of the current position).
-                size_t find = currentPos + InsecureRandRange(8);
+                size_t find = currentPos + m_rng.randrange(8);
                 if (find >= fileSize)
                     find = fileSize - 1;
                 bf.FindByte(std::byte(find));
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 break;
             }
             case 5: {
-                size_t requestPos = InsecureRandRange(maxPos + 4);
+                size_t requestPos = m_rng.randrange(maxPos + 4);
                 bool okay = bf.SetPos(requestPos);
                 // The new position may differ from the requested position
                 // because we may not be able to rewind beyond the rewind
