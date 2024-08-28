@@ -586,9 +586,9 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <immintrin.h>
 
     #if defined(__clang__)
-    #pragma clang attribute push(__attribute__((__target__("sse4,sha"))), apply_to = function)
+    #pragma clang attribute push(__attribute__((__target__("sse4,sse4.1,sha"))), apply_to = function)
     #elif defined(__GNUC__)
-    #pragma GCC target ("sse4,sha")
+    #pragma GCC target ("sse4,sse4.1,sha")
     #endif
   ]],[[
     __m128i i = _mm_set1_epi32(0);
