@@ -996,7 +996,7 @@ static RPCHelpMan getblockheaders()
         "If verbose is true, each item is an Object with information about a single blockheader.\n",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-            {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
+            {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS_NEW), ""},
             {"verbose", RPCArg::Type::BOOL, /* default */ "true", "true for a json object, false for the hex-encoded data"},
         },
         {
@@ -1054,11 +1054,11 @@ static RPCHelpMan getblockheaders()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
-    int nCount = MAX_HEADERS_RESULTS;
+    int nCount = MAX_HEADERS_RESULTS_NEW;
     if (!request.params[1].isNull())
         nCount = request.params[1].get_int();
 
-    if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS)
+    if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS_NEW)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
 
     bool fVerbose = true;
@@ -1134,7 +1134,7 @@ static RPCHelpMan getmerkleblocks()
         {
             {"filter", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded bloom filter"},
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-            {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS), ""},
+            {"count", RPCArg::Type::NUM, /* default */ strprintf("%s", MAX_HEADERS_RESULTS_NEW), ""},
         },
         RPCResult{
                 RPCResult::Type::ARR, "", "",
@@ -1163,11 +1163,11 @@ static RPCHelpMan getmerkleblocks()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
-    int nCount = MAX_HEADERS_RESULTS;
+    int nCount = MAX_HEADERS_RESULTS_NEW;
     if (!request.params[2].isNull())
         nCount = request.params[2].get_int();
 
-    if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS) {
+    if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS_NEW) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
     }
 

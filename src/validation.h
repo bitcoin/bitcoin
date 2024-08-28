@@ -85,7 +85,10 @@ static const int MAX_SCRIPTCHECK_THREADS = 15;
 static const int DEFAULT_SCRIPTCHECK_THREADS = 0;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
-static const unsigned int MAX_HEADERS_RESULTS = 2000;
+static const unsigned int MAX_HEADERS_RESULTS_OLD = 2000;
+/** Introduced in protocol version INCREASE_MAX_HEADERS_VERSION */
+static const unsigned int MAX_HEADERS_RESULTS_NEW = 8000;
+
 
 static const int64_t DEFAULT_MAX_TIP_AGE = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
 

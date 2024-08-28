@@ -11,7 +11,7 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70234;
+static const int PROTOCOL_VERSION = 70235;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -57,6 +57,9 @@ static const int NO_LEGACY_ISLOCK_PROTO_VERSION = 70231;
 
 //! Inventory type for DSQ messages added
 static const int DSQ_INV_VERSION = 70234;
+
+//! Maximum header count was increased from 2000 -> 8000 in this version
+static const int INCREASE_MAX_HEADERS_VERSION = 70235;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 

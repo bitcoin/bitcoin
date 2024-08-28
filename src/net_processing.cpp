@@ -2952,7 +2952,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     }
 
     // Consider fetching more headers.
-    if (nCount == MAX_HEADERS_RESULTS) {
+    if (nCount == (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS_VERSION ? MAX_HEADERS_RESULTS_NEW : MAX_HEADERS_RESULTS_OLD)) {
         std::string msg_type = UsesCompressedHeaders(peer) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
         // Headers message had its maximum size; the peer may have more headers.
         if (MaybeSendGetHeaders(pfrom, msg_type, m_chainman.ActiveChain().GetLocator(pindexLast), peer)) {
@@ -2961,7 +2961,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         }
     }
 
-    UpdatePeerStateForReceivedHeaders(pfrom, pindexLast, received_new_header, nCount == MAX_HEADERS_RESULTS);
+    UpdatePeerStateForReceivedHeaders(pfrom, pindexLast, received_new_header, nCount == (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS_VERSION ? MAX_HEADERS_RESULTS_NEW : MAX_HEADERS_RESULTS_OLD));
 
     // Consider immediately downloading blocks.
     HeadersDirectFetchBlocks(pfrom, peer, pindexLast);
@@ -4056,7 +4056,7 @@ void PeerManagerImpl::ProcessMessage(
         }
 
         const auto send_headers = [this /* for m_connman */, &hashStop, &pindex, &nodestate, &pfrom, &msgMaker](auto msg_type, auto& v_headers, auto callback) {
-            int nLimit = MAX_HEADERS_RESULTS;
+            int nLimit = pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS_VERSION ? MAX_HEADERS_RESULTS_NEW : MAX_HEADERS_RESULTS_OLD;
             for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex)) {
                 v_headers.push_back(callback(pindex));
 
@@ -4564,7 +4564,7 @@ void PeerManagerImpl::ProcessMessage(
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
-        if (nCount > MAX_HEADERS_RESULTS) {
+        if (nCount > (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS_VERSION ? MAX_HEADERS_RESULTS_NEW : MAX_HEADERS_RESULTS_OLD)) {
             Misbehaving(pfrom.GetId(), 20, strprintf("headers message size = %u", nCount));
             return;
         }
