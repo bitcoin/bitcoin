@@ -12,6 +12,7 @@
 #include <util/strencodings.h>
 #include <util/transaction_identifier.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -22,7 +23,7 @@ FUZZ_TARGET(hex)
     const std::string random_hex_string(buffer.begin(), buffer.end());
     const std::vector<unsigned char> data = ParseHex(random_hex_string);
     const std::vector<std::byte> bytes{ParseHex<std::byte>(random_hex_string)};
-    assert(AsBytes(Span{data}) == Span{bytes});
+    assert(std::ranges::equal(AsBytes(Span{data}), bytes));
     const std::string hex_data = HexStr(data);
     if (IsHex(random_hex_string)) {
         assert(ToLower(random_hex_string) == hex_data);

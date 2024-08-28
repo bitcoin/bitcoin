@@ -10,12 +10,13 @@
 #include <script/script.h>
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
+#include <univalue.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
-#include <univalue.h>
+#include <algorithm>
 
 BOOST_FIXTURE_TEST_SUITE(key_io_tests, BasicTestingSetup)
 
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             privkey = DecodeSecret(exp_base58string);
             BOOST_CHECK_MESSAGE(privkey.IsValid(), "!IsValid:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
-            BOOST_CHECK_MESSAGE(Span{privkey} == Span{exp_payload}, "key mismatch:" + strTest);
+            BOOST_CHECK_MESSAGE(std::ranges::equal(privkey, exp_payload), "key mismatch:" + strTest);
 
             // Private key must be invalid public key
             destination = DecodeDestination(exp_base58string);
