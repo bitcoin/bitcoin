@@ -23,7 +23,7 @@ endif()
 # Project / Package metadata
 #=============================
 set(PACKAGE_NAME "Bitcoin Core")
-set(CLIENT_VERSION_MAJOR 27)
+set(CLIENT_VERSION_MAJOR 28)
 set(CLIENT_VERSION_MINOR 99)
 set(CLIENT_VERSION_BUILD 0)
 set(CLIENT_VERSION_RC 0)
