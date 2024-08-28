@@ -122,3 +122,21 @@ std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) 
     }
     return std::nullopt;
 }
+
+std::vector<std::string> GetOutputTypes()
+{
+    std::vector<std::string> v;
+    for (auto t : OUTPUT_TYPES) {
+        v.emplace_back("\"" + FormatOutputType(t) + "\"");
+    }
+    return v;
+}
+
+std::vector<std::string> GetLegacyOutputTypes()
+{
+    std::vector<std::string> v;
+    for (auto t : LEGACY_TYPES) {
+        v.emplace_back("\"" + FormatOutputType(t) + "\"");
+    }
+    return v;
+}

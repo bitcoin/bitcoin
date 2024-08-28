@@ -12,6 +12,7 @@
 #include <array>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 enum class OutputType {
@@ -27,6 +28,16 @@ static constexpr auto OUTPUT_TYPES = std::array{
     OutputType::P2SH_SEGWIT,
     OutputType::BECH32,
     OutputType::BECH32M,
+};
+
+/** OutputTypes supported by the LegacyScriptPubKeyMan */
+static constexpr auto LEGACY_TYPES = std::array{
+    OutputType::LEGACY,
+    OutputType::P2SH_SEGWIT,
+    OutputType::BECH32,
+};
+static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
+    LEGACY_TYPES.begin(), LEGACY_TYPES.end()
 };
 
 std::optional<OutputType> ParseOutputType(const std::string& str);
@@ -50,5 +61,8 @@ CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, cons
 
 /** Get the OutputType for a CTxDestination */
 std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest);
+
+std::vector<std::string> GetOutputTypes();
+std::vector<std::string> GetLegacyOutputTypes();
 
 #endif // BITCOIN_OUTPUTTYPE_H
