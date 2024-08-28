@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
-from binascii import a2b_hex
 from decimal import Decimal
 import io
 import struct
@@ -24,7 +23,7 @@ from .messages import (
     uint256_to_string,
 )
 from .script import CScript, CScriptNum, CScriptOp, OP_TRUE, OP_CHECKSIG
-from .util import assert_equal, hex_str_to_bytes
+from .util import assert_equal
 from io import BytesIO
 
 MAX_BLOCK_SIGOPS = 40000
@@ -48,7 +47,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 600)
     block.hashPrevBlock = hashprev or int(tmpl['previousblockhash'], 0x10)
     if tmpl and not tmpl.get('bits') is None:
-        block.nBits = struct.unpack('>I', a2b_hex(tmpl['bits']))[0]
+        block.nBits = struct.unpack('>I', bytes.fromhex(tmpl['bits']))[0]
     else:
         block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
     if coinbase is None:
@@ -210,7 +209,7 @@ def create_transaction(node, txid, to_address, *, amount):
     """
     raw_tx = create_raw_transaction(node, txid, to_address, amount=amount)
     tx = CTransaction()
-    tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx)))
+    tx.deserialize(BytesIO(bytes.fromhex(raw_tx)))
     return tx
 
 def create_raw_transaction(node, txid, to_address, *, amount):

@@ -41,7 +41,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    hex_str_to_bytes,
 )
 from test_framework.wallet_util import bytes_to_wif
 
@@ -170,7 +169,7 @@ class AssetLocksTest(DashTestFramework):
 
         cbb = create_coinbase(height, dip4_activated=True, v20_activated=True)
         gbt = node_wallet.getblocktemplate()
-        cbb.vExtraPayload = hex_str_to_bytes(gbt["coinbase_payload"])
+        cbb.vExtraPayload = bytes.fromhex(gbt["coinbase_payload"])
         cbb.rehash()
         block = create_block(tip, cbb, block_time, version=4)
         # Add quorum commitments from block template
