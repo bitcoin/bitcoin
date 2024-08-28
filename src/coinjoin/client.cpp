@@ -638,14 +638,14 @@ bool CCoinJoinClientSession::SignFinalTransaction(CNode& peer, CChainState& acti
 
     // fill values for found outpoints
     m_wallet.chain().findCoins(coins);
-    std::map<int, std::string> signing_errors;
+    std::map<int, bilingual_str> signing_errors;
     m_wallet.SignTransaction(finalMutableTransaction, coins, SIGHASH_ALL | SIGHASH_ANYONECANPAY, signing_errors);
 
     for (const auto& [input_index, error_string] : signing_errors) {
         // NOTE: this is a partial signing so it's expected for SignTransaction to return
         // "Input not found or already spent" errors for inputs that aren't ours
-        if (error_string != "Input not found or already spent") {
-            WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- signing input %d failed: %s!\n", __func__, input_index, error_string);
+        if (error_string.original != "Input not found or already spent") {
+            WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- signing input %d failed: %s!\n", __func__, input_index, error_string.original);
             UnlockCoins();
             keyHolderStorage.ReturnAll();
             SetNull();

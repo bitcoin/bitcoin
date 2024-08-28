@@ -41,6 +41,7 @@
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <util/irange.h>
@@ -1165,12 +1166,12 @@ RPCHelpMan sendrawtransaction()
 
     bool bypass_limits = false;
     if (!request.params[3].isNull()) bypass_limits = request.params[3].get_bool();
-    std::string err_string;
+    bilingual_str err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /* relay */ true, /* wait_callback */ true, bypass_limits);
     if (TransactionError::OK != err) {
-        throw JSONRPCTransactionError(err, err_string);
+        throw JSONRPCTransactionError(err, err_string.original);
     }
 
     return tx->GetHash().GetHex();
