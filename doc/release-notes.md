@@ -1,9 +1,9 @@
-26.2 Release Notes
+26.x Release Notes
 ==================
 
-Bitcoin Core version 26.2 is now available from:
+Bitcoin Core version 26.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-26.2/>
+  <https://bitcoincore.org/bin/bitcoin-core-26.x/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,55 +40,16 @@ unsupported systems.
 Notable changes
 ===============
 
-### Script
-
-- #29853: sign: don't assume we are parsing a sane TapMiniscript
-
-### P2P and network changes
-
-- #29691: Change Luke Dashjr seed to dashjr-list-of-p2p-nodes.us
-- #30085: p2p: detect addnode cjdns peers in GetAddedNodeInfo()
-
-### RPC
-
-- #29869: rpc, bugfix: Enforce maximum value for setmocktime
-- #28554: bugfix: throw an error if an invalid parameter is passed to getnetworkhashps RPC
-- #30094: rpc: move UniValue in blockToJSON
-- #29870: rpc: Reword SighashFromStr error message
-
 ### Build
 
-- #29747: depends: fix mingw-w64 Qt DEBUG=1 build
-- #29985: depends: Fix build of Qt for 32-bit platforms with recent glibc
-- #30151: depends: Fetch miniupnpc sources from an alternative website
-- #30283: upnp: fix build with miniupnpc 2.2.8
-
-### Misc
-
-- #29776: ThreadSanitizer: Fix #29767
-- #29856: ci: Bump s390x to ubuntu:24.04
-- #29764: doc: Suggest installing dev packages for debian/ubuntu qt5 build
-- #30149: contrib: Renew Windows code signing certificate
+- #30633 Fixes for GCC 15 compatibility
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Antoine Poinsot
-- Ava Chow
-- Cory Fields
-- dergoegge
-- fanquake
-- glozow
-- Hennadii Stepanov
-- Jameson Lopp
-- jonatack
-- laanwj
-- Luke Dashjr
-- MarcoFalke
-- nanlour
-- willcl-ark
+- Matt Whitlock
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
