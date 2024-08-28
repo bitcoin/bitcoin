@@ -25,9 +25,10 @@ function(try_append_linker_flag flag)
     "IF_CHECK_PASSED"                 # multi_value_keywords
   )
 
-  string(MAKE_C_IDENTIFIER "${flag}" linker_result)
+  # Create a unique identifier based on the flag and a global linker setting
+  string(MAKE_C_IDENTIFIER "${flag} ${working_linker_werror_flag}" linker_result)
   string(TOUPPER "${linker_result}" linker_result)
-  string(PREPEND linker_result LINKER_SUPPORTS_)
+  string(PREPEND linker_result "LINKER_SUPPORTS_")
 
   set(source "int main() { return 0; }")
   if(DEFINED TALF_SOURCE AND NOT TALF_SOURCE STREQUAL source)
