@@ -62,7 +62,7 @@ constexpr auto Invalid = mntype_struct{
     }
 }
 
-[[nodiscard]] constexpr const bool IsValidMnType(MnType type)
+[[nodiscard]] constexpr bool IsValidMnType(MnType type)
 {
     return type < MnType::COUNT;
 }
