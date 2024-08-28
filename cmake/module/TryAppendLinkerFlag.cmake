@@ -31,10 +31,11 @@ function(try_append_linker_flag flag)
 
   set(source "int main() { return 0; }")
   if(DEFINED TALF_SOURCE AND NOT TALF_SOURCE STREQUAL source)
+    # If a custom source code is provided, use it and append its hash to the cache key to ensure uniqueness.
     set(source "${TALF_SOURCE}")
     string(SHA256 source_hash "${source}")
-    string(SUBSTRING ${source_hash} 0 4 source_hash_head)
-    string(APPEND linker_result _${source_hash_head})
+    string(TOUPPER "${source_hash}" upper_hash)
+    string(APPEND linker_result "_${upper_hash}")
   endif()
 
   # This forces running a linker.
