@@ -17,4 +17,4 @@ export XCODE_BUILD_ID=15A240d
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
-export BITCOIN_CONFIG="--with-gui --enable-reduce-exports"
+export BITCOIN_CONFIG="-DBUILD_GUI=ON -DREDUCE_EXPORTS=ON"

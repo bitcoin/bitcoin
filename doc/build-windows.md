@@ -7,7 +7,7 @@ The options known to work for building Bitcoin Core on Windows are:
 
 * On Linux, using the [Mingw-w64](https://www.mingw-w64.org/) cross compiler tool chain.
 * On Windows, using [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/about) and Mingw-w64.
-* On Windows, using [Microsoft Visual Studio](https://visualstudio.microsoft.com). See [README.md](/build_msvc/README.md).
+* On Windows, using [Microsoft Visual Studio](https://visualstudio.microsoft.com). See [`build-windows-msvc.md`](./build-windows-msvc.md).
 
 Other options which may work, but which have not been extensively tested are (please contribute instructions):
 
@@ -32,14 +32,14 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils cmake curl git
+    sudo apt install cmake curl g++ git make pkg-config
 
-A host toolchain (`build-essential`) is necessary because some dependency
+A host toolchain (`g++`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-If you want to build the windows installer with `make deploy` you need [NSIS](https://nsis.sourceforge.io/Main_Page):
+If you want to build the Windows installer using the `deploy` build target, you will need [NSIS](https://nsis.sourceforge.io/Main_Page):
 
     sudo apt install nsis
 
@@ -50,7 +50,7 @@ Acquire the source in the usual way:
 
 ## Building for 64-bit Windows
 
-The first step is to install the mingw-w64 cross-compilation tool chain:
+The first step is to install the mingw-w64 cross-compilation toolchain:
 
 ```sh
 sudo apt install g++-mingw-w64-x86-64-posix
@@ -62,21 +62,12 @@ Note that for WSL the Bitcoin Core source path MUST be somewhere in the default 
 example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
 This means you cannot use a directory that is located directly on the host Windows file system to perform the build.
 
-Additional WSL Note: WSL support for [launching Win32 applications](https://learn.microsoft.com/en-us/archive/blogs/wsl/windows-and-ubuntu-interoperability#launching-win32-applications-from-within-wsl)
-results in `Autoconf` configure scripts being able to execute Windows Portable Executable files. This can cause
-unexpected behaviour during the build, such as Win32 error dialogs for missing libraries. The recommended approach
-is to temporarily disable WSL support for Win32 applications.
-
 Build using:
 
-    sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
-    cd depends
-    make HOST=x86_64-w64-mingw32
-    cd ..
-    ./autogen.sh
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
-    make # use "-j N" for N parallel jobs
-    sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+    gmake -C depends HOST=x86_64-w64-mingw32  # Use "-j N" for N parallel jobs.
+    cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
+    cmake --build build     # Use "-j N" for N parallel jobs.
+    ctest --test-dir build  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 
 ## Depends system
 
@@ -90,8 +81,8 @@ executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
 
-    make install DESTDIR=/mnt/c/workspace/bitcoin
+    cmake --install build --prefix /mnt/c/workspace/bitcoin
 
 You can also create an installer using:
 
-    make deploy
+    cmake --build build --target deploy
