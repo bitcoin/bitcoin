@@ -4137,7 +4137,7 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
     return false;
 }
 
-arith_uint256 CalculateClaimedHeadersWork(const std::vector<CBlockHeader>& headers)
+arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
 {
     arith_uint256 total_work{0};
     for (const CBlockHeader& header : headers) {
