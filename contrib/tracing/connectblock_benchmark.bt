@@ -16,7 +16,7 @@
 
   This script requires a 'bitcoind' binary compiled with eBPF support and the
   'validation:block_connected' USDT. By default, it's assumed that 'bitcoind' is
-  located in './src/bitcoind'. This can be modified in the script below.
+  located in './build/src/bitcoind'. This can be modified in the script below.
 
   EXAMPLES:
 
@@ -67,7 +67,7 @@ BEGIN
   connected block is between the start and end height (or the end height is
   unset).
 */
-usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 == 0 )/
+usdt:./build/src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 == 0 )/
 {
   $height = arg1;
   $transactions = arg2;
@@ -102,7 +102,7 @@ usdt:./src/bitcoind:validation:block_connected /arg1 >= $1 && (arg1 <= $2 || $2 
   blocks where the time it took to connect the block is above the
   <logging threshold in ms>.
 */
-usdt:./src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
+usdt:./build/src/bitcoind:validation:block_connected / (uint64) arg5 / 1000> $3 /
 {
   $hash = arg0;
   $height = (int32) arg1;
