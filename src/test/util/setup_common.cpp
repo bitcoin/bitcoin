@@ -14,6 +14,7 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <hash.h>
 #include <init.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
@@ -74,9 +75,6 @@ using node::RegenerateCommitments;
 using node::VerifyLoadedChainstate;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-
-/** Random context to get unique temp data dirs. Separate from m_rng, which can be seeded from a const env var */
-static FastRandomContext g_rng_temp_path;
 
 std::ostream& operator<<(std::ostream& os, const arith_uint256& num)
 {
@@ -156,9 +154,10 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     // data directories use a random name that doesn't overlap with other tests.
     SeedRandomForTest(SeedRand::SEED);
 
+    const std::string test_path{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
     if (!m_node.args->IsArgSet("-testdatadir")) {
         // By default, the data directory has a random name
-        const auto rand_str{g_rng_temp_path.rand256().ToString()};
+        const auto rand_str{Hash(m_rng.randbytes(32), test_path).ToString()};
         m_path_root = fs::temp_directory_path() / "test_common_" PACKAGE_NAME / rand_str;
         TryCreateDirectories(m_path_root);
     } else {
@@ -168,7 +167,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         if (root_dir.empty()) ExitFailure("-testdatadir argument is empty, please specify a path");
 
         root_dir = fs::absolute(root_dir);
-        const std::string test_path{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
         m_path_lock = root_dir / "test_common_" PACKAGE_NAME / fs::PathFromString(test_path);
         m_path_root = m_path_lock / "datadir";
 
