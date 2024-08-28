@@ -13,6 +13,8 @@
 #include <span.h>
 #include <util/string.h>
 
+#include <array>
+#include <bit>
 #include <charconv>
 #include <cstddef>
 #include <cstdint>
@@ -364,5 +366,80 @@ std::string Capitalize(std::string str);
  *                                 if ToIntegral is false, str is empty, trailing whitespace or overflow
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
+
+namespace util {
+/** consteval version of HexDigit() without the lookup table. */
+consteval uint8_t ConstevalHexDigit(const char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 0xa;
+
+    throw "Only lowercase hex digits are allowed, for consistency";
+}
+
+/**
+ * ""_hex is a compile-time user-defined literal returning a
+ * `std::array<std::byte>`, equivalent to ParseHex(). Variants provided:
+ *
+ * - ""_hex_v: Returns `std::vector<std::byte>`, useful for heap allocation or
+ *   variable-length serialization.
+ *
+ * - ""_hex_u8: Returns `std::array<uint8_t>`, for cases where `std::byte` is
+ *   incompatible.
+ *
+ * - ""_hex_v_u8: Returns `std::vector<uint8_t>`, combining heap allocation with
+ *   `uint8_t`.
+ *
+ * @warning It could be necessary to use vector instead of array variants when
+ *   serializing, or vice versa, because vectors are assumed to be variable-
+ *   length and serialized with a size prefix, while arrays are considered fixed
+ *   length and serialized with no prefix.
+ *
+ * @warning It may be preferable to use vector variants to save stack space when
+ *   declaring local variables if hex strings are large. Alternatively variables
+ *   could be declared constexpr to avoid using stack space.
+ *
+ * @warning Avoid `uint8_t` variants when not necessary, as the codebase
+ *   migrates to use `std::byte` instead of `unsigned char` and `uint8_t`.
+ *
+ * @note One reason ""_hex uses `std::array` instead of `std::vector` like
+ *   ParseHex() does is because heap-based containers cannot cross the compile-
+ *   time/runtime barrier.
+ */
+inline namespace hex_literals {
+namespace detail {
+
+template <size_t N>
+struct Hex {
+    std::array<std::byte, N / 2> bytes{};
+    consteval Hex(const char (&hex_str)[N])
+        // 2 hex digits required per byte + implicit null terminator
+        requires(N % 2 == 1)
+    {
+        if (hex_str[N - 1]) throw "null terminator required";
+        for (std::size_t i = 0; i < bytes.size(); ++i) {
+            bytes[i] = static_cast<std::byte>(
+                (ConstevalHexDigit(hex_str[2 * i]) << 4) |
+                 ConstevalHexDigit(hex_str[2 * i + 1]));
+        }
+    }
+};
+
+} // namespace detail
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex() { return str.bytes; }
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex_u8() { return std::bit_cast<std::array<uint8_t, str.bytes.size()>>(str.bytes); }
+
+template <util::detail::Hex str>
+constexpr auto operator""_hex_v() { return std::vector<std::byte>{str.bytes.begin(), str.bytes.end()}; }
+
+template <util::detail::Hex str>
+inline auto operator""_hex_v_u8() { return std::vector<uint8_t>{UCharCast(str.bytes.data()), UCharCast(str.bytes.data() + str.bytes.size())}; }
+
+} // inline namespace hex_literals
+} // namespace util
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H
