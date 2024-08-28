@@ -1,6 +1,6 @@
 # macOS Build Guide
 
-**Updated for MacOS [14.4](https://www.apple.com/macos/sonoma/)**
+**Updated for MacOS [14](https://www.apple.com/macos/sonoma/)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
 
@@ -103,7 +103,7 @@ brew install berkeley-db@4
 ###### Qt
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
-the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
+Qt, libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ``` bash
 brew install qt@5
@@ -120,7 +120,7 @@ The GUI will be able to encode addresses in QR codes unless this feature is expl
 brew install qrencode
 ```
 
-Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
+Otherwise, if you don't need QR encoding support, you can pass `-DWITH_QRENCODE=OFF` to disable this feature.
 
 ---
 
@@ -144,7 +144,6 @@ Skip if you do not need this functionality.
 brew install libnatpmp
 ```
 
-Note: UPnP and NAT-PMP support will be compiled in and disabled by default.
 Check out the [further configuration](#further-configuration) section for more information.
 
 ---
@@ -158,7 +157,6 @@ Skip if you do not need ZMQ functionality.
 brew install zeromq
 ```
 
-ZMQ is automatically compiled in and enabled if the dependency is detected.
 Check out the [further configuration](#further-configuration) section for more information.
 
 For more information on ZMQ, see: [zmq.md](zmq.md)
@@ -239,8 +237,8 @@ cmake --build build --target deploy
 
 ## Running Bitcoin Core
 
-Bitcoin Core should now be available at `./src/bitcoind`.
-If you compiled support for the GUI, it should be available at `./src/qt/bitcoin-qt`.
+Bitcoin Core should now be available at `./build/src/bitcoind`.
+If you compiled support for the GUI, it should be available at `./build/src/qt/bitcoin-qt`.
 
 The first time you run `bitcoind` or `bitcoin-qt`, it will start downloading the blockchain.
 This process could take many hours, or even days on slower than average systems.
