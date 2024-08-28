@@ -126,7 +126,11 @@ class HelpRpcTest(BitcoinTestFramework):
                 f.write(self.nodes[0].help(call))
 
     def wallet_help(self):
-        assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
+        assert '"legacy", "p2sh-segwit", "bech32", "bech32m".' in self.nodes[0].help('getaddressinfo')
+        assert '"legacy", "p2sh-segwit", "bech32".' in self.nodes[0].help('addmultisigaddress')
+        ret = self.nodes[0].help('getnewaddress')
+        assert '"legacy", "p2sh-segwit", "bech32", "bech32m".' in ret
+        assert 'getnewaddress ( "label" "address_type" )' in ret
         self.restart_node(0, extra_args=['-nowallet=1'])
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
 
