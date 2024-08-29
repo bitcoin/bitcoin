@@ -68,7 +68,7 @@ struct BasicTestingSetup {
 
     FastRandomContext m_rng;
     /** Seed the global RNG state and m_rng for testing and log the seed value. This affects all randomness, except GetStrongRandBytes(). */
-    void SeedRandomForTest(SeedRand seed = SeedRand::SEED)
+    void SeedRandomForTest(SeedRand seed)
     {
         SeedRandomStateForTest(seed);
         m_rng.Reseed(GetRandHash());

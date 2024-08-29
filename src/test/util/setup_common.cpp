@@ -154,7 +154,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
     // Use randomly chosen seed for deterministic PRNG, so that (by default) test
     // data directories use a random name that doesn't overlap with other tests.
-    SeedRandomForTest(SeedRand::SEED);
+    SeedRandomForTest(SeedRand::FIXED_SEED);
 
     if (!m_node.args->IsArgSet("-testdatadir")) {
         // By default, the data directory has a random name

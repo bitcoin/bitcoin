@@ -36,7 +36,7 @@ void SeedRandomStateForTest(SeedRand seedtype)
         return GetRandHash();
     }();
 
-    const uint256& seed{seedtype == SeedRand::SEED ? ctx_seed : uint256::ZERO};
+    const uint256& seed{seedtype == SeedRand::FIXED_SEED ? ctx_seed : uint256::ZERO};
     LogInfo("Setting random seed for current tests to %s=%s\n", RANDOM_CTX_SEED, seed.GetHex());
     MakeRandDeterministicDANGEROUS(seed);
 }
