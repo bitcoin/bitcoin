@@ -155,7 +155,7 @@ struct DepGraphFormatter
                 // Ignore transactions which are already known to be ancestors.
                 if (depgraph.Descendants(dep_idx).Overlaps(written_parents)) continue;
                 if (depgraph.Ancestors(idx)[dep_idx]) {
-                    // When an actual parent is encounted, encode how many non-parents were skipped
+                    // When an actual parent is encountered, encode how many non-parents were skipped
                     // before it.
                     s << VARINT(diff);
                     diff = 0;
