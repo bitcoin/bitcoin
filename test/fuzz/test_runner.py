@@ -31,6 +31,10 @@ def get_fuzz_env(*, target, source_dir):
     if platform.system() == "Windows":
         # On Windows, `env` option must include valid `SystemRoot`.
         fuzz_env = {**fuzz_env, 'SystemRoot': os.environ.get('SystemRoot')}
+    random_seed = os.environ.get('RANDOM_CTX_SEED')
+    if random_seed:
+        fuzz_env['RANDOM_CTX_SEED'] = random_seed
+
     return fuzz_env
 
 
