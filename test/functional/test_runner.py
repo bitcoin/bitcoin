@@ -293,6 +293,7 @@ BASE_SCRIPTS = [
     'feature_governance.py --descriptors',
     'feature_governance_cl.py --legacy-wallet',
     'feature_governance_cl.py --descriptors',
+    'p2p_governance_invs.py',
     'rpc_uptime.py',
     'feature_discover.py',
     'wallet_resendwallettransactions.py --legacy-wallet',
