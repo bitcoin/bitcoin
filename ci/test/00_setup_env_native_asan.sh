@@ -28,7 +28,8 @@ export BITCOIN_CONFIG="\
  -DCMAKE_C_COMPILER=clang-18 \
  -DCMAKE_CXX_COMPILER=clang++-18 \
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
- -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern' \
+ -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern -Wno-error=deprecated-declarations' \
+ -DAPPEND_CXXFLAGS='-std=c++23' \
  -DAPPEND_CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' \
 "
 export CCACHE_MAXSIZE=300M
