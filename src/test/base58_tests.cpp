@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     BOOST_CHECK(!DecodeBase58("invalid\0"s, result, 100));
     BOOST_CHECK(!DecodeBase58("\0invalid"s, result, 100));
 
-    BOOST_CHECK(DecodeBase58("good"s, result, 100));
+    BOOST_CHECK( DecodeBase58("good"s, result, 100));
     BOOST_CHECK(!DecodeBase58("bad0IOl"s, result, 100));
     BOOST_CHECK(!DecodeBase58("goodbad0IOl"s, result, 100));
     BOOST_CHECK(!DecodeBase58("good\0bad0IOl"s, result, 100));
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     constexpr auto expected{"971a55"_hex_u8};
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 
-    BOOST_CHECK(DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh"s, result, 100));
+    BOOST_CHECK( DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh"s, result, 100));
     BOOST_CHECK(!DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oi"s, result, 100));
     BOOST_CHECK(!DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh0IOl"s, result, 100));
     BOOST_CHECK(!DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh\0" "0IOl"s, result, 100));
