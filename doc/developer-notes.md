@@ -214,14 +214,14 @@ int main()
 To run clang-tidy on Ubuntu/Debian, install the dependencies:
 
 ```sh
-apt install clang-tidy bear clang
+apt install clang-tidy clang
 ```
 
-Then, pass clang as compiler to configure, and use bear to produce the `compile_commands.json`:
+Configure with clang as the compiler:
 
 ```sh
-./autogen.sh && ./configure CC=clang CXX=clang++
-make clean && bear --config src/.bear-tidy-config -- make -j $(nproc)
+cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build build -j $(nproc)
 ```
 
 The output is denoised of errors from external dependencies.
@@ -229,13 +229,13 @@ The output is denoised of errors from external dependencies.
 To run clang-tidy on all source files:
 
 ```sh
-( cd ./src/ && run-clang-tidy  -j $(nproc) )
+( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) )
 ```
 
 To run clang-tidy on the changed source lines:
 
 ```sh
-git diff | ( cd ./src/ && clang-tidy-diff -p2 -j $(nproc) )
+git diff | ( cd ./src/ && clang-tidy-diff -p2 -path ../build -j $(nproc) )
 ```
 
 Coding Style (Python)
