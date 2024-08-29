@@ -23,6 +23,7 @@
 #include <util/ranges.h>
 #include <util/thread.h>
 #include <validation.h>
+#include <statsd_client.h>
 
 #include <cxxtimer.hpp>
 
@@ -774,6 +775,17 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: received islock, peer=%d\n", __func__,
             islock->txid.ToString(), hash.ToString(), pfrom.GetId());
 
+    auto time_diff =  [&] () -> int64_t {
+        LOCK(cs_timingsTxSeen);
+        if (auto it = timingsTxSeen.find(islock->txid); it != timingsTxSeen.end()) {
+            // This is the normal case where we received the TX before the islock
+            return GetTimeMillis() - it->second;
+        }
+        // But if we received the islock and don't know when we got the tx, then say 0, to indicate we received the islock first.
+        return 0;
+    }();
+    statsClient.timing("islock_ms", time_diff);
+
     LOCK(cs_pendingLocks);
     pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom.GetId(), islock));
     return {};
@@ -1167,6 +1179,15 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx, const CBlock
             ++it;
         }
     }
+
+    {
+        LOCK(cs_timingsTxSeen);
+        // Only insert the time the first time we see the tx, as we sometimes try to resign
+        if (auto it = timingsTxSeen.find(tx->GetHash()); it == timingsTxSeen.end()) {
+            timingsTxSeen[tx->GetHash()] = GetTimeMillis();
+        }
+    }
+
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, pindexMined=%s\n", __func__,
              tx->GetHash().ToString(), pindexMined ? pindexMined->GetBlockHash().ToString() : "");
 }

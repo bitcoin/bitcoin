@@ -252,6 +252,9 @@ private:
     mutable Mutex cs_pendingRetry;
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
+    mutable Mutex cs_timingsTxSeen;
+    std::unordered_map<uint256, int64_t, StaticSaltedHasher> timingsTxSeen GUARDED_BY(cs_timingsTxSeen);
+
 public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
                                  CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
