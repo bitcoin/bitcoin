@@ -162,8 +162,6 @@ if [ "${RUN_TIDY}" = "true" ]; then
     echo "^^^ ⚠️ Failure generated from clang-tidy"
     false
   fi
-  # Filter out files by regex here, because regex may not be
-  # accepted in src/.bear-tidy-config
   # Filter out:
   # * qt qrc and moc generated files
   jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$") | not))' "${BASE_BUILD_DIR}/compile_commands.json" > tmp.json
