@@ -148,11 +148,6 @@ if(WITH_ZMQ)
     # TODO: Switch to find_package(ZeroMQ) at some point in the future.
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(libzmq REQUIRED IMPORTED_TARGET libzmq>=4)
-    # TODO: This command will be redundant once
-    #       https://github.com/bitcoin/bitcoin/pull/30508 is merged.
-    target_link_libraries(PkgConfig::libzmq INTERFACE
-      $<$<PLATFORM_ID:Windows>:iphlpapi;ws2_32>
-    )
   endif()
 endif()
 
