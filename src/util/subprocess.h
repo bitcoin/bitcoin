@@ -521,6 +521,20 @@ namespace util
  */
 
 /*!
+ * Option to close all file descriptors
+ * when the child process is spawned.
+ * The close fd list does not include
+ * input/output/error if they are explicitly
+ * set as part of the Popen arguments.
+ *
+ * Default value is false.
+ */
+struct close_fds {
+  explicit close_fds(bool c): close_all(c) {}
+  bool close_all = false;
+};
+
+/*!
  * Base class for all arguments involving string value.
  */
 struct string_arg
@@ -717,6 +731,7 @@ struct ArgumentDeducer
   void set_option(input&& inp);
   void set_option(output&& out);
   void set_option(error&& err);
+  void set_option(close_fds&& cfds);
 
 private:
   Popen* popen_ = nullptr;
@@ -1004,6 +1019,8 @@ private:
   std::future<void> cleanup_future_;
 #endif
 
+  bool close_fds_ = false;
+
   std::string exe_name_;
 
   // Command in string format
@@ -1233,6 +1250,10 @@ namespace detail {
     if (err.rd_ch_ != -1) popen_->stream_.err_read_ = err.rd_ch_;
   }
 
+  inline void ArgumentDeducer::set_option(close_fds&& cfds) {
+    popen_->close_fds_ = cfds.close_all;
+  }
+
 
   inline void Child::execute_child() {
 #ifndef __USING_WINDOWS__
@@ -1278,6 +1299,17 @@ namespace detail {
 
       if (stream.err_write_ != -1 && stream.err_write_ > 2)
         close(stream.err_write_);
+
+      // Close all the inherited fd's except the error write pipe
+      if (parent_->close_fds_) {
+        int max_fd = sysconf(_SC_OPEN_MAX);
+        if (max_fd == -1) throw OSError("sysconf failed", errno);
+
+        for (int i = 3; i < max_fd; i++) {
+          if (i == err_wr_pipe_) continue;
+          close(i);
+        }
+      }
 
       // Replace the current image with the executable
       sys_ret = execvp(parent_->exe_name_.c_str(), parent_->cargv_.data());
