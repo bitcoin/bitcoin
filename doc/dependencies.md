@@ -6,9 +6,8 @@ You can find installation instructions in the `build-*.md` file for your platfor
 
 | Dependency | Minimum required |
 | --- | --- |
-| [Autoconf](https://www.gnu.org/software/autoconf/) | [2.69](https://github.com/bitcoin/bitcoin/pull/17769) |
-| [Automake](https://www.gnu.org/software/automake/) | [1.13](https://github.com/bitcoin/bitcoin/pull/18290) |
 | [Clang](https://clang.llvm.org) | [16.0](https://github.com/bitcoin/bitcoin/pull/30263) |
+| [CMake](https://cmake.org/) | [3.22](https://github.com/bitcoin/bitcoin/pull/30454) |
 | [GCC](https://gcc.gnu.org) | [11.1](https://github.com/bitcoin/bitcoin/pull/29091) |
 | [Python](https://www.python.org) (scripts, tests) | [3.9](https://github.com/bitcoin/bitcoin/pull/28211) |
 | [systemtap](https://sourceware.org/systemtap/) ([tracing](tracing.md))| N/A |
