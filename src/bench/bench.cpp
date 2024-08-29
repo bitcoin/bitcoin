@@ -29,7 +29,8 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
-const std::function<std::string()> G_TEST_GET_FULL_NAME{};
+static std::string g_bench_name;
+const std::function<std::string()> G_TEST_GET_FULL_NAME = []{ return g_bench_name; };
 
 namespace {
 
@@ -117,6 +118,7 @@ void BenchRunner::RunAll(const Args& args)
             bench.output(nullptr);
         }
         bench.name(name);
+        g_bench_name = name;
         if (args.min_time > 0ms) {
             // convert to nanos before dividing to reduce rounding errors
             std::chrono::nanoseconds min_time_ns = args.min_time;
