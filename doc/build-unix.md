@@ -44,7 +44,7 @@ Finally, clang (often less resource hungry) can be used instead of gcc, which is
 
 Build requirements:
 
-    sudo apt-get install build-essential cmake pkg-config bsdmainutils python3
+    sudo apt-get install build-essential cmake pkg-config python3
 
 Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
