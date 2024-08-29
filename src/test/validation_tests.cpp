@@ -57,13 +57,35 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+    auto step = 1000;
+    assert(chainParams->GetConsensus().nSubsidyHalvingInterval % step == 0);
+    for (int nHeight = 0; nHeight < 14000000; nHeight += step) {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
         BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += nSubsidy * 1000;
+        nSum += nSubsidy * step;
         BOOST_CHECK(MoneyRange(nSum));
     }
     BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
+}
+
+// Similar to subsidy_limit_test, but sums every single block subsidy until it drops to zero,
+// after which it asserts that it remains 0.
+BOOST_AUTO_TEST_CASE(subsidy_sum_test)
+{
+    auto main_consensus{CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus()};
+    CAmount total_subsidy_sats{0};
+    int block_height{0};
+    while (auto subsidy = GetBlockSubsidy(block_height, main_consensus)) {
+        total_subsidy_sats += subsidy;
+        block_height++;
+    }
+    BOOST_CHECK_EQUAL(total_subsidy_sats, CAmount{20'999'999'97690000});
+    BOOST_CHECK_EQUAL(block_height, 6'930'000);
+
+    while (block_height < 10'000'000) {
+        BOOST_CHECK_EQUAL(GetBlockSubsidy(block_height, main_consensus), CAmount{0});
+        block_height++;
+    }
 }
 
 BOOST_AUTO_TEST_CASE(signet_parse_tests)
