@@ -16,18 +16,22 @@ execute_process(
 execute_process(
   COMMAND ${LCOV_COMMAND} --capture --directory src --test-name fuzz-tests --output-file fuzz.info
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND_ERROR_IS_FATAL ANY
 )
 execute_process(
   COMMAND ${LCOV_COMMAND} --zerocounters --directory src
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND_ERROR_IS_FATAL ANY
 )
 execute_process(
   COMMAND ${LCOV_FILTER_COMMAND} fuzz.info fuzz_filtered.info
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND_ERROR_IS_FATAL ANY
 )
 execute_process(
   COMMAND ${LCOV_COMMAND} --add-tracefile fuzz_filtered.info --output-file fuzz_filtered.info
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND_ERROR_IS_FATAL ANY
 )
 execute_process(
   COMMAND ${LCOV_COMMAND} --add-tracefile baseline_filtered.info --add-tracefile fuzz_filtered.info --output-file fuzz_coverage.info
@@ -35,8 +39,10 @@ execute_process(
   COMMAND ${AWK_EXECUTABLE} "{ print substr($3,2,50) \"/\" $5 }"
   OUTPUT_FILE coverage_percent.txt
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND_ERROR_IS_FATAL ANY
 )
 execute_process(
   COMMAND ${GENHTML_COMMAND} fuzz_coverage.info --output-directory fuzz.coverage
   WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMAND_ERROR_IS_FATAL ANY
 )
