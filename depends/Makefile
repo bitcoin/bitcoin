@@ -183,7 +183,6 @@ meta_depends = Makefile config.guess config.sub funcs.mk builders/default.mk hos
 
 include funcs.mk
 
-final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
 final_build_id_long+=$(shell $(build_SHA256SUM) toolchain.cmake.in)
 final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
@@ -192,62 +191,6 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	echo copying packages: $^
 	echo to: $(@D)
 	cd $(@D); $(foreach package,$^, $(build_TAR) xf $($(package)_cached); )
-	touch $@
-
-# $PATH is not preserved between ./configure and make by convention. Its
-# modification and overriding at ./configure time is (as I understand it)
-# supposed to be captured by the AC_{PROG_{,OBJ}CXX,PATH_{PROG,TOOL}} macros,
-# which will expand the program names to their full absolute paths. The notable
-# exception is command line overriding: ./configure CC=clang, which skips the
-# program name expansion step, and works because the user implicitly indicates
-# with CC=clang that clang will be available in $PATH at all times, and is most
-# likely part of the user's system.
-#
-# Therefore, when we "seed the autoconf cache"/"override well-known program
-# vars" by setting AR=<blah> in our config.site, either one of two things needs
-# to be true for the build system to work correctly:
-#
-#   1. If we refer to the program by name (e.g. AR=riscv64-gnu-linux-ar), the
-#      tool needs to be available in $PATH at all times.
-#
-#   2. If the tool is _**not**_ expected to be available in $PATH at all times
-#      it needs to be referred to by its absolute path, such as would be output
-#      by the AC_PATH_{PROG,TOOL} macros.
-#
-# Minor note: it is also okay to refer to tools by their absolute path even if
-# we expect them to be available in $PATH at all times, more specificity does
-# not hurt.
-$(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_build_id)
-	@mkdir -p $(@D)
-	sed -e 's|@HOST@|$(host)|' \
-            -e 's|@CC@|$(host_CC)|' \
-            -e 's|@CXX@|$(host_CXX)|' \
-            -e 's|@AR@|$(host_AR)|' \
-            -e 's|@RANLIB@|$(host_RANLIB)|' \
-            -e 's|@NM@|$(host_NM)|' \
-            -e 's|@STRIP@|$(host_STRIP)|' \
-            -e 's|@OBJDUMP@|$(host_OBJDUMP)|' \
-            -e 's|@DSYMUTIL@|$(host_DSYMUTIL)|' \
-            -e 's|@build_os@|$(build_os)|' \
-            -e 's|@host_os@|$(host_os)|' \
-            -e 's|@CFLAGS@|$(strip $(host_CFLAGS) $(host_$(release_type)_CFLAGS))|' \
-            -e 's|@CXXFLAGS@|$(strip $(host_CXXFLAGS) $(host_$(release_type)_CXXFLAGS))|' \
-            -e 's|@CPPFLAGS@|$(strip $(host_CPPFLAGS) $(host_$(release_type)_CPPFLAGS))|' \
-            -e 's|@LDFLAGS@|$(strip $(host_LDFLAGS) $(host_$(release_type)_LDFLAGS))|' \
-            -e 's|@no_qt@|$(NO_QT)|' \
-            -e 's|@no_qr@|$(NO_QR)|' \
-            -e 's|@no_zmq@|$(NO_ZMQ)|' \
-            -e 's|@no_wallet@|$(NO_WALLET)|' \
-            -e 's|@no_bdb@|$(NO_BDB)|' \
-            -e 's|@no_sqlite@|$(NO_SQLITE)|' \
-            -e 's|@no_upnp@|$(NO_UPNP)|' \
-            -e 's|@no_usdt@|$(NO_USDT)|' \
-            -e 's|@no_natpmp@|$(NO_NATPMP)|' \
-            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
-            -e 's|@lto@|$(LTO)|' \
-            -e 's|@no_harden@|$(NO_HARDEN)|' \
-            -e 's|@debug@|$(DEBUG)|' \
-            $< > $@
 	touch $@
 
 ifeq ($(host),$(build))
@@ -316,7 +259,6 @@ check-packages:
 check-sources:
 	@$(foreach package,$(all_packages),$(call check_or_remove_sources,$(package));)
 
-$(host_prefix)/share/config.site: check-packages
 $(host_prefix)/toolchain.cmake: check-packages
 
 check-packages: check-sources
@@ -327,7 +269,7 @@ clean-all: clean
 clean:
 	@rm -rf $(WORK_PATH) $(BASE_CACHE) $(BUILD) *.log
 
-install: check-packages $(host_prefix)/share/config.site $(host_prefix)/toolchain.cmake
+install: check-packages $(host_prefix)/toolchain.cmake
 
 
 download-one: check-sources $(all_sources)
