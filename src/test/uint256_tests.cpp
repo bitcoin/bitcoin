@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <arith_uint256.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -243,38 +242,6 @@ BOOST_AUTO_TEST_CASE(methods) // GetHex SetHexDeprecated FromHex begin() end() s
     ss >> TmpS;
     BOOST_CHECK_EQUAL(MaxS, TmpS);
     ss.clear();
-}
-
-BOOST_AUTO_TEST_CASE( operator_with_self )
-{
-
-/* Clang 16 and earlier detects v -= v and v /= v as self-assignments
-   to 0 and 1 respectively.
-   See: https://github.com/llvm/llvm-project/issues/42469
-   and the fix in commit c5302325b2a62d77cf13dd16cd5c19141862fed0 .
-
-   This makes some sense for arithmetic classes, but could be considered a bug
-   elsewhere. Disable the warning here so that the code can be tested, but the
-   warning should remain on as there will likely always be a better way to
-   express this.
-*/
-
-#if defined(__clang__)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wself-assign-overloaded"
-#endif
-    arith_uint256 v{2};
-    v *= v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{4});
-    v /= v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{1});
-    v += v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{2});
-    v -= v;
-    BOOST_CHECK_EQUAL(v, arith_uint256{0});
-#if defined(__clang__)
-#    pragma clang diagnostic pop
-#endif
 }
 
 /**
