@@ -1042,7 +1042,7 @@ static bool IsLimitedPeer(const Peer& peer)
 static uint16_t GetHeadersLimit(const CNode& pfrom)
 {
     if (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS_VERSION) {
-        return MAX_HEADERS_RESULTS_NEW;
+        return MAX_HEADERS_RESULTS;
     }
     return MAX_HEADERS_RESULTS_OLD;
 }
