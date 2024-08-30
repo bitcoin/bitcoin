@@ -127,7 +127,7 @@ void CMasternodeSync::ProcessTick(const PeerManager& peerman)
 
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
-    if(GetTime() - nTimeLastProcess > 60*60 && !fMasternodeMode) {
+    if (!Params().IsMockableChain() && GetTime() - nTimeLastProcess > 60 * 60 && !fMasternodeMode) {
         LogPrintf("CMasternodeSync::ProcessTick -- WARNING: no actions for too long, restarting sync...\n");
         Reset(true);
         nTimeLastProcess = GetTime();
