@@ -18,6 +18,9 @@ A Linux bash script that will set up traffic control (tc) to limit the outgoing 
 ### [Seeds](/contrib/seeds) ###
 Utility to generate the pnSeed[] array that is compiled into the client.
 
+### [ASMap](/contrib/asmap) ###
+Utilities to analyze and process asmap files.
+
 Build Tools and Keys
 ---------------------
 
