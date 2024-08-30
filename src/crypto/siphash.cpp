@@ -6,6 +6,11 @@
 
 #include <bit>
 
+constexpr uint64_t SIPHASH_CONST_0 = 0x736f6d6570736575ULL;
+constexpr uint64_t SIPHASH_CONST_1 = 0x646f72616e646f6dULL;
+constexpr uint64_t SIPHASH_CONST_2 = 0x6c7967656e657261ULL;
+constexpr uint64_t SIPHASH_CONST_3 = 0x7465646279746573ULL;
+
 #define SIPROUND do { \
     v0 += v1; v1 = std::rotl(v1, 13); v1 ^= v0; \
     v0 = std::rotl(v0, 32); \
@@ -17,10 +22,10 @@
 
 CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
 {
-    v[0] = 0x736f6d6570736575ULL ^ k0;
-    v[1] = 0x646f72616e646f6dULL ^ k1;
-    v[2] = 0x6c7967656e657261ULL ^ k0;
-    v[3] = 0x7465646279746573ULL ^ k1;
+    v[0] = SIPHASH_CONST_0 ^ k0;
+    v[1] = SIPHASH_CONST_1 ^ k1;
+    v[2] = SIPHASH_CONST_2 ^ k0;
+    v[3] = SIPHASH_CONST_3 ^ k1;
     count = 0;
     tmp = 0;
 }
@@ -51,8 +56,8 @@ CSipHasher& CSipHasher::Write(Span<const unsigned char> data)
     uint64_t t = tmp;
     uint8_t c = count;
 
-    while (data.size() > 0) {
-        t |= uint64_t{data.front()} << (8 * (c % 8));
+    for (unsigned char byte : data) {
+        t |= uint64_t{byte} << (8 * (c % 8));
         c++;
         if ((c & 7) == 0) {
             v3 ^= t;
@@ -61,7 +66,6 @@ CSipHasher& CSipHasher::Write(Span<const unsigned char> data)
             v0 ^= t;
             t = 0;
         }
-        data = data.subspan(1);
     }
 
     v[0] = v0;
@@ -92,38 +96,34 @@ uint64_t CSipHasher::Finalize() const
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
+static uint64_t SipHashCommon(uint64_t k0, uint64_t k1, const uint256& val, uint64_t extra_data, bool is_extra)
 {
-    /* Specialized implementation for efficiency */
-    uint64_t d = val.GetUint64(0);
-
-    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
-    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
-    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
-    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
+    uint64_t v0 = SIPHASH_CONST_0 ^ k0;
+    uint64_t v1 = SIPHASH_CONST_1 ^ k1;
+    uint64_t v2 = SIPHASH_CONST_2 ^ k0;
+    uint64_t v3 = SIPHASH_CONST_3 ^ k1 ^ val.GetUint64(0);
 
     SIPROUND;
     SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(1);
-    v3 ^= d;
+    v0 ^= val.GetUint64(0);
+    v3 ^= val.GetUint64(1);
     SIPROUND;
     SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(2);
-    v3 ^= d;
+    v0 ^= val.GetUint64(1);
+    v3 ^= val.GetUint64(2);
     SIPROUND;
     SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(3);
-    v3 ^= d;
+    v0 ^= val.GetUint64(2);
+    v3 ^= val.GetUint64(3);
     SIPROUND;
     SIPROUND;
-    v0 ^= d;
-    v3 ^= (uint64_t{4}) << 59;
+    v0 ^= val.GetUint64(3);
+
+    v3 ^= is_extra ? (extra_data | ((uint64_t{36}) << 56)) : (uint64_t{4} << 59);
     SIPROUND;
     SIPROUND;
-    v0 ^= (uint64_t{4}) << 59;
+    v0 ^= is_extra ? (extra_data | ((uint64_t{36}) << 56)) : (uint64_t{4} << 59);
+
     v2 ^= 0xFF;
     SIPROUND;
     SIPROUND;
@@ -132,43 +132,12 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
+uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
+{
+    return SipHashCommon(k0, k1, val, 0, false);
+}
+
 uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
 {
-    /* Specialized implementation for efficiency */
-    uint64_t d = val.GetUint64(0);
-
-    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
-    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
-    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
-    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
-
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(1);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(2);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(3);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = ((uint64_t{36}) << 56) | extra;
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    v2 ^= 0xFF;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    return v0 ^ v1 ^ v2 ^ v3;
+    return SipHashCommon(k0, k1, val, extra, true);
 }
