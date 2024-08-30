@@ -14,6 +14,7 @@
 #include <bit>
 #include <cassert>
 #include <cstdio>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -194,30 +195,46 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
     return false; // Reached EOF without RETURN instruction
 }
 
-std::vector<bool> DecodeAsmap(fs::path path)
+std::vector<bool> Decode(const std::span<const std::byte>& data)
 {
     std::vector<bool> bits;
-    FILE *filestr = fsbridge::fopen(path, "rb");
-    AutoFile file{filestr};
-    if (file.IsNull()) {
-        LogPrintf("Failed to open asmap file from disk\n");
+    if (data.empty()) {
         return bits;
     }
-    file.seek(0, SEEK_END);
-    int length = file.tell();
-    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
-    file.seek(0, SEEK_SET);
-    uint8_t cur_byte;
-    for (int i = 0; i < length; ++i) {
-        file >> cur_byte;
+    bits.reserve(data.size() * 8);
+    for (auto cur_byte : data) {
         for (int bit = 0; bit < 8; ++bit) {
-            bits.push_back((cur_byte >> bit) & 1);
+            bits.push_back((std::to_integer<uint8_t>(cur_byte) >> bit) & 1);
         }
     }
     if (!SanityCheckASMap(bits, 128)) {
-        LogPrintf("Sanity check of asmap file %s failed\n", fs::quoted(fs::PathToString(path)));
+        LogInfo("Sanity check of asmap data failed\n");
         return {};
     }
     return bits;
 }
 
+std::vector<bool> DecodeAsmap(fs::path path)
+{
+    FILE *filestr = fsbridge::fopen(path, "rb");
+    AutoFile file{filestr};
+    if (file.IsNull()) {
+        LogInfo("Failed to open asmap file from disk\n");
+        return {};
+    }
+
+    file.seek(0, SEEK_END);
+    int length = file.tell();
+    LogInfo("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
+    file.seek(0, SEEK_SET);
+
+    std::vector<std::byte> buffer(length);
+    file.read(buffer);
+    return Decode(buffer);
+}
+
+std::vector<bool> DecodeAsmap(const std::span<const std::byte> data)
+{
+    LogInfo("Opened asmap data (%zu bytes) from embedded byte array\n", data.size());
+    return Decode(data);
+}
