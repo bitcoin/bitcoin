@@ -91,17 +91,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc
-  (package
-    (inherit gcc-12) ;; 12.3.0
-    (version "12.4.0")
-    (source (origin
-              (method url-fetch)
-              (uri (string-append "mirror://gnu/gcc/gcc-"
-                                  version "/gcc-" version ".tar.xz"))
-              (sha256
-               (base32
-                "0xcida8l2wykvvzvpcrcn649gj0ijn64gwxbplacpg6c0hk6akvh"))))))
+(define base-gcc gcc-12) ;; 12.4.0
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
