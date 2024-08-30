@@ -15,6 +15,7 @@
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <validation.h>
 
