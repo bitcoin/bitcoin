@@ -97,6 +97,7 @@ class ZMQTestSetupBlock:
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.disable_mocktime = True
         if self.is_wallet_compiled():
             self.requires_wallet = True
         # This test isn't testing txn relay/timing, so set whitelist on the
@@ -108,10 +109,6 @@ class ZMQTest (BitcoinTestFramework):
         self.skip_if_no_bitcoind_zmq()
         # TODO: drop this check after migration to MiniWallet, see bitcoin/bitcoin#24653
         self.skip_if_no_bdb()
-
-    def setup_network(self):
-        self.disable_mocktime()
-        super().setup_network()
 
     def run_test(self):
         self.ctx = zmq.Context()

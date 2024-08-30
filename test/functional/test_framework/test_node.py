@@ -103,9 +103,11 @@ class TestNode():
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
-            "-mocktime=" + str(mocktime),
-            "-uacomment=testnode%d" % i
+            "-uacomment=testnode%d" % i,
         ]
+        if self.mocktime != 0:
+            self.args.append(f"-mocktime={mocktime}")
+
         if use_valgrind:
             default_suppressions_file = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -215,7 +217,7 @@ class TestNode():
 
         all_args = self.args + self.extra_args_from_options + extra_args
         if self.mocktime != 0:
-            all_args = all_args + ["-mocktime=%d" % self.mocktime]
+            all_args = all_args + [f"-mocktime={self.mocktime}"]
 
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by dashd, and
@@ -777,3 +779,7 @@ class RPCOverloadWrapper():
         for res in import_res:
             if not res['success']:
                 raise JSONRPCException(res['error'])
+
+    def setmocktime(self, mocktime):
+        self.mocktime = mocktime
+        return self.__getattr__('setmocktime')(mocktime)

@@ -22,6 +22,7 @@ class DIP3Test(BitcoinTestFramework):
         self.num_initial_mn = 11 # Should be >= 11 to make sure quorums are not always the same MNs
         self.num_nodes = 1 + self.num_initial_mn + 2 # +1 for controller, +1 for mn-qt, +1 for mn created after dip3 activation
         self.setup_clean_chain = True
+        self.disable_mocktime = True
         self.supports_cli = False
 
         self.extra_args = ["-deprecatedrpc=addresses"]
@@ -34,7 +35,6 @@ class DIP3Test(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        self.disable_mocktime()
         self.add_nodes(1)
         self.start_controller_node()
         self.import_deterministic_coinbase_privkeys()
