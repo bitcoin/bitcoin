@@ -1,9 +1,9 @@
 package=qt
-$(package)_version=5.15.14
+$(package)_version=5.15.15
 $(package)_download_path=https://download.qt.io/official_releases/qt/5.15/$($(package)_version)/submodules
 $(package)_suffix=everywhere-opensource-src-$($(package)_version).tar.xz
 $(package)_file_name=qtbase-$($(package)_suffix)
-$(package)_sha256_hash=500d3b390048e9538c28b5f523dfea6936f9c2e10d24ab46580ff57d430b98be
+$(package)_sha256_hash=e5f941fecf694ecba97c550b45b0634e552166cc6c815bcfdc481edd62796ba1
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_linguist_tools = lrelease lupdate lconvert
@@ -27,10 +27,10 @@ $(package)_patches += darwin_no_libm.patch
 $(package)_patches += zlib-timebits64.patch
 
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
-$(package)_qttranslations_sha256_hash=5b94d1a11b566908622fcca2f8b799744d2f8a68da20be4caa5953ed63b10489
+$(package)_qttranslations_sha256_hash=33e077ea098c86ad5616e5ae11458484ba846db8e2f4524c0a4185c84ed6a806
 
 $(package)_qttools_file_name=qttools-$($(package)_suffix)
-$(package)_qttools_sha256_hash=12061a85baf5f4de8fbc795e1d3872b706f340211b9e70962caeffc6f5e89563
+$(package)_qttools_sha256_hash=71946704c6bd6c925910288b97dfcc2e357d4a28e22c8651a5813aae4f238028
 
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
