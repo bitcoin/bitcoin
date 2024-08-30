@@ -88,8 +88,10 @@ class DashGovernanceTest (DashTestFramework):
         assert_equal(len(self.nodes[0].gobject("list-prepared")), 0)
 
         # TODO: drop these extra 80 blocks - doesn't work without them
-        self.nodes[0].generate(80)
-        self.bump_mocktime(80)
+        for _ in range(8):
+            self.bump_mocktime(10)
+            self.nodes[0].generate(10)
+            self.sync_blocks()
 
         self.nodes[0].generate(3)
         self.bump_mocktime(3)
@@ -280,7 +282,7 @@ class DashGovernanceTest (DashTestFramework):
         before = self.nodes[1].gobject("count")["votes"]
 
         # Bump mocktime to let MNs vote again
-        self.bump_mocktime(GOVERNANCE_UPDATE_MIN + 1)
+        self.bump_mocktime(GOVERNANCE_UPDATE_MIN + 1, update_schedulers=False)
 
         # Move another block inside the Superblock maturity window
         with self.nodes[1].assert_debug_log(["CGovernanceManager::VoteGovernanceTriggers"]):
@@ -291,7 +293,7 @@ class DashGovernanceTest (DashTestFramework):
         # Vote count should not change even though MNs are allowed to vote again
         assert_equal(before, self.nodes[1].gobject("count")["votes"])
         # Revert mocktime back to avoid issues in tests below
-        self.bump_mocktime(GOVERNANCE_UPDATE_MIN * -1)
+        self.bump_mocktime(GOVERNANCE_UPDATE_MIN * -1, update_schedulers=False)
 
         block_count = self.nodes[0].getblockcount()
         n = sb_cycle - block_count % sb_cycle
