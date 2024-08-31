@@ -1034,7 +1034,7 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // Notify transport that bytes have been processed.
             node.m_transport->MarkBytesSent(nBytes);
             // Update statistics per message type.
-            node.mapSendBytesPerMsgType[msg_type] += nBytes;
+            node.AccountForSentBytes(msg_type, nBytes);
             nSentSize += nBytes;
             if ((size_t)nBytes != data.size()) {
                 // could not send full message; stop sending more
@@ -1115,7 +1115,7 @@ bool CConnman::AttemptToEvictConnection()
                 .m_is_local = node->addr.IsLocal(),
                 .m_network = node->ConnectedThroughNetwork(),
                 .m_noban = node->HasPermission(NetPermissionFlags::NoBan),
-                .m_conn_type = node->m_conn_type,
+                .m_conn_type = node->GetConnectionType(),
             };
             vEvictionCandidates.push_back(candidate);
         }
@@ -1339,7 +1339,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
 
     // Count existing connections
     int existing_connections = WITH_LOCK(m_nodes_mutex,
-                                         return std::count_if(m_nodes.begin(), m_nodes.end(), [conn_type](CNode* node) { return node->m_conn_type == conn_type; }););
+                                         return std::count_if(m_nodes.begin(), m_nodes.end(), [conn_type](CNode* node) { return node->GetConnectionType() == conn_type; }););
 
     // Max connections of specified type already exist
     if (max_connections != std::nullopt && existing_connections >= max_connections) return false;
@@ -1494,16 +1494,8 @@ void CConnman::CalculateNumConnectionsChangedStats()
     mapSentBytesMsgStats[NET_MESSAGE_TYPE_OTHER] = 0;
     const NodesSnapshot snap{*this, /* filter = */ CConnman::FullyConnectedOnly};
     for (auto pnode : snap.Nodes()) {
-        {
-            LOCK(pnode->cs_vRecv);
-            for (const mapMsgTypeSize::value_type &i : pnode->mapRecvBytesPerMsgType)
-                mapRecvBytesMsgStats[i.first] += i.second;
-        }
-        {
-            LOCK(pnode->cs_vSend);
-            for (const mapMsgTypeSize::value_type &i : pnode->mapSendBytesPerMsgType)
-                mapSentBytesMsgStats[i.first] += i.second;
-        }
+        WITH_LOCK(pnode->cs_vRecv, pnode->UpdateRecvMapWithStats(mapRecvBytesMsgStats));
+        WITH_LOCK(pnode->cs_vSend, pnode->UpdateSentMapWithStats(mapSentBytesMsgStats));
         if (pnode->m_bloom_filter_loaded.load()) {
             spvNodes++;
         } else {
@@ -2096,18 +2088,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
         }
         RecordBytesRecv(nBytes);
         if (notify) {
-            size_t nSizeAdded = 0;
-            for (const auto& msg : pnode->vRecvMsg) {
-                // vRecvMsg contains only completed CNetMessage
-                // the single possible partially deserialized message are held by TransportDeserializer
-                nSizeAdded += msg.m_raw_message_size;
-            }
-            {
-                LOCK(pnode->cs_vProcessMsg);
-                pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg);
-                pnode->nProcessQueueSize += nSizeAdded;
-                pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
-            }
+            pnode->MarkReceivedMsgsForProcessing(nReceiveFloodSize);
             WakeMessageHandler();
         }
     }
@@ -2483,7 +2464,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 if (pnode->IsFullOutboundConn() && pnode->ConnectedThroughNetwork() == Network::NET_ONION) nOutboundOnionRelay++;
 
                 // Make sure our persistent outbound slots belong to different netgroups.
-                switch (pnode->m_conn_type) {
+                switch (pnode->GetConnectionType()) {
                     // We currently don't take inbound connections into account. Since they are
                     // free to make, an attacker could make them to prevent us from connecting to
                     // certain peers.
@@ -4072,6 +4053,37 @@ CNode::CNode(NodeId idIn,
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
+}
+
+void CNode::MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
+{
+    AssertLockNotHeld(m_msg_process_queue_mutex);
+
+    size_t nSizeAdded = 0;
+    for (const auto& msg : vRecvMsg) {
+        // vRecvMsg contains only completed CNetMessage
+        // the single possible partially deserialized message are held by TransportDeserializer
+        nSizeAdded += msg.m_raw_message_size;
+    }
+
+    LOCK(m_msg_process_queue_mutex);
+    m_msg_process_queue.splice(m_msg_process_queue.end(), vRecvMsg);
+    m_msg_process_queue_size += nSizeAdded;
+    fPauseRecv = m_msg_process_queue_size > recv_flood_size;
+}
+
+std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage(size_t recv_flood_size)
+{
+    LOCK(m_msg_process_queue_mutex);
+    if (m_msg_process_queue.empty()) return std::nullopt;
+
+    std::list<CNetMessage> msgs;
+    // Just take one message
+    msgs.splice(msgs.begin(), m_msg_process_queue, m_msg_process_queue.begin());
+    m_msg_process_queue_size -= msgs.front().m_raw_message_size;
+    fPauseRecv = m_msg_process_queue_size > recv_flood_size;
+
+    return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)

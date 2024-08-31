@@ -459,9 +459,6 @@ struct CNodeOptions
 /** Information about a peer */
 class CNode
 {
-    friend class CConnman;
-    friend struct ConnmanTestMsg;
-
 public:
     /** Transport serializer/deserializer. The receive side functions are only called under cs_vRecv, while
      * the sending side functions are only called under cs_vSend. */
@@ -489,10 +486,6 @@ public:
     Mutex cs_vSend;
     Mutex m_sock_mutex;
     Mutex cs_vRecv;
-
-    RecursiveMutex cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
-    size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
@@ -553,6 +546,48 @@ public:
     std::atomic_bool fHasRecvData{false};
     std::atomic_bool fCanSendData{false};
 
+    const ConnectionType& GetConnectionType() const
+    {
+        return m_conn_type;
+    }
+
+    /** Move all messages from the received queue to the processing queue. */
+    void MarkReceivedMsgsForProcessing(unsigned int recv_flood_size)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
+
+    /** Poll the next message from the processing queue of this connection.
+     *
+     * Returns std::nullopt if the processing queue is empty, or a pair
+     * consisting of the message and a bool that indicates if the processing
+     * queue has more entries. */
+    std::optional<std::pair<CNetMessage, bool>> PollMessage(size_t recv_flood_size)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
+
+    /** Account for the total size of a sent message in the per msg type connection stats. */
+    void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
+    {
+        mapSendBytesPerMsgType[msg_type] += sent_bytes;
+    }
+
+    /** Update a supplied map with bytes sent for each msg type for this node */
+    void UpdateSentMapWithStats(mapMsgTypeSize& map_sentbytes_msg)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
+    {
+        for (auto& [msg_type, bytes] : mapSendBytesPerMsgType) {
+            map_sentbytes_msg[msg_type] += bytes;
+        }
+    }
+
+    /** Update a supplied map with bytes recv for each msg type for this node */
+    void UpdateRecvMapWithStats(mapMsgTypeSize& map_recvbytes_msg)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_vRecv)
+    {
+        for (auto& [msg_type, bytes] : mapRecvBytesPerMsgType) {
+            map_recvbytes_msg[msg_type] += bytes;
+        }
+    }
+
     /**
      * Get network the peer connected through.
      *
@@ -564,6 +599,7 @@ public:
      * @return network the peer connected through.
      */
     Network ConnectedThroughNetwork() const;
+
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
@@ -793,6 +829,10 @@ private:
     std::atomic<int> m_greatest_common_version{INIT_PROTO_VERSION};
 
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
+
+    Mutex m_msg_process_queue_mutex;
+    std::list<CNetMessage> m_msg_process_queue GUARDED_BY(m_msg_process_queue_mutex);
+    size_t m_msg_process_queue_size GUARDED_BY(m_msg_process_queue_mutex){0};
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(m_addr_local_mutex);
