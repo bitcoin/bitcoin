@@ -90,10 +90,8 @@ using node::SnapshotMetadata;
 
 /** Size threshold for warning about slow UTXO set flush to disk. */
 static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
-/** Time to wait between writing blocks/block index to disk. */
+/** Time to wait between writing blocks/block index and chainstate to disk. */
 static constexpr std::chrono::hours DATABASE_WRITE_INTERVAL{1};
-/** Time to wait between flushing chainstate to disk. */
-static constexpr std::chrono::hours DATABASE_FLUSH_INTERVAL{24};
 /** Maximum age of our tip for us to be considered current for fee estimation */
 static constexpr std::chrono::hours MAX_FEE_ESTIMATION_TIP_AGE{3};
 const std::vector<std::string> CHECKLEVEL_DOC {
@@ -2883,21 +2881,16 @@ bool Chainstate::FlushStateToDisk(
         if (m_last_write == decltype(m_last_write){}) {
             m_last_write = nNow;
         }
-        if (m_last_flush == decltype(m_last_flush){}) {
-            m_last_flush = nNow;
-        }
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
         // The cache is over the limit, we have to write now.
         bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
-        // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
+        // It's been a while since we wrote the block index and chain state to disk. Do this frequently, so we don't need to redownload or reindex after a crash.
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > m_last_write + DATABASE_WRITE_INTERVAL;
-        // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
-        bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
         // Combine all conditions that result in a full cache flush.
-        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
-        // Write blocks and block index to disk.
-        if (fDoFullFlush || fPeriodicWrite) {
+        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicWrite || fFlushForPrune;
+        // Write blocks, block index and best chain related state to disk.
+        if (fDoFullFlush) {
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
@@ -2927,35 +2920,34 @@ bool Chainstate::FlushStateToDisk(
 
                 m_blockman.UnlinkPrunedFiles(setFilesToPrune);
             }
-            m_last_write = nNow;
-        }
-        // Flush best chain related state. This can only be done if the blocks / block index write was also done.
-        if (fDoFullFlush && !CoinsTip().GetBestBlock().IsNull()) {
-            if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
-            LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
-                coins_count, coins_mem_usage >> 10), BCLog::BENCH);
 
-            // Typical Coin structures on disk are around 48 bytes in size.
-            // Pushing a new one to the database can cause it to be written
-            // twice (once in the log, and once in the tables). This is already
-            // an overestimation, as most will delete an existing entry or
-            // overwrite one. Still, use a conservative safety factor of 2.
-            if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
-                return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+            if (!CoinsTip().GetBestBlock().IsNull()) {
+                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
+                LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
+                    coins_count, coins_mem_usage >> 10), BCLog::BENCH);
+
+                // Typical Coin structures on disk are around 48 bytes in size.
+                // Pushing a new one to the database can cause it to be written
+                // twice (once in the log, and once in the tables). This is already
+                // an overestimation, as most will delete an existing entry or
+                // overwrite one. Still, use a conservative safety factor of 2.
+                if (!CheckDiskSpace(m_chainman.m_options.datadir, 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
+                    return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                }
+                // Flush the chainstate (which may refer to block index entries).
+                const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
+                if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
+                    return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
+                }
+                full_flush_completed = true;
+                TRACEPOINT(utxocache, flush,
+                    int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
+                    (uint32_t)mode,
+                    (uint64_t)coins_count,
+                    (uint64_t)coins_mem_usage,
+                    (bool)fFlushForPrune);
             }
-            // Flush the chainstate (which may refer to block index entries).
-            const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
-            if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
-                return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
-            }
-            m_last_flush = nNow;
-            full_flush_completed = true;
-            TRACEPOINT(utxocache, flush,
-                   int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
-                   (uint32_t)mode,
-                   (uint64_t)coins_count,
-                   (uint64_t)coins_mem_usage,
-                   (bool)fFlushForPrune);
+            m_last_write = NodeClock::now();
         }
     }
     if (full_flush_completed && m_chainman.m_options.signals) {

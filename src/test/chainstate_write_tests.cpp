@@ -25,17 +25,18 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
     auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
     BlockValidationState state_dummy{};
 
-    // The first periodic flush sets m_last_flush and does not flush
+    // The first periodic flush sets m_last_write and does not flush
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(!sub->m_did_flush);
 
-    SetMockTime(GetTime<std::chrono::minutes>() + 23h + 59min);
+    // The periodic flush interval is 1 hour
+    SetMockTime(GetTime<std::chrono::minutes>() + 59min);
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(!sub->m_did_flush);
 
-    SetMockTime(GetTime<std::chrono::minutes>() + 24h);
+    SetMockTime(GetTime<std::chrono::minutes>() + 1h);
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(sub->m_did_flush);
