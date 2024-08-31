@@ -311,12 +311,13 @@ void CCoinsViewCache::SanityCheck() const
     size_t recomputed_usage = 0;
     size_t count_flagged = 0;
     for (const auto& [_, entry] : cacheCoins) {
-        unsigned attr = 0;
-        if (entry.IsDirty()) attr |= 1;
-        if (entry.IsFresh()) attr |= 2;
-        if (entry.coin.IsSpent()) attr |= 4;
-        // Only 4 combinations are possible.
-        assert(attr != 2 && attr != 4 && attr != 6 && attr != 7);
+        if (entry.coin.IsSpent()) {
+            // A spent coin must be dirty and cannot be fresh
+            assert(entry.IsDirty() && !entry.IsFresh());
+        } else {
+            // An unspent coin must not be fresh if not dirty
+            assert(entry.IsDirty() || !entry.IsFresh());
+        }
 
         // Recompute cachedCoinsUsage.
         recomputed_usage += entry.coin.DynamicMemoryUsage();
