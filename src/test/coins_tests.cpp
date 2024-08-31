@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(ccoins_add)
         CheckAddCoin(base_value, MISSING,            VALUE3, VALUE3_DIRTY_FRESH,   false);
         CheckAddCoin(base_value, MISSING,            VALUE3, VALUE3_DIRTY,         true );
 
-        CheckAddCoin(base_value, SPENT_CLEAN,        VALUE3, VALUE3_DIRTY_FRESH,   false);
+        CheckAddCoin(base_value, SPENT_CLEAN,        VALUE3, VALUE3_DIRTY,         false);
         CheckAddCoin(base_value, SPENT_CLEAN,        VALUE3, VALUE3_DIRTY,         true );
         CheckAddCoin(base_value, SPENT_FRESH,        VALUE3, VALUE3_DIRTY_FRESH,   false);
         CheckAddCoin(base_value, SPENT_FRESH,        VALUE3, VALUE3_DIRTY_FRESH,   true );
