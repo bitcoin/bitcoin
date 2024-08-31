@@ -2878,7 +2878,7 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
         }
-        const auto nNow{SteadyClock::now()};
+        const auto nNow{NodeClock::now()};
         // Avoid writing/flushing immediately after startup.
         if (m_last_write == decltype(m_last_write){}) {
             m_last_write = nNow;
@@ -2951,7 +2951,7 @@ bool Chainstate::FlushStateToDisk(
             m_last_flush = nNow;
             full_flush_completed = true;
             TRACEPOINT(utxocache, flush,
-                   int64_t{Ticks<std::chrono::microseconds>(SteadyClock::now() - nNow)},
+                   int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
                    (uint32_t)mode,
                    (uint64_t)coins_count,
                    (uint64_t)coins_mem_usage,
