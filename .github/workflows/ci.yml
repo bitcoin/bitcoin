@@ -146,10 +146,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Remove non-MSVC tool installations
-        run: |
-          Remove-Item -Path "$env:ProgramFiles/CMake" -Recurse -Force
-
       - name: Configure Developer Command Prompt for Microsoft Visual C++
         # Using microsoft/setup-msbuild is not enough.
         uses: ilammy/msvc-dev-cmd@v1
