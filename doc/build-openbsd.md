@@ -112,7 +112,7 @@ Run `cmake -B build -LH` to see the full list of available options.
 This enables support for both wallet types:
 
 ```bash
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include"
+cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
 ```
 
 ### 2. Compile

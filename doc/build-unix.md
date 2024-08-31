@@ -162,7 +162,7 @@ and configure using the following:
 ```bash
 export BDB_PREFIX="/path/to/bitcoin/depends/x86_64-pc-linux-gnu"
 
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include"
+cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
 ```
 
 **Note**: Make sure that `BDB_PREFIX` is an absolute path.
