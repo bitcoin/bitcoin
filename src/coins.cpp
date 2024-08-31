@@ -79,20 +79,18 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
         if (!it->second.coin.IsSpent()) {
             throw std::logic_error("Attempted to overwrite an unspent coin (when possible_overwrite is false)");
         }
-        // If the coin exists in this cache as a spent coin and is DIRTY, then
+        // If the coin exists in this cache as a spent coin, then
         // its spentness hasn't been flushed to the parent cache. We're
         // re-adding the coin to this cache now but we can't mark it as FRESH.
-        // If we mark it FRESH and then spend it before the cache is flushed
-        // we would remove it from this cache and would never flush spentness
-        // to the parent cache.
+        // A spent FRESH coin cannot exist in the cache because a FRESH coin
+        // is simply erased when it is spent.
         //
         // Re-adding a spent coin can happen in the case of a re-org (the coin
         // is 'spent' when the block adding it is disconnected and then
         // re-added when it is also added in a newly connected block).
         //
-        // If the coin doesn't exist in the current cache, or is spent but not
-        // DIRTY, then it can be marked FRESH.
-        fresh = !it->second.IsDirty();
+        // If the coin doesn't exist in the current cache then it can be marked FRESH.
+        fresh = inserted;
     }
     it->second.coin = std::move(coin);
     CCoinsCacheEntry::SetDirty(*it, m_sentinel);
