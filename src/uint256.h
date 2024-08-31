@@ -127,20 +127,11 @@ public:
 template <unsigned int BITS>
 consteval base_blob<BITS>::base_blob(std::string_view hex_str)
 {
-    // Non-lookup table version of HexDigit().
-    auto from_hex = [](const char c) -> int8_t {
-        if (c >= '0' && c <= '9') return c - '0';
-        if (c >= 'a' && c <= 'f') return c - 'a' + 0xA;
-        if (c >= 'A' && c <= 'F') return c - 'A' + 0xA;
-
-        assert(false); // Reached if ctor is called with an invalid hex digit.
-    };
-
-    assert(hex_str.length() == m_data.size() * 2); // 2 hex digits per byte.
+    if (hex_str.length() != m_data.size() * 2) throw "Hex string must fit exactly";
     auto str_it = hex_str.rbegin();
     for (auto& elem : m_data) {
-        auto lo = from_hex(*(str_it++));
-        elem = (from_hex(*(str_it++)) << 4) | lo;
+        auto lo = util::ConstevalHexDigit(*(str_it++));
+        elem = (util::ConstevalHexDigit(*(str_it++)) << 4) | lo;
     }
 }
 

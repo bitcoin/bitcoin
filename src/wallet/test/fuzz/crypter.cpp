@@ -35,11 +35,11 @@ FUZZ_TARGET(crypter, .init = initialize_crypter)
 
         const unsigned int derivation_method = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<unsigned int>();
 
-        // Limiting the value of nRounds since it is otherwise uselessly expensive and causes a timeout when fuzzing.
-        crypt.SetKeyFromPassphrase(/*strKeyData=*/secure_string,
-                                    /*chSalt=*/ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_SALT_SIZE),
-                                    /*nRounds=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 25000),
-                                    /*nDerivationMethod=*/derivation_method);
+        // Limiting the value of rounds since it is otherwise uselessly expensive and causes a timeout when fuzzing.
+        crypt.SetKeyFromPassphrase(/*key_data=*/secure_string,
+                                   /*salt=*/ConsumeFixedLengthByteVector(fuzzed_data_provider, WALLET_CRYPTO_SALT_SIZE),
+                                   /*rounds=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 25000),
+                                   /*derivation_method=*/derivation_method);
     }
 
     LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 100)

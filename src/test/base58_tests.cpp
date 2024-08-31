@@ -17,6 +17,7 @@
 #include <string>
 
 using namespace std::literals;
+using namespace util::hex_literals;
 
 BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     // check that DecodeBase58 skips whitespace, but still fails with unexpected non-whitespace at the end.
     BOOST_CHECK(!DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t a", result, 3));
     BOOST_CHECK( DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result, 3));
-    std::vector<unsigned char> expected = ParseHex("971a55");
+    constexpr auto expected{"971a55"_hex_u8};
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 
     BOOST_CHECK(DecodeBase58Check("3vQB7B6MrGQZaxCuFg4oh"s, result, 100));
