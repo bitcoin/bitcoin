@@ -611,13 +611,13 @@ public:
     explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications)
         : m_notifications(std::move(notifications)) {}
     virtual ~NotificationsProxy() = default;
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx, nAcceptTime);
+        m_notifications->transactionAddedToMempool(tx, nAcceptTime, mempool_sequence);
     }
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionRemovedFromMempool(tx, reason);
+        m_notifications->transactionRemovedFromMempool(tx, reason, mempool_sequence);
     }
     void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
@@ -997,7 +997,7 @@ public:
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->mapTx) {
-            notifications.transactionAddedToMempool(entry.GetSharedTx(), 0);
+            notifications.transactionAddedToMempool(entry.GetSharedTx(), /* nAcceptTime = */ 0, /* mempool_sequence = */ 0);
         }
     }
     NodeContext& m_node;

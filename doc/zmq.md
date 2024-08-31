@@ -77,6 +77,7 @@ Currently, the following notifications are supported:
     -zmqpubrawgovernanceobject=address
     -zmqpubrawinstantsenddoublespend=address
     -zmqpubrawrecoveredsig=address
+    -zmqpubsequence=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
@@ -103,6 +104,7 @@ The option to set the PUB socket's outbound message high water mark
     -zmqpubrawgovernanceobjecthwm=n
     -zmqpubrawinstantsenddoublespendhwm=n
     -zmqpubrawrecoveredsighwm=n
+    -zmqpubsequencehwm=address
 
 The high water mark value must be an integer greater than or equal to 0.
 
@@ -110,16 +112,44 @@ For instance:
 
     $ dashd -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubhashtx=tcp://192.168.1.2:28332 \
+               -zmqpubhashblock="tcp://[::1]:28333" \
                -zmqpubrawtx=ipc:///tmp/dashd.tx.raw \
                -zmqpubhashtxhwm=10000
 
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
-terminator) and the body is the transaction hash (32
-bytes).
+terminator). These options can also be provided in dash.conf.
 
-These options can also be provided in dash.conf.
+The topics are:
+
+`sequence`: the body is structured as the following based on the type of message:
+
+    <32-byte hash>C :                 Blockhash connected
+    <32-byte hash>D :                 Blockhash disconnected
+    <32-byte hash>R<8-byte LE uint> : Transactionhash removed from mempool for non-block inclusion reason
+    <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
+
+Where the 8-byte uints correspond to the mempool sequence number.
+
+`rawtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`rawtx`), the second part is the serialized transaction, and the last part is a sequence number (representing the message count to detect lost messages).
+
+    | rawtx | <serialized transaction> | <uint32 sequence number in Little Endian>
+
+`hashtx`: Notifies about all transactions, both when they are added to mempool or when a new block arrives. This means a transaction could be published multiple times. First, when it enters the mempool and then again in each block that includes it. The messages are ZMQ multipart messages with three parts. The first part is the topic (`hashtx`), the second part is the 32-byte transaction hash, and the last part is a sequence number (representing the message count to detect lost messages).
+
+    | hashtx | <32-byte transaction hash in Little Endian> | <uint32 sequence number in Little Endian>
+
+
+`rawblock`: Notifies when the chain tip is updated. Messages are ZMQ multipart messages with three parts. The first part is the topic (`rawblock`), the second part is the serialized block, and the last part is a sequence number (representing the message count to detect lost messages).
+
+    | rawblock | <serialized block> | <uint32 sequence number in Little Endian>
+
+`hashblock`: Notifies when the chain tip is updated. Messages are ZMQ multipart messages with three parts. The first part is the topic (`hashblock`), the second part is the 32-byte block hash, and the last part is a sequence number (representing the message count to detect lost messages).
+
+    | hashblock | <32-byte block hash in Little Endian> | <uint32 sequence number in Little Endian>
+
+**_NOTE:_**  Note that the 32-byte hashes are in Little Endian and not in the Big Endian format that the RPC interface and block explorers use to display transaction and block hashes.
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 [ZeroMQ API](http://api.zeromq.org/4-0:_start).
@@ -143,6 +173,9 @@ Setting the keepalive values appropriately for your operating environment may
 improve connectivity in situations where long-lived connections are silently
 dropped by network middle boxes.
 
+Also, the socket's ZMQ_IPV6 option is enabled to accept connections from IPv6
+hosts as well. If needed, this option has to be set on the client side too.
+
 ## Remarks
 
 From the perspective of dashd, the ZeroMQ socket is write-only; PUB
@@ -154,13 +187,20 @@ No authentication or authorization is done on connecting clients; it
 is assumed that the ZeroMQ port is exposed only to trusted entities,
 using other means such as firewalling.
 
-Note that when the block chain tip changes, a reorganisation may occur
-and just the tip will be notified. It is up to the subscriber to
-retrieve the chain from the last known block to the new tip. Also note
-that no notification occurs if the tip was in the active chain - this
-is the case after calling invalidateblock RPC.
+Note that for `*block` topics, when the block chain tip changes,
+a reorganisation may occur and just the tip will be notified.
+It is up to the subscriber to retrieve the chain from the last known
+block to the new tip. Also note that no notification will occur if the tip
+was in the active chain--as would be the case after calling invalidateblock RPC.
+In contrast, the `sequence` topic publishes all block connections and
+disconnections.
 
 There are several possibilities that ZMQ notification can get lost
 during transmission depending on the communication type you are
 using. Dashd appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.
+
+The `sequence` topic refers specifically to the mempool sequence
+number, which is also published along with all mempool events. This
+is a different sequence value than in ZMQ itself in order to allow a total
+ordering of mempool events to be constructed.

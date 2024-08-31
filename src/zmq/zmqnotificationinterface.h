@@ -19,14 +19,15 @@ public:
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static CZMQNotificationInterface* Create();
+    static std::unique_ptr<CZMQNotificationInterface> Create();
 
 protected:
     bool Initialize();
     void Shutdown();
 
     // CValidationInterface
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override;
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override;
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
@@ -44,6 +45,6 @@ private:
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 
-extern CZMQNotificationInterface* g_zmq_notification_interface;
+extern std::unique_ptr<CZMQNotificationInterface> g_zmq_notification_interface;
 
 #endif // BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
