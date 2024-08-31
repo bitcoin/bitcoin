@@ -62,9 +62,6 @@ constexpr auto Invalid = mntype_struct{
     }
 }
 
-[[nodiscard]] constexpr const bool IsValidMnType(MnType type)
-{
-    return type < MnType::COUNT;
-}
+[[nodiscard]] constexpr bool IsValidMnType(MnType type) { return type < MnType::COUNT; }
 
 #endif // BITCOIN_EVO_DMN_TYPES_H
