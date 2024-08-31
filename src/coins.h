@@ -181,17 +181,15 @@ public:
     bool IsDirty() const noexcept { return m_flags & DIRTY; }
     bool IsFresh() const noexcept { return m_flags & FRESH; }
 
-    //! Only call Next when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Next() const noexcept
     {
-        Assume(m_flags);
+        Assume(IsDirty());
         return m_next;
     }
 
-    //! Only call Prev when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Prev() const noexcept
     {
-        Assume(m_flags);
+        Assume(IsDirty());
         return m_prev;
     }
 
