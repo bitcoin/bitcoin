@@ -220,7 +220,7 @@ static RPCHelpMan loadwallet()
                 "\nNote that all wallet command-line options used when starting bitcoind will be"
                 "\napplied to the new wallet.\n",
                 {
-                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
+                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file. The filename should be the relative path from the wallet directory (~/.bitcoin/regtest/wallets)."},
                     {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{
@@ -235,7 +235,7 @@ static RPCHelpMan loadwallet()
                 },
                 RPCExamples{
                     HelpExampleCli("loadwallet", "\"test.dat\"")
-            + HelpExampleRpc("loadwallet", "\"test.dat\"")
+                  + HelpExampleRpc("loadwallet", "\"test.dat\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
