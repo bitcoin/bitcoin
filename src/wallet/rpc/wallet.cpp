@@ -235,6 +235,8 @@ static RPCHelpMan loadwallet()
                 },
                 RPCExamples{
                     HelpExampleCli("loadwallet", "\"test.dat\"")
+                  + HelpExampleCli("loadwallet", "\"subdirectory/test.dat\"") 
+                  + HelpExampleCli("loadwallet", "\"../otherdir/testwallet.dat\"") 
                   + HelpExampleRpc("loadwallet", "\"test.dat\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
