@@ -804,7 +804,6 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     NodeClock::time_point m_last_write{};
-    NodeClock::time_point m_last_flush{};
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
