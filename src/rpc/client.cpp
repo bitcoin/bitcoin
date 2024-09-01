@@ -225,6 +225,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "upgradetohd", 3, "rescan"},
     { "getnodeaddresses", 0, "count"},
     { "addpeeraddress", 1, "port"},
+    { "addpeeraddress", 2, "tried"},
     { "stop", 0, "wait" },
     { "verifychainlock", 2, "blockHeight" },
     { "verifyislock", 3, "maxHeight" },
