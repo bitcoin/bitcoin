@@ -616,7 +616,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
     return fInsert;
 }
 
-void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
+bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nTime)
 {
     AssertLockHeld(cs);
 
@@ -627,8 +627,7 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     AddrInfo* pinfo = Find(addr, &nId);
 
     // if not found, bail out
-    if (!pinfo)
-        return;
+    if (!pinfo) return false;
 
     AddrInfo& info = *pinfo;
 
@@ -640,13 +639,11 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
     // currently-connected peers.
 
     // if it is already in the tried set, don't do anything else
-    if (info.fInTried)
-        return;
+    if (info.fInTried) return false;
 
     // if it is not in new, something bad happened
-    if (!Assume(info.nRefCount > 0)) {
-        return;
-    }
+    if (!Assume(info.nRefCount > 0)) return false;
+
 
     // which tried bucket to move the entry to
     int tried_bucket = info.GetTriedBucket(nKey, m_asmap);
@@ -665,6 +662,7 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
                      addr.ToString(),
                      m_tried_collisions.size());
         }
+        return false;
     } else {
         // move nId to the tried tables
         MakeTried(info, nId);
@@ -672,6 +670,7 @@ void AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
             LogPrint(BCLog::ADDRMAN, "Moved %s mapped to AS%i to tried[%i][%i]\n",
                      addr.ToString(), addr.GetMappedAS(m_asmap), tried_bucket, tried_bucket_pos);
         }
+        return true;
     }
 }
 
@@ -1068,12 +1067,13 @@ bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source
     return ret;
 }
 
-void AddrManImpl::Good(const CService& addr, int64_t nTime)
+bool AddrManImpl::Good(const CService& addr, int64_t nTime)
 {
     LOCK(cs);
     Check();
-    Good_(addr, /* test_before_evict */ true, nTime);
+    auto ret = Good_(addr, /*test_before_evict=*/true, nTime);
     Check();
+    return ret;
 }
 
 void AddrManImpl::Attempt(const CService& addr, bool fCountFailure, int64_t nTime)
@@ -1187,9 +1187,9 @@ bool AddrMan::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, in
     return m_impl->Add(vAddr, source, nTimePenalty);
 }
 
-void AddrMan::Good(const CService& addr, int64_t nTime)
+bool AddrMan::Good(const CService& addr, int64_t nTime)
 {
-    m_impl->Good(addr, nTime);
+    return m_impl->Good(addr, nTime);
 }
 
 void AddrMan::Attempt(const CService& addr, bool fCountFailure, int64_t nTime)
