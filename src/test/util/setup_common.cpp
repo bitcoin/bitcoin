@@ -177,8 +177,11 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    m_node.addrman = std::make_unique<AddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
     m_node.chain = interfaces::MakeChain(m_node);
+
+    m_node.addrman = std::make_unique<AddrMan>(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
+    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
+
     // while g_wallet_init_interface is init here at very early stage
     // we can't get rid of unique_ptr from wallet/contex.h
     // TODO: remove unique_ptr from wallet/context.h after bitcoin/bitcoin#22219
@@ -186,7 +189,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     fCheckBlockIndex = true;
     m_node.evodb = std::make_unique<CEvoDB>(1 << 20, true, true);
     m_node.mnhf_manager = std::make_unique<CMNHFManager>(*m_node.evodb);
-    connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
     llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*m_node.evodb));
     m_node.cpoolman = std::make_unique<CCreditPoolManager>(*m_node.evodb);
     static bool noui_connected = false;
@@ -200,11 +202,12 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
 BasicTestingSetup::~BasicTestingSetup()
 {
     SetMockTime(0s); // Reset mocktime for following tests
-    connman.reset();
-    llmq::quorumSnapshotManager.reset();
     m_node.cpoolman.reset();
+    llmq::quorumSnapshotManager.reset();
     m_node.mnhf_manager.reset();
     m_node.evodb.reset();
+    m_node.connman.reset();
+    m_node.addrman.reset();
 
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
@@ -226,8 +229,6 @@ ChainTestingSetup::ChainTestingSetup(const std::string& chainName, const std::ve
 
     m_node.chainman = std::make_unique<ChainstateManager>();
     m_node.chainman->m_blockman.m_block_tree_db = std::make_unique<CBlockTreeDB>(1 << 20, true);
-
-    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
 
     m_node.mn_metaman = std::make_unique<CMasternodeMetaMan>();
     m_node.netfulfilledman = std::make_unique<CNetFulfilledRequestManager>();
@@ -252,8 +253,6 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.sporkman.reset();
     m_node.netfulfilledman.reset();
     m_node.mn_metaman.reset();
-    m_node.connman.reset();
-    m_node.addrman.reset();
     m_node.args = nullptr;
     m_node.mempool.reset();
     m_node.scheduler.reset();

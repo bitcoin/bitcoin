@@ -88,7 +88,6 @@ struct BasicTestingSetup {
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();
 
-    std::unique_ptr<CConnman> connman;
     const fs::path m_path_root;
     ArgsManager m_args;
 };
