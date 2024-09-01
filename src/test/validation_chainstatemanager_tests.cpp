@@ -806,22 +806,26 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
     };
 
     // test -assumevalid
-    BOOST_CHECK(!get_valid_opts({}).assumed_valid_block.has_value());
-    BOOST_CHECK(get_valid_opts({"-assumevalid="}).assumed_valid_block.value().IsNull());
-    BOOST_CHECK(get_valid_opts({"-assumevalid=0"}).assumed_valid_block.value().IsNull());
-    BOOST_CHECK(get_valid_opts({"-noassumevalid"}).assumed_valid_block.value().IsNull());
-    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid=0x1234"}).assumed_valid_block.value().ToString(), std::string(60, '0') + "1234");
-    const std::string cmd{"-assumevalid=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
-    BOOST_CHECK_EQUAL(get_valid_opts({cmd.c_str()}).assumed_valid_block.value().ToString(), cmd.substr(13, cmd.size()));
+    BOOST_CHECK(!get_valid_opts({}).assumed_valid_block);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid="}).assumed_valid_block, uint256::ZERO);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid=0"}).assumed_valid_block, uint256::ZERO);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-noassumevalid"}).assumed_valid_block, uint256::ZERO);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-assumevalid=0x12"}).assumed_valid_block, uint256{0x12});
+
+    std::string assume_valid{"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
+    BOOST_CHECK_EQUAL(get_valid_opts({("-assumevalid=" + assume_valid).c_str()}).assumed_valid_block, uint256::FromHex(assume_valid));
 
     BOOST_CHECK(!get_opts({"-assumevalid=xyz"}));                                                               // invalid hex characters
     BOOST_CHECK(!get_opts({"-assumevalid=01234567890123456789012345678901234567890123456789012345678901234"})); // > 64 hex chars
 
     // test -minimumchainwork
-    BOOST_CHECK(!get_valid_opts({}).minimum_chain_work.has_value());
-    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0"}).minimum_chain_work.value().GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(get_valid_opts({"-nominimumchainwork"}).minimum_chain_work.value().GetCompact(), 0U);
-    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0x1234"}).minimum_chain_work.value().GetCompact(), 0x02123400U);
+    BOOST_CHECK(!get_valid_opts({}).minimum_chain_work);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0"}).minimum_chain_work, arith_uint256());
+    BOOST_CHECK_EQUAL(get_valid_opts({"-nominimumchainwork"}).minimum_chain_work, arith_uint256());
+    BOOST_CHECK_EQUAL(get_valid_opts({"-minimumchainwork=0x1234"}).minimum_chain_work, arith_uint256{0x1234});
+
+    std::string minimum_chainwork{"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"};
+    BOOST_CHECK_EQUAL(get_valid_opts({("-minimumchainwork=" + minimum_chainwork).c_str()}).minimum_chain_work, UintToArith256(uint256::FromHex(minimum_chainwork).value()));
 
     BOOST_CHECK(!get_opts({"-minimumchainwork=xyz"}));                                                               // invalid hex characters
     BOOST_CHECK(!get_opts({"-minimumchainwork=01234567890123456789012345678901234567890123456789012345678901234"})); // > 64 hex chars

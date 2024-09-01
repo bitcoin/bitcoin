@@ -395,15 +395,15 @@ BOOST_AUTO_TEST_CASE(from_hex)
 
 BOOST_AUTO_TEST_CASE(from_user_hex)
 {
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("").value(), uint256::ZERO);
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("0x").value(), uint256::ZERO);
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("0").value(), uint256::ZERO);
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("00").value(), uint256::ZERO);
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("1").value(), uint256::ONE);
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("0x10").value(), uint256{0x10});
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("10").value(), uint256{0x10});
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("0xFf").value(), uint256{0xff});
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("Ff").value(), uint256{0xff});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex(""), uint256::ZERO);
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("0x"), uint256::ZERO);
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("0"), uint256::ZERO);
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("00"), uint256::ZERO);
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("1"), uint256::ONE);
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("0x10"), uint256{0x10});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("10"), uint256{0x10});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("0xFf"), uint256{0xff});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("Ff"), uint256{0xff});
     const std::string valid_hex_64{"0x0123456789abcdef0123456789abcdef0123456789ABDCEF0123456789ABCDEF"};
     BOOST_REQUIRE_EQUAL(valid_hex_64.size(), 2 + 64); // 0x prefix and 64 hex digits
     BOOST_CHECK_EQUAL(uint256::FromUserHex(valid_hex_64.substr(2)).value().ToString(), ToLower(valid_hex_64.substr(2)));
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE( check_ONE )
 
 BOOST_AUTO_TEST_CASE(FromHex_vs_uint256)
 {
-    auto runtime_uint{uint256::FromHex("4A5E1E4BAAB89F3A32518A88C31BC87F618f76673e2cc77ab2127b7afdeda33b").value()};
+    auto runtime_uint{uint256::FromHex("4A5E1E4BAAB89F3A32518A88C31BC87F618f76673e2cc77ab2127b7afdeda33b")};
     constexpr uint256 consteval_uint{  "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"};
     BOOST_CHECK_EQUAL(consteval_uint, runtime_uint);
 }
