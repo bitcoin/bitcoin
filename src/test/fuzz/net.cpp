@@ -21,10 +21,23 @@
 #include <string>
 #include <vector>
 
+namespace {
+const BasicTestingSetup* g_setup;
+
+int32_t GetCheckRatio()
+{
+    return std::clamp<int32_t>(g_setup->m_node.args->GetArg("-checkaddrman", 0), 0, 1000000);
+}
+} // namespace
+
 void initialize_net()
 {
     static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::MAIN);
+    g_setup = testing_setup.get();
 }
+
+// From src/test/fuzz/addrman.cpp
+extern NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 FUZZ_TARGET_INIT(net, initialize_net)
 {
@@ -37,8 +50,9 @@ FUZZ_TARGET_INIT(net, initialize_net)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
-                CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
+                NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
+                AddrMan addrman(netgroupman, /*deterministic=*/false, GetCheckRatio());
+                CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, netgroupman};
                 node.CloseSocketDisconnect(&connman);
             },
             [&] {

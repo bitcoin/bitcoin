@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
+#include <netgroup.h>
 #include <test/fuzz/fuzz.h>
 #include <util/asmap.h>
 
@@ -56,5 +57,6 @@ FUZZ_TARGET(asmap)
         memcpy(&ipv4, addr_data, addr_size);
         net_addr.SetIP(CNetAddr{ipv4});
     }
-    (void)net_addr.GetMappedAS(asmap);
+    NetGroupManager netgroupman{asmap};
+    (void)netgroupman.GetMappedAS(net_addr);
 }

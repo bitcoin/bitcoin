@@ -15,6 +15,7 @@
 #include <merkleblock.h>
 #include <net.h>
 #include <netbase.h>
+#include <netgroup.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
@@ -198,7 +199,8 @@ FUZZ_TARGET_DESERIALIZE(blockmerkleroot, {
     BlockMerkleRoot(block, &mutated);
 })
 FUZZ_TARGET_DESERIALIZE(addrman_deserialize, {
-    AddrMan am(/*asmap=*/std::vector<bool>(),
+    NetGroupManager netgroupman{std::vector<bool>()};
+    AddrMan am(netgroupman,
                /*deterministic=*/false,
                g_setup->m_node.args->GetArg("-checkaddrman", 0));
     DeserializeFromFuzzingInput(buffer, am);

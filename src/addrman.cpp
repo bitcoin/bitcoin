@@ -43,17 +43,17 @@ static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
 /** The maximum time we'll spend trying to resolve a tried table collision, in seconds */
 static constexpr int64_t ADDRMAN_TEST_WINDOW{40*60}; // 40 minutes
 
-int AddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool>& asmap) const
+int AddrInfo::GetTriedBucket(const uint256& nKey, const NetGroupManager& netgroupman) const
 {
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetCheapHash();
-    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup(asmap) << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetCheapHash();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << netgroupman.GetGroup(*this) << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetCheapHash();
     return hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
 }
 
-int AddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src, const std::vector<bool>& asmap) const
+int AddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src, const NetGroupManager& netgroupman) const
 {
-    std::vector<unsigned char> vchSourceGroupKey = src.GetGroup(asmap);
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup(asmap) << vchSourceGroupKey).GetCheapHash();
+    std::vector<unsigned char> vchSourceGroupKey = netgroupman.GetGroup(src);
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << netgroupman.GetGroup(*this) << vchSourceGroupKey).GetCheapHash();
     uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetCheapHash();
     return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
 }
@@ -101,11 +101,11 @@ double AddrInfo::GetChance(int64_t nNow) const
     return fChance;
 }
 
-AddrManImpl::AddrManImpl(std::vector<bool>&& asmap, bool deterministic, int32_t consistency_check_ratio)
+AddrManImpl::AddrManImpl(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio)
     : insecure_rand{deterministic}
     , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
     , m_consistency_check_ratio{consistency_check_ratio}
-    , m_asmap{std::move(asmap)}
+    , m_netgroupman{netgroupman}
 {
     for (auto& bucket : vvNew) {
         for (auto& entry : bucket) {
@@ -220,11 +220,7 @@ void AddrManImpl::Serialize(Stream& s_) const
     }
     // Store asmap checksum after bucket entries so that it
     // can be ignored by older clients for backward compatibility.
-    uint256 asmap_checksum;
-    if (m_asmap.size() != 0) {
-        asmap_checksum = SerializeHash(m_asmap);
-    }
-    s << asmap_checksum;
+    s << m_netgroupman.GetAsmapChecksum();
 }
 
 template <typename Stream>
@@ -294,7 +290,7 @@ void AddrManImpl::Unserialize(Stream& s_)
     for (int n = 0; n < nTried; n++) {
         AddrInfo info;
         s >> info;
-        int nKBucket = info.GetTriedBucket(nKey, m_asmap);
+        int nKBucket = info.GetTriedBucket(nKey, m_netgroupman);
         int nKBucketPos = info.GetBucketPosition(nKey, false, nKBucket);
         if (info.IsValid()
                 && vvTried[nKBucket][nKBucketPos] == -1) {
@@ -331,10 +327,7 @@ void AddrManImpl::Unserialize(Stream& s_)
     // If the bucket count and asmap checksum haven't changed, then attempt
     // to restore the entries to the buckets/positions they were in before
     // serialization.
-    uint256 supplied_asmap_checksum;
-    if (m_asmap.size() != 0) {
-        supplied_asmap_checksum = SerializeHash(m_asmap);
-    }
+    uint256 supplied_asmap_checksum{m_netgroupman.GetAsmapChecksum()};
     uint256 serialized_asmap_checksum;
     if (format >= Format::V2_ASMAP) {
         s >> serialized_asmap_checksum;
@@ -367,7 +360,7 @@ void AddrManImpl::Unserialize(Stream& s_)
         } else {
             // In case the new table data cannot be used (bucket count wrong or new asmap),
             // try to give them a reference based on their primary source address.
-            bucket = info.GetNewBucket(nKey, m_asmap);
+            bucket = info.GetNewBucket(nKey, m_netgroupman);
             bucket_position = info.GetBucketPosition(nKey, true, bucket);
             if (vvNew[bucket][bucket_position] == -1) {
                 vvNew[bucket][bucket_position] = entry_index;
@@ -489,7 +482,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
     AssertLockHeld(cs);
 
     // remove the entry from all new buckets
-    const int start_bucket{info.GetNewBucket(nKey, m_asmap)};
+    const int start_bucket{info.GetNewBucket(nKey, m_netgroupman)};
     for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; ++n) {
         const int bucket{(start_bucket + n) % ADDRMAN_NEW_BUCKET_COUNT};
         const int pos{info.GetBucketPosition(nKey, true, bucket)};
@@ -504,7 +497,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
     assert(info.nRefCount == 0);
 
     // which tried bucket to move the entry to
-    int nKBucket = info.GetTriedBucket(nKey, m_asmap);
+    int nKBucket = info.GetTriedBucket(nKey, m_netgroupman);
     int nKBucketPos = info.GetBucketPosition(nKey, false, nKBucket);
 
     // first make space to add it (the existing tried entry there is moved to new, deleting whatever is there).
@@ -520,7 +513,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
         nTried--;
 
         // find which new bucket it belongs to
-        int nUBucket = infoOld.GetNewBucket(nKey, m_asmap);
+        int nUBucket = infoOld.GetNewBucket(nKey, m_netgroupman);
         int nUBucketPos = infoOld.GetBucketPosition(nKey, true, nUBucket);
         ClearNew(nUBucket, nUBucketPos);
         assert(vvNew[nUBucket][nUBucketPos] == -1);
@@ -590,7 +583,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
         nNew++;
     }
 
-    int nUBucket = pinfo->GetNewBucket(nKey, source, m_asmap);
+    int nUBucket = pinfo->GetNewBucket(nKey, source, m_netgroupman);
     int nUBucketPos = pinfo->GetBucketPosition(nKey, true, nUBucket);
     bool fInsert = vvNew[nUBucket][nUBucketPos] == -1;
     if (vvNew[nUBucket][nUBucketPos] != nId) {
@@ -606,7 +599,7 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
             pinfo->nRefCount++;
             vvNew[nUBucket][nUBucketPos] = nId;
             LogPrint(BCLog::ADDRMAN, "Added %s mapped to AS%i to new[%i][%i]\n",
-                     addr.ToString(), addr.GetMappedAS(m_asmap), nUBucket, nUBucketPos);
+                     addr.ToString(), m_netgroupman.GetMappedAS(addr), nUBucket, nUBucketPos);
         } else {
             if (pinfo->nRefCount == 0) {
                 Delete(nId);
@@ -646,7 +639,7 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
 
 
     // which tried bucket to move the entry to
-    int tried_bucket = info.GetTriedBucket(nKey, m_asmap);
+    int tried_bucket = info.GetTriedBucket(nKey, m_netgroupman);
     int tried_bucket_pos = info.GetBucketPosition(nKey, false, tried_bucket);
 
     // Will moving this address into tried evict another entry?
@@ -668,7 +661,7 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, int64_t nT
         MakeTried(info, nId);
         if (fLogIPs) {
             LogPrint(BCLog::ADDRMAN, "Moved %s mapped to AS%i to tried[%i][%i]\n",
-                     addr.ToString(), addr.GetMappedAS(m_asmap), tried_bucket, tried_bucket_pos);
+                     addr.ToString(), m_netgroupman.GetMappedAS(addr), tried_bucket, tried_bucket_pos);
         }
         return true;
     }
@@ -874,7 +867,7 @@ void AddrManImpl::ResolveCollisions_()
             AddrInfo& info_new = mapInfo[id_new];
 
             // Which tried bucket to move the entry to.
-            int tried_bucket = info_new.GetTriedBucket(nKey, m_asmap);
+            int tried_bucket = info_new.GetTriedBucket(nKey, m_netgroupman);
             int tried_bucket_pos = info_new.GetBucketPosition(nKey, false, tried_bucket);
             if (!info_new.IsValid()) { // id_new may no longer map to a valid address
                 erase_collision = true;
@@ -942,7 +935,7 @@ std::pair<CAddress, int64_t> AddrManImpl::SelectTriedCollision_()
     const AddrInfo& newInfo = mapInfo[id_new];
 
     // which tried bucket to move the entry to
-    int tried_bucket = newInfo.GetTriedBucket(nKey, m_asmap);
+    int tried_bucket = newInfo.GetTriedBucket(nKey, m_netgroupman);
     int tried_bucket_pos = newInfo.GetBucketPosition(nKey, false, tried_bucket);
 
     const AddrInfo& info_old = mapInfo[vvTried[tried_bucket][tried_bucket_pos]];
@@ -958,13 +951,13 @@ std::optional<AddressPosition> AddrManImpl::FindAddressEntry_(const CAddress& ad
     if (!addr_info) return std::nullopt;
 
     if(addr_info->fInTried) {
-        int bucket{addr_info->GetTriedBucket(nKey, m_asmap)};
+        int bucket{addr_info->GetTriedBucket(nKey, m_netgroupman)};
         return AddressPosition(/*tried_in=*/true,
                                /*multiplicity_in=*/1,
                                /*bucket_in=*/bucket,
                                /*position_in=*/addr_info->GetBucketPosition(nKey, false, bucket));
     } else {
-        int bucket{addr_info->GetNewBucket(nKey, m_asmap)};
+        int bucket{addr_info->GetNewBucket(nKey, m_netgroupman)};
         return AddressPosition(/*tried_in=*/false,
                                /*multiplicity_in=*/addr_info->nRefCount,
                                /*bucket_in=*/bucket,
@@ -1039,7 +1032,7 @@ int AddrManImpl::CheckAddrman() const
                 if (!setTried.count(vvTried[n][i]))
                     return -11;
                 const auto it{mapInfo.find(vvTried[n][i])};
-                if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_asmap) != n) {
+                if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_netgroupman) != n) {
                     return -17;
                 }
                 if (it->second.GetBucketPosition(nKey, false, n) != i) {
@@ -1179,13 +1172,8 @@ AddrInfo AddrManImpl::GetAddressInfo(const CService& addr)
     return addrRet;
 }
 
-const std::vector<bool>& AddrManImpl::GetAsmap() const
-{
-    return m_asmap;
-}
-
-AddrMan::AddrMan(std::vector<bool> asmap, bool deterministic, int32_t consistency_check_ratio)
-    : m_impl(std::make_unique<AddrManImpl>(std::move(asmap), deterministic, consistency_check_ratio)) {}
+AddrMan::AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio)
+    : m_impl(std::make_unique<AddrManImpl>(netgroupman, deterministic, consistency_check_ratio)) {}
 
 AddrMan::~AddrMan() = default;
 
@@ -1262,11 +1250,6 @@ void AddrMan::SetServices(const CService& addr, ServiceFlags nServices)
 AddrInfo AddrMan::GetAddressInfo(const CService& addr)
 {
     return m_impl->GetAddressInfo(addr);
-}
-
-const std::vector<bool>& AddrMan::GetAsmap() const
-{
-    return m_impl->GetAsmap();
 }
 
 std::optional<AddressPosition> AddrMan::FindAddressEntry(const CAddress& addr)

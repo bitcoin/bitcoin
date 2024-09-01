@@ -184,10 +184,11 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     InitScriptExecutionCache();
     m_node.chain = interfaces::MakeChain(m_node);
 
-    m_node.addrman = std::make_unique<AddrMan>(/*asmap=*/std::vector<bool>(),
+    m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
+    m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
                                                /*deterministic=*/false,
                                                m_node.args->GetArg("-checkaddrman", 0));
-    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
+    m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman); // Deterministic randomness for tests.
 
     // while g_wallet_init_interface is init here at very early stage
     // we can't get rid of unique_ptr from wallet/contex.h
@@ -215,6 +216,7 @@ BasicTestingSetup::~BasicTestingSetup()
     m_node.evodb.reset();
     m_node.connman.reset();
     m_node.addrman.reset();
+    m_node.netgroupman.reset();
 
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);

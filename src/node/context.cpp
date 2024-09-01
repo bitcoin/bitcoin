@@ -22,6 +22,7 @@
 #include <net.h>
 #include <netfulfilledman.h>
 #include <net_processing.h>
+#include <netgroup.h>
 #include <policy/fees.h>
 #include <scheduler.h>
 #include <spork.h>
