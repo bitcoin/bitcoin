@@ -137,11 +137,14 @@ public:
     void SetServices(const CService& addr, ServiceFlags nServices)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    AddrInfo GetAddressInfo(const CService& addr);
+    std::optional<AddressPosition> FindAddressEntry(const CAddress& addr)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    AddrInfo GetAddressInfo(const CService& addr)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     const std::vector<bool>& GetAsmap() const;
 
-    friend class AddrManTest;
     friend class AddrManDeterministic;
 
 private:
@@ -269,6 +272,8 @@ private:
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::pair<CAddress, int64_t> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check, taking into account m_consistency_check_ratio.
     //! Will std::abort if an inconsistency is detected.
