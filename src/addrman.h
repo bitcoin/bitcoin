@@ -64,6 +64,7 @@ public:
  */
 class AddrMan
 {
+protected:
     const std::unique_ptr<AddrManImpl> m_impl;
 
 public:
@@ -149,9 +150,6 @@ public:
     AddrInfo GetAddressInfo(const CService& addr);
 
     const std::vector<bool>& GetAsmap() const;
-
-    friend class AddrManTest;
-    friend class AddrManDeterministic;
 };
 
 #endif // BITCOIN_ADDRMAN_H
