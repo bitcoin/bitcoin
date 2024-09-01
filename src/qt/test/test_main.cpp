@@ -23,6 +23,7 @@
 #include <QApplication>
 #include <QObject>
 #include <QTest>
+#include <functional>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -39,6 +40,8 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+
+const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
 // This is all you need to run all the tests
 int main(int argc, char* argv[])
