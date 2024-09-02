@@ -466,7 +466,9 @@ class WalletTest(BitcoinTestFramework):
             self.sync_all(self.nodes[0:3])
             postbalance = self.nodes[2].getbalance()
             fee = prebalance - postbalance - amount
-            assert_fee_amount(fee, tx_size, Decimal(fee_rate_btc_kvb))
+            # TODO: remove workaround after bitcoin/bitcoin#22949 done
+            workaround_offset = 1
+            assert_fee_amount(fee, tx_size - workaround_offset, Decimal(fee_rate_btc_kvb))
 
             for key in ["totalFee", "feeRate"]:
                 assert_raises_rpc_error(-8, "Unknown named parameter key", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, key=1)
