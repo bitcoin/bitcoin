@@ -74,11 +74,12 @@ struct _StatsdClientData {
     char    errmsg[1024];
 };
 
-StatsdClient::StatsdClient(const std::string& host, int port, const std::string& ns) :
-    d(std::make_unique<_StatsdClientData>())
+StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, int port, const std::string& ns,
+                           bool enabled)
+    : d{std::make_unique<_StatsdClientData>()}, m_enabled{enabled}
 {
     d->sock = INVALID_SOCKET;
-    config(host, port, ns);
+    config(host, nodename, port, ns);
 }
 
 StatsdClient::~StatsdClient()
@@ -87,10 +88,11 @@ StatsdClient::~StatsdClient()
     CloseSocket(d->sock);
 }
 
-void StatsdClient::config(const std::string& host, int port, const std::string& ns)
+void StatsdClient::config(const std::string& host, const std::string& nodename, int port, const std::string& ns)
 {
     d->ns = ns;
     d->host = host;
+    d->nodename = nodename;
     d->port = port;
     d->init = false;
     CloseSocket(d->sock);
@@ -98,12 +100,7 @@ void StatsdClient::config(const std::string& host, int port, const std::string& 
 
 int StatsdClient::init()
 {
-    static bool fEnabled = gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE);
-    if (!fEnabled) return -3;
-
     if ( d->init ) return 0;
-
-    config(gArgs.GetArg("-statshost", DEFAULT_STATSD_HOST), gArgs.GetArg("-statsport", DEFAULT_STATSD_PORT), gArgs.GetArg("-statsns", DEFAULT_STATSD_NAMESPACE));
 
     d->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if ( d->sock == INVALID_SOCKET ) {
@@ -119,10 +116,6 @@ int StatsdClient::init()
     if (!LookupHost(d->host, netaddr, true) || !netaddr.GetInAddr(&d->server.sin_addr)) {
         snprintf(d->errmsg, sizeof(d->errmsg), "LookupHost or GetInAddr failed");
         return -2;
-    }
-
-    if (gArgs.IsArgSet("-statshostname")) {
-        d->nodename = gArgs.GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME);
     }
 
     d->init = true;
@@ -226,6 +219,9 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
 
 int StatsdClient::send(const std::string& message)
 {
+    if (!m_enabled)
+        return -3;
+
     int ret = init();
     if ( ret )
     {

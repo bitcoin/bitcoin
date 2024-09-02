@@ -25,12 +25,13 @@ struct _StatsdClientData;
 
 class StatsdClient {
     public:
-        explicit StatsdClient(const std::string& host = DEFAULT_STATSD_HOST, int port = DEFAULT_STATSD_PORT, const std::string& ns = DEFAULT_STATSD_NAMESPACE);
+        explicit StatsdClient(const std::string& host, const std::string& nodename, int port, const std::string& ns,
+                              bool enabled);
         ~StatsdClient();
 
     public:
         // you can config at anytime; client will use new address (useful for Singleton)
-        void config(const std::string& host, int port, const std::string& ns = DEFAULT_STATSD_NAMESPACE);
+        void config(const std::string& host, const std::string& nodename, int port, const std::string& ns);
         const char* errmsg();
 
     public:
@@ -62,6 +63,9 @@ class StatsdClient {
 
     protected:
         const std::unique_ptr<struct _StatsdClientData> d;
+
+    private:
+        const bool m_enabled{false};
 };
 
 } // namespace statsd
