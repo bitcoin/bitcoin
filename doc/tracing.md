@@ -366,7 +366,7 @@ USDT support.
 To list probes in Bitcoin Core, use `info probes` in `gdb`:
 
 ```
-$ gdb ./src/bitcoind
+$ gdb ./build/src/bitcoind
 …
 (gdb) info probes
 Type Provider   Name             Where              Semaphore Object
@@ -382,7 +382,7 @@ The `readelf` tool can be used to display the USDT tracepoints in Bitcoin Core.
 Look for the notes with the description `NT_STAPSDT`.
 
 ```
-$ readelf -n ./src/bitcoind | grep NT_STAPSDT -A 4 -B 2
+$ readelf -n ./build/src/bitcoind | grep NT_STAPSDT -A 4 -B 2
 Displaying notes found in: .note.stapsdt
   Owner                 Data size	Description
   stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
@@ -406,7 +406,7 @@ between distributions. For example, on
 [ubuntu binary]: https://github.com/iovisor/bcc/blob/master/INSTALL.md#ubuntu---binary
 
 ```
-$ tplist -l ./src/bitcoind -v
+$ tplist -l ./build/src/bitcoind -v
 b'net':b'outbound_message' [sema 0x0]
   1 location(s)
   6 argument(s)
