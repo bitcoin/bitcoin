@@ -116,7 +116,7 @@ void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
             const auto time_penalty = fast_random_context.randrange(100000001);
             addrman.Add({addr}, source, time_penalty);
 
-            if (n > 0 && addrman.size() % n == 0) {
+            if (n > 0 && addrman.Size() % n == 0) {
                 addrman.Good(addr, GetTime());
             }
 
@@ -306,7 +306,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 }
             });
     }
-    (void)addr_man.size();
+    (void)addr_man.Size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
     data_stream << addr_man;
 }

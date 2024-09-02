@@ -282,6 +282,7 @@ void AddrManImpl::Unserialize(Stream& s_)
         mapAddr[info] = n;
         info.nRandomPos = vRandom.size();
         vRandom.push_back(n);
+        m_network_counts[info.GetNetwork()].n_new++;
     }
     nIdCount = nNew;
 
@@ -301,6 +302,7 @@ void AddrManImpl::Unserialize(Stream& s_)
             mapAddr[info] = nIdCount;
             vvTried[nKBucket][nKBucketPos] = nIdCount;
             nIdCount++;
+            m_network_counts[info.GetNetwork()].n_tried++;
         } else {
             nLost++;
         }
@@ -414,6 +416,8 @@ AddrInfo* AddrManImpl::Create(const CAddress& addr, const CNetAddr& addrSource, 
     mapAddr[addr] = nId;
     mapInfo[nId].nRandomPos = vRandom.size();
     vRandom.push_back(nId);
+    nNew++;
+    m_network_counts[addr.GetNetwork()].n_new++;
     if (pnId)
         *pnId = nId;
     return &mapInfo[nId];
@@ -453,6 +457,7 @@ void AddrManImpl::Delete(int nId)
     assert(info.nRefCount == 0);
 
     SwapRandom(info.nRandomPos, vRandom.size() - 1);
+    m_network_counts[info.GetNetwork()].n_new--;
     vRandom.pop_back();
     mapAddr.erase(info);
     mapInfo.erase(nId);
@@ -493,6 +498,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
         }
     }
     nNew--;
+    m_network_counts[info.GetNetwork()].n_new--;
 
     assert(info.nRefCount == 0);
 
@@ -511,6 +517,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
         infoOld.fInTried = false;
         vvTried[nKBucket][nKBucketPos] = -1;
         nTried--;
+        m_network_counts[infoOld.GetNetwork()].n_tried--;
 
         // find which new bucket it belongs to
         int nUBucket = infoOld.GetNewBucket(nKey, m_netgroupman);
@@ -522,6 +529,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
         infoOld.nRefCount = 1;
         vvNew[nUBucket][nUBucketPos] = nIdEvict;
         nNew++;
+        m_network_counts[infoOld.GetNetwork()].n_new++;
         LogPrint(BCLog::ADDRMAN, "Moved %s from tried[%i][%i] to new[%i][%i] to make space\n",
                  infoOld.ToString(), nKBucket, nKBucketPos, nUBucket, nUBucketPos);
     }
@@ -530,6 +538,7 @@ void AddrManImpl::MakeTried(AddrInfo& info, int nId)
     vvTried[nKBucket][nKBucketPos] = nId;
     nTried++;
     info.fInTried = true;
+    m_network_counts[info.GetNetwork()].n_tried++;
 }
 
 bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_t nTimePenalty)
@@ -580,7 +589,6 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, int64_
     } else {
         pinfo = Create(addr, source, &nId);
         pinfo->nTime = std::max((int64_t)0, (int64_t)pinfo->nTime - nTimePenalty);
-        nNew++;
     }
 
     int nUBucket = pinfo->GetNewBucket(nKey, source, m_netgroupman);
@@ -965,6 +973,28 @@ std::optional<AddressPosition> AddrManImpl::FindAddressEntry_(const CAddress& ad
     }
 }
 
+size_t AddrManImpl::Size_(std::optional<Network> net, std::optional<bool> in_new) const
+{
+    AssertLockHeld(cs);
+
+    if (!net.has_value()) {
+        if (in_new.has_value()) {
+            return *in_new ? nNew : nTried;
+        } else {
+            return vRandom.size();
+        }
+    }
+    if (auto it = m_network_counts.find(*net); it != m_network_counts.end()) {
+        auto net_count = it->second;
+        if (in_new.has_value()) {
+            return *in_new ? net_count.n_new : net_count.n_tried;
+        } else {
+            return net_count.n_new + net_count.n_tried;
+        }
+    }
+    return 0;
+}
+
 void AddrManImpl::Check() const
 {
     AssertLockHeld(cs);
@@ -989,6 +1019,7 @@ int AddrManImpl::CheckAddrman() const
 
     std::unordered_set<int> setTried;
     std::unordered_map<int, int> mapNew;
+    std::unordered_map<Network, NewTriedCount> local_counts;
 
     if (vRandom.size() != (size_t)(nTried + nNew))
         return -7;
@@ -1002,12 +1033,14 @@ int AddrManImpl::CheckAddrman() const
             if (info.nRefCount)
                 return -2;
             setTried.insert(n);
+            local_counts[info.GetNetwork()].n_tried++;
         } else {
             if (info.nRefCount < 0 || info.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS)
                 return -3;
             if (!info.nRefCount)
                 return -4;
             mapNew[n] = info.nRefCount;
+            local_counts[info.GetNetwork()].n_new++;
         }
         const auto it{mapAddr.find(info)};
         if (it == mapAddr.end() || it->second != n) {
@@ -1065,13 +1098,27 @@ int AddrManImpl::CheckAddrman() const
     if (nKey.IsNull())
         return -16;
 
+    // It's possible that m_network_counts may have all-zero entries that local_counts
+    // doesn't have if addrs from a network were being added and then removed again in the past.
+    if (m_network_counts.size() < local_counts.size()) {
+        return -20;
+    }
+    for (const auto& [net, count] : m_network_counts) {
+        if (local_counts[net].n_new != count.n_new || local_counts[net].n_tried != count.n_tried) {
+            return -21;
+        }
+    }
+
     return 0;
 }
 
-size_t AddrManImpl::size() const
+size_t AddrManImpl::Size(std::optional<Network> net, std::optional<bool> in_new) const
 {
-    LOCK(cs); // TODO: Cache this in an atomic to avoid this overhead
-    return vRandom.size();
+    LOCK(cs);
+    Check();
+    auto ret = Size_(net, in_new);
+    Check();
+    return ret;
 }
 
 bool AddrManImpl::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
@@ -1197,9 +1244,9 @@ template void AddrMan::Unserialize(CHashVerifier<CAutoFile>& s);
 template void AddrMan::Unserialize(CDataStream& s);
 template void AddrMan::Unserialize(CHashVerifier<CDataStream>& s);
 
-size_t AddrMan::size() const
+size_t AddrMan::Size(std::optional<Network> net, std::optional<bool> in_new) const
 {
-    return m_impl->size();
+    return m_impl->Size(net, in_new);
 }
 
 bool AddrMan::Add(const std::vector<CAddress>& vAddr, const CNetAddr& source, int64_t nTimePenalty)
