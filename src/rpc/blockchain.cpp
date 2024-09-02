@@ -1932,14 +1932,8 @@ static RPCHelpMan getchaintips()
     // Always report the currently active tip.
     setTips.insert(active_chain.Tip());
 
-    int nBranchMin = -1;
-    int nCountMax = INT_MAX;
-
-    if(!request.params[0].isNull())
-        nCountMax = request.params[0].get_int();
-
-    if(!request.params[1].isNull())
-        nBranchMin = request.params[1].get_int();
+    int nCountMax{request.params[0].isNull() ? INT_MAX : request.params[0].get_int()};
+    const int nBranchMin{request.params[1].isNull() ? -1: request.params[1].get_int()};
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
