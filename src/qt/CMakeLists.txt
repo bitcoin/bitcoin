@@ -13,9 +13,6 @@ endif()
 
 get_target_property(qt_lib_type Qt5::Core TYPE)
 
-# TODO: After the transition from Autotools to CMake,
-#       all `Q_IMPORT_PLUGIN` macros can be deleted from the
-#       qt/bitcoin.cpp and qt/test/test_main.cpp source files.
 function(import_plugins target)
   if(qt_lib_type STREQUAL "STATIC_LIBRARY")
     set(plugins Qt5::QMinimalIntegrationPlugin)
