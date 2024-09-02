@@ -90,7 +90,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkg_add install python  # Select the newest version of the package.
+pkg_add python  # Select the newest version of the package.
 ```
 
 ## Building Bitcoin Core
@@ -112,7 +112,7 @@ Run `cmake -B build -LH` to see the full list of available options.
 This enables support for both wallet types:
 
 ```bash
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include"
+cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
 ```
 
 ### 2. Compile

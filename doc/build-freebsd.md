@@ -118,7 +118,7 @@ Run `cmake -B build -LH` to see the full list of available options.
 This enables support for both wallet types, assuming
 `sqlite3` and `db4` are both installed.
 ```bash
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include"
+cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
 ```
 
 ##### No Wallet or GUI
