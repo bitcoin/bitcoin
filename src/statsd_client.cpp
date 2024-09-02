@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <cstdio>
 
-statsd::StatsdClient statsClient;
+std::unique_ptr<statsd::StatsdClient> statsClient;
 
 namespace statsd {
 
