@@ -571,7 +571,7 @@ static RPCHelpMan getblocktemplate()
                             {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported feature, 'longpoll', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
                         },
                         },
-                    {"rules", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "A list of strings",
+                    {"rules", RPCArg::Type::ARR, RPCArg::Optional::NO, "A list of strings",
                         {
                             {"str", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "client side supported softfork deployment"},
                         },
