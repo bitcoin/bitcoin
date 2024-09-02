@@ -52,10 +52,13 @@ set(SECP256K1_BUILD_EXHAUSTIVE_TESTS ${BUILD_TESTS} CACHE BOOL "" FORCE)
 set(SECP256K1_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 include(GetTargetInterface)
 # -fsanitize and related flags apply to both C++ and C,
-# so we can pass them down to libsecp256k1 as CFLAGS.
+# so we can pass them down to libsecp256k1 as CFLAGS and LDFLAGS.
 get_target_interface(core_sanitizer_cxx_flags "" sanitize_interface COMPILE_OPTIONS)
-set(SECP256K1_LATE_CFLAGS ${core_sanitizer_cxx_flags} CACHE STRING "" FORCE)
+set(SECP256K1_APPEND_CFLAGS ${core_sanitizer_cxx_flags} CACHE STRING "" FORCE)
 unset(core_sanitizer_cxx_flags)
+get_target_interface(core_sanitizer_linker_flags "" sanitize_interface LINK_OPTIONS)
+set(SECP256K1_APPEND_LDFLAGS ${core_sanitizer_linker_flags} CACHE STRING "" FORCE)
+unset(core_sanitizer_linker_flags)
 # We want to build libsecp256k1 with the most tested RelWithDebInfo configuration.
 enable_language(C)
 foreach(config IN LISTS CMAKE_BUILD_TYPE CMAKE_CONFIGURATION_TYPES)
