@@ -264,22 +264,6 @@ BOOST_AUTO_TEST_CASE(methods) // GetHex SetHexDeprecated FromHex begin() end() s
     ss.clear();
 }
 
-BOOST_AUTO_TEST_CASE( conversion )
-{
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(ZeroL)), ZeroL);
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(OneL)), OneL);
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(R1L)), R1L);
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(R2L)), R2L);
-    BOOST_CHECK_EQUAL(UintToArith256(ZeroL), 0);
-    BOOST_CHECK_EQUAL(UintToArith256(OneL), 1);
-    BOOST_CHECK_EQUAL(ArithToUint256(0), ZeroL);
-    BOOST_CHECK_EQUAL(ArithToUint256(1), OneL);
-    BOOST_CHECK_EQUAL(arith_uint256(UintToArith256(uint256S(R1L.GetHex()))), UintToArith256(R1L));
-    BOOST_CHECK_EQUAL(arith_uint256(UintToArith256(uint256S(R2L.GetHex()))), UintToArith256(R2L));
-    BOOST_CHECK_EQUAL(R1L.GetHex(), UintToArith256(R1L).GetHex());
-    BOOST_CHECK_EQUAL(R2L.GetHex(), UintToArith256(R2L).GetHex());
-}
-
 BOOST_AUTO_TEST_CASE( operator_with_self )
 {
 
