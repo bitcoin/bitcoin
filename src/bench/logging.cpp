@@ -28,18 +28,6 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
     bench.run([&] { log(); });
 }
 
-static void LogPrintLevelWithThreadNames(benchmark::Bench& bench)
-{
-    Logging(bench, {"-logthreadnames=1", "-debug=net"}, [] {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
-}
-
-static void LogPrintLevelWithoutThreadNames(benchmark::Bench& bench)
-{
-    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "%s\n", "test"); });
-}
-
 static void LogWithDebug(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
@@ -48,20 +36,6 @@ static void LogWithDebug(benchmark::Bench& bench)
 static void LogWithoutDebug(benchmark::Bench& bench)
 {
     Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
-}
-
-static void LogPrintfCategoryWithThreadNames(benchmark::Bench& bench)
-{
-    Logging(bench, {"-logthreadnames=1", "-debug=net"}, [] {
-        LogPrintfCategory(BCLog::NET, "%s\n", "test");
-    });
-}
-
-static void LogPrintfCategoryWithoutThreadNames(benchmark::Bench& bench)
-{
-    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] {
-        LogPrintfCategory(BCLog::NET, "%s\n", "test");
-    });
 }
 
 static void LogWithThreadNames(benchmark::Bench& bench)
@@ -83,12 +57,8 @@ static void LogWithoutWriteToFile(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(LogPrintLevelWithThreadNames, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogPrintLevelWithoutThreadNames, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LogWithDebug, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LogWithoutDebug, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogPrintfCategoryWithThreadNames, benchmark::PriorityLevel::HIGH);
-BENCHMARK(LogPrintfCategoryWithoutThreadNames, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LogWithThreadNames, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LogWithoutThreadNames, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LogWithoutWriteToFile, benchmark::PriorityLevel::HIGH);
