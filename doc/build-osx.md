@@ -60,7 +60,7 @@ brew install llvm
 And append the following to the configure commands below:
 
 ``` bash
-CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
+-DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++"
 ```
 
 Try `llvm@17` if compilation fails with the default version of llvm.
