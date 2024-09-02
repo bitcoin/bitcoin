@@ -2,8 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-# This script is a multiplatform port of the share/genbuild.sh shell script.
-
 macro(fatal_error)
   message(FATAL_ERROR "\n"
     "Usage:\n"
