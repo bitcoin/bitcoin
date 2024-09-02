@@ -66,6 +66,6 @@ class StatsdClient {
 
 } // namespace statsd
 
-extern std::unique_ptr<statsd::StatsdClient> statsClient;
+extern std::unique_ptr<statsd::StatsdClient> g_stats_client;
 
 #endif // BITCOIN_STATSD_CLIENT_H

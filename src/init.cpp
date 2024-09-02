@@ -289,7 +289,7 @@ void PrepareShutdown(NodeContext& node)
     node.banman.reset();
     node.addrman.reset();
     node.netgroupman.reset();
-    ::statsClient.reset();
+    ::g_stats_client.reset();
 
     if (node.mempool && node.mempool->IsLoaded() && node.args->GetBoolArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
@@ -840,12 +840,12 @@ static void PeriodicStats(ArgsManager& args, ChainstateManager& chainman, const 
     CCoinsStats stats{CoinStatsHashType::NONE};
     chainman.ActiveChainstate().ForceFlushStateToDisk();
     if (WITH_LOCK(cs_main, return GetUTXOStats(&chainman.ActiveChainstate().CoinsDB(), std::ref(chainman.m_blockman), stats, RpcInterruptionPoint, chainman.ActiveChain().Tip()))) {
-        ::statsClient->gauge("utxoset.tx", stats.nTransactions, 1.0f);
-        ::statsClient->gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
-        ::statsClient->gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
-        ::statsClient->gauge("utxoset.blockHeight", stats.nHeight, 1.0f);
+        ::g_stats_client->gauge("utxoset.tx", stats.nTransactions, 1.0f);
+        ::g_stats_client->gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
+        ::g_stats_client->gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
+        ::g_stats_client->gauge("utxoset.blockHeight", stats.nHeight, 1.0f);
         if (stats.total_amount.has_value()) {
-            ::statsClient->gauge("utxoset.totalAmount", (double)stats.total_amount.value() / (double)COIN, 1.0f);
+            ::g_stats_client->gauge("utxoset.totalAmount", (double)stats.total_amount.value() / (double)COIN, 1.0f);
         }
     } else {
         // something went wrong
@@ -867,22 +867,22 @@ static void PeriodicStats(ArgsManager& args, ChainstateManager& chainman, const 
     int64_t timeDiff = maxTime - minTime;
     double nNetworkHashPS = workDiff.getdouble() / timeDiff;
 
-    ::statsClient->gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
-    ::statsClient->gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
-    ::statsClient->gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
-    ::statsClient->gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    ::g_stats_client->gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
+    ::g_stats_client->gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
+    ::g_stats_client->gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
+    ::g_stats_client->gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
     // No need for cs_main, we never use null tip here
-    ::statsClient->gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
+    ::g_stats_client->gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
 
-    ::statsClient->gauge("transactions.txCacheSize", WITH_LOCK(cs_main, return chainman.ActiveChainstate().CoinsTip().GetCacheSize()), 1.0f);
-    ::statsClient->gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
+    ::g_stats_client->gauge("transactions.txCacheSize", WITH_LOCK(cs_main, return chainman.ActiveChainstate().CoinsTip().GetCacheSize()), 1.0f);
+    ::g_stats_client->gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
 
     {
         LOCK(mempool.cs);
-        ::statsClient->gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
-        ::statsClient->gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
-        ::statsClient->gauge("transactions.mempool.memoryUsageBytes", (int64_t) mempool.DynamicMemoryUsage(), 1.0f);
-        ::statsClient->gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
+        ::g_stats_client->gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
+        ::g_stats_client->gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
+        ::g_stats_client->gauge("transactions.mempool.memoryUsageBytes", (int64_t) mempool.DynamicMemoryUsage(), 1.0f);
+        ::g_stats_client->gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
     }
 }
 
@@ -1525,10 +1525,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fDiscover = args.GetBoolArg("-discover", true);
     const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)};
 
-    // We need to initialize statsClient early as currently, statsClient is called
+    // We need to initialize g_stats_client early as currently, g_stats_client is called
     // regardless of whether transmitting stats are desirable or not and if
-    // statsClient isn't present when that attempt is made, the client will crash.
-    ::statsClient = std::make_unique<statsd::StatsdClient>();
+    // g_stats_client isn't present when that attempt is made, the client will crash.
+    ::g_stats_client = std::make_unique<statsd::StatsdClient>();
 
     {
 

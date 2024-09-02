@@ -183,7 +183,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    ::statsClient = std::make_unique<statsd::StatsdClient>();
+    ::g_stats_client = std::make_unique<statsd::StatsdClient>();
     m_node.chain = interfaces::MakeChain(m_node);
 
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
@@ -219,7 +219,7 @@ BasicTestingSetup::~BasicTestingSetup()
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.netgroupman.reset();
-    ::statsClient.reset();
+    ::g_stats_client.reset();
 
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
