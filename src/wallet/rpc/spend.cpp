@@ -68,10 +68,7 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
 {
     std::set<int> sffo_set;
     if (sffo_instructions.isNull()) return sffo_set;
-    if (sffo_instructions.isBool()) {
-        if (sffo_instructions.get_bool()) sffo_set.insert(0);
-        return sffo_set;
-    }
+
     for (const auto& sffo : sffo_instructions.getValues()) {
         if (sffo.isStr()) {
             for (size_t i = 0; i < destinations.size(); ++i) {
@@ -310,10 +307,13 @@ RPCHelpMan sendtoaddress()
     UniValue address_amounts(UniValue::VOBJ);
     const std::string address = request.params[0].get_str();
     address_amounts.pushKV(address, request.params[1]);
-    std::vector<CRecipient> recipients = CreateRecipients(
-            ParseOutputs(address_amounts),
-            InterpretSubtractFeeFromOutputInstructions(request.params[4], address_amounts.getKeys())
-    );
+
+    std::set<int> sffo_set;
+    if (!request.params[4].isNull() && request.params[4].get_bool()) {
+        sffo_set.insert(0);
+    }
+
+    std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts), sffo_set)};
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
