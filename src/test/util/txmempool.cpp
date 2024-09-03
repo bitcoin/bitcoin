@@ -141,7 +141,7 @@ std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
     return std::nullopt;
 }
 
-std::vector<uint32_t> GetDustIndexes(const CTransactionRef tx_ref, CFeeRate dust_relay_rate)
+std::vector<uint32_t> GetDustIndexes(const CTransactionRef& tx_ref, CFeeRate dust_relay_rate)
 {
     std::vector<uint32_t> dust_indexes;
     for (size_t i = 0; i < tx_ref->vout.size(); ++i) {
