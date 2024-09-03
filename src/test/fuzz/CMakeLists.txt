@@ -132,6 +132,7 @@ target_link_libraries(fuzz
   test_fuzz
   bitcoin_cli
   bitcoin_common
+  bitcoin_util
   minisketch
   leveldb
   univalue
