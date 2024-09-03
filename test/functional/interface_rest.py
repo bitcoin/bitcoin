@@ -340,5 +340,9 @@ class RESTTest (BitcoinTestFramework):
         json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
 
+        # Compare with normal RPC getblockchaininfo response
+        blockchain_info = self.nodes[0].getblockchaininfo()
+        assert_equal(blockchain_info, json_obj)
+
 if __name__ == '__main__':
     RESTTest().main()
