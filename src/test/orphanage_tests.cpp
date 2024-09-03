@@ -3,12 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <consensus/validation.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/transaction_utils.h>
 #include <txorphanage.h>
 
 #include <array>
@@ -368,6 +371,23 @@ BOOST_AUTO_TEST_CASE(get_children)
             BOOST_CHECK(EqualTxns(expected_parent2_node2, orphanage.GetChildrenFromDifferentPeer(parent2, node1)));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(too_large_orphan_tx)
+{
+    TxOrphanage orphanage;
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+
+    // check that txs larger than MAX_STANDARD_TX_WEIGHT are not added to the orphanage
+    BulkTransaction(tx, MAX_STANDARD_TX_WEIGHT + 4);
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(tx)), MAX_STANDARD_TX_WEIGHT + 4);
+    BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), 0));
+
+    tx.vout.clear();
+    BulkTransaction(tx, MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(tx)), MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK(orphanage.AddTx(MakeTransactionRef(tx), 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
