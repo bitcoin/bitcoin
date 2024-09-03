@@ -37,40 +37,41 @@ struct LogCategory {
 };
 
 namespace BCLog {
-    enum LogFlags : uint32_t {
-        NONE        = 0,
-        NET         = (1 <<  0),
-        TOR         = (1 <<  1),
-        MEMPOOL     = (1 <<  2),
-        HTTP        = (1 <<  3),
-        BENCH       = (1 <<  4),
-        ZMQ         = (1 <<  5),
-        WALLETDB    = (1 <<  6),
-        RPC         = (1 <<  7),
-        ESTIMATEFEE = (1 <<  8),
-        ADDRMAN     = (1 <<  9),
-        SELECTCOINS = (1 << 10),
-        REINDEX     = (1 << 11),
-        CMPCTBLOCK  = (1 << 12),
-        RAND        = (1 << 13),
-        PRUNE       = (1 << 14),
-        PROXY       = (1 << 15),
-        MEMPOOLREJ  = (1 << 16),
-        LIBEVENT    = (1 << 17),
-        COINDB      = (1 << 18),
-        QT          = (1 << 19),
-        LEVELDB     = (1 << 20),
-        VALIDATION  = (1 << 21),
-        I2P         = (1 << 22),
-        IPC         = (1 << 23),
+    using CategoryMask = uint64_t;
+    enum LogFlags : CategoryMask {
+        NONE        = CategoryMask{0},
+        NET         = (CategoryMask{1} <<  0),
+        TOR         = (CategoryMask{1} <<  1),
+        MEMPOOL     = (CategoryMask{1} <<  2),
+        HTTP        = (CategoryMask{1} <<  3),
+        BENCH       = (CategoryMask{1} <<  4),
+        ZMQ         = (CategoryMask{1} <<  5),
+        WALLETDB    = (CategoryMask{1} <<  6),
+        RPC         = (CategoryMask{1} <<  7),
+        ESTIMATEFEE = (CategoryMask{1} <<  8),
+        ADDRMAN     = (CategoryMask{1} <<  9),
+        SELECTCOINS = (CategoryMask{1} << 10),
+        REINDEX     = (CategoryMask{1} << 11),
+        CMPCTBLOCK  = (CategoryMask{1} << 12),
+        RAND        = (CategoryMask{1} << 13),
+        PRUNE       = (CategoryMask{1} << 14),
+        PROXY       = (CategoryMask{1} << 15),
+        MEMPOOLREJ  = (CategoryMask{1} << 16),
+        LIBEVENT    = (CategoryMask{1} << 17),
+        COINDB      = (CategoryMask{1} << 18),
+        QT          = (CategoryMask{1} << 19),
+        LEVELDB     = (CategoryMask{1} << 20),
+        VALIDATION  = (CategoryMask{1} << 21),
+        I2P         = (CategoryMask{1} << 22),
+        IPC         = (CategoryMask{1} << 23),
 #ifdef DEBUG_LOCKCONTENTION
-        LOCK        = (1 << 24),
+        LOCK        = (CategoryMask{1} << 24),
 #endif
-        BLOCKSTORAGE = (1 << 25),
-        TXRECONCILIATION = (1 << 26),
-        SCAN        = (1 << 27),
-        TXPACKAGES  = (1 << 28),
-        ALL         = ~(uint32_t)0,
+        BLOCKSTORAGE = (CategoryMask{1} << 25),
+        TXRECONCILIATION = (CategoryMask{1} << 26),
+        SCAN        = (CategoryMask{1} << 27),
+        TXPACKAGES  = (CategoryMask{1} << 28),
+        ALL         = ~NONE,
     };
     enum class Level {
         Trace = 0, // High-volume or detailed logging for development/debugging
@@ -119,7 +120,7 @@ namespace BCLog {
         std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> m_categories{BCLog::NONE};
+        std::atomic<CategoryMask> m_categories{BCLog::NONE};
 
         void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
@@ -204,7 +205,7 @@ namespace BCLog {
         void SetLogLevel(Level level) { m_log_level = level; }
         bool SetLogLevel(std::string_view level);
 
-        uint32_t GetCategoryMask() const { return m_categories.load(); }
+        CategoryMask GetCategoryMask() const { return m_categories.load(); }
 
         void EnableCategory(LogFlags flag);
         bool EnableCategory(std::string_view str);
