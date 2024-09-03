@@ -70,31 +70,31 @@ StatsdClient::StatsdClient(const std::string& host, const std::string& nodename,
         return;
     }
 
-    m_sock = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (m_sock == INVALID_SOCKET) {
+    SOCKET hSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (hSocket == INVALID_SOCKET) {
         LogPrintf("ERROR: Cannot create socket (socket() returned error %s), cannot init StatsdClient\n",
                   NetworkErrorString(WSAGetLastError()));
         return;
     }
+    m_sock = std::make_unique<Sock>(hSocket);
 
-    memset(&m_server, 0, sizeof(m_server));
-    m_server.sin_family = AF_INET;
-    m_server.sin_port = htons(m_port);
-
-    CNetAddr netaddr(m_server.sin_addr);
-    if (!LookupHost(m_host, netaddr, true) || !netaddr.GetInAddr(&m_server.sin_addr)) {
-        LogPrintf("ERROR: LookupHost or GetInAddr failed, cannot init StatsdClient\n");
+    CNetAddr netaddr;
+    if (!LookupHost(m_host, netaddr, /*fAllowLookup=*/true)) {
+        LogPrintf("ERROR: Unable to lookup host %s, cannot init StatsdClient\n", m_host);
+        return;
+    }
+    if (!netaddr.IsIPv4()) {
+        LogPrintf("ERROR: Host %s on unsupported network, cannot init StatsdClient\n", m_host);
+        return;
+    }
+    if (!CService(netaddr, port).GetSockAddr(reinterpret_cast<struct sockaddr*>(&m_server.first), &m_server.second)) {
+        LogPrintf("ERROR: Cannot get socket address for %s, cannot init StatsdClient\n", m_host);
         return;
     }
 
     m_init = true;
 
     LogPrintf("StatsdClient initialized to transmit stats to %s:%d\n", m_host, m_port);
-}
-
-StatsdClient::~StatsdClient()
-{
-    CloseSocket(m_sock);
 }
 
 /* will change the original string */
@@ -183,12 +183,11 @@ int StatsdClient::send(const std::string& message)
     if (!m_init)
         return -3;
 
-    int ret = ::sendto(m_sock, message.data(), message.size(), 0, reinterpret_cast<const sockaddr*>(&m_server),
-                       sizeof(m_server));
-    if (ret == -1) {
+    if (::sendto(m_sock->Get(), message.data(), message.size(), /*flags=*/0,
+                 reinterpret_cast<struct sockaddr*>(&m_server.first), m_server.second) == SOCKET_ERROR) {
         LogPrintf("ERROR: Unable to send message (sendto() returned error %s), host=%s:%d\n",
                   NetworkErrorString(WSAGetLastError()), m_host, m_port);
-        return ret;
+        return -1;
     }
 
     return 0;

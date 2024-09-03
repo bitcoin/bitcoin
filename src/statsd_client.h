@@ -29,7 +29,6 @@ class StatsdClient {
     public:
         explicit StatsdClient(const std::string& host, const std::string& nodename, uint16_t port, const std::string& ns,
                               bool enabled);
-        ~StatsdClient();
 
     public:
         int inc(const std::string& key, float sample_rate = 1.f);
@@ -65,8 +64,8 @@ class StatsdClient {
         mutable FastRandomContext insecure_rand GUARDED_BY(cs);
 
         bool m_init{false};
-        SOCKET m_sock{INVALID_SOCKET};
-        struct sockaddr_in m_server;
+        std::unique_ptr<Sock> m_sock{nullptr};
+        std::pair<struct sockaddr_storage, socklen_t> m_server{{}, sizeof(struct sockaddr_storage)};
 
         const uint16_t m_port;
         const std::string m_host;
