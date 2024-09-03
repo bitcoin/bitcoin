@@ -55,7 +55,6 @@ class StatsdClient {
                 const std::string& type, float sample_rate);
 
     protected:
-        int init();
         static void cleanup(std::string& key);
 
     private:
@@ -69,7 +68,6 @@ class StatsdClient {
         SOCKET m_sock{INVALID_SOCKET};
         struct sockaddr_in m_server;
 
-        const bool m_enabled{false};
         const uint16_t m_port;
         const std::string m_host;
         const std::string m_nodename;

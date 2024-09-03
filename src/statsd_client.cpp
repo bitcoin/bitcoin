@@ -63,24 +63,18 @@ bool StatsdClient::ShouldSend(float sample_rate)
 
 StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, uint16_t port, const std::string& ns,
                            bool enabled)
-    : m_enabled{enabled}, m_port{port}, m_host{host}, m_nodename{nodename}, m_ns{ns}
+    : m_port{port}, m_host{host}, m_nodename{nodename}, m_ns{ns}
 {
-}
-
-StatsdClient::~StatsdClient()
-{
-    // close socket
-    CloseSocket(m_sock);
-}
-
-int StatsdClient::init()
-{
-    if (m_init) return 0;
+    if (!enabled) {
+        LogPrintf("Transmitting stats are disabled, will not init StatsdClient\n");
+        return;
+    }
 
     m_sock = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (m_sock == INVALID_SOCKET) {
-        LogPrintf("ERROR: Cannot create socket (socket() returned error %s)\n", NetworkErrorString(WSAGetLastError()));
-        return -1;
+        LogPrintf("ERROR: Cannot create socket (socket() returned error %s), cannot init StatsdClient\n",
+                  NetworkErrorString(WSAGetLastError()));
+        return;
     }
 
     memset(&m_server, 0, sizeof(m_server));
@@ -89,12 +83,18 @@ int StatsdClient::init()
 
     CNetAddr netaddr(m_server.sin_addr);
     if (!LookupHost(m_host, netaddr, true) || !netaddr.GetInAddr(&m_server.sin_addr)) {
-        LogPrintf("ERROR: LookupHost or GetInAddr failed\n");
-        return -2;
+        LogPrintf("ERROR: LookupHost or GetInAddr failed, cannot init StatsdClient\n");
+        return;
     }
 
     m_init = true;
-    return 0;
+
+    LogPrintf("StatsdClient initialized to transmit stats to %s:%d\n", m_host, m_port);
+}
+
+StatsdClient::~StatsdClient()
+{
+    CloseSocket(m_sock);
 }
 
 /* will change the original string */
@@ -180,16 +180,11 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
 
 int StatsdClient::send(const std::string& message)
 {
-    if (!m_enabled)
+    if (!m_init)
         return -3;
 
-    int ret = init();
-    if (ret) {
-        return ret;
-    }
-
-    ret = ::sendto(m_sock, message.data(), message.size(), 0, reinterpret_cast<const sockaddr*>(&m_server),
-                   sizeof(m_server));
+    int ret = ::sendto(m_sock, message.data(), message.size(), 0, reinterpret_cast<const sockaddr*>(&m_server),
+                       sizeof(m_server));
     if (ret == -1) {
         LogPrintf("ERROR: Unable to send message (sendto() returned error %s), host=%s:%d\n",
                   NetworkErrorString(WSAGetLastError()), m_host, m_port);
