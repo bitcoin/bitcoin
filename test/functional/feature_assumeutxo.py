@@ -248,6 +248,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         node1.submitheader(main_block1)
         node1.submitheader(main_block2)
 
+    def assert_only_network_limited_service(self, node):
+        node_services = node.getnetworkinfo()['localservicesnames']
+        assert 'NETWORK' not in node_services
+        assert 'NETWORK_LIMITED' in node_services
+
     def run_test(self):
         """
         Bring up two (disconnected) nodes, mine some new blocks on the first,
@@ -381,12 +386,19 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_snapshot_block_invalidated(dump_output['path'])
         self.test_snapshot_not_on_most_work_chain(dump_output['path'])
 
+        # Prune-node sanity check
+        assert 'NETWORK' not in n1.getnetworkinfo()['localservicesnames']
+
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
         # This node's tip is on an ancestor block of the snapshot, which should
         # be the normal case
         loaded = n1.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        self.log.info("Confirm that local services remain unchanged")
+        # Since n1 is a pruned node, the 'NETWORK' service flag must always be unset.
+        self.assert_only_network_limited_service(n1)
 
         self.log.info("Check that UTXO-querying RPCs operate on snapshot chainstate")
         snapshot_hash = loaded['tip_hash']
@@ -491,6 +503,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.restart_node(1, extra_args=[
             f"-stopatheight={PAUSE_HEIGHT}", *self.extra_args[1]])
 
+        # Upon restart during snapshot tip sync, the node must remain in 'limited' mode.
+        self.assert_only_network_limited_service(n1)
+
         # Finally connect the nodes and let them sync.
         #
         # Set `wait_for_connect=False` to avoid a race between performing connection
@@ -506,6 +521,9 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Restarted node before snapshot validation completed, reloading...")
         self.restart_node(1, extra_args=self.extra_args[1])
+
+        # Upon restart, the node must remain in 'limited' mode
+        self.assert_only_network_limited_service(n1)
 
         # Send snapshot block to n1 out of order. This makes the test less
         # realistic because normally the snapshot block is one of the last
@@ -524,6 +542,10 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Ensuring background validation completes")
         self.wait_until(lambda: len(n1.getchainstates()['chainstates']) == 1)
+
+        # Since n1 is a pruned node, it will not signal NODE_NETWORK after
+        # completing the background sync.
+        self.assert_only_network_limited_service(n1)
 
         # Ensure indexes have synced.
         completed_idx_state = {
@@ -555,11 +577,17 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("-- Testing all indexes + reindex")
         assert_equal(n2.getblockcount(), START_HEIGHT)
+        assert 'NETWORK' in n2.getnetworkinfo()['localservicesnames']  # sanity check
 
         self.log.info(f"Loading snapshot into third node from {dump_output['path']}")
         loaded = n2.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        # Even though n2 is a full node, it will unset the 'NETWORK' service flag during snapshot loading.
+        # This indicates other peers that the node will temporarily not provide historical blocks.
+        self.log.info("Check node2 updated the local services during snapshot load")
+        self.assert_only_network_limited_service(n2)
 
         for reindex_arg in ['-reindex=1', '-reindex-chainstate=1']:
             self.log.info(f"Check that restarting with {reindex_arg} will delete the snapshot chainstate")
@@ -584,12 +612,20 @@ class AssumeutxoTest(BitcoinTestFramework):
         msg = "Unable to load UTXO snapshot: Can't activate a snapshot-based chainstate more than once"
         assert_raises_rpc_error(-32603, msg, n2.loadtxoutset, dump_output['path'])
 
+        # Upon restart, the node must stay in 'limited' mode until the background
+        # chain sync completes.
+        self.restart_node(2, extra_args=self.extra_args[2])
+        self.assert_only_network_limited_service(n2)
+
         self.connect_nodes(0, 2)
         self.wait_until(lambda: n2.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
         self.sync_blocks(nodes=(n0, n2))
 
         self.log.info("Ensuring background validation completes")
         self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
+
+        # Once background chain sync completes, the full node must start offering historical blocks again.
+        assert {'NETWORK', 'NETWORK_LIMITED'}.issubset(n2.getnetworkinfo()['localservicesnames'])
 
         completed_idx_state = {
             'basic block filter index': COMPLETE_IDX,
