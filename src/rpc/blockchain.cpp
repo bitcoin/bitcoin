@@ -2684,6 +2684,23 @@ public:
 };
 
 /**
+ * RAII class that temporarily rolls back the local chain in it's constructor
+ * and rolls it forward again in it's destructor.
+ */
+class TemporaryRollback
+{
+    ChainstateManager& m_chainman;
+    const CBlockIndex& m_invalidate_index;
+public:
+    TemporaryRollback(ChainstateManager& chainman, const CBlockIndex& index) : m_chainman(chainman), m_invalidate_index(index) {
+        InvalidateBlock(m_chainman, m_invalidate_index.GetBlockHash());
+    };
+    ~TemporaryRollback() {
+        ReconsiderBlock(m_chainman, m_invalidate_index.GetBlockHash());
+    };
+};
+
+/**
  * Serialize the UTXO set to a file for loading elsewhere.
  *
  * @see SnapshotMetadata
@@ -2770,6 +2787,7 @@ static RPCHelpMan dumptxoutset()
     CConnman& connman = EnsureConnman(node);
     const CBlockIndex* invalidate_index{nullptr};
     std::unique_ptr<NetworkDisable> disable_network;
+    std::unique_ptr<TemporaryRollback> temporary_rollback;
 
     // If the user wants to dump the txoutset of the current tip, we don't have
     // to roll back at all
@@ -2798,7 +2816,7 @@ static RPCHelpMan dumptxoutset()
         }
 
         invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
-        InvalidateBlock(*node.chainman, invalidate_index->GetBlockHash());
+        temporary_rollback = std::make_unique<TemporaryRollback>(*node.chainman, *invalidate_index);
     }
 
     Chainstate* chainstate;
@@ -2822,23 +2840,15 @@ static RPCHelpMan dumptxoutset()
         // sister block of invalidate_index. This block (or a descendant) would
         // be activated as the new tip and we would not get to new_tip_index.
         if (target_index != chainstate->m_chain.Tip()) {
-            LogInfo("Failed to roll back to requested height, reverting to tip.\n");
-            error = JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height.");
+            LogWarning("dumptxoutset failed to roll back to requested height, reverting to tip.\n");
+            throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height.");
         } else {
             std::tie(cursor, stats, tip) = PrepareUTXOSnapshot(*chainstate, node.rpc_interruption_point);
         }
     }
 
-    if (error.isNull()) {
-        result = WriteUTXOSnapshot(*chainstate, cursor.get(), &stats, tip, afile, path, temppath, node.rpc_interruption_point);
-        fs::rename(temppath, path);
-    }
-    if (invalidate_index) {
-        ReconsiderBlock(*node.chainman, invalidate_index->GetBlockHash());
-    }
-    if (!error.isNull()) {
-        throw error;
-    }
+    result = WriteUTXOSnapshot(*chainstate, cursor.get(), &stats, tip, afile, path, temppath, node.rpc_interruption_point);
+    fs::rename(temppath, path);
 
     result.pushKV("path", path.utf8string());
     return result;
