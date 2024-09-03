@@ -47,11 +47,12 @@ static CService ResolveService(const std::string& ip, uint16_t port = 0)
 }
 
 
-static std::vector<bool> FromBytes(const unsigned char* source, int vector_size)
+static std::vector<bool> FromBytes(std::span<const std::byte> source)
 {
+    int vector_size(source.size() * 8);
     std::vector<bool> result(vector_size);
     for (int byte_i = 0; byte_i < vector_size / 8; ++byte_i) {
-        unsigned char cur_byte = source[byte_i];
+        uint8_t cur_byte{std::to_integer<uint8_t>(source[byte_i])};
         for (int bit_i = 0; bit_i < 8; ++bit_i) {
             result[byte_i * 8 + bit_i] = (cur_byte >> bit_i) & 1;
         }
@@ -576,7 +577,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.8.0.0/16 AS8
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
-    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    std::vector<bool> asmap = FromBytes(test::data::asmap);
     NetGroupManager ngm_asmap{asmap};
 
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
@@ -630,7 +631,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 {
-    std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    std::vector<bool> asmap = FromBytes(test::data::asmap);
     NetGroupManager ngm_asmap{asmap};
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
@@ -708,7 +709,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 
 BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
-    std::vector<bool> asmap1 = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
+    std::vector<bool> asmap1 = FromBytes(test::data::asmap);
     NetGroupManager netgroupman{asmap1};
 
     const auto ratio = GetCheckRatio(m_node);
