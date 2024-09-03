@@ -36,13 +36,14 @@ def main():
     # Create 16 byte hex salt
     salt = generate_salt(16)
     password_hmac = password_to_hmac(salt, args.password)
+    rpcauth = f'{args.username}:{salt}${password_hmac}'
 
     if args.json:
-        odict={'username':args.username, 'password':args.password, 'rpcauth':f'{args.username}:{salt}${password_hmac}'}
+        odict={'username':args.username, 'password':args.password, 'rpcauth':rpcauth}
         print(json.dumps(odict))
     else:
         print('String to be appended to bitcoin.conf:')
-        print(f'rpcauth={args.username}:{salt}${password_hmac}')
+        print(f'rpcauth={rpcauth}')
         print(f'Your password:\n{args.password}')
 
 if __name__ == '__main__':
