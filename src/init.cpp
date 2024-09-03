@@ -483,12 +483,8 @@ std::string GetSupportedSocketEventsStr()
     return strSupportedModes;
 }
 
-void SetupServerArgs(NodeContext& node)
+void SetupServerArgs(ArgsManager& argsman)
 {
-    assert(!node.args);
-    node.args = &gArgs;
-    ArgsManager& argsman = *node.args;
-
     SetupHelpOptions(argsman);
     argsman.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
