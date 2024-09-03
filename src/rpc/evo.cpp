@@ -505,9 +505,9 @@ static RPCHelpMan protx_register_prepare_legacy()
     return protx_register_prepare_wrapper(true);
 }
 
-static RPCHelpMan protx_register_fund_evo_wrapper(bool use_hpmn_suffix)
+static RPCHelpMan protx_register_fund_evo()
 {
-    const std::string command_name{use_hpmn_suffix ? "protx register_fund_hpmn" : "protx register_fund_evo"};
+    const std::string command_name{"protx register_fund_evo"};
     return RPCHelpMan{
         command_name,
         "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 4000 Dash\n"
@@ -540,28 +540,14 @@ static RPCHelpMan protx_register_fund_evo_wrapper(bool use_hpmn_suffix)
             HelpExampleCli("protx", "register_fund_evo \"" + EXAMPLE_ADDRESS[0] + "\" \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (use_hpmn_suffix && !IsDeprecatedRPCEnabled("hpmn")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
-    }
-
     return protx_register_common_wrapper(request, false, ProTxRegisterAction::Fund, MnType::Evo);
 },
     };
 }
 
-static RPCHelpMan protx_register_fund_evo()
+static RPCHelpMan protx_register_evo()
 {
-    return protx_register_fund_evo_wrapper(false);
-}
-
-static RPCHelpMan protx_register_fund_hpmn()
-{
-    return protx_register_fund_evo_wrapper(true);
-}
-
-static RPCHelpMan protx_register_evo_wrapper(bool use_hpmn_suffix)
-{
-    const std::string command_name{use_hpmn_suffix ? "protx register_hpmn" : "protx register_evo"};
+    const std::string command_name{"protx register_evo"};
     return RPCHelpMan{
         command_name,
         "\nSame as \"protx register_fund_evo\", but with an externally referenced collateral.\n"
@@ -593,28 +579,14 @@ static RPCHelpMan protx_register_evo_wrapper(bool use_hpmn_suffix)
             HelpExampleCli("protx", "register_evo \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (use_hpmn_suffix && !IsDeprecatedRPCEnabled("hpmn")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
-    }
-
     return protx_register_common_wrapper(request, false, ProTxRegisterAction::External, MnType::Evo);
 },
     };
 }
 
-static RPCHelpMan protx_register_evo()
+static RPCHelpMan protx_register_prepare_evo()
 {
-    return protx_register_evo_wrapper(false);
-}
-
-static RPCHelpMan protx_register_hpmn()
-{
-    return protx_register_evo_wrapper(true);
-}
-
-static RPCHelpMan protx_register_prepare_evo_wrapper(bool use_hpmn_suffix)
-{
-    const std::string command_name{use_hpmn_suffix ? "protx register_prepare_hpmn" : "protx register_prepare_evo"};
+    const std::string command_name{"protx register_prepare_evo"};
     return RPCHelpMan{
         command_name,
         "\nCreates an unsigned ProTx and a message that must be signed externally\n"
@@ -643,23 +615,9 @@ static RPCHelpMan protx_register_prepare_evo_wrapper(bool use_hpmn_suffix)
         RPCExamples{HelpExampleCli("protx", "register_prepare_evo \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (use_hpmn_suffix && !IsDeprecatedRPCEnabled("hpmn")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
-    }
-
     return protx_register_common_wrapper(request, false, ProTxRegisterAction::Prepare, MnType::Evo);
 },
     };
-}
-
-static RPCHelpMan protx_register_prepare_evo()
-{
-    return protx_register_prepare_evo_wrapper(false);
-}
-
-static RPCHelpMan protx_register_prepare_hpmn()
-{
-    return protx_register_prepare_evo_wrapper(true);
 }
 
 static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
@@ -961,9 +919,9 @@ static RPCHelpMan protx_update_service()
     };
 }
 
-static RPCHelpMan protx_update_service_evo_wrapper(bool use_hpmn_suffix)
+static RPCHelpMan protx_update_service_evo()
 {
-    const std::string command_name{use_hpmn_suffix ? "protx update_service_hpmn" : "protx update_service_evo"};
+    const std::string command_name{"protx update_service_evo"};
     return RPCHelpMan{
         command_name,
         "\nCreates and sends a ProUpServTx to the network. This will update the IP address and the Platform fields\n"
@@ -986,23 +944,9 @@ static RPCHelpMan protx_update_service_evo_wrapper(bool use_hpmn_suffix)
             HelpExampleCli("protx", "update_service_evo \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" \"5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (use_hpmn_suffix && !IsDeprecatedRPCEnabled("hpmn")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "*_hpmn methods are deprecated. Use the related *_evo methods or set -deprecatedrpc=hpmn to enable them");
-    }
-
     return protx_update_service_common_wrapper(request, MnType::Evo);
 },
     };
-}
-
-static RPCHelpMan protx_update_service_evo()
-{
-    return protx_update_service_evo_wrapper(false);
-}
-
-static RPCHelpMan protx_update_service_hpmn()
-{
-    return protx_update_service_evo_wrapper(true);
 }
 
 static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& request, const MnType mnType)
@@ -1880,19 +1824,15 @@ static const CRPCCommand commands[] =
 #ifdef ENABLE_WALLET
     { "evo",                &protx_register,                   },
     { "evo",                &protx_register_evo,               },
-    { "evo",                &protx_register_hpmn,              },
     { "evo",                &protx_register_legacy,            },
     { "evo",                &protx_register_fund,              },
     { "evo",                &protx_register_fund_legacy,       },
     { "evo",                &protx_register_fund_evo,          },
-    { "evo",                &protx_register_fund_hpmn,         },
     { "evo",                &protx_register_prepare,           },
     { "evo",                &protx_register_prepare_evo,       },
-    { "evo",                &protx_register_prepare_hpmn,      },
     { "evo",                &protx_register_prepare_legacy,    },
     { "evo",                &protx_update_service,             },
     { "evo",                &protx_update_service_evo,         },
-    { "evo",                &protx_update_service_hpmn,        },
     { "evo",                &protx_register_submit,            },
     { "evo",                &protx_update_registrar,           },
     { "evo",                &protx_update_registrar_legacy,    },
