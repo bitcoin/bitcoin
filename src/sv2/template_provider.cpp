@@ -352,6 +352,11 @@ void Sv2TemplateProvider::PruneBlockTemplateCache()
     // If the blocks prevout is not the tip's prevout, delete it.
     uint256 prev_hash = m_best_prev_hash;
     std::erase_if(m_block_template_cache, [prev_hash] (const auto& kv) {
+        // TODO: this shouldn't happen, but it does.
+        //       Investigate after the mining interface is merged / stable.
+        //       When trying testnet4 mining, using only the pool role,
+        //       the node would crash immediately after finding a block.
+        if (!kv.second) return true;
         if (kv.second->getBlockHeader().hashPrevBlock != prev_hash) {
             return true;
         }
