@@ -388,6 +388,12 @@ static bool HTTPBindAddresses(struct evhttp* http)
             if (i->first.empty() || (addr.has_value() && addr->IsBindAny())) {
                 LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
+            // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
+            evutil_socket_t fd = evhttp_bound_socket_get_fd(bind_handle);
+            int one = 1;
+            if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (sockopt_arg_type)&one, sizeof(one)) == SOCKET_ERROR) {
+                LogInfo("WARNING: Unable to set TCP_NODELAY on RPC server socket, continuing anyway\n");
+            }
             boundSockets.push_back(bind_handle);
         } else {
             LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
