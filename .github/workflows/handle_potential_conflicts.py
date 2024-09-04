@@ -27,9 +27,6 @@ import hjson
 def get_label(pr_num):
     return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['head']['label']
 
-def is_draft(pr_num):
-    return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['draft']
-
 def main():
     if len(sys.argv) != 2:
         print(f'Usage: {sys.argv[0]} <conflicts>', file=sys.stderr)
@@ -60,11 +57,11 @@ def main():
             print(f'{this_pr_num} needs rebase. Skipping conflict check')
             continue
 
-        if is_draft(this_pr_num):
+        if r.json()["draft"]:
             print(f'{this_pr_num} is a draft. Skipping conflict check')
             continue
 
-        r = requests.get(f'https://github.com/dashpay/dash/branches/pre_mergeable/{our_pr_label}...{get_label(this_pr_num)}')
+        r = requests.get(f'https://github.com/dashpay/dash/branches/pre_mergeable/{our_pr_label}...{r.json()['head']['label']}')
         if "These branches can be automatically merged." in r.text:
             good.append(this_pr_num)
         elif "Can’t automatically merge" in r.text:
