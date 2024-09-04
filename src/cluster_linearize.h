@@ -86,35 +86,13 @@ public:
      *
      * Complexity: O(N^2) where N=cluster.size().
      */
-    explicit DepGraph(const Cluster<SetType>& cluster) noexcept : entries(cluster.size())
+    explicit DepGraph(const Cluster<SetType>& cluster) noexcept : DepGraph(cluster.size())
     {
         for (ClusterIndex i = 0; i < cluster.size(); ++i) {
             // Fill in fee and size.
             entries[i].feerate = cluster[i].first;
-            // Fill in direct parents as ancestors.
-            entries[i].ancestors = cluster[i].second;
-            // Make sure transactions are ancestors of themselves.
-            entries[i].ancestors.Set(i);
-        }
-
-        // Propagate ancestor information.
-        for (ClusterIndex i = 0; i < entries.size(); ++i) {
-            // At this point, entries[a].ancestors[b] is true iff b is an ancestor of a and there
-            // is a path from a to b through the subgraph consisting of {a, b} union
-            // {0, 1, ..., (i-1)}.
-            SetType to_merge = entries[i].ancestors;
-            for (ClusterIndex j = 0; j < entries.size(); ++j) {
-                if (entries[j].ancestors[i]) {
-                    entries[j].ancestors |= to_merge;
-                }
-            }
-        }
-
-        // Fill in descendant information by transposing the ancestor information.
-        for (ClusterIndex i = 0; i < entries.size(); ++i) {
-            for (auto j : entries[i].ancestors) {
-                entries[j].descendants.Set(i);
-            }
+            // Fill in dependencies.
+            AddDependencies(cluster[i].second, i);
         }
     }
 
@@ -122,21 +100,16 @@ public:
      *
      * Complexity: O(N^2) where N=depgraph.TxCount().
      */
-    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping) noexcept : entries(depgraph.TxCount())
+    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping) noexcept : DepGraph(depgraph.TxCount())
     {
         Assert(mapping.size() == depgraph.TxCount());
-        // Fill in fee, size, ancestors.
         for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
-            const auto& input = depgraph.entries[i];
-            auto& output = entries[mapping[i]];
-            output.feerate = input.feerate;
-            for (auto j : input.ancestors) output.ancestors.Set(mapping[j]);
-        }
-        // Fill in descendant information.
-        for (ClusterIndex i = 0; i < entries.size(); ++i) {
-            for (auto j : entries[i].ancestors) {
-                entries[j].descendants.Set(i);
-            }
+            // Fill in fee and size.
+            entries[mapping[i]].feerate = depgraph.entries[i].feerate;
+            // Fill in dependencies by mapping direct parents.
+            SetType parents;
+            for (auto j : depgraph.GetReducedParents(i)) parents.Set(mapping[j]);
+            AddDependencies(parents, mapping[i]);
         }
     }
 
@@ -164,21 +137,26 @@ public:
         return new_idx;
     }
 
-    /** Modify this transaction graph, adding a dependency between a specified parent and child.
+    /** Modify this transaction graph, adding multiple parents to a specified child.
      *
      * Complexity: O(N) where N=TxCount().
-     **/
-    void AddDependency(ClusterIndex parent, ClusterIndex child) noexcept
+     */
+    void AddDependencies(const SetType& parents, ClusterIndex child) noexcept
     {
-        // Bail out if dependency is already implied.
-        if (entries[child].ancestors[parent]) return;
-        // To each ancestor of the parent, add as descendants the descendants of the child.
+        // Compute the ancestors of parents that are not already ancestors of child.
+        SetType par_anc;
+        for (auto par : parents - Ancestors(child)) {
+            par_anc |= Ancestors(par);
+        }
+        par_anc -= Ancestors(child);
+        // Bail out if there are no such ancestors.
+        if (par_anc.None()) return;
+        // To each such ancestor, add as descendants the descendants of the child.
         const auto& chl_des = entries[child].descendants;
-        for (auto anc_of_par : Ancestors(parent)) {
+        for (auto anc_of_par : par_anc) {
             entries[anc_of_par].descendants |= chl_des;
         }
-        // To each descendant of the child, add as ancestors the ancestors of the parent.
-        const auto& par_anc = entries[parent].ancestors;
+        // To each descendant of the child, add those ancestors.
         for (auto dec_of_chl : Descendants(child)) {
             entries[dec_of_chl].ancestors |= par_anc;
         }

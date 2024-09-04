@@ -234,7 +234,7 @@ struct DepGraphFormatter
             if (new_feerate.IsEmpty()) break;
             assert(reordering.size() < SetType::Size());
             auto topo_idx = topo_depgraph.AddTransaction(new_feerate);
-            for (auto parent : new_ancestors) topo_depgraph.AddDependency(parent, topo_idx);
+            topo_depgraph.AddDependencies(new_ancestors, topo_idx);
             diff %= total_size + 1;
             // Insert the new transaction at distance diff back from the end.
             for (auto& pos : reordering) {

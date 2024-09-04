@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cluster_linearize.h>
+#include <random.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
@@ -176,7 +177,7 @@ void MakeConnected(DepGraph<BS>& depgraph)
     while (todo.Any()) {
         auto nextcomp = depgraph.FindConnectedComponent(todo);
         Assume(depgraph.IsConnected(nextcomp));
-        depgraph.AddDependency(comp.Last(), nextcomp.First());
+        depgraph.AddDependencies(BS::Singleton(comp.Last()), nextcomp.First());
         todo -= nextcomp;
         comp = nextcomp;
     }
@@ -240,32 +241,65 @@ std::vector<ClusterIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanRe
 
 } // namespace
 
-FUZZ_TARGET(clusterlin_add_dependency)
+FUZZ_TARGET(clusterlin_add_dependencies)
 {
-    // Verify that computing a DepGraph from a cluster, or building it step by step using AddDependency
-    // have the same effect.
+    // Verify that computing a DepGraph from a cluster, or building it step by step using
+    // AddDependencies has the same effect.
+
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+    auto rng_seed = provider.ConsumeIntegral<uint64_t>();
+    InsecureRandomContext rng(rng_seed);
 
     // Construct a cluster of a certain length, with no dependencies.
-    FuzzedDataProvider provider(buffer.data(), buffer.size());
-    auto num_tx = provider.ConsumeIntegralInRange<ClusterIndex>(2, 32);
+    auto num_tx = provider.ConsumeIntegralInRange<ClusterIndex>(2, TestBitSet::Size());
     Cluster<TestBitSet> cluster(num_tx, std::pair{FeeFrac{0, 1}, TestBitSet{}});
     // Construct the corresponding DepGraph object (also no dependencies).
-    DepGraph depgraph(cluster);
-    SanityCheck(depgraph);
-    // Read (parent, child) pairs, and add them to the cluster and depgraph.
-    LIMITED_WHILE(provider.remaining_bytes() > 0, TestBitSet::Size() * TestBitSet::Size()) {
-        auto parent = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx - 1);
-        auto child = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx - 2);
-        child += (child >= parent);
-        cluster[child].second.Set(parent);
-        depgraph.AddDependency(parent, child);
-        assert(depgraph.Ancestors(child)[parent]);
-        assert(depgraph.Descendants(parent)[child]);
+    DepGraph depgraph_batch(cluster);
+    SanityCheck(depgraph_batch);
+    // Read (parents, child) pairs, and add the dependencies to the cluster and depgraph.
+    std::vector<std::pair<ClusterIndex, ClusterIndex>> deps_list;
+    LIMITED_WHILE(provider.remaining_bytes() > 0, TestBitSet::Size()) {
+        const auto parents_mask = provider.ConsumeIntegralInRange<uint64_t>(0, (uint64_t{1} << num_tx) - 1);
+        auto child = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx - 1);
+
+        auto parents_mask_shifted = parents_mask;
+        TestBitSet deps;
+        for (ClusterIndex i = 0; i < num_tx; ++i) {
+            if (parents_mask_shifted & 1) {
+                deps.Set(i);
+                cluster[child].second.Set(i);
+            }
+            parents_mask_shifted >>= 1;
+        }
+        assert(parents_mask_shifted == 0);
+        depgraph_batch.AddDependencies(deps, child);
+        for (auto i : deps) {
+            deps_list.emplace_back(i, child);
+            assert(depgraph_batch.Ancestors(child)[i]);
+            assert(depgraph_batch.Descendants(i)[child]);
+        }
     }
     // Sanity check the result.
-    SanityCheck(depgraph);
+    SanityCheck(depgraph_batch);
     // Verify that the resulting DepGraph matches one recomputed from the cluster.
-    assert(DepGraph(cluster) == depgraph);
+    assert(DepGraph(cluster) == depgraph_batch);
+
+    DepGraph<TestBitSet> depgraph_individual;
+    // Add all transactions to depgraph_individual.
+    for (const auto& [feerate, parents] : cluster) {
+        depgraph_individual.AddTransaction(feerate);
+    }
+    SanityCheck(depgraph_individual);
+    // Add all individual dependencies to depgraph_individual in randomized order.
+    std::shuffle(deps_list.begin(), deps_list.end(), rng);
+    for (auto [parent, child] : deps_list) {
+        depgraph_individual.AddDependencies(TestBitSet::Singleton(parent), child);
+        assert(depgraph_individual.Ancestors(child)[parent]);
+        assert(depgraph_individual.Descendants(parent)[child]);
+    }
+    // Sanity check and compare again the batched version.
+    SanityCheck(depgraph_individual);
+    assert(depgraph_individual == depgraph_batch);
 }
 
 FUZZ_TARGET(clusterlin_cluster_serialization)
@@ -897,12 +931,16 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     if (direction & 1) {
         for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
             auto children = depgraph_gen.GetReducedChildren(i);
-            if (children.Any()) depgraph_tree.AddDependency(i, children.First());
+            if (children.Any()) {
+                depgraph_tree.AddDependencies(TestBitSet::Singleton(i), children.First());
+            }
          }
     } else {
         for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
             auto parents = depgraph_gen.GetReducedParents(i);
-            if (parents.Any()) depgraph_tree.AddDependency(parents.First(), i);
+            if (parents.Any()) {
+                depgraph_tree.AddDependencies(TestBitSet::Singleton(parents.First()), i);
+            }
         }
     }
 
