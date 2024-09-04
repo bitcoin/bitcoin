@@ -119,10 +119,18 @@ if(NOT BUILD_SHARED_LIBS)
   set(all_kernel_static_link_libs "")
   get_target_static_link_libs(bitcoinkernel all_kernel_static_link_libs)
 
+  # LIBS_PRIVATE is substituted in the pkg-config file.
+  set(LIBS_PRIVATE "")
   foreach(lib ${all_kernel_static_link_libs})
     install(TARGETS ${lib} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    string(APPEND LIBS_PRIVATE " -l${lib}")
   endforeach()
+
+  string(STRIP "${LIBS_PRIVATE}" LIBS_PRIVATE)
 endif()
+
+configure_file(${PROJECT_SOURCE_DIR}/libbitcoinkernel.pc.in ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc @ONLY)
+install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 include(GNUInstallDirs)
 install(TARGETS bitcoinkernel
