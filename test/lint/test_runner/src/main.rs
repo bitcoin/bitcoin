@@ -5,9 +5,12 @@
 use std::env;
 use std::fs;
 use std::io::ErrorKind;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
 
+/// A possible error returned by any of the linters.
+///
+/// The error string should explain the failure type and list all violations.
 type LintError = String;
 type LintResult = Result<(), LintError>;
 type LintFn = fn() -> LintResult;
@@ -44,6 +47,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check that std::filesystem is not used directly",
             name: "std_filesystem",
             lint_fn: lint_std_filesystem
+        },
+        &Linter {
+            description: "Check that release note snippets are in the right folder",
+            name: "doc_release_note_snippets",
+            lint_fn: lint_doc_release_note_snippets
         },
         &Linter {
             description: "Check that subtrees are pure subtrees",
@@ -125,20 +133,27 @@ fn parse_lint_args(args: &[String]) -> Vec<&'static Linter> {
 }
 
 /// Return the git command
+///
+/// Lint functions should use this command, so that only files tracked by git are considered and
+/// temporary and untracked files are ignored. For example, instead of 'grep', 'git grep' should be
+/// used.
 fn git() -> Command {
     let mut git = Command::new("git");
     git.arg("--no-pager");
     git
 }
 
-/// Return stdout
+/// Return stdout on success and a LintError on failure, when invalid UTF8 was detected or the
+/// command did not succeed.
 fn check_output(cmd: &mut std::process::Command) -> Result<String, LintError> {
     let out = cmd.output().expect("command error");
     if !out.status.success() {
         return Err(String::from_utf8_lossy(&out.stderr).to_string());
     }
     Ok(String::from_utf8(out.stdout)
-        .map_err(|e| format!("{e}"))?
+        .map_err(|e| {
+            format!("All path names, source code, messages, and output must be valid UTF8!\n{e}")
+        })?
         .trim()
         .to_string())
 }
@@ -273,6 +288,30 @@ fs:: namespace, which has unsafe filesystem functions marked as deleted.
         .to_string())
     } else {
         Ok(())
+    }
+}
+
+fn lint_doc_release_note_snippets() -> LintResult {
+    let non_release_notes = check_output(git().args([
+        "ls-files",
+        "--",
+        "doc/release-notes/",
+        ":(exclude)doc/release-notes/*.*.md", // Assume that at least one dot implies a proper release note
+    ]))?;
+    if non_release_notes.is_empty() {
+        Ok(())
+    } else {
+        Err(format!(
+            r#"
+{}
+^^^
+Release note snippets and other docs must be put into the doc/ folder directly.
+
+The doc/release-notes/ folder is for archived release notes of previous releases only. Snippets are
+expected to follow the naming "/doc/release-notes-<PR number>.md".
+            "#,
+            non_release_notes
+        ))
     }
 }
 
