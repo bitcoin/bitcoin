@@ -98,6 +98,32 @@ set_target_properties(bitcoinkernel PROPERTIES
   CXX_VISIBILITY_PRESET default
 )
 
+# When building the static library, install all static libraries the
+# bitcoinkernel depends on.
+if(NOT BUILD_SHARED_LIBS)
+  # Recursively get all the static libraries a target depends on and put them in libs_out
+  function(get_target_static_link_libs target libs_out)
+    get_target_property(linked_libraries ${target} LINK_LIBRARIES)
+    foreach(dep ${linked_libraries})
+      if(TARGET ${dep})
+        get_target_property(dep_type ${dep} TYPE)
+        if(dep_type STREQUAL "STATIC_LIBRARY")
+          list(APPEND ${libs_out} ${dep})
+          get_target_static_link_libs(${dep} ${libs_out})
+        endif()
+      endif()
+    endforeach()
+    set(${libs_out} ${${libs_out}} PARENT_SCOPE)
+  endfunction()
+
+  set(all_kernel_static_link_libs "")
+  get_target_static_link_libs(bitcoinkernel all_kernel_static_link_libs)
+
+  foreach(lib ${all_kernel_static_link_libs})
+    install(TARGETS ${lib} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  endforeach()
+endif()
+
 include(GNUInstallDirs)
 install(TARGETS bitcoinkernel
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
