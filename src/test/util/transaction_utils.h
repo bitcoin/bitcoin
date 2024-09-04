@@ -26,4 +26,8 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
 // the second nValues[2] and nValues[3] outputs paid to a TxoutType::PUBKEYHASH.
 std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet, const std::array<CAmount,4>& nValues);
 
+// bulk transaction to reach a certain target weight,
+// by appending a single output with padded output script
+void BulkTransaction(CMutableTransaction& tx, int32_t target_weight);
+
 #endif // BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
