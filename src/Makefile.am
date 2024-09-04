@@ -314,6 +314,7 @@ BITCOIN_CORE_H = \
   streams.h \
   statsd_client.h \
   support/allocators/mt_pooled_secure.h \
+  support/allocators/pool.h \
   support/allocators/pooled_secure.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -328,6 +329,7 @@ BITCOIN_CORE_H = \
   torcontrol.h \
   txdb.h \
   txmempool.h \
+  txorphanage.h \
   undo.h \
   unordered_lru_cache.h \
   util/bip32.h \
@@ -527,6 +529,7 @@ libbitcoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
+  txorphanage.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \

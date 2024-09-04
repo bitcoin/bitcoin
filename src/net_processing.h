@@ -29,7 +29,6 @@ struct CJContext;
 struct LLMQContext;
 
 extern RecursiveMutex cs_main;
-extern RecursiveMutex g_cs_orphans;
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
@@ -126,9 +125,17 @@ public:
 
     /** Process a single message from a peer. Public for fuzz testing */
     virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
+                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+
+    /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
 
     virtual bool IsBanned(NodeId pnode) = 0;
+
+    virtual void EraseObjectRequest(NodeId nodeid, const CInv& inv) = 0;
+    virtual void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
+                               bool is_masternode, bool fForce = false) = 0;
+    virtual size_t GetRequestedObjectCount(NodeId nodeid) const = 0;
 };
 
 #endif // BITCOIN_NET_PROCESSING_H

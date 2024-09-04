@@ -306,6 +306,7 @@ BASE_SCRIPTS = [
     'rpc_estimatefee.py',
     'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
+    'p2p_ibd_txrelay.py',
     'rpc_coinjoin.py',
     'rpc_masternode.py',
     'rpc_mnauth.py',

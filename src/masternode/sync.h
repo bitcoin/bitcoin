@@ -15,6 +15,7 @@ class CGovernanceManager;
 class CMasternodeSync;
 class CNetFulfilledRequestManager;
 class CNode;
+class PeerManager;
 
 static constexpr int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static constexpr int MASTERNODE_SYNC_GOVERNANCE      = 4;
@@ -71,13 +72,13 @@ public:
     void SwitchToNextAsset();
 
     void ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv) const;
-    void ProcessTick();
+    void ProcessTick(const PeerManager& peerman);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void UpdatedBlockTip(const CBlockIndex *pindexTip, const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    void DoMaintenance();
+    void DoMaintenance(const PeerManager& peerman);
 };
 
 #endif // BITCOIN_MASTERNODE_SYNC_H

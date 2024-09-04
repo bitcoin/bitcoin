@@ -15,6 +15,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <timedata.h>
+#include <txorphanage.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
@@ -26,26 +27,12 @@
 #include <boost/test/unit_test.hpp>
 
 
-// Tests these internal-to-net_processing.cpp methods:
-extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
-extern void EraseOrphansFor(NodeId peer);
-extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-
-struct COrphanTx {
-    CTransactionRef tx;
-    NodeId fromPeer;
-    int64_t nTimeExpire;
-};
-extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
-
 static CService ip(uint32_t i)
 {
     struct in_addr s;
     s.s_addr = i;
     return CService(CNetAddr(s), Params().GetDefaultPort());
 }
-
-void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds);
 
 BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 
@@ -59,6 +46,8 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 // work.
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
     ConnmanTestMsg& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
     // Disable inactivity checks for this test to avoid interference
     connman.SetPeerConnectTimeout(99999s);
@@ -95,34 +84,29 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     }
 
     // Test starts here
-    {
-        LOCK(dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
-    }
+    BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
+
     {
         LOCK(dummyNode1.cs_vSend);
         BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
-        dummyNode1.vSendMsg.clear();
-        dummyNode1.nSendMsgSize = 0;
+    }
+    connman.FlushSendBuffer(dummyNode1);
+    {
+        LOCK(dummyNode1.cs_vSend);
+        BOOST_CHECK(dummyNode1.vSendMsg.empty());
     }
 
     int64_t nStartTime = GetTime();
     // Wait 21 minutes
     SetMockTime(nStartTime+21*60);
-    {
-        LOCK(dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
-    }
+    BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
     {
         LOCK(dummyNode1.cs_vSend);
         BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
     }
     // Wait 3 more minutes
     SetMockTime(nStartTime+24*60);
-    {
-        LOCK(dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in disconnect
-    }
+    BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in disconnect
     BOOST_CHECK(dummyNode1.fDisconnect == true);
 
     peerman.FinalizeNode(dummyNode1);
@@ -213,7 +197,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     // Update the last announced block time for the last
     // peer, and check that the next newest node gets evicted.
-    UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), GetTime());
+    peerLogic->UpdateLastBlockAnnounceTime(vNodes.back()->GetId(), GetTime());
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_full_relay - 1; ++i) {
@@ -296,6 +280,8 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 
 BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
     const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman);
@@ -333,10 +319,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     nodes[0]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[0]);
     peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD); // Should be discouraged
-    {
-        LOCK(nodes[0]->cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
-    }
+    BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
@@ -355,10 +338,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     nodes[1]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[1]);
     peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1);
-    {
-        LOCK(nodes[1]->cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
-    }
+    BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     // [0] is still discouraged/disconnected.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(nodes[0]->fDisconnect);
@@ -366,10 +346,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(!nodes[1]->fDisconnect);
     peerLogic->Misbehaving(nodes[1]->GetId(), 1); // [1] reaches discouragement threshold
-    {
-        LOCK(nodes[1]->cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
-    }
+    BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     // Expect both [0] and [1] to be discouraged/disconnected now.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(nodes[0]->fDisconnect);
@@ -392,10 +369,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     nodes[2]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[2]);
     peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
-    {
-        LOCK(nodes[2]->cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
-    }
+    BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
     BOOST_CHECK(banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(banman->IsDiscouraged(addr[2]));
@@ -411,6 +385,8 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
     const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
@@ -439,24 +415,29 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     dummyNode.fSuccessfullyConnected = true;
 
     peerLogic->Misbehaving(dummyNode.GetId(), DISCOURAGEMENT_THRESHOLD);
-    {
-        LOCK(dummyNode.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
-    }
+    BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
     BOOST_CHECK(banman->IsDiscouraged(addr));
 
     peerLogic->FinalizeNode(dummyNode);
 }
 
-static CTransactionRef RandomOrphan()
+class TxOrphanageTest : public TxOrphanage
 {
-    std::map<uint256, COrphanTx>::iterator it;
-    LOCK2(cs_main, g_cs_orphans);
-    it = mapOrphanTransactions.lower_bound(InsecureRand256());
-    if (it == mapOrphanTransactions.end())
-        it = mapOrphanTransactions.begin();
-    return it->second.tx;
-}
+public:
+    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    {
+        return m_orphans.size();
+    }
+
+    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    {
+        std::map<uint256, OrphanTx>::iterator it;
+        it = m_orphans.lower_bound(InsecureRand256());
+        if (it == m_orphans.end())
+            it = m_orphans.begin();
+        return it->second.tx;
+    }
+};
 
 static void MakeNewKeyWithFastRandomContext(CKey& key)
 {
@@ -476,10 +457,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // signature's R and S values have leading zeros.
     g_insecure_rand_ctx = FastRandomContext{uint256{33}};
 
+    TxOrphanageTest orphanage;
     CKey key;
     MakeNewKeyWithFastRandomContext(key);
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
+
+    LOCK(g_cs_orphans);
 
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
@@ -493,13 +477,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-        AddOrphanTx(MakeTransactionRef(tx), i);
+        orphanage.AddTx(MakeTransactionRef(tx), i);
     }
 
     // ... and 50 that depend on other orphans:
     for (int i = 0; i < 50; i++)
     {
-        CTransactionRef txPrev = RandomOrphan();
+        CTransactionRef txPrev = orphanage.RandomOrphan();
 
         CMutableTransaction tx;
         tx.vin.resize(1);
@@ -510,13 +494,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL));
 
-        AddOrphanTx(MakeTransactionRef(tx), i);
+        orphanage.AddTx(MakeTransactionRef(tx), i);
     }
 
     // This really-big orphan should be ignored:
     for (int i = 0; i < 10; i++)
     {
-        CTransactionRef txPrev = RandomOrphan();
+        CTransactionRef txPrev = orphanage.RandomOrphan();
 
         CMutableTransaction tx;
         tx.vout.resize(1);
@@ -534,25 +518,24 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!AddOrphanTx(MakeTransactionRef(tx), i));
+        BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i));
     }
 
-    LOCK2(cs_main, g_cs_orphans);
     // Test EraseOrphansFor:
     for (NodeId i = 0; i < 3; i++)
     {
-        size_t sizeBefore = mapOrphanTransactions.size();
-        EraseOrphansFor(i);
-        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
+        size_t sizeBefore = orphanage.CountOrphans();
+        orphanage.EraseForPeer(i);
+        BOOST_CHECK(orphanage.CountOrphans() < sizeBefore);
     }
 
     // Test LimitOrphanTxSize() function:
-    LimitOrphanTxSize(40);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
-    LimitOrphanTxSize(10);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
-    LimitOrphanTxSize(0);
-    BOOST_CHECK(mapOrphanTransactions.empty());
+    orphanage.LimitOrphans(40);
+    BOOST_CHECK(orphanage.CountOrphans() <= 40);
+    orphanage.LimitOrphans(10);
+    BOOST_CHECK(orphanage.CountOrphans() <= 10);
+    orphanage.LimitOrphans(0);
+    BOOST_CHECK(orphanage.CountOrphans() == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

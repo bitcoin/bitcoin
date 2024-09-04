@@ -29,6 +29,7 @@
 #include <tinyformat.h>
 #include <index/txindex.h>
 #include <txmempool.h>
+#include <txorphanage.h>
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -86,10 +87,6 @@ static_assert(INBOUND_PEER_TX_DELAY >= MAX_GETDATA_RANDOM_DELAY,
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
 
-/** Expiration time for orphan transactions in seconds */
-static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
-/** Minimum time between orphan transactions expire time checks in seconds */
-static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
 /** How long to cache transactions in mapRelay for normal relay */
 static constexpr auto RELAY_TX_CACHE_TIME = 15min;
 /** How long a transaction has to be in the mempool before it can unconditionally be relayed (even when not in mapRelay). */
@@ -191,24 +188,6 @@ static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** The compactblocks version we support. See BIP 152. */
 static constexpr uint64_t CMPCTBLOCKS_VERSION{1};
 
-struct COrphanTx {
-    // When modifying, adapt the copy of this definition in tests/DoS_tests.
-    CTransactionRef tx;
-    NodeId fromPeer;
-    int64_t nTimeExpire;
-    size_t list_pos;
-    size_t nTxSize;
-};
-
-/** Guards orphan transactions and extra txs for compact blocks */
-RecursiveMutex g_cs_orphans;
-/** Map from txid to orphan transaction record. Limited by
- *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
-
-size_t nMapOrphanTransactionsSize = 0;
-void EraseOrphansFor(NodeId peer);
-
 // Internal stuff
 namespace {
 /** Blocks that are in flight, and that are in the queue to be downloaded. */
@@ -307,7 +286,7 @@ struct Peer {
         bool m_send_mempool GUARDED_BY(m_tx_inventory_mutex){false};
         // Last time a "MEMPOOL" request was serviced.
         std::atomic<std::chrono::seconds> m_last_mempool_req{0s};
-        std::chrono::microseconds m_next_inv_send_time{0};
+        std::chrono::microseconds m_next_inv_send_time GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
     };
 
     // in bitcoin: m_tx_relay == nullptr if we're not relaying transactions with this peer
@@ -316,7 +295,7 @@ struct Peer {
     std::unique_ptr<TxRelay> m_tx_relay{std::make_unique<TxRelay>()};
 
     /** A vector of addresses to send to the peer, limited to MAX_ADDR_TO_SEND. */
-    std::vector<CAddress> m_addrs_to_send;
+    std::vector<CAddress> m_addrs_to_send GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Probabilistic filter to track recent addr messages relayed with this
      *  peer. Used to avoid relaying redundant addresses to this peer.
      *
@@ -326,7 +305,7 @@ struct Peer {
      *
      *  Presence of this filter must correlate with m_addr_relay_enabled.
      **/
-    std::unique_ptr<CRollingBloomFilter> m_addr_known;
+    std::unique_ptr<CRollingBloomFilter> m_addr_known GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
     /** Whether we are participating in address relay with this connection.
      *
      *  We set this bool to true for outbound peers (other than
@@ -345,7 +324,7 @@ struct Peer {
     /** Whether a Peer can only be relayed blocks */
     const bool m_block_relay_only{false};
     /** Whether a getaddr request to this peer is outstanding. */
-    bool m_getaddr_sent{false};
+    bool m_getaddr_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Guards address sending timers. */
     mutable Mutex m_addr_send_times_mutex;
     /** Time point to send the next ADDR message to this peer. */
@@ -356,12 +335,12 @@ struct Peer {
      *  messages, indicating a preference to receive ADDRv2 instead of ADDR ones. */
     std::atomic_bool m_wants_addrv2{false};
     /** Whether this peer has already sent us a getaddr message. */
-    bool m_getaddr_recvd{false};
+    bool m_getaddr_recvd GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Number of addresses that can be processed from this peer. Start at 1 to
      *  permit self-announcement. */
-    double m_addr_token_bucket{1.0};
+    double m_addr_token_bucket GUARDED_BY(NetEventsInterface::g_msgproc_mutex){1.0};
     /** When m_addr_token_bucket was last updated */
-    std::chrono::microseconds m_addr_token_timestamp{GetTime<std::chrono::microseconds>()};
+    std::chrono::microseconds m_addr_token_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){GetTime<std::chrono::microseconds>()};
     /** Total number of addresses that were dropped due to rate limiting. */
     std::atomic<uint64_t> m_addr_rate_limited{0};
     /** Total number of addresses that were processed (excludes rate-limited ones). */
@@ -371,7 +350,7 @@ struct Peer {
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
     /** Whether we've sent this peer a getheaders in response to an inv prior to initial-headers-sync completing */
-    bool m_inv_triggered_getheaders_before_sync{false};
+    bool m_inv_triggered_getheaders_before_sync GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
     /** Protects m_getdata_requests **/
     Mutex m_getdata_requests_mutex;
@@ -379,7 +358,7 @@ struct Peer {
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
     /** Time of the last getheaders message to this peer */
-    std::atomic<std::chrono::seconds> m_last_getheaders_timestamp{0s};
+    std::atomic<std::chrono::seconds> m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0s};
 
     explicit Peer(NodeId id, ServiceFlags our_services, bool block_relay_only)
         : m_id(id)
@@ -391,420 +370,6 @@ struct Peer {
 
 using PeerRef = std::shared_ptr<Peer>;
 
-class PeerManagerImpl final : public PeerManager
-{
-public:
-    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman, BanMan* banman,
-                    ChainstateManager& chainman, CTxMemPool& pool,
-                    CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
-                    CGovernanceManager& govman, CSporkManager& sporkman,
-                    const CActiveMasternodeManager* const mn_activeman,
-                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
-                    const std::unique_ptr<CJContext>& cj_ctx,
-                    const std::unique_ptr<LLMQContext>& llmq_ctx,
-                    bool ignore_incoming_txs);
-
-    /** Overridden from CValidationInterface. */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_recent_confirmed_transactions_mutex);
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void BlockChecked(const CBlock& block, const BlockValidationState& state) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
-
-    /** Implement NetEventsInterface */
-    void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
-
-    /** Implement PeerManager */
-    void StartScheduledTasks(CScheduler& scheduler) override;
-    void CheckForStaleTipAndEvictPeers() override;
-    std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
-    void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);;
-    void PushInventory(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInv(CInv &inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void SetBestHeight(int height) override { m_best_height = height; };
-    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
-    bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
-    bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-private:
-    /** Helper to process result of external handlers of message */
-    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
-    void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
-    void EvictExtraOutboundPeers(std::chrono::seconds now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
-    void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /** Get a shared pointer to the Peer object.
-     *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /** Get a shared pointer to the Peer object and remove it from m_peer_map.
-     *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /**
-     * Potentially mark a node discouraged based on the contents of a BlockValidationState object
-     *
-     * @param[in] via_compact_block this bool is passed in because net_processing should
-     * punish peers differently depending on whether the data was provided in a compact
-     * block message or not. If the compact block had a valid header, but contained invalid
-     * txs, the peer should not be punished. See BIP 152.
-     *
-     * @return Returns true if the peer was punished (probably disconnected)
-     */
-    bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
-                                 bool via_compact_block, const std::string& message = "")
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /**
-     * Potentially ban a node based on the contents of a TxValidationState object
-     *
-     * @return Returns true if the peer was punished (probably disconnected)
-     *
-     * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
-     */
-    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "")
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /** Maybe disconnect a peer and discourage future connections from its address.
-     *
-     * @param[in]   pnode     The node to check.
-     * @param[in]   peer      The peer object to check.
-     * @return                True if the peer was marked for disconnection in this function
-     */
-    bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
-
-    void ProcessOrphanTx(std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    /** Process a single headers message from a peer. */
-    void ProcessHeadersMessage(CNode& pfrom, Peer& peer,
-                               const std::vector<CBlockHeader>& headers,
-                               bool via_compact_block)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
-    /** Deal with state tracking and headers sync for peers that send the
-     * occasional non-connecting header (this can happen due to BIP 130 headers
-     * announcements for blocks interacting with the 2hr (MAX_FUTURE_BLOCK_TIME) rule). */
-    void HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    /** Return true if the headers connect to each other, false otherwise */
-    bool CheckHeadersAreContinuous(const std::vector<CBlockHeader>& headers) const;
-    /** Request further headers from this peer with a given locator.
-     * We don't issue a getheaders message if we have a recent one outstanding.
-     * This returns true if a getheaders is actually sent, and false otherwise.
-     */
-    bool MaybeSendGetHeaders(CNode& pfrom, const std::string& msg_type, const CBlockLocator& locator, Peer& peer);
-    /** Potentially fetch blocks from this peer upon receipt of a new headers tip */
-    void HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex* pindexLast);
-    /** Update peer state based on received headers message */
-    void UpdatePeerStateForReceivedHeaders(CNode& pfrom, const CBlockIndex *pindexLast, bool received_new_header, bool may_have_more_headers);
-
-    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    /** Send a version message to a peer */
-    void PushNodeVersion(CNode& pnode, const Peer& peer);
-
-    /** Send a ping message every PING_INTERVAL or if requested via RPC. May
-     *  mark the peer to be disconnected if a ping has timed out.
-     *  We use mockable time for ping timeouts, so setmocktime may cause pings
-     *  to time out. */
-    void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
-
-    /** Send `addr` messages on a regular schedule. */
-    void MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time);
-
-    /** Relay (gossip) an address to a few randomly chosen nodes.
-     *
-     * @param[in] originator   The id of the peer that sent us the address. We don't want to relay it back.
-     * @param[in] addr         Address to relay.
-     * @param[in] fReachable   Whether the address' network is reachable. We relay unreachable
-     *                         addresses less.
-     */
-    void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-
-    const CChainParams& m_chainparams;
-    CConnman& m_connman;
-    AddrMan& m_addrman;
-    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
-    BanMan* const m_banman;
-    ChainstateManager& m_chainman;
-    CTxMemPool& m_mempool;
-    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
-    const std::unique_ptr<CJContext>& m_cj_ctx;
-    const std::unique_ptr<LLMQContext>& m_llmq_ctx;
-    CMasternodeMetaMan& m_mn_metaman;
-    CMasternodeSync& m_mn_sync;
-    CGovernanceManager& m_govman;
-    CSporkManager& m_sporkman;
-    const CActiveMasternodeManager* const m_mn_activeman;
-
-    /** The height of the best chain */
-    std::atomic<int> m_best_height{-1};
-
-    /** Next time to check for stale tip */
-    std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
-
-    /** Whether this node is running in blocks only mode */
-    const bool m_ignore_incoming_txs;
-
-    /** Whether we've completed initial sync yet, for determining when to turn
-      * on extra block-relay-only peers. */
-    bool m_initial_sync_finished GUARDED_BY(cs_main){false};
-
-    /** Protects m_peer_map. This mutex must not be locked while holding a lock
-     *  on any of the mutexes inside a Peer object. */
-    mutable Mutex m_peer_mutex;
-    /**
-     * Map of all Peer objects, keyed by peer id. This map is protected
-     * by the m_peer_mutex. Once a shared pointer reference is
-     * taken, the lock may be released. Individual fields are protected by
-     * their own locks.
-     */
-    std::map<NodeId, PeerRef> m_peer_map GUARDED_BY(m_peer_mutex);
-
-    /** Check whether the last unknown block a peer advertised is not yet known. */
-    void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    /** Update tracking information about which blocks a peer is assumed to have. */
-    void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    /**
-     * To prevent fingerprinting attacks, only send blocks/headers outside of the
-     * active chain if they are no more than a month older (both in time, and in
-     * best equivalent proof of work) than the best header chain we know about and
-     * we fully-validated them at some point.
-     */
-    bool BlockRequestAllowed(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv, llmq::CInstantSendManager& isman);
-
-    /**
-     * Validation logic for compact filters request handling.
-     *
-     * May disconnect from the peer in the case of a bad request.
-     *
-     * @param[in]   node            The node that we received the request from
-     * @param[in]   peer            The peer that we received the request from
-     * @param[in]   filter_type     The filter type the request is for. Must be basic filters.
-     * @param[in]   start_height    The start height for the request
-     * @param[in]   stop_hash       The stop_hash for the request
-     * @param[in]   max_height_diff The maximum number of items permitted to request, as specified in BIP 157
-     * @param[out]  stop_index      The CBlockIndex for the stop_hash block, if the request can be serviced.
-     * @param[out]  filter_index    The filter index, if the request can be serviced.
-     * @return                      True if the request can be serviced.
-     */
-    bool PrepareBlockFilterRequest(CNode& node, Peer& peer,
-                                   BlockFilterType filter_type, uint32_t start_height,
-                                   const uint256& stop_hash, uint32_t max_height_diff,
-                                   const CBlockIndex*& stop_index,
-                                   BlockFilterIndex*& filter_index);
-
-    /**
-     * Handle a cfilters request.
-     *
-     * May disconnect from the peer in the case of a bad request.
-     *
-     * @param[in]   node            The node that we received the request from
-     * @param[in]   peer            The peer that we received the request from
-     * @param[in]   vRecv           The raw message received
-     */
-    void ProcessGetCFilters(CNode& node, Peer& peer, CDataStream& vRecv);
-
-    /**
-     * Handle a cfheaders request.
-     *
-     * May disconnect from the peer in the case of a bad request.
-     *
-     * @param[in]   node            The node that we received the request from
-     * @param[in]   peer            The peer that we received the request from
-     * @param[in]   vRecv           The raw message received
-     */
-    void ProcessGetCFHeaders(CNode& node, Peer& peer, CDataStream& vRecv);
-
-    /**
-     * Handle a getcfcheckpt request.
-     *
-     * May disconnect from the peer in the case of a bad request.
-     *
-     * @param[in]   node            The node that we received the request from
-     * @param[in]   peer            The peer that we received the request from
-     * @param[in]   vRecv           The raw message received
-     */
-    void ProcessGetCFCheckPt(CNode& node, Peer& peer, CDataStream& vRecv);
-
-    /** Checks if address relay is permitted with peer. If needed, initializes
-     * the m_addr_known bloom filter and sets m_addr_relay_enabled to true.
-     *
-     *  @return   True if address relay is enabled with peer
-     *            False if address relay is disallowed
-     */
-    bool SetupAddressRelay(const CNode& node, Peer& peer);
-
-    /** Number of nodes with fSyncStarted. */
-    int nSyncStarted GUARDED_BY(cs_main) = 0;
-
-    /** Hash of the last block we received via INV */
-    uint256 m_last_block_inv_triggering_headers_sync{};
-
-    /**
-     * Sources of received blocks, saved to be able punish them when processing
-     * happens afterwards.
-     * Set mapBlockSource[hash].second to false if the node should not be
-     * punished if the block is invalid.
-     */
-    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
-
-    /** Number of outbound peers with m_chain_sync.m_protect. */
-    int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
-
-    bool AlreadyHave(const CInv& inv)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
-
-    /**
-     * Filter for transactions that were recently rejected by
-     * AcceptToMemoryPool. These are not rerequested until the chain tip
-     * changes, at which point the entire filter is reset.
-     *
-     * Without this filter we'd be re-requesting txs from each of our peers,
-     * increasing bandwidth consumption considerably. For instance, with 100
-     * peers, half of which relay a tx we don't accept, that might be a 50x
-     * bandwidth increase. A flooding attacker attempting to roll-over the
-     * filter using minimum-sized, 60byte, transactions might manage to send
-     * 1000/sec if we have fast peers, so we pick 120,000 to give our peers a
-     * two minute window to send invs to us.
-     *
-     * Decreasing the false positive rate is fairly cheap, so we pick one in a
-     * million to make it highly unlikely for users to have issues with this
-     * filter.
-     *
-     * Memory used: 1.3MB
-     */
-    CRollingBloomFilter m_recent_rejects GUARDED_BY(::cs_main){120'000, 0.000'001};
-    uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
-
-    /*
-     * Filter for transactions that have been recently confirmed.
-     * We use this to avoid requesting transactions that have already been
-     * confirnmed.
-     *
-     * Blocks don't typically have more than 4000 transactions, so this should
-     * be at least six blocks (~1 hr) worth of transactions that we can store,
-     * inserting both a txid and wtxid for every observed transaction.
-     * If the number of transactions appearing in a block goes up, or if we are
-     * seeing getdata requests more than an hour after initial announcement, we
-     * can increase this number.
-     * The false positive rate of 1/1M should come out to less than 1
-     * transaction per day that would be inadvertently ignored (which is the
-     * same probability that we have in the reject filter).
-     */
-    Mutex m_recent_confirmed_transactions_mutex;
-    CRollingBloomFilter m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex){48'000, 0.000'001};
-
-    /* Returns a bool indicating whether we requested this block.
-     * Also used if a block was /not/ received and timed out or started with another peer
-     */
-    bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    /* Mark a block as in flight
-     * Returns false, still setting pit, if the block was already in flight from the same peer
-     * pit will only be valid as long as the same cs_main lock is being held
-     */
-    bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlockIndex* pindex = nullptr, std::list<QueuedBlock>::iterator** pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    bool TipMayBeStale() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
-     *  at most count entries.
-     */
-    void FindNextBlocksToDownload(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight GUARDED_BY(cs_main);
-
-    /** When our tip was last updated. */
-    std::atomic<std::chrono::seconds> m_last_tip_update{0s};
-
-    /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
-    CTransactionRef FindTxForGetData(const CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main);
-
-    void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex);
-
-    void ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing);
-
-    /** Relay map (txid -> CTransactionRef) */
-    typedef std::map<uint256, CTransactionRef> MapRelay;
-    MapRelay mapRelay GUARDED_BY(cs_main);
-    /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
-    std::deque<std::pair<std::chrono::microseconds, MapRelay::iterator>> g_relay_expiration GUARDED_BY(cs_main);
-
-    /**
-     * When a peer sends us a valid block, instruct it to announce blocks to us
-     * using CMPCTBLOCK if possible by adding its nodeid to the end of
-     * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
-     * removing the first element if necessary.
-     */
-    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    /** Stack of nodes which we have set to announce using compact blocks */
-    std::list<NodeId> lNodesAnnouncingHeaderAndIDs GUARDED_BY(cs_main);
-
-    /** Number of peers from which we're downloading blocks. */
-    int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
-};
-} // namespace
-
-namespace {
-
-    /** Number of preferable block download peers. */
-    int nPreferredDownload GUARDED_BY(cs_main) = 0;
-
-    struct IteratorComparator
-    {
-        template<typename I>
-        bool operator()(const I& a, const I& b) const
-        {
-            return &(*a) < &(*b);
-        }
-    };
-
-    /** Index from the parents' COutPoint into the mapOrphanTransactions. Used
-     *  to remove orphan transactions from the mapOrphanTransactions */
-    std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
-    /** Orphan transactions in vector for quick random eviction */
-    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
-
-    /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
-     *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
-     *  these are kept in a ring buffer */
-    static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
-    /** Offset into vExtraTxnForCompact to insert the next tx */
-    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
-} // namespace
-
-namespace {
 /**
  * Maintain validation-specific state about nodes, protected by cs_main, instead
  * by CNode's own locks. This simplifies asynchronous operation, where
@@ -956,18 +521,460 @@ struct CNodeState {
     CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
 };
 
+class PeerManagerImpl final : public PeerManager
+{
+public:
+    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman, BanMan* banman,
+                    ChainstateManager& chainman, CTxMemPool& pool,
+                    CMasternodeMetaMan& mn_metaman, CMasternodeSync& mn_sync,
+                    CGovernanceManager& govman, CSporkManager& sporkman,
+                    const CActiveMasternodeManager* const mn_activeman,
+                    const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                    const std::unique_ptr<CJContext>& cj_ctx,
+                    const std::unique_ptr<LLMQContext>& llmq_ctx,
+                    bool ignore_incoming_txs);
+
+    /** Overridden from CValidationInterface. */
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex);
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_recent_confirmed_transactions_mutex);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void BlockChecked(const CBlock& block, const BlockValidationState& state) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
+
+    /** Implement NetEventsInterface */
+    void InitializeNode(CNode& node, ServiceFlags our_services) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, g_msgproc_mutex);
+    bool SendMessages(CNode* pto) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, g_msgproc_mutex);
+
+    /** Implement PeerManager */
+    void StartScheduledTasks(CScheduler& scheduler) override;
+    void CheckForStaleTipAndEvictPeers() override;
+    std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
+    void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);;
+    void PushInventory(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInv(CInv &inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void SetBestHeight(int height) override { m_best_height = height; };
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message = "") override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_recent_confirmed_transactions_mutex, g_msgproc_mutex);
+    void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
+    bool IsBanned(NodeId pnode) override EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
+    void EraseObjectRequest(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
+                       bool is_masternode, bool fForce = false) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    size_t GetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+private:
+    /** Helper to process result of external handlers of message */
+    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
+    void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+
+    /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
+    void EvictExtraOutboundPeers(std::chrono::seconds now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
+    void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /** Get a shared pointer to the Peer object.
+     *  May return an empty shared_ptr if the Peer object can't be found. */
+    PeerRef GetPeerRef(NodeId id) const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /** Get a shared pointer to the Peer object and remove it from m_peer_map.
+     *  May return an empty shared_ptr if the Peer object can't be found. */
+    PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /**
+     * Potentially mark a node discouraged based on the contents of a BlockValidationState object
+     *
+     * @param[in] via_compact_block this bool is passed in because net_processing should
+     * punish peers differently depending on whether the data was provided in a compact
+     * block message or not. If the compact block had a valid header, but contained invalid
+     * txs, the peer should not be punished. See BIP 152.
+     *
+     * @return Returns true if the peer was punished (probably disconnected)
+     */
+    bool MaybePunishNodeForBlock(NodeId nodeid, const BlockValidationState& state,
+                                 bool via_compact_block, const std::string& message = "")
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /**
+     * Potentially ban a node based on the contents of a TxValidationState object
+     *
+     * @return Returns true if the peer was punished (probably disconnected)
+     *
+     * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
+     */
+    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "")
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /** Maybe disconnect a peer and discourage future connections from its address.
+     *
+     * @param[in]   pnode     The node to check.
+     * @param[in]   peer      The peer object to check.
+     * @return                True if the peer was marked for disconnection in this function
+     */
+    bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
+
+    void ProcessOrphanTx(std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    /** Process a single headers message from a peer. */
+    void ProcessHeadersMessage(CNode& pfrom, Peer& peer,
+                               const std::vector<CBlockHeader>& headers,
+                               bool via_compact_block)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+    /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
+    /** Deal with state tracking and headers sync for peers that send the
+     * occasional non-connecting header (this can happen due to BIP 130 headers
+     * announcements for blocks interacting with the 2hr (MAX_FUTURE_BLOCK_TIME) rule). */
+    void HandleFewUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+    /** Return true if the headers connect to each other, false otherwise */
+    bool CheckHeadersAreContinuous(const std::vector<CBlockHeader>& headers) const;
+    /** Request further headers from this peer with a given locator.
+     * We don't issue a getheaders message if we have a recent one outstanding.
+     * This returns true if a getheaders is actually sent, and false otherwise.
+     */
+    bool MaybeSendGetHeaders(CNode& pfrom, const std::string& msg_type, const CBlockLocator& locator, Peer& peer)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    /** Potentially fetch blocks from this peer upon receipt of a new headers tip */
+    void HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex* pindexLast);
+    /** Update peer state based on received headers message */
+    void UpdatePeerStateForReceivedHeaders(CNode& pfrom, const CBlockIndex *pindexLast, bool received_new_header, bool may_have_more_headers);
+
+    void SendBlockTransactions(CNode& pfrom, const CBlock& block, const BlockTransactionsRequest& req)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /** Send a version message to a peer */
+    void PushNodeVersion(CNode& pnode, const Peer& peer);
+
+    /** Send a ping message every PING_INTERVAL or if requested via RPC. May
+     *  mark the peer to be disconnected if a ping has timed out.
+     *  We use mockable time for ping timeouts, so setmocktime may cause pings
+     *  to time out. */
+    void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
+
+    /** Send `addr` messages on a regular schedule. */
+    void MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /** Relay (gossip) an address to a few randomly chosen nodes.
+     *
+     * @param[in] originator   The id of the peer that sent us the address. We don't want to relay it back.
+     * @param[in] addr         Address to relay.
+     * @param[in] fReachable   Whether the address' network is reachable. We relay unreachable
+     *                         addresses less.
+     */
+    void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
+
+    const CChainParams& m_chainparams;
+    CConnman& m_connman;
+    AddrMan& m_addrman;
+    /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
+    BanMan* const m_banman;
+    ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
+    const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
+    const std::unique_ptr<CJContext>& m_cj_ctx;
+    const std::unique_ptr<LLMQContext>& m_llmq_ctx;
+    CMasternodeMetaMan& m_mn_metaman;
+    CMasternodeSync& m_mn_sync;
+    CGovernanceManager& m_govman;
+    CSporkManager& m_sporkman;
+    const CActiveMasternodeManager* const m_mn_activeman;
+
+    /** The height of the best chain */
+    std::atomic<int> m_best_height{-1};
+
+    /** Next time to check for stale tip */
+    std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
+
+    /** Whether this node is running in blocks only mode */
+    const bool m_ignore_incoming_txs;
+
+    /** Whether we've completed initial sync yet, for determining when to turn
+      * on extra block-relay-only peers. */
+    bool m_initial_sync_finished GUARDED_BY(cs_main){false};
+
+    /** Protects m_peer_map. This mutex must not be locked while holding a lock
+     *  on any of the mutexes inside a Peer object. */
+    mutable Mutex m_peer_mutex;
+    /**
+     * Map of all Peer objects, keyed by peer id. This map is protected
+     * by the m_peer_mutex. Once a shared pointer reference is
+     * taken, the lock may be released. Individual fields are protected by
+     * their own locks.
+     */
+    std::map<NodeId, PeerRef> m_peer_map GUARDED_BY(m_peer_mutex);
+
+    /** Map maintaining per-node state. */
+    std::map<NodeId, CNodeState> m_node_states GUARDED_BY(cs_main);
+
+    /** Get a pointer to a const CNodeState, used when not mutating the CNodeState object. */
+    const CNodeState* State(NodeId pnode) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Get a pointer to a mutable CNodeState. */
+    CNodeState* State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    std::atomic<std::chrono::microseconds> m_next_inv_to_inbounds{0us};
+
+    /** Check whether the last unknown block a peer advertised is not yet known. */
+    void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Update tracking information about which blocks a peer is assumed to have. */
+    void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * To prevent fingerprinting attacks, only send blocks/headers outside of the
+     * active chain if they are no more than a month older (both in time, and in
+     * best equivalent proof of work) than the best header chain we know about and
+     * we fully-validated them at some point.
+     */
+    bool BlockRequestAllowed(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv, llmq::CInstantSendManager& isman);
+
+    /**
+     * Validation logic for compact filters request handling.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   node            The node that we received the request from
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   filter_type     The filter type the request is for. Must be basic filters.
+     * @param[in]   start_height    The start height for the request
+     * @param[in]   stop_hash       The stop_hash for the request
+     * @param[in]   max_height_diff The maximum number of items permitted to request, as specified in BIP 157
+     * @param[out]  stop_index      The CBlockIndex for the stop_hash block, if the request can be serviced.
+     * @param[out]  filter_index    The filter index, if the request can be serviced.
+     * @return                      True if the request can be serviced.
+     */
+    bool PrepareBlockFilterRequest(CNode& node, Peer& peer,
+                                   BlockFilterType filter_type, uint32_t start_height,
+                                   const uint256& stop_hash, uint32_t max_height_diff,
+                                   const CBlockIndex*& stop_index,
+                                   BlockFilterIndex*& filter_index);
+
+    /**
+     * Handle a cfilters request.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   node            The node that we received the request from
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   vRecv           The raw message received
+     */
+    void ProcessGetCFilters(CNode& node, Peer& peer, CDataStream& vRecv);
+
+    /**
+     * Handle a cfheaders request.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   node            The node that we received the request from
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   vRecv           The raw message received
+     */
+    void ProcessGetCFHeaders(CNode& node, Peer& peer, CDataStream& vRecv);
+
+    /**
+     * Handle a getcfcheckpt request.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   node            The node that we received the request from
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   vRecv           The raw message received
+     */
+    void ProcessGetCFCheckPt(CNode& node, Peer& peer, CDataStream& vRecv);
+
+    /** Checks if address relay is permitted with peer. If needed, initializes
+     * the m_addr_known bloom filter and sets m_addr_relay_enabled to true.
+     *
+     *  @return   True if address relay is enabled with peer
+     *            False if address relay is disallowed
+     */
+    bool SetupAddressRelay(const CNode& node, Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+    void PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /** Number of nodes with fSyncStarted. */
+    int nSyncStarted GUARDED_BY(cs_main) = 0;
+
+    /** Hash of the last block we received via INV */
+    uint256 m_last_block_inv_triggering_headers_sync GUARDED_BY(g_msgproc_mutex){};
+
+    /**
+     * Sources of received blocks, saved to be able punish them when processing
+     * happens afterwards.
+     * Set mapBlockSource[hash].second to false if the node should not be
+     * punished if the block is invalid.
+     */
+    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
+
+    /** Number of outbound peers with m_chain_sync.m_protect. */
+    int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
+
+    /** Number of preferable block download peers. */
+    int m_num_preferred_download_peers GUARDED_BY(cs_main){0};
+
+    bool AlreadyHave(const CInv& inv)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
+
+    /**
+     * Filter for transactions that were recently rejected by
+     * AcceptToMemoryPool. These are not rerequested until the chain tip
+     * changes, at which point the entire filter is reset.
+     *
+     * Without this filter we'd be re-requesting txs from each of our peers,
+     * increasing bandwidth consumption considerably. For instance, with 100
+     * peers, half of which relay a tx we don't accept, that might be a 50x
+     * bandwidth increase. A flooding attacker attempting to roll-over the
+     * filter using minimum-sized, 60byte, transactions might manage to send
+     * 1000/sec if we have fast peers, so we pick 120,000 to give our peers a
+     * two minute window to send invs to us.
+     *
+     * Decreasing the false positive rate is fairly cheap, so we pick one in a
+     * million to make it highly unlikely for users to have issues with this
+     * filter.
+     *
+     * Memory used: 1.3MB
+     */
+    CRollingBloomFilter m_recent_rejects GUARDED_BY(::cs_main){120'000, 0.000'001};
+    uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
+
+    /*
+     * Filter for transactions that have been recently confirmed.
+     * We use this to avoid requesting transactions that have already been
+     * confirnmed.
+     *
+     * Blocks don't typically have more than 4000 transactions, so this should
+     * be at least six blocks (~1 hr) worth of transactions that we can store,
+     * inserting both a txid and wtxid for every observed transaction.
+     * If the number of transactions appearing in a block goes up, or if we are
+     * seeing getdata requests more than an hour after initial announcement, we
+     * can increase this number.
+     * The false positive rate of 1/1M should come out to less than 1
+     * transaction per day that would be inadvertently ignored (which is the
+     * same probability that we have in the reject filter).
+     */
+    Mutex m_recent_confirmed_transactions_mutex;
+    CRollingBloomFilter m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex){48'000, 0.000'001};
+
+    /**
+     * For sending `inv`s to inbound peers, we use a single (exponentially
+     * distributed) timer for all peers. If we used a separate timer for each
+     * peer, a spy node could make multiple inbound connections to us to
+     * accurately determine when we received the transaction (and potentially
+     * determine the transaction's origin). */
+    std::chrono::microseconds NextInvToInbounds(std::chrono::microseconds now,
+                                                std::chrono::seconds average_interval);
+
+
+    // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
+    RecursiveMutex m_most_recent_block_mutex;
+    std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
+    std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
+    uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
+
+    /** Height of the highest block announced using BIP 152 high-bandwidth mode. */
+    int m_highest_fast_announce GUARDED_BY(::cs_main){0};
+
+    /* Returns a bool indicating whether we requested this block.
+     * Also used if a block was /not/ received and timed out or started with another peer
+     */
+    bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /* Mark a block as in flight
+     * Returns false, still setting pit, if the block was already in flight from the same peer
+     * pit will only be valid as long as the same cs_main lock is being held
+     */
+    bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlockIndex* pindex = nullptr, std::list<QueuedBlock>::iterator** pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    bool TipMayBeStale() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
+     *  at most count entries.
+     */
+    void FindNextBlocksToDownload(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> > mapBlocksInFlight GUARDED_BY(cs_main);
+
+    /** When our tip was last updated. */
+    std::atomic<std::chrono::seconds> m_last_tip_update{0s};
+
+    /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
+    CTransactionRef FindTxForGetData(const CNode* peer, const uint256& txid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main);
+
+    void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex);
+
+    void ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing);
+
+    /** Relay map (txid -> CTransactionRef) */
+    typedef std::map<uint256, CTransactionRef> MapRelay;
+    MapRelay mapRelay GUARDED_BY(cs_main);
+    /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
+    std::deque<std::pair<std::chrono::microseconds, MapRelay::iterator>> g_relay_expiration GUARDED_BY(cs_main);
+
+    /**
+     * When a peer sends us a valid block, instruct it to announce blocks to us
+     * using CMPCTBLOCK if possible by adding its nodeid to the end of
+     * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
+     * removing the first element if necessary.
+     */
+    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Stack of nodes which we have set to announce using compact blocks */
+    std::list<NodeId> lNodesAnnouncingHeaderAndIDs GUARDED_BY(cs_main);
+
+    /** Number of peers from which we're downloading blocks. */
+    int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
+
+    /** Storage for orphan information */
+    TxOrphanage m_orphanage;
+
+    void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
+     *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
+     *  these are kept in a ring buffer */
+    std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+    /** Offset into vExtraTxnForCompact to insert the next tx */
+    size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+};
+
 // Keeps track of the time (in microseconds) when transactions were requested last time
 unordered_limitedmap<uint256, std::chrono::microseconds, StaticSaltedHasher> g_already_asked_for(MAX_INV_SZ, MAX_INV_SZ * 2);
 unordered_limitedmap<uint256, std::chrono::microseconds, StaticSaltedHasher> g_erased_object_requests(MAX_INV_SZ, MAX_INV_SZ * 2);
 
-/** Map maintaining per-node state. */
-static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
-
-static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
-    std::map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
-    if (it == mapNodeState.end())
+const CNodeState* PeerManagerImpl::State(NodeId pnode) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    std::map<NodeId, CNodeState>::const_iterator it = m_node_states.find(pnode);
+    if (it == m_node_states.end())
         return nullptr;
     return &it->second;
+}
+
+CNodeState* PeerManagerImpl::State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    return const_cast<CNodeState*>(std::as_const(*this).State(pnode));
 }
 
 /**
@@ -980,13 +987,13 @@ static bool IsAddrCompatible(const Peer& peer, const CAddress& addr)
     return peer.m_wants_addrv2 || addr.IsAddrV1Compatible();
 }
 
-static void AddAddressKnown(Peer& peer, const CAddress& addr)
+void PeerManagerImpl::AddAddressKnown(Peer& peer, const CAddress& addr)
 {
     assert(peer.m_addr_known);
     peer.m_addr_known->insert(addr.GetKey());
 }
 
-static void PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand)
+void PeerManagerImpl::PushAddress(Peer& peer, const CAddress& addr, FastRandomContext& insecure_rand)
 {
     // Known checking here is only to save space from duplicates.
     // Before sending, we'll filter it again for known addresses that were
@@ -1054,14 +1061,16 @@ static void PushInv(Peer& peer, const CInv& inv)
     peer.m_tx_relay->vInventoryOtherToSend.push_back(inv);
 }
 
-static void UpdatePreferredDownload(const CNode& node, const Peer& peer, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::microseconds now,
+                                                             std::chrono::seconds average_interval)
 {
-    nPreferredDownload -= state->fPreferredDownload;
-
-    // Whether this node should be marked as a preferred download node.
-    state->fPreferredDownload = (!node.IsInboundConn() || node.HasPermission(NetPermissionFlags::NoBan)) && !node.IsAddrFetchConn() && CanServeBlocks(peer);
-
-    nPreferredDownload += state->fPreferredDownload;
+    if (m_next_inv_to_inbounds.load() < now) {
+        // If this function were called from multiple threads simultaneously
+        // it would possible that both update the next send variable, and return a different result to their caller.
+        // This is not possible in practice as only the net processing thread invokes this function.
+        m_next_inv_to_inbounds = GetExponentialRand(now, average_interval);
+    }
+    return m_next_inv_to_inbounds;
 }
 
 bool PeerManagerImpl::MarkBlockAsReceived(const uint256& hash)
@@ -1359,27 +1368,20 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     }
 }
 
-void EraseObjectRequest(CNodeState* nodestate, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::EraseObjectRequest(NodeId nodeid, const CInv& inv)
 {
     AssertLockHeld(cs_main);
+
+    CNodeState* state = State(nodeid);
+    if (state == nullptr)
+        return;
+
     LogPrint(BCLog::NET, "%s -- inv=(%s)\n", __func__, inv.ToString());
     g_already_asked_for.erase(inv.hash);
     g_erased_object_requests.insert(std::make_pair(inv.hash, GetTime<std::chrono::microseconds>()));
 
-    if (nodestate) {
-        nodestate->m_object_download.m_object_announced.erase(inv);
-        nodestate->m_object_download.m_object_in_flight.erase(inv);
-    }
-}
-
-void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
-        return;
-    }
-    EraseObjectRequest(state, inv);
+    state->m_object_download.m_object_announced.erase(inv);
+    state->m_object_download.m_object_in_flight.erase(inv);
 }
 
 std::chrono::microseconds GetObjectRequestTime(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1452,9 +1454,15 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
     return process_time;
 }
 
-void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool fForce = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
+                                    bool is_masternode, bool fForce)
 {
     AssertLockHeld(cs_main);
+
+    CNodeState* state = State(nodeid);
+    if (state == nullptr)
+        return;
+
     CNodeState::ObjectDownloadState& peer_download_state = state->m_object_download;
     if (peer_download_state.m_object_announced.size() >= MAX_PEER_OBJECT_ANNOUNCEMENTS ||
             peer_download_state.m_object_process_time.size() >= MAX_PEER_OBJECT_ANNOUNCEMENTS ||
@@ -1480,29 +1488,18 @@ void RequestObject(CNodeState* state, const CInv& inv, std::chrono::microseconds
     LogPrint(BCLog::NET, "%s -- inv=(%s), current_time=%d, process_time=%d, delta=%d\n", __func__, inv.ToString(), current_time.count(), process_time.count(), (process_time - current_time).count());
 }
 
-void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool is_masternode, bool fForce) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+size_t PeerManagerImpl::GetRequestedObjectCount(NodeId nodeid) const
 {
     AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
-        return;
-    }
-    RequestObject(state, inv, current_time, is_masternode, fForce);
-}
 
-size_t GetRequestedObjectCount(NodeId nodeId)
-{
-    AssertLockHeld(cs_main);
-    auto* state = State(nodeId);
-    if (!state) {
+    const CNodeState* state = State(nodeid);
+    if (state == nullptr)
         return 0;
-    }
+
     return state->m_object_download.m_object_process_time.size();
 }
 
-// This function is used for testing the stale tip eviction logic, see
-// denialofservice_tests.cpp
-void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
+void PeerManagerImpl::UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 {
     LOCK(cs_main);
     CNodeState *state = State(node);
@@ -1513,7 +1510,7 @@ void PeerManagerImpl::InitializeNode(CNode& node, ServiceFlags our_services) {
     NodeId nodeid = node.GetId();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.IsInboundConn()));
+        m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(node.IsInboundConn()));
     }
     PeerRef peer = std::make_shared<Peer>(nodeid, our_services, /* block_relay_only = */ node.IsBlockOnlyConn());
     {
@@ -1569,19 +1566,19 @@ void PeerManagerImpl::FinalizeNode(const CNode& node) {
     for (const QueuedBlock& entry : state->vBlocksInFlight) {
         mapBlocksInFlight.erase(entry.hash);
     }
-    EraseOrphansFor(nodeid);
-    nPreferredDownload -= state->fPreferredDownload;
+    WITH_LOCK(g_cs_orphans, m_orphanage.EraseForPeer(nodeid));
+    m_num_preferred_download_peers -= state->fPreferredDownload;
     nPeersWithValidatedDownloads -= (state->nBlocksInFlightValidHeaders != 0);
     assert(nPeersWithValidatedDownloads >= 0);
     m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(m_outbound_peers_with_protect_from_disconnect >= 0);
 
-    mapNodeState.erase(nodeid);
+    m_node_states.erase(nodeid);
 
-    if (mapNodeState.empty()) {
+    if (m_node_states.empty()) {
         // Do a consistency check after the last peer is removed.
         assert(mapBlocksInFlight.empty());
-        assert(nPreferredDownload == 0);
+        assert(m_num_preferred_download_peers == 0);
         assert(nPeersWithValidatedDownloads == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
     }
@@ -1620,7 +1617,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
 {
     {
         LOCK(cs_main);
-        CNodeState* state = State(nodeid);
+        const CNodeState* state = State(nodeid);
         if (state == nullptr)
             return false;
         stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : -1;
@@ -1661,12 +1658,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     return true;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// mapOrphanTransactions
-//
-
-static void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
     size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
@@ -1675,131 +1667,6 @@ static void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_L
         vExtraTxnForCompact.resize(max_extra_txn);
     vExtraTxnForCompact[vExtraTxnForCompactIt] = std::make_pair(tx->GetHash(), tx);
     vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
-}
-
-bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
-{
-    const uint256& hash = tx->GetHash();
-    if (mapOrphanTransactions.count(hash))
-        return false;
-
-    // Ignore big transactions, to avoid a
-    // send-big-orphans memory exhaustion attack. If a peer has a legitimate
-    // large transaction with a missing parent then we assume
-    // it will rebroadcast it later, after the parent transaction(s)
-    // have been mined or received.
-    // 100 orphans, each of which is at most 99,999 bytes big is
-    // at most 10 megabytes of orphans and somewhat more byprev index (in the worst case):
-    unsigned int sz = GetSerializeSize(*tx, CTransaction::CURRENT_VERSION);
-    if (sz > MAX_STANDARD_TX_SIZE)
-    {
-        LogPrint(BCLog::MEMPOOL, "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
-        return false;
-    }
-
-    auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, g_orphan_list.size(), sz});
-    assert(ret.second);
-    g_orphan_list.push_back(ret.first);
-    for (const CTxIn& txin : tx->vin) {
-        mapOrphanTransactionsByPrev[txin.prevout].insert(ret.first);
-    }
-
-    AddToCompactExtraTransactions(tx);
-
-    nMapOrphanTransactionsSize += sz;
-
-    LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
-             mapOrphanTransactions.size(), mapOrphanTransactionsByPrev.size());
-    statsClient.inc("transactions.orphans.add", 1.0f);
-    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
-    return true;
-}
-
-int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
-{
-    std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
-    if (it == mapOrphanTransactions.end())
-        return 0;
-    for (const CTxIn& txin : it->second.tx->vin)
-    {
-        auto itPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
-        if (itPrev == mapOrphanTransactionsByPrev.end())
-            continue;
-        itPrev->second.erase(it);
-        if (itPrev->second.empty())
-            mapOrphanTransactionsByPrev.erase(itPrev);
-    }
-
-    size_t old_pos = it->second.list_pos;
-    assert(g_orphan_list[old_pos] == it);
-    if (old_pos + 1 != g_orphan_list.size()) {
-        // Unless we're deleting the last entry in g_orphan_list, move the last
-        // entry to the position we're deleting.
-        auto it_last = g_orphan_list.back();
-        g_orphan_list[old_pos] = it_last;
-        it_last->second.list_pos = old_pos;
-    }
-    g_orphan_list.pop_back();
-
-    assert(nMapOrphanTransactionsSize >= it->second.nTxSize);
-    nMapOrphanTransactionsSize -= it->second.nTxSize;
-    mapOrphanTransactions.erase(it);
-    statsClient.inc("transactions.orphans.remove", 1.0f);
-    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
-    return 1;
-}
-
-void EraseOrphansFor(NodeId peer)
-{
-    LOCK(g_cs_orphans);
-    int nErased = 0;
-    std::map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
-    while (iter != mapOrphanTransactions.end())
-    {
-        std::map<uint256, COrphanTx>::iterator maybeErase = iter++; // increment to avoid iterator becoming invalid
-        if (maybeErase->second.fromPeer == peer)
-        {
-            nErased += EraseOrphanTx(maybeErase->second.tx->GetHash());
-        }
-    }
-    if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx from peer=%d\n", nErased, peer);
-}
-
-
-unsigned int LimitOrphanTxSize(unsigned int nMaxOrphansSize)
-{
-    LOCK(g_cs_orphans);
-
-    unsigned int nEvicted = 0;
-    static int64_t nNextSweep;
-    int64_t nNow = GetTime();
-    if (nNextSweep <= nNow) {
-        // Sweep out expired orphan pool entries:
-        int nErased = 0;
-        int64_t nMinExpTime = nNow + ORPHAN_TX_EXPIRE_TIME - ORPHAN_TX_EXPIRE_INTERVAL;
-        std::map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
-        while (iter != mapOrphanTransactions.end())
-        {
-            std::map<uint256, COrphanTx>::iterator maybeErase = iter++;
-            if (maybeErase->second.nTimeExpire <= nNow) {
-                nErased += EraseOrphanTx(maybeErase->second.tx->GetHash());
-            } else {
-                nMinExpTime = std::min(maybeErase->second.nTimeExpire, nMinExpTime);
-            }
-        }
-        // Sweep again 5 minutes after the next entry that expires in order to batch the linear scan.
-        nNextSweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
-        if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx due to expiration\n", nErased);
-    }
-    FastRandomContext rng;
-    while (!mapOrphanTransactions.empty() && nMapOrphanTransactionsSize > nMaxOrphansSize)
-    {
-        // Evict a random orphan:
-        size_t randompos = rng.randrange(g_orphan_list.size());
-        EraseOrphanTx(g_orphan_list[randompos]->first);
-        ++nEvicted;
-    }
-    return nEvicted;
 }
 
 void PeerManagerImpl::Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
@@ -2022,52 +1889,17 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
-    {
-        LOCK2(cs_main, g_cs_orphans);
+    LOCK2(::cs_main, g_cs_orphans);
 
-        std::vector<uint256> vOrphanErase;
-        std::set<uint256> orphanWorkSet;
-
-        for (const CTransactionRef& ptx : pblock->vtx) {
-            const CTransaction& tx = *ptx;
-
-            // Which orphan pool entries we should reprocess and potentially try to accept into mempool again?
-            for (size_t i = 0; i < tx.vin.size(); i++) {
-                auto itByPrev = mapOrphanTransactionsByPrev.find(COutPoint(tx.GetHash(), (uint32_t)i));
-                if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
-                for (const auto& elem : itByPrev->second) {
-                    orphanWorkSet.insert(elem->first);
-                }
-            }
-
-            // Which orphan pool entries must we evict?
-            for (const auto& txin : tx.vin) {
-                auto itByPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
-                if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
-                for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
-                    const CTransaction& orphanTx = *(*mi)->second.tx;
-                    const uint256& orphanHash = orphanTx.GetHash();
-                    vOrphanErase.push_back(orphanHash);
-                }
-            }
-        }
-
-        // Erase orphan transactions included or precluded by this block
-        if (vOrphanErase.size()) {
-            int nErased = 0;
-            for (const uint256& orphanHash : vOrphanErase) {
-                nErased += EraseOrphanTx(orphanHash);
-            }
-            LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
-        }
-
-        while (!orphanWorkSet.empty()) {
-            LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
-            ProcessOrphanTx(orphanWorkSet);
-        }
-
-        m_last_tip_update = GetTime<std::chrono::seconds>();
+    auto orphanWorkSet = m_orphanage.GetCandidatesForBlock(*pblock);
+    while (!orphanWorkSet.empty()) {
+        LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
+        ProcessOrphanTx(orphanWorkSet);
     }
+
+    m_orphanage.EraseForBlock(*pblock);
+    m_last_tip_update = GetTime<std::chrono::seconds>();
+
     {
         LOCK(m_recent_confirmed_transactions_mutex);
         for (const auto& ptx : pblock->vtx) {
@@ -2090,12 +1922,6 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
     m_recent_confirmed_transactions.reset();
 }
 
-// All of the following cache a recent block, and are protected by cs_most_recent_block
-static RecursiveMutex cs_most_recent_block;
-static std::shared_ptr<const CBlock> most_recent_block GUARDED_BY(cs_most_recent_block);
-static std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block GUARDED_BY(cs_most_recent_block);
-static uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
-
 /**
  * Maintain state about the best-seen block and fast-announce a compact block
  * to compatible peers.
@@ -2106,20 +1932,19 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     LOCK(cs_main);
 
-    static int nHighestFastAnnounce = 0;
-    if (pindex->nHeight <= nHighestFastAnnounce)
+    if (pindex->nHeight <= m_highest_fast_announce)
         return;
-    nHighestFastAnnounce = pindex->nHeight;
+    m_highest_fast_announce = pindex->nHeight;
 
     uint256 hashBlock(pblock->GetHash());
     const std::shared_future<CSerializedNetMsg> lazy_ser{
         std::async(std::launch::deferred, [&] { return msgMaker.Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
 
     {
-        LOCK(cs_most_recent_block);
-        most_recent_block_hash = hashBlock;
-        most_recent_block = pblock;
-        most_recent_compact_block = pcmpctblock;
+        LOCK(m_most_recent_block_mutex);
+        m_most_recent_block_hash = hashBlock;
+        m_most_recent_block = pblock;
+        m_most_recent_compact_block = pcmpctblock;
     }
 
     m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) {
@@ -2241,10 +2066,7 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
                 m_recent_rejects.reset();
             }
 
-            {
-                LOCK(g_cs_orphans);
-                if (mapOrphanTransactions.count(inv.hash)) return true;
-            }
+            if (m_orphanage.HaveTx(inv.hash)) return true;
 
             {
                 LOCK(m_recent_confirmed_transactions_mutex);
@@ -2428,8 +2250,8 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     // Relay to a limited number of other nodes
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the m_addr_knowns of the chosen nodes prevent repeats
-    uint64_t hashAddr = addr.GetHash();
-    const CSipHasher hasher = m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr << 32).Write((GetTime() + hashAddr) / (24 * 60 * 60));
+    const uint64_t hashAddr{addr.GetHash()};
+    const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr).Write((GetTime() + hashAddr) / (24 * 60 * 60))};
     FastRandomContext insecure_rand;
 
     // Relay reachable addresses to 2 peers. Unreachable addresses are relayed randomly to 1 or 2 peers.
@@ -2463,9 +2285,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     std::shared_ptr<const CBlock> a_recent_block;
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
     {
-        LOCK(cs_most_recent_block);
-        a_recent_block = most_recent_block;
-        a_recent_compact_block = most_recent_compact_block;
+        LOCK(m_most_recent_block_mutex);
+        a_recent_block = m_most_recent_block;
+        a_recent_compact_block = m_most_recent_compact_block;
     }
 
     bool need_activate_chain = false;
@@ -3144,40 +2966,32 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         const uint256 orphanHash = *orphan_work_set.begin();
         orphan_work_set.erase(orphan_work_set.begin());
 
-        auto orphan_it = mapOrphanTransactions.find(orphanHash);
-        if (orphan_it == mapOrphanTransactions.end()) continue;
+        const auto [porphanTx, from_peer] = m_orphanage.GetTx(orphanHash);
+        if (porphanTx == nullptr) continue;
 
-        const CTransactionRef porphanTx = orphan_it->second.tx;
         const MempoolAcceptResult result = AcceptToMemoryPool(m_chainman.ActiveChainstate(), m_mempool, porphanTx, false /* bypass_limits */);
         const TxValidationState& state = result.m_state;
 
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(porphanTx->GetHash());
-            for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
-                if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
-                    for (const auto& elem : it_by_prev->second) {
-                        orphan_work_set.insert(elem->first);
-                    }
-                }
-            }
-            EraseOrphanTx(orphanHash);
+            m_orphanage.AddChildrenToWorkSet(*porphanTx, orphan_work_set);
+            m_orphanage.EraseTx(orphanHash);
             break;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
                     orphanHash.ToString(),
-                    orphan_it->second.fromPeer,
+                    from_peer,
                     state.ToString());
                 // Maybe punish peer that gave us an invalid orphan tx
-                MaybePunishNodeForTx(orphan_it->second.fromPeer, state);
+                MaybePunishNodeForTx(from_peer, state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
             LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
             m_recent_rejects.insert(orphanHash);
-            EraseOrphanTx(orphanHash);
+            m_orphanage.EraseTx(orphanHash);
             break;
         }
     }
@@ -3442,6 +3256,8 @@ void PeerManagerImpl::ProcessMessage(
     const std::chrono::microseconds time_received,
     const std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockHeld(g_msgproc_mutex);
+
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
     statsClient.inc("message.received." + SanitizeString(msg_type), 1.0f);
 
@@ -3593,7 +3409,9 @@ void PeerManagerImpl::ProcessMessage(
         // Potentially mark this peer as a preferred download peer.
         {
             LOCK(cs_main);
-            UpdatePreferredDownload(pfrom, *peer, State(pfrom.GetId()));
+            CNodeState* state = State(pfrom.GetId());
+            state->fPreferredDownload = (!pfrom.IsInboundConn() || pfrom.HasPermission(NetPermissionFlags::NoBan)) && !pfrom.IsAddrFetchConn() && CanServeBlocks(*peer);
+            m_num_preferred_download_peers += state->fPreferredDownload;
         }
 
         // Self advertisement & GETADDR logic
@@ -3980,7 +3798,7 @@ void PeerManagerImpl::ProcessMessage(
                     }
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD || !m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
-                        RequestObject(State(pfrom.GetId()), inv, current_time, is_masternode);
+                        RequestObject(pfrom.GetId(), inv, current_time, is_masternode);
                     }
                 }
             }
@@ -4062,8 +3880,8 @@ void PeerManagerImpl::ProcessMessage(
         {
             std::shared_ptr<const CBlock> a_recent_block;
             {
-                LOCK(cs_most_recent_block);
-                a_recent_block = most_recent_block;
+                LOCK(m_most_recent_block_mutex);
+                a_recent_block = m_most_recent_block;
             }
             BlockValidationState state;
             if (!m_chainman.ActiveChainstate().ActivateBestChain(state, a_recent_block)) {
@@ -4116,10 +3934,10 @@ void PeerManagerImpl::ProcessMessage(
 
         std::shared_ptr<const CBlock> recent_block;
         {
-            LOCK(cs_most_recent_block);
-            if (most_recent_block_hash == req.blockhash)
-                recent_block = most_recent_block;
-            // Unlock cs_most_recent_block to avoid cs_main lock inversion
+            LOCK(m_most_recent_block_mutex);
+            if (m_most_recent_block_hash == req.blockhash)
+                recent_block = m_most_recent_block;
+            // Unlock m_most_recent_block_mutex to avoid cs_main lock inversion
         }
         if (recent_block) {
             SendBlockTransactions(pfrom, *recent_block, req);
@@ -4261,6 +4079,11 @@ void PeerManagerImpl::ProcessMessage(
     }
 
     if (msg_type == NetMsgType::TX || msg_type == NetMsgType::DSTX) {
+        // Stop processing the transaction early if we are still in IBD since we don't
+        // have enough information to validate it yet. Sending unsolicited transactions
+        // is not considered a protocol violation, so don't punish the peer.
+        if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) return;
+
         CTransactionRef ptx;
         CCoinJoinBroadcastTx dstx;
         int nInvType = MSG_TX;
@@ -4325,15 +4148,7 @@ void PeerManagerImpl::ProcessMessage(
 
             m_mempool.check(m_chainman.ActiveChainstate());
             RelayTransaction(tx.GetHash());
-
-            for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
-                if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
-                    for (const auto& elem : it_by_prev->second) {
-                        peer->m_orphan_work_set.insert(elem->first);
-                    }
-                }
-            }
+            m_orphanage.AddChildrenToWorkSet(tx, peer->m_orphan_work_set);
 
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
 
@@ -4371,19 +4186,22 @@ void PeerManagerImpl::ProcessMessage(
                 for (const uint256& parent_txid : unique_parents) {
                     CInv _inv(MSG_TX, parent_txid);
                     AddKnownInv(*peer, _inv.hash);
-                    if (!AlreadyHave(_inv)) RequestObject(State(pfrom.GetId()), _inv, current_time, is_masternode);
+                    if (!AlreadyHave(_inv)) RequestObject(pfrom.GetId(), _inv, current_time, is_masternode);
                     // We don't know if the previous tx was a regular or a mixing one, try both
                     CInv _inv2(MSG_DSTX, parent_txid);
                     AddKnownInv(*peer, _inv2.hash);
-                    if (!AlreadyHave(_inv2)) RequestObject(State(pfrom.GetId()), _inv2, current_time, is_masternode);
+                    if (!AlreadyHave(_inv2)) RequestObject(pfrom.GetId(), _inv2, current_time, is_masternode);
                 }
-                AddOrphanTx(ptx, pfrom.GetId());
 
-                // DoS prevention: do not allow mapOrphanTransactions to grow unbounded (see CVE-2012-3789)
+                if (m_orphanage.AddTx(ptx, pfrom.GetId())) {
+                    AddToCompactExtraTransactions(ptx);
+                }
+
+                // DoS prevention: do not allow m_orphans to grow unbounded (see CVE-2012-3789)
                 unsigned int nMaxOrphanTxSize = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantxsize", DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE)) * 1000000;
-                unsigned int nEvicted = LimitOrphanTxSize(nMaxOrphanTxSize);
+                unsigned int nEvicted = m_orphanage.LimitOrphans(nMaxOrphanTxSize);
                 if (nEvicted > 0) {
-                    LogPrint(BCLog::MEMPOOL, "mapOrphan overflow, removed %u tx\n", nEvicted);
+                    LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);
                 }
             } else {
                 LogPrint(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s\n",tx.GetHash().ToString());
@@ -5161,6 +4979,8 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
 
 bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
+    AssertLockHeld(g_msgproc_mutex);
+
     bool fMoreWork = false;
 
     PeerRef peer = GetPeerRef(pfrom->GetId());
@@ -5487,13 +5307,13 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
             FastRandomContext insecure_rand;
             PushAddress(peer, local_addr, insecure_rand);
         }
-        peer.m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
+        peer.m_next_local_addr_send = GetExponentialRand(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
     }
 
     // We sent an `addr` message to this peer recently. Nothing more to do.
     if (current_time <= peer.m_next_addr_send) return;
 
-    peer.m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
+    peer.m_next_addr_send = GetExponentialRand(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
 
     if (!Assume(peer.m_addrs_to_send.size() <= MAX_ADDR_TO_SEND)) {
         // Should be impossible since we always check size before adding to
@@ -5503,7 +5323,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 
     // Remove addr records that the peer already knows about, and add new
     // addrs to the m_addr_known filter on the same pass.
-    auto addr_already_known = [&peer](const CAddress& addr) {
+    auto addr_already_known = [&peer](const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) {
         bool ret = peer.m_addr_known->contains(addr.GetKey());
         if (!ret) peer.m_addr_known->insert(addr.GetKey());
         return ret;
@@ -5569,6 +5389,8 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
 
 bool PeerManagerImpl::SendMessages(CNode* pto)
 {
+    AssertLockHeld(g_msgproc_mutex);
+
     assert(m_llmq_ctx);
 
     const bool is_masternode = m_mn_activeman != nullptr;
@@ -5629,7 +5451,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // the latest blocks is from an inbound peer, we have to be sure to
             // eventually download it (and not just wait indefinitely for an
             // outbound peer to have it).
-            if (nPreferredDownload == 0 || mapBlocksInFlight.empty()) {
+            if (m_num_preferred_download_peers == 0 || mapBlocksInFlight.empty()) {
                 sync_blocks_and_headers_from_peer = true;
             }
         }
@@ -5748,9 +5570,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
                     bool fGotBlockFromCache = false;
                     {
-                        LOCK(cs_most_recent_block);
-                        if (most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::CMPCTBLOCK, *most_recent_compact_block));
+                        LOCK(m_most_recent_block_mutex);
+                        if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
+                            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block));
                             fGotBlockFromCache = true;
                         }
                     }
@@ -5868,12 +5690,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             if (peer->m_tx_relay->m_next_inv_send_time < current_time) {
                 fSendTrickle = true;
                 if (pto->IsInboundConn()) {
-                    peer->m_tx_relay->m_next_inv_send_time = m_connman.PoissonNextSendInbound(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
+                    peer->m_tx_relay->m_next_inv_send_time = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
                 } else {
                     // Use half the delay for Masternode outbound peers, as there is less privacy concern for them.
                     peer->m_tx_relay->m_next_inv_send_time = pto->GetVerifiedProRegTxHash().IsNull() ?
-                                                     PoissonNextSend(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL) :
-                                                     PoissonNextSend(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL / 2);
+                                                     GetExponentialRand(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL) :
+                                                     GetExponentialRand(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL / 2);
                 }
             }
 
@@ -6023,7 +5845,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (state.fSyncStarted && state.m_headers_sync_timeout < std::chrono::microseconds::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
             if (m_chainman.m_best_header->GetBlockTime() <= GetAdjustedTime() - nMaxTipAge) {
-                if (current_time > state.m_headers_sync_timeout && nSyncStarted == 1 && (nPreferredDownload - state.fPreferredDownload >= 1)) {
+                if (current_time > state.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
                     // Note: If all our peers are inbound, then we won't
@@ -6153,16 +5975,3 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     } // release cs_main
     return true;
 }
-
-class CNetProcessingCleanup
-{
-public:
-    CNetProcessingCleanup() {}
-    ~CNetProcessingCleanup() {
-        // orphan transactions
-        mapOrphanTransactions.clear();
-        mapOrphanTransactionsByPrev.clear();
-        nMapOrphanTransactionsSize = 0;
-    }
-};
-static CNetProcessingCleanup instance_of_cnetprocessingcleanup;
