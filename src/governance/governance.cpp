@@ -1221,7 +1221,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(CNode& peer, CConnman& conn
     return RequestGovernanceObjectVotes(vNodeCopy, connman, peerman);
 }
 
-int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman, const PeerManager& peerman) const
+int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesCopy, CConnman& connman,
+                                                     const PeerManager& peerman) const
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
 
