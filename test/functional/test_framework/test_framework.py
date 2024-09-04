@@ -119,6 +119,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
         self.chain: str = 'regtest'
         self.setup_clean_chain: bool = False
+        self.disable_mocktime: bool = False
         self.nodes: List[TestNode] = []
         self.network_thread = None
         self.mocktime = 0
@@ -409,10 +410,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log.info("Initializing test directory " + self.options.tmpdir)
         if self.setup_clean_chain:
             self._initialize_chain_clean()
-            self.set_genesis_mocktime()
         else:
             self._initialize_chain()
-            self.set_cache_mocktime()
+        if not self.disable_mocktime:
+            self._initialize_mocktime(is_genesis=self.setup_clean_chain)
 
     def setup_network(self):
         """Override this method to customize test network topology"""
@@ -451,8 +452,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
             # To ensure that all nodes are out of IBD, the most recent block
             # must have a timestamp not too old (see IsInitialBlockDownload()).
-            self.log.debug('Generate a block with current mocktime')
-            self.bump_mocktime(156 * 200)
+            if not self.disable_mocktime:
+                self.log.debug('Generate a block with current mocktime')
+                self.bump_mocktime(156 * 200)
             block_hash = self.nodes[0].generate(1)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
@@ -810,24 +812,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
 
-    def disable_mocktime(self):
-        self.mocktime = 0
-        for node in self.nodes:
-            node.mocktime = 0
-
     def bump_mocktime(self, t, update_nodes=True, nodes=None):
-        if self.mocktime != 0:
-            self.mocktime += t
-            if update_nodes:
-                set_node_times(nodes or self.nodes, self.mocktime)
+        if self.mocktime == 0:
+            return
 
-    def set_cache_mocktime(self):
-        self.mocktime = TIME_GENESIS_BLOCK + (199 * 156)
-        for node in self.nodes:
-            node.mocktime = self.mocktime
+        self.mocktime += t
+        if update_nodes:
+            set_node_times(nodes or self.nodes, self.mocktime)
 
-    def set_genesis_mocktime(self):
-        self.mocktime = TIME_GENESIS_BLOCK
+    def _initialize_mocktime(self, is_genesis):
+        if is_genesis:
+            self.mocktime = TIME_GENESIS_BLOCK
+        else:
+            self.mocktime = TIME_GENESIS_BLOCK + (199 * 156)
         for node in self.nodes:
             node.mocktime = self.mocktime
 
@@ -884,7 +881,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     cache_node_dir,
                     chain=self.chain,
                     extra_conf=["bind=127.0.0.1"],
-                    extra_args=['-disablewallet', "-mocktime=%d" % TIME_GENESIS_BLOCK],
+                    extra_args=['-disablewallet', f"-mocktime={TIME_GENESIS_BLOCK}"],
                     extra_args_from_options=self.extra_args_from_options,
                     rpchost=None,
                     timewait=self.rpc_timeout,
@@ -911,7 +908,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
-            self.set_genesis_mocktime()
+            self._initialize_mocktime(is_genesis=True)
             gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2SH_OP_TRUE]
             assert_equal(len(gen_addresses), 4)
             for i in range(8):
@@ -926,7 +923,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Shut it down, and clean up cache directories:
             self.stop_nodes()
             self.nodes = []
-            self.disable_mocktime()
+            self.mocktime = 0
 
             def cache_path(*paths):
                 chain = get_chain_folder(cache_node_dir, self.chain)

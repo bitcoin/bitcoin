@@ -89,10 +89,7 @@ class P2PVersionStore(P2PInterface):
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-
-    def setup_network(self):
-        self.disable_mocktime()
-        self.setup_nodes()
+        self.disable_mocktime = True
 
     def run_test(self):
         # Another peer that never sends a version, nor any other messages. It shouldn't receive anything from the node.
