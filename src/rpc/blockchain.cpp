@@ -2684,6 +2684,23 @@ public:
 };
 
 /**
+ * RAII class that temporarily rolls back the local chain in it's constructor
+ * and rolls it forward again in it's destructor.
+ */
+class TemporaryRollback
+{
+    ChainstateManager& m_chainman;
+    const CBlockIndex& m_invalidate_index;
+public:
+    TemporaryRollback(ChainstateManager& chainman, const CBlockIndex& index) : m_chainman(chainman), m_invalidate_index(index) {
+        InvalidateBlock(m_chainman, m_invalidate_index.GetBlockHash());
+    };
+    ~TemporaryRollback() {
+        ReconsiderBlock(m_chainman, m_invalidate_index.GetBlockHash());
+    };
+};
+
+/**
  * Serialize the UTXO set to a file for loading elsewhere.
  *
  * @see SnapshotMetadata
@@ -2698,7 +2715,7 @@ static RPCHelpMan dumptxoutset()
         "This call may take several minutes. Make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
-            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that currently be loaded with loadtxoutset."},
+            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that can currently be loaded with loadtxoutset."},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"rollback", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
@@ -2770,6 +2787,7 @@ static RPCHelpMan dumptxoutset()
     CConnman& connman = EnsureConnman(node);
     const CBlockIndex* invalidate_index{nullptr};
     std::unique_ptr<NetworkDisable> disable_network;
+    std::unique_ptr<TemporaryRollback> temporary_rollback;
 
     // If the user wants to dump the txoutset of the current tip, we don't have
     // to roll back at all
@@ -2790,10 +2808,15 @@ static RPCHelpMan dumptxoutset()
         // this so we don't punish peers that send us that send us data that
         // seems wrong in this temporary state. For example a normal new block
         // would be classified as a block connecting an invalid block.
-        disable_network = std::make_unique<NetworkDisable>(connman);
+        // Skip if the network is already disabled because this
+        // automatically re-enables the network activity at the end of the
+        // process which may not be what the user wants.
+        if (connman.GetNetworkActive()) {
+            disable_network = std::make_unique<NetworkDisable>(connman);
+        }
 
         invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
-        InvalidateBlock(*node.chainman, invalidate_index->GetBlockHash());
+        temporary_rollback = std::make_unique<TemporaryRollback>(*node.chainman, *invalidate_index);
     }
 
     Chainstate* chainstate;
@@ -2817,23 +2840,15 @@ static RPCHelpMan dumptxoutset()
         // sister block of invalidate_index. This block (or a descendant) would
         // be activated as the new tip and we would not get to new_tip_index.
         if (target_index != chainstate->m_chain.Tip()) {
-            LogInfo("Failed to roll back to requested height, reverting to tip.\n");
-            error = JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height.");
+            LogWarning("dumptxoutset failed to roll back to requested height, reverting to tip.\n");
+            throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height.");
         } else {
             std::tie(cursor, stats, tip) = PrepareUTXOSnapshot(*chainstate, node.rpc_interruption_point);
         }
     }
 
-    if (error.isNull()) {
-        result = WriteUTXOSnapshot(*chainstate, cursor.get(), &stats, tip, afile, path, temppath, node.rpc_interruption_point);
-        fs::rename(temppath, path);
-    }
-    if (invalidate_index) {
-        ReconsiderBlock(*node.chainman, invalidate_index->GetBlockHash());
-    }
-    if (!error.isNull()) {
-        throw error;
-    }
+    result = WriteUTXOSnapshot(*chainstate, cursor.get(), &stats, tip, afile, path, temppath, node.rpc_interruption_point);
+    fs::rename(temppath, path);
 
     result.pushKV("path", path.utf8string());
     return result;
@@ -3000,7 +3015,7 @@ static RPCHelpMan loadtxoutset()
                 }
         },
         RPCExamples{
-            HelpExampleCli("loadtxoutset", "utxo.dat")
+            HelpExampleCli("loadtxoutset -rpcclienttimeout=0", "utxo.dat")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
