@@ -27,6 +27,9 @@ import hjson
 def get_label(pr_num):
     return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['head']['label']
 
+def is_draft(pr_num):
+    return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['draft']
+
 def main():
     if len(sys.argv) != 2:
         print(f'Usage: {sys.argv[0]} <conflicts>', file=sys.stderr)
@@ -55,6 +58,10 @@ def main():
         mergable_state = r.json()['mergeable_state']
         if mergable_state == "dirty":
             print(f'{this_pr_num} needs rebase. Skipping conflict check')
+            continue
+
+        if is_draft(this_pr_num):
+            print(f'{this_pr_num} is a draft. Skipping conflict check')
             continue
 
         r = requests.get(f'https://github.com/dashpay/dash/branches/pre_mergeable/{our_pr_label}...{get_label(this_pr_num)}')
