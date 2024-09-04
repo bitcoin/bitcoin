@@ -266,6 +266,7 @@ BITCOIN_CORE_H = \
   netaddress.h \
   netbase.h \
   netfulfilledman.h \
+  netgroup.h \
   netmessagemaker.h \
   node/blockstorage.h \
   node/coin.h \
@@ -492,6 +493,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   netfulfilledman.cpp \
+  netgroup.cpp \
   net_processing.cpp \
   node/blockstorage.cpp \
   node/coin.cpp \

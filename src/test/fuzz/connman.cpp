@@ -11,22 +11,31 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/system.h>
 #include <util/translation.h>
 
 #include <cstdint>
 #include <vector>
 
+namespace {
+const TestingSetup* g_setup;
+} // namespace
+
 void initialize_connman()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
+    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    AddrMan addrman(/* asmap */ std::vector<bool>(), /* deterministic */ false, /* consistency_check_ratio */ 0);
-    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman};
+    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+                     fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+                     *g_setup->m_node.addrman,
+                     *g_setup->m_node.netgroupman,
+                     fuzzed_data_provider.ConsumeBool()};
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
