@@ -58,8 +58,8 @@ static const int NO_LEGACY_ISLOCK_PROTO_VERSION = 70231;
 //! Inventory type for DSQ messages added
 static const int DSQ_INV_VERSION = 70234;
 
-//! Maximum header count was increased from 2000 -> 8000 in this version
-static const int INCREASE_MAX_HEADERS_VERSION = 70235;
+//! Maximum header count for HEADRES2 message was increased from 2000 to 8000 in this version
+static const int INCREASE_MAX_HEADERS2_VERSION = 70235;
 
 // Make sure that none of the values above collide with `ADDRV2_FORMAT`.
 

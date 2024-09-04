@@ -1039,12 +1039,12 @@ static bool IsLimitedPeer(const Peer& peer)
 }
 
 /** Get maximum number of headers that can be included in one batch */
-static uint16_t GetHeadersLimit(const CNode& pfrom)
+static uint16_t GetHeadersLimit(const CNode& pfrom, const std::string& msg_type)
 {
-    if (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS_VERSION) {
-        return MAX_HEADERS_RESULTS;
+    if (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS2_VERSION && msg_type == NetMsgType::GETHEADERS2) {
+        return MAX_HEADERS2_RESULTS;
     }
-    return MAX_HEADERS_RESULTS_OLD;
+    return MAX_HEADERS_RESULTS;
 }
 
 static void PushInv(Peer& peer, const CInv& inv)
@@ -2961,8 +2961,8 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     }
 
     // Consider fetching more headers.
-    if (nCount == GetHeadersLimit(pfrom)) {
-        std::string msg_type = UsesCompressedHeaders(peer) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+    std::string msg_type = UsesCompressedHeaders(peer) ? NetMsgType::GETHEADERS2 : NetMsgType::GETHEADERS;
+    if (nCount == GetHeadersLimit(pfrom, msg_type)) {
         // Headers message had its maximum size; the peer may have more headers.
         if (MaybeSendGetHeaders(pfrom, msg_type, m_chainman.ActiveChain().GetLocator(pindexLast), peer)) {
             LogPrint(BCLog::NET, "more %s (%d) to end to peer=%d (startheight:%d)\n",
@@ -2970,7 +2970,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         }
     }
 
-    UpdatePeerStateForReceivedHeaders(pfrom, pindexLast, received_new_header, nCount == GetHeadersLimit(pfrom));
+    UpdatePeerStateForReceivedHeaders(pfrom, pindexLast, received_new_header, nCount == GetHeadersLimit(pfrom, msg_type));
 
     // Consider immediately downloading blocks.
     HeadersDirectFetchBlocks(pfrom, peer, pindexLast);
@@ -4065,7 +4065,7 @@ void PeerManagerImpl::ProcessMessage(
         }
 
         const auto send_headers = [this /* for m_connman */, &hashStop, &pindex, &nodestate, &pfrom, &msgMaker](auto msg_type, auto& v_headers, auto callback) {
-            int nLimit = GetHeadersLimit(pfrom);
+            int nLimit = GetHeadersLimit(pfrom, msg_type);
             for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex)) {
                 v_headers.push_back(callback(pindex));
 
@@ -4573,7 +4573,7 @@ void PeerManagerImpl::ProcessMessage(
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
-        if (nCount > GetHeadersLimit(pfrom)) {
+        if (nCount > GetHeadersLimit(pfrom, msg_type)) {
             Misbehaving(pfrom.GetId(), 20, strprintf("headers message size = %u", nCount));
             return;
         }

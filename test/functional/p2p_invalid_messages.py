@@ -11,6 +11,7 @@ from test_framework.messages import (
     msg_ping,
     ser_string,
     MAX_HEADERS_RESULTS,
+    MAX_HEADERS2_RESULTS,
     MAX_INV_SIZE,
     MAX_PROTOCOL_MESSAGE_LENGTH,
     msg_getdata,
@@ -155,6 +156,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_oversized_headers_msg(self):
         size = MAX_HEADERS_RESULTS + 1
         self.test_oversized_msg(msg_headers([CBlockHeader()] * size), size)
+
+    def test_oversized_headers2_msg(self):
+        size = MAX_HEADERS2_RESULTS + 1
+        self.test_oversized_msg(msg_headers2([CBlockHeader()] * size), size)
 
     def test_resource_exhaustion(self):
         self.log.info("Test node stays up despite many large junk messages")
