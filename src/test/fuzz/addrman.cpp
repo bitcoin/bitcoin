@@ -250,19 +250,30 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
                     addresses.push_back(ConsumeAddress(fuzzed_data_provider));
                 }
-                addr_man.Add(addresses, ConsumeNetAddr(fuzzed_data_provider), std::chrono::seconds{ConsumeTime(fuzzed_data_provider, 0, 100000000)});
+                auto net_addr = ConsumeNetAddr(fuzzed_data_provider);
+                auto time_penalty = std::chrono::seconds{ConsumeTime(fuzzed_data_provider, 0, 100000000)};
+                addr_man.Add(addresses, net_addr, time_penalty);
             },
             [&] {
-                addr_man.Good(ConsumeService(fuzzed_data_provider), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
+                auto addr = ConsumeService(fuzzed_data_provider);
+                auto time = NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}};
+                addr_man.Good(addr, time);
             },
             [&] {
-                addr_man.Attempt(ConsumeService(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool(), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
+                auto addr = ConsumeService(fuzzed_data_provider);
+                auto count_failure = fuzzed_data_provider.ConsumeBool();
+                auto time = NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}};
+                addr_man.Attempt(addr, count_failure, time);
             },
             [&] {
-                addr_man.Connected(ConsumeService(fuzzed_data_provider), NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}});
+                auto addr = ConsumeService(fuzzed_data_provider);
+                auto time = NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}};
+                addr_man.Connected(addr, time);
             },
             [&] {
-                addr_man.SetServices(ConsumeService(fuzzed_data_provider), ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
+                auto addr = ConsumeService(fuzzed_data_provider);
+                auto n_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
+                addr_man.SetServices(addr, n_services);
             });
     }
     const AddrMan& const_addr_man{addr_man};
@@ -270,11 +281,10 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
     if (fuzzed_data_provider.ConsumeBool()) {
         network = fuzzed_data_provider.PickValueInArray(ALL_NETWORKS);
     }
-    (void)const_addr_man.GetAddr(
-        /*max_addresses=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        /*max_pct=*/fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-        network,
-        /*filtered=*/fuzzed_data_provider.ConsumeBool());
+    auto max_addresses = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+    auto max_pct = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
+    auto filtered = fuzzed_data_provider.ConsumeBool();
+    (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered);
     (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), network);
     std::optional<bool> in_new;
     if (fuzzed_data_provider.ConsumeBool()) {
