@@ -11,6 +11,8 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.governance import have_trigger_for_height, prepare_object
 from test_framework.util import assert_equal, satoshi_round, set_node_times, wait_until_helper
 
+GOVERNANCE_UPDATE_MIN = 60 * 60 # src/governance/object.h
+
 class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
         self.v20_start_time = 1417713500 + 80
@@ -282,6 +284,23 @@ class DashGovernanceTest (DashTestFramework):
         # Should see NO votes on both triggers now
         self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
         self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
+
+        # Remember vote count
+        before = self.nodes[1].gobject("count")["votes"]
+
+        # Bump mocktime to let MNs vote again
+        self.bump_mocktime(GOVERNANCE_UPDATE_MIN + 1)
+
+        # Move another block inside the Superblock maturity window
+        with self.nodes[1].assert_debug_log(["CGovernanceManager::VoteGovernanceTriggers"]):
+            self.nodes[0].generate(1)
+            self.bump_mocktime(1)
+            self.sync_blocks()
+
+        # Vote count should not change even though MNs are allowed to vote again
+        assert_equal(before, self.nodes[1].gobject("count")["votes"])
+        # Revert mocktime back to avoid issues in tests below
+        self.bump_mocktime(GOVERNANCE_UPDATE_MIN * -1)
 
         block_count = self.nodes[0].getblockcount()
         n = sb_cycle - block_count % sb_cycle
