@@ -69,7 +69,7 @@ bool VerifyWallets(WalletContext& context)
             // Pass write=false because no need to write file and probably
             // better not to. If unnamed wallet needs to be added next startup
             // and the setting is empty, this code will just run again.
-            chain.overwriteRwSetting("wallet", std::move(wallets), /*write=*/false);
+            chain.overwriteRwSetting("wallet", std::move(wallets), interfaces::SettingsAction::SKIP_WRITE);
         }
     }
 

@@ -826,22 +826,22 @@ public:
         });
         if (!action) return false;
         // Now dump value to disk if requested
-        return *action == interfaces::SettingsAction::SKIP_WRITE || args().WriteSettingsFile();
+        return *action != interfaces::SettingsAction::WRITE || args().WriteSettingsFile();
     }
-    bool overwriteRwSetting(const std::string& name, common::SettingsValue value, bool write) override
+    bool overwriteRwSetting(const std::string& name, common::SettingsValue value, interfaces::SettingsAction action) override
     {
-        if (value.isNull()) return deleteRwSettings(name, write);
+        if (value.isNull()) return deleteRwSettings(name, action);
         return updateRwSetting(name, [&](common::SettingsValue& settings) {
             settings = std::move(value);
-            return write ? interfaces::SettingsAction::WRITE : interfaces::SettingsAction::SKIP_WRITE;
+            return action;
         });
     }
-    bool deleteRwSettings(const std::string& name, bool write) override
+    bool deleteRwSettings(const std::string& name, interfaces::SettingsAction action) override
     {
         args().LockSettings([&](common::Settings& settings) {
             settings.rw_settings.erase(name);
         });
-        return !write || args().WriteSettingsFile();
+        return action != interfaces::SettingsAction::WRITE || args().WriteSettingsFile();
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {

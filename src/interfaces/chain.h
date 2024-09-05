@@ -361,10 +361,10 @@ public:
     virtual bool updateRwSetting(const std::string& name, const SettingsUpdate& update_function) = 0;
 
     //! Replace a setting in <datadir>/settings.json with a new value.
-    virtual bool overwriteRwSetting(const std::string& name, common::SettingsValue value, bool write = true) = 0;
+    virtual bool overwriteRwSetting(const std::string& name, common::SettingsValue value, SettingsAction action = SettingsAction::WRITE) = 0;
 
     //! Delete a given setting in <datadir>/settings.json.
-    virtual bool deleteRwSettings(const std::string& name, bool write = true) = 0;
+    virtual bool deleteRwSettings(const std::string& name, SettingsAction action = SettingsAction::WRITE) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
