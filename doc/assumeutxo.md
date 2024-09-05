@@ -3,7 +3,7 @@
 Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
 instance.
 
-For notes on the design of Assumeutxo, please refer to [the design doc](/doc/assumeutxo.md).
+For notes on the design of Assumeutxo, please refer to [the design doc](/doc/design/assumeutxo.md).
 
 ## Loading a snapshot
 
