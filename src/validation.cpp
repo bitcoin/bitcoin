@@ -46,6 +46,7 @@
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/hasher.h>
 #include <util/strencodings.h>
+#include <util/trace.h>
 #include <util/translation.h>
 #include <util/system.h>
 #include <validationinterface.h>
@@ -2302,6 +2303,15 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     statsClient.gauge("blocks.tip.NumTransactions", block.vtx.size(), 1.0f);
     statsClient.gauge("blocks.tip.SigOps", nSigOps, 1.0f);
 
+    TRACE6(validation, block_connected,
+        block.GetHash().data(),
+        pindex->nHeight,
+        block.vtx.size(),
+        nInputs,
+        nSigOps,
+        GetTimeMicros() - nTimeStart // in microseconds (µs)
+    );
+
     return true;
 }
 
@@ -2461,6 +2471,12 @@ bool CChainState::FlushStateToDisk(
             }
             nLastFlush = nNow;
             full_flush_completed = true;
+            TRACE5(utxocache, flush,
+                   (int64_t)(GetTimeMicros() - nNow.count()), // in microseconds (µs)
+                   (u_int32_t)mode,
+                   (u_int64_t)coins_count,
+                   (u_int64_t)coins_mem_usage,
+                   (bool)fFlushForPrune);
         }
     }
     if (full_flush_completed) {

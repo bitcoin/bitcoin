@@ -50,6 +50,7 @@ Optional dependencies:
  libqrencode | QR codes in GUI  | QR code generation (only needed when GUI enabled)
  libzmq3     | ZMQ notification | ZMQ notifications (requires ZMQ version >= 4.0.0)
  sqlite3     | SQLite DB        | Wallet storage (only needed when descriptor wallet enabled)
+ systemtap   | Tracing (USDT)   | Statically defined tracepoints
 
 For the versions used, see [dependencies.md](dependencies.md)
 
@@ -113,6 +114,12 @@ GMP dependencies (provides platform-optimized routines):
 
 ```sh
 sudo apt-get install libgmp-dev
+```
+
+User-Space, Statically Defined Tracing (USDT) dependencies:
+
+```sh
+sudo apt install systemtap-sdt-dev
 ```
 
 GUI dependencies:
@@ -194,6 +201,12 @@ GMP dependencies (provides platform-optimized routines):
 
 ```sh
 sudo dnf install gmp-devel
+```
+
+User-Space, Statically Defined Tracing (USDT) dependencies:
+
+```sh
+sudo dnf install systemtap-sdt-devel
 ```
 
 GUI dependencies:
