@@ -458,10 +458,10 @@ else()
   )
 endif()
 
-configure_file(cmake/script/Coverage.cmake Coverage.cmake COPYONLY)
-configure_file(cmake/script/CoverageFuzz.cmake CoverageFuzz.cmake COPYONLY)
-configure_file(cmake/script/CoverageInclude.cmake.in CoverageInclude.cmake @ONLY)
-configure_file(contrib/filter-lcov.py filter-lcov.py COPYONLY)
+configure_file(cmake/script/Coverage.cmake Coverage.cmake USE_SOURCE_PERMISSIONS COPYONLY)
+configure_file(cmake/script/CoverageFuzz.cmake CoverageFuzz.cmake USE_SOURCE_PERMISSIONS COPYONLY)
+configure_file(cmake/script/CoverageInclude.cmake.in CoverageInclude.cmake USE_SOURCE_PERMISSIONS @ONLY)
+configure_file(contrib/filter-lcov.py filter-lcov.py USE_SOURCE_PERMISSIONS COPYONLY)
 
 # Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
 try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK)

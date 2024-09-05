@@ -5,7 +5,7 @@
 include(GNUInstallDirs)
 include(AddWindowsResources)
 
-configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-config.h.in config/bitcoin-config.h @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-config.h.in config/bitcoin-config.h USE_SOURCE_PERMISSIONS @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 # TODO: After the transition from Autotools to CMake, the obj/ subdirectory

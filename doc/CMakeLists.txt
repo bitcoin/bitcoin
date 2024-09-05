@@ -6,7 +6,7 @@ find_package(Doxygen COMPONENTS dot)
 
 if(DOXYGEN_FOUND)
   set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-  configure_file(Doxyfile.in ${doxyfile})
+  configure_file(Doxyfile.in ${doxyfile} USE_SOURCE_PERMISSIONS)
 
   # In CMake 3.27, The FindDoxygen module's doxygen_add_docs()
   # command gained a CONFIG_FILE option to specify a custom doxygen
