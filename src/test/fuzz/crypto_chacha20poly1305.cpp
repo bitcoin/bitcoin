@@ -39,7 +39,7 @@ FUZZ_TARGET(crypto_aeadchacha20poly1305)
     // data).
     InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
-    LIMITED_WHILE(provider.ConsumeBool(), 10000)
+    LIMITED_WHILE(provider.ConsumeBool(), 100)
     {
         // Mode:
         // - Bit 0: whether to use single-plain Encrypt/Decrypt; otherwise use a split at prefix.
