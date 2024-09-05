@@ -102,7 +102,7 @@ bool IsAcyclic(const DepGraph<SetType>& depgraph) noexcept
 struct DepGraphFormatter
 {
     /** Convert x>=0 to 2x (even), x<0 to -2x-1 (odd). */
-    static uint64_t SignedToUnsigned(int64_t x) noexcept
+    [[maybe_unused]] static uint64_t SignedToUnsigned(int64_t x) noexcept
     {
         if (x < 0) {
             return 2 * uint64_t(-(x + 1)) + 1;
@@ -112,7 +112,7 @@ struct DepGraphFormatter
     }
 
     /** Convert even x to x/2 (>=0), odd x to -(x/2)-1 (<0). */
-    static int64_t UnsignedToSigned(uint64_t x) noexcept
+    [[maybe_unused]] static int64_t UnsignedToSigned(uint64_t x) noexcept
     {
         if (x & 1) {
             return -int64_t(x / 2) - 1;
