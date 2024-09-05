@@ -5,6 +5,8 @@
 #ifndef BITCOIN_STATSD_CLIENT_H
 #define BITCOIN_STATSD_CLIENT_H
 
+#include <util/sock.h>
+
 #include <string>
 #include <memory>
 
@@ -20,18 +22,13 @@ static const int MIN_STATSD_PERIOD = 5;
 static const int MAX_STATSD_PERIOD = 60 * 60;
 
 namespace statsd {
-
-struct _StatsdClientData;
-
 class StatsdClient {
     public:
-        explicit StatsdClient(const std::string& host, const std::string& nodename, int port, const std::string& ns,
+        explicit StatsdClient(const std::string& host, const std::string& nodename, short port, const std::string& ns,
                               bool enabled);
         ~StatsdClient();
 
     public:
-        // you can config at anytime; client will use new address (useful for Singleton)
-        void config(const std::string& host, const std::string& nodename, int port, const std::string& ns);
         const char* errmsg();
 
     public:
@@ -61,13 +58,18 @@ class StatsdClient {
         int init();
         static void cleanup(std::string& key);
 
-    protected:
-        const std::unique_ptr<struct _StatsdClientData> d;
-
     private:
-        const bool m_enabled{false};
-};
+        bool m_init{false};
+        char m_errmsg[1024];
+        SOCKET m_sock{INVALID_SOCKET};
+        struct sockaddr_in m_server;
 
+        const bool m_enabled{false};
+        const short m_port;
+        const std::string m_host;
+        const std::string m_nodename;
+        const std::string m_ns;
+};
 } // namespace statsd
 
 extern std::unique_ptr<statsd::StatsdClient> g_stats_client;

@@ -41,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 std::unique_ptr<statsd::StatsdClient> g_stats_client;
 
 namespace statsd {
-
 inline bool fequal(float a, float b)
 {
     const float epsilon = 0.0001;
@@ -61,64 +60,39 @@ inline bool should_send(float sample_rate)
     return sample_rate > p;
 }
 
-struct _StatsdClientData {
-    SOCKET  sock;
-    struct  sockaddr_in server;
-
-    std::string  ns;
-    std::string  host;
-    std::string  nodename;
-    short   port;
-    bool    init;
-
-    char    errmsg[1024];
-};
-
-StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, int port, const std::string& ns,
+StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, short port, const std::string& ns,
                            bool enabled)
-    : d{std::make_unique<_StatsdClientData>()}, m_enabled{enabled}
+    : m_enabled{enabled}, m_port{port}, m_host{host}, m_nodename{nodename}, m_ns{ns}
 {
-    d->sock = INVALID_SOCKET;
-    config(host, nodename, port, ns);
 }
 
 StatsdClient::~StatsdClient()
 {
     // close socket
-    CloseSocket(d->sock);
-}
-
-void StatsdClient::config(const std::string& host, const std::string& nodename, int port, const std::string& ns)
-{
-    d->ns = ns;
-    d->host = host;
-    d->nodename = nodename;
-    d->port = port;
-    d->init = false;
-    CloseSocket(d->sock);
+    CloseSocket(m_sock);
 }
 
 int StatsdClient::init()
 {
-    if ( d->init ) return 0;
+    if ( m_init ) return 0;
 
-    d->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if ( d->sock == INVALID_SOCKET ) {
-        snprintf(d->errmsg, sizeof(d->errmsg), "could not create socket, err=%m");
+    m_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if ( m_sock == INVALID_SOCKET ) {
+        snprintf(m_errmsg, sizeof(m_errmsg), "could not create socket, err=%m");
         return -1;
     }
 
-    memset(&d->server, 0, sizeof(d->server));
-    d->server.sin_family = AF_INET;
-    d->server.sin_port = htons(d->port);
+    memset(&m_server, 0, sizeof(m_server));
+    m_server.sin_family = AF_INET;
+    m_server.sin_port = htons(m_port);
 
-    CNetAddr netaddr(d->server.sin_addr);
-    if (!LookupHost(d->host, netaddr, true) || !netaddr.GetInAddr(&d->server.sin_addr)) {
-        snprintf(d->errmsg, sizeof(d->errmsg), "LookupHost or GetInAddr failed");
+    CNetAddr netaddr(m_server.sin_addr);
+    if (!LookupHost(m_host, netaddr, true) || !netaddr.GetInAddr(&m_server.sin_addr)) {
+        snprintf(m_errmsg, sizeof(m_errmsg), "LookupHost or GetInAddr failed");
         return -2;
     }
 
-    d->init = true;
+    m_init = true;
     return 0;
 }
 
@@ -170,8 +144,8 @@ int StatsdClient::send(std::string key, size_t value, const std::string& type, f
     }
 
     // partition stats by node name if set
-    if (!d->nodename.empty())
-        key = key + "." + d->nodename;
+    if (!m_nodename.empty())
+        key = key + "." + m_nodename;
 
     cleanup(key);
 
@@ -179,12 +153,12 @@ int StatsdClient::send(std::string key, size_t value, const std::string& type, f
     if ( fequal( sample_rate, 1.0 ) )
     {
         snprintf(buf, sizeof(buf), "%s%s:%zd|%s",
-                d->ns.c_str(), key.c_str(), (ssize_t) value, type.c_str());
+                m_ns.c_str(), key.c_str(), (ssize_t) value, type.c_str());
     }
     else
     {
         snprintf(buf, sizeof(buf), "%s%s:%zd|%s|@%.2f",
-                d->ns.c_str(), key.c_str(), (ssize_t) value, type.c_str(), sample_rate);
+                m_ns.c_str(), key.c_str(), (ssize_t) value, type.c_str(), sample_rate);
     }
 
     return send(buf);
@@ -197,8 +171,8 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
     }
 
     // partition stats by node name if set
-    if (!d->nodename.empty())
-        key = key + "." + d->nodename;
+    if (!m_nodename.empty())
+        key = key + "." + m_nodename;
 
     cleanup(key);
 
@@ -206,12 +180,12 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
     if ( fequal( sample_rate, 1.0 ) )
     {
         snprintf(buf, sizeof(buf), "%s%s:%f|%s",
-                d->ns.c_str(), key.c_str(), value, type.c_str());
+                m_ns.c_str(), key.c_str(), value, type.c_str());
     }
     else
     {
         snprintf(buf, sizeof(buf), "%s%s:%f|%s|@%.2f",
-                d->ns.c_str(), key.c_str(), value, type.c_str(), sample_rate);
+                m_ns.c_str(), key.c_str(), value, type.c_str(), sample_rate);
     }
 
     return send(buf);
@@ -227,10 +201,10 @@ int StatsdClient::send(const std::string& message)
     {
         return ret;
     }
-    ret = sendto(d->sock, message.data(), message.size(), 0, reinterpret_cast<const sockaddr*>(&d->server), sizeof(d->server));
+    ret = sendto(m_sock, message.data(), message.size(), 0, reinterpret_cast<const sockaddr*>(&m_server), sizeof(m_server));
     if ( ret == -1) {
-        snprintf(d->errmsg, sizeof(d->errmsg),
-                "sendto server fail, host=%s:%d, err=%m", d->host.c_str(), d->port);
+        snprintf(m_errmsg, sizeof(m_errmsg),
+                "sendto server fail, host=%s:%d, err=%m", m_host.c_str(), m_port);
         return -1;
     }
     return 0;
@@ -238,7 +212,6 @@ int StatsdClient::send(const std::string& message)
 
 const char* StatsdClient::errmsg()
 {
-    return d->errmsg;
+    return m_errmsg;
 }
-
 } // namespace statsd
