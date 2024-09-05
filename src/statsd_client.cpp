@@ -37,32 +37,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <compat.h>
 #include <netbase.h>
-#include <random.h>
 #include <util/system.h>
 
 #include <cmath>
 #include <cstdio>
+#include <random>
 
 std::unique_ptr<statsd::StatsdClient> g_stats_client;
 
 namespace statsd {
-inline bool fequal(float a, float b)
+bool StatsdClient::ShouldSend(float sample_rate)
 {
-    const float epsilon = 0.0001;
-    return ( fabs(a - b) < epsilon );
-}
+    sample_rate = std::clamp(sample_rate, 0.f, 1.f);
 
-thread_local FastRandomContext insecure_rand;
+    constexpr float EPSILON{0.0001f};
+    /* If sample rate is 1, we should always send */
+    if (std::fabs(sample_rate - 1.f) < EPSILON) return true;
+    /* If sample rate is 0, we should never send */
+    if (std::fabs(sample_rate) < EPSILON) return false;
 
-inline bool should_send(float sample_rate)
-{
-    if ( fequal(sample_rate, 1.0) )
-    {
-        return true;
-    }
-
-    float p = float(insecure_rand(std::numeric_limits<uint32_t>::max())) / float(std::numeric_limits<uint32_t>::max());
-    return sample_rate > p;
+    /* Sample rate is >0 and <1, roll the dice */
+    LOCK(cs);
+    return sample_rate > std::uniform_real_distribution<float>(0.f, 1.f)(insecure_rand);
 }
 
 StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, uint16_t port, const std::string& ns,
@@ -144,7 +140,7 @@ int StatsdClient::timing(const std::string& key, int64_t ms, float sample_rate)
 
 int StatsdClient::send(std::string key, int64_t value, const std::string& type, float sample_rate)
 {
-    if (!should_send(sample_rate)) {
+    if (!ShouldSend(sample_rate)) {
         return 0;
     }
 
@@ -154,11 +150,9 @@ int StatsdClient::send(std::string key, int64_t value, const std::string& type, 
 
     cleanup(key);
 
-    std::string buf{""};
-    if (fequal(sample_rate, 1.0)) {
-        buf = strprintf("%s%s:%d|%s", m_ns, key, value, type);
-    } else {
-        buf = strprintf("%s%s:%d|%s|@%.2f", m_ns, key, value, type, sample_rate);
+    std::string buf{strprintf("%s%s:%d|%s", m_ns, key, value, type)};
+    if (sample_rate < 1.f) {
+        buf += strprintf("|@%.2f", sample_rate);
     }
 
     return send(buf);
@@ -166,7 +160,7 @@ int StatsdClient::send(std::string key, int64_t value, const std::string& type, 
 
 int StatsdClient::sendDouble(std::string key, double value, const std::string& type, float sample_rate)
 {
-    if (!should_send(sample_rate)) {
+    if (!ShouldSend(sample_rate)) {
         return 0;
     }
 
@@ -176,11 +170,9 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
 
     cleanup(key);
 
-    std::string buf{""};
-    if (fequal(sample_rate, 1.0)) {
-        buf = strprintf("%s%s:%f|%s", m_ns, key, value, type);
-    } else {
-        buf = strprintf("%s%s:%f|%s|@%.2f", m_ns, key, value, type, sample_rate);
+    std::string buf{strprintf("%s%s:%f|%s", m_ns, key, value, type)};
+    if (sample_rate < 1.f) {
+        buf += strprintf("|@%.2f", sample_rate);
     }
 
     return send(buf);

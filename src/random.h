@@ -207,10 +207,6 @@ public:
         return rand32() % nMax;
     }
 
-    uint32_t operator()(uint32_t nMax) {
-        return rand32(nMax);
-    }
-
     /** Generate random bytes. */
     template <typename B = unsigned char>
     std::vector<B> randbytes(size_t len);

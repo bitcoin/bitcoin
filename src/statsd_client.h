@@ -6,6 +6,8 @@
 #ifndef BITCOIN_STATSD_CLIENT_H
 #define BITCOIN_STATSD_CLIENT_H
 
+#include <random.h>
+#include <threadsafety.h>
 #include <util/sock.h>
 
 #include <string>
@@ -30,12 +32,12 @@ class StatsdClient {
         ~StatsdClient();
 
     public:
-        int inc(const std::string& key, float sample_rate = 1.0);
-        int dec(const std::string& key, float sample_rate = 1.0);
-        int count(const std::string& key, int64_t value, float sample_rate = 1.0);
-        int gauge(const std::string& key, int64_t value, float sample_rate = 1.0);
-        int gaugeDouble(const std::string& key, double value, float sample_rate = 1.0);
-        int timing(const std::string& key, int64_t ms, float sample_rate = 1.0);
+        int inc(const std::string& key, float sample_rate = 1.f);
+        int dec(const std::string& key, float sample_rate = 1.f);
+        int count(const std::string& key, int64_t value, float sample_rate = 1.f);
+        int gauge(const std::string& key, int64_t value, float sample_rate = 1.f);
+        int gaugeDouble(const std::string& key, double value, float sample_rate = 1.f);
+        int timing(const std::string& key, int64_t ms, float sample_rate = 1.f);
 
     public:
         /**
@@ -57,6 +59,12 @@ class StatsdClient {
         static void cleanup(std::string& key);
 
     private:
+        bool ShouldSend(float sample_rate);
+
+    private:
+        mutable Mutex cs;
+        mutable FastRandomContext insecure_rand GUARDED_BY(cs);
+
         bool m_init{false};
         SOCKET m_sock{INVALID_SOCKET};
         struct sockaddr_in m_server;
