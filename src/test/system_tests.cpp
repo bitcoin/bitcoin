@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, with error message for stderr
-        const std::string command{"ls nosuchfile"};
-        const std::string expected{"No such file or directory"};
+        const std::string command{"python3 -c 'import sys; print(\"err\", file=sys.stderr); sys.exit(2)'"};
+        const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
             BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned", command)) != std::string::npos);
