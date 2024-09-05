@@ -30,12 +30,9 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_CHECKSIG,
-    OP_DUP,
-    OP_EQUALVERIFY,
-    OP_HASH160,
     OP_RETURN,
-    hash160,
 )
+from test_framework.script_util import key_to_p2pkh_script
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
@@ -66,8 +63,8 @@ class AssetLocksTest(DashTestFramework):
         tmp_amount = amount
         if tmp_amount > COIN:
             tmp_amount -= COIN
-            credit_outputs.append(CTxOut(COIN, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
-        credit_outputs.append(CTxOut(tmp_amount, CScript([OP_DUP, OP_HASH160, hash160(pubkey), OP_EQUALVERIFY, OP_CHECKSIG])))
+            credit_outputs.append(CTxOut(COIN, key_to_p2pkh_script(pubkey)))
+        credit_outputs.append(CTxOut(tmp_amount, key_to_p2pkh_script(pubkey)))
 
         lockTx_payload = CAssetLockTx(1, credit_outputs)
 
@@ -281,7 +278,11 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=asset_lock_tx, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
         self.validate_credit_pool_balance(0)
         txid_in_block = self.send_tx(asset_lock_tx)
-        assert "assetLockTx" in node.getrawtransaction(txid_in_block, 1)
+        rpc_tx = node.getrawtransaction(txid_in_block, 1)
+        assert_equal(len(rpc_tx["assetLockTx"]["creditOutputs"]), 2)
+        assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][0]["valueSat"] + rpc_tx["assetLockTx"]["creditOutputs"][1]["valueSat"], locked_1)
+        assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][0]["scriptPubKey"]["hex"], key_to_p2pkh_script(pubkey).hex())
+        assert_equal(rpc_tx["assetLockTx"]["creditOutputs"][1]["scriptPubKey"]["hex"], key_to_p2pkh_script(pubkey).hex())
         self.validate_credit_pool_balance(0)
         node.generate(1)
         assert_equal(self.get_credit_pool_balance(node=node), locked_1)
