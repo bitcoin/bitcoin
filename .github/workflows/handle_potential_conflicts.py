@@ -24,8 +24,8 @@ import requests
 # need to install via pip
 import hjson
 
-def get_label(pr_num):
-    return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()['head']['label']
+def get_pr_json(pr_num):
+    return requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}').json()
 
 def main():
     if len(sys.argv) != 2:
@@ -39,33 +39,33 @@ def main():
 
 
     our_pr_num = j_input['pull_number']
-    our_pr_label = get_label(our_pr_num)
+    our_pr_label = get_pr_json(our_pr_num)['head']['label']
     conflictPrs = j_input['conflictPrs']
 
     good = []
     bad = []
 
     for conflict in conflictPrs:
-        this_pr_num = conflict['number']
-        print(this_pr_num)
+        conflict_pr_num = conflict['number']
+        print(conflict_pr_num)
 
-        r = requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{this_pr_num}')
-        print(r.json()['head']['label'])
+        conflict_pr_json = get_pr_json(conflict_pr_num)
+        conflict_pr_label = conflict_pr_json['head']['label']
+        print(conflict_pr_label)
 
-        mergable_state = r.json()['mergeable_state']
-        if mergable_state == "dirty":
-            print(f'{this_pr_num} needs rebase. Skipping conflict check')
+        if conflict_pr_json['mergeable_state'] == "dirty":
+            print(f'{conflict_pr_num} needs rebase. Skipping conflict check')
             continue
 
-        if r.json()["draft"]:
-            print(f'{this_pr_num} is a draft. Skipping conflict check')
+        if conflict_pr_json['draft']:
+            print(f'{conflict_pr_num} is a draft. Skipping conflict check')
             continue
 
-        r = requests.get(f'https://github.com/dashpay/dash/branches/pre_mergeable/{our_pr_label}...{r.json()['head']['label']}')
-        if "These branches can be automatically merged." in r.text:
-            good.append(this_pr_num)
-        elif "Can’t automatically merge" in r.text:
-            bad.append(this_pr_num)
+        pre_mergeable = requests.get(f'https://github.com/dashpay/dash/branches/pre_mergeable/{our_pr_label}...{conflict_pr_label}')
+        if "These branches can be automatically merged." in pre_mergeable.text:
+            good.append(conflict_pr_num)
+        elif "Can’t automatically merge" in pre_mergeable.text:
+            bad.append(conflict_pr_num)
         else:
             raise Exception("not mergeable or unmergable!")
 
