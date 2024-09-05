@@ -5,10 +5,10 @@
 file(READ ${JSON_SOURCE_PATH} hex_content HEX)
 string(REGEX MATCHALL "([A-Za-z0-9][A-Za-z0-9])" bytes "${hex_content}")
 
-file(WRITE ${HEADER_PATH} "#include <string>\n")
+file(WRITE ${HEADER_PATH} "#include <string_view>\n")
 file(APPEND ${HEADER_PATH} "namespace json_tests{\n")
 get_filename_component(json_source_basename ${JSON_SOURCE_PATH} NAME_WE)
-file(APPEND ${HEADER_PATH} "static const std::string ${json_source_basename}{\n")
+file(APPEND ${HEADER_PATH} "inline constexpr char detail_${json_source_basename}_bytes[]{\n")
 
 set(i 0)
 foreach(byte ${bytes})
@@ -21,4 +21,6 @@ foreach(byte ${bytes})
   endif()
 endforeach()
 
-file(APPEND ${HEADER_PATH} "\n};};")
+file(APPEND ${HEADER_PATH} "\n};\n")
+file(APPEND ${HEADER_PATH} "inline constexpr std::string_view ${json_source_basename}{std::begin(detail_${json_source_basename}_bytes), std::end(detail_${json_source_basename}_bytes)};")
+file(APPEND ${HEADER_PATH} "\n}")
