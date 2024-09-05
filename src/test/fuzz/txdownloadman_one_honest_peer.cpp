@@ -41,15 +41,15 @@ enum class PossibleMessage {
 
 // What a peer may send in response to a getdata.
 enum class PossibleResponse {
-    /** Send the target transaction, in response to getdata */
+    /** Send the transaction requested */
     TX_REAL,
-    /** Send a transaction with the witness stripped */
+    /** Send a transaction whose txid matches the requested hash, with the witness stripped */
     TX_WITNESS_STRIPPED,
-    /** Send a transaction with the witness malleated */
+    /** Send a transaction whose txid matches the requested hash, with the witness malleated */
     TX_WITNESS_MALLEATED,
     /** Send a notfound for this getdata */
     NOTFOUND,
-    /** Don't send anything (similar becoming unresponsive and/or stalling) */
+    /** Don't send anything (similar to becoming unresponsive and/or stalling) */
     NOTHING,
     /** Push to the back of the message queue (similar to stalling and/or responding to messages out of order) */
     DEFER,
@@ -83,7 +83,7 @@ static PossibleResponse NON_GOOD_RESPONSES[] = {
 
 class TestPeer {
 public:
-    // Queue of getdats to respond to: process from front, add to back.
+    // Queue of getdatas to respond to: process from front, add to back.
     std::deque<GenTxid> m_getdata_queue;
 
     // Connection state
