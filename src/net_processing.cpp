@@ -4556,8 +4556,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // Do not process unrequested transactions to mitigate potential DoS risks.
         // We check both identifiers as txid mode may happen with wtxidrelay peers
-        // due to parent-orphan fetching.
-        if (!pfrom.HasPermission(NetPermissionFlags::Relay) && pfrom.GetCommonVersion() >= REJECT_UNSOLICITED_TX_VERSION) {
+        // due to parent-orphan fetching. For backward-compatibility reasons, we only
+        // apply this transaction relay policy to node signaling NODE_TXRELAY_V2.
+        if ((peer->m_our_services & NODE_TXRELAY_V2) && !pfrom.HasPermission(NetPermissionFlags::Relay) && pfrom.GetCommonVersion() >= REJECT_UNSOLICITED_TX_VERSION) {
             bool is_expected = tx.HasWitness() ? m_txrequest.ExpectedTx(pfrom.GetId(), wtxid) ||
                 m_txrequest.ExpectedTx(pfrom.GetId(), txid) : m_txrequest.ExpectedTx(pfrom.GetId(), txid);
             if (!is_expected) {
