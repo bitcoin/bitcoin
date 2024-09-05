@@ -732,7 +732,7 @@ static RPCHelpMan quorum_selectquorum()
     ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
 
     UniValue recoveryMembers(UniValue::VARR);
-    for (size_t i = 0; i < size_t(quorum->params.recoveryMembers); i++) {
+    for (int i = 0; i < quorum->params.recoveryMembers; ++i) {
         auto dmn = llmq_ctx.shareman->SelectMemberForRecovery(quorum, id, i);
         recoveryMembers.push_back(dmn->proTxHash.ToString());
     }
