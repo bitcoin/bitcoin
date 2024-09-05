@@ -61,8 +61,8 @@ bool StatsdClient::ShouldSend(float sample_rate)
     return sample_rate > std::uniform_real_distribution<float>(0.f, 1.f)(insecure_rand);
 }
 
-StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, uint16_t port, const std::string& ns,
-                           bool enabled)
+StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, uint16_t port,
+                           const std::string& ns, bool enabled)
     : m_port{port}, m_host{host}, m_nodename{nodename}, m_ns{ns}
 {
     if (!enabled) {

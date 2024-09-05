@@ -13,22 +13,22 @@
 #include <string>
 #include <memory>
 
-static const bool DEFAULT_STATSD_ENABLE = false;
-static const uint16_t DEFAULT_STATSD_PORT = 8125;
-static const std::string DEFAULT_STATSD_HOST = "127.0.0.1";
-static const std::string DEFAULT_STATSD_HOSTNAME = "";
-static const std::string DEFAULT_STATSD_NAMESPACE = "";
+static constexpr bool DEFAULT_STATSD_ENABLE{false};
+static constexpr uint16_t DEFAULT_STATSD_PORT{8125};
+static const std::string DEFAULT_STATSD_HOST{"127.0.0.1"};
+static const std::string DEFAULT_STATSD_HOSTNAME{""};
+static const std::string DEFAULT_STATSD_NAMESPACE{""};
 
 // schedule periodic measurements, in seconds: default - 1 minute, min - 5 sec, max - 1h.
-static const int DEFAULT_STATSD_PERIOD = 60;
-static const int MIN_STATSD_PERIOD = 5;
-static const int MAX_STATSD_PERIOD = 60 * 60;
+static constexpr int DEFAULT_STATSD_PERIOD{60};
+static constexpr int MIN_STATSD_PERIOD{5};
+static constexpr int MAX_STATSD_PERIOD{60*60};
 
 namespace statsd {
 class StatsdClient {
     public:
-        explicit StatsdClient(const std::string& host, const std::string& nodename, uint16_t port, const std::string& ns,
-                              bool enabled);
+        explicit StatsdClient(const std::string& host, const std::string& nodename, uint16_t port,
+                              const std::string& ns, bool enabled);
 
     public:
         bool inc(const std::string& key, float sample_rate = 1.f);
