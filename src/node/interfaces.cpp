@@ -828,7 +828,7 @@ public:
         // Now dump value to disk if requested
         return *action == interfaces::SettingsAction::SKIP_WRITE || args().WriteSettingsFile();
     }
-    bool overwriteRwSetting(const std::string& name, common::SettingsValue& value, bool write) override
+    bool overwriteRwSetting(const std::string& name, common::SettingsValue value, bool write) override
     {
         if (value.isNull()) return deleteRwSettings(name, write);
         return updateRwSetting(name, [&](common::SettingsValue& settings) {
