@@ -53,6 +53,25 @@ std::unique_ptr<Init> MakeWalletInit(int argc, char* argv[], int& exit_status);
 
 //! Return implementation of Init interface for the gui process.
 std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[]);
+
+//! Return implementation of Init interface for a basic IPC client that doesn't
+//! provide any IPC services itself.
+//!
+//! When an IPC client connects to a socket or spawns a process, it gets a pointer
+//! to an Init object allowing it to create objects and threads on the remote
+//! side of the IPC connection. But the client also needs to provide a local Init
+//! object to allow the remote side of the connection to create objects and
+//! threads on this side. This function just returns a basic Init object
+//! allowing remote connections to only create local threads, not other objects
+//! (because its Init::make* methods return null.)
+//!
+//! @param exe_name Current executable name, which is just passed to the IPC
+//!     system and used for logging.
+//!
+//! @param process_argv0 Optional string containing argv[0] value passed to
+//!     main(). This is passed to the IPC system and used to locate binaries by
+//!     relative path if subprocesses are spawned.
+std::unique_ptr<Init> MakeBasicInit(const char* exe_name, const char* process_argv0="");
 } // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_INIT_H
