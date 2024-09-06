@@ -64,9 +64,9 @@ function(add_boost_if_needed)
     set(CMAKE_REQUIRED_DEFINITIONS)
   endif()
 
-  if(BUILD_TESTS)
-    # Some package managers, such as vcpkg, vendor Boost.Test separately
-    # from the rest of the headers, so we have to check for it individually.
+  # Some package managers, such as vcpkg, vendor Boost.Test separately
+  # from the rest of the headers, so we have to check for it individually.
+  if(BUILD_TESTS AND DEFINED VCPKG_TARGET_TRIPLET)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DBOOST_TEST_NO_MAIN)
     include(CheckIncludeFileCXX)
     check_include_file_cxx(boost/test/included/unit_test.hpp HAVE_BOOST_INCLUDED_UNIT_TEST_H)
