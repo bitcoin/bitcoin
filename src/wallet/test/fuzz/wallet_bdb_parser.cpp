@@ -18,6 +18,13 @@
 #include <fstream>
 #include <iostream>
 
+// There is an inconsistency in BDB on Windows.
+// See: https://github.com/bitcoin/bitcoin/pull/26606#issuecomment-2322763212
+#undef USE_BDB_NON_MSVC
+#if defined(USE_BDB) && !defined(_MSC_VER)
+#define USE_BDB_NON_MSVC
+#endif
+
 using wallet::DatabaseOptions;
 using wallet::DatabaseStatus;
 
@@ -50,7 +57,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     }
     g_setup->m_args.ForceSetArg("-dumpfile", fs::PathToString(bdb_ro_dumpfile));
 
-#ifdef USE_BDB
+#ifdef USE_BDB_NON_MSVC
     bool bdb_ro_err = false;
     bool bdb_ro_strict_err = false;
 #endif
@@ -58,7 +65,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     if (db) {
         assert(DumpWallet(g_setup->m_args, *db, error));
     } else {
-#ifdef USE_BDB
+#ifdef USE_BDB_NON_MSVC
         bdb_ro_err = true;
 #endif
         if (error.original.starts_with("AutoFile::ignore: end of file") ||
@@ -90,7 +97,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
                    error.original == "Subdatabase has an unexpected name" ||
                    error.original == "Unsupported BDB data file version number" ||
                    error.original == "BDB builtin encryption is not supported") {
-#ifdef USE_BDB
+#ifdef USE_BDB_NON_MSVC
             bdb_ro_strict_err = true;
 #endif
         } else {
@@ -98,7 +105,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
         }
     }
 
-#ifdef USE_BDB
+#ifdef USE_BDB_NON_MSVC
     // Try opening with BDB
     fs::path bdb_dumpfile{g_setup->m_args.GetDataDirNet() / "fuzzed_dumpfile_bdb.dump"};
     if (fs::exists(bdb_dumpfile)) { // Writing into an existing dump file will throw an exception

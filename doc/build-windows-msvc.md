@@ -42,27 +42,31 @@ Available presets can be listed as follows:
 cmake --list-presets
 ```
 
+By default, all presets:
+- Set `BUILD_GUI` to `ON`.
+- Set `WITH_QRENCODE` to `OFF`, due to known build issues when using vcpkg's `libqrencode` package.
+
 ## Building
 
 CMake will put the resulting object files, libraries, and executables into a dedicated build directory.
 
 In the following instructions, the "Debug" configuration can be specified instead of the "Release" one.
 
-### 4. Building with Dynamic Linking with GUI
-
-```
-cmake -B build --preset vs2022 -DBUILD_GUI=ON  # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
-cmake --build build --config Release           # Use "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
-```
-
-### 5. Building with Static Linking without GUI
+### 4. Building with Static Linking with GUI
 
 ```
 cmake -B build --preset vs2022-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Use "-j N" for N parallel jobs.
 ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 cmake --install build --config Release         # Optional.
+```
+
+### 5. Building with Dynamic Linking without GUI
+
+```
+cmake -B build --preset vs2022 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
+cmake --build build --config Release           # Use "-j N" for N parallel jobs.
+ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 ```
 
 ## Performance Notes

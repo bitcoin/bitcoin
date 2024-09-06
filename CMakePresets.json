@@ -16,8 +16,7 @@
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows",
         "BUILD_GUI": "ON",
-        "WITH_QRENCODE": "OFF",
-        "WITH_NATPMP": "OFF"
+        "WITH_QRENCODE": "OFF"
       }
     },
     {
@@ -34,8 +33,7 @@
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-static",
         "BUILD_GUI": "ON",
-        "WITH_QRENCODE": "OFF",
-        "WITH_NATPMP": "OFF"
+        "WITH_QRENCODE": "OFF"
       }
     }
   ]
