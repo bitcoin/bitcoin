@@ -66,17 +66,21 @@ def signet_txs(block, challenge):
 
     return spend, to_spend
 
-def decode_psbt(b64psbt):
+def decode_challenge_psbt(b64psbt):
     psbt = PSBT.from_base64(b64psbt)
 
     assert len(psbt.tx.vin) == 1
     assert len(psbt.tx.vout) == 1
     assert PSBT_SIGNET_BLOCK in psbt.g.map
+    return psbt
 
+def get_block_from_psbt(psbt):
+    return from_binary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK])
+
+def get_solution_from_psbt(psbt):
     scriptSig = psbt.i[0].map.get(PSBT_IN_FINAL_SCRIPTSIG, b"")
     scriptWitness = psbt.i[0].map.get(PSBT_IN_FINAL_SCRIPTWITNESS, b"\x00")
-
-    return from_binary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK]), ser_string(scriptSig) + scriptWitness
+    return ser_string(scriptSig) + scriptWitness
 
 def finish_block(block, signet_solution, grind_cmd):
     block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
@@ -180,7 +184,9 @@ def do_genpsbt(args):
     print(psbt)
 
 def do_solvepsbt(args):
-    block, signet_solution = decode_psbt(sys.stdin.read())
+    psbt = decode_challenge_psbt(sys.stdin.read())
+    block = get_block_from_psbt(psbt)
+    signet_solution = get_solution_from_psbt(psbt)
     block = finish_block(block, signet_solution, args.grind_cmd)
     print(block.serialize().hex())
 
@@ -330,7 +336,9 @@ class Generate:
             logging.debug("Generated PSBT: %s" % (psbt,))
             sys.stderr.write("PSBT signing failed\n")
             return None
-        block, signet_solution = decode_psbt(psbt_signed["psbt"])
+        psbt = decode_challenge_psbt(psbt_signed["psbt"])
+        block = get_block_from_psbt(psbt)
+        signet_solution = get_solution_from_psbt(psbt)
         return finish_block(block, signet_solution, grind_cmd)
 
 def do_generate(args):
