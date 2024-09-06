@@ -80,7 +80,7 @@ static bool CheckOrphanBehavior(node::TxDownloadManagerImpl& txdownload_impl, co
         return false;
     }
 
-    if (expect_orphan != txdownload_impl.m_orphanage.HaveTx(tx->GetWitnessHash())) {
+    if (expect_orphan != WITH_LOCK(txdownload_impl.m_txdownload_mutex, return txdownload_impl.m_orphanage.HaveTx(tx->GetWitnessHash()))) {
         err_msg = strprintf("unexpectedly %s tx in orphanage", expect_orphan ? "did not find" : "found");
         return false;
     }
@@ -141,10 +141,10 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 // No distinction between txid and wtxid caching for nonsegwit transactions, so only test these specific
                 // behaviors for segwit transactions.
                 Behaviors actual_behavior{
-                    /*txid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_txid),
-                    /*wtxid_rejects=*/txdownload_impl.RecentRejectsFilter().contains(parent_wtxid),
-                    /*txid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_txid),
-                    /*wtxid_recon=*/txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_wtxid),
+                    /*txid_rejects=*/WITH_LOCK(txdownload_impl.m_txdownload_mutex, return txdownload_impl.RecentRejectsFilter().contains(parent_txid)),
+                    /*wtxid_rejects=*/WITH_LOCK(txdownload_impl.m_txdownload_mutex, return txdownload_impl.RecentRejectsFilter().contains(parent_wtxid)),
+                    /*txid_recon=*/WITH_LOCK(txdownload_impl.m_txdownload_mutex, return txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_txid)),
+                    /*wtxid_recon=*/WITH_LOCK(txdownload_impl.m_txdownload_mutex, return txdownload_impl.RecentRejectsReconsiderableFilter().contains(parent_wtxid)),
                     /*keep=*/keep,
                     /*txid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Txid(parent_txid), now, /*p2p_inv=*/true),
                     /*wtxid_inv=*/txdownload_impl.AddTxAnnouncement(nodeid, GenTxid::Wtxid(parent_wtxid), now, /*p2p_inv=*/true),
@@ -158,6 +158,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 
                 // If parent (by txid) was rejected, child is too.
                 const bool parent_txid_rejected{segwit_parent ? expected_behavior.m_txid_in_rejects : expected_behavior.m_wtxid_in_rejects};
+                LOCK(txdownload_impl.m_txdownload_mutex);
                 BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_txid));
                 BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_wtxid));
 
@@ -217,9 +218,18 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
         const bool parent_recent_conf((decisions >> 2) & 1);
         const bool parent_in_mempool((decisions >> 3) & 1);
 
-        if (parent_recent_rej) txdownload_impl.RecentRejectsFilter().insert(single_parent->GetHash().ToUint256());
-        if (parent_recent_rej_recon) txdownload_impl.RecentRejectsReconsiderableFilter().insert(single_parent->GetHash().ToUint256());
-        if (parent_recent_conf) txdownload_impl.RecentConfirmedTransactionsFilter().insert(single_parent->GetHash().ToUint256());
+        if (parent_recent_rej) {
+            LOCK(txdownload_impl.m_txdownload_mutex);
+            txdownload_impl.RecentRejectsFilter().insert(single_parent->GetHash().ToUint256());
+        }
+        if (parent_recent_rej_recon) {
+            LOCK(txdownload_impl.m_txdownload_mutex);
+            txdownload_impl.RecentRejectsReconsiderableFilter().insert(single_parent->GetHash().ToUint256());
+        }
+        if (parent_recent_conf) {
+            LOCK(txdownload_impl.m_txdownload_mutex);
+            txdownload_impl.RecentConfirmedTransactionsFilter().insert(single_parent->GetHash().ToUint256());
+        }
         if (parent_in_mempool) {
             const auto mempool_result = WITH_LOCK(::cs_main, return m_node.chainman->ProcessTransaction(single_parent));
             BOOST_CHECK(mempool_result.m_result_type == MempoolAcceptResult::ResultType::VALID);
@@ -265,7 +275,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
             txdownload_impl.ConnectedPeer(nodeid, DEFAULT_CONN);
 
-            txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[0]->GetHash().ToUint256());
+            WITH_LOCK(txdownload_impl.m_txdownload_mutex, txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[0]->GetHash().ToUint256()));
             const auto ret_1p1c_parent_reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c_parent_reconsiderable, err_msg,
@@ -278,8 +288,9 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
             txdownload_impl.ConnectedPeer(nodeid, DEFAULT_CONN);
 
-            txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[0]->GetHash().ToUint256());
+            WITH_LOCK(txdownload_impl.m_txdownload_mutex, txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[0]->GetHash().ToUint256()));
             for (int32_t i = 1; i < num_parents; ++i) {
+                LOCK(txdownload_impl.m_txdownload_mutex);
                 txdownload_impl.RecentConfirmedTransactionsFilter().insert(parents[i]->GetHash().ToUint256());
             }
             const unsigned int expected_parents = 1;
@@ -296,14 +307,14 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
             txdownload_impl.ConnectedPeer(nodeid, DEFAULT_CONN);
 
-            txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[1]->GetHash().ToUint256());
+            WITH_LOCK(txdownload_impl.m_txdownload_mutex, txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[1]->GetHash().ToUint256()));
 
             // Doesn't really matter which parent
             auto& alreadyhave_parent = parents[0];
             if (i == 0) {
-                txdownload_impl.RecentRejectsReconsiderableFilter().insert(alreadyhave_parent->GetHash().ToUint256());
+                WITH_LOCK(txdownload_impl.m_txdownload_mutex, txdownload_impl.RecentRejectsReconsiderableFilter().insert(alreadyhave_parent->GetHash().ToUint256()));
             } else if (i == 1) {
-                txdownload_impl.RecentRejectsFilter().insert(alreadyhave_parent->GetHash().ToUint256());
+                WITH_LOCK(txdownload_impl.m_txdownload_mutex, txdownload_impl.RecentRejectsFilter().insert(alreadyhave_parent->GetHash().ToUint256()));
             }
 
             const auto ret_2_problems = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
@@ -328,7 +339,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
             txdownload_impl.ConnectedPeer(nodeid, DEFAULT_CONN);
 
-            txdownload_impl.RecentRejectsReconsiderableFilter().insert(parent_2outputs->GetHash().ToUint256());
+            WITH_LOCK(txdownload_impl.m_txdownload_mutex, txdownload_impl.RecentRejectsReconsiderableFilter().insert(parent_2outputs->GetHash().ToUint256()));
             const auto ret_1p1c_2reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c_2reconsiderable, err_msg,
