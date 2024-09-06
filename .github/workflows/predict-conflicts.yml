@@ -19,7 +19,7 @@ permissions:
   statuses: none
 
 jobs:
-  main:
+  predict_conflicts:
     runs-on: ubuntu-latest
     steps:
       - name: check for potential conflicts
