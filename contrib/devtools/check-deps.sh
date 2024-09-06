@@ -8,11 +8,10 @@ declare -A LIBS
 LIBS[cli]="libbitcoin_cli.a"
 LIBS[common]="libbitcoin_common.a"
 LIBS[consensus]="libbitcoin_consensus.a"
-LIBS[crypto]="crypto/.libs/libbitcoin_crypto_base.a crypto/.libs/libbitcoin_crypto_x86_shani.a crypto/.libs/libbitcoin_crypto_sse41.a crypto/.libs/libbitcoin_crypto_avx2.a"
+LIBS[crypto]="crypto/libbitcoin_crypto.a crypto/libbitcoin_crypto_x86_shani.a crypto/libbitcoin_crypto_sse41.a crypto/libbitcoin_crypto_avx2.a"
 LIBS[node]="libbitcoin_node.a"
-LIBS[util]="libbitcoin_util.a"
-LIBS[wallet]="libbitcoin_wallet.a"
-LIBS[wallet_tool]="libbitcoin_wallet_tool.a"
+LIBS[util]="util/libbitcoin_util.a"
+LIBS[wallet]="wallet/libbitcoin_wallet.a"
 
 # Declare allowed dependencies "X Y" where X is allowed to depend on Y. This
 # list is taken from doc/design/libraries.md.
@@ -32,32 +31,28 @@ ALLOWED_DEPENDENCIES=(
     "wallet common"
     "wallet crypto"
     "wallet util"
-    "wallet_tool util"
-    "wallet_tool wallet"
 )
 
 # Add minor dependencies omitted from doc/design/libraries.md to keep the
 # dependency diagram simple.
 ALLOWED_DEPENDENCIES+=(
     "wallet consensus"
-    "wallet_tool common"
-    "wallet_tool crypto"
 )
 
 # Declare list of known errors that should be suppressed.
 declare -A SUPPRESS
 # init.cpp file currently calls Berkeley DB sanity check function on startup, so
 # there is an undocumented dependency of the node library on the wallet library.
-SUPPRESS["libbitcoin_node_a-init.o libbitcoin_wallet_a-bdb.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
+SUPPRESS["init.cpp.o bdb.cpp.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
 # init/common.cpp file calls InitError and InitWarning from interface_ui which
 # is currently part of the node library. interface_ui should just be part of the
 # common library instead, and is moved in
 # https://github.com/bitcoin/bitcoin/issues/10102
-SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z11InitWarningRK13bilingual_str"]=1
-SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z9InitErrorRK13bilingual_str"]=1
+SUPPRESS["common.cpp.o interface_ui.cpp.o _Z11InitWarningRK13bilingual_str"]=1
+SUPPRESS["common.cpp.o interface_ui.cpp.o _Z9InitErrorRK13bilingual_str"]=1
 # rpc/external_signer.cpp adds defines node RPC methods but is built as part of the
 # common library. It should be moved to the node library instead.
-SUPPRESS["libbitcoin_common_a-external_signer.o libbitcoin_node_a-server.o _ZN9CRPCTable13appendCommandERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK11CRPCCommand"]=1
+SUPPRESS["external_signer.cpp.o server.cpp.o _ZN9CRPCTable13appendCommandERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK11CRPCCommand"]=1
 
 usage() {
    echo "Usage: $(basename "${BASH_SOURCE[0]}") [BUILD_DIR]"
@@ -67,8 +62,10 @@ usage() {
 lib_targets() {
   for lib in "${!LIBS[@]}"; do
       for lib_path in ${LIBS[$lib]}; do
-          # shellcheck disable=SC2001
-          sed 's:/.libs/\(.*\)\.a$:/\1.la:g' <<<"$lib_path"
+          local name="${lib_path##*/}"
+          name="${name#lib}"
+          name="${name%.a}"
+          echo "$name"
       done
   done
 }
@@ -78,8 +75,8 @@ extract_symbols() {
     local temp_dir="$1"
     for lib in "${!LIBS[@]}"; do
         for lib_path in ${LIBS[$lib]}; do
-            nm -o "$lib_path" | grep ' T ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_exports.txt"
-            nm -o "$lib_path" | grep ' U ' | awk '{print $3, $1}' >> "${temp_dir}/${lib}_imports.txt"
+            nm -o "$lib_path" | { grep ' T \| W ' || true; } | awk '{print $3, $1}' >> "${temp_dir}/${lib}_exports.txt"
+            nm -o "$lib_path" | { grep ' U ' || true; } | awk '{print $3, $1}' >> "${temp_dir}/${lib}_imports.txt"
             awk '{print $1}' "${temp_dir}/${lib}_exports.txt" | sort -u > "${temp_dir}/${lib}_exported_symbols.txt"
             awk '{print $1}' "${temp_dir}/${lib}_imports.txt" | sort -u > "${temp_dir}/${lib}_imported_symbols.txt"
         done
@@ -175,7 +172,7 @@ check_not_suppressed() {
 
 # Check arguments.
 if [ "$#" = 0 ]; then
-    BUILD_DIR="$(dirname "${BASH_SOURCE[0]}")/../../src"
+    BUILD_DIR="$(dirname "${BASH_SOURCE[0]}")/../../build"
 elif [ "$#" = 1 ]; then
     BUILD_DIR="$1"
 else
@@ -190,10 +187,10 @@ if [ ! -f "$BUILD_DIR/Makefile" ]; then
 fi
 
 # Build libraries and run checks.
-cd "$BUILD_DIR"
 # shellcheck disable=SC2046
-make -j"$(nproc)" $(lib_targets)
+cmake --build "$BUILD_DIR" -j"$(nproc)" -t $(lib_targets)
 TEMP_DIR="$(mktemp -d)"
+cd "$BUILD_DIR/src"
 extract_symbols "$TEMP_DIR"
 if check_libraries "$TEMP_DIR"; then
     echo "Success! No unexpected dependencies were detected."
