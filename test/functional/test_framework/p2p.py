@@ -31,8 +31,8 @@ import threading
 from test_framework.messages import (
     CBlockHeader,
     CompressibleBlockHeader,
-    MAX_HEADERS_UNCOMPRESSED_RESULT,
     MAX_HEADERS_COMPRESSED_RESULT,
+    MAX_HEADERS_UNCOMPRESSED_RESULT,
     NODE_HEADERS_COMPRESSED,
     msg_addr,
     msg_addrv2,
