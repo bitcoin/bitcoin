@@ -203,7 +203,7 @@ static bool HTTPReq_JSONRPC(const CoreContext& context, HTTPRequest* req)
 
     JSONRPCRequest jreq;
     jreq.context = context;
-    jreq.peerAddr = req->GetPeer().ToString();
+    jreq.peerAddr = req->GetPeer().ToStringAddrPort();
     if (!RPCAuthorized(authHeader.second, rpcRequest.user)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
 
