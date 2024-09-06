@@ -264,9 +264,23 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
         for (ClusterIndex j = 0; j < depgraph.TxCount(); ++j) {
             assert(depgraph.Ancestors(i)[j] == depgraph.Descendants(j)[i]);
         }
+        // No transaction is a parent or child of itself.
+        auto parents = depgraph.GetReducedParents(i);
+        auto children = depgraph.GetReducedChildren(i);
+        assert(!parents[i]);
+        assert(!children[i]);
+        // Parents of a transaction do not have ancestors inside those parents (except itself).
+        // Note that even the transaction itself may be missing (if it is part of a cycle).
+        for (auto parent : parents) {
+            assert((depgraph.Ancestors(parent) & parents).IsSubsetOf(SetType::Singleton(parent)));
+        }
+        // Similar for children and descendants.
+        for (auto child : children) {
+            assert((depgraph.Descendants(child) & children).IsSubsetOf(SetType::Singleton(child)));
+        }
     }
-    // If DepGraph is acyclic, serialize + deserialize must roundtrip.
     if (IsAcyclic(depgraph)) {
+        // If DepGraph is acyclic, serialize + deserialize must roundtrip.
         std::vector<unsigned char> ser;
         VectorWriter writer(ser, 0);
         writer << Using<DepGraphFormatter>(depgraph);
@@ -284,6 +298,37 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
         reader >> Using<DepGraphFormatter>(decoded_depgraph);
         assert(depgraph == decoded_depgraph);
         assert(reader.empty());
+
+        // In acyclic graphs, the union of parents with parents of parents etc. yields the
+        // full ancestor set (and similar for children and descendants).
+        std::vector<SetType> parents, children;
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            parents.push_back(depgraph.GetReducedParents(i));
+            children.push_back(depgraph.GetReducedChildren(i));
+        }
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            // Initialize the set of ancestors with just the current transaction itself.
+            SetType ancestors = SetType::Singleton(i);
+            // Iteratively add parents of all transactions in the ancestor set to itself.
+            while (true) {
+                const auto old_ancestors = ancestors;
+                for (auto j : ancestors) ancestors |= parents[j];
+                // Stop when no more changes are being made.
+                if (old_ancestors == ancestors) break;
+            }
+            assert(ancestors == depgraph.Ancestors(i));
+
+            // Initialize the set of descendants with just the current transaction itself.
+            SetType descendants = SetType::Singleton(i);
+            // Iteratively add children of all transactions in the descendant set to itself.
+            while (true) {
+                const auto old_descendants = descendants;
+                for (auto j : descendants) descendants |= children[j];
+                // Stop when no more changes are being made.
+                if (old_descendants == descendants) break;
+            }
+            assert(descendants == depgraph.Descendants(i));
+        }
     }
 }
 

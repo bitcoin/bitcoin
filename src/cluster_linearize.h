@@ -184,6 +184,48 @@ public:
         }
     }
 
+    /** Compute the (reduced) set of parents of node i in this graph.
+     *
+     * This returns the minimal subset of the parents of i whose ancestors together equal all of
+     * i's ancestors (unless i is part of a cycle of dependencies). Note that DepGraph does not
+     * store the set of parents; this information is inferred from the ancestor sets.
+     *
+     * Complexity: O(N) where N=Ancestors(i).Count() (which is bounded by TxCount()).
+     */
+    SetType GetReducedParents(ClusterIndex i) const noexcept
+    {
+        SetType parents = Ancestors(i);
+        parents.Reset(i);
+        for (auto parent : parents) {
+            if (parents[parent]) {
+                parents -= Ancestors(parent);
+                parents.Set(parent);
+            }
+        }
+        return parents;
+    }
+
+    /** Compute the (reduced) set of children of node i in this graph.
+     *
+     * This returns the minimal subset of the children of i whose descendants together equal all of
+     * i's descendants (unless i is part of a cycle of dependencies). Note that DepGraph does not
+     * store the set of children; this information is inferred from the descendant sets.
+     *
+     * Complexity: O(N) where N=Descendants(i).Count() (which is bounded by TxCount()).
+     */
+    SetType GetReducedChildren(ClusterIndex i) const noexcept
+    {
+        SetType children = Descendants(i);
+        children.Reset(i);
+        for (auto child : children) {
+            if (children[child]) {
+                children -= Descendants(child);
+                children.Set(child);
+            }
+        }
+        return children;
+    }
+
     /** Compute the aggregate feerate of a set of nodes in this graph.
      *
      * Complexity: O(N) where N=elems.Count().

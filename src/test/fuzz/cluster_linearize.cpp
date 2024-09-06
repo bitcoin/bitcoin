@@ -896,24 +896,12 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
     }
     if (direction & 1) {
         for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto children = depgraph_gen.Descendants(i) - TestBitSet::Singleton(i);
-            // Remove descendants that are children of other descendants.
-            for (auto j : children) {
-                if (!children[j]) continue;
-                children -= depgraph_gen.Descendants(j);
-                children.Set(j);
-            }
+            auto children = depgraph_gen.GetReducedChildren(i);
             if (children.Any()) depgraph_tree.AddDependency(i, children.First());
          }
     } else {
         for (ClusterIndex i = 0; i < depgraph_gen.TxCount(); ++i) {
-            auto parents = depgraph_gen.Ancestors(i) - TestBitSet::Singleton(i);
-            // Remove ancestors that are parents of other ancestors.
-            for (auto j : parents) {
-                if (!parents[j]) continue;
-                parents -= depgraph_gen.Ancestors(j);
-                parents.Set(j);
-            }
+            auto parents = depgraph_gen.GetReducedParents(i);
             if (parents.Any()) depgraph_tree.AddDependency(parents.First(), i);
         }
     }
