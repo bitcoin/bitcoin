@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
-
 #include <test/util/setup_common.h>
 
 #include <addrman.h>
@@ -76,6 +74,7 @@ using node::VerifyLoadedChainstate;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
+constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes a space to catch possible path escape issues.
 /** Random context to get unique temp data dirs. Separate from m_rng, which can be seeded from a const env var */
 static FastRandomContext g_rng_temp_path;
 
@@ -109,7 +108,7 @@ static NetworkSetup g_networksetup_instance;
 /** Register test-only arguments */
 static void SetupUnitTestArgs(ArgsManager& argsman)
 {
-    argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / "test_common_" PACKAGE_NAME / "")),
+    argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / "")),
                    ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 }
 
@@ -155,12 +154,12 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
     // Use randomly chosen seed for deterministic PRNG, so that (by default) test
     // data directories use a random name that doesn't overlap with other tests.
-    SeedRandomForTest(SeedRand::SEED);
+    SeedRandomForTest(SeedRand::FIXED_SEED);
 
     if (!m_node.args->IsArgSet("-testdatadir")) {
         // By default, the data directory has a random name
         const auto rand_str{g_rng_temp_path.rand256().ToString()};
-        m_path_root = fs::temp_directory_path() / "test_common_" PACKAGE_NAME / rand_str;
+        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / rand_str;
         TryCreateDirectories(m_path_root);
     } else {
         // Custom data directory
@@ -170,7 +169,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
 
         root_dir = fs::absolute(root_dir);
         const std::string test_path{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
-        m_path_lock = root_dir / "test_common_" PACKAGE_NAME / fs::PathFromString(test_path);
+        m_path_lock = root_dir / TEST_DIR_PATH_ELEMENT / fs::PathFromString(test_path);
         m_path_root = m_path_lock / "datadir";
 
         // Try to obtain the lock; if unsuccessful don't disturb the existing test.
