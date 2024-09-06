@@ -1044,7 +1044,7 @@ static uint16_t GetHeadersLimit(const CNode& pfrom, const std::string& msg_type)
     if (pfrom.GetCommonVersion() >= INCREASE_MAX_HEADERS2_VERSION && msg_type == NetMsgType::GETHEADERS2) {
         return MAX_HEADERS_COMPRESSED_RESULT;
     }
-    return MAX_HEADERS_UNCOMPRESSED_RESULTS;
+    return MAX_HEADERS_UNCOMPRESSED_RESULT;
 }
 
 static void PushInv(Peer& peer, const CInv& inv)

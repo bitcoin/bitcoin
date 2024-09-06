@@ -31,7 +31,7 @@ import threading
 from test_framework.messages import (
     CBlockHeader,
     CompressibleBlockHeader,
-    MAX_HEADERS_UNCOMPRESSED_RESULTS,
+    MAX_HEADERS_UNCOMPRESSED_RESULT,
     MAX_HEADERS_COMPRESSED_RESULT,
     NODE_HEADERS_COMPRESSED,
     msg_addr,
@@ -734,7 +734,7 @@ class P2PDataStore(P2PInterface):
                 break
 
         # Truncate the list if there are too many headers
-        max_results = MAX_HEADERS_COMPRESSED_RESULT if use_headers2 else MAX_HEADERS_UNCOMPRESSED_RESULTS
+        max_results = MAX_HEADERS_COMPRESSED_RESULT if use_headers2 else MAX_HEADERS_UNCOMPRESSED_RESULT
         headers_list = headers_list[:-max_results - 1:-1]
 
         return headers_list
