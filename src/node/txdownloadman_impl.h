@@ -200,6 +200,9 @@ protected:
      * skipping any combinations that have already been tried. Return the resulting package along with
      * the senders of its respective transactions, or std::nullopt if no package is found. */
     std::optional<PackageToValidate> Find1P1CPackage(const CTransactionRef& ptx, NodeId nodeid);
+
+    /** Internal version of AlreadyHaveTx */
+    bool AlreadyHaveTxInternal(const GenTxid& gtxid, bool include_reconsiderable);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_IMPL_H
