@@ -315,7 +315,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         if (i->exactMatch)
             match = (strURI == i->prefix);
         else
-            match = (strURI.substr(0, i->prefix.size()) == i->prefix);
+            match = strURI.starts_with(i->prefix);
         if (match) {
             path = strURI.substr(i->prefix.size());
             break;
