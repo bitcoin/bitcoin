@@ -10,8 +10,8 @@ from test_framework.messages import (
     CInv,
     msg_ping,
     ser_string,
-    MAX_HEADERS_RESULTS,
-    MAX_HEADERS2_RESULTS,
+    MAX_HEADERS_UNCOMPRESSED_RESULTS,
+    MAX_HEADERS_COMPRESSED_RESULT,
     MAX_INV_SIZE,
     MAX_PROTOCOL_MESSAGE_LENGTH,
     msg_getdata,
@@ -154,11 +154,11 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_oversized_msg(msg_getdata([CInv(MSG_TX, 1)] * size), size)
 
     def test_oversized_headers_msg(self):
-        size = MAX_HEADERS_RESULTS + 1
+        size = MAX_HEADERS_UNCOMPRESSED_RESULTS + 1
         self.test_oversized_msg(msg_headers([CBlockHeader()] * size), size)
 
     def test_oversized_headers2_msg(self):
-        size = MAX_HEADERS2_RESULTS + 1
+        size = MAX_HEADERS_COMPRESSED_RESULT + 1
         self.test_oversized_msg(msg_headers2([CBlockHeader()] * size), size)
 
     def test_resource_exhaustion(self):
