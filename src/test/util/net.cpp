@@ -138,38 +138,31 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     return candidates;
 }
 
-StaticContentsSock::StaticContentsSock(const std::string& contents)
-    : Sock{INVALID_SOCKET}, m_contents{contents}
+// Have different ZeroSock (or others that inherit from it) objects have different
+// m_socket because EqualSharedPtrSock compares m_socket and we want to avoid two
+// different objects comparing as equal.
+static std::atomic<SOCKET> g_mocked_sock_fd{0};
+
+ZeroSock::ZeroSock() : Sock{g_mocked_sock_fd++} {}
+
+// Sock::~Sock() would try to close(2) m_socket if it is not INVALID_SOCKET, avoid that.
+ZeroSock::~ZeroSock() { m_socket = INVALID_SOCKET; }
+
+ssize_t ZeroSock::Send(const void*, size_t len, int) const { return len; }
+
+ssize_t ZeroSock::Recv(void* buf, size_t len, int flags) const
 {
+    memset(buf, 0x0, len);
+    return len;
 }
 
-StaticContentsSock::~StaticContentsSock() { m_socket = INVALID_SOCKET; }
+int ZeroSock::Connect(const sockaddr*, socklen_t) const { return 0; }
 
-StaticContentsSock& StaticContentsSock::operator=(Sock&& other)
-{
-    assert(false && "Move of Sock into MockSock not allowed.");
-    return *this;
-}
+int ZeroSock::Bind(const sockaddr*, socklen_t) const { return 0; }
 
-ssize_t StaticContentsSock::Send(const void*, size_t len, int) const { return len; }
+int ZeroSock::Listen(int) const { return 0; }
 
-ssize_t StaticContentsSock::Recv(void* buf, size_t len, int flags) const
-{
-    const size_t consume_bytes{std::min(len, m_contents.size() - m_consumed)};
-    std::memcpy(buf, m_contents.data() + m_consumed, consume_bytes);
-    if ((flags & MSG_PEEK) == 0) {
-        m_consumed += consume_bytes;
-    }
-    return consume_bytes;
-}
-
-int StaticContentsSock::Connect(const sockaddr*, socklen_t) const { return 0; }
-
-int StaticContentsSock::Bind(const sockaddr*, socklen_t) const { return 0; }
-
-int StaticContentsSock::Listen(int) const { return 0; }
-
-std::unique_ptr<Sock> StaticContentsSock::Accept(sockaddr* addr, socklen_t* addr_len) const
+std::unique_ptr<Sock> ZeroSock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
     if (addr != nullptr) {
         // Pretend all connections come from 5.5.5.5:6789
@@ -183,30 +176,28 @@ std::unique_ptr<Sock> StaticContentsSock::Accept(sockaddr* addr, socklen_t* addr
             addr_in->sin_port = htons(6789);
         }
     }
-    return std::make_unique<StaticContentsSock>("");
-};
+    return std::make_unique<ZeroSock>();
+}
 
-int StaticContentsSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
+int ZeroSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     std::memset(opt_val, 0x0, *opt_len);
     return 0;
 }
 
-int StaticContentsSock::SetSockOpt(int, int, const void*, socklen_t) const { return 0; }
+int ZeroSock::SetSockOpt(int, int, const void*, socklen_t) const { return 0; }
 
-int StaticContentsSock::GetSockName(sockaddr* name, socklen_t* name_len) const
+int ZeroSock::GetSockName(sockaddr* name, socklen_t* name_len) const
 {
     std::memset(name, 0x0, *name_len);
     return 0;
 }
 
-bool StaticContentsSock::SetNonBlocking() const { return true; }
+bool ZeroSock::SetNonBlocking() const { return true; }
 
-bool StaticContentsSock::IsSelectable() const { return true; }
+bool ZeroSock::IsSelectable() const { return true; }
 
-bool StaticContentsSock::Wait(std::chrono::milliseconds timeout,
-          Event requested,
-          Event* occurred) const
+bool ZeroSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     if (occurred != nullptr) {
         *occurred = requested;
@@ -214,7 +205,7 @@ bool StaticContentsSock::Wait(std::chrono::milliseconds timeout,
     return true;
 }
 
-bool StaticContentsSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
+bool ZeroSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
 {
     for (auto& [sock, events] : events_per_sock) {
         (void)sock;
@@ -223,7 +214,29 @@ bool StaticContentsSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSo
     return true;
 }
 
-bool StaticContentsSock::IsConnected(std::string&) const
+ZeroSock& ZeroSock::operator=(Sock&& other)
 {
-    return true;
+    assert(false && "Move of Sock into ZeroSock not allowed.");
+    return *this;
+}
+
+StaticContentsSock::StaticContentsSock(const std::string& contents)
+    : m_contents{contents}
+{
+}
+
+ssize_t StaticContentsSock::Recv(void* buf, size_t len, int flags) const
+{
+    const size_t consume_bytes{std::min(len, m_contents.size() - m_consumed)};
+    std::memcpy(buf, m_contents.data() + m_consumed, consume_bytes);
+    if ((flags & MSG_PEEK) == 0) {
+        m_consumed += consume_bytes;
+    }
+    return consume_bytes;
+}
+
+StaticContentsSock& StaticContentsSock::operator=(Sock&& other)
+{
+    assert(false && "Move of Sock into StaticContentsSock not allowed.");
+    return *this;
 }

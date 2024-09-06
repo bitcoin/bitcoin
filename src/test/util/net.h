@@ -134,18 +134,15 @@ constexpr auto ALL_NETWORKS = std::array{
 };
 
 /**
- * A mocked Sock alternative that returns a statically contained data upon read and succeeds
- * and ignores all writes. The data to be returned is given to the constructor and when it is
- * exhausted an EOF is returned by further reads.
+ * A mocked Sock alternative that succeeds on all operations.
+ * Returns infinite amount of 0x0 bytes on reads.
  */
-class StaticContentsSock : public Sock
+class ZeroSock : public Sock
 {
 public:
-    explicit StaticContentsSock(const std::string& contents);
+    ZeroSock();
 
-    ~StaticContentsSock() override;
-
-    StaticContentsSock& operator=(Sock&& other) override;
+    ~ZeroSock() override;
 
     ssize_t Send(const void*, size_t len, int) const override;
 
@@ -175,9 +172,34 @@ public:
 
     bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
 
-    bool IsConnected(std::string&) const override;
+private:
+    ZeroSock& operator=(Sock&& other) override;
+};
+
+/**
+ * A mocked Sock alternative that returns a statically contained data upon read and succeeds
+ * and ignores all writes. The data to be returned is given to the constructor and when it is
+ * exhausted an EOF is returned by further reads.
+ */
+class StaticContentsSock : public ZeroSock
+{
+public:
+    explicit StaticContentsSock(const std::string& contents);
+
+    /**
+     * Return parts of the contents that was provided at construction until it is exhausted
+     * and then return 0 (EOF).
+     */
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
+
+    bool IsConnected(std::string&) const override
+    {
+        return true;
+    }
 
 private:
+    StaticContentsSock& operator=(Sock&& other) override;
+
     const std::string m_contents;
     mutable size_t m_consumed{0};
 };
