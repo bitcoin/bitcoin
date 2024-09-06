@@ -368,6 +368,19 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   install_binary_component(bitcoin-node)
+
+  add_executable(bitcoin-mine
+    bitcoin-mine.cpp
+    init/basic.cpp
+  )
+  add_windows_resources(bitcoin-mine bitcoin-mine-res.rc)
+  add_windows_application_manifest(bitcoin-mine)
+  target_link_libraries(bitcoin-mine
+    core_interface
+    bitcoin_common
+    bitcoin_ipc
+  )
+  install_binary_component(bitcoin-mine)
 endif()
 
 if(ENABLE_IPC AND BUILD_TESTS)
