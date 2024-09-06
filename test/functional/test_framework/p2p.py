@@ -713,7 +713,7 @@ class P2PDataStore(P2PInterface):
             else:
                 logger.debug('getdata message type {} received.'.format(hex(inv.type)))
 
-    def _compute_requested_block_headers(self, locator, hash_stop, use_headers2):
+    def _compute_requested_block_headers(self, locator, hash_stop, max_results):
         # Assume that the most recent block added is the tip
         if not self.block_store:
             return
@@ -734,7 +734,6 @@ class P2PDataStore(P2PInterface):
                 break
 
         # Truncate the list if there are too many headers
-        max_results = MAX_HEADERS_COMPRESSED_RESULT if use_headers2 else MAX_HEADERS_UNCOMPRESSED_RESULT
         headers_list = headers_list[:-max_results - 1:-1]
 
         return headers_list
@@ -742,7 +741,7 @@ class P2PDataStore(P2PInterface):
     def on_getheaders2(self, message):
         """Search back through our block store for the locator, and reply with a compressed headers message if found."""
 
-        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop, True)
+        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop, MAX_HEADERS_COMPRESSED_RESULT)
         compressible_headers_list = [CompressibleBlockHeader(h) for h in headers_list] if headers_list else None
         response = msg_headers2(compressible_headers_list)
 
@@ -752,7 +751,7 @@ class P2PDataStore(P2PInterface):
     def on_getheaders(self, message):
         """Search back through our block store for the locator, and reply with a headers message if found."""
 
-        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop, False)
+        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop, MAX_HEADERS_UNCOMPRESSED_RESULT)
         response = msg_headers(headers_list)
 
         if response is not None:
