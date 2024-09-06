@@ -182,7 +182,7 @@ jobs:
 
       - name: Generate build system
         run: |
-          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWERROR=ON
+          cmake -B build --preset vs2022-static -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_MINIUPNPC=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWERROR=ON
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
