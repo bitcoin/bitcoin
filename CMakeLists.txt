@@ -8,12 +8,6 @@
 # Centos Stream 9, https://www.centos.org/cl-vs-cs/#end-of-life, EOL in May 2027:
 #  - CMake 3.26.5, https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/
 cmake_minimum_required(VERSION 3.22)
-if(POLICY CMP0141)
-  # MSVC debug information format flags are selected by an abstraction.
-  # We want to use the CMAKE_MSVC_DEBUG_INFORMATION_FORMAT variable
-  # to select the MSVC debug information format.
-  cmake_policy(SET CMP0141 NEW)
-endif()
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds are not allowed.")
