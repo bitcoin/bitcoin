@@ -72,11 +72,15 @@ public:
         return m_orphans.size();
     }
 
-protected:
-    struct OrphanTx {
+    /** Allows providing orphan information externally */
+    struct OrphanTxBase {
         CTransactionRef tx;
         NodeId fromPeer;
         NodeSeconds nTimeExpire;
+    };
+
+protected:
+    struct OrphanTx : public OrphanTxBase {
         size_t list_pos;
     };
 

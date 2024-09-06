@@ -33,7 +33,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
         return false;
     }
 
-    auto ret = m_orphans.emplace(wtxid, OrphanTx{tx, peer, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME, m_orphan_list.size()});
+    auto ret = m_orphans.emplace(wtxid, OrphanTx{{tx, peer, Now<NodeSeconds>() + ORPHAN_TX_EXPIRE_TIME}, m_orphan_list.size()});
     assert(ret.second);
     m_orphan_list.push_back(ret.first);
     for (const CTxIn& txin : tx->vin) {
