@@ -354,8 +354,14 @@ Development tips and tricks
 
 ### Compiling for debugging
 
-Run configure with `--enable-debug` to add additional compiler flags that
-produce better debugging builds.
+When using the default build configuration by running `cmake -B build`, the
+`-DCMAKE_BUILD_TYPE` is set to `RelWithDebInfo`. This option adds debug symbols
+but also performs some compiler optimizations that may make debugging trickier
+as the code may not correspond directly to the source.
+
+If you need to build exclusively for debugging, set the `-DCMAKE_BUILD_TYPE`
+to `Debug` (i.e. `-DCMAKE_BUILD_TYPE=Debug`). You can always check the cmake
+build options of an existing build with `ccmake build`.
 
 ### Show sources in debugging
 
