@@ -988,13 +988,12 @@ bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint, Coin& coin) const
+std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint) const
 {
     // Check to see if the inputs are made available by another tx in the package.
     // These Coins would not be available in the underlying CoinsView.
     if (auto it = m_temp_added.find(outpoint); it != m_temp_added.end()) {
-        coin = it->second;
-        return coin;
+        return it->second;
     }
 
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
@@ -1003,14 +1002,13 @@ std::optional<Coin> CCoinsViewMemPool::GetCoin(const COutPoint& outpoint, Coin& 
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
-            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+            Coin coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
             m_non_base_coins.emplace(outpoint);
             return coin;
-        } else {
-            return std::nullopt;
         }
+        return std::nullopt;
     }
-    return base->GetCoin(outpoint, coin);
+    return base->GetCoin(outpoint);
 }
 
 void CCoinsViewMemPool::PackageAddTransaction(const CTransactionRef& tx)

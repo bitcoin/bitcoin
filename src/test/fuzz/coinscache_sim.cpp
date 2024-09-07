@@ -146,15 +146,11 @@ class CoinsViewBottom final : public CCoinsView
     std::map<COutPoint, Coin> m_data;
 
 public:
-    std::optional<Coin> GetCoin(const COutPoint& outpoint, Coin& coin) const final
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const final
     {
-        auto it = m_data.find(outpoint);
-        if (it == m_data.end()) {
-            return std::nullopt;
-        } else {
-            coin = it->second;
-            return coin; // TODO GetCoin shouldn't return spent coins
-        }
+        // TODO GetCoin shouldn't return spent coins
+        if (auto it = m_data.find(outpoint); it != m_data.end()) return it->second;
+        return std::nullopt;
     }
 
     bool HaveCoin(const COutPoint& outpoint) const final
@@ -265,17 +261,16 @@ FUZZ_TARGET(coinscache_sim)
                 // Look up in simulation data.
                 auto sim = lookup(outpointidx);
                 // Look up in real caches.
-                Coin realcoin;
-                auto real = caches.back()->GetCoin(data.outpoints[outpointidx], realcoin);
+                auto realcoin = caches.back()->GetCoin(data.outpoints[outpointidx]);
                 // Compare results.
                 if (!sim.has_value()) {
-                    assert(!real || realcoin.IsSpent());
+                    assert(!realcoin || realcoin->IsSpent());
                 } else {
-                    assert(real && !realcoin.IsSpent());
+                    assert(realcoin && !realcoin->IsSpent());
                     const auto& simcoin = data.coins[sim->first];
-                    assert(realcoin.out == simcoin.out);
-                    assert(realcoin.fCoinBase == simcoin.fCoinBase);
-                    assert(realcoin.nHeight == sim->second);
+                    assert(realcoin->out == simcoin.out);
+                    assert(realcoin->fCoinBase == simcoin.fCoinBase);
+                    assert(realcoin->nHeight == sim->second);
                 }
             },
 
@@ -460,16 +455,15 @@ FUZZ_TARGET(coinscache_sim)
 
     // Compare the bottom coinsview (not a CCoinsViewCache) with sim_cache[0].
     for (uint32_t outpointidx = 0; outpointidx < NUM_OUTPOINTS; ++outpointidx) {
-        Coin realcoin;
-        auto real = bottom.GetCoin(data.outpoints[outpointidx], realcoin);
+        auto realcoin = bottom.GetCoin(data.outpoints[outpointidx]);
         auto sim = lookup(outpointidx, 0);
         if (!sim.has_value()) {
-            assert(!real || realcoin.IsSpent());
+            assert(!realcoin || realcoin->IsSpent());
         } else {
-            assert(real && !realcoin.IsSpent());
-            assert(realcoin.out == data.coins[sim->first].out);
-            assert(realcoin.fCoinBase == data.coins[sim->first].fCoinBase);
-            assert(realcoin.nHeight == sim->second);
+            assert(realcoin && !realcoin->IsSpent());
+            assert(realcoin->out == data.coins[sim->first].out);
+            assert(realcoin->fCoinBase == data.coins[sim->first].fCoinBase);
+            assert(realcoin->nHeight == sim->second);
         }
     }
 }
