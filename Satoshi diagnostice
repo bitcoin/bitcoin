@@ -1,0 +1,146 @@
+
+Diagnostic information for administrators:
+
+Generating server: CH4PR16MB6697.namprd16.prod.outlook.com
+johann_hulstrom@hotmail.com
+Remote server returned '554 5.2.2 mailbox full; STOREDRV.Deliver.Exception:QuotaExceededException.MapiExceptionShutoffQuotaExceeded; Failed to process message due to a permanent exception with message [BeginDiagnosticData]The process failed to get the correct properties. 1.84300:02000000, 1.84300:9F000000, 1.84300:A1000000, 1.84300:01000000, 1.84300:08000000, 1.116652:93000000, 1.81836:04020000, 0.117068:03000000, 1.79180:02000000, 1.79180:9F000000, 1.79180:FA000000, 0.73100:14000000, 0.38698:02000000, 1.41134:87000000, 7.36354:010000000000012187000000, 1.41134:87000000, 7.36354:0100000000000121578A0FC6, 0.34102:874A159B, 5.29818:0000000030303036303030302D383866622D663832392D303030302D30303030303030303030303000E73499, 5.55446:00000000333A300002A60000, 7.29828:3CAC00C00300000087000000, 7.29832:000000C003000000CC394B00, 4.45884:DD040000, 4.29880:DD040000, 4.59420:DD040000, 7.40840:01000000000001212D616435, 8.45434:00000600FB8829F8000000000000000020382E30, 1.46798:04000000, 5.10786:0000000031352E32302E373931382E3031383A534A32505231364D42353931343A62356435653430312D366265322D343032392D616435392D6164353965326566386165383A32343236383A2E4E455420382E302E380010A4000000, 7.51330:1FA9501FF5CEDC08A4000000, 0.39570:00000000, 1.64146:02000000, 1.33010:02000000, 2.54258:00000000, 0.58802:A4000000, 1.33010:02000000, 2.54258:00000000, 0.58802:03000000, 1.64146:9F000000, 1.33010:9F000000, 2.54258:DD040000, 1.33010:9F000000, 2.54258:DD040000, 0.79500:00000000, 1.79180:A1000000, 1.79180:08000000, 0.100684:0F010480, 4.70028:DD040000, 1.52466:01000000, 0.60402:59000000, 1.52466:01000000[EndDiagnosticData] [Stage: CreateMessage]'
+Original message headers:
+
+Received: from BYAPR05CA0082.namprd05.prod.outlook.com (2603:10b6:a03:e0::23)
+ by CH4PR16MB6697.namprd16.prod.outlook.com (2603:10b6:610:225::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7918.28; Sat, 7 Sep
+ 2024 04:25:35 +0000
+Received: from MWH0EPF000971E3.namprd02.prod.outlook.com
+ (2603:10b6:a03:e0:cafe::4d) by BYAPR05CA0082.outlook.office365.com
+ (2603:10b6:a03:e0::23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7939.17 via Frontend
+ Transport; Sat, 7 Sep 2024 04:25:34 +0000
+Authentication-Results: spf=pass (sender IP is 209.85.167.68)
+ smtp.mailfrom=gmail.com; dkim=pass (signature was verified)
+ header.d=gmail.com;dmarc=pass action=none header.from=gmail.com;compauth=pass
+ reason=100
+Received-SPF: Pass (protection.outlook.com: domain of gmail.com designates
+ 209.85.167.68 as permitted sender) receiver=protection.outlook.com;
+ client-ip=209.85.167.68; helo=mail-lf1-f68.google.com; pr=C
+Received: from mail-lf1-f68.google.com (209.85.167.68) by
+ MWH0EPF000971E3.mail.protection.outlook.com (10.167.243.70) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.7918.13
+ via Frontend Transport; Sat, 7 Sep 2024 04:25:34 +0000
+X-IncomingTopHeaderMarker: OriginalChecksum:11EA45A391CF705A9027AF0A7E2731FBB90EA3163AC37286D88E5CF02512DC4F;UpperCasedChecksum:EB852C279D6D2AAA30429A8C92144BF5807EB55C7973754BEEE2F7A11423C685;SizeAsReceived:3901;Count:15
+Received: by mail-lf1-f68.google.com with SMTP id 2adb3069b0e04-5365c512b00so1008926e87.3
+        for <johann_hulstrom@hotmail.com>; Fri, 06 Sep 2024 21:25:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725683133; x=1726287933; darn=hotmail.com;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rJ9UuELwPQ1ejef+Ew2a3a+4nvSEjF7ut3xKCronpzU=;
+        b=mP3FUgrguhFZ2gyiFTgppqoTwXAXj9oJVFqUcQ3yCNY40mNQxC0/13rG7s+B713p9A
+         SkaJtVWe8fd9Kw+wJYXaV3o/W6y00d0TAWpq1+TVMQx2lEA0WgNK+I/q3oHTcbVr8/Ff
+         THAcJzpUttbkMvoU2L8PgHWZy/wVZDYqbe0XlvBh6U/q9pmkTUtTTeJuwfIdLe5qiCnS
+         /Il+F+4ByTusKqoa/TL4FUEyE+V5sjnl9GSaf74aUKWF/S84KgkQl5H3h2rU3dbZhgEE
+         J3JHnEgbgFPUjaGUIczFvbFSccKzt/1ZkHzkc1G+N3pPGpjHjoajpe70j7xDxIoZzDlk
+         xBgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725683133; x=1726287933;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rJ9UuELwPQ1ejef+Ew2a3a+4nvSEjF7ut3xKCronpzU=;
+        b=VS5RDauWbpDjKtZiLLBDZVHba1KG5elo6kE2E7nbX9xzD0ESyMJ55E+QdSGHkcZ1BX
+         VhRAphLIy9qXHOoavfGigelAXHSV7p9LB8fUGW/+x/Twjx+AdVbKWnzi6SDnC77A/ZEd
+         imO+QCgPunb2WItYyq/Zu3Qbx/GqyTHsLpMAYgJ+hLKSFqQOY4kIa1jD6kMEi2qRGayA
+         1Cd3VFQU7JSygalW4nIwrj3tKvKRgncHOT3Z727YwTcUVBE6Z8G/H7yg+B1AgCzXaFe1
+         IAz8NDCLHgTHB99WRcuaEwqoSlW3CtarxGNdPODPDU1X1XjDrVzR7V2bRXbke9x9vbnm
+         ajCA==
+X-Gm-Message-State: AOJu0YwHXcEWFVeOswxyFGElLMvuNptFPMhl5Pd/8M8DpGNb4guJF6Lm
+	apD2cZnJ4aS6ZHpFT1kDwPFZ48D6399wXn/ht9sRtIQvSDtDZ7tUQJTio0rP40Cje8tMv89rTTm
+	uOdjMEQ4mX21iqgFekKgrR7zDz0Mjxlbn
+X-Google-Smtp-Source: AGHT+IG5qnPImRafq8dF+YyYxd66q4Ibpjj8uFhbR2aZh0ZDLfDUxDkyIHy3wPAikiKMFLkDPBM53QAQ7kKExcQoCMw=
+X-Received: by 2002:a05:6512:e97:b0:52e:7ef1:7c6e with SMTP id
+ 2adb3069b0e04-536587fd1a8mr3086620e87.51.1725683132342; Fri, 06 Sep 2024
+ 21:25:32 -0700 (PDT)
+MIME-Version: 1.0
+References: <01000191ca917de0-86c63ca4-6c8b-42ea-ac6b-d8d9e9f10a75-000000@email.amazonses.com>
+In-Reply-To: <01000191ca917de0-86c63ca4-6c8b-42ea-ac6b-d8d9e9f10a75-000000@email.amazonses.com>
+From: Johann Hulstrom <yomatherzz@gmail.com>
+Date: Fri, 6 Sep 2024 21:25:19 -0700
+Message-ID: <CABwMpbUMf2o_DjjAihUet=i+7TE=Jfv2MML1JDe-jm97QngTsw@mail.gmail.com>
+Subject: =?UTF-8?Q?Fwd=3A_Welcome_to_Samsung_Wallet=21Skip_to_content_Navig?=
+	=?UTF-8?Q?ation_Menu_Code_Issues_366_Comparing_changes_Choose_two_bran?=
+	=?UTF-8?Q?ches_to_see_what=E2=80=99s_changed_or_to_start_a_new_pull_request=2E?=
+	=?UTF-8?Q?_If_you_need_to=2C_you_can_also_or_learn_more_about_diff_compa?=
+	=?UTF-8?Q?risons=2E_=2E=2E=2E_Able_to_merge=2E_These_branches_can_be_automatical?=
+	=?UTF-8?Q?ly_merged=2E_Discuss_and_review_the_changes_in_this_comparison?=
+	=?UTF-8?Q?_with_others=2E_Learn_about_pull_requests_1_commit_1_file_chan?=
+	=?UTF-8?Q?ged_1_contributor_Commits_on_Sep_6=2C_2024_Create_Monzturr_Mon?=
+	=?UTF-8?Q?ey_=40Monzurrz_Monzurrz_committed_1_minute_ago_Showing_with_15?=
+	=?UTF-8?Q?6_additions_and_0_deletions=2E_156_changes=3A_156_additions_=26_0_?=
+	=?UTF-8?Q?deletions156_Monzturr_Money_Copied=21_Original_file_line_numbe?=
+	=?UTF-8?Q?r_Diff_line_number_Diff_line_change_=40=40_=2D0=2C0_=2B1=2C156_=40=40_=23Walle?=
+	=?UTF-8?Q?t_SatoshiMines=2Ecom_=2800000e65f1c11137=29=2C_page_1_from_5853=2C_tra?=
+	=?UTF-8?Q?nsactions_1=2D100=2E_Updated_to_block_858544_=282024=2D08=2D26_17=3A38=3A5?=
+	=?UTF-8?Q?5_UTC=29=2E_Source=3A_WalletExplorer=2Ecom_date_received_from_receiv?=
+	=?UTF-8?Q?ed_amount_sent_amount_sent_to_balance_transaction?=
+To: johann_hulstrom@hotmail.com
+Content-Type: multipart/alternative; boundary="0000000000001927e106217fea3a"
+X-IncomingHeaderCount: 15
+Return-Path: yomatherzz@gmail.com
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa:0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWH0EPF000971E3:EE_|CH4PR16MB6697:EE_
+X-MS-UserLastLogonTime: 12/9/2020 12:50:26 AM
+X-MS-Office365-Filtering-Correlation-Id: 7975220b-2c89-4d67-d2e0-08dccef51ddd
+X-MS-Exchange-EOPDirect: true
+X-Sender-IP: 209.85.167.68
+X-SID-PRA: YOMATHERZZ@GMAIL.COM
+X-SID-Result: PASS
+X-Microsoft-Antispam:
+	BCL:0;ARA:1444111002|94000799012|47200799018|9000799047|10300799029|22402599018|58200799015|970799054|461199028|2100799027|9020799016|2700799026|56899033|1360799030|1380799030|1370799030|1619999018|3412199025|440099028;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?3ZcimMRx7CntOZFvXJUNPiPbcIzFz8Izvgwo/FXKaM0TD8LrQbjifhVwWRIg?=
+ =?us-ascii?Q?2ayccebEdB1ICpeOQFAvAhA5Wy1jMwv/cxkhiVxo/8phppmeETJ4INkXVIu9?=
+ =?us-ascii?Q?5W2q/KRcMQGAHfwg9YjdGytLqrEcL8mb39WQxyZLoh7ZSdZZVZFk7CIHCPFr?=
+ =?us-ascii?Q?nWlE9LeSm/4ufWcxfHGCQUNGDF6Og5byspCvq2nFRpaq0FZiLEFbyJayIqhm?=
+ =?us-ascii?Q?KmsNU4/0STS738hG2f8yasoEUI56uKyko3L4UVbTq4/jABVSsfbvWqQMKyj8?=
+ =?us-ascii?Q?OQWH19ZJH5pRPUPtX/DfACNWY6+3EtpqvY1fv+4PhjBdcadf86WBXNyCrXzU?=
+ =?us-ascii?Q?sGORAjFaskQq+t6MpNE3HCaVXphfX3MzK3sAvfQNSteX4AzwMqEoQHz2C7Io?=
+ =?us-ascii?Q?WAKJMqE+98cgUlNd773hnqgzVb7hliNZ5HJcsy0HArooWv+tvzCIUg10819x?=
+ =?us-ascii?Q?j/CJ1WsYS9OvoGqzP5MDChKePnl+nsI95aKnVcjjBBNQOnwQDeTmHU7rTj1F?=
+ =?us-ascii?Q?PHV0+ctGaXU6x9E1y/jmwkwlGOBnNdR8D5liWabdhlkjQUwM3gxMe7GhrYNo?=
+ =?us-ascii?Q?FGyD3V8j7V25/2qz9lhXu5scTwPxpTKbIL8RfwMlVaY9s3hR2eU3+IcrVdx/?=
+ =?us-ascii?Q?hBZdhj5u8UkCqSFPUcTwgNSitYNTX+Grk0XZZvF+cttYGgrKEWNTLmUI1sNJ?=
+ =?us-ascii?Q?sPVakcmH+KytY4f5wWgE/yCqUHc4T4RFLlaDGi4vewmA31M2CWQfbV6iqTWL?=
+ =?us-ascii?Q?Wx2KF8MBcj8bXztOFTbxu6k8zXeZGyCbsow6hxGxEUimH95/eErFiPbtmO3f?=
+ =?us-ascii?Q?pN7541GaaI5LCyZEsuI7YSL42ViprbPBhFZIRs9B3xycqMpx21c8TPqYkit3?=
+ =?us-ascii?Q?peisvZ3Ja/WVSygvAUXsFw652EmzWTHTR7SOHvVwNmeb2qc7AzBRf+qT6dzu?=
+ =?us-ascii?Q?n8E6tLHiy/EiNmvmCBspoCMFaBEh+IEMjxWDH5ipVoUpobP6S1sTX8lCUGTo?=
+ =?us-ascii?Q?hIeTh9AmGKi1iz4yvOebzACZDmnmftj57gx63aozO65R1+/2HzoF/2/1UsiG?=
+ =?us-ascii?Q?aiBTg9K1yh5JLHr+PATVtpX5BJ8GEqL/xEy3al4GrVGniTdFUX4ihrf7Lebw?=
+ =?us-ascii?Q?3DoU4PvsCwjQZdYqIkJvokApvWztUdOPtl55/wFj4jwBCWAcSAbSq4OUosp0?=
+ =?us-ascii?Q?MhJUAB7BpHFV1K/XlgLRAj/KCJLvTO55mPJCi+OrTWjBTJqxi3IhTh8J/nbt?=
+ =?us-ascii?Q?3wlefmBQyPKKXPr3WA7Y9m0ZN+fJmsIOLH7TYfvP5fgstuCr7LLum7j4IqJO?=
+ =?us-ascii?Q?d6djFktljK8b5sHsUqfw90PCawOPWsT/jG5bh4mv5U5qSdXwUh19wczSFF3d?=
+ =?us-ascii?Q?5CKQzaDVTqfJ1rbiT2FTbj0dJpETjaD/EMGrbaFmLeZsBJlnD18eOizfEYUW?=
+ =?us-ascii?Q?sEik9zupk0eF19HSuYfytKS+R2VrjCStAuSGofwsrqm0Yse97K2HCwkC9qzI?=
+ =?us-ascii?Q?MidoWa6SDiaIi3GXdV7omgFCc6q9QayDKCnphOfmKOfPIqy3Cb54I42JFX9V?=
+ =?us-ascii?Q?/S/xxyP13TkYU3nqVpwMFUeZE/YQQ8bmUxjlAGJyWePw8ClnBBhXxpveesBS?=
+ =?us-ascii?Q?gL0FvH0iYei4UhoTl5DPRGYEEKpvuv4pj4MVHOEGB371zkMwj4ad3dV8PjR5?=
+ =?us-ascii?Q?oL9YftcMb+BeDKYzQSBOe4xmowKToYfmBPdH40Lbwv0lsFuWSvnM2MV9mpGY?=
+ =?us-ascii?Q?MjAsk+kdqhbriwgagbtQJksNNA5sEOaHc/+tsgbzHgw559vFMXp1GiQAQW5x?=
+ =?us-ascii?Q?eXNq75Uv+HbWQTbqG2qki/8L38jRXfbQLmzss0rlRUJ5zFo7h7Jrzyo9NTF4?=
+ =?us-ascii?Q?k79xIe8UfiMw1rC9/yBjc7YBFpMqc8ck6nOpMfwFfDeT7cY7NjiUj5zMRS5k?=
+ =?us-ascii?Q?Ze1a5sGFOVDbUGGT5TJKtUHStLH/C8ZC6nwoZYL41d76RDkRPRqAV4ioPK3W?=
+ =?us-ascii?Q?JNd9orF+W3y0UWVQqwmhUzbWweMWN8U7Xhlf8NQ2wHETl9GxCL05TNnJCtC7?=
+ =?us-ascii?Q?luSLiDDQ2x8NCh7BAkh4GhZLkzy3spChEAnJWe+OyPlfHk1n8ZA=3D?=
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Sep 2024 04:25:34.2685
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7975220b-2c89-4d67-d2e0-08dccef51ddd
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-AuthSource:
+	MWH0EPF000971E3.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH4PR16MB6697
