@@ -632,7 +632,7 @@ jobs:
 
       - name: Install Homebrew packages
         run: |
-          brew install automake libtool gcc
+          brew install --quiet automake libtool gcc
           ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
 
       - name: Install and cache Valgrind
@@ -691,7 +691,7 @@ jobs:
 
       - name: Install Homebrew packages
         run: |
-          brew install automake libtool gcc
+          brew install --quiet automake libtool gcc
           ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
 
       - name: CI script

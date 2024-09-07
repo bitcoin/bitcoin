@@ -18,9 +18,9 @@
 #include "examples_util.h"
 
 int main(void) {
-    unsigned char msg[12] = "Hello World!";
+    unsigned char msg[] = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'};
     unsigned char msg_hash[32];
-    unsigned char tag[17] = "my_fancy_protocol";
+    unsigned char tag[] = {'m', 'y', '_', 'f', 'a', 'n', 'c', 'y', '_', 'p', 'r', 'o', 't', 'o', 'c', 'o', 'l'};
     unsigned char seckey[32];
     unsigned char randomize[32];
     unsigned char auxiliary_rand[32];
