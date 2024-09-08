@@ -819,10 +819,14 @@ public:
     {
         std::optional<interfaces::SettingsAction> action;
         args().LockSettings([&](common::Settings& settings) {
-            auto* ptr_value = common::FindKey(settings.rw_settings, name);
-            // Create value if it doesn't exist
-            auto& value = ptr_value ? *ptr_value : settings.rw_settings[name];
-            action = update_settings_func(value);
+            if (auto* value = common::FindKey(settings.rw_settings, name)) {
+                action = update_settings_func(*value);
+                if (value->isNull()) settings.rw_settings.erase(name);
+            } else {
+                UniValue new_value;
+                action = update_settings_func(new_value);
+                if (!new_value.isNull()) settings.rw_settings[name] = std::move(new_value);
+            }
         });
         if (!action) return false;
         // Now dump value to disk if requested

@@ -356,6 +356,8 @@ public:
     virtual common::SettingsValue getRwSetting(const std::string& name) = 0;
 
     //! Updates a setting in <datadir>/settings.json.
+    //! Null can be passed to erase the setting. There is intentionally no
+    //! support for writing null values to settings.json.
     //! Depending on the action returned by the update function, this will either
     //! update the setting in memory or write the updated settings to disk.
     virtual bool updateRwSetting(const std::string& name, const SettingsUpdate& update_function) = 0;
