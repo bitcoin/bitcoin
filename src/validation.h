@@ -803,7 +803,7 @@ private:
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    NodeClock::time_point m_last_write{};
+    NodeClock::time_point m_next_write{NodeClock::time_point::max()};
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
