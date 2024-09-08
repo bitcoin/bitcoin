@@ -163,7 +163,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
         const bool exists_using_have_coin = coins_view_cache.HaveCoin(random_out_point);
         const bool exists_using_have_coin_in_cache = coins_view_cache.HaveCoinInCache(random_out_point);
         Coin coin_using_get_coin;
-        const bool exists_using_get_coin = coins_view_cache.GetCoin(random_out_point, coin_using_get_coin);
+        const bool exists_using_get_coin = coins_view_cache.GetCoin(random_out_point, coin_using_get_coin).has_value();
         if (exists_using_get_coin) {
             assert(coin_using_get_coin == coin_using_access_coin);
         }

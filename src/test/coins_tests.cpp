@@ -44,18 +44,18 @@ class CCoinsViewTest : public CCoinsView
 public:
     CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
 
-    [[nodiscard]] bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
-            return false;
+            return std::nullopt;
         }
         coin = it->second;
         if (coin.IsSpent() && m_rng.randbool() == 0) {
-            // Randomly return false in case of an empty entry.
-            return false;
+            // Randomly return std::nullopt in case of an empty entry.
+            return std::nullopt;
         }
-        return true;
+        return coin;
     }
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
