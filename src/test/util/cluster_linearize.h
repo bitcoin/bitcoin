@@ -134,9 +134,8 @@ struct DepGraphFormatter
         });
 
         /** Which transactions the deserializer already knows when it has deserialized what has
-         *  been serialized here so far, and in what order. */
-        std::vector<ClusterIndex> rebuilt_order;
-        rebuilt_order.reserve(depgraph.TxCount());
+         *  been serialized here so far. */
+        SetType done;
 
         // Loop over the transactions in topological order.
         for (ClusterIndex topo_idx = 0; topo_idx < topo_order.size(); ++topo_idx) {
@@ -166,14 +165,11 @@ struct DepGraphFormatter
                 }
             }
             // Write position information.
-            ClusterIndex insert_distance = 0;
-            while (insert_distance < rebuilt_order.size()) {
-                // Loop to find how far from the end in rebuilt_order to insert.
-                if (idx > *(rebuilt_order.end() - 1 - insert_distance)) break;
-                ++insert_distance;
-            }
-            rebuilt_order.insert(rebuilt_order.end() - insert_distance, idx);
-            s << VARINT(diff + insert_distance);
+            // The new transaction is to be inserted N positions back from the end of the cluster.
+            // Emit N to indicate that that many insertion choices are skipped.
+            auto skips = (done - SetType::Fill(idx)).Count();
+            s << VARINT(diff + skips);
+            done.Set(idx);
         }
 
         // Output a final 0 to denote the end of the graph.
