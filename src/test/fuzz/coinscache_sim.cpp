@@ -137,9 +137,8 @@ struct CacheLevel
 
 /** Class for the base of the hierarchy (roughly simulating a memory-backed CCoinsViewDB).
  *
- * The initial state consists of the empty UTXO set, though coins whose output index
- * is 3 (mod 5) always have GetCoin() succeed (but returning an IsSpent() coin unless a UTXO
- * exists). Coins whose output index is 4 (mod 5) have GetCoin() always succeed after being spent.
+ * The initial state consists of the empty UTXO set.
+ * Coins whose output index is 4 (mod 5) have GetCoin() always succeed after being spent.
  * This exercises code paths with spent, non-DIRTY cache entries.
  */
 class CoinsViewBottom final : public CCoinsView
@@ -151,14 +150,10 @@ public:
     {
         auto it = m_data.find(outpoint);
         if (it == m_data.end()) {
-            if ((outpoint.n % 5) == 3) {
-                coin.Clear();
-                return true;
-            }
             return false;
         } else {
             coin = it->second;
-            return true;
+            return true; // TODO GetCoin shouldn't return spent coins
         }
     }
 
