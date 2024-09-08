@@ -834,7 +834,6 @@ public:
     }
     bool overwriteRwSetting(const std::string& name, common::SettingsValue value, interfaces::SettingsAction action) override
     {
-        if (value.isNull()) return deleteRwSettings(name, action);
         return updateRwSetting(name, [&](common::SettingsValue& settings) {
             settings = std::move(value);
             return action;
