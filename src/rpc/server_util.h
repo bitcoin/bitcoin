@@ -7,10 +7,11 @@
 
 #include <context.h>
 
+class ArgsManager;
 class CBlockPolicyEstimator;
 class CConnman;
-class ChainstateManager;
 class CTxMemPool;
+class ChainstateManager;
 class PeerManager;
 struct NodeContext;
 struct LLMQContext;
@@ -18,6 +19,8 @@ struct LLMQContext;
 NodeContext& EnsureAnyNodeContext(const CoreContext& context);
 CTxMemPool& EnsureMemPool(const NodeContext& node);
 CTxMemPool& EnsureAnyMemPool(const CoreContext& context);
+ArgsManager& EnsureArgsman(const NodeContext& node);
+ArgsManager& EnsureAnyArgsman(const CoreContext& context);
 ChainstateManager& EnsureChainman(const NodeContext& node);
 ChainstateManager& EnsureAnyChainman(const CoreContext& context);
 CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);

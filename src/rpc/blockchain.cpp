@@ -1776,9 +1776,8 @@ RPCHelpMan getblockchaininfo()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
-
     const NodeContext& node = EnsureAnyNodeContext(request.context);
+    const ArgsManager& args{EnsureArgsman(node)};
     ChainstateManager& chainman = EnsureChainman(node);
 
     LOCK(cs_main);
@@ -1792,7 +1791,11 @@ RPCHelpMan getblockchaininfo()
     const auto ehfSignals = node.mnhf_manager->GetSignalsStage(tip);
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("chain", strChainName);
+    if (args.IsArgSet("-devnet")) {
+        obj.pushKV("chain", args.GetDevNetName());
+    } else {
+        obj.pushKV("chain", Params().NetworkIDString());
+    }
     obj.pushKV("blocks", height);
     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
     obj.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
@@ -1814,7 +1817,7 @@ RPCHelpMan getblockchaininfo()
         obj.pushKV("pruneheight",        block->nHeight);
 
         // if 0, execution bypasses the whole if block.
-        bool automatic_pruning = (gArgs.GetArg("-prune", 0) != 1);
+        bool automatic_pruning{args.GetArg("-prune", 0) != 1};
         obj.pushKV("automatic_pruning",  automatic_pruning);
         if (automatic_pruning) {
             obj.pushKV("prune_target_size",  nPruneTarget);
@@ -2654,9 +2657,8 @@ static RPCHelpMan savemempool()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     if (!mempool.IsLoaded()) {
         throw JSONRPCError(RPC_MISC_ERROR, "The mempool was not loaded yet");
@@ -2667,7 +2669,7 @@ static RPCHelpMan savemempool()
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("filename", fs::path((node.args->GetDataDirNet() / "mempool.dat")).u8string());
+    ret.pushKV("filename", fs::path((args.GetDataDirNet() / "mempool.dat")).u8string());
 
     return ret;
 },
@@ -3011,10 +3013,11 @@ static RPCHelpMan dumptxoutset()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const fs::path path = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
+    const ArgsManager& args{EnsureAnyArgsman(request.context)};
+    const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    const fs::path temppath = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
+    const fs::path temppath = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
 
     if (fs::exists(path)) {
         throw JSONRPCError(
