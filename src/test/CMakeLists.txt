@@ -199,7 +199,7 @@ function(add_boost_test source_file)
       COMMAND test_bitcoin --run_test=${test_suite_name} --catch_system_error=no
     )
     set_property(TEST ${test_suite_name} PROPERTY
-      SKIP_REGULAR_EXPRESSION "no test cases matching filter" "Skipping"
+      SKIP_REGULAR_EXPRESSION "no test cases matching filter"
     )
   endif()
 endfunction()
