@@ -4,21 +4,27 @@
 
 #include <ipc/process.h>
 #include <ipc/protocol.h>
+#include <logging.h>
 #include <mp/util.h>
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
+#include <util/syserror.h>
 
 #include <cstdint>
 #include <cstdlib>
+#include <errno.h>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <string.h>
-#include <system_error>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <utility>
 #include <vector>
+
+using util::RemovePrefixView;
 
 namespace ipc {
 namespace {
@@ -54,7 +60,95 @@ public:
         }
         return true;
     }
+    int connect(const fs::path& data_dir,
+                const std::string& dest_exe_name,
+                std::string& address) override;
+    int bind(const fs::path& data_dir, const std::string& exe_name, std::string& address) override;
 };
+
+static bool ParseAddress(std::string& address,
+                  const fs::path& data_dir,
+                  const std::string& dest_exe_name,
+                  struct sockaddr_un& addr,
+                  std::string& error)
+{
+    if (address.compare(0, 4, "unix") == 0 && (address.size() == 4 || address[4] == ':')) {
+        fs::path path;
+        if (address.size() <= 5) {
+            path = data_dir / fs::PathFromString(strprintf("%s.sock", RemovePrefixView(dest_exe_name, "bitcoin-")));
+        } else {
+            path = data_dir / fs::PathFromString(address.substr(5));
+        }
+        std::string path_str = fs::PathToString(path);
+        address = strprintf("unix:%s", path_str);
+        if (path_str.size() >= sizeof(addr.sun_path)) {
+            error = strprintf("Unix address path %s exceeded maximum socket path length", fs::quoted(fs::PathToString(path)));
+            return false;
+        }
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        strncpy(addr.sun_path, path_str.c_str(), sizeof(addr.sun_path)-1);
+        return true;
+    }
+
+    error = strprintf("Unrecognized address '%s'", address);
+    return false;
+}
+
+int ProcessImpl::connect(const fs::path& data_dir,
+                         const std::string& dest_exe_name,
+                         std::string& address)
+{
+    struct sockaddr_un addr;
+    std::string error;
+    if (!ParseAddress(address, data_dir, dest_exe_name, addr, error)) {
+        throw std::invalid_argument(error);
+    }
+
+    int fd;
+    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
+        throw std::system_error(errno, std::system_category());
+    }
+    if (::connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+        return fd;
+    }
+    int connect_error = errno;
+    if (::close(fd) != 0) {
+        LogPrintf("Error closing file descriptor %i '%s': %s\n", fd, address, SysErrorString(errno));
+    }
+    throw std::system_error(connect_error, std::system_category());
+}
+
+int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std::string& address)
+{
+    struct sockaddr_un addr;
+    std::string error;
+    if (!ParseAddress(address, data_dir, exe_name, addr, error)) {
+        throw std::invalid_argument(error);
+    }
+
+    if (addr.sun_family == AF_UNIX) {
+        fs::path path = addr.sun_path;
+        if (path.has_parent_path()) fs::create_directories(path.parent_path());
+        if (fs::symlink_status(path).type() == fs::file_type::socket) {
+            fs::remove(path);
+        }
+    }
+
+    int fd;
+    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
+        throw std::system_error(errno, std::system_category());
+    }
+
+    if (::bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+        return fd;
+    }
+    int bind_error = errno;
+    if (::close(fd) != 0) {
+        LogPrintf("Error closing file descriptor %i: %s\n", fd, SysErrorString(errno));
+    }
+    throw std::system_error(bind_error, std::system_category());
+}
 } // namespace
 
 std::unique_ptr<Process> MakeProcess() { return std::make_unique<ProcessImpl>(); }

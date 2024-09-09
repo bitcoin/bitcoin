@@ -41,6 +41,11 @@ class Init;
 //!    to make other proxy objects calling other remote interfaces. It can also
 //!    destroy the initial interfaces::Init object to close the connection and
 //!    shut down the spawned process.
+//!
+//! When connecting to an existing process, the steps are similar to spawning a
+//! new process, except a socket is created instead of a socketpair, and
+//! destroying an Init interface doesn't end the process, since there can be
+//! multiple connections.
 class Ipc
 {
 public:
@@ -53,6 +58,17 @@ public:
     //! process by forwarding them to this process's Init interface, then return
     //! true. If this is not a spawned child process, return false.
     virtual bool startSpawnedProcess(int argc, char* argv[], int& exit_status) = 0;
+
+    //! Connect to a socket address and make a client interface proxy object
+    //! using provided callback. connectAddress returns an interface pointer if
+    //! the connection was established, returns null if address is empty ("") or
+    //! disabled ("0") or if a connection was refused but not required ("auto"),
+    //! and throws an exception if there was an unexpected error.
+    virtual std::unique_ptr<Init> connectAddress(std::string& address) = 0;
+
+    //! Connect to a socket address and make a client interface proxy object
+    //! using provided callback. Throws an exception if there was an error.
+    virtual void listenAddress(std::string& address) = 0;
 
     //! Add cleanup callback to remote interface that will run when the
     //! interface is deleted.
