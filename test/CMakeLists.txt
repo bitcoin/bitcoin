@@ -27,7 +27,7 @@ function(create_test_config)
   set_configure_variable(ENABLE_EXTERNAL_SIGNER ENABLE_EXTERNAL_SIGNER)
   set_configure_variable(WITH_USDT ENABLE_USDT_TRACEPOINTS)
 
-  configure_file(config.ini.in config.ini @ONLY)
+  configure_file(config.ini.in config.ini USE_SOURCE_PERMISSIONS @ONLY)
 endfunction()
 
 create_test_config()
