@@ -189,10 +189,17 @@ struct DepGraphFormatter
         /** Mapping from serialization order to cluster order, used later to reconstruct the
          *  cluster order. */
         std::vector<ClusterIndex> reordering;
+        /** How big the entries vector in the reconstructed depgraph will be (before the
+         *  introduction of holes in a further commit, this always equals reordering.size()). */
+        ClusterIndex total_size{0};
 
         // Read transactions in topological order.
-        try {
-            while (true) {
+        while (true) {
+            FeeFrac new_feerate; //!< The new transaction's fee and size.
+            SetType new_ancestors; //!< The new transaction's ancestors (excluding itself).
+            uint64_t diff{0}; //!< How many potential parents/insertions we have to skip.
+            bool read_error{false};
+            try {
                 // Read size. Size 0 signifies the end of the DepGraph.
                 int32_t size;
                 s >> VARINT_MODE(size, VarIntMode::NONNEGATIVE_SIGNED);
@@ -204,21 +211,18 @@ struct DepGraphFormatter
                 s >> VARINT(coded_fee);
                 coded_fee &= 0xFFFFFFFFFFFFF; // Enough for fee between -21M...21M BTC.
                 static_assert(0xFFFFFFFFFFFFF > uint64_t{2} * 21000000 * 100000000);
-                auto fee = UnsignedToSigned(coded_fee);
-                // Extend topo_depgraph with the new transaction (preliminarily at the end).
-                auto topo_idx = topo_depgraph.AddTransaction({fee, size});
-                reordering.push_back(reordering.size());
+                new_feerate = {UnsignedToSigned(coded_fee), size};
                 // Read dependency information.
-                uint64_t diff = 0; //!< How many potential parents we have to skip.
+                auto topo_idx = reordering.size();
                 s >> VARINT(diff);
                 for (ClusterIndex dep_dist = 0; dep_dist < topo_idx; ++dep_dist) {
                     /** Which topo_depgraph index we are currently considering as parent of topo_idx. */
                     ClusterIndex dep_topo_idx = topo_idx - 1 - dep_dist;
                     // Ignore transactions which are already known ancestors of topo_idx.
-                    if (topo_depgraph.Descendants(dep_topo_idx)[topo_idx]) continue;
+                    if (new_ancestors[dep_topo_idx]) continue;
                     if (diff == 0) {
                         // When the skip counter has reached 0, add an actual dependency.
-                        topo_depgraph.AddDependency(dep_topo_idx, topo_idx);
+                        new_ancestors |= topo_depgraph.Ancestors(dep_topo_idx);
                         // And read the number of skips after it.
                         s >> VARINT(diff);
                     } else {
@@ -226,20 +230,24 @@ struct DepGraphFormatter
                         --diff;
                     }
                 }
-                // If we reach this point, we can interpret the remaining skip value as how far
-                // from the end of reordering the new transaction should be placed (wrapping
-                // around), so remove the preliminary position it was put in above (which was to
-                // make sure that if a deserialization exception occurs, the new transaction still
-                // has some entry in reordering).
-                reordering.pop_back();
-                ClusterIndex insert_distance = diff % (reordering.size() + 1);
-                // And then update reordering to reflect this new transaction's insertion.
-                for (auto& pos : reordering) {
-                    pos += (pos >= reordering.size() - insert_distance);
-                }
-                reordering.push_back(reordering.size() - insert_distance);
+            } catch (const std::ios_base::failure&) {
+                // Continue even if a read error was encountered.
+                read_error = true;
             }
-        } catch (const std::ios_base::failure&) {}
+            // Construct a new transaction whenever we made it past the new_feerate construction.
+            if (new_feerate.IsEmpty()) break;
+            assert(reordering.size() < SetType::Size());
+            auto topo_idx = topo_depgraph.AddTransaction(new_feerate);
+            for (auto parent : new_ancestors) topo_depgraph.AddDependency(parent, topo_idx);
+            diff %= total_size + 1;
+            // Insert the new transaction at distance diff back from the end.
+            for (auto& pos : reordering) {
+                pos += (pos >= total_size - diff);
+            }
+            reordering.push_back(total_size++ - diff);
+            // Stop if a read error was encountered during deserialization.
+            if (read_error) break;
+        }
 
         // Construct the original cluster order depgraph.
         depgraph = DepGraph(topo_depgraph, reordering);
