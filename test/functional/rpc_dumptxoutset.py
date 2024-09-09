@@ -28,7 +28,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         FILENAME = 'txoutset.dat'
         out = node.dumptxoutset(FILENAME, "latest")
-        expected_path = node.datadir_path / self.chain / FILENAME
+        expected_path = node.chain_path / FILENAME
 
         assert expected_path.is_file()
 
@@ -60,6 +60,16 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(
             -8, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
 
+        self.log.info(f"Test that dumptxoutset failure does not leave the network activity suspended")
+        rev_file = node.blocks_path / "rev00000.dat"
+        bogus_file = node.blocks_path / "bogus.dat"
+        rev_file.rename(bogus_file)
+        assert_raises_rpc_error(
+            -1, 'Could not roll back to requested height.', node.dumptxoutset, 'utxos.dat', rollback=99)
+        assert_equal(node.getnetworkinfo()['networkactive'], True)
+
+        # Cleanup
+        bogus_file.rename(rev_file)
 
 if __name__ == '__main__':
     DumptxoutsetTest(__file__).main()
