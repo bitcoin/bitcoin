@@ -4,7 +4,7 @@ project(libsecp256k1
   # The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
   # the API. All changes in experimental modules are treated as
   # backwards-compatible and therefore at most increase the minor version.
-  VERSION 0.5.1
+  VERSION 0.5.2
   DESCRIPTION "Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1."
   HOMEPAGE_URL "https://github.com/bitcoin-core/secp256k1"
   LANGUAGES C
@@ -27,7 +27,7 @@ endif()
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 set(${PROJECT_NAME}_LIB_VERSION_CURRENT 4)
-set(${PROJECT_NAME}_LIB_VERSION_REVISION 1)
+set(${PROJECT_NAME}_LIB_VERSION_REVISION 2)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 2)
 
 set(CMAKE_C_STANDARD 90)
@@ -276,6 +276,14 @@ if(SECP256K1_APPEND_CFLAGS)
   string(APPEND CMAKE_C_COMPILE_OBJECT " ${SECP256K1_APPEND_CFLAGS}")
 endif()
 
+set(SECP256K1_APPEND_LDFLAGS "" CACHE STRING "Linker flags that are appended to the command line after all other flags added by the build system. This variable is intended for debugging and special builds.")
+if(SECP256K1_APPEND_LDFLAGS)
+  # Appending to this low-level rule variable is the only way to
+  # guarantee that the flags appear at the end of the command line.
+  string(APPEND CMAKE_C_CREATE_SHARED_LIBRARY " ${SECP256K1_APPEND_LDFLAGS}")
+  string(APPEND CMAKE_C_LINK_EXECUTABLE " ${SECP256K1_APPEND_LDFLAGS}")
+endif()
+
 add_subdirectory(src)
 if(SECP256K1_BUILD_EXAMPLES)
   add_subdirectory(examples)
@@ -354,6 +362,9 @@ else()
 endif()
 if(SECP256K1_APPEND_CFLAGS)
   message("SECP256K1_APPEND_CFLAGS ............... ${SECP256K1_APPEND_CFLAGS}")
+endif()
+if(SECP256K1_APPEND_LDFLAGS)
+  message("SECP256K1_APPEND_LDFLAGS .............. ${SECP256K1_APPEND_LDFLAGS}")
 endif()
 message("")
 if(print_msan_notice)

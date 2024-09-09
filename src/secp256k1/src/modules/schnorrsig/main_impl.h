@@ -45,7 +45,7 @@ static void secp256k1_nonce_function_bip340_sha256_tagged_aux(secp256k1_sha256 *
 
 /* algo argument for nonce_function_bip340 to derive the nonce exactly as stated in BIP-340
  * by using the correct tagged hash function. */
-static const unsigned char bip340_algo[13] = "BIP0340/nonce";
+static const unsigned char bip340_algo[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'n', 'o', 'n', 'c', 'e'};
 
 static const unsigned char schnorrsig_extraparams_magic[4] = SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC;
 
