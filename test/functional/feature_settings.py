@@ -13,10 +13,31 @@ from test_framework.util import assert_equal
 
 
 class SettingsTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.wallet_names = []
+
+    def test_wallet_settings(self, settings_path):
+        if not self.is_wallet_compiled():
+            return
+
+        self.log.info("Testing wallet settings..")
+        node = self.nodes[0]
+        # Create wallet to use it during tests
+        self.start_node(0)
+        node.createwallet(wallet_name='w1')
+        self.stop_node(0)
+
+        # Verify wallet settings can only be strings. Either names or paths. Not booleans, nums nor anything else.
+        for wallets_data in [[10], [True], [[]], [{}], ["w1", 10], ["w1", False]]:
+            with settings_path.open("w") as fp:
+                json.dump({"wallet": wallets_data}, fp)
+            node.assert_start_raises_init_error(expected_msg="Error: Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets",
+                                                extra_args=[f'-settings={settings_path}'])
 
     def run_test(self):
         node, = self.nodes
@@ -85,6 +106,8 @@ class SettingsTest(BitcoinTestFramework):
         with node.assert_debug_log(expected_msgs=['Setting file arg: key = "value"']):
             self.start_node(0, extra_args=[f"-settings={altsettings}"])
             self.stop_node(0)
+
+        self.test_wallet_settings(settings)
 
 
 if __name__ == '__main__':
