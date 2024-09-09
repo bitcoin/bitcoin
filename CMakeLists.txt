@@ -480,18 +480,21 @@ if(ENABLE_HARDENING)
     try_append_linker_flag("/HIGHENTROPYVA" TARGET hardening_interface)
     try_append_linker_flag("/NXCOMPAT" TARGET hardening_interface)
   else()
+
+    # _FORTIFY_SOURCE requires that there is some level of optimization,
+    # otherwise it does nothing and just creates a compiler warning.
     try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
       RESULT_VAR cxx_supports_fortify_source
+      SOURCE "int main() {
+              # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
+                #error
+              #endif
+              }"
     )
     if(cxx_supports_fortify_source)
-      # When the build configuration is Debug, all optimizations are disabled.
-      # However, _FORTIFY_SOURCE requires that there is some level of optimization,
-      # otherwise it does nothing and just creates a compiler warning.
-      # Since _FORTIFY_SOURCE is a no-op without optimizations, do not enable it
-      # when the build configuration is Debug.
       target_compile_options(hardening_interface INTERFACE
-        $<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE>
-        $<$<NOT:$<CONFIG:Debug>>:-D_FORTIFY_SOURCE=3>
+        -U_FORTIFY_SOURCE
+        -D_FORTIFY_SOURCE=3
       )
     endif()
     unset(cxx_supports_fortify_source)
