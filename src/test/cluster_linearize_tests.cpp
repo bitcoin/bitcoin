@@ -18,6 +18,10 @@ using namespace cluster_linearize;
 
 namespace {
 
+/** Special magic value that indicates to TestDepGraphSerialization that a cluster entry represents
+ *  a hole. */
+constexpr std::pair<FeeFrac, TestBitSet> HOLE{FeeFrac{0, 0x3FFFFF}, {}};
+
 template<typename SetType>
 void TestDepGraphSerialization(const Cluster<SetType>& cluster, const std::string& hexenc)
 {
@@ -25,6 +29,13 @@ void TestDepGraphSerialization(const Cluster<SetType>& cluster, const std::strin
 
     // Run normal sanity and correspondence checks, which includes a round-trip test.
     VerifyDepGraphFromCluster(cluster, depgraph);
+
+    // Remove holes (which are expected to be present as HOLE entries in cluster).
+    SetType holes;
+    for (ClusterIndex i = 0; i < cluster.size(); ++i) {
+        if (cluster[i] == HOLE) holes.Set(i);
+    }
+    depgraph.RemoveTransactions(holes);
 
     // There may be multiple serializations of the same graph, but DepGraphFormatter's serializer
     // only produces one of those. Verify that hexenc matches that canonical serialization.
@@ -131,6 +142,34 @@ BOOST_AUTO_TEST_CASE(depgraph_ser_tests)
         "00" /* E->D dependency (no skips) */
         "02" /* E insertion position (skip E->C dependency, E->B and E->A are implied,
                 skip insertion C): D,A,B,E,C */
+        "00" /* end of graph */
+    );
+
+    // Transactions: A(1,2), B(3,1), C(2,1), D(1,3), E(1,1). Deps: C->A, D->A, D->B, E->D.
+    // In order: [_, D, _, _, A, _, B, _, _, _, E, _, _, C] (_ being holes). Internally serialized
+    // in order A,B,C,D,E.
+    TestDepGraphSerialization<TestBitSet>(
+        {HOLE, {{1, 3}, {4, 6}}, HOLE, HOLE, {{1, 2}, {}}, HOLE, {{3, 1}, {}}, HOLE, HOLE, HOLE, {{1, 1}, {1}}, HOLE, HOLE, {{2, 1}, {4}}},
+        "02" /* A size */
+        "02" /* A fee */
+        "03" /* A insertion position (3 holes): _, _, _, A */
+        "01" /* B size */
+        "06" /* B fee */
+        "06" /* B insertion position (skip B->A dependency, skip 4 inserts, add 1 hole): _, _, _, A, _, B */
+        "01" /* C size */
+        "04" /* C fee */
+        "01" /* C->A dependency (skip C->B dependency) */
+        "0b" /* C insertion position (skip 6 inserts, add 5 holes): _, _, _, A, _, B, _, _, _, _, _, C */
+        "03" /* D size */
+        "02" /* D fee */
+        "01" /* D->B dependency (skip D->C dependency) */
+        "00" /* D->A dependency (no skips) */
+        "0b" /* D insertion position (skip 11 inserts): _, D, _, _, A, _, B, _, _, _, _, _, C */
+        "01" /* E size */
+        "02" /* E fee */
+        "00" /* E->D dependency (no skips) */
+        "04" /* E insertion position (skip E->C dependency, E->B and E->A are implied, skip 3
+                inserts): _, D, _, _, A, _, B, _, _, _, E, _, _, C */
         "00" /* end of graph */
     );
 }

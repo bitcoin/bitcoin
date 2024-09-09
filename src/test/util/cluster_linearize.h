@@ -27,7 +27,7 @@ using TestBitSet = BitSet<32>;
 template<typename SetType>
 bool IsAcyclic(const DepGraph<SetType>& depgraph) noexcept
 {
-    for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+    for (ClusterIndex i : depgraph.Positions()) {
         if ((depgraph.Ancestors(i) & depgraph.Descendants(i)) != SetType::Singleton(i)) {
             return false;
         }
@@ -57,11 +57,14 @@ bool IsAcyclic(const DepGraph<SetType>& depgraph) noexcept
  *   by parent relations that were serialized before it).
  * - The various insertion positions in the cluster, from the very end of the cluster, to the
  *   front.
+ * - The appending of 1, 2, 3, ... holes at the end of the cluster, followed by appending the new
+ *   transaction.
  *
- * Let's say you have a 7-transaction cluster, consisting of transactions F,A,C,B,G,E,D, but
- * serialized in order A,B,C,D,E,F,G, because that happens to be a topological ordering. By the
- * time G gets serialized, what has been serialized already represents the cluster F,A,C,B,E,D (in
- * that order). G has B and E as direct parents, and E depends on C.
+ * Let's say you have a 7-transaction cluster, consisting of transactions F,A,C,B,_,G,E,_,D
+ * (where _ represent holes; unused positions within the DepGraph) but serialized in order
+ * A,B,C,D,E,F,G, because that happens to be a topological ordering. By the time G gets serialized,
+ * what has been serialized already represents the cluster F,A,C,B,_,E,_,D (in that order). G has B
+ * and E as direct parents, and E depends on C.
  *
  * In this case, the possibilities are, in order:
  * - [ ] the dependency G->F
@@ -71,17 +74,23 @@ bool IsAcyclic(const DepGraph<SetType>& depgraph) noexcept
  * - [ ] the dependency G->A
  * - [ ] put G at the end of the cluster
  * - [ ] put G before D
+ * - [ ] put G before the hole before D
  * - [X] put G before E
+ * - [ ] put G before the hole before E
  * - [ ] put G before B
  * - [ ] put G before C
  * - [ ] put G before A
  * - [ ] put G before F
+ * - [ ] add 1 hole at the end of the cluster, followed by G
+ * - [ ] add 2 holes at the end of the cluster, followed by G
+ * - [ ] add ...
  *
- * The skip values in this case are 1 (G->F), 1 (G->D), 3 (G->A, G at end, G before D). No skip
- * after 3 is needed (or permitted), because there can only be one position for G. Also note that
- * G->C is not included in the list of possibilities, as it is implied by the included G->E and
- * E->C that came before it. On deserialization, if the last skip value was 8 or larger (putting
- * G before the beginning of the cluster), it is interpreted as wrapping around back to the end.
+ * The skip values in this case are 1 (G->F), 1 (G->D), 4 (G->A, G at end, G before D, G before
+ * hole). No skip after 4 is needed (or permitted), because there can only be one position for G.
+ * Also note that G->C is not included in the list of possibilities, as it is implied by the
+ * included G->E and E->C that came before it. On deserialization, if the last skip value was 8 or
+ * larger (putting G before the beginning of the cluster), it is interpreted as wrapping around
+ * back to the end.
  *
  *
  * Rationale:
@@ -125,16 +134,17 @@ struct DepGraphFormatter
     static void Ser(Stream& s, const DepGraph<SetType>& depgraph)
     {
         /** Construct a topological order to serialize the transactions in. */
-        std::vector<ClusterIndex> topo_order(depgraph.TxCount());
-        std::iota(topo_order.begin(), topo_order.end(), ClusterIndex{0});
+        std::vector<ClusterIndex> topo_order;
+        topo_order.reserve(depgraph.TxCount());
+        for (auto i : depgraph.Positions()) topo_order.push_back(i);
         std::sort(topo_order.begin(), topo_order.end(), [&](ClusterIndex a, ClusterIndex b) {
             auto anc_a = depgraph.Ancestors(a).Count(), anc_b = depgraph.Ancestors(b).Count();
             if (anc_a != anc_b) return anc_a < anc_b;
             return a < b;
         });
 
-        /** Which transactions the deserializer already knows when it has deserialized what has
-         *  been serialized here so far. */
+        /** Which positions (incl. holes) the deserializer already knows when it has deserialized
+         *  what has been serialized here so far. */
         SetType done;
 
         // Loop over the transactions in topological order.
@@ -165,10 +175,19 @@ struct DepGraphFormatter
                 }
             }
             // Write position information.
-            // The new transaction is to be inserted N positions back from the end of the cluster.
-            // Emit N to indicate that that many insertion choices are skipped.
-            auto skips = (done - SetType::Fill(idx)).Count();
-            s << VARINT(diff + skips);
+            auto add_holes = SetType::Fill(idx) - done - depgraph.Positions();
+            if (add_holes.None()) {
+                // The new transaction is to be inserted N positions back from the end of the
+                // cluster. Emit N to indicate that that many insertion choices are skipped.
+                auto skips = (done - SetType::Fill(idx)).Count();
+                s << VARINT(diff + skips);
+            } else {
+                // The new transaction is to be appended at the end of the cluster, after N holes.
+                // Emit current_cluster_size + N, to indicate all insertion choices are skipped,
+                // plus N possibilities for the number of holes.
+                s << VARINT(diff + done.Count() + add_holes.Count());
+                done |= add_holes;
+            }
             done.Set(idx);
         }
 
@@ -185,8 +204,7 @@ struct DepGraphFormatter
         /** Mapping from serialization order to cluster order, used later to reconstruct the
          *  cluster order. */
         std::vector<ClusterIndex> reordering;
-        /** How big the entries vector in the reconstructed depgraph will be (before the
-         *  introduction of holes in a further commit, this always equals reordering.size()). */
+        /** How big the entries vector in the reconstructed depgraph will be (including holes). */
         ClusterIndex total_size{0};
 
         // Read transactions in topological order.
@@ -235,18 +253,43 @@ struct DepGraphFormatter
             assert(reordering.size() < SetType::Size());
             auto topo_idx = topo_depgraph.AddTransaction(new_feerate);
             topo_depgraph.AddDependencies(new_ancestors, topo_idx);
-            diff %= total_size + 1;
-            // Insert the new transaction at distance diff back from the end.
-            for (auto& pos : reordering) {
-                pos += (pos >= total_size - diff);
+            if (total_size < SetType::Size()) {
+                // Normal case.
+                diff %= SetType::Size();
+                if (diff <= total_size) {
+                    // Insert the new transaction at distance diff back from the end.
+                    for (auto& pos : reordering) {
+                        pos += (pos >= total_size - diff);
+                    }
+                    reordering.push_back(total_size++ - diff);
+                } else {
+                    // Append diff - total_size holes at the end, plus the new transaction.
+                    total_size = diff;
+                    reordering.push_back(total_size++);
+                }
+            } else {
+                // In case total_size == SetType::Size, it is not possible to insert the new
+                // transaction without exceeding SetType's size. Instead, interpret diff as an
+                // index into the holes, and overwrite a position there. This branch is never used
+                // when deserializing the output of the serializer, but gives meaning to otherwise
+                // invalid input.
+                diff %= (SetType::Size() - reordering.size());
+                SetType holes = SetType::Fill(SetType::Size());
+                for (auto pos : reordering) holes.Reset(pos);
+                for (auto pos : holes) {
+                    if (diff == 0) {
+                        reordering.push_back(pos);
+                        break;
+                    }
+                    --diff;
+                }
             }
-            reordering.push_back(total_size++ - diff);
             // Stop if a read error was encountered during deserialization.
             if (read_error) break;
         }
 
         // Construct the original cluster order depgraph.
-        depgraph = DepGraph(topo_depgraph, reordering);
+        depgraph = DepGraph(topo_depgraph, reordering, total_size);
     }
 };
 
@@ -254,8 +297,19 @@ struct DepGraphFormatter
 template<typename SetType>
 void SanityCheck(const DepGraph<SetType>& depgraph)
 {
+    // Verify Positions and PositionRange consistency.
+    ClusterIndex num_positions{0};
+    ClusterIndex position_range{0};
+    for (ClusterIndex i : depgraph.Positions()) {
+        ++num_positions;
+        position_range = i + 1;
+    }
+    assert(num_positions == depgraph.TxCount());
+    assert(position_range == depgraph.PositionRange());
+    assert(position_range >= num_positions);
+    assert(position_range <= SetType::Size());
     // Consistency check between ancestors internally.
-    for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+    for (ClusterIndex i : depgraph.Positions()) {
         // Transactions include themselves as ancestors.
         assert(depgraph.Ancestors(i)[i]);
         // If a is an ancestor of b, then b's ancestors must include all of a's ancestors.
@@ -264,8 +318,8 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
         }
     }
     // Consistency check between ancestors and descendants.
-    for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
-        for (ClusterIndex j = 0; j < depgraph.TxCount(); ++j) {
+    for (ClusterIndex i : depgraph.Positions()) {
+        for (ClusterIndex j : depgraph.Positions()) {
             assert(depgraph.Ancestors(i)[j] == depgraph.Descendants(j)[i]);
         }
         // No transaction is a parent or child of itself.
@@ -305,12 +359,12 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
 
         // In acyclic graphs, the union of parents with parents of parents etc. yields the
         // full ancestor set (and similar for children and descendants).
-        std::vector<SetType> parents, children;
-        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
-            parents.push_back(depgraph.GetReducedParents(i));
-            children.push_back(depgraph.GetReducedChildren(i));
+        std::vector<SetType> parents(depgraph.PositionRange()), children(depgraph.PositionRange());
+        for (ClusterIndex i : depgraph.Positions()) {
+            parents[i] = depgraph.GetReducedParents(i);
+            children[i] = depgraph.GetReducedChildren(i);
         }
-        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+        for (auto i : depgraph.Positions()) {
             // Initialize the set of ancestors with just the current transaction itself.
             SetType ancestors = SetType::Singleton(i);
             // Iteratively add parents of all transactions in the ancestor set to itself.
@@ -382,7 +436,7 @@ void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> lin
     TestBitSet done;
     for (auto i : linearization) {
         // Check transaction position is in range.
-        assert(i < depgraph.TxCount());
+        assert(depgraph.Positions()[i]);
         // Check topology and lack of duplicates.
         assert((depgraph.Ancestors(i) - done) == TestBitSet::Singleton(i));
         done.Set(i);

@@ -40,7 +40,7 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
-T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
+constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
     if constexpr (IS_ASSERT
 #ifdef ABORT_ON_FAILED_ASSUME
