@@ -523,6 +523,20 @@ struct Node {
         }
     }
 
+    NodeRef<Key> Clone() const
+    {
+        // Use TreeEval() to avoid a stack-overflow due to recursion
+        auto upfn = [](const Node& node, Span<NodeRef<Key>> children) {
+            NodeRef<Key> ret(MakeNodeRef<Key>(node));
+            ret->subs.clear();
+            for (const auto& child : children) {
+                ret->subs.push_back(child);
+            }
+            return ret;
+        };
+        return TreeEval<NodeRef<Key>>(upfn);
+    }
+
 private:
     //! Cached ops counts.
     const internal::Ops ops;
