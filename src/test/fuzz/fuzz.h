@@ -36,10 +36,11 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 
 #define DETAIL_FUZZ(name, ...)                                                        \
     void name##_fuzz_target(FuzzBufferType);                                          \
+    FuzzTargetOptions name##_fuzz_opts{__VA_ARGS__};                                  \
     struct name##_Before_Main {                                                       \
         name##_Before_Main()                                                          \
         {                                                                             \
-            FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, {__VA_ARGS__});    \
+            FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, name##_fuzz_opts); \
         }                                                                             \
     } const static g_##name##_before_main;                                            \
     void name##_fuzz_target(FuzzBufferType buffer)

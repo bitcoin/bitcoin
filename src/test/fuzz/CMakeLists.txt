@@ -4,7 +4,7 @@
 
 add_subdirectory(util)
 
-add_executable(fuzz
+set(HARNESS_SOURCES
   addition_overflow.cpp
   addrman.cpp
   asmap.cpp
@@ -128,9 +128,9 @@ add_executable(fuzz
   vecdeque.cpp
   versionbits.cpp
 )
-target_link_libraries(fuzz
+
+set(HARNESS_LIBS
   core_interface
-  test_fuzz
   bitcoin_cli
   bitcoin_common
   bitcoin_util
@@ -142,6 +142,30 @@ target_link_libraries(fuzz
   $<TARGET_NAME_IF_EXISTS:libevent::libevent>
 )
 
+if(BUILD_INDIVIDUAL_FUZZ_BINARIES)
+  # bash command produces list of harnesses: <harness name> <source file>
+  execute_process(
+      COMMAND bash -c "grep -H \"^FUZZ_TARGET\" src/test/fuzz/*.cpp | sed -E 's/.*\\/([^/]+\\.cpp):FUZZ_TARGET(_DESERIALIZE)?\\(([a-zA-Z0-9_]+).*/\\3 \\1/'"
+      OUTPUT_VARIABLE FUZZ_HARNESSES
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  string(REPLACE "\n" ";" FUZZ_HARNESS_LIST "${FUZZ_HARNESSES}")
+  message(STATUS ${FUZZ_HARNESSES})
+
+  foreach(HARNESS_INFO ${FUZZ_HARNESS_LIST})
+    string(REPLACE " " ";" HARNESS_PARTS ${HARNESS_INFO})
+    list(GET HARNESS_PARTS 0 HARNESS_NAME)
+    list(GET HARNESS_PARTS 1 HARNESS_FILE)
+
+    add_executable(fuzz_${HARNESS_NAME} ${HARNESS_FILE})
+    target_link_libraries(fuzz_${HARNESS_NAME} ${HARNESS_LIBS} test_fuzz_${HARNESS_NAME})
+    target_compile_definitions(fuzz_${HARNESS_NAME} PUBLIC FUZZ_HARNESS=${HARNESS_NAME})
+  endforeach()
+else()
+  add_executable(fuzz ${HARNESS_SOURCES})
+  target_link_libraries(fuzz ${HARNESS_LIBS} test_fuzz)
+endif()
+
 if(ENABLE_WALLET)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test/fuzz wallet)
+    #add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test/fuzz wallet)
 endif()
