@@ -80,15 +80,29 @@ std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
 
     auto sanitize_string = [](std::string& string) {
         // Remove key delimiters from the front and back as they're added back
-        // in formatting
         if (!string.empty()) {
             if (string.front() == STATSD_NS_DELIMITER) string.erase(string.begin());
             if (string.back() == STATSD_NS_DELIMITER) string.pop_back();
         }
     };
 
-    // Get our suffix and if we get nothing, try again with the deprecated
-    // argument. If we still get nothing, that's fine, suffixes are optional.
+    // Get our prefix and suffix and if we get nothing, try again with the
+    // deprecated argument. If we still get nothing, that's fine, they're optional.
+    auto prefix = args.GetArg("-statsprefix", DEFAULT_STATSD_PREFIX);
+    if (prefix.empty()) {
+        prefix = args.GetArg("-statsns", DEFAULT_STATSD_PREFIX);
+    } else {
+        // We restrict sanitization logic to our newly added arguments to
+        // prevent breaking changes.
+        sanitize_string(prefix);
+        // We need to add the delimiter here for backwards compatibility with
+        // the deprecated argument.
+        //
+        // TODO: Move this step into the constructor when removing deprecated
+        //       args support
+        prefix += STATSD_NS_DELIMITER;
+    }
+
     auto suffix = args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX);
     if (suffix.empty()) {
         suffix = args.GetArg("-statshostname", DEFAULT_STATSD_SUFFIX);
@@ -103,15 +117,15 @@ std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
         args.GetArg("-statsport", DEFAULT_STATSD_PORT),
         args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
         args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
-        args.GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),
+        prefix,
         suffix,
         is_enabled
     );
 }
 
 StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                           const std::string& ns, const std::string& suffix, bool enabled) :
-    m_ns{ns},
+                           const std::string& prefix, const std::string& suffix, bool enabled) :
+    m_prefix{prefix},
     m_suffix{[suffix]() { return !suffix.empty() ? STATSD_NS_DELIMITER + suffix : suffix; }()}
 {
     if (!enabled) {
@@ -177,7 +191,7 @@ bool StatsdClient::send(const std::string& key, T1 value, const std::string& typ
     }
 
     // Construct the message and if our message isn't always-send, report the sample rate
-    RawMessage msg{strprintf("%s%s%s:%f|%s", m_ns, key, m_suffix, value, type)};
+    RawMessage msg{strprintf("%s%s%s:%f|%s", m_prefix, key, m_suffix, value, type)};
     if (!always_send) {
         msg += strprintf("|@%.2f", sample_rate);
     }

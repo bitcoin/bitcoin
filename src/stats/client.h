@@ -21,7 +21,7 @@ static constexpr uint16_t DEFAULT_STATSD_PORT{8125};
 /** Default host assumed to be running a Statsd server */
 static const std::string DEFAULT_STATSD_HOST{"127.0.0.1"};
 /** Default prefix prepended to Statsd message keys */
-static const std::string DEFAULT_STATSD_NAMESPACE{""};
+static const std::string DEFAULT_STATSD_PREFIX{""};
 /** Default suffix appended to Statsd message keys */
 static const std::string DEFAULT_STATSD_SUFFIX{""};
 
@@ -40,7 +40,7 @@ class StatsdClient
 {
 public:
     explicit StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                          const std::string& ns, const std::string& suffix, bool enabled);
+                          const std::string& prefix, const std::string& suffix, bool enabled);
     ~StatsdClient();
 
 public:
@@ -69,7 +69,7 @@ private:
     std::unique_ptr<RawSender> m_sender{nullptr};
 
     /* Phrase prepended to keys */
-    const std::string m_ns;
+    const std::string m_prefix{""};
     /* Phrase appended to keys */
     const std::string m_suffix{""};
 };
