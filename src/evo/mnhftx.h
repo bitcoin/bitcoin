@@ -109,8 +109,6 @@ private:
     // versionBit <-> height
     unordered_lru_cache<uint256, Signals, StaticSaltedHasher> mnhfCache GUARDED_BY(cs_cache) {MNHFCacheSize};
 
-    // This cache is used only for v20 activation to avoid double lock through VersionBitsConditionChecker::SignalHeight
-    VersionBitsCache v20_activation GUARDED_BY(cs_cache);
 public:
     explicit CMNHFManager(CEvoDB& evoDb);
     ~CMNHFManager();

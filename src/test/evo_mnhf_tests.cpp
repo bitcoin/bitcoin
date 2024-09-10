@@ -6,10 +6,12 @@
 #include <consensus/validation.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
+#include <llmq/context.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
@@ -18,24 +20,12 @@
 #include <vector>
 
 
-bool VerifyMNHFTx(const CTransaction& tx, TxValidationState& state)
-{
-    if (const auto opt_mnhfTx_payload = GetTxPayload<MNHFTxPayload>(tx); !opt_mnhfTx_payload) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-payload");
-    } else if (opt_mnhfTx_payload->nVersion == 0 ||
-               opt_mnhfTx_payload->nVersion > MNHFTxPayload::CURRENT_VERSION) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-version");
-    }
-
-    return true;
-}
-
-static CMutableTransaction CreateMNHFTx(const uint256& mnhfTxHash, const CBLSSignature& cblSig, const uint16_t& versionBit)
+static CMutableTransaction CreateMNHFTx(const uint256& quorumHash, const CBLSSignature& cblSig, const uint16_t& versionBit)
 {
     MNHFTxPayload extraPayload;
     extraPayload.nVersion = 1;
     extraPayload.signal.versionBit = versionBit;
-    extraPayload.signal.quorumHash = mnhfTxHash;
+    extraPayload.signal.quorumHash = quorumHash;
     extraPayload.signal.sig = cblSig;
 
     CMutableTransaction tx;
@@ -46,19 +36,18 @@ static CMutableTransaction CreateMNHFTx(const uint256& mnhfTxHash, const CBLSSig
     return tx;
 }
 
-BOOST_FIXTURE_TEST_SUITE(evo_mnhf_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(evo_mnhf_tests, TestChain100Setup)
 
 BOOST_AUTO_TEST_CASE(verify_mnhf_specialtx_tests)
 {
     int count = 10;
-    uint16_t ver = 2;
+    uint16_t bit = 1;
 
     std::vector<CBLSSignature> vec_sigs;
     std::vector<CBLSPublicKey> vec_pks;
     std::vector<CBLSSecretKey> vec_sks;
 
     CBLSSecretKey sk;
-    uint256 hash = GetRandHash();
     for (int i = 0; i < count; i++) {
         sk.MakeNewKey();
         vec_pks.push_back(sk.GetPublicKey());
@@ -71,13 +60,27 @@ BOOST_AUTO_TEST_CASE(verify_mnhf_specialtx_tests)
     BOOST_CHECK(ag_sk.IsValid());
     BOOST_CHECK(ag_pk.IsValid());
 
-    uint256 verHash = uint256S(ToString(ver));
+    uint256 verHash = uint256S(ToString(bit));
     auto sig = ag_sk.Sign(verHash);
     BOOST_CHECK(sig.VerifyInsecure(ag_pk, verHash));
 
-    const CMutableTransaction tx = CreateMNHFTx(hash, sig, ver);
+    auto& chainman = Assert(m_node.chainman);
+    auto& qman = *Assert(m_node.llmq_ctx)->qman;
+    const CBlockIndex* pindex = chainman->ActiveChain().Tip();
+    uint256 hash = GetRandHash();
     TxValidationState state;
-    BOOST_CHECK(VerifyMNHFTx(CTransaction(tx), state));
+
+    { // wrong quorum (we don't have any indeed)
+        const CTransaction tx{CTransaction(CreateMNHFTx(hash, sig, bit))};
+        CheckMNHFTx(*chainman, qman, CTransaction(tx), pindex, state);
+        BOOST_CHECK_EQUAL(state.ToString(), "bad-mnhf-quorum-hash");
+    }
+
+    { // non EHF fork
+        const CTransaction tx{CTransaction(CreateMNHFTx(hash, sig, 28))};
+        CheckMNHFTx(*chainman, qman, CTransaction(tx), pindex, state);
+        BOOST_CHECK_EQUAL(state.ToString(), "bad-mnhf-non-ehf");
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

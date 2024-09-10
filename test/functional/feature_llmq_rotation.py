@@ -18,7 +18,6 @@ from test_framework.p2p import P2PInterface
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
-    assert_greater_than, get_bip9_details,
 )
 
 
@@ -114,17 +113,14 @@ class LLMQQuorumRotationTest(DashTestFramework):
         expectedNew = [h_100_0, h_106_0, h_104_0, h_100_1, h_106_1, h_104_1]
         quorumList = self.test_getmnlistdiff_quorums(b_h_0, b_h_1, {}, expectedDeleted, expectedNew, testQuorumsCLSigs=False)
 
-        self.log.info(f"Wait for v20 locked_in phase")
-        # Expected locked_in phase starts at 1200 - 400 (window size in regtest)
-        projected_activation_height = self.advance_to_locked_in_for_v20(expected_locked_in_height=800)
+        projected_activation_height = 1200
 
         self.activate_v20(expected_activation_height=1200)
         self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
-        softfork_info = get_bip9_details(self.nodes[0], 'v20')
-        assert_equal(softfork_info['status'], 'active')
-        assert 'since' in softfork_info
-        assert_equal(projected_activation_height, softfork_info['since'])
+        softfork_info = self.nodes[0].getblockchaininfo()['softforks']['v20']
+        assert_equal(softfork_info['active'], True)
+        assert_equal(projected_activation_height, softfork_info['height'])
 
         # v20 is active for the next block, not for the tip
         self.nodes[0].generate(1)
@@ -393,51 +389,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
             return True
         return False
 
-    def advance_to_locked_in_for_v20(self, expected_locked_in_height):
-        # disable spork17 while mining blocks to activate "name" to prevent accidental quorum formation
-        spork17_value = self.nodes[0].spork('show')['SPORK_17_QUORUM_DKG_ENABLED']
-        self.bump_mocktime(1)
-        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
-        self.wait_for_sporks_same()
-
-        # mine blocks in batches
-        batch_size = 10
-        height = self.nodes[0].getblockcount()
-        assert_greater_than(expected_locked_in_height, height)
-        # NOTE: getblockchaininfo shows softforks locked_in at block (window * 2 - 1)
-        # since it's returning whether a softwork is locked_in for the _next_ block.
-        # Hence the last block prior to the locked_in state is (expected_locked_in_height - 2).
-        while expected_locked_in_height - height - 2 >= batch_size:
-            self.bump_mocktime(batch_size)
-            self.nodes[0].generate(batch_size)
-            height += batch_size
-            self.sync_blocks()
-        blocks_left = expected_locked_in_height - height - 2
-        assert_greater_than(batch_size, blocks_left)
-        self.bump_mocktime(blocks_left)
-        self.nodes[0].generate(blocks_left)
-        self.sync_blocks()
-
-        softfork_info = get_bip9_details(self.nodes[0], 'v20')
-        assert_equal(softfork_info['status'], 'started')
-        assert 'activation_height' not in softfork_info
-
-        self.bump_mocktime(1)
-        self.nodes[0].generate(1)
-        self.sync_blocks()
-
-        softfork_info = get_bip9_details(self.nodes[0], 'v20')
-        assert_equal(softfork_info['status'], 'locked_in')
-        assert_equal(softfork_info['since'], expected_locked_in_height)
-        assert 'activation_height' in softfork_info
-        projected_activation_height = softfork_info['activation_height']
-
-        # revert spork17 changes
-        self.bump_mocktime(1)
-        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", spork17_value)
-        self.wait_for_sporks_same()
-
-        return projected_activation_height
 
 if __name__ == '__main__':
     LLMQQuorumRotationTest().main()

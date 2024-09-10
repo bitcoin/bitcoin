@@ -154,16 +154,7 @@ class BlockchainTest(BitcoinTestFramework):
             'dip0024': { 'type': 'buried', 'active': False, 'height': 900},
             'realloc': { 'type': 'buried', 'active': True, 'height': 1},
             'v19': { 'type': 'buried', 'active': False, 'height': 900},
-            'v20': {
-                'type': 'bip9',
-                'bip9': {
-                    'status': 'defined',
-                    'start_time': 0,
-                    'timeout': 9223372036854775807,
-                    'since': 0,
-                    'min_activation_height': 0,
-                    'ehf': False,
-                }, 'active': False},
+            'v20': { 'type': 'buried', 'active': False, 'height': 1200},
             'mn_rr': {
                 'type': 'bip9',
                 'bip9': {

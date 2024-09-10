@@ -490,21 +490,7 @@ CAmount CSuperblock::GetPaymentsLimit(const CChain& active_chain, int nBlockHeig
         return 0;
     }
 
-    const CBlockIndex* pindex = active_chain.Tip();
-    if (pindex->nHeight > nBlockHeight) pindex = pindex->GetAncestor(nBlockHeight);
-
-    const auto v20_state = g_versionbitscache.State(pindex, consensusParams, Consensus::DEPLOYMENT_V20);
-    bool fV20Active{v20_state == ThresholdState::ACTIVE};
-    if (!fV20Active && nBlockHeight > pindex->nHeight) {
-        // If fV20Active isn't active yet and nBlockHeight refers to a future SuperBlock
-        // then we need to check if the fork is locked_in and see if it will be active by the time of the future SuperBlock
-        if (v20_state == ThresholdState::LOCKED_IN) {
-            int activation_height = g_versionbitscache.StateSinceHeight(pindex, consensusParams, Consensus::DEPLOYMENT_V20) + static_cast<int>(Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_V20].nWindowSize);
-            if (nBlockHeight >= activation_height) {
-                fV20Active = true;
-            }
-        }
-    }
+    const bool fV20Active{nBlockHeight >= consensusParams.V20Height};
 
     // min subsidy for high diff networks and vice versa
     int nBits = consensusParams.fPowAllowMinDifficultyBlocks ? UintToArith256(consensusParams.powLimit).GetCompact() : 1;

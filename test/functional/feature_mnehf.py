@@ -131,8 +131,8 @@ class MnehfTest(DashTestFramework):
         node = self.nodes[0]
 
         self.set_sporks()
-        self.activate_v19()
-        self.log.info(f"After v19 activation should be plenty of blocks: {node.getblockcount()}")
+        self.activate_v20()
+        self.log.info(f"After v20 activation should be plenty of blocks: {node.getblockcount()}")
         assert_greater_than(node.getblockcount(), 900)
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
 
@@ -145,7 +145,6 @@ class MnehfTest(DashTestFramework):
         pubkey = key.get_pubkey().get_bytes()
         ehf_tx = self.create_mnehf(28, pubkey)
         ehf_unknown_tx = self.create_mnehf(27, pubkey)
-        ehf_invalid_tx = self.create_mnehf(9, pubkey) # deployment that is known as non-EHF
 
         self.log.info("Checking deserialization of CMnEhf by python's code")
         mnehf_payload = CMnEhf()
@@ -155,10 +154,6 @@ class MnehfTest(DashTestFramework):
         self.log.info("Checking correctness of requestId and quorumHash")
         assert_equal(mnehf_payload.quorumHash, int(self.mninfo[0].node.quorum("selectquorum", 100, 'a0eee872d7d3170dd20d5c5e8380c92b3aa887da5f63d8033289fafa35a90691')["quorumHash"], 16))
 
-        self.send_tx(ehf_tx, expected_error='mnhf-before-v20')
-
-        assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
-        self.activate_v20()
         assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
         assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'defined')
 
@@ -166,7 +161,6 @@ class MnehfTest(DashTestFramework):
         self.log.info(f"ehf tx: {ehf_tx_sent}")
         ehf_unknown_tx_sent = self.send_tx(ehf_unknown_tx)
         self.log.info(f"unknown ehf tx: {ehf_unknown_tx_sent}")
-        self.send_tx(ehf_invalid_tx, expected_error='bad-mnhf-non-ehf')
         self.sync_all()
         ehf_blockhash = self.nodes[1].generate(1)[0]
         self.sync_blocks()

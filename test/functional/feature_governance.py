@@ -9,29 +9,24 @@ import json
 from test_framework.messages import uint256_to_string
 from test_framework.test_framework import DashTestFramework
 from test_framework.governance import have_trigger_for_height, prepare_object
-from test_framework.util import assert_equal, satoshi_round, set_node_times, wait_until_helper
+from test_framework.util import assert_equal, satoshi_round, wait_until_helper
 
 GOVERNANCE_UPDATE_MIN = 60 * 60 # src/governance/object.h
 
 class DashGovernanceTest (DashTestFramework):
     def set_test_params(self):
-        self.v20_start_time = 1417713500 + 80
-        # using adjusted v20 deployment params to test an edge case where superblock maturity window is equal to deployment window size
-        self.set_dash_test_params(6, 5, [["-budgetparams=10:10:10", f"-vbparams=v20:{self.v20_start_time}:999999999999:0:10:8:6:5:0"]] * 6, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, [[
+            "-budgetparams=10:10:10",
+            '-testactivationheight=v20@240',
+        ]] * 6, fast_dip3_enforcement=True)
 
     def check_superblockbudget(self, v20_active):
         v20_state = self.nodes[0].getblockchaininfo()["softforks"]["v20"]
         assert_equal(v20_state["active"], v20_active)
         assert_equal(self.nodes[0].getsuperblockbudget(200), self.expected_old_budget)
         assert_equal(self.nodes[0].getsuperblockbudget(220), self.expected_old_budget)
-        if v20_state["bip9"]["status"] == "locked_in" or v20_state["bip9"]["status"] == "active":
-            assert_equal(self.nodes[0].getsuperblockbudget(240), self.expected_v20_budget)
-            assert_equal(self.nodes[0].getsuperblockbudget(260), self.expected_v20_budget)
-            assert_equal(self.nodes[0].getsuperblockbudget(280), self.expected_v20_budget)
-        else:
-            assert_equal(self.nodes[0].getsuperblockbudget(240), self.expected_old_budget)
-            assert_equal(self.nodes[0].getsuperblockbudget(260), self.expected_old_budget)
-            assert_equal(self.nodes[0].getsuperblockbudget(280), self.expected_old_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(240), self.expected_v20_budget)
+        assert_equal(self.nodes[0].getsuperblockbudget(260), self.expected_v20_budget)
 
     def check_superblock(self):
         # Make sure Superblock has only payments that fit into the budget
@@ -100,18 +95,14 @@ class DashGovernanceTest (DashTestFramework):
         self.bump_mocktime(3)
         self.sync_blocks()
         assert_equal(self.nodes[0].getblockcount(), 210)
-        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "defined")
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
-
-        assert self.mocktime < self.v20_start_time
-        self.mocktime = self.v20_start_time
-        set_node_times(self.nodes, self.mocktime)
 
         self.nodes[0].generate(10)
         self.bump_mocktime(10)
         self.sync_blocks()
         assert_equal(self.nodes[0].getblockcount(), 220)
-        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "started")
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
 
         proposal_time = self.mocktime
@@ -215,7 +206,7 @@ class DashGovernanceTest (DashTestFramework):
         self.nodes[0].generate(1)
         self.bump_mocktime(1)
         assert_equal(self.nodes[0].getblockcount(), 230)
-        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "locked_in")
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], False)
         self.check_superblockbudget(False)
 
         # The "winner" should submit new trigger and vote for it, but it's isolated so no triggers should be found
@@ -341,7 +332,7 @@ class DashGovernanceTest (DashTestFramework):
         self.bump_mocktime(1)
         self.sync_blocks()
         assert_equal(self.nodes[0].getblockcount(), 260)
-        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
+        assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], True)
 
         # Mine and check a couple more superblocks
         for i in range(2):
@@ -357,7 +348,7 @@ class DashGovernanceTest (DashTestFramework):
             self.bump_mocktime(1)
             self.sync_blocks()
             assert_equal(self.nodes[0].getblockcount(), sb_block_height)
-            assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["bip9"]["status"], "active")
+            assert_equal(self.nodes[0].getblockchaininfo()["softforks"]["v20"]["active"], True)
             self.check_superblockbudget(True)
             self.check_superblock()
 
