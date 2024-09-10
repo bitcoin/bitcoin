@@ -30,6 +30,7 @@ class CBlockIndex;
 class CMasternodeSync;
 class CTxMemPool;
 class TxValidationState;
+class PeerManager;
 
 namespace llmq {
 class CChainLocksHandler;
@@ -206,6 +207,7 @@ public:
         }
     }
 
+    [[nodiscard]] uint256 GetHash() const;
     [[nodiscard]] uint256 GetSignatureHash() const;
     /** Sign this mixing transaction
      *  return true if all conditions are met:
@@ -218,7 +220,7 @@ public:
     /// Check if we have a valid Masternode address
     [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
-    bool Relay(CConnman& connman);
+    bool Relay(CConnman& connman, PeerManager& peerman);
 
     /// Check if a queue is too old or too far into the future
     [[nodiscard]] bool IsTimeOutOfBounds(int64_t current_time = GetAdjustedTime()) const;
@@ -340,6 +342,18 @@ public:
 
     int GetQueueSize() const EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue) { LOCK(cs_vecqueue); return vecCoinJoinQueue.size(); }
     bool GetQueueItemAndTry(CCoinJoinQueue& dsqRet) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
+
+    bool HasQueue(const uint256& queueHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue)
+    {
+        LOCK(cs_vecqueue);
+        return std::any_of(vecCoinJoinQueue.begin(), vecCoinJoinQueue.end(),
+                           [&queueHash](auto q) { return q.GetHash() == queueHash; });
+    }
+    std::optional<CCoinJoinQueue> GetQueueFromHash(const uint256& queueHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue)
+    {
+        LOCK(cs_vecqueue);
+        return ranges::find_if_opt(vecCoinJoinQueue, [&queueHash](const auto& q) { return q.GetHash() == queueHash; });
+    }
 };
 
 // Various helpers and dstx manager implementation

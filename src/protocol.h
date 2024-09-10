@@ -518,6 +518,7 @@ enum GetDataMsg : uint32_t {
     MSG_CLSIG = 29,
     /* MSG_ISLOCK = 30, */                            // Non-deterministic InstantSend and not used anymore
     MSG_ISDLOCK = 31,
+    MSG_DSQ = 32,
 };
 
 /** inv message data */

@@ -12,6 +12,7 @@
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <net.h>
+#include <net_processing.h>
 #include <netmessagemaker.h>
 #include <shutdown.h>
 #include <util/check.h>
@@ -22,9 +23,9 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <version.h>
-#include <walletinitinterface.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
+#include <walletinitinterface.h>
 
 #include <memory>
 #include <univalue.h>
@@ -46,6 +47,11 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
 
     CCoinJoinQueue dsq;
     vRecv >> dsq;
+
+    {
+        LOCK(cs_main);
+        Assert(peerman)->EraseObjectRequest(peer.GetId(), CInv(MSG_DSQ, dsq.GetHash()));
+    }
 
     if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
         return tl::unexpected{100};
@@ -126,7 +132,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CDataS
             WITH_LOCK(cs_vecqueue, vecCoinJoinQueue.push_back(dsq));
         }
     } // cs_ProcessDSQueue
-    dsq.Relay(connman);
+    dsq.Relay(connman, *peerman);
     return {};
 }
 
