@@ -106,44 +106,45 @@ void StatsdClient::cleanup(std::string& key)
     }
 }
 
-int StatsdClient::dec(const std::string& key, float sample_rate)
+bool StatsdClient::dec(const std::string& key, float sample_rate)
 {
     return count(key, -1, sample_rate);
 }
 
-int StatsdClient::inc(const std::string& key, float sample_rate)
+bool StatsdClient::inc(const std::string& key, float sample_rate)
 {
     return count(key, 1, sample_rate);
 }
 
-int StatsdClient::count(const std::string& key, int64_t value, float sample_rate)
+bool StatsdClient::count(const std::string& key, int64_t value, float sample_rate)
 {
     return send(key, value, "c", sample_rate);
 }
 
-int StatsdClient::gauge(const std::string& key, int64_t value, float sample_rate)
+bool StatsdClient::gauge(const std::string& key, int64_t value, float sample_rate)
 {
     return send(key, value, "g", sample_rate);
 }
 
-int StatsdClient::gaugeDouble(const std::string& key, double value, float sample_rate)
+bool StatsdClient::gaugeDouble(const std::string& key, double value, float sample_rate)
 {
     return sendDouble(key, value, "g", sample_rate);
 }
 
-int StatsdClient::timing(const std::string& key, int64_t ms, float sample_rate)
+bool StatsdClient::timing(const std::string& key, int64_t ms, float sample_rate)
 {
     return send(key, ms, "ms", sample_rate);
 }
 
-int StatsdClient::send(std::string key, int64_t value, const std::string& type, float sample_rate)
+bool StatsdClient::send(std::string key, int64_t value, const std::string& type, float sample_rate)
 {
     if (!m_sock) {
-        return -3;
+        return false;
     }
 
     if (!ShouldSend(sample_rate)) {
-        return 0;
+        // Not our turn to send but report that we have
+        return true;
     }
 
     // partition stats by node name if set
@@ -160,14 +161,15 @@ int StatsdClient::send(std::string key, int64_t value, const std::string& type, 
     return send(buf);
 }
 
-int StatsdClient::sendDouble(std::string key, double value, const std::string& type, float sample_rate)
+bool StatsdClient::sendDouble(std::string key, double value, const std::string& type, float sample_rate)
 {
     if (!m_sock) {
-        return -3;
+        return false;
     }
 
     if (!ShouldSend(sample_rate)) {
-        return 0;
+        // Not our turn to send but report that we have
+        return true;
     }
 
     // partition stats by node name if set
@@ -184,7 +186,7 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
     return send(buf);
 }
 
-int StatsdClient::send(const std::string& message)
+bool StatsdClient::send(const std::string& message)
 {
     assert(m_sock);
 
@@ -192,9 +194,9 @@ int StatsdClient::send(const std::string& message)
                  reinterpret_cast<struct sockaddr*>(&m_server.first), m_server.second) == SOCKET_ERROR) {
         LogPrintf("ERROR: Unable to send message (sendto() returned error %s), host=%s:%d\n",
                   NetworkErrorString(WSAGetLastError()), m_host, m_port);
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 } // namespace statsd

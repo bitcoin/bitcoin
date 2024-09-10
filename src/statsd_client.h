@@ -31,32 +31,27 @@ class StatsdClient {
                               bool enabled);
 
     public:
-        int inc(const std::string& key, float sample_rate = 1.f);
-        int dec(const std::string& key, float sample_rate = 1.f);
-        int count(const std::string& key, int64_t value, float sample_rate = 1.f);
-        int gauge(const std::string& key, int64_t value, float sample_rate = 1.f);
-        int gaugeDouble(const std::string& key, double value, float sample_rate = 1.f);
-        int timing(const std::string& key, int64_t ms, float sample_rate = 1.f);
-
-    public:
-        /**
-         * (Low Level Api) manually send a message
-         * which might be composed of several lines.
-         */
-        int send(const std::string& message);
+        bool inc(const std::string& key, float sample_rate = 1.f);
+        bool dec(const std::string& key, float sample_rate = 1.f);
+        bool count(const std::string& key, int64_t value, float sample_rate = 1.f);
+        bool gauge(const std::string& key, int64_t value, float sample_rate = 1.f);
+        bool gaugeDouble(const std::string& key, double value, float sample_rate = 1.f);
+        bool timing(const std::string& key, int64_t ms, float sample_rate = 1.f);
 
         /* (Low Level Api) manually send a message
          * type = "c", "g" or "ms"
          */
-        int send(std::string key, int64_t value,
-                const std::string& type, float sample_rate);
-        int sendDouble(std::string key, double value,
-                const std::string& type, float sample_rate);
-
-    protected:
-        static void cleanup(std::string& key);
+        bool send(std::string key, int64_t value, const std::string& type, float sample_rate);
+        bool sendDouble(std::string key, double value, const std::string& type, float sample_rate);
 
     private:
+        /**
+         * (Low Level Api) manually send a message
+         * which might be composed of several lines.
+         */
+        bool send(const std::string& message);
+
+        void cleanup(std::string& key);
         bool ShouldSend(float sample_rate);
 
     private:
