@@ -17,10 +17,6 @@ add_custom_target(generate_build_info
 add_library(bitcoin_clientversion OBJECT EXCLUDE_FROM_ALL
   clientversion.cpp
 )
-target_compile_definitions(bitcoin_clientversion
-  PRIVATE
-    HAVE_BUILD_INFO
-)
 target_link_libraries(bitcoin_clientversion
   PRIVATE
     core_interface
