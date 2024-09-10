@@ -1360,7 +1360,7 @@ public:
         for (const auto& arg : m_pubkey_args) {
             providers.push_back(arg->Clone());
         }
-        return std::make_unique<MiniscriptDescriptor>(std::move(providers), miniscript::MakeNodeRef<uint32_t>(*m_node));
+        return std::make_unique<MiniscriptDescriptor>(std::move(providers), m_node->Clone());
     }
 };
 
@@ -2154,7 +2154,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 for (auto& pub : parser.m_keys) {
                     pubs.emplace_back(std::move(pub.at(i)));
                 }
-                ret.emplace_back(std::make_unique<MiniscriptDescriptor>(std::move(pubs), node));
+                ret.emplace_back(std::make_unique<MiniscriptDescriptor>(std::move(pubs), node->Clone()));
             }
             return ret;
         }
