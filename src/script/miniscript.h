@@ -528,6 +528,20 @@ struct Node {
         }
     }
 
+    NodeRef<Key> Clone() const
+    {
+        // Use TreeEval() to avoid a stack-overflow due to recursion
+        auto upfn = [](const Node& node, Span<NodeRef<Key>> children) {
+            std::vector<NodeRef<Key>> new_subs;
+            for (auto child = children.begin(); child != children.end(); ++child) {
+                new_subs.emplace_back(std::move(*child));
+            }
+            // std::make_unique (and therefore MakeNodeRef) doesn't work on private constructors
+            return std::unique_ptr<Node>{new Node{internal::NoDupCheck{}, node.m_script_ctx, node.fragment, std::move(new_subs), node.keys, node.data, node.k}};
+        };
+        return TreeEval<NodeRef<Key>>(upfn);
+    }
+
 private:
     //! Cached ops counts.
     const internal::Ops ops;
@@ -546,6 +560,11 @@ private:
     //! for all subnodes as well.
     mutable std::optional<bool> has_duplicate_keys;
 
+    // Constructor which takes all of the data that a Node could possibly contain.
+    // This is kept private as no valid fragment has all of these arguments.
+    // Only used by Clone()
+    Node(internal::NoDupCheck, MiniscriptContext script_ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, std::vector<unsigned char> arg, uint32_t val)
+        : fragment(nt), k(val), keys(key), data(std::move(arg)), subs(std::move(sub)), m_script_ctx{script_ctx}, ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 
     //! Compute the length of the script for this miniscript (including children).
     size_t CalcScriptLen() const {
