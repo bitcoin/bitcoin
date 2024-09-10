@@ -17,7 +17,6 @@ import sys
 
 FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS = [
     'tfm::format,1',  # Assuming tfm::::format(std::ostream&, ...
-    'LogConnectFailure,1',
     'LogError,0',
     'LogWarning,0',
     'LogInfo,0',

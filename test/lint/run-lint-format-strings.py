@@ -13,7 +13,6 @@ import re
 import sys
 
 FALSE_POSITIVES = [
-    ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/clientversion.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/test/translation_tests.cpp", "strprintf(format, arg)"),
     ("src/validationinterface.cpp", "LogDebug(BCLog::VALIDATION, fmt \"\\n\", __VA_ARGS__)"),
