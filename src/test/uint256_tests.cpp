@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <arith_uint256.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -61,14 +60,6 @@ static std::string ArrayToString(const unsigned char A[], unsigned int width)
     return Stream.str();
 }
 
-// Takes hex string in reverse byte order.
-inline uint160 uint160S(std::string_view str)
-{
-    uint160 rv;
-    rv.SetHexDeprecated(str);
-    return rv;
-}
-
 BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
 {
     // constructor uint256(vector<char>):
@@ -92,33 +83,22 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK_NE(MaxL, ZeroL); BOOST_CHECK_NE(MaxS, ZeroS);
 
     // String Constructor and Copy Constructor
-    BOOST_CHECK_EQUAL(uint256S("0x"+R1L.ToString()), R1L);
-    BOOST_CHECK_EQUAL(uint256S("0x"+R2L.ToString()), R2L);
-    BOOST_CHECK_EQUAL(uint256S("0x"+ZeroL.ToString()), ZeroL);
-    BOOST_CHECK_EQUAL(uint256S("0x"+OneL.ToString()), OneL);
-    BOOST_CHECK_EQUAL(uint256S("0x"+MaxL.ToString()), MaxL);
-    BOOST_CHECK_EQUAL(uint256S(R1L.ToString()), R1L);
-    BOOST_CHECK_EQUAL(uint256S("   0x"+R1L.ToString()+"   "), R1L);
-    BOOST_CHECK_EQUAL(uint256S("   0x"+R1L.ToString()+"-trash;%^&   "), R1L);
-    BOOST_CHECK_EQUAL(uint256S("\t \n  \n \f\n\r\t\v\t   0x"+R1L.ToString()+"  \t \n  \n \f\n\r\t\v\t "), R1L);
-    BOOST_CHECK_EQUAL(uint256S(""), ZeroL);
-    BOOST_CHECK_EQUAL(uint256S("1"), OneL);
-    BOOST_CHECK_EQUAL(R1L, uint256S(R1ArrayHex));
+    BOOST_CHECK_EQUAL(uint256::FromHex(R1L.ToString()).value(), R1L);
+    BOOST_CHECK_EQUAL(uint256::FromHex(R2L.ToString()).value(), R2L);
+    BOOST_CHECK_EQUAL(uint256::FromHex(ZeroL.ToString()).value(), ZeroL);
+    BOOST_CHECK_EQUAL(uint256::FromHex(OneL.ToString()).value(), OneL);
+    BOOST_CHECK_EQUAL(uint256::FromHex(MaxL.ToString()).value(), MaxL);
+    BOOST_CHECK_EQUAL(uint256::FromHex(R1ArrayHex).value(), R1L);
     BOOST_CHECK_EQUAL(uint256(R1L), R1L);
     BOOST_CHECK_EQUAL(uint256(ZeroL), ZeroL);
     BOOST_CHECK_EQUAL(uint256(OneL), OneL);
 
-    BOOST_CHECK_EQUAL(uint160S("0x"+R1S.ToString()), R1S);
-    BOOST_CHECK_EQUAL(uint160S("0x"+R2S.ToString()), R2S);
-    BOOST_CHECK_EQUAL(uint160S("0x"+ZeroS.ToString()), ZeroS);
-    BOOST_CHECK_EQUAL(uint160S("0x"+OneS.ToString()), OneS);
-    BOOST_CHECK_EQUAL(uint160S("0x"+MaxS.ToString()), MaxS);
-    BOOST_CHECK_EQUAL(uint160S(R1S.ToString()), R1S);
-    BOOST_CHECK_EQUAL(uint160S("   0x"+R1S.ToString()+"   "), R1S);
-    BOOST_CHECK_EQUAL(uint160S("   0x"+R1S.ToString()+"-trash;%^&   "), R1S);
-    BOOST_CHECK_EQUAL(uint160S(" \t \n  \n \f\n\r\t\v\t  0x"+R1S.ToString()+"   \t \n  \n \f\n\r\t\v\t"), R1S);
-    BOOST_CHECK_EQUAL(uint160S(""), ZeroS);
-    BOOST_CHECK_EQUAL(R1S, uint160S(R1ArrayHex));
+    BOOST_CHECK_EQUAL(uint160::FromHex(R1S.ToString()).value(), R1S);
+    BOOST_CHECK_EQUAL(uint160::FromHex(R2S.ToString()).value(), R2S);
+    BOOST_CHECK_EQUAL(uint160::FromHex(ZeroS.ToString()).value(), ZeroS);
+    BOOST_CHECK_EQUAL(uint160::FromHex(OneS.ToString()).value(), OneS);
+    BOOST_CHECK_EQUAL(uint160::FromHex(MaxS.ToString()).value(), MaxS);
+    BOOST_CHECK_EQUAL(uint160::FromHex(std::string_view{R1ArrayHex + 24, 40}).value(), R1S);
 
     BOOST_CHECK_EQUAL(uint160(R1S), R1S);
     BOOST_CHECK_EQUAL(uint160(ZeroS), ZeroS);
@@ -262,82 +242,6 @@ BOOST_AUTO_TEST_CASE(methods) // GetHex SetHexDeprecated FromHex begin() end() s
     ss >> TmpS;
     BOOST_CHECK_EQUAL(MaxS, TmpS);
     ss.clear();
-}
-
-BOOST_AUTO_TEST_CASE( conversion )
-{
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(ZeroL)), ZeroL);
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(OneL)), OneL);
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(R1L)), R1L);
-    BOOST_CHECK_EQUAL(ArithToUint256(UintToArith256(R2L)), R2L);
-    BOOST_CHECK_EQUAL(UintToArith256(ZeroL), 0);
-    BOOST_CHECK_EQUAL(UintToArith256(OneL), 1);
-    BOOST_CHECK_EQUAL(ArithToUint256(0), ZeroL);
-    BOOST_CHECK_EQUAL(ArithToUint256(1), OneL);
-    BOOST_CHECK_EQUAL(arith_uint256(UintToArith256(uint256S(R1L.GetHex()))), UintToArith256(R1L));
-    BOOST_CHECK_EQUAL(arith_uint256(UintToArith256(uint256S(R2L.GetHex()))), UintToArith256(R2L));
-    BOOST_CHECK_EQUAL(R1L.GetHex(), UintToArith256(R1L).GetHex());
-    BOOST_CHECK_EQUAL(R2L.GetHex(), UintToArith256(R2L).GetHex());
-}
-
-BOOST_AUTO_TEST_CASE( operator_with_self )
-{
-
-/* Clang 16 and earlier detects v -= v and v /= v as self-assignments
-   to 0 and 1 respectively.
-   See: https://github.com/llvm/llvm-project/issues/42469
-   and the fix in commit c5302325b2a62d77cf13dd16cd5c19141862fed0 .
-
-   This makes some sense for arithmetic classes, but could be considered a bug
-   elsewhere. Disable the warning here so that the code can be tested, but the
-   warning should remain on as there will likely always be a better way to
-   express this.
-*/
-
-#if defined(__clang__)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wself-assign-overloaded"
-#endif
-    arith_uint256 v = UintToArith256(uint256S("02"));
-    v *= v;
-    BOOST_CHECK_EQUAL(v, UintToArith256(uint256S("04")));
-    v /= v;
-    BOOST_CHECK_EQUAL(v, UintToArith256(uint256S("01")));
-    v += v;
-    BOOST_CHECK_EQUAL(v, UintToArith256(uint256S("02")));
-    v -= v;
-    BOOST_CHECK_EQUAL(v, UintToArith256(uint256S("0")));
-#if defined(__clang__)
-#    pragma clang diagnostic pop
-#endif
-}
-
-BOOST_AUTO_TEST_CASE(parse)
-{
-    {
-        std::string s_12{"0000000000000000000000000000000000000000000000000000000000000012"};
-        BOOST_CHECK_EQUAL(uint256S("12\0").GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S(std::string_view{"12\0", 3}).GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S("0x12").GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S(" 0x12").GetHex(), s_12);
-        BOOST_CHECK_EQUAL(uint256S(" 12").GetHex(), s_12);
-    }
-    {
-        std::string s_1{uint256::ONE.GetHex()};
-        BOOST_CHECK_EQUAL(uint256S("1\0").GetHex(), s_1);
-        BOOST_CHECK_EQUAL(uint256S(std::string_view{"1\0", 2}).GetHex(), s_1);
-        BOOST_CHECK_EQUAL(uint256S("0x1").GetHex(), s_1);
-        BOOST_CHECK_EQUAL(uint256S(" 0x1").GetHex(), s_1);
-        BOOST_CHECK_EQUAL(uint256S(" 1").GetHex(), s_1);
-    }
-    {
-        std::string s_0{uint256::ZERO.GetHex()};
-        BOOST_CHECK_EQUAL(uint256S("\0").GetHex(), s_0);
-        BOOST_CHECK_EQUAL(uint256S(std::string_view{"\0", 1}).GetHex(), s_0);
-        BOOST_CHECK_EQUAL(uint256S("0x").GetHex(), s_0);
-        BOOST_CHECK_EQUAL(uint256S(" 0x").GetHex(), s_0);
-        BOOST_CHECK_EQUAL(uint256S(" ").GetHex(), s_0);
-    }
 }
 
 /**
