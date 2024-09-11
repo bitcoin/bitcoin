@@ -43,15 +43,16 @@ static RPCHelpMan masternode_connect()
 {
     std::string strAddress = request.params[0].get_str();
 
-    CService addr;
-    if (!Lookup(strAddress, addr, 0, false))
+    std::optional<CService> addr{Lookup(strAddress, 0, false)};
+    if (!addr.has_value()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
+    }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    connman.OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!connman.IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    connman.OpenMasternodeConnection(CAddress(addr.value(), NODE_NETWORK));
+    if (!connman.IsConnected(CAddress(addr.value(), NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
     return "successfully connected";

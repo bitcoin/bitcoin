@@ -188,13 +188,13 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
     // Addresses could be specified via externalip or bind option, discovered via UPnP
     // or added by TorController. Use some random dummy IPv4 peer to prefer the one
     // reachable via IPv4.
-    CNetAddr addrDummyPeer;
     bool fFoundLocal{false};
-    if (LookupHost("8.8.8.8", addrDummyPeer, false)) {
-        fFoundLocal = GetLocal(addrRet, &addrDummyPeer) && IsValidNetAddr(addrRet);
+    if (auto peerAddr = LookupHost("8.8.8.8", false); peerAddr.has_value()) {
+        fFoundLocal = GetLocal(addrRet, &peerAddr.value()) && IsValidNetAddr(addrRet);
     }
     if (!fFoundLocal && !Params().RequireRoutableExternalIP()) {
-        if (Lookup("127.0.0.1", addrRet, GetListenPort(), false)) {
+        if (auto addr = Lookup("127.0.0.1", GetListenPort(), false); addr.has_value()) {
+            addrRet = addr.value();
             fFoundLocal = true;
         }
     }

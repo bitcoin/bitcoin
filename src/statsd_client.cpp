@@ -73,17 +73,17 @@ StatsdClient::StatsdClient(const std::string& host, const std::string& nodename,
         return;
     }
 
-    CNetAddr netaddr;
-    if (!LookupHost(m_host, netaddr, /*fAllowLookup=*/true)) {
-        LogPrintf("ERROR: Unable to lookup host %s, cannot init StatsdClient\n", m_host);
-        return;
-    }
-    if (!netaddr.IsIPv4()) {
-        LogPrintf("ERROR: Host %s on unsupported network, cannot init StatsdClient\n", m_host);
-        return;
-    }
-    if (!CService(netaddr, port).GetSockAddr(reinterpret_cast<struct sockaddr*>(&m_server.first), &m_server.second)) {
-        LogPrintf("ERROR: Cannot get socket address for %s, cannot init StatsdClient\n", m_host);
+    if (auto netaddr = LookupHost(m_host, /*fAllowLookup=*/true); netaddr.has_value()) {
+        if (!netaddr->IsIPv4()) {
+            LogPrintf("ERROR: Host %s on unsupported network, cannot init StatsdClient\n", m_host);
+            return;
+        }
+        if (!CService(*netaddr, port).GetSockAddr(reinterpret_cast<struct sockaddr*>(&m_server.first), &m_server.second)) {
+            LogPrintf("ERROR: Cannot get socket address for %s, cannot init StatsdClient\n", m_host);
+            return;
+        }
+    } else {
+        LogPrintf("Unable to lookup host %s, cannot init StatsdClient\n", m_host);
         return;
     }
 
