@@ -48,6 +48,14 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
     CI_PREVIOUS_RELEASES_MOUNT="type=bind,src=${PREVIOUS_RELEASES_DIR},dst=$PREVIOUS_RELEASES_DIR"
   fi
 
+  if [ "$DANGER_CI_ON_HOST_CCACHE_FOLDER" ]; then
+    if [ ! -d "${CCACHE_DIR}" ]; then
+      echo "Error: Directory '${CCACHE_DIR}' must be created in advance."
+      exit 1
+    fi
+    CI_CCACHE_MOUNT="type=bind,src=${CCACHE_DIR},dst=${CCACHE_DIR}"
+  fi
+
   docker network create --ipv6 --subnet 1111:1111::/112 ci-ip6net || true
 
   if [ -n "${RESTART_CI_DOCKER_BEFORE_RUN}" ] ; then
