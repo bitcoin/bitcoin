@@ -99,7 +99,7 @@ sudo apt-get install qtcreator
 #### Setup Qt Creator
 
 1. Make sure you've installed all dependencies specified in your systems build instructions
-2. Follow the compile instructions for your system, run `./configure` with the `--enable-debug` flag
+2. Follow the compile instructions for your system, adding the `-DCMAKE_BUILD_TYPE=Debug` build flag
 3. Start Qt Creator. At the start page, do: `New` -> `Import Project` -> `Import Existing Project`
 4. Enter `bitcoin-qt` as the Project Name and enter the absolute path to `src/qt` as Location
 5. Check over the file selection, you may need to select the `forms` directory (necessary if you intend to edit *.ui files)
