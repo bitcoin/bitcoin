@@ -16,6 +16,7 @@ from test_framework.messages import (
     MAX_PROTOCOL_MESSAGE_LENGTH,
     msg_getdata,
     msg_headers,
+    msg_headers2,
     msg_inv,
     MSG_TX,
     msg_version,
