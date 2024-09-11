@@ -70,14 +70,6 @@ StatsdClient::StatsdClient(const std::string& host, const std::string& nodename,
         return;
     }
 
-    SOCKET hSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (hSocket == INVALID_SOCKET) {
-        LogPrintf("ERROR: Cannot create socket (socket() returned error %s), cannot init StatsdClient\n",
-                  NetworkErrorString(WSAGetLastError()));
-        return;
-    }
-    m_sock = std::make_unique<Sock>(hSocket);
-
     CNetAddr netaddr;
     if (!LookupHost(m_host, netaddr, /*fAllowLookup=*/true)) {
         LogPrintf("ERROR: Unable to lookup host %s, cannot init StatsdClient\n", m_host);
@@ -92,7 +84,13 @@ StatsdClient::StatsdClient(const std::string& host, const std::string& nodename,
         return;
     }
 
-    m_init = true;
+    SOCKET hSocket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (hSocket == INVALID_SOCKET) {
+        LogPrintf("ERROR: Cannot create socket (socket() returned error %s), cannot init StatsdClient\n",
+                  NetworkErrorString(WSAGetLastError()));
+        return;
+    }
+    m_sock = std::make_unique<Sock>(hSocket);
 
     LogPrintf("StatsdClient initialized to transmit stats to %s:%d\n", m_host, m_port);
 }
@@ -140,6 +138,10 @@ int StatsdClient::timing(const std::string& key, int64_t ms, float sample_rate)
 
 int StatsdClient::send(std::string key, int64_t value, const std::string& type, float sample_rate)
 {
+    if (!m_sock) {
+        return -3;
+    }
+
     if (!ShouldSend(sample_rate)) {
         return 0;
     }
@@ -160,6 +162,10 @@ int StatsdClient::send(std::string key, int64_t value, const std::string& type, 
 
 int StatsdClient::sendDouble(std::string key, double value, const std::string& type, float sample_rate)
 {
+    if (!m_sock) {
+        return -3;
+    }
+
     if (!ShouldSend(sample_rate)) {
         return 0;
     }
@@ -180,8 +186,7 @@ int StatsdClient::sendDouble(std::string key, double value, const std::string& t
 
 int StatsdClient::send(const std::string& message)
 {
-    if (!m_init)
-        return -3;
+    assert(m_sock);
 
     if (::sendto(m_sock->Get(), message.data(), message.size(), /*flags=*/0,
                  reinterpret_cast<struct sockaddr*>(&m_server.first), m_server.second) == SOCKET_ERROR) {

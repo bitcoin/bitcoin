@@ -63,7 +63,6 @@ class StatsdClient {
         mutable Mutex cs;
         mutable FastRandomContext insecure_rand GUARDED_BY(cs);
 
-        bool m_init{false};
         std::unique_ptr<Sock> m_sock{nullptr};
         std::pair<struct sockaddr_storage, socklen_t> m_server{{}, sizeof(struct sockaddr_storage)};
 
