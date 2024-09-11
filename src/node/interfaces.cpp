@@ -841,10 +841,7 @@ public:
     }
     bool deleteRwSettings(const std::string& name, interfaces::SettingsAction action) override
     {
-        args().LockSettings([&](common::Settings& settings) {
-            settings.rw_settings.erase(name);
-        });
-        return action != interfaces::SettingsAction::WRITE || args().WriteSettingsFile();
+        return overwriteRwSetting(name, {}, action);
     }
     void requestMempoolTransactions(Notifications& notifications) override
     {

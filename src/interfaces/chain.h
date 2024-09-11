@@ -369,6 +369,8 @@ public:
     virtual bool overwriteRwSetting(const std::string& name, common::SettingsValue value, SettingsAction action = SettingsAction::WRITE) = 0;
 
     //! Delete a given setting in <datadir>/settings.json.
+    //! This method provides a simpler alternative to overwriteRwSetting when
+    //! erasing a setting, for ease of use and readability.
     virtual bool deleteRwSettings(const std::string& name, SettingsAction action = SettingsAction::WRITE) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
