@@ -23,5 +23,4 @@ export BITCOIN_CONFIG="\
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern' \
 "
-export CCACHE_MAXSIZE=200M
 export LLVM_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-18"
