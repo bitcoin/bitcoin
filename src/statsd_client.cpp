@@ -61,9 +61,12 @@ bool StatsdClient::ShouldSend(float sample_rate)
     return sample_rate > std::uniform_real_distribution<float>(0.f, 1.f)(insecure_rand);
 }
 
-StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, uint16_t port,
-                           const std::string& ns, bool enabled)
-    : m_port{port}, m_host{host}, m_nodename{nodename}, m_ns{ns}
+StatsdClient::StatsdClient(const std::string& host, const std::string& nodename, uint16_t port, const std::string& ns,
+                           bool enabled) :
+    m_port{port},
+    m_host{host},
+    m_nodename{nodename},
+    m_ns{ns}
 {
     if (!enabled) {
         LogPrintf("Transmitting stats are disabled, will not init StatsdClient\n");
@@ -99,22 +102,15 @@ StatsdClient::StatsdClient(const std::string& host, const std::string& nodename,
 void StatsdClient::cleanup(std::string& key)
 {
     auto pos = key.find_first_of(":|@");
-    while (pos != std::string::npos)
-    {
+    while (pos != std::string::npos) {
         key[pos] = '_';
         pos = key.find_first_of(":|@");
     }
 }
 
-bool StatsdClient::dec(const std::string& key, float sample_rate)
-{
-    return count(key, -1, sample_rate);
-}
+bool StatsdClient::dec(const std::string& key, float sample_rate) { return count(key, -1, sample_rate); }
 
-bool StatsdClient::inc(const std::string& key, float sample_rate)
-{
-    return count(key, 1, sample_rate);
-}
+bool StatsdClient::inc(const std::string& key, float sample_rate) { return count(key, 1, sample_rate); }
 
 bool StatsdClient::count(const std::string& key, int64_t value, float sample_rate)
 {
@@ -148,8 +144,7 @@ bool StatsdClient::send(std::string key, int64_t value, const std::string& type,
     }
 
     // partition stats by node name if set
-    if (!m_nodename.empty())
-        key = key + "." + m_nodename;
+    if (!m_nodename.empty()) key = key + "." + m_nodename;
 
     cleanup(key);
 
@@ -173,8 +168,7 @@ bool StatsdClient::sendDouble(std::string key, double value, const std::string& 
     }
 
     // partition stats by node name if set
-    if (!m_nodename.empty())
-        key = key + "." + m_nodename;
+    if (!m_nodename.empty()) key = key + "." + m_nodename;
 
     cleanup(key);
 

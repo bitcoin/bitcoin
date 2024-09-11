@@ -22,7 +22,7 @@ static const std::string DEFAULT_STATSD_NAMESPACE{""};
 // schedule periodic measurements, in seconds: default - 1 minute, min - 5 sec, max - 1h.
 static constexpr int DEFAULT_STATSD_PERIOD{60};
 static constexpr int MIN_STATSD_PERIOD{5};
-static constexpr int MAX_STATSD_PERIOD{60*60};
+static constexpr int MAX_STATSD_PERIOD{60 * 60};
 
 namespace statsd {
 class StatsdClient {
