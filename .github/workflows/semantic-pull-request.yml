@@ -47,3 +47,4 @@ jobs:
             utils
             wallet
             zmq
+            stats
