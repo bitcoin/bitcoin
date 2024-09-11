@@ -26,6 +26,7 @@ std::string GetArgumentName(const std::string& name)
     }
     return name.substr(0, idx);
 }
+} // namespace
 
 FUZZ_TARGET(system, .init = initialize_system)
 {
@@ -127,4 +128,3 @@ FUZZ_TARGET(system, .init = initialize_system)
 
     (void)HelpRequested(args_manager);
 }
-} // namespace

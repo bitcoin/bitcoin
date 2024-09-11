@@ -186,9 +186,9 @@ void Test(const std::string& str)
     }
 }
 
-void test_init() {}
+} // namespace
 
-FUZZ_TARGET(script_assets_test_minimizer, .init = test_init, .hidden = true)
+FUZZ_TARGET(script_assets_test_minimizer, .hidden = true)
 {
     if (buffer.size() < 2 || buffer.back() != '\n' || buffer[buffer.size() - 2] != ',') return;
     const std::string str((const char*)buffer.data(), buffer.size() - 2);
@@ -197,5 +197,3 @@ FUZZ_TARGET(script_assets_test_minimizer, .init = test_init, .hidden = true)
     } catch (const std::runtime_error&) {
     }
 }
-
-} // namespace

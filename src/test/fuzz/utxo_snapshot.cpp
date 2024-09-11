@@ -184,6 +184,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         setup.LoadVerifyActivateChainstate();
     }
 }
+} // namespace
 
 // There are two fuzz targets:
 //
@@ -196,5 +197,3 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
 // expensive state to be reset.
 FUZZ_TARGET(utxo_snapshot /*valid*/, .init = initialize_chain<false>) { utxo_snapshot_fuzz<false>(buffer); }
 FUZZ_TARGET(utxo_snapshot_invalid, .init = initialize_chain<true>) { utxo_snapshot_fuzz<true>(buffer); }
-
-} // namespace
