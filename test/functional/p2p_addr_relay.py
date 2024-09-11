@@ -326,6 +326,8 @@ class AddrTest(BitcoinTestFramework):
         self.restart_node(0, [])
 
         for conn_type, no_relay in [("outbound-full-relay", False), ("block-relay-only", True), ("inbound", False)]:
+            # Advance the time by 5 * 60 seconds, permitting syncing from the same peer.
+            self.bump_mocktime(5 * 60)
             self.log.info(f'Test rate limiting of addr processing for {conn_type} peers')
             if conn_type == "inbound":
                 peer = self.nodes[0].add_p2p_connection(AddrReceiver())

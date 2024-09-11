@@ -455,7 +455,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # must have a timestamp not too old (see IsInitialBlockDownload()).
             if not self.disable_mocktime:
                 self.log.debug('Generate a block with current mocktime')
-                self.bump_mocktime(156 * 200)
+                self.bump_mocktime(156 * 200, update_schedulers=False)
             block_hash = self.nodes[0].generate(1)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
@@ -813,13 +813,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
 
-    def bump_mocktime(self, t, update_nodes=True, nodes=None):
+    def bump_mocktime(self, t, update_nodes=True, nodes=None, update_schedulers=True):
         if self.mocktime == 0:
             return
 
         self.mocktime += t
-        if update_nodes:
-            set_node_times(nodes or self.nodes, self.mocktime)
+
+        if not update_nodes:
+            return
+
+        nodes_to_update = nodes or self.nodes
+        set_node_times(nodes_to_update, self.mocktime)
+
+        if not update_schedulers:
+            return
+
+        for node in nodes_to_update:
+            if node.version_is_at_least(180100):
+                node.mockscheduler(t)
 
     def _initialize_mocktime(self, is_genesis):
         if is_genesis:
@@ -913,7 +924,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [ADDRESS_BCRT1_P2SH_OP_TRUE]
             assert_equal(len(gen_addresses), 4)
             for i in range(8):
-                self.bump_mocktime((25 if i != 7 else 24) * 156)
+                self.bump_mocktime((25 if i != 7 else 24) * 156, update_schedulers=False)
                 cache_node.generatetoaddress(
                     nblocks=25 if i != 7 else 24,
                     address=gen_addresses[i % len(gen_addresses)],
@@ -1132,13 +1143,13 @@ class DashTestFramework(BitcoinTestFramework):
             # NOTE: getblockchaininfo shows softforks active at block (window * 3 - 1)
             # since it's returning whether a softwork is active for the _next_ block.
             # Hence the last block prior to the activation is (expected_activation_height - 2).
-            while expected_activation_height - height - 2 >= batch_size:
+            while expected_activation_height - height - 2 > batch_size:
                 self.bump_mocktime(batch_size)
                 self.nodes[0].generate(batch_size)
                 height += batch_size
                 self.sync_blocks()
             blocks_left = expected_activation_height - height - 2
-            assert blocks_left < batch_size
+            assert blocks_left <= batch_size
             self.bump_mocktime(blocks_left)
             self.nodes[0].generate(blocks_left)
             self.sync_blocks()
