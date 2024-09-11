@@ -30,6 +30,10 @@ df -h
 # Tests that run natively guess the host
 export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
 
+echo "=== BEGIN env ==="
+env
+echo "=== END env ==="
+
 (
   # compact->outputs[i].file_size is uninitialized memory, so reading it is UB.
   # The statistic bytes_written is only used for logging, which is disabled in
