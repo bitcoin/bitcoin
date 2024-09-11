@@ -132,6 +132,7 @@ include:
   - *wallet* for changes to the wallet code
   - *zmq* for changes to the ZMQ APIs
   - *guix* for changes to the GUIX reproducible builds
+  - *stats* for changes to reporting of statistics
 
 Examples:
 
