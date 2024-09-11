@@ -1,0 +1,105 @@
+<svg width="940" height="1308" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 940 1308">
+<rect width="940" height="1308" x="0" y="0" id="0" fill="#11131f"></rect>
+<path d="M75 1268.5L895 1268.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 1092.5L895 1092.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 917.5L895 917.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 741.5L895 741.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 566.5L895 566.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 391.5L895 391.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 215.5L895 215.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 40.5L895 40.5" fill="none" stroke="var(--transparent-fg)" stroke-opacity="0.25" stroke-dasharray="1"></path>
+<path d="M75 1268.5L895 1268.5" fill="none" stroke="#6E7079" stroke-linecap="round"></path>
+<path d="M107.5 1268L107.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M203.5 1268L203.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M301.5 1268L301.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M397.5 1268L397.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M493.5 1268L493.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M588.5 1268L588.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M684.5 1268L684.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M780.5 1268L780.5 1273" fill="none" stroke="#6E7079"></path>
+<path d="M878.5 1268L878.5 1273" fill="none" stroke="#6E7079"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 1268)" fill="rgb(110, 112, 121)">0 sats</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 1092.5714)" fill="rgb(110, 112, 121)">0.300 BTC</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 917.1429)" fill="rgb(110, 112, 121)">0.600 BTC</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 741.7143)" fill="rgb(110, 112, 121)">0.900 BTC</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 566.2857)" fill="rgb(110, 112, 121)">1.200 BTC</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 390.8571)" fill="rgb(110, 112, 121)">1.500 BTC</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 215.4286)" fill="rgb(110, 112, 121)">1.800 BTC</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" transform="translate(67 40)" fill="rgb(110, 112, 121)">2.100 BTC</text>
+<path d="M-33.2842 0l66.5684 0l0 12l-66.5684 0Z" transform="translate(107.6231 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(107.6231 1276)" fill="#6E7079">Mayıs 2023</text>
+<path d="M-40.0679 0l80.1357 0l0 12l-80.1357 0Z" transform="translate(203.6978 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(203.6978 1276)" fill="#6E7079">Temmuz 2023</text>
+<path d="M-30.0937 0l60.1875 0l0 12l-60.1875 0Z" transform="translate(301.3475 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(301.3475 1276)" fill="#6E7079">Eylül 2023</text>
+<path d="M-34.1946 0l68.3892 0l0 12l-68.3892 0Z" transform="translate(397.4222 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(397.4222 1276)" fill="#6E7079">Kasım 2023</text>
+<path d="M-30.3193 0l60.6387 0l0 12l-60.6387 0Z" transform="translate(587.9966 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(587.9966 1276)" fill="#6E7079">Mart 2024</text>
+<path d="M-33.2842 0l66.5684 0l0 12l-66.5684 0Z" transform="translate(684.0712 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(684.0712 1276)" fill="#6E7079">Mayıs 2024</text>
+<path d="M-40.0679 0l80.1357 0l0 12l-80.1357 0Z" transform="translate(780.1459 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(780.1459 1276)" fill="#6E7079">Temmuz 2024</text>
+<path d="M-30.0937 0l60.1875 0l0 12l-60.1875 0Z" transform="translate(877.7956 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(877.7956 1276)" fill="#6E7079">Eylül 2024</text>
+<path d="M-31.1707 0l62.3413 0l0 12l-62.3413 0Z" transform="translate(493.4969 1276)" fill="none"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font: normal normal 11px sans-serif" xml:space="preserve" y="6" transform="translate(493.4969 1276)" fill="#6E7079">Ocak 2024</text>
+<path d="M-5 -5l119.7168 0l0 24l-119.7168 0Z" transform="translate(415.1416 5)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#ccc" stroke-width="0"></path>
+<path d="M3.5 0L21.5 0A3.5 3.5 0 0 1 25 3.5L25 10.5A3.5 3.5 0 0 1 21.5 14L3.5 14A3.5 3.5 0 0 1 0 10.5L0 3.5A3.5 3.5 0 0 1 3.5 0" transform="translate(415.1416 5)" fill="#8F5FF6"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" xml:space="preserve" x="30" y="7" transform="translate(415.1416 5)" fill="white">Total bid boost</text>
+<path d="M75.0107 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M136.1913 1268l4.1595 0l0 -1.8944l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M229.2366 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M450.1586 1268l4.1595 0l0 -12.7109l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M466.1634 1268l4.1595 0l0 -1.8677l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M475.9004 1268l4.1595 0l0 -32.8104l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M498.3087 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M504.7109 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M515.6099 1268l4.1595 0l0 -9.0708l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M520.5736 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M532.2442 1268l4.1595 0l0 -235.8577l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M538.5731 1268l4.1595 0l0 -1072.3463l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M543.1947 1268l4.1595 0l0 -16.06l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M554.3146 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M561.5052 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M578.7004 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M593.9878 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M601.3431 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M610.4086 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M616.8764 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M625.3675 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M631.1467 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M642.7397 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M648.98 1268l4.1595 0l0 -21.2454l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M654.89 1268l4.1595 0l0 -6.6387l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M664.0777 1268l4.1595 0l0 -3.1796l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M672.1138 1268l4.1595 0l0 -2.9701l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M680.0994 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M687.3712 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M696.5898 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M704.2453 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M710.4239 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M719.226 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M727.8697 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M737.638 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M742.5326 1268l4.1595 0l0 -2.2292l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M750.62 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M759.0836 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M765.3705 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M775.0782 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M781.9082 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M791.0717 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M797.4366 1268l4.1595 0l0 -1.6134l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M805.5128 1268l4.1595 0l0 -5.4174l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M813.9693 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M822.0963 1268l4.1595 0l0 -1.3428l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M829.3106 1268l4.1595 0l0 -1.38l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M837.6934 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M845.5183 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M854.024 1268l4.1595 0l0 -2.136l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M860.5515 1268l4.1595 0l0 -16.5443l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M869.3619 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M877.0876 1268l4.1595 0l0 -1.4592l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M884.6105 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+<path d="M890.8299 1268l4.1595 0l0 -1l-4.1595 0Z" fill="#8F5FF6"></path>
+</svg>

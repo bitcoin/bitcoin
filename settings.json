@@ -1,0 +1,21 @@
+{
+    "jake.autoDetect": "on",
+    "grunt.autoDetect": "on",
+    "window.confirmBeforeClose": "open",
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "parallels-desktop.extension.path": "/home/codespace/.parallels-desktop-vscode",
+    "editor.columnSelection": true,
+    "workbench.sideBar.location": "right",
+    "redhat.telemetry.enabled": true,
+    "yaml.schemas": {
+        "file:///home/codespace/.vscode-remote/extensions/atlassian.atlascode-3.0.10/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml"
+    },
+    "notebook.lineNumbers": "on",
+    "diffEditor.maxComputationTime": 0,
+    "workbench.editor.highlightModifiedTabs": true,
+    "workbench.editor.enablePreviewFromQuickOpen": true,
+    "workbench.editor.doubleClickTabToToggleEditorGroupSizes": "maximize",
+    "workbench.editor.enablePreviewFromCodeNavigation": true,
+    "workbench.editor.defaultBinaryEditor": "polyglot-notebook"
+}
