@@ -555,7 +555,7 @@ See the functional test documentation for how to invoke perf within tests.
 Bitcoin Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
 conditions, or undefined behavior. This is controlled with the
-`--with-sanitizers` configure flag, which should be a comma separated list of
+`-DSANITIZERS` cmake build flag, which should be a comma separated list of
 sanitizers to enable. The sanitizer list should correspond to supported
 `-fsanitize=` options in your compiler. These sanitizers have runtime overhead,
 so they are most useful when testing changes or producing debugging builds.
@@ -564,10 +564,10 @@ Some examples:
 
 ```bash
 # Enable both the address sanitizer and the undefined behavior sanitizer
-./configure --with-sanitizers=address,undefined
+cmake -B build -DSANITIZERS=address,undefined
 
 # Enable the thread sanitizer
-./configure --with-sanitizers=thread
+cmake -B build -DSANITIZERS=thread
 ```
 
 If you are compiling with GCC you will typically need to install corresponding
@@ -589,7 +589,7 @@ See the CI config for more examples, and upstream documentation for more informa
 about any additional options.
 
 Not all sanitizer options can be enabled at the same time, e.g. trying to build
-with `--with-sanitizers=address,thread` will fail in the configure script as
+with `-DSANITIZERS=address,thread` will fail in the configure script as
 these sanitizers are mutually incompatible. Refer to your compiler manual to
 learn more about these options and which sanitizers are supported by your
 compiler.
@@ -603,7 +603,6 @@ Additional resources:
  * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
  * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
  * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
- * [Issue #12691: Enable -fsanitize flags in Travis](https://github.com/bitcoin/bitcoin/issues/12691)
 
 Locking/mutex usage notes
 -------------------------
