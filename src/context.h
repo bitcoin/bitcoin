@@ -8,6 +8,7 @@
 #include <functional>
 #include <variant>
 
+class ArgsManager;
 class ChainstateManager;
 class CTxMemPool;
 class CBlockPolicyEstimator;
@@ -16,6 +17,7 @@ struct NodeContext;
 struct WalletContext;
 
 using CoreContext = std::variant<std::monostate,
+                                 std::reference_wrapper<ArgsManager>,
                                  std::reference_wrapper<NodeContext>,
                                  std::reference_wrapper<WalletContext>,
                                  std::reference_wrapper<CTxMemPool>,
