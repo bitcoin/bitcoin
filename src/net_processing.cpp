@@ -1699,9 +1699,9 @@ void PeerManagerImpl::Misbehaving(const NodeId pnode, const int howmuch, const s
     if (score_now >= DISCOURAGEMENT_THRESHOLD && score_before < DISCOURAGEMENT_THRESHOLD) {
         warning = " DISCOURAGE THRESHOLD EXCEEDED";
         peer->m_should_discourage = true;
-        statsClient.inc("misbehavior.banned", 1.0f);
+        ::g_stats_client->inc("misbehavior.banned", 1.0f);
     } else {
-        statsClient.count("misbehavior.amount", howmuch, 1.0);
+        ::g_stats_client->count("misbehavior.amount", howmuch, 1.0);
     }
 
     LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s%s\n",
@@ -3290,7 +3290,7 @@ void PeerManagerImpl::ProcessMessage(
     AssertLockHeld(g_msgproc_mutex);
 
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom.GetId());
-    statsClient.inc("message.received." + SanitizeString(msg_type), 1.0f);
+    ::g_stats_client->inc("message.received." + SanitizeString(msg_type), 1.0f);
 
     const bool is_masternode = m_mn_activeman != nullptr;
 
@@ -3789,7 +3789,7 @@ void PeerManagerImpl::ProcessMessage(
             if (inv.IsMsgBlk()) {
                 const bool fAlreadyHave = AlreadyHaveBlock(inv.hash);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
-                statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
+                ::g_stats_client->inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
                 UpdateBlockAvailability(pfrom.GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !IsBlockRequested(inv.hash)) {
@@ -3804,7 +3804,7 @@ void PeerManagerImpl::ProcessMessage(
             } else {
                 const bool fAlreadyHave = AlreadyHave(inv);
                 LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom.GetId());
-                statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
+                ::g_stats_client->inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
                 static std::set<int> allowWhileInIBDObjs = {
                         MSG_SPORK

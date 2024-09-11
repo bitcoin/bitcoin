@@ -51,8 +51,8 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 
     LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
              m_orphans.size(), m_outpoint_to_orphan_it.size());
-    statsClient.inc("transactions.orphans.add", 1.0f);
-    statsClient.gauge("transactions.orphans", m_orphans.size());
+    ::g_stats_client->inc("transactions.orphans.add", 1.0f);
+    ::g_stats_client->gauge("transactions.orphans", m_orphans.size());
 
     return true;
 }
@@ -87,8 +87,8 @@ int TxOrphanage::EraseTx(const uint256& txid)
     assert(m_orphan_tx_size >= it->second.nTxSize);
     m_orphan_tx_size -= it->second.nTxSize;
     m_orphans.erase(it);
-    statsClient.inc("transactions.orphans.remove", 1.0f);
-    statsClient.gauge("transactions.orphans", m_orphans.size());
+    ::g_stats_client->inc("transactions.orphans.remove", 1.0f);
+    ::g_stats_client->gauge("transactions.orphans", m_orphans.size());
     return 1;
 }
 

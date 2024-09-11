@@ -39,6 +39,7 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <spork.h>
+#include <statsd_client.h>
 #include <streams.h>
 #include <test/util/index.h>
 #include <txdb.h>
@@ -182,6 +183,13 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
+    ::g_stats_client = std::make_unique<statsd::StatsdClient>(
+        m_node.args->GetArg("-statshost", DEFAULT_STATSD_HOST),
+        m_node.args->GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
+        m_node.args->GetArg("-statsport", DEFAULT_STATSD_PORT),
+        m_node.args->GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),
+        m_node.args->GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)
+    );
     m_node.chain = interfaces::MakeChain(m_node);
 
     m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
@@ -217,6 +225,7 @@ BasicTestingSetup::~BasicTestingSetup()
     m_node.connman.reset();
     m_node.addrman.reset();
     m_node.netgroupman.reset();
+    ::g_stats_client.reset();
 
     LogInstance().DisconnectTestLogger();
     fs::remove_all(m_path_root);
