@@ -37,6 +37,8 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 const std::function<std::string()> G_TEST_GET_FULL_NAME{};
 
+std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+
 /**
  * A copy of the command line arguments that start with `--`.
  * First `LLVMFuzzerInitialize()` is called, which saves the arguments to `g_args`.
