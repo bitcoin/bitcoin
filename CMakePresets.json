@@ -35,6 +35,63 @@
         "BUILD_GUI": "ON",
         "WITH_QRENCODE": "OFF"
       }
+    },
+    {
+      "name": "libfuzzer",
+      "displayName": "Build for fuzzing with libfuzzer, and sanitizers enabled",
+      "binaryDir": "${sourceDir}/build_fuzz",
+      "cacheVariables": {
+        "BUILD_FOR_FUZZING": "ON",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_C_FLAGS": "-ftrivial-auto-var-init=pattern",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-ftrivial-auto-var-init=pattern",
+        "SANITIZERS": "undefined,address,fuzzer"
+      }
+    },
+    {
+      "name": "libfuzzer-nosan",
+      "displayName": "Build for fuzzing with libfuzzer, and sanitizers disabled",
+      "binaryDir": "${sourceDir}/build_fuzz_nosan",
+      "cacheVariables": {
+        "BUILD_FOR_FUZZING": "ON",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "SANITIZERS": "fuzzer"
+      }
+    },
+    {
+      "name": "dev-mode",
+      "displayName": "Developer mode, with all features/dependencies enabled",
+      "binaryDir": "${sourceDir}/build_dev_mode",
+      "cacheVariables": {
+        "BUILD_BENCH": "ON",
+        "BUILD_CLI": "ON",
+        "BUILD_DAEMON": "ON",
+        "BUILD_FUZZ_BINARY": "ON",
+        "BUILD_GUI": "ON",
+        "BUILD_GUI_TESTS": "ON",
+        "BUILD_KERNEL_LIB": "ON",
+        "BUILD_SHARED_LIBS": "ON",
+        "BUILD_TESTING": "ON",
+        "BUILD_TESTS": "ON",
+        "BUILD_TX": "ON",
+        "BUILD_UTIL": "ON",
+        "BUILD_UTIL_CHAINSTATE": "ON",
+        "BUILD_WALLET_TOOL": "ON",
+        "ENABLE_EXTERNAL_SIGNER": "ON",
+        "ENABLE_HARDENING": "ON",
+        "ENABLE_WALLET": "ON",
+        "WARN_INCOMPATIBLE_BDB": "OFF",
+        "WITH_BDB": "ON",
+        "WITH_MINIUPNPC": "ON",
+        "WITH_MULTIPROCESS": "ON",
+        "WITH_NATPMP": "ON",
+        "WITH_QRENCODE": "ON",
+        "WITH_SQLITE": "ON",
+        "WITH_USDT": "ON",
+        "WITH_ZMQ": "ON"
+      }
     }
   ]
 }
