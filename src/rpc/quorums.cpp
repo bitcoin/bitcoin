@@ -204,7 +204,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_
             const auto& dmn = quorum->members[i];
             UniValue mo(UniValue::VOBJ);
             mo.pushKV("proTxHash", dmn->proTxHash.ToString());
-            mo.pushKV("service", dmn->pdmnState->addr.ToString());
+            mo.pushKV("service", dmn->pdmnState->addr.ToStringAddrPort());
             mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.ToString());
             mo.pushKV("valid", quorum->qc->validMembers[i]);
             if (quorum->qc->validMembers[i]) {
@@ -338,7 +338,7 @@ static RPCHelpMan quorum_dkgstatus()
                         ecj.pushKV("proTxHash", ec.ToString());
                         if (foundConnections.count(ec)) {
                             ecj.pushKV("connected", true);
-                            ecj.pushKV("address", foundConnections[ec].ToString());
+                            ecj.pushKV("address", foundConnections[ec].ToStringAddrPort());
                         } else {
                             ecj.pushKV("connected", false);
                         }

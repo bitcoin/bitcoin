@@ -1374,7 +1374,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
                           nonce, strSubVersion, nNodeStartingHeight, tx_relay, mnauthChallenge, pnode.m_masternode_connection.load()));
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addr_you.ToString(), tx_relay, nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addr_you.ToStringAddrPort(), tx_relay, nodeid);
     } else {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, txrelay=%d, peer=%d\n", nProtocolVersion, nNodeStartingHeight, tx_relay, nodeid);
     }
@@ -3377,7 +3377,7 @@ void PeerManagerImpl::ProcessMessage(
         // Disconnect if we connected to ourself
         if (pfrom.IsInboundConn() && !m_connman.CheckIncomingNonce(nNonce))
         {
-            LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToString());
+            LogPrintf("connected to self at %s, disconnecting\n", pfrom.addr.ToStringAddrPort());
             pfrom.fDisconnect = true;
             return;
         }
@@ -3464,7 +3464,7 @@ void PeerManagerImpl::ProcessMessage(
                 FastRandomContext insecure_rand;
                 if (addr.IsRoutable())
                 {
-                    LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToString());
+                    LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToStringAddrPort());
                     PushAddress(*peer, addr, insecure_rand);
                 } else if (IsPeerAddrLocalGood(&pfrom)) {
                     // Override just the address with whatever the peer sees us as.
@@ -3472,7 +3472,7 @@ void PeerManagerImpl::ProcessMessage(
                     // above, as this is an outbound connection and the peer cannot
                     // observe our listening port.
                     addr.SetIP(addrMe);
-                    LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToString());
+                    LogPrint(BCLog::NET, "ProcessMessages: advertising address %s\n", addr.ToStringAddrPort());
                     PushAddress(*peer, addr, insecure_rand);
                 }
             }
@@ -3505,11 +3505,11 @@ void PeerManagerImpl::ProcessMessage(
 
         std::string remoteAddr;
         if (fLogIPs)
-            remoteAddr = ", peeraddr=" + pfrom.addr.ToString();
+            remoteAddr = ", peeraddr=" + pfrom.addr.ToStringAddrPort();
 
         LogPrint(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s\n",
                   cleanSubVer, pfrom.nVersion,
-                  peer->m_starting_height, addrMe.ToString(), fRelay, pfrom.GetId(),
+                  peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
                   remoteAddr);
 
         int64_t nTimeOffset = nTime - GetTime();
@@ -3544,7 +3544,7 @@ void PeerManagerImpl::ProcessMessage(
         if (!pfrom.IsInboundConn()) {
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), peer->m_starting_height,
-                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
+                      pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToStringAddrPort()) : ""),
                       pfrom.ConnectionTypeAsString());
         }
 

@@ -43,15 +43,16 @@ static RPCHelpMan masternode_connect()
 {
     std::string strAddress = request.params[0].get_str();
 
-    CService addr;
-    if (!Lookup(strAddress, addr, 0, false))
+    std::optional<CService> addr{Lookup(strAddress, 0, false)};
+    if (!addr.has_value()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
+    }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    connman.OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!connman.IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    connman.OpenMasternodeConnection(CAddress(addr.value(), NODE_NETWORK));
+    if (!connman.IsConnected(CAddress(addr.value(), NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to masternode %s", strAddress));
 
     return "successfully connected";
@@ -115,7 +116,7 @@ static UniValue GetNextMasternodeForPayment(const CChain& active_chain, CDetermi
     UniValue obj(UniValue::VOBJ);
 
     obj.pushKV("height",        mnList.GetHeight() + heightShift);
-    obj.pushKV("IP:port",       payee->pdmnState->addr.ToString());
+    obj.pushKV("IP:port",       payee->pdmnState->addr.ToStringAddrPort());
     obj.pushKV("proTxHash",     payee->proTxHash.ToString());
     obj.pushKV("outpoint",      payee->collateralOutpoint.ToStringShort());
     obj.pushKV("payee",         IsValidDestination(payeeDest) ? EncodeDestination(payeeDest) : "UNKNOWN");
@@ -219,7 +220,7 @@ static RPCHelpMan masternode_status()
     UniValue mnObj(UniValue::VOBJ);
     // keep compatibility with legacy status for now (might get deprecated/removed later)
     mnObj.pushKV("outpoint", node.mn_activeman->GetOutPoint().ToStringShort());
-    mnObj.pushKV("service", node.mn_activeman->GetService().ToString());
+    mnObj.pushKV("service", node.mn_activeman->GetService().ToStringAddrPort());
     CDeterministicMNCPtr dmn = node.dmnman->GetListAtChainTip().GetMN(node.mn_activeman->GetProTxHash());
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
@@ -612,7 +613,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         }
 
         if (strMode == "addr") {
-            std::string strAddress = dmn.pdmnState->addr.ToString();
+            std::string strAddress = dmn.pdmnState->addr.ToStringAddrPort();
             if (strFilter !="" && strAddress.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, strAddress);
@@ -624,7 +625,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                            payeeStr << " " << std::setw(10) <<
                            dmnToLastPaidTime(dmn) << " "  << std::setw(6) <<
                            dmn.pdmnState->nLastPaidHeight << " " <<
-                           dmn.pdmnState->addr.ToString();
+                           dmn.pdmnState->addr.ToStringAddrPort();
             std::string strFull = streamFull.str();
             if (strFilter !="" && strFull.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
@@ -635,7 +636,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                            dmnToStatus(dmn) << " " <<
                            dmn.pdmnState->nPoSePenalty << " " <<
                            payeeStr << " " <<
-                           dmn.pdmnState->addr.ToString();
+                           dmn.pdmnState->addr.ToStringAddrPort();
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
@@ -643,7 +644,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         } else if (strMode == "json" || strMode == "recent" || strMode == "evo") {
             std::ostringstream streamInfo;
             streamInfo <<  dmn.proTxHash.ToString() << " " <<
-                           dmn.pdmnState->addr.ToString() << " " <<
+                           dmn.pdmnState->addr.ToStringAddrPort() << " " <<
                            payeeStr << " " <<
                            dmnToStatus(dmn) << " " <<
                            dmn.pdmnState->nPoSePenalty << " " <<
@@ -658,7 +659,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                 strOutpoint.find(strFilter) == std::string::npos) return;
             UniValue objMN(UniValue::VOBJ);
             objMN.pushKV("proTxHash", dmn.proTxHash.ToString());
-            objMN.pushKV("address", dmn.pdmnState->addr.ToString());
+            objMN.pushKV("address", dmn.pdmnState->addr.ToStringAddrPort());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));

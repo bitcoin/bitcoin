@@ -973,6 +973,17 @@ void InitParameterInteraction(ArgsManager& args)
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
 
+    if (args.IsArgSet("-onlynet")) {
+        const auto onlynets = args.GetArgs("-onlynet");
+        bool clearnet_reachable = std::any_of(onlynets.begin(), onlynets.end(), [](const auto& net) {
+            const auto n = ParseNetwork(net);
+            return n == NET_IPV4 || n == NET_IPV6;
+        });
+        if (!clearnet_reachable && args.SoftSetBoolArg("-dnsseed", false)) {
+            LogPrintf("%s: parameter interaction: -onlynet excludes IPv4 and IPv6 -> setting -dnsseed=0\n", __func__);
+        }
+    }
+
     int64_t nPruneArg = args.GetArg("-prune", 0);
     if (nPruneArg > 0) {
         if (args.SoftSetBoolArg("-disablegovernance", true)) {
@@ -1555,7 +1566,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                 return false;
             }
-            const uint256 asmap_version = SerializeHash(asmap);
+            const uint256 asmap_version = (HashWriter{} << asmap).GetHash();
             LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
         } else {
             LogPrintf("Using /16 prefix for IP bucketing\n");
@@ -1678,6 +1689,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // 2.1. -onlynet is not given or
     // 2.2. -onlynet=cjdns is given
 
+    // Requesting DNS seeds entails connecting to IPv4/IPv6, which -onlynet options may prohibit:
+    // If -dnsseed=1 is explicitly specified, abort. If it's left unspecified by the user, we skip
+    // the DNS seeds by adjusting -dnsseed in InitParameterInteraction.
+    if (args.GetBoolArg("-dnsseed", DEFAULT_DNSSEED) == true && !IsReachable(NET_IPV4) && !IsReachable(NET_IPV6)) {
+        return InitError(strprintf(_("Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")));
+    };
+
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = args.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
@@ -1688,12 +1706,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
     std::string proxyArg = args.GetArg("-proxy", "");
     if (proxyArg != "" && proxyArg != "0") {
-        CService proxyAddr;
-        if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
+        const std::optional<CService> proxyAddr{Lookup(proxyArg, 9050, fNameLookup)};
+        if (!proxyAddr.has_value()) {
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
         }
 
-        Proxy addrProxy = Proxy(proxyAddr, proxyRandomize);
+        Proxy addrProxy = Proxy(proxyAddr.value(), proxyRandomize);
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
 
@@ -1719,11 +1737,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                       "reaching the Tor network is explicitly forbidden: -onion=0"));
             }
         } else {
-            CService addr;
-            if (!Lookup(onionArg, addr, 9050, fNameLookup) || !addr.IsValid()) {
+            const std::optional<CService> addr{Lookup(onionArg, 9050, fNameLookup)};
+            if (!addr.has_value() || !addr->IsValid()) {
                 return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
             }
-            onion_proxy = Proxy{addr, proxyRandomize};
+            onion_proxy = Proxy{addr.value(), proxyRandomize};
         }
     }
 
@@ -1743,9 +1761,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     for (const std::string& strAddr : args.GetArgs("-externalip")) {
-        CService addrLocal;
-        if (Lookup(strAddr, addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
-            AddLocal(addrLocal, LOCAL_MANUAL);
+        const std::optional<CService> addrLocal{Lookup(strAddr, GetListenPort(), fNameLookup)};
+        if (addrLocal.has_value() && addrLocal->IsValid())
+            AddLocal(addrLocal.value(), LOCAL_MANUAL);
         else
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
@@ -2379,19 +2397,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         static_cast<uint16_t>(args.GetArg("-port", Params().GetDefaultPort()));
 
     for (const std::string& bind_arg : args.GetArgs("-bind")) {
-        CService bind_addr;
+        std::optional<CService> bind_addr;
         const size_t index = bind_arg.rfind('=');
         if (index == std::string::npos) {
-            if (Lookup(bind_arg, bind_addr, default_bind_port, /*fAllowLookup=*/false)) {
-                connOptions.vBinds.push_back(bind_addr);
+            bind_addr = Lookup(bind_arg, default_bind_port, /*fAllowLookup=*/false);
+            if (bind_addr.has_value()) {
+                connOptions.vBinds.push_back(bind_addr.value());
                 continue;
             }
         } else {
             const std::string network_type = bind_arg.substr(index + 1);
             if (network_type == "onion") {
                 const std::string truncated_bind_arg = bind_arg.substr(0, index);
-                if (Lookup(truncated_bind_arg, bind_addr, BaseParams().OnionServiceTargetPort(), false)) {
-                    connOptions.onion_binds.push_back(bind_addr);
+                bind_addr = Lookup(truncated_bind_arg, BaseParams().OnionServiceTargetPort(), false);
+                if (bind_addr.has_value()) {
+                    connOptions.onion_binds.push_back(bind_addr.value());
                     continue;
                 }
             }
@@ -2422,7 +2442,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
-                                  onion_service_target.ToStringIPPort()));
+                                  onion_service_target.ToStringAddrPort()));
         }
         StartTorControl(onion_service_target);
     }
@@ -2467,11 +2487,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     const std::string& i2psam_arg = args.GetArg("-i2psam", "");
     if (!i2psam_arg.empty()) {
-        CService addr;
-        if (!Lookup(i2psam_arg, addr, 7656, fNameLookup) || !addr.IsValid()) {
+        const std::optional<CService> addr{Lookup(i2psam_arg, 7656, fNameLookup)};
+        if (!addr.has_value() || !addr->IsValid()) {
             return InitError(strprintf(_("Invalid -i2psam address or hostname: '%s'"), i2psam_arg));
         }
-        SetProxy(NET_I2P, Proxy{addr});
+        SetProxy(NET_I2P, Proxy{addr.value()});
     } else {
         SetReachable(NET_I2P, false);
     }

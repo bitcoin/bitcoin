@@ -25,10 +25,14 @@ std::string CDeterministicMNState::ToString() const
         operatorPayoutAddress = EncodeDestination(dest);
     }
 
-    return strprintf("CDeterministicMNState(nVersion=%d, nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, addr=%s, payoutAddress=%s, operatorPayoutAddress=%s)",
-                     nVersion, nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-                     EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), addr.ToStringIPPort(), payoutAddress, operatorPayoutAddress);
+    return strprintf("CDeterministicMNState(nVersion=%d, nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, "
+                     "nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
+                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, addr=%s, payoutAddress=%s, "
+                     "operatorPayoutAddress=%s)",
+                     nVersion, nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight,
+                     nRevocationReason, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
+                     EncodeDestination(PKHash(keyIDVoting)), addr.ToStringAddrPort(), payoutAddress,
+                     operatorPayoutAddress);
 }
 
 UniValue CDeterministicMNState::ToJson(MnType nType) const
@@ -36,7 +40,7 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
     UniValue obj;
     obj.setObject();
     obj.pushKV("version", nVersion);
-    obj.pushKV("service", addr.ToStringIPPort());
+    obj.pushKV("service", addr.ToStringAddrPort());
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("consecutivePayments", nConsecutivePayments);
@@ -71,7 +75,7 @@ UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
         obj.pushKV("version", state.nVersion);
     }
     if (fields & Field_addr) {
-        obj.pushKV("service", state.addr.ToStringIPPort());
+        obj.pushKV("service", state.addr.ToStringAddrPort());
     }
     if (fields & Field_nRegisteredHeight) {
         obj.pushKV("registeredHeight", state.nRegisteredHeight);

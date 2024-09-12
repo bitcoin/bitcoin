@@ -110,8 +110,14 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s_);
 
-    //! Return the number of (unique) addresses in all tables.
-    size_t size() const;
+    /**
+    * Return size information about addrman.
+    *
+    * @param[in] net              Select addresses only from specified network (nullopt = all)
+    * @param[in] in_new           Select addresses only from one table (true = new, false = tried, nullopt = both)
+    * @return                     Number of unique addresses that match specified options.
+    */
+    size_t Size(std::optional<Network> net = {}, std::optional<bool> in_new = {}) const;
 
     /**
      * Attempt to add one or more addresses to addrman's new table.
@@ -151,11 +157,16 @@ public:
     /**
      * Choose an address to connect to.
      *
-     * @param[in] newOnly  Whether to only select addresses from the new table.
+     * @param[in] new_only Whether to only select addresses from the new table. Passing `true` returns
+     *                     an address from the new table or an empty pair. Passing `false` will return an
+     *                     empty pair or an address from either the new or tried table (it does not
+     *                     guarantee a tried entry).
+     * @param[in] network  Select only addresses of this network (nullopt = all). Passing a network may
+     *                     slow down the search.
      * @return    CAddress The record for the selected peer.
      *            int64_t  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, int64_t> Select(bool newOnly = false) const;
+    std::pair<CAddress, int64_t> Select(bool new_only = false, std::optional<Network> network = std::nullopt) const;
 
     /**
      * Return all or many randomly selected addresses, optionally by network.

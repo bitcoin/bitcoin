@@ -192,7 +192,7 @@ std::optional<bilingual_str> LoadAddrman(const NetGroupManager& netgroupman, con
     const auto path_addr{gArgs.GetDataDirNet() / "peers.dat"};
     try {
         DeserializeFileDB(path_addr, *addrman, CLIENT_VERSION);
-        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->size(), GetTimeMillis() - nStart);
+        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->Size(), GetTimeMillis() - nStart);
     } catch (const DbNotFoundError&) {
         // Addrman can be in an inconsistent state after failure, reset it
         addrman = std::make_unique<AddrMan>(netgroupman, /*deterministic=*/false, /*consistency_check_ratio=*/check_addrman);

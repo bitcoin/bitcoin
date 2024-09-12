@@ -189,7 +189,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("id", stats.nodeid);
         obj.pushKV("addr", stats.m_addr_name);
         if (stats.addrBind.IsValid()) {
-            obj.pushKV("addrbind", stats.addrBind.ToString());
+            obj.pushKV("addrbind", stats.addrBind.ToStringAddrPort());
         }
         if (!(stats.addrLocal.empty())) {
             obj.pushKV("addrlocal", stats.addrLocal);
@@ -509,7 +509,7 @@ static RPCHelpMan getaddednodeinfo()
         UniValue addresses(UniValue::VARR);
         if (info.fConnected) {
             UniValue address(UniValue::VOBJ);
-            address.pushKV("address", info.resolvedAddress.ToString());
+            address.pushKV("address", info.resolvedAddress.ToStringAddrPort());
             address.pushKV("connected", info.fInbound ? "inbound" : "outbound");
             addresses.push_back(address);
         }
@@ -584,7 +584,7 @@ static UniValue GetNetworksInfo()
         obj.pushKV("name", GetNetworkName(network));
         obj.pushKV("limited", !IsReachable(network));
         obj.pushKV("reachable", IsReachable(network));
-        obj.pushKV("proxy", proxy.IsValid() ? proxy.proxy.ToStringIPPort() : std::string());
+        obj.pushKV("proxy", proxy.IsValid() ? proxy.proxy.ToStringAddrPort() : std::string());
         obj.pushKV("proxy_randomize_credentials", proxy.randomize_credentials);
         networks.push_back(obj);
     }
@@ -686,7 +686,7 @@ static RPCHelpMan getnetworkinfo()
         for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost)
         {
             UniValue rec(UniValue::VOBJ);
-            rec.pushKV("address", item.first.ToString());
+            rec.pushKV("address", item.first.ToStringAddr());
             rec.pushKV("port", item.second.nPort);
             rec.pushKV("score", item.second.nScore);
             localAddresses.push_back(rec);
@@ -736,9 +736,10 @@ static RPCHelpMan setban()
         isSubnet = true;
 
     if (!isSubnet) {
-        CNetAddr resolved;
-        LookupHost(request.params[0].get_str(), resolved, false);
-        netAddr = resolved;
+        const std::optional<CNetAddr> addr{LookupHost(request.params[0].get_str(), false)};
+        if (addr.has_value()) {
+            netAddr = addr.value();
+        }
     }
     else
         LookupSubNet(request.params[0].get_str(), subNet);
@@ -953,7 +954,7 @@ static RPCHelpMan getnodeaddresses()
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("time", (int)addr.nTime);
         obj.pushKV("services", (uint64_t)addr.nServices);
-        obj.pushKV("address", addr.ToStringIP());
+        obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
         obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
         ret.push_back(obj);
@@ -995,11 +996,11 @@ static RPCHelpMan addpeeraddress()
     const bool tried{request.params[2].isTrue()};
 
     UniValue obj(UniValue::VOBJ);
-    CNetAddr net_addr;
+    std::optional<CNetAddr> net_addr{LookupHost(addr_string, false)};
     bool success{false};
 
-    if (LookupHost(addr_string, net_addr, false)) {
-        CAddress address{{net_addr, port}, ServiceFlags{NODE_NETWORK}};
+    if (net_addr.has_value()) {
+        CAddress address{{net_addr.value(), port}, ServiceFlags{NODE_NETWORK}};
         address.nTime = GetAdjustedTime();
         // The source address is set equal to the address. This is equivalent to the peer
         // announcing itself.
