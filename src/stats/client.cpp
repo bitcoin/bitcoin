@@ -43,6 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <random>
 
+/** Delimiter segmenting two fully formed Statsd messages */
+static constexpr char STATSD_MSG_DELIMITER{'\n'};
+
 std::unique_ptr<StatsdClient> g_stats_client;
 
 bool StatsdClient::ShouldSend(float sample_rate)
@@ -60,8 +63,8 @@ bool StatsdClient::ShouldSend(float sample_rate)
     return sample_rate > std::uniform_real_distribution<float>(0.f, 1.f)(insecure_rand);
 }
 
-StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t interval_ms, const std::string& nodename,
-                           const std::string& ns, bool enabled) :
+StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
+                           const std::string& nodename, const std::string& ns, bool enabled) :
     m_nodename{nodename},
     m_ns{ns}
 {
@@ -71,7 +74,9 @@ StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t inte
     }
 
     std::optional<std::string> error_opt;
-    m_sender = std::make_unique<RawSender>(host, port, interval_ms, error_opt);
+    m_sender = std::make_unique<RawSender>(host, port,
+                                           std::make_pair(batch_size, static_cast<uint8_t>(STATSD_MSG_DELIMITER)),
+                                           interval_ms, error_opt);
     if (error_opt.has_value()) {
         LogPrintf("ERROR: %s, cannot initialize StatsdClient.\n", error_opt.value());
         m_sender.reset();

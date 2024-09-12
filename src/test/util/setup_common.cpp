@@ -186,6 +186,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     ::g_stats_client = std::make_unique<StatsdClient>(
         m_node.args->GetArg("-statshost", DEFAULT_STATSD_HOST),
         m_node.args->GetArg("-statsport", DEFAULT_STATSD_PORT),
+        m_node.args->GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
         m_node.args->GetArg("-statsduration", DEFAULT_STATSD_DURATION),
         m_node.args->GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
         m_node.args->GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),

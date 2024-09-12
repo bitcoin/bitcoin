@@ -10,10 +10,11 @@
 #include <util/sock.h>
 #include <util/thread.h>
 
-RawSender::RawSender(const std::string& host, uint16_t port, uint64_t interval_ms,
-                     std::optional<std::string>& error) :
+RawSender::RawSender(const std::string& host, uint16_t port, std::pair<uint64_t, uint8_t> batching_opts,
+                     uint64_t interval_ms, std::optional<std::string>& error) :
     m_host{host},
     m_port{port},
+    m_batching_opts{batching_opts},
     m_interval_ms{interval_ms}
 {
     if (host.empty()) {
@@ -105,7 +106,27 @@ std::string RawSender::ToStringHostPort() const { return strprintf("%s:%d", m_ho
 void RawSender::QueueAdd(const RawMessage& msg)
 {
     AssertLockNotHeld(cs);
-    WITH_LOCK(cs, m_queue.push_back(msg));
+    LOCK(cs);
+
+    const auto& [batch_size, batch_delim] = m_batching_opts;
+    // If no batch size has been specified, simply add to queue
+    if (batch_size == 0) {
+        m_queue.push_back(msg);
+        return;
+    }
+
+    // We can batch, either create a new batch in queue or append to existing batch in queue
+    if (m_queue.empty() || m_queue.back().size() + msg.size() >= batch_size) {
+        // Either we don't have a place to batch our message or we exceeded the batch size, make a new batch
+        m_queue.emplace_back();
+        m_queue.back().reserve(batch_size);
+    } else if (!m_queue.back().empty()) {
+        // When there is already a batch open we need a delimiter when its not empty
+        m_queue.back() += batch_delim;
+    }
+
+    // Add the new message to the batch
+    m_queue.back() += msg;
 }
 
 void RawSender::QueueFlush()
