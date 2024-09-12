@@ -7,6 +7,7 @@ Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 '''
+import re
 import sys
 
 import lief
@@ -115,6 +116,25 @@ def check_ELF_CONTROL_FLOW(binary) -> bool:
     if content.tolist() == [243, 15, 30, 250]: # endbr64
         return True
     return False
+
+def check_ELF_FORTIFY(binary) -> bool:
+
+    # bitcoin-util does not currently contain any fortified functions
+    if 'Bitcoin Core bitcoin-util utility version ' in binary.strings:
+        return True
+
+    chk_funcs = set()
+
+    for sym in binary.imported_symbols:
+        match = re.search(r'__[a-z]*_chk', sym.name)
+        if match:
+            chk_funcs.add(match.group(0))
+
+    # ignore stack-protector and bdb
+    chk_funcs.discard('__stack_chk')
+    chk_funcs.discard('__db_chk')
+
+    return len(chk_funcs) >= 1
 
 def check_PE_DYNAMIC_BASE(binary) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
@@ -228,11 +248,11 @@ BASE_MACHO = [
 
 CHECKS = {
     lief.EXE_FORMATS.ELF: {
-        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_CONTROL_FLOW)],
-        lief.ARCHITECTURES.ARM: BASE_ELF,
-        lief.ARCHITECTURES.ARM64: BASE_ELF,
-        lief.ARCHITECTURES.PPC: BASE_ELF,
-        lief.ARCHITECTURES.RISCV: BASE_ELF,
+        lief.ARCHITECTURES.X86: BASE_ELF + [('CONTROL_FLOW', check_ELF_CONTROL_FLOW), ('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.ARM: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.ARM64: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.PPC: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
+        lief.ARCHITECTURES.RISCV: BASE_ELF, # Skip FORTIFY. See https://github.com/lief-project/LIEF/issues/1082.
     },
     lief.EXE_FORMATS.PE: {
         lief.ARCHITECTURES.X86: BASE_PE,
