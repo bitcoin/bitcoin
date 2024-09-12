@@ -33,7 +33,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
 
-#include <statsd_client.h>
+#include <stats/client.h>
 
 #include <compat.h>
 #include <netbase.h>
@@ -43,9 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <random>
 
-std::unique_ptr<statsd::StatsdClient> g_stats_client;
+std::unique_ptr<StatsdClient> g_stats_client;
 
-namespace statsd {
 bool StatsdClient::ShouldSend(float sample_rate)
 {
     sample_rate = std::clamp(sample_rate, 0.f, 1.f);
@@ -193,4 +192,3 @@ bool StatsdClient::send(const std::string& message)
 
     return true;
 }
-} // namespace statsd

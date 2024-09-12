@@ -69,7 +69,7 @@
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
 
-#include <statsd_client.h>
+#include <stats/client.h>
 
 /** Maximum number of in-flight objects from a peer */
 static constexpr int32_t MAX_PEER_OBJECT_IN_FLIGHT = 100;

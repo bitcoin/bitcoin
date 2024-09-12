@@ -39,7 +39,7 @@
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <spork.h>
-#include <statsd_client.h>
+#include <stats/client.h>
 #include <streams.h>
 #include <test/util/index.h>
 #include <txdb.h>
@@ -183,7 +183,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    ::g_stats_client = std::make_unique<statsd::StatsdClient>(
+    ::g_stats_client = std::make_unique<StatsdClient>(
         m_node.args->GetArg("-statshost", DEFAULT_STATSD_HOST),
         m_node.args->GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
         m_node.args->GetArg("-statsport", DEFAULT_STATSD_PORT),

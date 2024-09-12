@@ -41,7 +41,7 @@
 #include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 
-#include <statsd_client.h>
+#include <stats/client.h>
 
 #ifdef WIN32
 #include <string.h>
