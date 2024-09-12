@@ -50,12 +50,18 @@ public:
     /* (Low Level Api) manually send a message
         * type = "c", "g" or "ms"
         */
-    bool send(std::string key, int64_t value, const std::string& type, float sample_rate);
-    bool sendDouble(std::string key, double value, const std::string& type, float sample_rate);
+    bool send(const std::string& key, int64_t value, const std::string& type, float sample_rate = 1.f)
+    {
+        return Send(key, value, type, sample_rate);
+    }
+    bool sendDouble(const std::string& key, double value, const std::string& type, float sample_rate = 1.f)
+    {
+        return Send(key, value, type, sample_rate);
+    }
 
 private:
-    void cleanup(std::string& key);
-    bool ShouldSend(float sample_rate);
+    template <typename T1>
+    bool Send(const std::string& key, T1 value, const std::string& type, float sample_rate);
 
 private:
     mutable Mutex cs;
