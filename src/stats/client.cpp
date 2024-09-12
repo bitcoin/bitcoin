@@ -49,6 +49,8 @@ static constexpr float EPSILON{0.0001f};
 
 /** Delimiter segmenting two fully formed Statsd messages */
 static constexpr char STATSD_MSG_DELIMITER{'\n'};
+/** Delimiter segmenting namespaces in a Statsd key */
+static constexpr char STATSD_NS_DELIMITER{'.'};
 /** Character used to denote Statsd message type as count */
 static constexpr char STATSD_METRIC_COUNT[]{"c"};
 /** Character used to denote Statsd message type as gauge */
@@ -76,21 +78,41 @@ std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
         is_enabled = true;
     }
 
+    auto sanitize_string = [](std::string& string) {
+        // Remove key delimiters from the front and back as they're added back
+        // in formatting
+        if (!string.empty()) {
+            if (string.front() == STATSD_NS_DELIMITER) string.erase(string.begin());
+            if (string.back() == STATSD_NS_DELIMITER) string.pop_back();
+        }
+    };
+
+    // Get our suffix and if we get nothing, try again with the deprecated
+    // argument. If we still get nothing, that's fine, suffixes are optional.
+    auto suffix = args.GetArg("-statssuffix", DEFAULT_STATSD_SUFFIX);
+    if (suffix.empty()) {
+        suffix = args.GetArg("-statshostname", DEFAULT_STATSD_SUFFIX);
+    } else {
+        // We restrict sanitization logic to our newly added arguments to
+        // prevent breaking changes.
+        sanitize_string(suffix);
+    }
+
     return std::make_unique<StatsdClient>(
         host,
         args.GetArg("-statsport", DEFAULT_STATSD_PORT),
         args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
         args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
-        args.GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
         args.GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),
+        suffix,
         is_enabled
     );
 }
 
 StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
-                           const std::string& nodename, const std::string& ns, bool enabled) :
-    m_nodename{nodename},
-    m_ns{ns}
+                           const std::string& ns, const std::string& suffix, bool enabled) :
+    m_ns{ns},
+    m_suffix{[suffix]() { return !suffix.empty() ? STATSD_NS_DELIMITER + suffix : suffix; }()}
 {
     if (!enabled) {
         LogPrintf("Transmitting stats are disabled, will not init StatsdClient\n");
@@ -154,11 +176,8 @@ bool StatsdClient::send(const std::string& key, T1 value, const std::string& typ
         return true;
     }
 
-    // partition stats by node name if set
-    if (!m_nodename.empty()) key = key + "." + m_nodename;
-
     // Construct the message and if our message isn't always-send, report the sample rate
-    RawMessage msg{strprintf("%s%s:%f|%s", m_ns, key, value, type)};
+    RawMessage msg{strprintf("%s%s%s:%f|%s", m_ns, key, m_suffix, value, type)};
     if (!always_send) {
         msg += strprintf("|@%.2f", sample_rate);
     }
