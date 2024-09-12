@@ -771,7 +771,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
-    argsman.AddArg("-statsenabled", strprintf("Publish internal stats to statsd (default: %u)", DEFAULT_STATSD_ENABLE), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
+    hidden_args.emplace_back("-statsenabled");
     argsman.AddArg("-statsbatchsize=<bytes>", strprintf("Specify the size of each batch of stats messages (default: %d)", DEFAULT_STATSD_BATCH_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statsduration=<ms>", strprintf("Specify the number of milliseconds between stats messages (default: %d)", DEFAULT_STATSD_DURATION), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statshost=<ip>", strprintf("Specify statsd host (default: %s)", DEFAULT_STATSD_HOST), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
@@ -838,7 +838,7 @@ static void StartupNotify(const ArgsManager& args)
 
 static void PeriodicStats(ArgsManager& args, ChainstateManager& chainman, const CTxMemPool& mempool)
 {
-    assert(args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
+    assert(::g_stats_client->active());
     CCoinsStats stats{CoinStatsHashType::NONE};
     chainman.ActiveChainstate().ForceFlushStateToDisk();
     if (WITH_LOCK(cs_main, return GetUTXOStats(&chainman.ActiveChainstate().CoinsDB(), std::ref(chainman.m_blockman), stats, RpcInterruptionPoint, chainman.ActiveChain().Tip()))) {
@@ -1541,13 +1541,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // We need to initialize g_stats_client early as currently, g_stats_client is called
     // regardless of whether transmitting stats are desirable or not and if
     // g_stats_client isn't present when that attempt is made, the client will crash.
-    ::g_stats_client = std::make_unique<StatsdClient>(args.GetArg("-statshost", DEFAULT_STATSD_HOST),
-                                                      args.GetArg("-statsport", DEFAULT_STATSD_PORT),
-                                                      args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
-                                                      args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
-                                                      args.GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
-                                                      args.GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),
-                                                      args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
+    ::g_stats_client = InitStatsClient(args);
 
     {
 
@@ -2278,7 +2272,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #endif // ENABLE_WALLET
     }
 
-    if (args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
+    if (::g_stats_client->active()) {
         int nStatsPeriod = std::min(std::max((int)args.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
         node.scheduler->scheduleEvery(std::bind(&PeriodicStats, std::ref(*node.args), std::ref(chainman), std::cref(*node.mempool)), std::chrono::seconds{nStatsPeriod});
     }

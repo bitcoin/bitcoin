@@ -1688,7 +1688,7 @@ void CConnman::NotifyNumConnectionsChanged(CMasternodeSync& mn_sync)
 
 void CConnman::CalculateNumConnectionsChangedStats()
 {
-    if (!gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
+    if (!::g_stats_client->active()) {
         return;
     }
 

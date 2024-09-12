@@ -59,6 +59,34 @@ static constexpr char STATSD_METRIC_TIMING[]{"ms"};
 
 std::unique_ptr<StatsdClient> g_stats_client;
 
+std::unique_ptr<StatsdClient> InitStatsClient(const ArgsManager& args)
+{
+    auto is_enabled = args.GetBoolArg("-statsenabled", /*fDefault=*/false);
+    auto host = args.GetArg("-statshost", /*fDefault=*/"");
+
+    if (is_enabled && host.empty()) {
+        // Stats are enabled but host has not been specified, then use
+        // default host. This is to preserve old behavior.
+        host = DEFAULT_STATSD_HOST;
+    } else if (!host.empty()) {
+        // Host is specified but stats are not explcitly enabled. Assume
+        // that if a host has been specified, we want stats enabled. This
+        // is new behaviour and will substitute old behaviour in a future
+        // release.
+        is_enabled = true;
+    }
+
+    return std::make_unique<StatsdClient>(
+        host,
+        args.GetArg("-statsport", DEFAULT_STATSD_PORT),
+        args.GetArg("-statsbatchsize", DEFAULT_STATSD_BATCH_SIZE),
+        args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
+        args.GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
+        args.GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),
+        is_enabled
+    );
+}
+
 StatsdClient::StatsdClient(const std::string& host, uint16_t port, uint64_t batch_size, uint64_t interval_ms,
                            const std::string& nodename, const std::string& ns, bool enabled) :
     m_nodename{nodename},
