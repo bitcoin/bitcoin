@@ -35,7 +35,13 @@ FUZZ_TARGET(hex)
         assert(uint256::FromUserHex(random_hex_string));
     }
     if (const auto result{uint256::FromUserHex(random_hex_string)}) {
-        assert(uint256::FromHex(result->ToString()));
+        const auto result_string{result->ToString()}; // ToString() returns a fixed-length string without "0x" prefix
+        assert(result_string.length() == 64);
+        assert(IsHex(result_string));
+        assert(TryParseHex(result_string));
+        assert(Txid::FromHex(result_string));
+        assert(Wtxid::FromHex(result_string));
+        assert(uint256::FromHex(result_string));
     }
     try {
         (void)HexToPubKey(random_hex_string);

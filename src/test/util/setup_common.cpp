@@ -78,24 +78,6 @@ constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes 
 /** Random context to get unique temp data dirs. Separate from m_rng, which can be seeded from a const env var */
 static FastRandomContext g_rng_temp_path;
 
-std::ostream& operator<<(std::ostream& os, const arith_uint256& num)
-{
-    os << num.ToString();
-    return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const uint160& num)
-{
-    os << num.ToString();
-    return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const uint256& num)
-{
-    os << num.ToString();
-    return os;
-}
-
 struct NetworkSetup
 {
     NetworkSetup()
@@ -605,4 +587,19 @@ CBlock getBlock13b8a()
     };
     stream >> TX_WITH_WITNESS(block);
     return block;
+}
+
+std::ostream& operator<<(std::ostream& os, const arith_uint256& num)
+{
+    return os << num.ToString();
+}
+
+std::ostream& operator<<(std::ostream& os, const uint160& num)
+{
+    return os << num.ToString();
+}
+
+std::ostream& operator<<(std::ostream& os, const uint256& num)
+{
+    return os << num.ToString();
 }
