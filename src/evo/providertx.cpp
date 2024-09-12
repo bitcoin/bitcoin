@@ -87,8 +87,13 @@ std::string CProRegTx::ToString() const
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToStringAddrPort(), (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(), EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+    return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, "
+                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, "
+                     "platformP2PPort=%d, platformHTTPPort=%d)",
+                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), addr.ToStringAddrPort(),
+                     (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
+                     EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort,
+                     platformHTTPPort);
 }
 
 bool CProUpServTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
@@ -111,8 +116,10 @@ std::string CProUpServTx::ToString() const
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s, platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
-                     nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToStringAddrPort(), payee, platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+    return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s, "
+                     "platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)",
+                     nVersion, ToUnderlying(nType), proTxHash.ToString(), addr.ToStringAddrPort(), payee,
+                     platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
 bool CProUpRegTx::IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const
