@@ -268,6 +268,27 @@ def satoshi_round(amount: Union[int, float, str], *, rounding: str) -> Decimal:
     return Decimal(amount).quantize(SATOSHI_PRECISION, rounding=rounding)
 
 
+def ensure_for(*, duration, f, check_interval=0.2):
+    """Check if the predicate keeps returning True for duration.
+
+    check_interval can be used to configure the wait time between checks.
+    Setting check_interval to 0 will allow to have two checks: one in the
+    beginning and one after duration.
+    """
+    # If check_interval is 0 or negative or larger than duration, we fall back
+    # to checking once in the beginning and once at the end of duration
+    if check_interval <= 0 or check_interval > duration:
+        check_interval = duration
+    time_end = time.time() + duration
+    predicate_source = "''''\n" + inspect.getsource(f) + "'''"
+    while True:
+        if not f():
+            raise AssertionError(f"Predicate {predicate_source} became false within {duration} seconds")
+        if time.time() > time_end:
+            return
+        time.sleep(check_interval)
+
+
 def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0):
     """Sleep until the predicate resolves to be True.
 

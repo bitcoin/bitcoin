@@ -12,7 +12,6 @@ import os
 import platform
 import shutil
 import stat
-import time
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
@@ -21,6 +20,7 @@ from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    ensure_for,
     get_rpc_proxy,
 )
 
@@ -373,8 +373,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w2.encryptwallet('test')
         w2.walletpassphrase('test', 1)
         w2.unloadwallet()
-        time.sleep(1.1)
-        assert 'w2' not in self.nodes[0].listwallets()
+        ensure_for(duration=1.1, f=lambda: 'w2' not in self.nodes[0].listwallets())
 
         # Successfully unload all wallets
         for wallet_name in self.nodes[0].listwallets():
