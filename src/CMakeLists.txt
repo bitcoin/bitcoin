@@ -49,6 +49,11 @@ set(SECP256K1_ENABLE_MODULE_RECOVERY ON CACHE BOOL "" FORCE)
 set(SECP256K1_BUILD_BENCHMARK OFF CACHE BOOL "" FORCE)
 set(SECP256K1_BUILD_TESTS ${BUILD_TESTS} CACHE BOOL "" FORCE)
 set(SECP256K1_BUILD_EXHAUSTIVE_TESTS ${BUILD_TESTS} CACHE BOOL "" FORCE)
+if(NOT BUILD_TESTS)
+  # Always skip the ctime tests, if we are building no other tests.
+  # Otherwise, they are built if Valgrind is available. See SECP256K1_VALGRIND.
+  set(SECP256K1_BUILD_CTIME_TESTS ${BUILD_TESTS} CACHE BOOL "" FORCE)
+endif()
 set(SECP256K1_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 include(GetTargetInterface)
 # -fsanitize and related flags apply to both C++ and C,
