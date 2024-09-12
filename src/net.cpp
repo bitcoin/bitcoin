@@ -4145,7 +4145,7 @@ void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     nTotalBytesRecv += bytes;
     ::g_stats_client->count("bandwidth.bytesReceived", bytes, 0.1f);
-    ::g_stats_client->gauge("bandwidth.totalBytesReceived", nTotalBytesRecv, 0.01f);
+    ::g_stats_client->gauge("bandwidth.totalBytesReceived", nTotalBytesRecv.load(), 0.01f);
 }
 
 void CConnman::RecordBytesSent(uint64_t bytes)

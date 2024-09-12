@@ -49,6 +49,12 @@ static constexpr float EPSILON{0.0001f};
 
 /** Delimiter segmenting two fully formed Statsd messages */
 static constexpr char STATSD_MSG_DELIMITER{'\n'};
+/** Character used to denote Statsd message type as count */
+static constexpr char STATSD_METRIC_COUNT[]{"c"};
+/** Character used to denote Statsd message type as gauge */
+static constexpr char STATSD_METRIC_GAUGE[]{"g"};
+/** Characters used to denote Statsd message type as timing */
+static constexpr char STATSD_METRIC_TIMING[]{"ms"};
 } // anonymous namespace
 
 std::unique_ptr<StatsdClient> g_stats_client;
@@ -82,28 +88,28 @@ bool StatsdClient::dec(const std::string& key, float sample_rate) { return count
 
 bool StatsdClient::inc(const std::string& key, float sample_rate) { return count(key, 1, sample_rate); }
 
-bool StatsdClient::count(const std::string& key, int64_t value, float sample_rate)
+bool StatsdClient::count(const std::string& key, int64_t delta, float sample_rate)
 {
-    return send(key, value, "c", sample_rate);
+    return send(key, delta, STATSD_METRIC_COUNT, sample_rate);
 }
 
 bool StatsdClient::gauge(const std::string& key, int64_t value, float sample_rate)
 {
-    return send(key, value, "g", sample_rate);
+    return send(key, value, STATSD_METRIC_GAUGE, sample_rate);
 }
 
 bool StatsdClient::gaugeDouble(const std::string& key, double value, float sample_rate)
 {
-    return sendDouble(key, value, "g", sample_rate);
+    return send(key, value, STATSD_METRIC_GAUGE, sample_rate);
 }
 
-bool StatsdClient::timing(const std::string& key, int64_t ms, float sample_rate)
+bool StatsdClient::timing(const std::string& key, uint64_t ms, float sample_rate)
 {
-    return send(key, ms, "ms", sample_rate);
+    return send(key, ms, STATSD_METRIC_TIMING, sample_rate);
 }
 
 template <typename T1>
-bool StatsdClient::Send(const std::string& key, T1 value, const std::string& type, float sample_rate)
+bool StatsdClient::send(const std::string& key, T1 value, const std::string& type, float sample_rate)
 {
     static_assert(std::is_arithmetic<T1>::value, "Must specialize to an arithmetic type");
 
@@ -137,3 +143,9 @@ bool StatsdClient::Send(const std::string& key, T1 value, const std::string& typ
 
     return true;
 }
+
+template bool StatsdClient::send(const std::string& key, double value, const std::string& type, float sample_rate);
+template bool StatsdClient::send(const std::string& key, int32_t value, const std::string& type, float sample_rate);
+template bool StatsdClient::send(const std::string& key, int64_t value, const std::string& type, float sample_rate);
+template bool StatsdClient::send(const std::string& key, uint32_t value, const std::string& type, float sample_rate);
+template bool StatsdClient::send(const std::string& key, uint64_t value, const std::string& type, float sample_rate);
