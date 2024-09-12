@@ -1170,9 +1170,6 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", spork17_value)
         self.wait_for_sporks_same()
 
-    def activate_dip0024(self, expected_activation_height=None):
-        self.activate_by_name('dip0024', expected_activation_height)
-
     def activate_v19(self, expected_activation_height=None):
         self.activate_by_name('v19', expected_activation_height)
 
@@ -1912,19 +1909,11 @@ class DashTestFramework(BitcoinTestFramework):
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
 
-        # if skip_count != 0:
-        #     self.bump_mocktime(1, nodes=nodes)
-        #     self.nodes[0].generate(skip_count)
-        #     time.sleep(4)
-        # self.sync_blocks(nodes)
-
         self.move_blocks(nodes, skip_count)
 
         q_0 = self.nodes[0].getbestblockhash()
         self.log.info("Expected quorum_0 at:" + str(self.nodes[0].getblockcount()))
-        # time.sleep(4)
         self.log.info("Expected quorum_0 hash:" + str(q_0))
-        # time.sleep(4)
         self.log.info("quorumIndex 0: Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q_0, 1, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("quorumIndex 0: Waiting for quorum connections (init)")
@@ -1936,9 +1925,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         q_1 = self.nodes[0].getbestblockhash()
         self.log.info("Expected quorum_1 at:" + str(self.nodes[0].getblockcount()))
-        # time.sleep(2)
         self.log.info("Expected quorum_1 hash:" + str(q_1))
-        # time.sleep(2)
         self.log.info("quorumIndex 1: Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q_1, 1, expected_members, None, 0, mninfos_online, llmq_type_name)
         self.log.info("quorumIndex 1: Waiting for quorum connections (init)")
@@ -2035,7 +2022,6 @@ class DashTestFramework(BitcoinTestFramework):
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
         self.sync_blocks(nodes)
-        time.sleep(1)
         self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
     def wait_for_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, timeout=10):
