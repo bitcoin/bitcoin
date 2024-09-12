@@ -313,9 +313,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.sync_blocks(nodes=(miner, snapshot_node))
         # Check the base snapshot block was stored and ensure node signals full-node service support
         self.wait_until(lambda: not try_rpc(-1, "Block not found", snapshot_node.getblock, snapshot_block_hash))
-        assert 'NETWORK' in snapshot_node.getnetworkinfo()['localservicesnames']
+        self.wait_until(lambda: 'NETWORK' in snapshot_node.getnetworkinfo()['localservicesnames'])
 
-        # Now the snapshot_node is sync, verify the ibd_node can sync from it
+        # Now that the snapshot_node is synced, verify the ibd_node can sync from it
         self.connect_nodes(snapshot_node.index, ibd_node.index)
         assert 'NETWORK' in ibd_node.getpeerinfo()[0]['servicesnames']
         self.sync_blocks(nodes=(ibd_node, snapshot_node))
@@ -660,7 +660,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
 
         # Once background chain sync completes, the full node must start offering historical blocks again.
-        assert {'NETWORK', 'NETWORK_LIMITED'}.issubset(n2.getnetworkinfo()['localservicesnames'])
+        self.wait_until(lambda: {'NETWORK', 'NETWORK_LIMITED'}.issubset(n2.getnetworkinfo()['localservicesnames']))
 
         completed_idx_state = {
             'basic block filter index': COMPLETE_IDX,
