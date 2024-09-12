@@ -16,13 +16,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
 
-// At least one test is required (in case ENABLE_EXTERNAL_SIGNER is not defined).
-// Workaround for https://github.com/bitcoin/bitcoin/issues/19128
-BOOST_AUTO_TEST_CASE(dummy)
-{
-    BOOST_CHECK(true);
-}
-
 #ifdef ENABLE_EXTERNAL_SIGNER
 
 BOOST_AUTO_TEST_CASE(run_command)

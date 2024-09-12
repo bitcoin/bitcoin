@@ -86,14 +86,6 @@ BOOST_AUTO_TEST_CASE(raii_event_order)
     event_set_mem_functions(malloc, realloc, free);
 }
 
-#else
-
-BOOST_AUTO_TEST_CASE(raii_event_tests_SKIPPED)
-{
-    // It would probably be ideal to report skipped, but boost::test doesn't seem to make that practical (at least not in versions available with common distros)
-    BOOST_TEST_MESSAGE("Skipping raii_event_tess: libevent doesn't support event_set_mem_functions");
-}
-
 #endif  // EVENT_SET_MEM_FUNCTIONS_IMPLEMENTED
 
 BOOST_AUTO_TEST_SUITE_END()
