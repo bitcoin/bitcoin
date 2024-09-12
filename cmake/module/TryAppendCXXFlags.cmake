@@ -32,12 +32,6 @@ Usage examples:
   )
 
 
-  try_append_cxx_flags("-Werror=return-type" TARGET core_interface
-    IF_CHECK_FAILED "-Wno-error=return-type"
-    SOURCE "#include <cassert>\nint f(){ assert(false); }"
-  )
-
-
 In configuration output, this function prints a string by the following pattern:
 
   -- Performing Test CXX_SUPPORTS_[flags]
@@ -49,7 +43,7 @@ function(try_append_cxx_flags flags)
     TACXXF                            # prefix
     "SKIP_LINK"                       # options
     "TARGET;VAR;SOURCE;RESULT_VAR"    # one_value_keywords
-    "IF_CHECK_PASSED;IF_CHECK_FAILED" # multi_value_keywords
+    "IF_CHECK_PASSED"                 # multi_value_keywords
   )
 
   set(flags_as_string "${flags}")
@@ -87,13 +81,6 @@ function(try_append_cxx_flags flags)
       if(DEFINED TACXXF_VAR)
         string(STRIP "${${TACXXF_VAR}} ${flags_as_string}" ${TACXXF_VAR})
       endif()
-    endif()
-  elseif(DEFINED TACXXF_IF_CHECK_FAILED)
-    if(DEFINED TACXXF_TARGET)
-      target_compile_options(${TACXXF_TARGET} INTERFACE ${TACXXF_IF_CHECK_FAILED})
-    endif()
-    if(DEFINED TACXXF_VAR)
-      string(STRIP "${${TACXXF_VAR}} ${TACXXF_IF_CHECK_FAILED}" ${TACXXF_VAR})
     endif()
   endif()
 

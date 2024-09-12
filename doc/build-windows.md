@@ -67,7 +67,6 @@ Build using:
     gmake -C depends HOST=x86_64-w64-mingw32  # Use "-j N" for N parallel jobs.
     cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
     cmake --build build     # Use "-j N" for N parallel jobs.
-    ctest --test-dir build  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 
 ## Depends system
 

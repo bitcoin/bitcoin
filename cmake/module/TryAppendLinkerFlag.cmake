@@ -22,7 +22,7 @@ function(try_append_linker_flag flag)
     TALF                              # prefix
     ""                                # options
     "TARGET;VAR;SOURCE;RESULT_VAR"    # one_value_keywords
-    "IF_CHECK_PASSED;IF_CHECK_FAILED" # multi_value_keywords
+    "IF_CHECK_PASSED"                 # multi_value_keywords
   )
 
   string(MAKE_C_IDENTIFIER "${flag}" result)
@@ -57,13 +57,6 @@ function(try_append_linker_flag flag)
       if(DEFINED TALF_VAR)
         string(STRIP "${${TALF_VAR}} ${flag}" ${TALF_VAR})
       endif()
-    endif()
-  elseif(DEFINED TALF_IF_CHECK_FAILED)
-    if(DEFINED TALF_TARGET)
-      target_link_options(${TALF_TARGET} INTERFACE ${TACXXF_IF_CHECK_FAILED})
-    endif()
-    if(DEFINED TALF_VAR)
-      string(STRIP "${${TALF_VAR}} ${TACXXF_IF_CHECK_FAILED}" ${TALF_VAR})
     endif()
   endif()
 

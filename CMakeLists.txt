@@ -8,12 +8,6 @@
 # Centos Stream 9, https://www.centos.org/cl-vs-cs/#end-of-life, EOL in May 2027:
 #  - CMake 3.26.5, https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/
 cmake_minimum_required(VERSION 3.22)
-if(POLICY CMP0141)
-  # MSVC debug information format flags are selected by an abstraction.
-  # We want to use the CMAKE_MSVC_DEBUG_INFORMATION_FORMAT variable
-  # to select the MSVC debug information format.
-  cmake_policy(SET CMP0141 NEW)
-endif()
 
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds are not allowed.")
@@ -143,7 +137,9 @@ if(WITH_ZMQ)
     find_package(ZeroMQ CONFIG REQUIRED)
   else()
     # The ZeroMQ project has provided config files since v4.2.2.
-    # TODO: Switch to find_package(ZeroMQ) at some point in the future.
+    # However, mainstream distributions do not yet provide CMake
+    # config files for ZeroMQ packages. If they do in the future,
+    # find_package(ZeroMQ) may be used instead.
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(libzmq REQUIRED IMPORTED_TARGET libzmq>=4)
   endif()
@@ -194,7 +190,7 @@ endif()
 
 option(BUILD_BENCH "Build bench_bitcoin executable." OFF)
 option(BUILD_FUZZ_BINARY "Build fuzz binary." OFF)
-cmake_dependent_option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF "NOT MSVC" OFF)
+option(BUILD_FOR_FUZZING "Build for fuzzing. Enabling this will disable all other targets and override BUILD_FUZZ_BINARY." OFF)
 
 option(INSTALL_MAN "Install man pages." ON)
 
