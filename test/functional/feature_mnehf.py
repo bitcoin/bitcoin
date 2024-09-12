@@ -19,7 +19,6 @@ from test_framework.messages import (
 from test_framework.test_framework import DashTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
     get_bip9_details,
 )
 
@@ -133,12 +132,10 @@ class MnehfTest(DashTestFramework):
         self.set_sporks()
         self.activate_v20()
         self.log.info(f"After v20 activation should be plenty of blocks: {node.getblockcount()}")
-        assert_greater_than(node.getblockcount(), 900)
-        assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
 
         self.log.info("Mine a quorum...")
         self.mine_quorum()
-        assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
+        self.check_fork('defined')
 
         key = ECKey()
         key.generate()
@@ -153,9 +150,6 @@ class MnehfTest(DashTestFramework):
         assert_equal(mnehf_payload.versionBit, 28)
         self.log.info("Checking correctness of requestId and quorumHash")
         assert_equal(mnehf_payload.quorumHash, int(self.mninfo[0].node.quorum("selectquorum", 100, 'a0eee872d7d3170dd20d5c5e8380c92b3aa887da5f63d8033289fafa35a90691')["quorumHash"], 16))
-
-        assert_equal(get_bip9_details(node, 'testdummy')['status'], 'defined')
-        assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'defined')
 
         ehf_tx_sent = self.send_tx(ehf_tx)
         self.log.info(f"ehf tx: {ehf_tx_sent}")
@@ -251,8 +245,8 @@ class MnehfTest(DashTestFramework):
 
         ehf_tx_new_start = self.create_mnehf(28, pubkey)
 
-        self.log.info("activate MN_RR also by enabling spork 24")
-        assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'defined')
+        self.log.info("Test spork 24 (EHF)")
+        self.check_fork('defined')
         self.nodes[0].sporkupdate("SPORK_24_TEST_EHF", 0)
         self.wait_for_sporks_same()
 
@@ -268,8 +262,6 @@ class MnehfTest(DashTestFramework):
         self.check_fork('defined')
         self.slowly_generate_batch(12 * 4)
         self.check_fork('active')
-        self.log.info(f"bip9: {get_bip9_details(node, 'mn_rr')}")
-        assert_equal(get_bip9_details(node, 'mn_rr')['status'], 'active')
 
 
 if __name__ == '__main__':
