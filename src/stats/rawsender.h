@@ -8,7 +8,9 @@
 
 #include <compat.h>
 #include <sync.h>
+#include <threadinterrupt.h>
 
+#include <deque>
 #include <memory>
 #include <optional>
 #include <string>
@@ -53,16 +55,22 @@ struct RawMessage : public std::vector<uint8_t>
 class RawSender
 {
 public:
-    RawSender(const std::string& host, uint16_t port, std::optional<std::string>& error);
+    RawSender(const std::string& host, uint16_t port, uint64_t interval_ms, std::optional<std::string>& error);
     ~RawSender();
 
     RawSender(const RawSender&) = delete;
     RawSender& operator=(const RawSender&) = delete;
     RawSender(RawSender&&) = delete;
 
-    std::optional<std::string> Send(const RawMessage& msg);
+    std::optional<std::string> Send(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::optional<std::string> SendDirectly(const RawMessage& msg);
 
     std::string ToStringHostPort() const;
+
+    void QueueAdd(const RawMessage& msg) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void QueueFlush() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void QueueFlush(std::deque<RawMessage>& queue);
+    void QueueThreadMain() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     /* Socket used to communicate with host */
@@ -70,10 +78,21 @@ private:
     /* Socket address containing host information */
     std::pair<struct sockaddr_storage, socklen_t> m_server{{}, sizeof(struct sockaddr_storage)};
 
+    /* Mutex to protect messages queue */
+    mutable Mutex cs;
+    /* Interrupt for queue processing thread */
+    CThreadInterrupt m_interrupt;
+    /* Queue of messages to be sent */
+    std::deque<RawMessage> m_queue GUARDED_BY(cs);
+    /* Thread that processes queue every m_interval_ms */
+    std::thread m_thread;
+
     /* Hostname of server receiving messages */
     const std::string m_host;
     /* Port of server receiving messages */
     const uint16_t m_port;
+    /* Time between queue thread runs (expressed in milliseconds) */
+    const uint64_t m_interval_ms;
 
     /* Number of messages sent */
     uint64_t m_successes{0};

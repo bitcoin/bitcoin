@@ -21,16 +21,20 @@ static const std::string DEFAULT_STATSD_HOST{"127.0.0.1"};
 static const std::string DEFAULT_STATSD_HOSTNAME{""};
 static const std::string DEFAULT_STATSD_NAMESPACE{""};
 
-// schedule periodic measurements, in seconds: default - 1 minute, min - 5 sec, max - 1h.
+/** Default number of milliseconds between flushing a queue of messages */
+static constexpr int DEFAULT_STATSD_DURATION{1000};
+/** Default number of seconds between recording periodic stats */
 static constexpr int DEFAULT_STATSD_PERIOD{60};
+/** Minimum number of seconds between recording periodic stats */
 static constexpr int MIN_STATSD_PERIOD{5};
+/** Maximum number of seconds between recording periodic stats */
 static constexpr int MAX_STATSD_PERIOD{60 * 60};
 
 class StatsdClient
 {
 public:
-    explicit StatsdClient(const std::string& host, const std::string& nodename, uint16_t port,
-                            const std::string& ns, bool enabled);
+    explicit StatsdClient(const std::string& host, uint16_t port, uint64_t interval_ms, const std::string& nodename,
+                          const std::string& ns, bool enabled);
     ~StatsdClient();
 
 public:

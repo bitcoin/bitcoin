@@ -772,6 +772,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
     argsman.AddArg("-statsenabled", strprintf("Publish internal stats to statsd (default: %u)", DEFAULT_STATSD_ENABLE), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
+    argsman.AddArg("-statsduration=<ms>", strprintf("Specify the number of milliseconds between stats messages (default: %d)", DEFAULT_STATSD_DURATION), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statshost=<ip>", strprintf("Specify statsd host (default: %s)", DEFAULT_STATSD_HOST), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statshostname=<ip>", strprintf("Specify statsd host name (default: %s)", DEFAULT_STATSD_HOSTNAME), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
     argsman.AddArg("-statsport=<port>", strprintf("Specify statsd port (default: %u)", DEFAULT_STATSD_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::STATSD);
@@ -1540,8 +1541,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // regardless of whether transmitting stats are desirable or not and if
     // g_stats_client isn't present when that attempt is made, the client will crash.
     ::g_stats_client = std::make_unique<StatsdClient>(args.GetArg("-statshost", DEFAULT_STATSD_HOST),
-                                                      args.GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
                                                       args.GetArg("-statsport", DEFAULT_STATSD_PORT),
+                                                      args.GetArg("-statsduration", DEFAULT_STATSD_DURATION),
+                                                      args.GetArg("-statshostname", DEFAULT_STATSD_HOSTNAME),
                                                       args.GetArg("-statsns", DEFAULT_STATSD_NAMESPACE),
                                                       args.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
 
