@@ -1794,7 +1794,6 @@ class DashTestFramework(BitcoinTestFramework):
         wait_until_helper(wait_func, timeout=timeout, sleep=sleep)
 
     def move_blocks(self, nodes, num_blocks):
-        time.sleep(1)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(num_blocks)
         self.sync_blocks(nodes)
