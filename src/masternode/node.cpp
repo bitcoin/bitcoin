@@ -15,6 +15,42 @@
 #include <validation.h>
 #include <warnings.h>
 
+namespace {
+bool GetLocal(CService& addr, const CNetAddr* paddrPeer)
+{
+    if (!fListen)
+        return false;
+
+    int nBestScore = -1;
+    {
+        LOCK(g_maplocalhost_mutex);
+        int nBestReachability = -1;
+        for (const auto& entry : mapLocalHost)
+        {
+            // For privacy reasons, don't advertise our privacy-network address
+            // to other networks and don't advertise our other-network address
+            // to privacy networks.
+            const Network our_net{entry.first.GetNetwork()};
+            const Network peers_net{paddrPeer->GetNetwork()};
+            if (our_net != peers_net &&
+                (our_net == NET_ONION || our_net == NET_I2P ||
+                 peers_net == NET_ONION || peers_net == NET_I2P)) {
+                continue;
+            }
+            int nScore = entry.second.nScore;
+            int nReachability = entry.first.GetReachabilityFrom(*paddrPeer);
+            if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
+            {
+                addr = CService(entry.first, entry.second.nPort);
+                nBestReachability = nReachability;
+                nBestScore = nScore;
+            }
+        }
+    }
+    return nBestScore >= 0;
+}
+} // anonymous namespace
+
 CActiveMasternodeManager::CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman) :
     m_info(sk, sk.GetPublicKey()),
     m_connman{connman},
@@ -204,8 +240,7 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         auto service = m_info.service;
         m_connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
-            if (pnode->addr.IsIPv4())
-                fFoundLocal = GetLocal(service, &pnode->addr) && IsValidNetAddr(service);
+            if (pnode->addr.IsIPv4()) fFoundLocal = GetLocal(service, *pnode) && IsValidNetAddr(service);
             return !fFoundLocal;
         });
         // nothing and no live connections, can't do anything for now
