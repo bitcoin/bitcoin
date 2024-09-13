@@ -2454,12 +2454,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
         //
         CAddress addrConnect;
 
-        // Only connect out to one peer per network group (/16 for IPv4).
+        // Only connect out to one peer per ipv4/ipv6 network group (/16 for IPv4).
         // This is only done for mainnet and testnet
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
         int nOutboundOnionRelay = 0;
-        std::set<std::vector<unsigned char> > setConnected;
+        int outbound_privacy_network_peers = 0;
+        std::set<std::vector<unsigned char>> setConnected; // netgroups of our ipv4/ipv6 outbound peers
+
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
@@ -2467,7 +2469,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
                 if (pnode->IsFullOutboundConn() && pnode->ConnectedThroughNetwork() == Network::NET_ONION) nOutboundOnionRelay++;
 
-                // Make sure our persistent outbound slots belong to different netgroups.
+                // Make sure our persistent outbound slots to ipv4/ipv6 peers belong to different netgroups.
                 switch (pnode->m_conn_type) {
                     // We currently don't take inbound connections into account. Since they are
                     // free to make, an attacker could make them to prevent us from connecting to
@@ -2481,7 +2483,19 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                     case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
                     case ConnectionType::BLOCK_RELAY:
-                        setConnected.insert(m_netgroupman.GetGroup(pnode->addr));
+                        CAddress address{pnode->addr};
+                        if (address.IsTor() || address.IsI2P() || address.IsCJDNS()) {
+                            // Since our addrman-groups for these networks are
+                            // random, without relation to the route we
+                            // take to connect to these peers or to the
+                            // difficulty in obtaining addresses with diverse
+                            // groups, we don't worry about diversity with
+                            // respect to our addrman groups when connecting to
+                            // these networks.
+                            ++outbound_privacy_network_peers;
+                        } else {
+                            setConnected.insert(m_netgroupman.GetGroup(address));
+                        }
                 } // no default case, so the compiler can warn about missing cases
             }
         }
@@ -2675,8 +2689,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                     LogPrint(BCLog::NET, "Making feeler connection\n");
                 }
             }
-
-            OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
+            // Record addrman failure attempts when node has at least 2 persistent outbound connections to peers with
+            // different netgroups in ipv4/ipv6 networks + all peers in Tor/I2P/CJDNS networks.
+            // Don't record addrman failure attempts when node is offline. This can be identified since all local
+            // network connections(if any) belong in the same netgroup and size of setConnected would only be 1.
+            OpenNetworkConnection(addrConnect, (int)setConnected.size() + outbound_privacy_network_peers >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
         }
     }
 }
