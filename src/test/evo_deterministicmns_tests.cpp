@@ -814,14 +814,18 @@ void FuncVerifyDB(TestChainSetup& setup)
 
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
-struct TestChainDIP3Setup : public TestChainSetup
-{
-    TestChainDIP3Setup() : TestChainSetup(431) {}
-};
-
 struct TestChainDIP3BeforeActivationSetup : public TestChainSetup
 {
     TestChainDIP3BeforeActivationSetup() : TestChainSetup(430) {}
+};
+
+struct TestChainDIP3Setup : public TestChainDIP3BeforeActivationSetup
+{
+    TestChainDIP3Setup()
+    {
+        // Activate DIP3 here
+        CreateAndProcessBlock({}, coinbaseKey);
+    }
 };
 
 struct TestChainV19BeforeActivationSetup : public TestChainSetup
@@ -829,10 +833,14 @@ struct TestChainV19BeforeActivationSetup : public TestChainSetup
     TestChainV19BeforeActivationSetup();
 };
 
-struct TestChainV19Setup : public TestChainSetup
+struct TestChainV19Setup : public TestChainV19BeforeActivationSetup
 {
-    TestChainV19Setup() : TestChainSetup(899)
+    TestChainV19Setup()
     {
+        // Activate V19
+        for (int i = 0; i < 5; ++i) {
+            CreateAndProcessBlock({}, coinbaseKey);
+        }
         bool v19_just_activated{DeploymentActiveAfter(m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19) &&
                                 !DeploymentActiveAt(*m_node.chainman->ActiveChain().Tip(), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
         assert(v19_just_activated);

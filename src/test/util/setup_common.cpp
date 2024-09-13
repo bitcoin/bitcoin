@@ -358,14 +358,10 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
             {  100, uint256S("0x6ffb83129c19ebdf1ae3771be6a67fe34b35f4c956326b9ba152fac1649f65ae") },
             /* TestChainDIP3BeforeActivationSetup */
             {  430, uint256S("0x0bcefaa33fec56cd84d05d0e76cd6a78badcc20f627d91903646de6a07930a14") },
-            /* TestChainDIP3Setup */
-            {  431, uint256S("0x5fd3aa5ef29464839499d7f847edd9362e3e73392b79d3bd88b1591f5fb17d4e") },
             /* TestChainBRRBeforeActivationSetup */
             {  497, uint256S("0x23c31820ec5160b7181bfdf328e2b76cd12c9fa4544d892b7f01e74dd6220849") },
             /* TestChainV19BeforeActivationSetup */
             {  894, uint256S("0x2885cf0fe8fdf29803b6c65002ba2570ff011531d8ea92be312a85d655e00c51") },
-            /* TestChainV19Setup */
-            {  899, uint256S("0x7df3c857ce647b3ecd0d4b389b6b0f16e2bdc60b20a8d01c4ad946fe5f15dbc2") },
         }
     };
 
