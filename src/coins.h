@@ -128,6 +128,21 @@ private:
     CoinsCachePair* m_next{nullptr};
     uint8_t m_flags{0};
 
+    //! Adding a flag requires a reference to the sentinel of the flagged pair linked list.
+    static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
+    {
+        Assume(flags & (DIRTY | FRESH));
+        if (!pair.second.m_flags) {
+            Assume(!pair.second.m_prev && !pair.second.m_next);
+            pair.second.m_prev = sentinel.second.m_prev;
+            pair.second.m_next = &sentinel;
+            sentinel.second.m_prev = &pair;
+            pair.second.m_prev->second.m_next = &pair;
+        }
+        Assume(pair.second.m_prev && pair.second.m_next);
+        pair.second.m_flags |= flags;
+    }
+
 public:
     Coin coin; // The actual cached data.
 
@@ -159,22 +174,6 @@ public:
         SetClean();
     }
 
-    //! Adding a flag also requires a self reference to the pair that contains
-    //! this entry in the CCoinsCache map and a reference to the sentinel of the
-    //! flagged pair linked list.
-    static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
-    {
-        Assume(flags & (DIRTY | FRESH));
-        if (!pair.second.m_flags) {
-            Assume(!pair.second.m_prev && !pair.second.m_next);
-            pair.second.m_prev = sentinel.second.m_prev;
-            pair.second.m_next = &sentinel;
-            sentinel.second.m_prev = &pair;
-            pair.second.m_prev->second.m_next = &pair;
-        }
-        Assume(pair.second.m_prev && pair.second.m_next);
-        pair.second.m_flags |= flags;
-    }
     static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
     static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
 
@@ -186,7 +185,6 @@ public:
         m_flags = 0;
         m_prev = m_next = nullptr;
     }
-    uint8_t GetFlags() const noexcept { return m_flags; }
     bool IsDirty() const noexcept { return m_flags & DIRTY; }
     bool IsFresh() const noexcept { return m_flags & FRESH; }
 

@@ -21,7 +21,7 @@ std::list<CoinsCachePair> CreatePairs(CoinsCachePair& sentinel)
         auto node{std::prev(nodes.end())};
         CCoinsCacheEntry::SetDirty(*node, sentinel);
 
-        BOOST_CHECK_EQUAL(node->second.GetFlags(), CCoinsCacheEntry::DIRTY);
+        BOOST_CHECK(node->second.IsDirty() && !node->second.IsFresh());
         BOOST_CHECK_EQUAL(node->second.Next(), &sentinel);
         BOOST_CHECK_EQUAL(sentinel.second.Prev(), &(*node));
 
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(linked_list_iteration)
     BOOST_CHECK_EQUAL(node, &sentinel);
 
     // Check iterating through pairs is identical to iterating through a list
-    // Clear the flags during iteration
+    // Clear the state during iteration
     node = sentinel.second.Next();
     for (const auto& expected : nodes) {
         BOOST_CHECK_EQUAL(&expected, node);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(linked_list_iteration)
 
     // Delete the nodes from the list to make sure there are no dangling pointers
     for (auto it{nodes.begin()}; it != nodes.end(); it = nodes.erase(it)) {
-        BOOST_CHECK_EQUAL(it->second.GetFlags(), 0);
+        BOOST_CHECK(!it->second.IsDirty() && !it->second.IsFresh());
     }
 }
 
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(linked_list_iterate_erase)
     auto nodes{CreatePairs(sentinel)};
 
     // Check iterating through pairs is identical to iterating through a list
-    // Erase the nodes as we iterate through, but don't clear flags
-    // The flags will be cleared by the CCoinsCacheEntry's destructor
+    // Erase the nodes as we iterate through, but don't clear state
+    // The state will be cleared by the CCoinsCacheEntry's destructor
     auto node{sentinel.second.Next()};
     for (auto expected{nodes.begin()}; expected != nodes.end(); expected = nodes.erase(expected)) {
         BOOST_CHECK_EQUAL(&(*expected), node);
@@ -104,10 +104,10 @@ BOOST_AUTO_TEST_CASE(linked_list_random_deletion)
     // sentinel->n1->n3->n4->sentinel
     nodes.erase(n2);
     // Check that n1 now points to n3, and n3 still points to n4
-    // Also check that flags were not altered
-    BOOST_CHECK_EQUAL(n1->second.GetFlags(), CCoinsCacheEntry::DIRTY);
+    // Also check that state was not altered
+    BOOST_CHECK(n1->second.IsDirty() && !n1->second.IsFresh());
     BOOST_CHECK_EQUAL(n1->second.Next(), &(*n3));
-    BOOST_CHECK_EQUAL(n3->second.GetFlags(), CCoinsCacheEntry::DIRTY);
+    BOOST_CHECK(n3->second.IsDirty() && !n3->second.IsFresh());
     BOOST_CHECK_EQUAL(n3->second.Next(), &(*n4));
     BOOST_CHECK_EQUAL(n3->second.Prev(), &(*n1));
 
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(linked_list_random_deletion)
     // sentinel->n3->n4->sentinel
     nodes.erase(n1);
     // Check that sentinel now points to n3, and n3 still points to n4
-    // Also check that flags were not altered
-    BOOST_CHECK_EQUAL(n3->second.GetFlags(), CCoinsCacheEntry::DIRTY);
+    // Also check that state was not altered
+    BOOST_CHECK(n3->second.IsDirty() && !n3->second.IsFresh());
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &(*n3));
     BOOST_CHECK_EQUAL(n3->second.Next(), &(*n4));
     BOOST_CHECK_EQUAL(n3->second.Prev(), &sentinel);
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(linked_list_random_deletion)
     // sentinel->n3->sentinel
     nodes.erase(n4);
     // Check that sentinel still points to n3, and n3 points to sentinel
-    // Also check that flags were not altered
-    BOOST_CHECK_EQUAL(n3->second.GetFlags(), CCoinsCacheEntry::DIRTY);
+    // Also check that state was not altered
+    BOOST_CHECK(n3->second.IsDirty() && !n3->second.IsFresh());
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &(*n3));
     BOOST_CHECK_EQUAL(n3->second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &(*n3));
@@ -139,48 +139,48 @@ BOOST_AUTO_TEST_CASE(linked_list_random_deletion)
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &sentinel);
 }
 
-BOOST_AUTO_TEST_CASE(linked_list_add_flags)
+BOOST_AUTO_TEST_CASE(linked_list_set_state)
 {
     CoinsCachePair sentinel;
     sentinel.second.SelfRef(sentinel);
     CoinsCachePair n1;
     CoinsCachePair n2;
 
-    // Check that adding DIRTY flag inserts it into linked list and sets flags
+    // Check that setting DIRTY inserts it into linked list and sets state
     CCoinsCacheEntry::SetDirty(n1, sentinel);
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY);
+    BOOST_CHECK(n1.second.IsDirty() && !n1.second.IsFresh());
     BOOST_CHECK_EQUAL(n1.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &sentinel);
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n1);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n1);
 
-    // Check that adding FRESH flag on new node inserts it after n1
+    // Check that setting FRESH on new node inserts it after n1
     CCoinsCacheEntry::SetFresh(n2, sentinel);
-    BOOST_CHECK_EQUAL(n2.second.GetFlags(), CCoinsCacheEntry::FRESH);
+    BOOST_CHECK(n2.second.IsFresh() && !n2.second.IsDirty());
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
     BOOST_CHECK_EQUAL(n1.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
 
-    // Check that we can add extra flags, but they don't change our position
+    // Check that we can set extra state, but they don't change our position
     CCoinsCacheEntry::SetFresh(n1, sentinel);
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY | CCoinsCacheEntry::FRESH);
+    BOOST_CHECK(n1.second.IsDirty() && n1.second.IsFresh());
     BOOST_CHECK_EQUAL(n1.second.Next(), &n2);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &sentinel);
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n1);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
 
-    // Check that we can clear flags then re-add them
+    // Check that we can clear state then re-set it
     n1.second.SetClean();
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
+    BOOST_CHECK(!n1.second.IsDirty() && !n1.second.IsFresh());
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &sentinel);
 
-    // Check that calling `SetClean` with 0 flags has no effect
+    // Calling `SetClean` a second time has no effect
     n1.second.SetClean();
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
+    BOOST_CHECK(!n1.second.IsDirty() && !n1.second.IsFresh());
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(linked_list_add_flags)
 
     // Adding DIRTY re-inserts it after n2
     CCoinsCacheEntry::SetDirty(n1, sentinel);
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY);
+    BOOST_CHECK(n1.second.IsDirty() && !n1.second.IsFresh());
     BOOST_CHECK_EQUAL(n2.second.Next(), &n1);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &n2);
     BOOST_CHECK_EQUAL(n1.second.Next(), &sentinel);
