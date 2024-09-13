@@ -19,7 +19,7 @@ std::list<CoinsCachePair> CreatePairs(CoinsCachePair& sentinel)
         nodes.emplace_back();
 
         auto node{std::prev(nodes.end())};
-        node->second.AddFlags(CCoinsCacheEntry::DIRTY, *node, sentinel);
+        CCoinsCacheEntry::SetDirty(*node, sentinel);
 
         BOOST_CHECK_EQUAL(node->second.GetFlags(), CCoinsCacheEntry::DIRTY);
         BOOST_CHECK_EQUAL(node->second.Next(), &sentinel);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(linked_list_iteration)
     for (const auto& expected : nodes) {
         BOOST_CHECK_EQUAL(&expected, node);
         auto next = node->second.Next();
-        node->second.ClearFlags();
+        node->second.SetClean();
         node = next;
     }
     BOOST_CHECK_EQUAL(node, &sentinel);
@@ -146,14 +146,8 @@ BOOST_AUTO_TEST_CASE(linked_list_add_flags)
     CoinsCachePair n1;
     CoinsCachePair n2;
 
-    // Check that adding 0 flag has no effect
-    n1.second.AddFlags(0, n1, sentinel);
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
-    BOOST_CHECK_EQUAL(sentinel.second.Next(), &sentinel);
-    BOOST_CHECK_EQUAL(sentinel.second.Prev(), &sentinel);
-
     // Check that adding DIRTY flag inserts it into linked list and sets flags
-    n1.second.AddFlags(CCoinsCacheEntry::DIRTY, n1, sentinel);
+    CCoinsCacheEntry::SetDirty(n1, sentinel);
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY);
     BOOST_CHECK_EQUAL(n1.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &sentinel);
@@ -161,23 +155,15 @@ BOOST_AUTO_TEST_CASE(linked_list_add_flags)
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n1);
 
     // Check that adding FRESH flag on new node inserts it after n1
-    n2.second.AddFlags(CCoinsCacheEntry::FRESH, n2, sentinel);
+    CCoinsCacheEntry::SetFresh(n2, sentinel);
     BOOST_CHECK_EQUAL(n2.second.GetFlags(), CCoinsCacheEntry::FRESH);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
     BOOST_CHECK_EQUAL(n1.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
 
-    // Check that adding 0 flag has no effect, and doesn't change position
-    n1.second.AddFlags(0, n1, sentinel);
-    BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY);
-    BOOST_CHECK_EQUAL(n1.second.Next(), &n2);
-    BOOST_CHECK_EQUAL(n1.second.Prev(), &sentinel);
-    BOOST_CHECK_EQUAL(sentinel.second.Next(), &n1);
-    BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
-
     // Check that we can add extra flags, but they don't change our position
-    n1.second.AddFlags(CCoinsCacheEntry::FRESH, n1, sentinel);
+    CCoinsCacheEntry::SetFresh(n1, sentinel);
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY | CCoinsCacheEntry::FRESH);
     BOOST_CHECK_EQUAL(n1.second.Next(), &n2);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &sentinel);
@@ -185,30 +171,23 @@ BOOST_AUTO_TEST_CASE(linked_list_add_flags)
     BOOST_CHECK_EQUAL(n2.second.Prev(), &n1);
 
     // Check that we can clear flags then re-add them
-    n1.second.ClearFlags();
+    n1.second.SetClean();
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &sentinel);
 
-    // Check that calling `ClearFlags` with 0 flags has no effect
-    n1.second.ClearFlags();
+    // Check that calling `SetClean` with 0 flags has no effect
+    n1.second.SetClean();
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), 0);
     BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
     BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
     BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
     BOOST_CHECK_EQUAL(n2.second.Prev(), &sentinel);
 
-    // Adding 0 still has no effect
-    n1.second.AddFlags(0, n1, sentinel);
-    BOOST_CHECK_EQUAL(sentinel.second.Next(), &n2);
-    BOOST_CHECK_EQUAL(sentinel.second.Prev(), &n2);
-    BOOST_CHECK_EQUAL(n2.second.Next(), &sentinel);
-    BOOST_CHECK_EQUAL(n2.second.Prev(), &sentinel);
-
-    // But adding DIRTY re-inserts it after n2
-    n1.second.AddFlags(CCoinsCacheEntry::DIRTY, n1, sentinel);
+    // Adding DIRTY re-inserts it after n2
+    CCoinsCacheEntry::SetDirty(n1, sentinel);
     BOOST_CHECK_EQUAL(n1.second.GetFlags(), CCoinsCacheEntry::DIRTY);
     BOOST_CHECK_EQUAL(n2.second.Next(), &n1);
     BOOST_CHECK_EQUAL(n1.second.Prev(), &n2);
