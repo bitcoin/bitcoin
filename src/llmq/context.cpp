@@ -41,9 +41,6 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
     }()},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *qman, sporkman, peerman)}
 {
-    // NOTE: we use this only to wipe the old db, do NOT use it for anything else
-    // TODO: remove it in some future version
-    auto llmqDbTmp = std::make_unique<CDBWrapper>(unit_tests ? "" : (gArgs.GetDataDirNet() / "llmq"), 1 << 20, unit_tests, true);
 }
 
 LLMQContext::~LLMQContext() {
