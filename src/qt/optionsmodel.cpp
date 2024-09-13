@@ -232,13 +232,8 @@ void OptionsModel::Init(bool resetSettings)
     if (!gArgs.SoftSetArg("-coinjoinrounds", settings.value("nCoinJoinRounds").toString().toStdString()))
         addOverriddenOption("-coinjoinrounds");
 
-    if (!settings.contains("nCoinJoinAmount")) {
-        // for migration from old settings
-        if (!settings.contains("nAnonymizeDashAmount"))
-            settings.setValue("nCoinJoinAmount", DEFAULT_COINJOIN_AMOUNT);
-        else
-            settings.setValue("nCoinJoinAmount", settings.value("nAnonymizeDashAmount").toInt());
-    }
+    if (!settings.contains("nCoinJoinAmount"))
+        settings.setValue("nCoinJoinAmount", DEFAULT_COINJOIN_AMOUNT);
     if (!gArgs.SoftSetArg("-coinjoinamount", settings.value("nCoinJoinAmount").toString().toStdString()))
         addOverriddenOption("-coinjoinamount");
 
