@@ -283,8 +283,6 @@ int main(int argc, char* argv[])
 epilogue:
     // Without this precise shutdown sequence, there will be a lot of nullptr
     // dereferencing and UB.
-    if (chainman.m_thread_load.joinable()) chainman.m_thread_load.join();
-
     validation_signals.FlushBackgroundCallbacks();
     {
         LOCK(cs_main);
