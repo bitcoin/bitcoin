@@ -101,7 +101,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
-            self.bump_mocktime(1, nodes=nodes)
+            self.bump_mocktime(skip_count, nodes=nodes)
             self.nodes[0].generate(skip_count)
         self.sync_blocks(nodes)
 
@@ -147,6 +147,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
+        self.bump_mocktime(8)
         self.nodes[0].generate(8)
         self.sync_blocks(nodes)
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
