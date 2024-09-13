@@ -1136,7 +1136,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_sporks_same()
 
         # mine blocks in batches
-        batch_size = 10
+        batch_size = 50
         if expected_activation_height is not None:
             height = self.nodes[0].getblockcount()
             assert height < expected_activation_height
