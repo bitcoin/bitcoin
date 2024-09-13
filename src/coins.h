@@ -190,7 +190,6 @@ public:
         m_prev->second.m_next = m_next;
         m_flags = 0;
     }
-    inline uint8_t GetFlags() const noexcept { return m_flags; }
     inline bool IsDirty() const noexcept { return m_flags & DIRTY; }
     inline bool IsFresh() const noexcept { return m_flags & FRESH; }
 
