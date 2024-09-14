@@ -48,9 +48,6 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const Chainstat
         case TRANSACTION_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(dmnman, chainman, tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
-            if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");
-            }
             return CheckMNHFTx(chainman, qman, tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
             return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
