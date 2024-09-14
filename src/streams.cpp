@@ -4,6 +4,7 @@
 
 #include <span.h>
 #include <streams.h>
+#include <util/fs_helpers.h>
 
 #include <array>
 
@@ -98,4 +99,19 @@ void AutoFile::write(Span<const std::byte> src)
             *m_position += buf_now.size();
         }
     }
+}
+
+bool AutoFile::Commit()
+{
+    return ::FileCommit(m_file);
+}
+
+bool AutoFile::IsError()
+{
+    return ferror(m_file);
+}
+
+bool AutoFile::Truncate(unsigned size)
+{
+    return ::TruncateFile(m_file, size);
 }
