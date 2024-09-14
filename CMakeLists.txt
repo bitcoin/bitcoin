@@ -133,16 +133,7 @@ endif()
 
 option(WITH_ZMQ "Enable ZMQ notifications." OFF)
 if(WITH_ZMQ)
-  if(VCPKG_TARGET_TRIPLET)
-    find_package(ZeroMQ CONFIG REQUIRED)
-  else()
-    # The ZeroMQ project has provided config files since v4.2.2.
-    # However, mainstream distributions do not yet provide CMake
-    # config files for ZeroMQ packages. If they do in the future,
-    # find_package(ZeroMQ) may be used instead.
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(libzmq REQUIRED IMPORTED_TARGET libzmq>=4)
-  endif()
+  find_package(ZeroMQ 4.0.0 MODULE REQUIRED)
 endif()
 
 option(WITH_USDT "Enable tracepoints for Userspace, Statically Defined Tracing." OFF)
