@@ -8,6 +8,20 @@ include(AddWindowsResources)
 configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-config.h.in config/bitcoin-config.h USE_SOURCE_PERMISSIONS @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
+#=============================
+# crc32c subtree
+#=============================
+message("")
+message("Configuring crc32c subtree...")
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(CRC32C_BUILD_TESTS OFF)
+set(CRC32C_BUILD_BENCHMARKS OFF)
+set(CRC32C_USE_GLOG OFF)
+set(CRC32C_INSTALL OFF)
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory(crc32c)
+unset(BUILD_SHARED_LIBS)
+
 add_custom_target(generate_build_info
   BYPRODUCTS ${PROJECT_BINARY_DIR}/src/bitcoin-build-info.h
   COMMAND ${CMAKE_COMMAND} -DBUILD_INFO_HEADER_PATH=${PROJECT_BINARY_DIR}/src/bitcoin-build-info.h -DSOURCE_DIR=${PROJECT_SOURCE_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/script/GenerateBuildInfo.cmake
