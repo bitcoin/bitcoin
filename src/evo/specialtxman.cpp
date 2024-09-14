@@ -52,9 +52,6 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const Chainstat
         case TRANSACTION_ASSET_LOCK:
             return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
         case TRANSACTION_ASSET_UNLOCK:
-            if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-v20");
-            }
             return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
         }
     } catch (const std::exception& e) {
