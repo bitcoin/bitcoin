@@ -199,8 +199,8 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         LogInfo("Writing %d unbroadcast transactions to file.\n", unbroadcast_txids.size());
         file << unbroadcast_txids;
 
-        if (!skip_file_commit && !FileCommit(file.Get()))
-            throw std::runtime_error("FileCommit failed");
+        if (!skip_file_commit && !file.Commit())
+            throw std::runtime_error("Commit failed");
         file.fclose();
         if (!RenameOver(dump_path + ".new", dump_path)) {
             throw std::runtime_error("Rename failed");

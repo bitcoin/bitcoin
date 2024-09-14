@@ -56,7 +56,6 @@ FUZZ_TARGET(autofile)
                 WriteToStream(fuzzed_data_provider, auto_file);
             });
     }
-    (void)auto_file.Get();
     (void)auto_file.IsNull();
     if (fuzzed_data_provider.ConsumeBool()) {
         FILE* f = auto_file.release();
