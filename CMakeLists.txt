@@ -86,6 +86,7 @@ option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 
 option(BUILD_UTIL_CHAINSTATE "Build experimental bitcoin-chainstate executable." OFF)
 option(BUILD_KERNEL_LIB "Build experimental bitcoinkernel library." ${BUILD_UTIL_CHAINSTATE})
+option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 
 option(ENABLE_WALLET "Enable wallet." ON)
 option(WITH_SQLITE "Enable SQLite wallet support." ${ENABLE_WALLET})
