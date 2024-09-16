@@ -5,6 +5,7 @@
 #include <test/util/net.h>
 
 #include <chainparams.h>
+#include <node/eviction.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
@@ -16,7 +17,6 @@ void ConnmanTestMsg::Handshake(CNode& node,
                                bool successfully_connected,
                                ServiceFlags remote_services,
                                ServiceFlags local_services,
-                               NetPermissionFlags permission_flags,
                                int32_t version,
                                bool relay_txs)
 {
@@ -54,7 +54,6 @@ void ConnmanTestMsg::Handshake(CNode& node,
     assert(peerman.GetNodeStateStats(node.GetId(), statestats));
     assert(statestats.m_relay_txs == (relay_txs && !node.IsBlockOnlyConn()));
     assert(statestats.their_services == remote_services);
-    node.m_permissionFlags = permission_flags;
     if (successfully_connected) {
         CSerializedNetMsg msg_verack{mm.Make(NetMsgType::VERACK)};
         (void)connman.ReceiveMsgFrom(node, std::move(msg_verack));
@@ -69,19 +68,7 @@ void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_by
 {
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
     if (complete) {
-        size_t nSizeAdded = 0;
-        auto it(node.vRecvMsg.begin());
-        for (; it != node.vRecvMsg.end(); ++it) {
-            // vRecvMsg contains only completed CNetMessage
-            // the single possible partially deserialized message are held by TransportDeserializer
-            nSizeAdded += it->m_raw_message_size;
-        }
-        {
-            LOCK(node.cs_vProcessMsg);
-            node.vProcessMsg.splice(node.vProcessMsg.end(), node.vRecvMsg, node.vRecvMsg.begin(), it);
-            node.nProcessQueueSize += nSizeAdded;
-            node.fPauseRecv = node.nProcessQueueSize > nReceiveFloodSize;
-        }
+        node.MarkReceivedMsgsForProcessing();
     }
 }
 
@@ -128,6 +115,8 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
             /* prefer_evict */ random_context.randbool(),
             /* m_is_local */ random_context.randbool(),
             /* m_network */ ALL_NETWORKS[random_context.randrange(ALL_NETWORKS.size())],
+            /* m_noban */ false,
+            /* m_conn_type */ConnectionType::INBOUND,
         });
     }
     return candidates;

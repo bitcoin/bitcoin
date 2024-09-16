@@ -17,6 +17,7 @@
 #include <compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
+#include <node/eviction.h>
 #include <fs.h>
 #include <i2p.h>
 #include <memusage.h>
@@ -185,7 +186,7 @@ uint16_t GetListenPort()
 }
 
 // find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
+bool GetLocal(CService& addr, const CNode& peer)
 {
     if (!fListen)
         return false;
@@ -196,8 +197,18 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
         LOCK(g_maplocalhost_mutex);
         for (const auto& entry : mapLocalHost)
         {
+            // For privacy reasons, don't advertise our privacy-network address
+            // to other networks and don't advertise our other-network address
+            // to privacy networks.
+            const Network our_net{entry.first.GetNetwork()};
+            const Network peers_net{peer.ConnectedThroughNetwork()};
+            if (our_net != peers_net &&
+                (our_net == NET_ONION || our_net == NET_I2P ||
+                 peers_net == NET_ONION || peers_net == NET_I2P)) {
+                continue;
+            }
             int nScore = entry.second.nScore;
-            int nReachability = entry.first.GetReachabilityFrom(paddrPeer);
+            int nReachability = entry.first.GetReachabilityFrom(peer.addr);
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
             {
                 addr = CService(entry.first, entry.second.nPort);
@@ -235,14 +246,13 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
 // Otherwise, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
-CService GetLocalAddress(const CNetAddr& addrPeer)
+CService GetLocalAddress(const CNode& peer)
 {
-    CService ret{CNetAddr(), GetListenPort()};
     CService addr;
-    if (GetLocal(addr, &addrPeer)) {
-        ret = CService{addr};
+    if (GetLocal(addr, peer)) {
+        return addr;
     }
-    return ret;
+    return CService{CNetAddr(), GetListenPort()};
 }
 
 static int GetnScore(const CService& addr)
@@ -262,7 +272,7 @@ bool IsPeerAddrLocalGood(CNode *pnode)
 
 std::optional<CService> GetLocalAddrForPeer(CNode& node)
 {
-    CService addrLocal{GetLocalAddress(node.addr)};
+    CService addrLocal{GetLocalAddress(node)};
     // If discovery is enabled, sometimes give our peer the address it
     // tells us that it sees us as in case it has a better idea of our
     // address than we do.
@@ -617,7 +627,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              pszDest ? pszDest : "",
                              conn_type,
                              /*inbound_onion=*/false,
-                             std::move(i2p_transient_session));
+                             CNodeOptions{
+                                 .i2p_sam_session = std::move(i2p_transient_session),
+                                 .recv_flood_size = nReceiveFloodSize,
+                             });
     pnode->AddRef();
     ::g_stats_client->inc("peers.connect", 1.0f);
 
@@ -677,26 +690,6 @@ bool CNode::IsBlockRelayOnly() const {
     // 1) We are in blocks only mode and peer has no relay permission
     // 2) This peer is a block-relay-only peer
     return (ignores_incoming_txs && !HasPermission(NetPermissionFlags::Relay)) || IsBlockOnlyConn();
-}
-
-std::string ConnectionTypeAsString(ConnectionType conn_type)
-{
-    switch (conn_type) {
-    case ConnectionType::INBOUND:
-        return "inbound";
-    case ConnectionType::MANUAL:
-        return "manual";
-    case ConnectionType::FEELER:
-        return "feeler";
-    case ConnectionType::OUTBOUND_FULL_RELAY:
-        return "outbound-full-relay";
-    case ConnectionType::BLOCK_RELAY:
-        return "block-relay-only";
-    case ConnectionType::ADDR_FETCH:
-        return "addr-fetch";
-    } // no default case, so the compiler can warn about missing cases
-
-    assert(false);
 }
 
 CService CNode::GetAddrLocal() const
@@ -761,7 +754,7 @@ void CNode::CopyStats(CNodeStats& stats)
         X(nRecvBytes);
     }
     X(m_legacyWhitelisted);
-    X(m_permissionFlags);
+    X(m_permission_flags);
 
     X(m_last_ping_time);
     X(m_min_ping_time);
@@ -1054,7 +1047,7 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             // Notify transport that bytes have been processed.
             node.m_transport->MarkBytesSent(nBytes);
             // Update statistics per message type.
-            node.mapSendBytesPerMsgType[msg_type] += nBytes;
+            node.AccountForSentBytes(msg_type, nBytes);
             nSentSize += nBytes;
             if ((size_t)nBytes != data.size()) {
                 // could not send full message; stop sending more
@@ -1084,210 +1077,6 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
     return {nSentSize, data_left};
 }
 
-static bool ReverseCompareNodeMinPingTime(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
-{
-    return a.m_min_ping_time > b.m_min_ping_time;
-}
-
-static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
-{
-    return a.m_connected > b.m_connected;
-}
-
-static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
-    return a.nKeyedNetGroup < b.nKeyedNetGroup;
-}
-
-static bool CompareNodeBlockTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
-{
-    // There is a fall-through here because it is common for a node to have many peers which have not yet relayed a block.
-    if (a.m_last_block_time != b.m_last_block_time) return a.m_last_block_time < b.m_last_block_time;
-    if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
-    return a.m_connected > b.m_connected;
-}
-
-static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
-{
-    // There is a fall-through here because it is common for a node to have more than a few peers that have not yet relayed txn.
-    if (a.m_last_tx_time != b.m_last_tx_time) return a.m_last_tx_time < b.m_last_tx_time;
-    if (a.m_relay_txs != b.m_relay_txs) return b.m_relay_txs;
-    if (a.fBloomFilter != b.fBloomFilter) return a.fBloomFilter;
-    return a.m_connected > b.m_connected;
-}
-
-// Pick out the potential block-relay only peers, and sort them by last block time.
-static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
-{
-    if (a.m_relay_txs != b.m_relay_txs) return a.m_relay_txs;
-    if (a.m_last_block_time != b.m_last_block_time) return a.m_last_block_time < b.m_last_block_time;
-    if (a.fRelevantServices != b.fRelevantServices) return b.fRelevantServices;
-    return a.m_connected > b.m_connected;
-}
-
-/**
- * Sort eviction candidates by network/localhost and connection uptime.
- * Candidates near the beginning are more likely to be evicted, and those
- * near the end are more likely to be protected, e.g. less likely to be evicted.
- * - First, nodes that are not `is_local` and that do not belong to `network`,
- *   sorted by increasing uptime (from most recently connected to connected longer).
- * - Then, nodes that are `is_local` or belong to `network`, sorted by increasing uptime.
- */
-struct CompareNodeNetworkTime {
-    const bool m_is_local;
-    const Network m_network;
-    CompareNodeNetworkTime(bool is_local, Network network) : m_is_local(is_local), m_network(network) {}
-    bool operator()(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b) const
-    {
-        if (m_is_local && a.m_is_local != b.m_is_local) return b.m_is_local;
-        if ((a.m_network == m_network) != (b.m_network == m_network)) return b.m_network == m_network;
-        return a.m_connected > b.m_connected;
-    };
-};
-
-//! Sort an array by the specified comparator, then erase the last K elements where predicate is true.
-template <typename T, typename Comparator>
-static void EraseLastKElements(
-    std::vector<T>& elements, Comparator comparator, size_t k,
-    std::function<bool(const NodeEvictionCandidate&)> predicate = [](const NodeEvictionCandidate& n) { return true; })
-{
-    std::sort(elements.begin(), elements.end(), comparator);
-    size_t eraseSize = std::min(k, elements.size());
-    elements.erase(std::remove_if(elements.end() - eraseSize, elements.end(), predicate), elements.end());
-}
-
-void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& eviction_candidates)
-{
-    // Protect the half of the remaining nodes which have been connected the longest.
-    // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
-    // To favorise the diversity of our peer connections, reserve up to half of these protected
-    // spots for Tor/onion, localhost, I2P, and CJDNS peers, even if they're not longest uptime
-    // overall. This helps protect these higher-latency peers that tend to be otherwise
-    // disadvantaged under our eviction criteria.
-    const size_t initial_size = eviction_candidates.size();
-    const size_t total_protect_size{initial_size / 2};
-
-    // Disadvantaged networks to protect. In the case of equal counts, earlier array members
-    // have the first opportunity to recover unused slots from the previous iteration.
-    struct Net { bool is_local; Network id; size_t count; };
-    std::array<Net, 4> networks{
-        {{false, NET_CJDNS, 0}, {false, NET_I2P, 0}, {/*localhost=*/true, NET_MAX, 0}, {false, NET_ONION, 0}}};
-
-    // Count and store the number of eviction candidates per network.
-    for (Net& n : networks) {
-        n.count = std::count_if(eviction_candidates.cbegin(), eviction_candidates.cend(),
-                                [&n](const NodeEvictionCandidate& c) {
-                                    return n.is_local ? c.m_is_local : c.m_network == n.id;
-                                });
-    }
-    // Sort `networks` by ascending candidate count, to give networks having fewer candidates
-    // the first opportunity to recover unused protected slots from the previous iteration.
-    std::stable_sort(networks.begin(), networks.end(), [](Net a, Net b) { return a.count < b.count; });
-
-    // Protect up to 25% of the eviction candidates by disadvantaged network.
-    const size_t max_protect_by_network{total_protect_size / 2};
-    size_t num_protected{0};
-
-    while (num_protected < max_protect_by_network) {
-        // Count the number of disadvantaged networks from which we have peers to protect.
-        auto num_networks = std::count_if(networks.begin(), networks.end(), [](const Net& n) { return n.count; });
-        if (num_networks == 0) {
-            break;
-        }
-        const size_t disadvantaged_to_protect{max_protect_by_network - num_protected};
-        const size_t protect_per_network{std::max(disadvantaged_to_protect / num_networks, static_cast<size_t>(1))};
-        // Early exit flag if there are no remaining candidates by disadvantaged network.
-        bool protected_at_least_one{false};
-
-        for (Net& n : networks) {
-            if (n.count == 0) continue;
-            const size_t before = eviction_candidates.size();
-            EraseLastKElements(eviction_candidates, CompareNodeNetworkTime(n.is_local, n.id),
-                               protect_per_network, [&n](const NodeEvictionCandidate& c) {
-                                   return n.is_local ? c.m_is_local : c.m_network == n.id;
-                               });
-            const size_t after = eviction_candidates.size();
-            if (before > after) {
-                protected_at_least_one = true;
-                const size_t delta{before - after};
-                num_protected += delta;
-                if (num_protected >= max_protect_by_network) {
-                    break;
-                }
-                n.count -= delta;
-            }
-        }
-        if (!protected_at_least_one) {
-            break;
-        }
-    }
-
-    // Calculate how many we removed, and update our total number of peers that
-    // we want to protect based on uptime accordingly.
-    assert(num_protected == initial_size - eviction_candidates.size());
-    const size_t remaining_to_protect{total_protect_size - num_protected};
-    EraseLastKElements(eviction_candidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
-}
-
-[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
-{
-    // Protect connections with certain characteristics
-
-    // Deterministically select 4 peers to protect by netgroup.
-    // An attacker cannot predict which netgroups will be protected
-    EraseLastKElements(vEvictionCandidates, CompareNetGroupKeyed, 4);
-    // Protect the 8 nodes with the lowest minimum ping time.
-    // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
-    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeMinPingTime, 8);
-    // Protect 4 nodes that most recently sent us novel transactions accepted into our mempool.
-    // An attacker cannot manipulate this metric without performing useful work.
-    EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
-    // Protect up to 8 non-tx-relay peers that have sent us novel blocks.
-    EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, 8,
-                       [](const NodeEvictionCandidate& n) { return !n.m_relay_txs && n.fRelevantServices; });
-
-    // Protect 4 nodes that most recently sent us novel blocks.
-    // An attacker cannot manipulate this metric without performing useful work.
-    EraseLastKElements(vEvictionCandidates, CompareNodeBlockTime, 4);
-
-    // Protect some of the remaining eviction candidates by ratios of desirable
-    // or disadvantaged characteristics.
-    ProtectEvictionCandidatesByRatio(vEvictionCandidates);
-
-    if (vEvictionCandidates.empty()) return std::nullopt;
-
-    // If any remaining peers are preferred for eviction consider only them.
-    // This happens after the other preferences since if a peer is really the best by other criteria (esp relaying blocks)
-    //  then we probably don't want to evict it no matter what.
-    if (std::any_of(vEvictionCandidates.begin(),vEvictionCandidates.end(),[](NodeEvictionCandidate const &n){return n.prefer_evict;})) {
-        vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.begin(),vEvictionCandidates.end(),
-                                  [](NodeEvictionCandidate const &n){return !n.prefer_evict;}),vEvictionCandidates.end());
-    }
-
-    // Identify the network group with the most connections and youngest member.
-    // (vEvictionCandidates is already sorted by reverse connect time)
-    uint64_t naMostConnections;
-    unsigned int nMostConnections = 0;
-    std::chrono::seconds nMostConnectionsTime{0};
-    std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapNetGroupNodes;
-    for (const NodeEvictionCandidate &node : vEvictionCandidates) {
-        std::vector<NodeEvictionCandidate> &group = mapNetGroupNodes[node.nKeyedNetGroup];
-        group.push_back(node);
-        const auto grouptime{group[0].m_connected};
-
-        if (group.size() > nMostConnections || (group.size() == nMostConnections && grouptime > nMostConnectionsTime)) {
-            nMostConnections = group.size();
-            nMostConnectionsTime = grouptime;
-            naMostConnections = node.nKeyedNetGroup;
-        }
-    }
-
-    // Reduce to the network group with the most connections
-    vEvictionCandidates = std::move(mapNetGroupNodes[naMostConnections]);
-
-    // Disconnect from the network group with the most connections
-    return vEvictionCandidates.front().id;
-}
-
 /** Try to find a connection to evict when the node is full.
  *  Extreme care must be taken to avoid opening the node to attacker
  *   triggered network partitioning.
@@ -1303,10 +1092,6 @@ bool CConnman::AttemptToEvictConnection()
         LOCK(m_nodes_mutex);
 
         for (const CNode* node : m_nodes) {
-            if (node->HasPermission(NetPermissionFlags::NoBan))
-                continue;
-            if (!node->IsInboundConn())
-                continue;
             if (node->fDisconnect)
                 continue;
 
@@ -1329,12 +1114,22 @@ bool CConnman::AttemptToEvictConnection()
                 }
             }
 
-            NodeEvictionCandidate candidate = {node->GetId(), node->m_connected, node->m_min_ping_time,
-                                               node->m_last_block_time, node->m_last_tx_time,
-                                               node->m_has_all_wanted_services,
-                                               node->m_relays_txs.load(), node->m_bloom_filter_loaded.load(),
-                                               node->nKeyedNetGroup, node->m_prefer_evict, node->addr.IsLocal(),
-                                               node->ConnectedThroughNetwork()};
+            NodeEvictionCandidate candidate{
+                .id = node->GetId(),
+                .m_connected = node->m_connected,
+                .m_min_ping_time = node->m_min_ping_time,
+                .m_last_block_time = node->m_last_block_time,
+                .m_last_tx_time = node->m_last_tx_time,
+                .fRelevantServices = node->m_has_all_wanted_services,
+                .m_relay_txs = node->m_relays_txs.load(),
+                .fBloomFilter = node->m_bloom_filter_loaded.load(),
+                .nKeyedNetGroup = node->nKeyedNetGroup,
+                .prefer_evict = node->m_prefer_evict,
+                .m_is_local = node->addr.IsLocal(),
+                .m_network = node->ConnectedThroughNetwork(),
+                .m_noban = node->HasPermission(NetPermissionFlags::NoBan),
+                .m_conn_type = node->m_conn_type,
+            };
             vEvictionCandidates.push_back(candidate);
         }
     }
@@ -1375,14 +1170,14 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSy
 
     const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock)), NODE_NONE};
 
-    NetPermissionFlags permissionFlags = NetPermissionFlags::None;
-    hListenSocket.AddSocketPermissionFlags(permissionFlags);
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    hListenSocket.AddSocketPermissionFlags(permission_flags);
 
-    CreateNodeFromAcceptedSocket(std::move(sock), permissionFlags, addr_bind, addr, mn_sync);
+    CreateNodeFromAcceptedSocket(std::move(sock), permission_flags, addr_bind, addr, mn_sync);
 }
 
 void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
-                                            NetPermissionFlags permissionFlags,
+                                            NetPermissionFlags permission_flags,
                                             const CAddress& addr_bind,
                                             const CAddress& addr,
                                             CMasternodeSync& mn_sync)
@@ -1391,14 +1186,14 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     int nVerifiedInboundMasternodes = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    AddWhitelistPermissionFlags(permissionFlags, addr);
+    AddWhitelistPermissionFlags(permission_flags, addr);
     bool legacyWhitelisted = false;
-    if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::Implicit)) {
-        NetPermissions::ClearFlag(permissionFlags, NetPermissionFlags::Implicit);
-        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::ForceRelay);
-        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::Relay);
-        NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::Mempool);
-        NetPermissions::AddFlag(permissionFlags, NetPermissionFlags::NoBan);
+    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::Implicit)) {
+        NetPermissions::ClearFlag(permission_flags, NetPermissionFlags::Implicit);
+        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::ForceRelay);
+        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Relay);
+        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Mempool);
+        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::NoBan);
         legacyWhitelisted = true;
     }
 
@@ -1443,7 +1238,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
-    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && banned)
+    if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && banned)
     {
         LogPrint(BCLog::NET, "%s (banned)\n", strDropped);
         return;
@@ -1451,7 +1246,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
     bool discouraged = m_banman && m_banman->IsDiscouraged(addr);
-    if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
+    if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToStringAddrPort());
         return;
@@ -1482,7 +1277,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
     ServiceFlags nodeServices = nLocalServices;
-    if (NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::BloomFilter)) {
+    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::BloomFilter)) {
         nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_BLOOM);
     }
 
@@ -1495,12 +1290,15 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                              addr_bind,
                              /*addrNameIn=*/"",
                              ConnectionType::INBOUND,
-                             inbound_onion);
+                             inbound_onion,
+                             CNodeOptions{
+                                 .permission_flags = permission_flags,
+                                 .prefer_evict = discouraged,
+                                 .recv_flood_size = nReceiveFloodSize,
+                             });
     pnode->AddRef();
-    pnode->m_permissionFlags = permissionFlags;
     // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
     pnode->m_legacyWhitelisted = legacyWhitelisted;
-    pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
     {
@@ -1710,16 +1508,8 @@ void CConnman::CalculateNumConnectionsChangedStats()
     mapSentBytesMsgStats[NET_MESSAGE_TYPE_OTHER] = 0;
     const NodesSnapshot snap{*this, /* filter = */ CConnman::FullyConnectedOnly};
     for (auto pnode : snap.Nodes()) {
-        {
-            LOCK(pnode->cs_vRecv);
-            for (const mapMsgTypeSize::value_type &i : pnode->mapRecvBytesPerMsgType)
-                mapRecvBytesMsgStats[i.first] += i.second;
-        }
-        {
-            LOCK(pnode->cs_vSend);
-            for (const mapMsgTypeSize::value_type &i : pnode->mapSendBytesPerMsgType)
-                mapSentBytesMsgStats[i.first] += i.second;
-        }
+        WITH_LOCK(pnode->cs_vRecv, pnode->UpdateRecvMapWithStats(mapRecvBytesMsgStats));
+        WITH_LOCK(pnode->cs_vSend, pnode->UpdateSentMapWithStats(mapSentBytesMsgStats));
         if (pnode->m_bloom_filter_loaded.load()) {
             spvNodes++;
         } else {
@@ -2312,19 +2102,7 @@ size_t CConnman::SocketRecvData(CNode *pnode)
         }
         RecordBytesRecv(nBytes);
         if (notify) {
-            size_t nSizeAdded = 0;
-            auto it(pnode->vRecvMsg.begin());
-            for (; it != pnode->vRecvMsg.end(); ++it) {
-                // vRecvMsg contains only completed CNetMessage
-                // the single possible partially deserialized message are held by TransportDeserializer
-                nSizeAdded += it->m_raw_message_size;
-            }
-            {
-                LOCK(pnode->cs_vProcessMsg);
-                pnode->vProcessMsg.splice(pnode->vProcessMsg.end(), pnode->vRecvMsg, pnode->vRecvMsg.begin(), it);
-                pnode->nProcessQueueSize += nSizeAdded;
-                pnode->fPauseRecv = pnode->nProcessQueueSize > nReceiveFloodSize;
-            }
+            pnode->MarkReceivedMsgsForProcessing();
             WakeMessageHandler();
         }
     }
@@ -2686,12 +2464,14 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
         //
         CAddress addrConnect;
 
-        // Only connect out to one peer per network group (/16 for IPv4).
+        // Only connect out to one peer per ipv4/ipv6 network group (/16 for IPv4).
         // This is only done for mainnet and testnet
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
         int nOutboundOnionRelay = 0;
-        std::set<std::vector<unsigned char> > setConnected;
+        int outbound_privacy_network_peers = 0;
+        std::set<std::vector<unsigned char>> outbound_ipv46_peer_netgroups;
+
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(m_nodes_mutex);
             for (const CNode* pnode : m_nodes) {
@@ -2699,20 +2479,33 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
                 if (pnode->IsFullOutboundConn() && pnode->ConnectedThroughNetwork() == Network::NET_ONION) nOutboundOnionRelay++;
 
-                // Netgroups for inbound and manual peers are not excluded because our goal here
-                // is to not use multiple of our limited outbound slots on a single netgroup
-                // but inbound and manual peers do not use our outbound slots. Inbound peers
-                // also have the added issue that they could be attacker controlled and used
-                // to prevent us from connecting to particular hosts if we used them here.
+                // Make sure our persistent outbound slots to ipv4/ipv6 peers belong to different netgroups.
                 switch (pnode->m_conn_type) {
+                    // We currently don't take inbound connections into account. Since they are
+                    // free to make, an attacker could make them to prevent us from connecting to
+                    // certain peers.
                     case ConnectionType::INBOUND:
-                    case ConnectionType::MANUAL:
-                        break;
-                    case ConnectionType::OUTBOUND_FULL_RELAY:
-                    case ConnectionType::BLOCK_RELAY:
+                    // Short-lived outbound connections should not affect how we select outbound
+                    // peers from addrman.
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
-                        setConnected.insert(m_netgroupman.GetGroup(pnode->addr));
+                        break;
+                    case ConnectionType::MANUAL:
+                    case ConnectionType::OUTBOUND_FULL_RELAY:
+                    case ConnectionType::BLOCK_RELAY:
+                        const CAddress address{pnode->addr};
+                        if (address.IsTor() || address.IsI2P() || address.IsCJDNS()) {
+                            // Since our addrman-groups for these networks are
+                            // random, without relation to the route we
+                            // take to connect to these peers or to the
+                            // difficulty in obtaining addresses with diverse
+                            // groups, we don't worry about diversity with
+                            // respect to our addrman groups when connecting to
+                            // these networks.
+                            ++outbound_privacy_network_peers;
+                        } else {
+                            outbound_ipv46_peer_netgroups.insert(m_netgroupman.GetGroup(address));
+                        }
                 } // no default case, so the compiler can warn about missing cases
             }
         }
@@ -2802,7 +2595,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
-                    setConnected.count(m_netgroupman.GetGroup(addr))) continue;
+                    outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
                 LogPrint(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToStringAddrPort());
                 break;
@@ -2845,13 +2638,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
             auto dmn = mnList.GetMNByService(addr);
             bool isMasternode = dmn != nullptr;
 
-            // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(m_netgroupman.GetGroup(addr))) {
+            // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
+            if (!fFeeler && outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) {
                 break;
             }
 
             // if we selected an invalid address, restart
-            if (!addr.IsValid() || setConnected.count(m_netgroupman.GetGroup(addr)))
+            if (!addr.IsValid() || outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr)))
                 break;
 
             // don't try to connect to masternodes that we already have a connection to (most likely inbound)
@@ -2906,8 +2699,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, CDe
                     LogPrint(BCLog::NET, "Making feeler connection\n");
                 }
             }
-
-            OpenNetworkConnection(addrConnect, (int)setConnected.size() >= std::min(nMaxConnections - 1, 2), &grant, nullptr, conn_type);
+            // Record addrman failure attempts when node has at least 2 persistent outbound connections to peers with
+            // different netgroups in ipv4/ipv6 networks + all peers in Tor/I2P/CJDNS networks.
+            // Don't record addrman failure attempts when node is offline. This can be identified since all local
+            // network connections (if any) belong in the same netgroup, and the size of `outbound_ipv46_peer_netgroups` would only be 1.
+            const bool count_failures{((int)outbound_ipv46_peer_netgroups.size() + outbound_privacy_network_peers) >= std::min(nMaxConnections - 1, 2)};
+            OpenNetworkConnection(addrConnect, count_failures, &grant, /*strDest=*/nullptr, conn_type);
         }
     }
 }
@@ -4250,8 +4047,6 @@ ServiceFlags CConnman::GetLocalServices() const
     return nLocalServices;
 }
 
-unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
-
 CNode::CNode(NodeId idIn,
              std::shared_ptr<Sock> sock,
              const CAddress& addrIn,
@@ -4261,19 +4056,22 @@ CNode::CNode(NodeId idIn,
              const std::string& addrNameIn,
              ConnectionType conn_type_in,
              bool inbound_onion,
-             std::unique_ptr<i2p::sam::Session>&& i2p_sam_session)
+             CNodeOptions&& node_opts)
     : m_transport{std::make_unique<V1Transport>(idIn, SER_NETWORK, INIT_PROTO_VERSION)},
+      m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringAddrPort() : addrNameIn},
       m_inbound_onion{inbound_onion},
+      m_prefer_evict{node_opts.prefer_evict},
       nKeyedNetGroup{nKeyedNetGroupIn},
+      m_conn_type{conn_type_in},
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
-      m_conn_type{conn_type_in},
-      m_i2p_sam_session{std::move(i2p_sam_session)}
+      m_recv_flood_size{node_opts.recv_flood_size},
+      m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 
@@ -4286,6 +4084,37 @@ CNode::CNode(NodeId idIn,
     } else {
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
+}
+
+void CNode::MarkReceivedMsgsForProcessing()
+{
+    AssertLockNotHeld(m_msg_process_queue_mutex);
+
+    size_t nSizeAdded = 0;
+    for (const auto& msg : vRecvMsg) {
+        // vRecvMsg contains only completed CNetMessage
+        // the single possible partially deserialized message are held by TransportDeserializer
+        nSizeAdded += msg.m_raw_message_size;
+    }
+
+    LOCK(m_msg_process_queue_mutex);
+    m_msg_process_queue.splice(m_msg_process_queue.end(), vRecvMsg);
+    m_msg_process_queue_size += nSizeAdded;
+    fPauseRecv = m_msg_process_queue_size > m_recv_flood_size;
+}
+
+std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage()
+{
+    LOCK(m_msg_process_queue_mutex);
+    if (m_msg_process_queue.empty()) return std::nullopt;
+
+    std::list<CNetMessage> msgs;
+    // Just take one message
+    msgs.splice(msgs.begin(), m_msg_process_queue, m_msg_process_queue.begin());
+    m_msg_process_queue_size -= msgs.front().m_raw_message_size;
+    fPauseRecv = m_msg_process_queue_size > m_recv_flood_size;
+
+    return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
 
 bool CConnman::NodeFullyConnected(const CNode* pnode)
