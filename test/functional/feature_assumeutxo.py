@@ -313,7 +313,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.connect_nodes(snapshot_node.index, miner.index)
         self.sync_blocks(nodes=(miner, snapshot_node))
         # Check the base snapshot block was stored and ensure node signals full-node service support
-        self.wait_until(lambda: not try_rpc(-1, "Block not found", snapshot_node.getblock, snapshot_block_hash))
+        self.wait_until(lambda: not try_rpc(-1, "Block not available (not fully downloaded)", snapshot_node.getblock, snapshot_block_hash))
         self.wait_until(lambda: 'NETWORK' in snapshot_node.getnetworkinfo()['localservicesnames'])
 
         # Now that the snapshot_node is synced, verify the ibd_node can sync from it
@@ -485,7 +485,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         # find coinbase output at snapshot height on node0 and scan for it on node1,
         # where the block is not available, but the snapshot was loaded successfully
         coinbase_tx = n0.getblock(snapshot_hash, verbosity=2)['tx'][0]
-        assert_raises_rpc_error(-1, "Block not found on disk", n1.getblock, snapshot_hash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", n1.getblock, snapshot_hash)
         coinbase_output_descriptor = coinbase_tx['vout'][0]['scriptPubKey']['desc']
         scan_result = n1.scantxoutset('start', [coinbase_output_descriptor])
         assert_equal(scan_result['success'], True)
@@ -557,7 +557,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Submit a spending transaction for a snapshot chainstate coin to the mempool")
         # spend the coinbase output of the first block that is not available on node1
         spend_coin_blockhash = n1.getblockhash(START_HEIGHT + 1)
-        assert_raises_rpc_error(-1, "Block not found on disk", n1.getblock, spend_coin_blockhash)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", n1.getblock, spend_coin_blockhash)
         prev_tx = n0.getblock(spend_coin_blockhash, 3)['tx'][0]
         prevout = {"txid": prev_tx['txid'], "vout": 0, "scriptPubKey": prev_tx['vout'][0]['scriptPubKey']['hex']}
         privkey = n0.get_deterministic_priv_key().key

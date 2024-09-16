@@ -201,8 +201,10 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
         case TxVerbosity::SHOW_DETAILS_AND_PREVOUT:
             CBlockUndo blockUndo;
             const bool is_not_pruned{WITH_LOCK(::cs_main, return !blockman.IsBlockPruned(blockindex))};
-            const bool have_undo{is_not_pruned && blockman.UndoReadFromDisk(blockUndo, blockindex)};
-
+            bool have_undo{is_not_pruned && WITH_LOCK(::cs_main, return blockindex.nStatus & BLOCK_HAVE_UNDO)};
+            if (have_undo && !blockman.UndoReadFromDisk(blockUndo, blockindex)) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.");
+            }
             for (size_t i = 0; i < block.vtx.size(); ++i) {
                 const CTransactionRef& tx = block.vtx.at(i);
                 // coinbase transaction (i.e. i == 0) doesn't have undo data
@@ -597,20 +599,32 @@ static RPCHelpMan getblockheader()
     };
 }
 
+void CheckBlockDataAvailability(BlockManager& blockman, const CBlockIndex& blockindex, bool check_for_undo)
+{
+    AssertLockHeld(cs_main);
+    uint32_t flag = check_for_undo ? BLOCK_HAVE_UNDO : BLOCK_HAVE_DATA;
+    if (!(blockindex.nStatus & flag)) {
+        if (blockman.IsBlockPruned(blockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("%s not available (pruned data)", check_for_undo ? "Undo data" : "Block"));
+        }
+        if (check_for_undo) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available");
+        }
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (not fully downloaded)");
+    }
+}
+
 static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockindex)
 {
     CBlock block;
     {
         LOCK(cs_main);
-        if (blockman.IsBlockPruned(blockindex)) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
-        }
+        CheckBlockDataAvailability(blockman, blockindex, /*check_for_undo=*/false);
     }
 
     if (!blockman.ReadBlockFromDisk(block, blockindex)) {
-        // Block not found on disk. This could be because we have the block
-        // header in our index but not yet have the block or did not accept the
-        // block. Or if the block was pruned right after we released the lock above.
+        // Block not found on disk. This shouldn't normally happen unless the block was
+        // pruned right after we released the lock above.
         throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
     }
 
@@ -623,16 +637,13 @@ static std::vector<uint8_t> GetRawBlockChecked(BlockManager& blockman, const CBl
     FlatFilePos pos{};
     {
         LOCK(cs_main);
-        if (blockman.IsBlockPruned(blockindex)) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
-        }
+        CheckBlockDataAvailability(blockman, blockindex, /*check_for_undo=*/false);
         pos = blockindex.GetBlockPos();
     }
 
     if (!blockman.ReadRawBlockFromDisk(data, pos)) {
-        // Block not found on disk. This could be because we have the block
-        // header in our index but not yet have the block or did not accept the
-        // block. Or if the block was pruned right after we released the lock above.
+        // Block not found on disk. This shouldn't normally happen unless the block was
+        // pruned right after we released the lock above.
         throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
     }
 
@@ -648,9 +659,7 @@ static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex& bloc
 
     {
         LOCK(cs_main);
-        if (blockman.IsBlockPruned(blockindex)) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
-        }
+        CheckBlockDataAvailability(blockman, blockindex, /*check_for_undo=*/true);
     }
 
     if (!blockman.UndoReadFromDisk(blockUndo, blockindex)) {
