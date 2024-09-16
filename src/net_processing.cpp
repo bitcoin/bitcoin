@@ -124,8 +124,11 @@ static constexpr std::chrono::minutes PING_INTERVAL{2};
 static const unsigned int MAX_LOCATOR_SZ = 101;
 /** Number of blocks that can be requested at any given time from a single peer. */
 static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
-/** Time during which a peer must stall block download progress before being disconnected. */
-static constexpr auto BLOCK_STALLING_TIMEOUT = 2s;
+/** Default time during which a peer must stall block download progress before being disconnected.
+ * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
+static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
+/** Maximum timeout for stalling block download. */
+static constexpr auto BLOCK_STALLING_TIMEOUT_MAX{64s};
 /** Maximum depth of blocks we're willing to serve as compact blocks to peers
  *  when requested. For older blocks, a regular BLOCK response will be sent. */
 static const int MAX_CMPCTBLOCK_DEPTH = 5;
@@ -834,6 +837,9 @@ private:
 
     /** Number of preferable block download peers. */
     int m_num_preferred_download_peers GUARDED_BY(cs_main){0};
+
+    /** Stalling timeout for blocks in IBD */
+    std::atomic<std::chrono::seconds> m_block_stalling_timeout{BLOCK_STALLING_TIMEOUT_DEFAULT};
 
     bool AlreadyHave(const CInv& inv)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_recent_confirmed_transactions_mutex);
@@ -1896,8 +1902,9 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 }
 
 /**
- * Evict orphan txn pool entries (EraseOrphanTx) based on a newly connected
- * block. Also save the time of the last tip update.
+ * Evict orphan txn pool entries based on a newly connected
+ * block. Also save the time of the last tip update and
+ * possibly reduce dynamic block stalling timeout.
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
@@ -1916,6 +1923,16 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
         LOCK(m_recent_confirmed_transactions_mutex);
         for (const auto& ptx : pblock->vtx) {
             m_recent_confirmed_transactions.insert(ptx->GetHash());
+        }
+    }
+
+    // In case the dynamic timeout was doubled once or more, reduce it slowly back to its default value
+    auto stalling_timeout = m_block_stalling_timeout.load();
+    Assume(stalling_timeout >= BLOCK_STALLING_TIMEOUT_DEFAULT);
+    if (stalling_timeout != BLOCK_STALLING_TIMEOUT_DEFAULT) {
+        const auto new_timeout = std::max(std::chrono::duration_cast<std::chrono::seconds>(stalling_timeout * 0.85), BLOCK_STALLING_TIMEOUT_DEFAULT);
+        if (m_block_stalling_timeout.compare_exchange_strong(stalling_timeout, new_timeout)) {
+            LogPrint(BCLog::NET, "Decreased stalling timeout to %d seconds\n", new_timeout.count());
         }
     }
 }
@@ -5855,12 +5872,19 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
         // Detect whether we're stalling
-        if (state.m_stalling_since.count() && state.m_stalling_since < current_time - BLOCK_STALLING_TIMEOUT) {
+        auto stalling_timeout = m_block_stalling_timeout.load();
+        if (state.m_stalling_since.count() && state.m_stalling_since < current_time - stalling_timeout) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
             LogPrintf("Peer=%d is stalling block download, disconnecting\n", pto->GetId());
             pto->fDisconnect = true;
+            // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
+            // bandwidth is insufficient.
+            const auto new_timeout = std::min(2 * stalling_timeout, BLOCK_STALLING_TIMEOUT_MAX);
+            if (stalling_timeout != new_timeout && m_block_stalling_timeout.compare_exchange_strong(stalling_timeout, new_timeout)) {
+                LogPrint(BCLog::NET, "Increased stalling timeout temporarily to %d seconds\n", m_block_stalling_timeout.load().count());
+            }
             return true;
         }
         // In case there is a block that has been in flight from this peer for block_interval * (1 + 0.5 * N)

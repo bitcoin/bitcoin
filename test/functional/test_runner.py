@@ -254,6 +254,7 @@ BASE_SCRIPTS = [
     'wallet_importprunedfunds.py --descriptors',
     'p2p_leak_tx.py',
     'p2p_eviction.py',
+    'p2p_ibd_stalling.py',
     'rpc_signmessage.py',
     'rpc_generateblock.py',
     'rpc_generate.py',
