@@ -565,9 +565,22 @@ const static CAmount FAIL = -3;
 const static CAmount VALUE1 = 100;
 const static CAmount VALUE2 = 200;
 const static CAmount VALUE3 = 300;
+
 const static char DIRTY = CCoinsCacheEntry::DIRTY;
 const static char FRESH = CCoinsCacheEntry::FRESH;
 const static char NO_ENTRY = -1;
+
+struct CoinEntry {
+    const CAmount value;
+    const char flags;
+
+    constexpr CoinEntry(const CAmount v, const char s) : value{v}, flags{s} {}
+
+    bool operator==(const CoinEntry& o) const = default;
+    friend std::ostream& operator<<(std::ostream& os, const CoinEntry& e) { return os << e.value << ", " << e.flags; }
+};
+
+using MaybeCoin = std::optional<CoinEntry>;
 
 const static auto FLAGS = {char(0), FRESH, DIRTY, char(DIRTY | FRESH)};
 const static auto CLEAN_FLAGS = {char(0), FRESH};
@@ -585,48 +598,39 @@ static void SetCoinsValue(CAmount value, Coin& coin)
     }
 }
 
-static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, CAmount value, char flags)
+static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, const CoinEntry& cache_coin)
 {
-    if (value == ABSENT) {
-        assert(flags == NO_ENTRY);
+    if (cache_coin.value == ABSENT) {
+        assert(cache_coin.flags == NO_ENTRY);
         return 0;
     }
-    assert(flags != NO_ENTRY);
+    assert(cache_coin.flags != NO_ENTRY);
     CCoinsCacheEntry entry;
-    SetCoinsValue(value, entry.coin);
+    SetCoinsValue(cache_coin.value, entry.coin);
     auto inserted = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
-    if (flags & DIRTY) CCoinsCacheEntry::SetDirty(*inserted.first, sentinel);
-    if (flags & FRESH) CCoinsCacheEntry::SetFresh(*inserted.first, sentinel);
+    if (cache_coin.flags & DIRTY) CCoinsCacheEntry::SetDirty(*inserted.first, sentinel);
+    if (cache_coin.flags & FRESH) CCoinsCacheEntry::SetFresh(*inserted.first, sentinel);
     return inserted.first->second.coin.DynamicMemoryUsage();
 }
 
-void GetCoinsMapEntry(const CCoinsMap& map, CAmount& value, char& flags, const COutPoint& outp = OUTPOINT)
+MaybeCoin GetCoinsMapEntry(const CCoinsMap& map, const COutPoint& outp = OUTPOINT)
 {
-    auto it = map.find(outp);
-    if (it == map.end()) {
-        value = ABSENT;
-        flags = NO_ENTRY;
-    } else {
-        if (it->second.coin.IsSpent()) {
-            value = SPENT;
-        } else {
-            value = it->second.coin.out.nValue;
-        }
-        flags = 0;
-        if (it->second.IsDirty()) flags |= DIRTY;
-        if (it->second.IsFresh()) flags |= FRESH;
-        assert(flags != NO_ENTRY);
+    if (auto it{map.find(outp)}; it != map.end()) {
+        return CoinEntry{
+            it->second.coin.IsSpent() ? SPENT : it->second.coin.out.nValue,
+            static_cast<char>((it->second.IsDirty() ? DIRTY : 0) | (it->second.IsFresh() ? FRESH : 0))};
     }
+    return CoinEntry{ABSENT, NO_ENTRY}; // TODO empty
 }
 
-void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
+void WriteCoinsViewEntry(CCoinsView& view, const CoinEntry& cache_coin)
 {
     CoinsCachePair sentinel{};
     sentinel.second.SelfRef(sentinel);
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
-    auto usage{InsertCoinsMapEntry(map, sentinel, value, flags)};
+    auto usage{InsertCoinsMapEntry(map, sentinel, cache_coin)};
     auto cursor{CoinsViewCacheCursor(usage, sentinel, map, /*will_erase=*/true)};
     BOOST_CHECK(view.BatchWrite(cursor, {}));
 }
@@ -634,10 +638,10 @@ void WriteCoinsViewEntry(CCoinsView& view, CAmount value, char flags)
 class SingleEntryCacheTest
 {
 public:
-    SingleEntryCacheTest(CAmount base_value, CAmount cache_value, char cache_flags)
+    SingleEntryCacheTest(CAmount base_value, const CoinEntry& cache_coin)
     {
-        WriteCoinsViewEntry(base, base_value, base_value == ABSENT ? NO_ENTRY : DIRTY);
-        cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), cache_value, cache_flags);
+        WriteCoinsViewEntry(base, CoinEntry{base_value, base_value == ABSENT ? NO_ENTRY : DIRTY}); // TODO complete state should be absent
+        cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), cache_coin);
     }
 
     CCoinsView root;
@@ -645,17 +649,16 @@ public:
     CCoinsViewCacheTest cache{&base};
 };
 
-static void CheckAccessCoin(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
+static void CheckAccessCoin(CAmount base_value, const CoinEntry& cache_coin, const CoinEntry& expected)
 {
-    SingleEntryCacheTest test(base_value, cache_value, cache_flags);
+    SingleEntryCacheTest test{base_value, cache_coin};
     test.cache.AccessCoin(OUTPOINT);
     test.cache.SelfTest(/*sanity_check=*/false);
-
-    CAmount result_value;
-    char result_flags;
-    GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
-    BOOST_CHECK_EQUAL(result_value, expected_value);
-    BOOST_CHECK_EQUAL(result_flags, expected_flags);
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(test.cache.map()), expected);
+}
+static void CheckAccessCoin(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
+{
+    CheckAccessCoin(base_value, CoinEntry{cache_value, cache_flags}, CoinEntry{expected_value, expected_flags});
 }
 
 BOOST_AUTO_TEST_CASE(ccoins_access)
@@ -696,18 +699,17 @@ BOOST_AUTO_TEST_CASE(ccoins_access)
     CheckAccessCoin(VALUE1, VALUE2, VALUE2, DIRTY|FRESH, DIRTY|FRESH);
 }
 
-static void CheckSpendCoins(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
+static void CheckSpendCoins(CAmount base_value, const CoinEntry& cache_coin, const CoinEntry& expected)
 {
-    SingleEntryCacheTest test(base_value, cache_value, cache_flags);
+    SingleEntryCacheTest test{base_value, cache_coin};
     test.cache.SpendCoin(OUTPOINT);
     test.cache.SelfTest();
-
-    CAmount result_value;
-    char result_flags;
-    GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
-    BOOST_CHECK_EQUAL(result_value, expected_value);
-    BOOST_CHECK_EQUAL(result_flags, expected_flags);
-};
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(test.cache.map()), expected);
+}
+static void CheckSpendCoins(CAmount base_value, CAmount cache_value, CAmount expected_value, char cache_flags, char expected_flags)
+{
+    CheckSpendCoins(base_value, CoinEntry{cache_value, cache_flags}, CoinEntry{expected_value, expected_flags});
+}
 
 BOOST_AUTO_TEST_CASE(ccoins_spend)
 {
@@ -747,25 +749,22 @@ BOOST_AUTO_TEST_CASE(ccoins_spend)
     CheckSpendCoins(VALUE1, VALUE2, ABSENT, DIRTY|FRESH, NO_ENTRY   );
 }
 
-static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount modify_value, CAmount expected_value, char cache_flags, char expected_flags, bool coinbase)
+static void CheckAddCoinBase(CAmount base_value, CAmount modify_value, const CoinEntry& cache_coin, const CoinEntry& expected, bool coinbase)
 {
-    SingleEntryCacheTest test(base_value, cache_value, cache_flags);
-
-    CAmount result_value;
-    char result_flags;
+    SingleEntryCacheTest test{base_value, cache_coin};
     try {
         CTxOut output;
         output.nValue = modify_value;
         test.cache.AddCoin(OUTPOINT, Coin(std::move(output), 1, coinbase), coinbase);
         test.cache.SelfTest();
-        GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
+        BOOST_CHECK_EQUAL(GetCoinsMapEntry(test.cache.map()), expected);
     } catch (std::logic_error&) {
-        result_value = FAIL;
-        result_flags = NO_ENTRY;
+        BOOST_CHECK_EQUAL(CoinEntry(FAIL, NO_ENTRY), expected); // TODO empty
     }
-
-    BOOST_CHECK_EQUAL(result_value, expected_value);
-    BOOST_CHECK_EQUAL(result_flags, expected_flags);
+}
+static void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount modify_value, CAmount expected_value, char cache_flags, char expected_flags, bool coinbase)
+{
+    CheckAddCoinBase(base_value, modify_value, CoinEntry{cache_value, cache_flags}, CoinEntry{expected_value, expected_flags}, coinbase);
 }
 
 // Simple wrapper for CheckAddCoinBase function above that loops through
@@ -810,23 +809,20 @@ BOOST_AUTO_TEST_CASE(ccoins_add)
     CheckAddCoin(VALUE2, VALUE3, VALUE3, DIRTY|FRESH, DIRTY|FRESH, true );
 }
 
+void CheckWriteCoins(const CoinEntry& parent, const CoinEntry& child, const CoinEntry& expected)
+{
+    SingleEntryCacheTest test{ABSENT, parent};
+    try {
+        WriteCoinsViewEntry(test.cache, child);
+        test.cache.SelfTest(/*sanity_check=*/false);
+        BOOST_CHECK_EQUAL(GetCoinsMapEntry(test.cache.map()), expected);
+    } catch (std::logic_error&) {
+        BOOST_CHECK_EQUAL(CoinEntry(FAIL, NO_ENTRY), expected); // TODO empty
+    }
+}
 void CheckWriteCoins(CAmount parent_value, CAmount child_value, CAmount expected_value, char parent_flags, char child_flags, char expected_flags)
 {
-    SingleEntryCacheTest test(ABSENT, parent_value, parent_flags);
-
-    CAmount result_value;
-    char result_flags;
-    try {
-        WriteCoinsViewEntry(test.cache, child_value, child_flags);
-        test.cache.SelfTest(/*sanity_check=*/false);
-        GetCoinsMapEntry(test.cache.map(), result_value, result_flags);
-    } catch (std::logic_error&) {
-        result_value = FAIL;
-        result_flags = NO_ENTRY;
-    }
-
-    BOOST_CHECK_EQUAL(result_value, expected_value);
-    BOOST_CHECK_EQUAL(result_flags, expected_flags);
+    CheckWriteCoins(CoinEntry{parent_value, parent_flags}, CoinEntry{child_value, child_flags}, CoinEntry{expected_value, expected_flags});
 }
 
 BOOST_AUTO_TEST_CASE(ccoins_write)
@@ -923,8 +919,6 @@ void TestFlushBehavior(
     std::vector<std::unique_ptr<CCoinsViewCacheTest>>& all_caches,
     bool do_erasing_flush)
 {
-    CAmount value;
-    char flags;
     size_t cache_usage;
     size_t cache_size;
 
@@ -958,9 +952,7 @@ void TestFlushBehavior(
     BOOST_CHECK(!base.HaveCoin(outp));
     BOOST_CHECK(view->HaveCoin(outp));
 
-    GetCoinsMapEntry(view->map(), value, flags, outp);
-    BOOST_CHECK_EQUAL(value, coin.out.nValue);
-    BOOST_CHECK_EQUAL(flags, DIRTY|FRESH);
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, DIRTY|FRESH));
 
     // --- 2. Flushing all caches (without erasing)
     //
@@ -972,9 +964,7 @@ void TestFlushBehavior(
 
     // --- 3. Ensuring the entry still exists in the cache and has been written to parent
     //
-    GetCoinsMapEntry(view->map(), value, flags, outp);
-    BOOST_CHECK_EQUAL(value, coin.out.nValue);
-    BOOST_CHECK_EQUAL(flags, 0);  // Flags should have been wiped.
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, 0));  // Flags should have been wiped.
 
     // Both views should now have the coin.
     BOOST_CHECK(base.HaveCoin(outp));
@@ -992,14 +982,9 @@ void TestFlushBehavior(
 
         // --- 5. Ensuring the entry is no longer in the cache
         //
-        GetCoinsMapEntry(view->map(), value, flags, outp);
-        BOOST_CHECK_EQUAL(value, ABSENT);
-        BOOST_CHECK_EQUAL(flags, NO_ENTRY);
-
+        BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(ABSENT, NO_ENTRY));
         view->AccessCoin(outp);
-        GetCoinsMapEntry(view->map(), value, flags, outp);
-        BOOST_CHECK_EQUAL(value, coin.out.nValue);
-        BOOST_CHECK_EQUAL(flags, 0);
+        BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, 0));
     }
 
     // Can't overwrite an entry without specifying that an overwrite is
@@ -1013,9 +998,7 @@ void TestFlushBehavior(
     BOOST_CHECK(view->SpendCoin(outp));
 
     // The coin should be in the cache, but spent and marked dirty.
-    GetCoinsMapEntry(view->map(), value, flags, outp);
-    BOOST_CHECK_EQUAL(value, SPENT);
-    BOOST_CHECK_EQUAL(flags, DIRTY);
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(SPENT, DIRTY));
     BOOST_CHECK(!view->HaveCoin(outp)); // Coin should be considered spent in `view`.
     BOOST_CHECK(base.HaveCoin(outp));  // But coin should still be unspent in `base`.
 
@@ -1066,10 +1049,7 @@ void TestFlushBehavior(
     all_caches[0]->AddCoin(outp, std::move(coin), false);
 
     // Coin should be FRESH in the cache.
-    GetCoinsMapEntry(all_caches[0]->map(), value, flags, outp);
-    BOOST_CHECK_EQUAL(value, coin_val);
-    BOOST_CHECK_EQUAL(flags, DIRTY|FRESH);
-
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(all_caches[0]->map(), outp), CoinEntry(coin_val, DIRTY|FRESH));
     // Base shouldn't have seen coin.
     BOOST_CHECK(!base.HaveCoin(outp));
 
@@ -1077,9 +1057,7 @@ void TestFlushBehavior(
     all_caches[0]->Sync();
 
     // Ensure there is no sign of the coin after spend/flush.
-    GetCoinsMapEntry(all_caches[0]->map(), value, flags, outp);
-    BOOST_CHECK_EQUAL(value, ABSENT);
-    BOOST_CHECK_EQUAL(flags, NO_ENTRY);
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(all_caches[0]->map(), outp), CoinEntry(ABSENT, NO_ENTRY));
     BOOST_CHECK(!all_caches[0]->HaveCoinInCache(outp));
     BOOST_CHECK(!base.HaveCoin(outp));
 }
