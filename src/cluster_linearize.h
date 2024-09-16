@@ -118,6 +118,28 @@ public:
         }
     }
 
+    /** Construct a DepGraph object given another DepGraph and a mapping from old to new.
+     *
+     * Complexity: O(N^2) where N=depgraph.TxCount().
+     */
+    DepGraph(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> mapping) noexcept : entries(depgraph.TxCount())
+    {
+        Assert(mapping.size() == depgraph.TxCount());
+        // Fill in fee, size, ancestors.
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            const auto& input = depgraph.entries[i];
+            auto& output = entries[mapping[i]];
+            output.feerate = input.feerate;
+            for (auto j : input.ancestors) output.ancestors.Set(mapping[j]);
+        }
+        // Fill in descendant information.
+        for (ClusterIndex i = 0; i < entries.size(); ++i) {
+            for (auto j : entries[i].ancestors) {
+                entries[j].descendants.Set(i);
+            }
+        }
+    }
+
     /** Get the number of transactions in the graph. Complexity: O(1). */
     auto TxCount() const noexcept { return entries.size(); }
     /** Get the feerate of a given transaction i. Complexity: O(1). */
@@ -256,6 +278,14 @@ struct SetInfo
     /** Construct a SetInfo for a set of transactions in a depgraph. */
     explicit SetInfo(const DepGraph<SetType>& depgraph, const SetType& txn) noexcept :
         transactions(txn), feerate(depgraph.FeeRate(txn)) {}
+
+    /** Add a transaction to this SetInfo (which must not yet be in it). */
+    void Set(const DepGraph<SetType>& depgraph, ClusterIndex pos) noexcept
+    {
+        Assume(!transactions[pos]);
+        transactions.Set(pos);
+        feerate += depgraph.FeeRate(pos);
+    }
 
     /** Add the transactions of other to this SetInfo (no overlap allowed). */
     SetInfo& operator|=(const SetInfo& other) noexcept
@@ -506,6 +536,12 @@ public:
         return m_todo.None();
     }
 
+    /** Count the number of remaining unlinearized transactions. */
+    ClusterIndex NumRemaining() const noexcept
+    {
+        return m_todo.Count();
+    }
+
     /** Find the best (highest-feerate, smallest among those in case of a tie) ancestor set
      *  among the remaining transactions. Requires !AllDone().
      *
@@ -541,10 +577,31 @@ class SearchCandidateFinder
 {
     /** Internal RNG. */
     InsecureRandomContext m_rng;
-    /** Internal dependency graph for the cluster. */
-    const DepGraph<SetType>& m_depgraph;
-    /** Which transactions are left to do (sorted indices). */
+    /** m_sorted_to_original[i] is the original position that sorted transaction position i had. */
+    std::vector<ClusterIndex> m_sorted_to_original;
+    /** m_original_to_sorted[i] is the sorted position original transaction position i has. */
+    std::vector<ClusterIndex> m_original_to_sorted;
+    /** Internal dependency graph for the cluster (with transactions in decreasing individual
+     *  feerate order). */
+    DepGraph<SetType> m_sorted_depgraph;
+    /** Which transactions are left to do (indices in m_sorted_depgraph's order). */
     SetType m_todo;
+
+    /** Given a set of transactions with sorted indices, get their original indices. */
+    SetType SortedToOriginal(const SetType& arg) const noexcept
+    {
+        SetType ret;
+        for (auto pos : arg) ret.Set(m_sorted_to_original[pos]);
+        return ret;
+    }
+
+    /** Given a set of transactions with original indices, get their sorted indices. */
+    SetType OriginalToSorted(const SetType& arg) const noexcept
+    {
+        SetType ret;
+        for (auto pos : arg) ret.Set(m_original_to_sorted[pos]);
+        return ret;
+    }
 
 public:
     /** Construct a candidate finder for a graph.
@@ -552,12 +609,28 @@ public:
      * @param[in] depgraph   Dependency graph for the to-be-linearized cluster.
      * @param[in] rng_seed   A random seed to control the search order.
      *
-     * Complexity: O(1).
+     * Complexity: O(N^2) where N=depgraph.Count().
      */
-    SearchCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND, uint64_t rng_seed) noexcept :
+    SearchCandidateFinder(const DepGraph<SetType>& depgraph, uint64_t rng_seed) noexcept :
         m_rng(rng_seed),
-        m_depgraph(depgraph),
-        m_todo(SetType::Fill(depgraph.TxCount())) {}
+        m_sorted_to_original(depgraph.TxCount()),
+        m_original_to_sorted(depgraph.TxCount()),
+        m_todo(SetType::Fill(depgraph.TxCount()))
+    {
+        // Determine reordering mapping, by sorting by decreasing feerate.
+        std::iota(m_sorted_to_original.begin(), m_sorted_to_original.end(), ClusterIndex{0});
+        std::sort(m_sorted_to_original.begin(), m_sorted_to_original.end(), [&](auto a, auto b) {
+            auto feerate_cmp = depgraph.FeeRate(a) <=> depgraph.FeeRate(b);
+            if (feerate_cmp == 0) return a < b;
+            return feerate_cmp > 0;
+        });
+        // Compute reverse mapping.
+        for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
+            m_original_to_sorted[m_sorted_to_original[i]] = i;
+        }
+        // Compute reordered dependency graph.
+        m_sorted_depgraph = DepGraph(depgraph, m_original_to_sorted);
+    }
 
     /** Check whether any unlinearized transactions remain. */
     bool AllDone() const noexcept
@@ -580,11 +653,14 @@ public:
      *                              be <= max_iterations. If strictly < max_iterations, the
      *                              returned subset is optimal.
      *
-     * Complexity: O(N * min(max_iterations, 2^N)) where N=depgraph.TxCount().
+     * Complexity: possibly O(N * min(max_iterations, sqrt(2^N))) where N=depgraph.TxCount().
      */
     std::pair<SetInfo<SetType>, uint64_t> FindCandidateSet(uint64_t max_iterations, SetInfo<SetType> best) noexcept
     {
         Assume(!AllDone());
+
+        // Convert the provided best to internal sorted indices.
+        best.transactions = OriginalToSorted(best.transactions);
 
         /** Type for work queue items. */
         struct WorkItem
@@ -596,16 +672,27 @@ public:
             /** Set of undecided transactions. This must be a subset of m_todo, and have no overlap
              *  with inc. The set (inc | und) must be topologically valid. */
             SetType und;
+            /** (Only when inc is not empty) The best feerate of any superset of inc that is also a
+             *  subset of (inc | und), without requiring it to be topologically valid. It forms a
+             *  conservative upper bound on how good a set this work item can give rise to.
+             *  Transactions whose feerate is below best's are ignored when determining this value,
+             *  which means it may technically be an underestimate, but if so, this work item
+             *  cannot result in something that beats best anyway. */
+            FeeFrac pot_feerate;
 
             /** Construct a new work item. */
-            WorkItem(SetInfo<SetType>&& i, SetType&& u) noexcept :
-                inc(std::move(i)), und(std::move(u)) {}
+            WorkItem(SetInfo<SetType>&& i, SetType&& u, FeeFrac&& p_f) noexcept :
+                inc(std::move(i)), und(std::move(u)), pot_feerate(std::move(p_f))
+            {
+                Assume(pot_feerate.IsEmpty() == inc.feerate.IsEmpty());
+            }
 
             /** Swap two WorkItems. */
             void Swap(WorkItem& other) noexcept
             {
                 swap(inc, other.inc);
                 swap(und, other.und);
+                swap(pot_feerate, other.pot_feerate);
             }
         };
 
@@ -613,39 +700,111 @@ public:
         VecDeque<WorkItem> queue;
         queue.reserve(std::max<size_t>(256, 2 * m_todo.Count()));
 
-        // Create an initial entry with m_todo as undecided. Also use it as best if not provided,
-        // so that during the work processing loop below, and during the add_fn/split_fn calls, we
-        // do not need to deal with the best=empty case.
-        if (best.feerate.IsEmpty()) best = SetInfo(m_depgraph, m_todo);
-        queue.emplace_back(SetInfo<SetType>{}, SetType{m_todo});
+        // Create initial entries per connected component of m_todo. While clusters themselves are
+        // generally connected, this is not necessarily true after some parts have already been
+        // removed from m_todo. Without this, effort can be wasted on searching "inc" sets that
+        // span multiple components.
+        auto to_cover = m_todo;
+        do {
+            auto component = m_sorted_depgraph.FindConnectedComponent(to_cover);
+            to_cover -= component;
+            // If best is not provided, set it to the first component, so that during the work
+            // processing loop below, and during the add_fn/split_fn calls, we do not need to deal
+            // with the best=empty case.
+            if (best.feerate.IsEmpty()) best = SetInfo(m_sorted_depgraph, component);
+            queue.emplace_back(/*inc=*/SetInfo<SetType>{},
+                               /*und=*/std::move(component),
+                               /*pot_feerate=*/FeeFrac{});
+        } while (to_cover.Any());
 
         /** Local copy of the iteration limit. */
         uint64_t iterations_left = max_iterations;
 
+        /** The set of transactions in m_todo which have feerate > best's. */
+        SetType imp = m_todo;
+        while (imp.Any()) {
+            ClusterIndex check = imp.Last();
+            if (m_sorted_depgraph.FeeRate(check) >> best.feerate) break;
+            imp.Reset(check);
+        }
+
         /** Internal function to add an item to the queue of elements to explore if there are any
-         *  transactions left to split on, and to update best.
+         *  transactions left to split on, possibly improving it before doing so, and to update
+         *  best/imp.
          *
          * - inc: the "inc" value for the new work item (must be topological).
          * - und: the "und" value for the new work item ((inc | und) must be topological).
          */
         auto add_fn = [&](SetInfo<SetType> inc, SetType und) noexcept {
+            /** SetInfo object with the set whose feerate will become the new work item's
+             *  pot_feerate. It starts off equal to inc. */
+            auto pot = inc;
             if (!inc.feerate.IsEmpty()) {
+                // Add entries to pot. We iterate over all undecided transactions whose feerate is
+                // higher than best. While undecided transactions of lower feerate may improve pot,
+                // the resulting pot feerate cannot possibly exceed best's (and this item will be
+                // skipped in split_fn anyway).
+                for (auto pos : imp & und) {
+                    // Determine if adding transaction pos to pot (ignoring topology) would improve
+                    // it. If not, we're done updating pot. This relies on the fact that
+                    // m_sorted_depgraph, and thus the transactions iterated over, are in decreasing
+                    // individual feerate order.
+                    if (!(m_sorted_depgraph.FeeRate(pos) >> pot.feerate)) break;
+                    pot.Set(m_sorted_depgraph, pos);
+                }
+
+                // The "jump ahead" optimization: whenever pot has a topologically-valid subset,
+                // that subset can be added to inc. Any subset of (pot - inc) has the property that
+                // its feerate exceeds that of any set compatible with this work item (superset of
+                // inc, subset of (inc | und)). Thus, if T is a topological subset of pot, and B is
+                // the best topologically-valid set compatible with this work item, and (T - B) is
+                // non-empty, then (T | B) is better than B and also topological. This is in
+                // contradiction with the assumption that B is best. Thus, (T - B) must be empty,
+                // or T must be a subset of B.
+                //
+                // See https://delvingbitcoin.org/t/how-to-linearize-your-cluster/303 section 2.4.
+                const auto init_inc = inc.transactions;
+                for (auto pos : pot.transactions - inc.transactions) {
+                    // If the transaction's ancestors are a subset of pot, we can add it together
+                    // with its ancestors to inc. Just update the transactions here; the feerate
+                    // update happens below.
+                    auto anc_todo = m_sorted_depgraph.Ancestors(pos) & m_todo;
+                    if (anc_todo.IsSubsetOf(pot.transactions)) inc.transactions |= anc_todo;
+                }
+                // Finally update und and inc's feerate to account for the added transactions.
+                und -= inc.transactions;
+                inc.feerate += m_sorted_depgraph.FeeRate(inc.transactions - init_inc);
+
                 // If inc's feerate is better than best's, remember it as our new best.
                 if (inc.feerate > best.feerate) {
                     best = inc;
+                    // See if we can remove any entries from imp now.
+                    while (imp.Any()) {
+                        ClusterIndex check = imp.Last();
+                        if (m_sorted_depgraph.FeeRate(check) >> best.feerate) break;
+                        imp.Reset(check);
+                    }
                 }
+
+                // If no potential transactions exist beyond the already included ones, no
+                // improvement is possible anymore.
+                if (pot.feerate.size == inc.feerate.size) return;
+                // At this point und must be non-empty. If it were empty then pot would equal inc.
+                Assume(und.Any());
             } else {
                 Assume(inc.transactions.None());
+                // If inc is empty, we just make sure there are undecided transactions left to
+                // split on.
+                if (und.None()) return;
             }
-
-            // Make sure there are undecided transactions left to split on.
-            if (und.None()) return;
 
             // Actually construct a new work item on the queue. Due to the switch to DFS when queue
             // space runs out (see below), we know that no reallocation of the queue should ever
             // occur.
             Assume(queue.size() < queue.capacity());
-            queue.emplace_back(std::move(inc), std::move(und));
+            queue.emplace_back(/*inc=*/std::move(inc),
+                               /*und=*/std::move(und),
+                               /*pot_feerate=*/std::move(pot.feerate));
         };
 
         /** Internal process function. It takes an existing work item, and splits it in two: one
@@ -659,18 +818,66 @@ public:
             Assume(elem.inc.transactions.IsSubsetOf(m_todo) && elem.und.IsSubsetOf(m_todo));
             // Included transactions cannot be undecided.
             Assume(!elem.inc.transactions.Overlaps(elem.und));
+            // If pot is empty, then so is inc.
+            Assume(elem.inc.feerate.IsEmpty() == elem.pot_feerate.IsEmpty());
 
-            // Pick the first undecided transaction as the one to split on.
-            const ClusterIndex split = elem.und.First();
+            const ClusterIndex first = elem.und.First();
+            if (!elem.inc.feerate.IsEmpty()) {
+                // If no undecided transactions remain with feerate higher than best, this entry
+                // cannot be improved beyond best.
+                if (!elem.und.Overlaps(imp)) return;
+                // We can ignore any queue item whose potential feerate isn't better than the best
+                // seen so far.
+                if (elem.pot_feerate <= best.feerate) return;
+            } else {
+                // In case inc is empty use a simpler alternative check.
+                if (m_sorted_depgraph.FeeRate(first) <= best.feerate) return;
+            }
+
+            // Decide which transaction to split on. Splitting is how new work items are added, and
+            // how progress is made. One split transaction is chosen among the queue item's
+            // undecided ones, and:
+            // - A work item is (potentially) added with that transaction plus its remaining
+            //   descendants excluded (removed from the und set).
+            // - A work item is (potentially) added with that transaction plus its remaining
+            //   ancestors included (added to the inc set).
+            //
+            // To decide what to split on, consider the undecided ancestors of the highest
+            // individual feerate undecided transaction. Pick the one which reduces the search space
+            // most. Let I(t) be the size of the undecided set after including t, and E(t) the size
+            // of the undecided set after excluding t. Then choose the split transaction t such
+            // that 2^I(t) + 2^E(t) is minimal, tie-breaking by highest individual feerate for t.
+            ClusterIndex split = 0;
+            const auto select = elem.und & m_sorted_depgraph.Ancestors(first);
+            Assume(select.Any());
+            std::optional<std::pair<ClusterIndex, ClusterIndex>> split_counts;
+            for (auto t : select) {
+                // Call max = max(I(t), E(t)) and min = min(I(t), E(t)). Let counts = {max,min}.
+                // Sorting by the tuple counts is equivalent to sorting by 2^I(t) + 2^E(t). This
+                // expression is equal to 2^max + 2^min = 2^max * (1 + 1/2^(max - min)). The second
+                // factor (1 + 1/2^(max - min)) there is in (1,2]. Thus increasing max will always
+                // increase it, even when min decreases. Because of this, we can first sort by max.
+                std::pair<ClusterIndex, ClusterIndex> counts{
+                    (elem.und - m_sorted_depgraph.Ancestors(t)).Count(),
+                    (elem.und - m_sorted_depgraph.Descendants(t)).Count()};
+                if (counts.first < counts.second) std::swap(counts.first, counts.second);
+                // Remember the t with the lowest counts.
+                if (!split_counts.has_value() || counts < *split_counts) {
+                    split = t;
+                    split_counts = counts;
+                }
+            }
+            // Since there was at least one transaction in select, we must always find one.
+            Assume(split_counts.has_value());
 
             // Add a work item corresponding to exclusion of the split transaction.
-            const auto& desc = m_depgraph.Descendants(split);
+            const auto& desc = m_sorted_depgraph.Descendants(split);
             add_fn(/*inc=*/elem.inc,
                    /*und=*/elem.und - desc);
 
             // Add a work item corresponding to inclusion of the split transaction.
-            const auto anc = m_depgraph.Ancestors(split) & m_todo;
-            add_fn(/*inc=*/elem.inc.Add(m_depgraph, anc),
+            const auto anc = m_sorted_depgraph.Ancestors(split) & m_todo;
+            add_fn(/*inc=*/elem.inc.Add(m_sorted_depgraph, anc),
                    /*und=*/elem.und - anc);
 
             // Account for the performed split.
@@ -713,7 +920,9 @@ public:
             split_fn(std::move(elem));
         }
 
-        // Return the found best set and the number of iterations performed.
+        // Return the found best set (converted to the original transaction indices), and the
+        // number of iterations performed.
+        best.transactions = SortedToOriginal(best.transactions);
         return {std::move(best), max_iterations - iterations_left};
     }
 
@@ -723,9 +932,10 @@ public:
      */
     void MarkDone(const SetType& done) noexcept
     {
-        Assume(done.Any());
-        Assume(done.IsSubsetOf(m_todo));
-        m_todo -= done;
+        const auto done_sorted = OriginalToSorted(done);
+        Assume(done_sorted.Any());
+        Assume(done_sorted.IsSubsetOf(m_todo));
+        m_todo -= done_sorted;
     }
 };
 
@@ -744,7 +954,7 @@ public:
  *                                - A boolean indicating whether the result is guaranteed to be
  *                                  optimal.
  *
- * Complexity: O(N * min(max_iterations + N, 2^N)) where N=depgraph.TxCount().
+ * Complexity: possibly O(N * min(max_iterations + N, sqrt(2^N))) where N=depgraph.TxCount().
  */
 template<typename SetType>
 std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, Span<const ClusterIndex> old_linearization = {}) noexcept
@@ -756,9 +966,19 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
     std::vector<ClusterIndex> linearization;
 
     AncestorCandidateFinder anc_finder(depgraph);
-    SearchCandidateFinder src_finder(depgraph, rng_seed);
+    std::optional<SearchCandidateFinder<SetType>> src_finder;
     linearization.reserve(depgraph.TxCount());
     bool optimal = true;
+
+    // Treat the initialization of SearchCandidateFinder as taking N^2/64 (rounded up) iterations
+    // (largely due to the cost of constructing the internal sorted-by-feerate DepGraph inside
+    // SearchCandidateFinder), a rough approximation based on benchmark. If we don't have that
+    // many, don't start it.
+    uint64_t start_iterations = (uint64_t{depgraph.TxCount()} * depgraph.TxCount() + 63) / 64;
+    if (iterations_left > start_iterations) {
+        iterations_left -= start_iterations;
+        src_finder.emplace(depgraph, rng_seed);
+    }
 
     /** Chunking of what remains of the old linearization. */
     LinearizationChunking old_chunking(depgraph, old_linearization);
@@ -772,12 +992,22 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
         auto best = anc_finder.FindCandidateSet();
         if (!best_prefix.feerate.IsEmpty() && best_prefix.feerate >= best.feerate) best = best_prefix;
 
-        // Invoke bounded search to update best, with up to half of our remaining iterations as
-        // limit.
-        uint64_t max_iterations_now = (iterations_left + 1) / 2;
         uint64_t iterations_done_now = 0;
-        std::tie(best, iterations_done_now) = src_finder.FindCandidateSet(max_iterations_now, best);
-        iterations_left -= iterations_done_now;
+        uint64_t max_iterations_now = 0;
+        if (src_finder) {
+            // Treat the invocation of SearchCandidateFinder::FindCandidateSet() as costing N/4
+            // up-front (rounded up) iterations (largely due to the cost of connected-component
+            // splitting), a rough approximation based on benchmarks.
+            uint64_t base_iterations = (anc_finder.NumRemaining() + 3) / 4;
+            if (iterations_left > base_iterations) {
+                // Invoke bounded search to update best, with up to half of our remaining
+                // iterations as limit.
+                iterations_left -= base_iterations;
+                max_iterations_now = (iterations_left + 1) / 2;
+                std::tie(best, iterations_done_now) = src_finder->FindCandidateSet(max_iterations_now, best);
+                iterations_left -= iterations_done_now;
+            }
+        }
 
         if (iterations_done_now == max_iterations_now) {
             optimal = false;
@@ -795,7 +1025,7 @@ std::pair<std::vector<ClusterIndex>, bool> Linearize(const DepGraph<SetType>& de
         // Update state to reflect best is no longer to be linearized.
         anc_finder.MarkDone(best.transactions);
         if (anc_finder.AllDone()) break;
-        src_finder.MarkDone(best.transactions);
+        if (src_finder) src_finder->MarkDone(best.transactions);
         if (old_chunking.NumChunksLeft() > 0) {
             old_chunking.MarkDone(best.transactions);
         }

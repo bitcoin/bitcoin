@@ -165,6 +165,23 @@ std::pair<std::vector<ClusterIndex>, bool> SimpleLinearize(const DepGraph<SetTyp
     return {std::move(linearization), optimal};
 }
 
+/** Stitch connected components together in a DepGraph, guaranteeing its corresponding cluster is connected. */
+template<typename BS>
+void MakeConnected(DepGraph<BS>& depgraph)
+{
+    auto todo = BS::Fill(depgraph.TxCount());
+    auto comp = depgraph.FindConnectedComponent(todo);
+    Assume(depgraph.IsConnected(comp));
+    todo -= comp;
+    while (todo.Any()) {
+        auto nextcomp = depgraph.FindConnectedComponent(todo);
+        Assume(depgraph.IsConnected(nextcomp));
+        depgraph.AddDependency(comp.Last(), nextcomp.First());
+        todo -= nextcomp;
+        comp = nextcomp;
+    }
+}
+
 /** Given a dependency graph, and a todo set, read a topological subset of todo from reader. */
 template<typename SetType>
 SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& todo, SpanReader& reader)
@@ -369,6 +386,20 @@ FUZZ_TARGET(clusterlin_components)
     assert(depgraph.FindConnectedComponent(todo).None());
 }
 
+FUZZ_TARGET(clusterlin_make_connected)
+{
+    // Verify that MakeConnected makes graphs connected.
+
+    SpanReader reader(buffer);
+    DepGraph<TestBitSet> depgraph;
+    try {
+        reader >> Using<DepGraphFormatter>(depgraph);
+    } catch (const std::ios_base::failure&) {}
+    MakeConnected(depgraph);
+    SanityCheck(depgraph);
+    assert(depgraph.IsConnected());
+}
+
 FUZZ_TARGET(clusterlin_chunking)
 {
     // Verify the correctness of the ChunkLinearization function.
@@ -398,7 +429,7 @@ FUZZ_TARGET(clusterlin_chunking)
         SetInfo<TestBitSet> accumulator, best;
         for (ClusterIndex idx : linearization) {
             if (todo[idx]) {
-                accumulator |= SetInfo(depgraph, idx);
+                accumulator.Set(depgraph, idx);
                 if (best.feerate.IsEmpty() || accumulator.feerate >> best.feerate) {
                     best = accumulator;
                 }
@@ -427,6 +458,7 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
     while (todo.Any()) {
         // Call the ancestor finder's FindCandidateSet for what remains of the graph.
         assert(!anc_finder.AllDone());
+        assert(todo.Count() == anc_finder.NumRemaining());
         auto best_anc = anc_finder.FindCandidateSet();
         // Sanity check the result.
         assert(best_anc.transactions.Any());
@@ -458,6 +490,7 @@ FUZZ_TARGET(clusterlin_ancestor_finder)
         anc_finder.MarkDone(del_set);
     }
     assert(anc_finder.AllDone());
+    assert(anc_finder.NumRemaining() == 0);
 }
 
 static constexpr auto MAX_SIMPLE_ITERATIONS = 300000;
@@ -468,13 +501,17 @@ FUZZ_TARGET(clusterlin_search_finder)
     // and comparing with the results from SimpleCandidateFinder, ExhaustiveCandidateFinder, and
     // AncestorCandidateFinder.
 
-    // Retrieve an RNG seed and a depgraph from the fuzz input.
+    // Retrieve an RNG seed, a depgraph, and whether to make it connected, from the fuzz input.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
     uint64_t rng_seed{0};
+    uint8_t make_connected{1};
     try {
-        reader >> Using<DepGraphFormatter>(depgraph) >> rng_seed;
+        reader >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
     } catch (const std::ios_base::failure&) {}
+    // The most complicated graphs are connected ones (other ones just split up). Optionally force
+    // the graph to be connected.
+    if (make_connected) MakeConnected(depgraph);
 
     // Instantiate ALL the candidate finders.
     SearchCandidateFinder src_finder(depgraph, rng_seed);
@@ -488,6 +525,7 @@ FUZZ_TARGET(clusterlin_search_finder)
         assert(!smp_finder.AllDone());
         assert(!exh_finder.AllDone());
         assert(!anc_finder.AllDone());
+        assert(anc_finder.NumRemaining() == todo.Count());
 
         // For each iteration, read an iteration count limit from the fuzz input.
         uint64_t max_iterations = 1;
@@ -513,9 +551,17 @@ FUZZ_TARGET(clusterlin_search_finder)
             assert(found.transactions.IsSupersetOf(depgraph.Ancestors(i) & todo));
         }
 
-        // At most 2^N-1 iterations can be required: the number of non-empty subsets a graph with N
-        // transactions has.
-        assert(iterations_done <= ((uint64_t{1} << todo.Count()) - 1));
+        // At most 2^(N-1) iterations can be required: the maximum number of non-empty topological
+        // subsets a (connected) cluster with N transactions can have. Even when the cluster is no
+        // longer connected after removing certain transactions, this holds, because the connected
+        // components are searched separately.
+        assert(iterations_done <= (uint64_t{1} << (todo.Count() - 1)));
+        // Additionally, test that no more than sqrt(2^N)+1 iterations are required. This is just
+        // an empirical bound that seems to hold, without proof. Still, add a test for it so we
+        // can learn about counterexamples if they exist.
+        if (iterations_done >= 1 && todo.Count() <= 63) {
+            Assume((iterations_done - 1) * (iterations_done - 1) <= uint64_t{1} << todo.Count());
+        }
 
         // Perform quality checks only if SearchCandidateFinder claims an optimal result.
         if (iterations_done < max_iterations) {
@@ -562,6 +608,7 @@ FUZZ_TARGET(clusterlin_search_finder)
     assert(smp_finder.AllDone());
     assert(exh_finder.AllDone());
     assert(anc_finder.AllDone());
+    assert(anc_finder.NumRemaining() == 0);
 }
 
 FUZZ_TARGET(clusterlin_linearization_chunking)
@@ -621,7 +668,7 @@ FUZZ_TARGET(clusterlin_linearization_chunking)
             SetInfo<TestBitSet> accumulator, best;
             for (auto j : linearization) {
                 if (todo[j] && !combined[j]) {
-                    accumulator |= SetInfo(depgraph, j);
+                    accumulator.Set(depgraph, j);
                     if (best.feerate.IsEmpty() || accumulator.feerate > best.feerate) {
                         best = accumulator;
                     }
@@ -685,14 +732,19 @@ FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
 
-    // Retrieve an RNG seed, an iteration count, and a depgraph from the fuzz input.
+    // Retrieve an RNG seed, an iteration count, a depgraph, and whether to make it connected from
+    // the fuzz input.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
     uint64_t rng_seed{0};
     uint64_t iter_count{0};
+    uint8_t make_connected{1};
     try {
-        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed;
+        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
     } catch (const std::ios_base::failure&) {}
+    // The most complicated graphs are connected ones (other ones just split up). Optionally force
+    // the graph to be connected.
+    if (make_connected) MakeConnected(depgraph);
 
     // Optionally construct an old linearization for it.
     std::vector<ClusterIndex> old_linearization;
@@ -721,11 +773,23 @@ FUZZ_TARGET(clusterlin_linearize)
     }
 
     // If the iteration count is sufficiently high, an optimal linearization must be found.
-    // Each linearization step can use up to 2^k iterations, with steps k=1..n. That sum is
-    // 2 * (2^n - 1)
+    // Each linearization step can use up to 2^(k-1) iterations, with steps k=1..n. That sum is
+    // 2^n - 1.
     const uint64_t n = depgraph.TxCount();
-    if (n <= 18 && iter_count > 2U * ((uint64_t{1} << n) - 1U)) {
+    if (n <= 19 && iter_count > (uint64_t{1} << n)) {
         assert(optimal);
+    }
+    // Additionally, if the assumption of sqrt(2^k)+1 iterations per step holds, plus ceil(k/4)
+    // start-up cost per step, plus ceil(n^2/64) start-up cost overall, we can compute the upper
+    // bound for a whole linearization (summing for k=1..n) using the Python expression
+    // [sum((k+3)//4 + int(math.sqrt(2**k)) + 1 for k in range(1, n + 1)) + (n**2 + 63) // 64 for n in range(0, 35)]:
+    static constexpr uint64_t MAX_OPTIMAL_ITERS[] = {
+        0, 4, 8, 12, 18, 26, 37, 51, 70, 97, 133, 182, 251, 346, 480, 666, 927, 1296, 1815, 2545,
+        3576, 5031, 7087, 9991, 14094, 19895, 28096, 39690, 56083, 79263, 112041, 158391, 223936,
+        316629, 447712
+    };
+    if (n < std::size(MAX_OPTIMAL_ITERS) && iter_count >= MAX_OPTIMAL_ITERS[n]) {
+        Assume(optimal);
     }
 
     // If Linearize claims optimal result, run quality tests.
