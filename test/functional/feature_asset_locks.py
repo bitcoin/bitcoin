@@ -47,7 +47,7 @@ blocks_in_one_day = 576
 
 class AssetLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 3, [["-whitelist=127.0.0.1", "-llmqtestinstantsenddip0024=llmq_test_instantsend"]] * 5, evo_count=3)
+        self.set_dash_test_params(4, 2, [["-whitelist=127.0.0.1", "-llmqtestinstantsenddip0024=llmq_test_instantsend"]] * 4, evo_count=2)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -229,6 +229,13 @@ class AssetLocksTest(DashTestFramework):
             self.nodes[1].generate(batch)
             self.sync_all()
 
+    # This functional test intentionally setup only 2 MN and only 2 Evo nodes
+    # to ensure that corner case of quorum with minimum amount of nodes as possible
+    # does not cause any issues in Dash Core
+    def mine_quorum_2_nodes(self, llmq_type_name, llmq_type):
+        self.mine_quorum(llmq_type_name=llmq_type_name, expected_members=2, expected_connections=1, expected_contributions=2, expected_commitments=2, llmq_type=llmq_type)
+
+
     def run_test(self):
         node_wallet = self.nodes[0]
         node = self.nodes[1]
@@ -241,9 +248,9 @@ class AssetLocksTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        self.mine_quorum(llmq_type_name='llmq_test_instantsend', llmq_type=104)
+        self.mine_quorum_2_nodes(llmq_type_name='llmq_test_instantsend', llmq_type=104)
 
-        for _ in range(3):
+        for _ in range(2):
             self.dynamically_add_masternode(evo=True)
             node.generate(8)
             self.sync_blocks()
@@ -321,7 +328,7 @@ class AssetLocksTest(DashTestFramework):
         self.create_and_check_block([extra_lock_tx], expected_error = 'bad-cbtx-assetlocked-amount')
 
         self.log.info("Mine a quorum...")
-        self.mine_quorum(llmq_type_name='llmq_test_platform', llmq_type=106, expected_connections=2, expected_members=3, expected_contributions=3, expected_complaints=0, expected_justifications=0, expected_commitments=3 )
+        self.mine_quorum_2_nodes(llmq_type_name='llmq_test_platform', llmq_type=106)
 
         self.validate_credit_pool_balance(locked_1)
 
@@ -407,7 +414,7 @@ class AssetLocksTest(DashTestFramework):
             reason = "double copy")
 
         self.log.info("Mining next quorum to check tx 'asset_unlock_tx_late' is still valid...")
-        self.mine_quorum(llmq_type_name="llmq_test_platform", llmq_type=106)
+        self.mine_quorum_2_nodes(llmq_type_name='llmq_test_platform', llmq_type=106)
         self.log.info("Checking credit pool amount is same...")
         self.validate_credit_pool_balance(locked - 1 * COIN)
         self.check_mempool_result(tx=asset_unlock_tx_late, result_expected={'allowed': True, 'fees': {'base': Decimal(str(tiny_amount / COIN))}})
@@ -427,7 +434,7 @@ class AssetLocksTest(DashTestFramework):
                 result_expected={'allowed': False, 'reject-reason' : 'bad-assetunlock-too-late'})
 
         self.log.info("Checking that two quorums later it is too late because quorum is not active...")
-        self.mine_quorum(llmq_type_name="llmq_test_platform", llmq_type=106)
+        self.mine_quorum_2_nodes(llmq_type_name='llmq_test_platform', llmq_type=106)
         self.log.info("Expecting new reject-reason...")
         self.check_mempool_result(tx=asset_unlock_tx_too_late,
                 result_expected={'allowed': False, 'reject-reason' : 'bad-assetunlock-not-active-quorum'})
@@ -504,7 +511,7 @@ class AssetLocksTest(DashTestFramework):
 
         self.log.info("Fast forward to the next day to reset all current unlock limits...")
         self.slowly_generate_batch(blocks_in_one_day)
-        self.mine_quorum(llmq_type_name="llmq_test_platform", llmq_type=106)
+        self.mine_quorum_2_nodes(llmq_type_name='llmq_test_platform', llmq_type=106)
 
         total = self.get_credit_pool_balance()
         coins = node_wallet.listunspent()
