@@ -95,8 +95,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->verticalLayout->setStretchFactor(ui->tabWidget, 1);
 
     /* Main elements init */
-    ui->databaseCache->setMinimum(nMinDbCache);
-    ui->databaseCache->setMaximum(nMaxDbCache);
+    ui->databaseCache->setRange(nMinDbCache, std::numeric_limits<int>::max());
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
     ui->pruneWarning->setVisible(false);
