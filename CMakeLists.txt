@@ -71,6 +71,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/module)
 
+# Flatten static lib dependencies.
+# Without this, if libfoo.a depends on libbar.a, libfoo's objects can't begin
+# to be compiled until libbar.a has been created.
+if (NOT DEFINED CMAKE_OPTIMIZE_DEPENDENCIES)
+  set(CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
+endif()
+
 #=============================
 # Configurable options
 #=============================

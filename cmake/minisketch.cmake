@@ -74,6 +74,9 @@ add_library(minisketch STATIC EXCLUDE_FROM_ALL
   ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/generic_8bytes.cpp
 )
 
+# Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/24058
+set_target_properties(minisketch PROPERTIES OPTIMIZE_DEPENDENCIES OFF)
+
 target_include_directories(minisketch
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/minisketch/include>
