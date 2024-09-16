@@ -1267,7 +1267,6 @@ class DashTestFramework(BitcoinTestFramework):
         for i in range(0, idx):
             self.connect_nodes(i, idx)
 
-    # TODO: to let creating Evo Nodes without instant-send available
     def dynamically_add_masternode(self, evo=False, rnd=None, should_be_rejected=False):
         mn_idx = len(self.nodes)
 
