@@ -43,6 +43,7 @@ from .test_node import TestNode
 from .util import (
     PortSeed,
     MAX_NODES,
+    append_config,
     assert_equal,
     check_json_precision,
     copy_datadir,
@@ -635,6 +636,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             f.write("upnp=0\n")
             f.write("natpmp=0\n")
             f.write("shrinkdebugfile=0\n")
+            f.write("dip3params=2:2\n")
             os.makedirs(os.path.join(new_data_dir, 'stderr'), exist_ok=True)
             os.makedirs(os.path.join(new_data_dir, 'stdout'), exist_ok=True)
 
@@ -1099,6 +1101,15 @@ class DashTestFramework(BitcoinTestFramework):
         """Tests must override this method to define test logic"""
         raise NotImplementedError
 
+    def add_nodes(self, num_nodes: int, extra_args=None, *, rpchost=None, binary=None, binary_cli=None, versions=None):
+        old_num_nodes = len(self.nodes)
+        super().add_nodes(num_nodes, extra_args, rpchost=rpchost, binary=binary, binary_cli=binary_cli, versions=versions)
+        for i in range(old_num_nodes, old_num_nodes + num_nodes):
+            append_config(self.nodes[i].datadir, ["dip3params=2:2"])
+        if old_num_nodes == 0:
+            # controller node is the only node that has an extra option allowing it to submit sporks
+            append_config(self.nodes[0].datadir, ["sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"])
+
     def connect_nodes(self, a, b):
         for mn2 in self.mninfo:
             if mn2.node is not None:
@@ -1119,9 +1130,6 @@ class DashTestFramework(BitcoinTestFramework):
             extra_args = [[]] * num_nodes
         assert_equal(len(extra_args), num_nodes)
         self.extra_args = [copy.deepcopy(a) for a in extra_args]
-        self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-        for i in range(0, num_nodes):
-            self.extra_args[i].append("-dip3params=2:2")
 
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
