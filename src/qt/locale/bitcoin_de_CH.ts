@@ -2227,6 +2227,14 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
         <translation type="unfinished">Anzahl der Verbindungen</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Lokale Adressen</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Netzwerk-Adressen, die dein Bitcoin-Node aktuell verwendet, um mit anderen Nodes zu kommunizieren.</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Blockchain</translation>
     </message>
@@ -2269,6 +2277,14 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">Gegenstelle auswählen, um detaillierte Informationen zu erhalten.</translation>
+    </message>
+    <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">Gegenstellen Reiter verstecken</translation>
+    </message>
+    <message>
+        <source>Ctrl+X</source>
+        <translation type="unfinished">Strg+X</translation>
     </message>
     <message>
         <source>The transport layer version: %1</source>

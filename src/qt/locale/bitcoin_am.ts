@@ -176,6 +176,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ቦርሳዎ ምስጢር ተደርጓል</translation>
     </message>
     <message>
+        <source>Back</source>
+        <translation type="unfinished">ተመለስ</translation>
+    </message>
+    <message>
         <source>Wallet to be encrypted</source>
         <translation type="unfinished">ለመመስጠር የተዘጋጀ ዋሌት</translation>
     </message>
@@ -252,6 +256,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">ስህተት፥ %1</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">የተከተተ "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">ነባሪ የስርዓት ቅርጸ-ቁምፊ "%1</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">ብጁ…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -363,6 +379,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;ተቀበል</translation>
     </message>
     <message>
+        <source>&amp;Change Passphrase…</source>
+        <translation type="unfinished">&amp;የይለፍ ቃል ቀይር…</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation type="unfinished">በእርሶ የተያዙ መሆኑን ለማረጋገጥ በBitcoin አድራሻዎችዎ መልዕክቶችን ይፈርሙ</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation type="unfinished">&amp;ፋይል</translation>
     </message>
@@ -406,6 +430,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ዋሌት ዝጋ</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">ዋሌትዎን ያዛውሩ</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">ዋሌትዎን ያዛውሩ</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">ዋሌት ስም</translation>
@@ -421,6 +453,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
             <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">ዋሌትዎን ለፍጠር ተሳስተዋል </translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">አዲስ ዋሌት መፍጠር አልተቻለም፣ ሶፍትዌሩ የተቀናበረው ያለ ስኩላይት ድጋፍ ነው (ለገላጭ ዋሌቶች ያስፈልጋል)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -485,6 +525,49 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">ዋሌት ያዛውሩ</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">ዋሌትን ማዛወር ይህንን ዋሌት አንድ ወይም ከዚያ በላይ ወደሆነ ገላጭ ዋሌቶች ይቀይረዋል።አዲስ ዋሌት ማዘጋጀት ያስፈልጋል ።ይህ ዋሌት ምንም ዓይነት የመመልከት ብቻ ስክሪፕቶችን የያዘ ከሆነ፣እነዚያን የመመልከት ብቻ ስክሪፕቶችን የያዘ አዲስ ዋሌት ይፈጠራል።ይህ ዋሌት ሊፈቱ የሚችሉ ነገር ግን የመመልከት ብቻ ያልሆኑ ስክሪፕቶችን የያዘ ከሆነ ፣ እነዚህን የያዘ አዲስ እና ልዩ የሆነ ዋሌት ይፈጠራል ።የማዛወር ሂደቱ ማዘዋወር ከመፈጸሙ በፊት የነዚህን ዋሌቶች መጠባበቂያ ቅጂ ይይዛል።ይህ መጠባበቂያ ቅጂ 1-2 legacy.bak ተብሎ ተሰይሞ በዋሌቱ ማውጫ ውስጥ ይገኛል።የተሳሳተ ዝውውር በሚከሰትበት ጊዜየመጠባበቂያ ቅጂው በ ዋሌት መመለሻ መተግበሪያ ውስጥ ይከማቻል።</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">ዋሌትዎን ያዛውሩ</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">ዋሌት ማዘዋወር &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">ዋሌት '%1' በትክክል ተዛውሯል </translation>
+    </message>
+    <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">የመመልከት ብቻ ስክሪፕቶች'%1'.ወደ ተሰኘው ዋሌት ተዛውረዋል </translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">ሊፈቱ የሚችሉ ነገር ግን የማይታዩ ስክሪፕቶች ወደ አዲስ ዋሌት ተዛውረዋል '%1'።</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">ዝውውሩ አልተሳካም </translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">ዝውውር ተሳክቷል </translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
@@ -501,6 +584,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">አዲሱን ዋሌትዎን ለመፍጠር አንድ እርምጃ ይቀርዎታል</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">እባክዎ ስም ያስገቡ እና ከተፈለገ ማንኛውንም የላቁ አማራጮችን ያንቁ</translation>
+    </message>
     <message>
         <source>Wallet Name</source>
         <translation type="unfinished">ዋሌት ስም</translation>
@@ -590,6 +681,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OptionsDialog</name>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">በአጠቃላይ እይታ ትር ውስጥ ያለ ፊደል</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">ስህተት</translation>
     </message>
@@ -602,11 +697,68 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">%1 ወደ %2 ይልካል</translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
         <translation type="unfinished">አድራሻ</translation>
+    </message>
+    </context>
+<context>
+    <name>RPCConsole</name>
+    <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">የአካባቢ አድራሻዎች</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">የእርስዎ Bitcoin ኖድ ከሌሎች ኖዶች ጋር ለመገናኘት በአሁኑ ጊዜ እየተጠቀመበት ያለው የአውታረ መረብ አድራሻ።</translation>
+    </message>
+    <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">የአቻዎችን ዝርዝር ደብቅ</translation>
+    </message>
+    <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">የማጓጓዣ ንብርብር ስሪት፡ %1</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">መጓጓዣ</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">የክፍለ ጊዜ መለያ</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">የBIP324 ክፍለ ጊዜ መለያ ሕብረቁምፊ በሄክስ።</translation>
+    </message>
+    <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">ማወቅ፡ እኩያ v1 ወይም v2 ሊሆን ይችላል።</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1፡ ያልተመሰጠረ፣ ግልጽ የጽሑፍ ትራንስፖርት ፕሮቶኮል</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2፡ BIP324 የተመሰጠረ የትራንስፖርት ፕሮቶኮል</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">የኖድ መስኮት - [%1]</translation>
     </message>
     </context>
 <context>
@@ -661,6 +813,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Copy fee</source>
         <translation type="unfinished">ክፍያው ቅዳ</translation>
     </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 ከዋሌት %2'</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
@@ -674,6 +830,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">ወደ እነርሱ የተላኩ ቢትኮይን መቀበል እንደሚችሉ ለማረጋገጥ ከርስዎ (P2PKH) አድራሻዎች ጋር መልዕክቶችን/ስምምነቶችን መፈረም ይችላሉ። የማስገር ጥቃቶች እርስዎን ማንነትዎን በእነሱ ላይ እንዲፈርሙ ሊያታልሉዎት ስለሚችሉ ግልጽ ያልሆነ ወይም በዘፈቀደ ላለመፈረም ይጠንቀቁ። የተስማሙባቸውን ሙሉ ዝርዝር መግለጫዎች ብቻ ይፈርሙ።</translation>
+    </message>
+    <message>
+        <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
+        <translation type="unfinished">የገባው አድራሻ የቅርስ (P2PKH) ቁልፍን አያመለክትም። ለሴግዊት እና ሌሎች P2PKH ላልሆኑ የአድራሻ አይነቶች የመልዕክት መፈረም በዚህ የ%1 ስሪት ውስጥ አይደገፍም። እባክዎ አድራሻውን ያረጋግጡ እና እንደገና ይሞክሩ።</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDesc</name>
     <message>
         <source>Date</source>
@@ -685,6 +852,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>matures in %n more block(s)</numerusform>
             <numerusform>matures in %n more block(s)</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (ማረጋገጫው አልተረጋገጠም)</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -739,6 +910,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">ስህተት</translation>
+    </message>
+    </context>
+<context>
+    <name>WalletModel</name>
+    <message>
+        <source>Fee-bump PSBT copied to clipboard</source>
+        <translation type="unfinished">ከክፍያ-ነፃ PSBT ወደ ቅንጥብ ሰሌዳ ተቀድቷል።</translation>
+    </message>
+    <message>
+        <source>Signer error</source>
+        <translation type="unfinished">የፈራሚ ስህተት</translation>
     </message>
     </context>
 <context>
