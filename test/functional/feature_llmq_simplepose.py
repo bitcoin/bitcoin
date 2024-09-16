@@ -161,6 +161,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for _ in range(2):
             mn = mninfos_valid.pop()
             went_offline, instant_ban = invalidate_proc(mn)
+            expected_complaints = expected_contributors - 1
             if went_offline:
                 mninfos_online.remove(mn)
                 expected_contributors -= 1
@@ -169,7 +170,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             # so nodes are PoSe-banned in the same DKG they misbehave without being PoSe-punished first.
             if instant_ban:
                 self.reset_probe_timeouts()
-                self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
+                self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_complaints, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
             else:
                 # It's ok to miss probes/quorum connections up to 5 times.
                 # 6th time is when it should be banned for sure.
