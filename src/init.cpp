@@ -1356,7 +1356,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             if (!SplitHostPort(socket_addr, port_out, host_out)) {
 #ifdef HAVE_SOCKADDR_UN
                 // Allow unix domain sockets for some options e.g. unix:/some/file/path
-                if (!unix || socket_addr.find(ADDR_PREFIX_UNIX) != 0) {
+                if (!unix || !socket_addr.starts_with(ADDR_PREFIX_UNIX)) {
                     return InitError(InvalidPortErrMsg(arg, socket_addr));
                 }
 #else

@@ -230,7 +230,7 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupF
 bool IsUnixSocketPath(const std::string& name)
 {
 #ifdef HAVE_SOCKADDR_UN
-    if (name.find(ADDR_PREFIX_UNIX) != 0) return false;
+    if (!name.starts_with(ADDR_PREFIX_UNIX)) return false;
 
     // Split off "unix:" prefix
     std::string str{name.substr(ADDR_PREFIX_UNIX.length())};
