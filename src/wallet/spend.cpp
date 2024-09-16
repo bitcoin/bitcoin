@@ -1119,18 +1119,14 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), coin_selection_params.m_change_fee, rng_fast);
 
-    if (coin_control.m_max_excess) {
-        coin_selection_params.m_max_excess = std::max(coin_control.m_max_excess.value(), coin_selection_params.m_cost_of_change);
-    } else {
-        coin_selection_params.m_max_excess = coin_selection_params.m_cost_of_change;
-    }
-
     // The smallest change amount should be:
     // 1. at least equal to dust threshold
     // 2. at least 1 sat greater than fees to spend it at m_discard_feerate
     const auto dust = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
     const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
+
+    coin_selection_params.m_max_excess = std::max(coin_control.m_max_excess.value_or(0), coin_selection_params.min_viable_change);
 
     // If set, do not add any excess from a changeless transaction to fees
     coin_selection_params.m_add_excess_to_recipient_position = coin_control.m_add_excess_to_recipient_position;
