@@ -120,10 +120,13 @@ static inline int TxStateSerializedIndex(const TxState& state)
 }
 
 //! Return TxState or SyncTxState as a string for logging or debugging.
+// Improved version of TxStateString using std::ostringstream to avoid multiple string concatenations.
 template<typename T>
 std::string TxStateString(const T& state)
 {
-    return std::visit([](const auto& s) { return s.toString(); }, state);
+    std::ostringstream oss;
+    std::visit([&oss](const auto& s) { oss << s.toString(); }, state);
+    return oss.str();
 }
 
 /**
