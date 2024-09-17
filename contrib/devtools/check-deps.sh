@@ -58,7 +58,7 @@ usage() {
    echo "Usage: $(basename "${BASH_SOURCE[0]}") [BUILD_DIR]"
 }
 
-# Output makefile targets, converting library .a paths to libtool .la targets
+# Output makefile targets, converting library .a paths to CMake targets
 lib_targets() {
   for lib in "${!LIBS[@]}"; do
       for lib_path in ${LIBS[$lib]}; do
