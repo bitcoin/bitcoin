@@ -560,51 +560,57 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     }
 }
 
-const static char DIRTY = CCoinsCacheEntry::DIRTY;
-const static char FRESH = CCoinsCacheEntry::FRESH;
-const static char CLEAN = 0;
-
 struct CoinEntry {
-    const CAmount value;
-    const char flags;
+    enum class State { CLEAN, DIRTY, FRESH, DIRTY_FRESH };
 
-    CoinEntry(CAmount v, char s) : value(v), flags(s) {}
+    const CAmount value;
+    const State state;
+
+    constexpr CoinEntry(CAmount v, State s) : value(v), state(s) {}
 
     bool operator==(const CoinEntry& o) const = default;
-    friend std::ostream& operator<<(std::ostream& os, const CoinEntry& e) { return os << e.value << e.flags; }
+    friend std::ostream& operator<<(std::ostream& os, const CoinEntry& e) { return os << e.value << e.state; }
 
-    constexpr bool IsDirty() const { return flags & DIRTY; }
-    constexpr bool IsFresh() const { return flags & FRESH; }
+    constexpr bool IsDirtyFresh() const { return state == State::DIRTY_FRESH; }
+    constexpr bool IsDirty() const { return state == State::DIRTY || IsDirtyFresh(); }
+    constexpr bool IsFresh() const { return state == State::FRESH || IsDirtyFresh(); }
+
+    static constexpr CoinEntry::State ToState(bool is_dirty, bool is_fresh) {
+        if (is_dirty && is_fresh) return CoinEntry::State::DIRTY_FRESH;
+        if (is_dirty) return CoinEntry::State::DIRTY;
+        if (is_fresh) return CoinEntry::State::FRESH;
+        return CoinEntry::State::CLEAN;
+    }
 };
 
 const static COutPoint OUTPOINT;
-const static CAmount SPENT = -1;
-const static CAmount ABSENT = -2;
-const static CAmount VALUE1 = 100;
-const static CAmount VALUE2 = 200;
-const static CAmount VALUE3 = 300;
+constexpr CAmount SPENT {-1};
+constexpr CAmount ABSENT{-2};
+constexpr CAmount VALUE1{100};
+constexpr CAmount VALUE2{200};
+constexpr CAmount VALUE3{300};
 
-using MaybeCoin = std::optional<CoinEntry>;
+using MaybeCoin   = std::optional<CoinEntry>;
 using CoinOrError = std::variant<MaybeCoin, std::string>;
 
-const static MaybeCoin MISSING            = std::nullopt;
-const static MaybeCoin SPENT_DIRTY        = CoinEntry{SPENT, DIRTY};
-const static MaybeCoin SPENT_DIRTY_FRESH  = CoinEntry{SPENT, DIRTY | FRESH};
-const static MaybeCoin SPENT_FRESH        = CoinEntry{SPENT, FRESH};
-const static MaybeCoin SPENT_CLEAN        = CoinEntry{SPENT, CLEAN};
-const static MaybeCoin VALUE1_DIRTY       = CoinEntry{VALUE1, DIRTY};
-const static MaybeCoin VALUE1_DIRTY_FRESH = CoinEntry{VALUE1, DIRTY | FRESH};
-const static MaybeCoin VALUE1_FRESH       = CoinEntry{VALUE1, FRESH};
-const static MaybeCoin VALUE1_CLEAN       = CoinEntry{VALUE1, CLEAN};
-const static MaybeCoin VALUE2_DIRTY       = CoinEntry{VALUE2, DIRTY};
-const static MaybeCoin VALUE2_DIRTY_FRESH = CoinEntry{VALUE2, DIRTY | FRESH};
-const static MaybeCoin VALUE2_FRESH       = CoinEntry{VALUE2, FRESH};
-const static MaybeCoin VALUE2_CLEAN       = CoinEntry{VALUE2, CLEAN};
-const static MaybeCoin VALUE3_DIRTY       = CoinEntry{VALUE3, DIRTY};
-const static MaybeCoin VALUE3_DIRTY_FRESH = CoinEntry{VALUE3, DIRTY | FRESH};
+constexpr MaybeCoin MISSING           {std::nullopt};
+constexpr MaybeCoin SPENT_DIRTY       {CoinEntry{SPENT,  CoinEntry::State::DIRTY}};
+constexpr MaybeCoin SPENT_DIRTY_FRESH {CoinEntry{SPENT,  CoinEntry::State::DIRTY_FRESH}};
+constexpr MaybeCoin SPENT_FRESH       {CoinEntry{SPENT,  CoinEntry::State::FRESH}};
+constexpr MaybeCoin SPENT_CLEAN       {CoinEntry{SPENT,  CoinEntry::State::CLEAN}};
+constexpr MaybeCoin VALUE1_DIRTY      {CoinEntry{VALUE1, CoinEntry::State::DIRTY}};
+constexpr MaybeCoin VALUE1_DIRTY_FRESH{CoinEntry{VALUE1, CoinEntry::State::DIRTY_FRESH}};
+constexpr MaybeCoin VALUE1_FRESH      {CoinEntry{VALUE1, CoinEntry::State::FRESH}};
+constexpr MaybeCoin VALUE1_CLEAN      {CoinEntry{VALUE1, CoinEntry::State::CLEAN}};
+constexpr MaybeCoin VALUE2_DIRTY      {CoinEntry{VALUE2, CoinEntry::State::DIRTY}};
+constexpr MaybeCoin VALUE2_DIRTY_FRESH{CoinEntry{VALUE2, CoinEntry::State::DIRTY_FRESH}};
+constexpr MaybeCoin VALUE2_FRESH      {CoinEntry{VALUE2, CoinEntry::State::FRESH}};
+constexpr MaybeCoin VALUE2_CLEAN      {CoinEntry{VALUE2, CoinEntry::State::CLEAN}};
+constexpr MaybeCoin VALUE3_DIRTY      {CoinEntry{VALUE3, CoinEntry::State::DIRTY}};
+constexpr MaybeCoin VALUE3_DIRTY_FRESH{CoinEntry{VALUE3, CoinEntry::State::DIRTY_FRESH}};
 
-const static std::string EX_OVERWRITE_UNSPENT = "Attempted to overwrite an unspent coin (when possible_overwrite is false)";
-const static std::string EX_FRESH_MISAPPLIED  = "FRESH flag misapplied to coin that exists in parent cache";
+constexpr auto EX_OVERWRITE_UNSPENT{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"};
+constexpr auto EX_FRESH_MISAPPLIED {"FRESH flag misapplied to coin that exists in parent cache"};
 
 static void SetCoinsValue(CAmount value, Coin& coin)
 {
@@ -624,22 +630,22 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, cons
     SetCoinsValue(cache_coin.value, entry.coin);
     auto [iter, inserted] = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted);
-    if (cache_coin.flags & DIRTY) iter->second.SetDirty(*iter, sentinel);
-    if (cache_coin.flags & FRESH) iter->second.SetFresh(*iter, sentinel);
+    if (cache_coin.IsDirty()) iter->second.SetDirty(*iter, sentinel);
+    if (cache_coin.IsFresh()) iter->second.SetFresh(*iter, sentinel);
     return iter->second.coin.DynamicMemoryUsage();
 }
 
-MaybeCoin GetCoinsMapEntry(const CCoinsMap& map, const COutPoint& outp = OUTPOINT)
+static MaybeCoin GetCoinsMapEntry(const CCoinsMap& map, const COutPoint& outp = OUTPOINT)
 {
     if (auto it{map.find(outp)}; it != map.end()) {
         return CoinEntry{
             it->second.coin.IsSpent() ? SPENT : it->second.coin.out.nValue,
-            static_cast<char>((it->second.IsDirty() ? DIRTY : 0) | (it->second.IsFresh() ? FRESH : 0))};
+            CoinEntry::ToState(it->second.IsDirty(), it->second.IsFresh())};
     }
     return MISSING;
 }
 
-void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
+static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
 {
     CoinsCachePair sentinel{};
     sentinel.second.SelfRef(sentinel);
@@ -655,7 +661,7 @@ class SingleEntryCacheTest
 public:
     SingleEntryCacheTest(CAmount base_value, const MaybeCoin& cache_coin)
     {
-        auto base_cache_coin{base_value == ABSENT ? MISSING : CoinEntry{base_value, DIRTY}};
+        auto base_cache_coin{base_value == ABSENT ? MISSING : CoinEntry{base_value, CoinEntry::State::DIRTY}};
         WriteCoinsViewEntry(base, base_cache_coin);
         if (cache_coin) cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
     }
@@ -803,7 +809,7 @@ BOOST_AUTO_TEST_CASE(ccoins_add)
     }
 }
 
-void CheckWriteCoins(const MaybeCoin& parent, const MaybeCoin& child, const CoinOrError expected)
+static void CheckWriteCoins(const MaybeCoin& parent, const MaybeCoin& child, const CoinOrError expected)
 {
     SingleEntryCacheTest test(ABSENT, parent);
     auto write_coins{[&]() { WriteCoinsViewEntry(test.cache, child); }};
@@ -873,7 +879,7 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
     CheckWriteCoins(VALUE1_DIRTY_FRESH, VALUE2_DIRTY,       VALUE2_DIRTY_FRESH );
     CheckWriteCoins(VALUE1_DIRTY_FRESH, VALUE2_DIRTY_FRESH, EX_FRESH_MISAPPLIED);
 
-    // The checks above omit cases where the child flags are not DIRTY, since
+    // The checks above omit cases where the child state is not DIRTY, since
     // they would be too repetitive (the parent cache is never updated in these
     // cases). The loop below covers these cases and makes sure the parent cache
     // is always left unchanged.
@@ -949,7 +955,7 @@ void TestFlushBehavior(
     BOOST_CHECK(!base.HaveCoin(outp));
     BOOST_CHECK(view->HaveCoin(outp));
 
-    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, DIRTY|FRESH));
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::DIRTY_FRESH));
 
     // --- 2. Flushing all caches (without erasing)
     //
@@ -961,7 +967,7 @@ void TestFlushBehavior(
 
     // --- 3. Ensuring the entry still exists in the cache and has been written to parent
     //
-    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CLEAN)); // Flags should have been wiped.
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::CLEAN)); // State should have been wiped.
 
     // Both views should now have the coin.
     BOOST_CHECK(base.HaveCoin(outp));
@@ -981,7 +987,7 @@ void TestFlushBehavior(
         //
         BOOST_CHECK(!GetCoinsMapEntry(view->map(), outp));
         view->AccessCoin(outp);
-        BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CLEAN));
+        BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::CLEAN));
     }
 
     // Can't overwrite an entry without specifying that an overwrite is
@@ -1046,7 +1052,7 @@ void TestFlushBehavior(
     all_caches[0]->AddCoin(outp, std::move(coin), false);
 
     // Coin should be FRESH in the cache.
-    BOOST_CHECK_EQUAL(GetCoinsMapEntry(all_caches[0]->map(), outp), CoinEntry(coin_val, DIRTY|FRESH));
+    BOOST_CHECK_EQUAL(GetCoinsMapEntry(all_caches[0]->map(), outp), CoinEntry(coin_val, CoinEntry::State::DIRTY_FRESH));
     // Base shouldn't have seen coin.
     BOOST_CHECK(!base.HaveCoin(outp));
 
