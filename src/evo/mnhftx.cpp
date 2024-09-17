@@ -231,10 +231,7 @@ std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& bl
             return signals;
         }
         for (const auto& versionBit : new_signals) {
-            if (Params().IsValidMNActivation(versionBit, pindex->GetMedianTimePast())) {
-                signals.insert({versionBit, mined_height});
-            }
-
+            signals.insert({versionBit, mined_height});
         }
 
         AddToCache(signals, pindex);
