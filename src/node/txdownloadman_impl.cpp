@@ -477,17 +477,7 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
     // already; and an adversary can already relay us old transactions
     // (older than our recency filter) if trying to DoS us, without any need
     // for witness malleation.
-    if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/true)) {
-
-        if (RecentRejectsReconsiderableFilter().contains(wtxid)) {
-            // When a transaction is already in m_lazy_recent_rejects_reconsiderable, we shouldn't submit
-            // it by itself again. However, look for a matching child in the orphanage, as it is
-            // possible that they succeed as a package.
-            LogDebug(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage\n",
-                     txid.ToString(), wtxid.ToString());
-            return std::make_pair(false, Find1P1CPackage(ptx, nodeid));
-        }
-
+    if (AlreadyHaveTx(GenTxid::Wtxid(wtxid), /*include_reconsiderable=*/false)) {
         // If a tx is detected by m_lazy_recent_rejects it is ignored. Because we haven't
         // submitted the tx to our mempool, we won't have computed a DoS
         // score for it or determined exactly why we consider it invalid.
@@ -504,7 +494,15 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
         // peer simply for relaying a tx that our m_lazy_recent_rejects has caught,
         // regardless of false positives.
         return {false, std::nullopt};
+    } else if (RecentRejectsReconsiderableFilter().contains(wtxid)) {
+        // When a transaction is already in m_lazy_recent_rejects_reconsiderable, we shouldn't submit
+        // it by itself again. However, look for a matching child in the orphanage, as it is
+        // possible that they succeed as a package.
+        LogDebug(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage\n",
+                 txid.ToString(), wtxid.ToString());
+        return {false, Find1P1CPackage(ptx, nodeid)};
     }
+
 
     return {true, std::nullopt};
 }
