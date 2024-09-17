@@ -93,19 +93,23 @@ bool SockMan::BindAndStartListening(const CService& to, bilingual_str& err_msg)
 
 std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
 {
-    struct sockaddr_storage sockaddr;
-    socklen_t len = sizeof(sockaddr);
-    auto sock = listen_sock.Accept((struct sockaddr*)&sockaddr, &len);
+    sockaddr_storage storage;
+    socklen_t len{sizeof(storage)};
+
+    auto sock{listen_sock.Accept(reinterpret_cast<sockaddr*>(&storage), &len)};
 
     if (!sock) {
-        const int nErr = WSAGetLastError();
-        if (nErr != WSAEWOULDBLOCK) {
-            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+        const int err{WSAGetLastError()};
+        if (err != WSAEWOULDBLOCK) {
+            LogPrintLevel(BCLog::NET,
+                          BCLog::Level::Error,
+                          "Cannot accept new connection: %s\n",
+                          NetworkErrorString(err));
         }
         return {};
     }
 
-    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr, len)) {
+    if (!addr.SetSockAddr(reinterpret_cast<sockaddr*>(&storage), len)) {
         LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
     }
 
