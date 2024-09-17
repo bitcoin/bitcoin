@@ -3200,12 +3200,15 @@ bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlag
     const CService addr{MaybeFlipIPv6toCJDNS(addr_)};
 
     bilingual_str strError;
-    if (!BindListenPort(addr, strError)) {
+    if (!BindAndStartListening(addr, strError)) {
+        LogError("%s", strError.original);
         if ((flags & BF_REPORT_ERROR) && m_client_interface) {
             m_client_interface->ThreadSafeMessageBox(strError, "", CClientUIInterface::MSG_ERROR);
         }
         return false;
     }
+
+    LogPrintLevel(BCLog::NET, BCLog::Level::Info, "Bound to and listening on %s", addr.ToStringAddrPort());
 
     m_listen_permissions.emplace(addr, permissions);
 
