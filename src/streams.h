@@ -390,9 +390,10 @@ class AutoFile
 protected:
     std::FILE* m_file;
     std::vector<std::byte> m_xor;
+    std::optional<int64_t> m_position;
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={}) : m_file{file}, m_xor{std::move(data_xor)} {}
+    explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
 
     ~AutoFile() { fclose(); }
 
@@ -418,12 +419,6 @@ public:
         m_file = nullptr;
         return ret;
     }
-
-    /** Get wrapped FILE* without transfer of ownership.
-     * @note Ownership of the FILE* will remain with this class. Use this only if the scope of the
-     * AutoFile outlives use of the passed pointer.
-     */
-    std::FILE* Get() const { return m_file; }
 
     /** Return true if the wrapped FILE* is nullptr, false otherwise.
      */
@@ -458,6 +453,10 @@ public:
         ::Unserialize(*this, obj);
         return *this;
     }
+
+    bool Commit();
+    bool IsError();
+    bool Truncate(unsigned size);
 };
 
 /** Wrapper around an AutoFile& that implements a ring buffer to

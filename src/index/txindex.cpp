@@ -87,10 +87,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     CBlockHeader header;
     try {
         file >> header;
-        if (fseek(file.Get(), postx.nTxOffset, SEEK_CUR)) {
-            LogError("%s: fseek(...) failed\n", __func__);
-            return false;
-        }
+        file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s\n", __func__, e.what());
