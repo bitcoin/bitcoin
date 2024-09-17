@@ -23,12 +23,12 @@ class SockMan
 public:
     /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
-     * @param[in] addrBind Where to bind.
-     * @param[out] strError Error string if an error occurs.
+     * @param[in] to Where to bind.
+     * @param[out] errmsg Error string if an error occurs.
      * @retval true Success.
      * @retval false Failure, `strError` will be set.
      */
-    bool BindListenPort(const CService& addrBind, bilingual_str& strError);
+    bool BindAndStartListening(const CService& to, bilingual_str& errmsg);
 
     /**
      * Close all sockets.
