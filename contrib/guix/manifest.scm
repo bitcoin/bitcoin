@@ -434,6 +434,7 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
                   "--enable-standard-branch-protection=yes",
+                  "--enable-cet=yes",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
