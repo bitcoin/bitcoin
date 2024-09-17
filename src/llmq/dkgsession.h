@@ -382,6 +382,9 @@ public:
     // Phase 5: aggregate/finalize
     std::vector<CFinalCommitment> FinalizeCommitments();
 
+    // All Phases 5-in-1 for single-node-quorum
+    CFinalCommitment FinalizeSingleCommitment();
+
     [[nodiscard]] bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 

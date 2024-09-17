@@ -414,6 +414,12 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
 
     quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
 
+    if (populate_cache && llmq_params_opt->size == 1) {
+        WITH_LOCK(cs_map_quorums, mapQuorumsCache[llmqType].insert(quorumHash, quorum));
+
+        return quorum;
+    }
+
     bool hasValidVvec = false;
     if (WITH_LOCK(cs_db, return quorum->ReadContributions(*db))) {
         hasValidVvec = true;
