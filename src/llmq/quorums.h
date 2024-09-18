@@ -217,8 +217,8 @@ public:
 
 private:
     bool HasVerificationVectorInternal() const EXCLUSIVE_LOCKS_REQUIRED(cs_vvec_shShare);
-    void WriteContributions(const std::unique_ptr<CDBWrapper>& db) const;
-    bool ReadContributions(const std::unique_ptr<CDBWrapper>& db);
+    void WriteContributions(CDBWrapper& db) const;
+    bool ReadContributions(const CDBWrapper& db);
 };
 
 /**
