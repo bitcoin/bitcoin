@@ -16,107 +16,34 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 {
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
 
-    // build the chain of 24 blocks
-    CBlockIndex blockIndexLast;
-    blockIndexLast.nHeight = 123456;
-    blockIndexLast.nTime = 1408732489;
-    blockIndexLast.nBits = 0x1b1418d4;
-    CBlockIndex blockIndexPrev1 = CBlockIndex();
-    blockIndexPrev1.nTime = 1408732257;  // Block #123455
-    blockIndexPrev1.nBits = 0x1b13b83f;
-    blockIndexLast.pprev = &blockIndexPrev1;
-    CBlockIndex blockIndexPrev2 = CBlockIndex();
-    blockIndexPrev2.nTime = 1408732229;  // Block #123454
-    blockIndexPrev2.nBits = 0x1b10460b;
-    blockIndexPrev1.pprev = &blockIndexPrev2;
-    CBlockIndex blockIndexPrev3 = CBlockIndex();
-    blockIndexPrev3.nTime = 1408731256;  // Block #123453
-    blockIndexPrev3.nBits = 0x1b113ff1;
-    blockIndexPrev2.pprev = &blockIndexPrev3;
-    CBlockIndex blockIndexPrev4 = CBlockIndex();
-    blockIndexPrev4.nTime = 1408731242;  // Block #123452
-    blockIndexPrev4.nBits = 0x1b0fed89;
-    blockIndexPrev3.pprev = &blockIndexPrev4;
-    CBlockIndex blockIndexPrev5 = CBlockIndex();
-    blockIndexPrev5.nTime = 1408730914;  // Block #123451
-    blockIndexPrev5.nBits = 0x1b10b864;
-    blockIndexPrev4.pprev = &blockIndexPrev5;
-    CBlockIndex blockIndexPrev6 = CBlockIndex();
-    blockIndexPrev6.nTime = 1408730862;  // Block #123450
-    blockIndexPrev6.nBits = 0x1b0dd168;
-    blockIndexPrev5.pprev = &blockIndexPrev6;
-    CBlockIndex blockIndexPrev7 = CBlockIndex();
-    blockIndexPrev7.nTime = 1408730179;  // Block #123449
-    blockIndexPrev7.nBits = 0x1b0c03d6;
-    blockIndexPrev6.pprev = &blockIndexPrev7;
-    CBlockIndex blockIndexPrev8 = CBlockIndex();
-    blockIndexPrev8.nTime = 1408729678;  // Block #123448
-    blockIndexPrev8.nBits = 0x1b0c9ab8;
-    blockIndexPrev7.pprev = &blockIndexPrev8;
-    CBlockIndex blockIndexPrev9 = CBlockIndex();
-    blockIndexPrev9.nTime = 1408729647;  // Block #123447
-    blockIndexPrev9.nBits = 0x1b0dfaff;
-    blockIndexPrev8.pprev = &blockIndexPrev9;
-    CBlockIndex blockIndexPrev10 = CBlockIndex();
-    blockIndexPrev10.nTime = 1408729587;  // Block #123446
-    blockIndexPrev10.nBits = 0x1b10e878;
-    blockIndexPrev9.pprev = &blockIndexPrev10;
-    CBlockIndex blockIndexPrev11 = CBlockIndex();
-    blockIndexPrev11.nTime = 1408729576;  // Block #123445
-    blockIndexPrev11.nBits = 0x1b1063d0;
-    blockIndexPrev10.pprev = &blockIndexPrev11;
-    CBlockIndex blockIndexPrev12 = CBlockIndex();
-    blockIndexPrev12.nTime = 1408729474;  // Block #123444
-    blockIndexPrev12.nBits = 0x1b104297;
-    blockIndexPrev11.pprev = &blockIndexPrev12;
-    CBlockIndex blockIndexPrev13 = CBlockIndex();
-    blockIndexPrev13.nTime = 1408729305;  // Block #123443
-    blockIndexPrev13.nBits = 0x1b107556;
-    blockIndexPrev12.pprev = &blockIndexPrev13;
-    CBlockIndex blockIndexPrev14 = CBlockIndex();
-    blockIndexPrev14.nTime = 1408729179;  // Block #123442
-    blockIndexPrev14.nBits = 0x1b110764;
-    blockIndexPrev13.pprev = &blockIndexPrev14;
-    CBlockIndex blockIndexPrev15 = CBlockIndex();
-    blockIndexPrev15.nTime = 1408729116;  // Block #123441
-    blockIndexPrev15.nBits = 0x1b1141bf;
-    blockIndexPrev14.pprev = &blockIndexPrev15;
-    CBlockIndex blockIndexPrev16 = CBlockIndex();
-    blockIndexPrev16.nTime = 1408728950;  // Block #123440
-    blockIndexPrev16.nBits = 0x1b1123f9;
-    blockIndexPrev15.pprev = &blockIndexPrev16;
-    CBlockIndex blockIndexPrev17 = CBlockIndex();
-    blockIndexPrev17.nTime = 1408728756;  // Block #123439
-    blockIndexPrev17.nBits = 0x1b118d9c;
-    blockIndexPrev16.pprev = &blockIndexPrev17;
-    CBlockIndex blockIndexPrev18 = CBlockIndex();
-    blockIndexPrev18.nTime = 1408728744;  // Block #123438
-    blockIndexPrev18.nBits = 0x1b11abac;
-    blockIndexPrev17.pprev = &blockIndexPrev18;
-    CBlockIndex blockIndexPrev19 = CBlockIndex();
-    blockIndexPrev19.nTime = 1408728608;  // Block #123437
-    blockIndexPrev19.nBits = 0x1b11951e;
-    blockIndexPrev18.pprev = &blockIndexPrev19;
-    CBlockIndex blockIndexPrev20 = CBlockIndex();
-    blockIndexPrev20.nTime = 1408728495;  // Block #123436
-    blockIndexPrev20.nBits = 0x1b121cf3;
-    blockIndexPrev19.pprev = &blockIndexPrev20;
-    CBlockIndex blockIndexPrev21 = CBlockIndex();
-    blockIndexPrev21.nTime = 1408728479;  // Block #123435
-    blockIndexPrev21.nBits = 0x1b11a33c;
-    blockIndexPrev20.pprev = &blockIndexPrev21;
-    CBlockIndex blockIndexPrev22 = CBlockIndex();
-    blockIndexPrev22.nTime = 1408728332;  // Block #123434
-    blockIndexPrev22.nBits = 0x1b10e09e;
-    blockIndexPrev21.pprev = &blockIndexPrev22;
-    CBlockIndex blockIndexPrev23 = CBlockIndex();
-    blockIndexPrev23.nTime = 1408728124;  // Block #123433
-    blockIndexPrev23.nBits = 0x1b104be1;
-    blockIndexPrev22.pprev = &blockIndexPrev23;
+    static const std::vector<std::pair<uint32_t, uint32_t>> mainnet_data = {
+        { 1408728124, 0x1b104be1U }, { 1408728332, 0x1b10e09eU }, { 1408728479, 0x1b11a33cU },
+        { 1408728495, 0x1b121cf3U }, { 1408728608, 0x1b11951eU }, { 1408728744, 0x1b11abacU },
+        { 1408728756, 0x1b118d9cU }, { 1408728950, 0x1b1123f9U }, { 1408729116, 0x1b1141bfU },
+        { 1408729179, 0x1b110764U }, { 1408729305, 0x1b107556U }, { 1408729474, 0x1b104297U },
+        { 1408729576, 0x1b1063d0U }, { 1408729587, 0x1b10e878U }, { 1408729647, 0x1b0dfaffU },
+        { 1408729678, 0x1b0c9ab8U }, { 1408730179, 0x1b0c03d6U }, { 1408730862, 0x1b0dd168U },
+        { 1408730914, 0x1b10b864U }, { 1408731242, 0x1b0fed89U }, { 1408731256, 0x1b113ff1U },
+        { 1408732229, 0x1b10460bU }, { 1408732257, 0x1b13b83fU }, { 1408732489, 0x1b1418d4U }
+    };
+
+    // Construct a chain of block index entries
+    std::list<CBlockIndex> blockidx;
+    CBlockIndex* blockIndexLast{nullptr};
+
+    for (const auto& [nTime, nBits] : mainnet_data) {
+        auto& entry = blockidx.emplace_back();
+        entry.nTime = nTime;
+        entry.nBits = nBits;
+        entry.pprev = blockIndexLast;
+        blockIndexLast = &entry;
+    }
+    blockIndexLast->nHeight = 123456;
+    assert(mainnet_data.size() == blockidx.size());
 
     CBlockHeader blockHeader;
     blockHeader.nTime = 1408732505; // Block #123457
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
 
     // test special rules for slow blocks on devnet/testnet
     gArgs.SoftSetBoolArg("-devnet", true);
@@ -125,18 +52,18 @@ BOOST_AUTO_TEST_CASE(get_next_work)
 
     // make sure normal rules apply
     blockHeader.nTime = 1408732505; // Block #123457
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1b1441deU); // Block #123457 has 0x1b1441de
 
     // 10x higher target
     blockHeader.nTime = 1408733090; // Block #123457 (10m+1sec)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8U); // Block #123457 has 0x1c00c8f8
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8U); // Block #123457 has 0x1c00c8f8
     blockHeader.nTime = 1408733689; // Block #123457 (20m)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8U); // Block #123457 has 0x1c00c8f8
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8U); // Block #123457 has 0x1c00c8f8
     // lowest diff possible
     blockHeader.nTime = 1408739690; // Block #123457 (2h+1sec)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffffU); // Block #123457 has 0x207fffff
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffffU); // Block #123457 has 0x207fffff
     blockHeader.nTime = 1408743289; // Block #123457 (3h)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffffU); // Block #123457 has 0x207fffff
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffffU); // Block #123457 has 0x207fffff
 }
 
 /* Test the constraint on the upper bound for next work */
