@@ -160,6 +160,7 @@ BASE_SCRIPTS = [
     'wallet_importmulti.py --legacy-wallet',
     'mempool_limit.py',
     'rpc_txoutproof.py',
+    'rpc_getorphantxs.py',
     'wallet_listreceivedby.py --legacy-wallet',
     'wallet_listreceivedby.py --descriptors',
     'wallet_abandonconflict.py --legacy-wallet',
