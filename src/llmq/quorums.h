@@ -14,7 +14,6 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
-#include <evo/evodb.h>
 #include <net_types.h>
 #include <gsl/pointers.h>
 
@@ -26,8 +25,11 @@ class CActiveMasternodeManager;
 class CBlockIndex;
 class CChainState;
 class CConnman;
+class CDataStream;
 class CDeterministicMN;
 class CDeterministicMNManager;
+class CDBWrapper;
+class CEvoDB;
 class CMasternodeSync;
 class CNode;
 class CSporkManager;
@@ -258,7 +260,7 @@ public:
                    CDKGSessionManager& _dkgManager, CEvoDB& _evoDb, CQuorumBlockProcessor& _quorumBlockProcessor,
                    const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
                    const CSporkManager& sporkman, bool unit_tests, bool wipe);
-    ~CQuorumManager() { Stop(); };
+    ~CQuorumManager();
 
     void Start();
     void Stop();

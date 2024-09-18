@@ -4,6 +4,7 @@
 
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <llmq/commitment.h>
