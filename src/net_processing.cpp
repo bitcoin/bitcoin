@@ -515,6 +515,7 @@ public:
     std::optional<std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1915,6 +1916,12 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     stats.time_offset = peer->m_time_offset;
 
     return true;
+}
+
+std::vector<TxOrphanage::OrphanTxBase> PeerManagerImpl::GetOrphanTransactions()
+{
+    LOCK(m_tx_download_mutex);
+    return m_orphanage.GetOrphanTransactions();
 }
 
 PeerManagerInfo PeerManagerImpl::GetInfo() const

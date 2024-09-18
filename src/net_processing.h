@@ -7,6 +7,7 @@
 #define BITCOIN_NET_PROCESSING_H
 
 #include <net.h>
+#include <txorphanage.h>
 #include <validationinterface.h>
 
 #include <chrono>
@@ -98,6 +99,8 @@ public:
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+
+    virtual std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() = 0;
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;

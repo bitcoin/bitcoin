@@ -277,3 +277,13 @@ std::vector<std::pair<CTransactionRef, NodeId>> TxOrphanage::GetChildrenFromDiff
     }
     return children_found;
 }
+
+std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() const
+{
+    std::vector<OrphanTxBase> ret;
+    ret.reserve(m_orphans.size());
+    for (auto const& o : m_orphans) {
+        ret.push_back({o.second.tx, o.second.fromPeer, o.second.nTimeExpire});
+    }
+    return ret;
+}
