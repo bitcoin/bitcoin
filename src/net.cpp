@@ -2255,6 +2255,7 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
     for (CNode* pnode : nodes) {
         bool select_recv = !pnode->fHasRecvData;
         bool select_send = !pnode->fCanSendData;
+        if (!select_recv && !select_send) continue;
 
         LOCK(pnode->m_sock_mutex);
         if (!pnode->m_sock) {
@@ -2625,9 +2626,7 @@ void CConnman::SocketHandlerConnected(const std::set<SOCKET>& recv_set,
                     //   receiving data. This means properly utilizing TCP flow control signalling.
                     // * Otherwise, if there is space left in the receive buffer (!fPauseRecv), try
                     //   receiving data (which should succeed as the socket signalled as receivable).
-                    const auto& [to_send, more, _msg_type] = it->second->m_transport->GetBytesToSend(it->second->nSendMsgSize != 0);
-                    const bool queue_is_empty{to_send.empty() && !more};
-                    if (!it->second->fPauseRecv && !it->second->fDisconnect && queue_is_empty) {
+                    if (!it->second->fPauseRecv && !it->second->fDisconnect && it->second->nSendMsgSize == 0) {
                         it->second->AddRef();
                         vReceivableNodes.emplace(it->second);
                     }
