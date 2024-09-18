@@ -185,6 +185,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.restart_node(0)
         copy_v16()
         wallet = node_master.get_wallet_rpc(self.default_wallet_name)
+        assert_equal(wallet.getbalance(), v16_3_balance)
         self.log.info("Test upgradewallet without a version argument")
         self.test_upgradewallet(wallet, previous_version=159900, expected_version=169900)
         # wallet should still contain the same balance
