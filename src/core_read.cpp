@@ -27,7 +27,7 @@ private:
 public:
     OpCodeParser()
     {
-        for (unsigned int op = 0; op <= MAX_OPCODE; ++op) {
+        for (unsigned int op = 0; op <= MAX_SCRIPT_OPCODE; ++op) {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED) {
                 continue;

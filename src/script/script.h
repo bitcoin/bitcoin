@@ -212,8 +212,8 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
-// Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_NOP10;
+// Maximum value that a script opcode can be (i.e. exluding Tapscript only opcode)
+static const unsigned int MAX_SCRIPT_OPCODE = OP_NOP10;
 
 std::string GetOpName(opcodetype opcode);
 
