@@ -1841,6 +1841,7 @@ RPCHelpMan getblockchaininfo()
     SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_V19);
     SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_V20);
     SoftForkDescPushBack(tip, softforks, consensusParams, Consensus::DEPLOYMENT_MN_RR);
+    SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, Consensus::DEPLOYMENT_WITHDRAWALS);
     SoftForkDescPushBack(tip, ehfSignals, softforks, consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
 
     obj.pushKV("softforks", softforks);
