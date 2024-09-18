@@ -22,7 +22,7 @@
 #include <utility>
 
 #ifndef WIN32
-// for posix_fallocate, in configure.ac we check if it is present after this
+// for posix_fallocate, in cmake/introspection.cmake we check if it is present after this
 #ifdef __linux__
 
 #ifdef _POSIX_C_SOURCE

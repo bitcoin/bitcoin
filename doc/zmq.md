@@ -47,10 +47,10 @@ operation.
 ## Enabling
 
 By default, the ZeroMQ feature is automatically compiled in if the
-necessary prerequisites are found.  To disable, use --disable-zmq
+necessary prerequisites are found.  To disable, use -DWITH_ZMQ=OFF
 during the *configure* step of building bitcoind:
 
-    $ ./configure --disable-zmq (other options)
+    $ cmake -B build -DWITH_ZMQ=OFF (other options)
 
 To actually enable operation, one must set the appropriate options on
 the command line or in the configuration file.
@@ -163,7 +163,7 @@ Note that for `*block` topics, when the block chain tip changes,
 a reorganisation may occur and just the tip will be notified.
 It is up to the subscriber to retrieve the chain from the last known
 block to the new tip. Also note that no notification will occur if the tip
-was in the active chain--as would be the case after calling invalidateblock RPC.
+was in the active chain, as would be the case after calling the `invalidateblock` RPC.
 In contrast, the `sequence` topic publishes all block connections and
 disconnections.
 

@@ -5,7 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test framework for bitcoin utils.
 
-Runs automatically during `make check`.
+Runs automatically during `ctest --test-dir build/`.
 
 Can also be run manually."""
 
