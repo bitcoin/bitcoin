@@ -83,15 +83,15 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
 }
 
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintf_, LogSetup)
+BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
-    LogPrintf_("fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug, "foo1: %s\n", "bar1");
-    LogPrintf_("fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info, "foo2: %s\n", "bar2");
-    LogPrintf_("fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug, "foo3: %s\n", "bar3");
-    LogPrintf_("fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info, "foo4: %s\n", "bar4");
-    LogPrintf_("fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug, "foo5: %s\n", "bar5");
-    LogPrintf_("fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info, "foo6: %s\n", "bar6");
+    LogInstance().LogPrintStr("foo1: bar1\n", "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo2: bar2\n", "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo3: bar3\n", "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo4: bar4\n", "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo5: bar5\n", "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo6: bar6\n", "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {

@@ -17,15 +17,7 @@ import sys
 
 FUNCTION_NAMES_AND_NUMBER_OF_LEADING_ARGUMENTS = [
     'tfm::format,1',  # Assuming tfm::::format(std::ostream&, ...
-    'LogError,0',
-    'LogWarning,0',
-    'LogInfo,0',
-    'LogDebug,1',
-    'LogTrace,1',
-    'LogPrintf,0',
-    'LogPrintLevel,2',
     'strprintf,0',
-    'WalletLogPrintf,0',
 ]
 RUN_LINT_FILE = 'test/lint/run-lint-format-strings.py'
 

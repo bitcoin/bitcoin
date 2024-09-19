@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -245,12 +245,8 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
-// Be conservative when using functions that
-// unconditionally log to debug.log! It should not be the case that an inbound
-// peer can fill up a user's disk with debug.log entries.
-
 template <typename... Args>
-static inline void LogPrintf_(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, const char* fmt, const Args&... args)
+inline void LogPrintFormatInternal(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
@@ -258,15 +254,18 @@ static inline void LogPrintf_(std::string_view logging_function, std::string_vie
             log_msg = tfm::format(fmt, args...);
         } catch (tinyformat::format_error& fmterr) {
             /* Original format string will have newline so don't add one here */
-            log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
+            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
         }
         LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
     }
 }
 
-#define LogPrintLevel_(category, level, ...) LogPrintf_(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
+#define LogPrintLevel_(category, level, ...) LogPrintFormatInternal(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
 
 // Log unconditionally.
+// Be conservative when using functions that unconditionally log to debug.log!
+// It should not be the case that an inbound peer can fill up a user's storage
+// with debug.log entries.
 #define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
 #define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
 #define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
