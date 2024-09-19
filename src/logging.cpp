@@ -5,6 +5,7 @@
 
 #include <logging.h>
 #include <memusage.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
 #include <util/threadnames.h>
@@ -368,6 +369,8 @@ static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
 
 void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
 {
+    if (!str.ends_with('\n')) str.push_back('\n');
+
     str.insert(0, GetLogPrefix(category, level));
 
     if (m_log_sourcelocations) {
@@ -391,21 +394,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_
 {
     std::string str_prefixed = LogEscapeMessage(str);
 
-    const bool starts_new_line = m_started_new_line;
-    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
-
     if (m_buffering) {
-        if (!starts_new_line) {
-            if (!m_msgs_before_open.empty()) {
-                m_msgs_before_open.back().str += str_prefixed;
-                m_cur_buffer_memusage += str_prefixed.size();
-                return;
-            } else {
-                // unlikely edge case; add a marker that something was trimmed
-                str_prefixed.insert(0, "[...] ");
-            }
-        }
-
         {
             BufferedLog buf{
                 .now=SystemClock::now(),
@@ -435,9 +424,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_
         return;
     }
 
-    if (starts_new_line) {
-        FormatLogStrInPlace(str_prefixed, category, level, source_file, source_line, logging_function, util::ThreadGetInternalName(), SystemClock::now(), GetMockTime());
-    }
+    FormatLogStrInPlace(str_prefixed, category, level, source_file, source_line, logging_function, util::ThreadGetInternalName(), SystemClock::now(), GetMockTime());
 
     if (m_print_to_console) {
         // print to console
