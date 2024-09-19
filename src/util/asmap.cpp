@@ -223,10 +223,8 @@ std::vector<bool> DecodeAsmap(fs::path path)
         return {};
     }
 
-    file.seek(0, SEEK_END);
-    int length = file.tell();
+    int64_t length{file.size()};
     LogInfo("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
-    file.seek(0, SEEK_SET);
 
     std::vector<std::byte> buffer(length);
     file.read(buffer);
