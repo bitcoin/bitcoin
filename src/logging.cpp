@@ -369,6 +369,8 @@ static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
 
 void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
 {
+    if (!str.ends_with('\n')) str.push_back('\n');
+
     str.insert(0, GetLogPrefix(category, level));
 
     if (m_log_sourcelocations) {
