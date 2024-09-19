@@ -16,7 +16,6 @@
 #include <index/txindex.h> // g_txindex
 #include <net_processing.h>
 #include <primitives/transaction.h>
-#include <spork.h>
 #include <txmempool.h>
 #include <validation.h>
 
@@ -25,14 +24,13 @@ namespace llmq {
 
 CEHFSignalsHandler::CEHFSignalsHandler(CChainState& chainstate, CMNHFManager& mnhfman, CSigningManager& sigman,
                                        CSigSharesManager& shareman, CTxMemPool& mempool, const CQuorumManager& qman,
-                                       const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
+                                       const std::unique_ptr<PeerManager>& peerman) :
     chainstate(chainstate),
     mnhfman(mnhfman),
     sigman(sigman),
     shareman(shareman),
     mempool(mempool),
     qman(qman),
-    sporkman(sporkman),
     m_peerman(peerman)
 {
     sigman.RegisterRecoveredSigsListener(this);
@@ -48,7 +46,7 @@ void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew, boo
 {
     if (!DeploymentActiveAfter(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
 
-    if (!is_masternode || (Params().IsTestChain() && !sporkman.IsSporkActive(SPORK_24_TEST_EHF))) {
+    if (!is_masternode) {
         return;
     }
 

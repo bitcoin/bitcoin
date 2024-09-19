@@ -5,6 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import struct
+import time
 from io import BytesIO
 
 from test_framework.authproxy import JSONRPCException
@@ -45,15 +46,6 @@ class MnehfTest(DashTestFramework):
         for i in range(1, self.num_nodes):
                 self.connect_nodes(i, 0)
 
-    def slowly_generate_batch(self, amount):
-        self.log.info(f"Slowly generate {amount} blocks")
-        while amount > 0:
-            self.log.info(f"Generating batch of blocks {amount} left")
-            next = min(10, amount)
-            amount -= next
-            self.bump_mocktime(next)
-            self.nodes[1].generate(next)
-            self.sync_all()
 
     def create_mnehf(self, versionBit, pubkey=None):
         # request ID = sha256("mnhf", versionBit)
@@ -241,26 +233,18 @@ class MnehfTest(DashTestFramework):
         node.generate(1)
         self.sync_blocks()
         self.restart_all_nodes(params=[self.mocktime, self.mocktime + 1000000])
+        self.check_fork('defined')
+
         self.mine_quorum()
-
-        ehf_tx_new_start = self.create_mnehf(28, pubkey)
-
-        self.log.info("Test spork 24 (EHF)")
-        self.check_fork('defined')
-        self.nodes[0].sporkupdate("SPORK_24_TEST_EHF", 0)
-        self.wait_for_sporks_same()
-
         self.check_fork('defined')
 
-        self.log.info("Mine one block and ensure EHF tx for the new deployment is mined")
-        ehf_tx_sent = self.send_tx(ehf_tx_new_start)
-        tip_blockhash = node.generate(1)[0]
-        self.sync_all()
-        block = node.getblock(tip_blockhash)
-        assert ehf_tx_sent in block['tx']
-
-        self.check_fork('defined')
-        self.slowly_generate_batch(4 * 4)
+        self.log.info("Waiting a bit to make EHF activating...")
+        self.mine_quorum()
+        for _ in range(4 * 4):
+            time.sleep(1)
+            self.bump_mocktime(1)
+            self.nodes[1].generate(1)
+            self.sync_all()
         self.check_fork('active')
 
 

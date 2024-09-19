@@ -44,8 +44,8 @@ LLMQContext::LLMQContext(CChainState& chainstate, CConnman& connman, CDeterminis
         llmq::quorumInstantSendManager = std::make_unique<llmq::CInstantSendManager>(*llmq::chainLocksHandler, chainstate, connman, *qman, *sigman, *shareman, sporkman, mempool, mn_sync, peerman, is_masternode, unit_tests, wipe);
         return llmq::quorumInstantSendManager.get();
     }()},
-    ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool,
-                                                                 *qman, sporkman, peerman)}
+    ehfSignalsHandler{
+        std::make_unique<llmq::CEHFSignalsHandler>(chainstate, mnhfman, *sigman, *shareman, mempool, *qman, peerman)}
 {
 }
 
