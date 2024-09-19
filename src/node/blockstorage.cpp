@@ -387,9 +387,14 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
     }
 
     const auto [mi, inserted]{m_block_index.try_emplace(hash)};
-    CBlockIndex* pindex = &(*mi).second;
+    CBlockIndex* pindex = nullptr;
     if (inserted) {
+        pindex = &(*mi).second;
         pindex->phashBlock = &((*mi).first);
+    } else {
+        // Log error or handle failure
+        LogError("%s: Failed to emplace block index for hash %s\n", __func__, hash.ToString());
+        return nullptr;
     }
     return pindex;
 }
