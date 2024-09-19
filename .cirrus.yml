@@ -4,9 +4,6 @@ env:  # Global defaults
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-  CCACHE_MAXSIZE: "200M"
-  CCACHE_DIR: "/tmp/ccache_dir"
-  CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
 
 # A self-hosted machine(s) can be used via Cirrus CI. It can be configured with
 # multiple users to run tasks in parallel. No sudo permission is required.

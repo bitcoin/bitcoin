@@ -31,4 +31,3 @@ export USE_MEMORY_SANITIZER="true"
 export RUN_UNIT_TESTS="false"
 export RUN_FUNCTIONAL_TESTS="false"
 export RUN_FUZZ_TESTS=true
-export CCACHE_MAXSIZE=250M

@@ -28,4 +28,3 @@ export BITCOIN_CONFIG="\
 "
 export USE_MEMORY_SANITIZER="true"
 export RUN_FUNCTIONAL_TESTS="false"
-export CCACHE_MAXSIZE=250M
