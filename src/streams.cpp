@@ -106,11 +106,6 @@ bool AutoFile::Commit()
     return ::FileCommit(m_file);
 }
 
-bool AutoFile::IsError()
-{
-    return ferror(m_file);
-}
-
 bool AutoFile::Truncate(unsigned size)
 {
     return ::TruncateFile(m_file, size);

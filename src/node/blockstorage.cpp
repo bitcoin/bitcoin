@@ -684,10 +684,6 @@ bool BlockManager::UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos
 
     // Write undo data
     long fileOutPos = fileout.tell();
-    if (fileOutPos < 0) {
-        LogError("%s: ftell failed\n", __func__);
-        return false;
-    }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << blockundo;
 
@@ -982,10 +978,6 @@ bool BlockManager::WriteBlockToDisk(const CBlock& block, FlatFilePos& pos) const
 
     // Write block
     long fileOutPos = fileout.tell();
-    if (fileOutPos < 0) {
-        LogError("%s: ftell failed\n", __func__);
-        return false;
-    }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << TX_WITH_WITNESS(block);
 

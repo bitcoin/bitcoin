@@ -77,8 +77,6 @@ std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
     afile.seek(0, SEEK_END);
     if (position != afile.tell()) {
         LogPrintf("[snapshot] warning: unexpected trailing data in %s\n", read_from_str);
-    } else if (afile.IsError()) {
-        LogPrintf("[snapshot] warning: i/o error reading %s\n", read_from_str);
     }
     return base_blockhash;
 }
