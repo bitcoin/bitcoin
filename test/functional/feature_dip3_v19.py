@@ -54,8 +54,7 @@ class DIP3V19Test(DashTestFramework):
         null_hash = format(0, "064x")
 
         for i in range(len(self.nodes)):
-            if i != 0:
-                self.connect_nodes(i, 0)
+            self.connect_nodes(i, 0)
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
