@@ -176,6 +176,7 @@ endif()
 if(WITH_SV2)
   target_sources(test_bitcoin
   PRIVATE
+    sv2_noise_tests.cpp
   )
   target_link_libraries(test_bitcoin bitcoin_sv2)
 endif()

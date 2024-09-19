@@ -3,6 +3,7 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 add_library(bitcoin_sv2 STATIC EXCLUDE_FROM_ALL
+  noise.cpp
 )
 
 target_link_libraries(bitcoin_sv2
