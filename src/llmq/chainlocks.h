@@ -9,7 +9,6 @@
 
 #include <crypto/common.h>
 #include <llmq/signing.h>
-#include <llmq/quorums.h>
 #include <net.h>
 #include <net_types.h>
 #include <primitives/block.h>
@@ -36,6 +35,7 @@ namespace llmq
 {
 class CSigningManager;
 class CSigSharesManager;
+enum class VerifyRecSigStatus;
 
 class CChainLocksHandler : public CRecoveredSigsListener
 {
