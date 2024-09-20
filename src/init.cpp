@@ -1145,6 +1145,53 @@ bool AppInitInterfaces(NodeContext& node)
     return true;
 }
 
+bool CheckHostPortOptions(const ArgsManager& args) {
+    for (const std::string port_option : {
+        "-port",
+        "-rpcport",
+    }) {
+        if (args.IsArgSet(port_option)) {
+            const std::string port = args.GetArg(port_option, "");
+            uint16_t n;
+            if (!ParseUInt16(port, &n) || n == 0) {
+                return InitError(InvalidPortErrMsg(port_option, port));
+            }
+        }
+    }
+
+    for ([[maybe_unused]] const auto& [arg, unix] : std::vector<std::pair<std::string, bool>>{
+        // arg name            UNIX socket support
+        {"-i2psam",                 false},
+        {"-onion",                  true},
+        {"-proxy",                  true},
+        {"-rpcbind",                false},
+        {"-torcontrol",             false},
+        {"-whitebind",              false},
+        {"-zmqpubhashblock",        true},
+        {"-zmqpubhashtx",           true},
+        {"-zmqpubrawblock",         true},
+        {"-zmqpubrawtx",            true},
+        {"-zmqpubsequence",         true},
+    }) {
+        for (const std::string& socket_addr : args.GetArgs(arg)) {
+            std::string host_out;
+            uint16_t port_out{0};
+            if (!SplitHostPort(socket_addr, port_out, host_out)) {
+#ifdef HAVE_SOCKADDR_UN
+                // Allow unix domain sockets for some options e.g. unix:/some/file/path
+                if (!unix || !socket_addr.starts_with(ADDR_PREFIX_UNIX)) {
+                    return InitError(InvalidPortErrMsg(arg, socket_addr));
+                }
+#else
+                return InitError(InvalidPortErrMsg(arg, socket_addr));
+#endif
+            }
+        }
+    }
+
+    return true;
+}
+
 bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const ArgsManager& args = *Assert(node.args);
@@ -1231,6 +1278,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #ifdef ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
+
+    // Check port numbers
+    if (!CheckHostPortOptions(args)) return false;
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
@@ -1320,50 +1370,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
         scheduler.scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
         validation_signals.RegisterValidationInterface(fee_estimator);
-    }
-
-    // Check port numbers
-    for (const std::string port_option : {
-        "-port",
-        "-rpcport",
-    }) {
-        if (args.IsArgSet(port_option)) {
-            const std::string port = args.GetArg(port_option, "");
-            uint16_t n;
-            if (!ParseUInt16(port, &n) || n == 0) {
-                return InitError(InvalidPortErrMsg(port_option, port));
-            }
-        }
-    }
-
-    for ([[maybe_unused]] const auto& [arg, unix] : std::vector<std::pair<std::string, bool>>{
-        // arg name            UNIX socket support
-        {"-i2psam",                 false},
-        {"-onion",                  true},
-        {"-proxy",                  true},
-        {"-rpcbind",                false},
-        {"-torcontrol",             false},
-        {"-whitebind",              false},
-        {"-zmqpubhashblock",        true},
-        {"-zmqpubhashtx",           true},
-        {"-zmqpubrawblock",         true},
-        {"-zmqpubrawtx",            true},
-        {"-zmqpubsequence",         true},
-    }) {
-        for (const std::string& socket_addr : args.GetArgs(arg)) {
-            std::string host_out;
-            uint16_t port_out{0};
-            if (!SplitHostPort(socket_addr, port_out, host_out)) {
-#ifdef HAVE_SOCKADDR_UN
-                // Allow unix domain sockets for some options e.g. unix:/some/file/path
-                if (!unix || !socket_addr.starts_with(ADDR_PREFIX_UNIX)) {
-                    return InitError(InvalidPortErrMsg(arg, socket_addr));
-                }
-#else
-                return InitError(InvalidPortErrMsg(arg, socket_addr));
-#endif
-            }
-        }
     }
 
     for (const std::string& socket_addr : args.GetArgs("-bind")) {

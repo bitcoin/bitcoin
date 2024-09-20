@@ -8,6 +8,7 @@
 
 #include <chainparamsbase.h>
 #include <common/args.h>
+#include <common/messages.h>
 #include <compat/compat.h>
 #include <logging.h>
 #include <netbase.h>
@@ -42,6 +43,8 @@
 #include <event2/util.h>
 
 #include <support/events.h>
+
+using common::InvalidPortErrMsg;
 
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
@@ -374,7 +377,10 @@ static bool HTTPBindAddresses(struct evhttp* http)
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
             uint16_t port{http_port};
             std::string host;
-            SplitHostPort(strRPCBind, port, host);
+            if (!SplitHostPort(strRPCBind, port, host)) {
+                LogError("%s\n", InvalidPortErrMsg("-rpcbind", strRPCBind).original);
+                return false;
+            }
             endpoints.emplace_back(host, port);
         }
     }
