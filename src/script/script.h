@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -412,6 +413,32 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public CScriptBase
 {
+private:
+    inline void AppendDataSize(const uint32_t size)
+    {
+        if (size < OP_PUSHDATA1) {
+            insert(end(), static_cast<value_type>(size));
+        } else if (size <= 0xff) {
+            insert(end(), OP_PUSHDATA1);
+            insert(end(), static_cast<value_type>(size));
+        } else if (size <= 0xffff) {
+            insert(end(), OP_PUSHDATA2);
+            value_type data[2];
+            WriteLE16(data, size);
+            insert(end(), std::cbegin(data), std::cend(data));
+        } else {
+            insert(end(), OP_PUSHDATA4);
+            value_type data[4];
+            WriteLE32(data, size);
+            insert(end(), std::cbegin(data), std::cend(data));
+        }
+    }
+
+    void AppendData(std::span<const value_type> data)
+    {
+        insert(end(), data.begin(), data.end());
+    }
+
 protected:
     CScript& push_int64(int64_t n)
     {
@@ -463,33 +490,17 @@ public:
         return *this;
     }
 
-    CScript& operator<<(const std::vector<unsigned char>& b) LIFETIMEBOUND
+    CScript& operator<<(std::span<const std::byte> b) LIFETIMEBOUND
     {
-        if (b.size() < OP_PUSHDATA1)
-        {
-            insert(end(), (unsigned char)b.size());
-        }
-        else if (b.size() <= 0xff)
-        {
-            insert(end(), OP_PUSHDATA1);
-            insert(end(), (unsigned char)b.size());
-        }
-        else if (b.size() <= 0xffff)
-        {
-            insert(end(), OP_PUSHDATA2);
-            uint8_t _data[2];
-            WriteLE16(_data, b.size());
-            insert(end(), _data, _data + sizeof(_data));
-        }
-        else
-        {
-            insert(end(), OP_PUSHDATA4);
-            uint8_t _data[4];
-            WriteLE32(_data, b.size());
-            insert(end(), _data, _data + sizeof(_data));
-        }
-        insert(end(), b.begin(), b.end());
+        AppendDataSize(b.size());
+        AppendData({reinterpret_cast<const value_type*>(b.data()), b.size()});
         return *this;
+    }
+
+    // For compatibility reasons. In new code, prefer using std::byte instead of uint8_t.
+    CScript& operator<<(std::span<const value_type> b) LIFETIMEBOUND
+    {
+        return *this << std::as_bytes(b);
     }
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const

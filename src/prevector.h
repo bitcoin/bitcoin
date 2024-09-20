@@ -363,7 +363,8 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
+        T* dst = ptr + 1;
+        memmove(dst, ptr, (size() - p) * sizeof(T));
         _size++;
         new(static_cast<void*>(ptr)) T(value);
         return iterator(ptr);
@@ -376,7 +377,8 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
+        T* dst = ptr + count;
+        memmove(dst, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(item_ptr(p), count, value);
     }
@@ -390,7 +392,8 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
+        T* dst = ptr + count;
+        memmove(dst, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(ptr, first, last);
     }
