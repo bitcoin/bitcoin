@@ -62,7 +62,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "banman -> bloom -> evo/assetlocktx -> llmq/quorums -> net -> banman"
     "banman -> bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> banman"
 
-    "llmq/dkgsession -> llmq/dkgsessionmgr -> llmq/dkgsession"
     "llmq/chainlocks -> validation -> llmq/chainlocks"
     "coinjoin/coinjoin -> llmq/chainlocks -> net -> coinjoin/coinjoin"
     "evo/deterministicmns -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns -> evo/deterministicmns"
