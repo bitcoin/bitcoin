@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/debug.h>
+#include <llmq/dkgsession.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
 #include <llmq/params.h>
@@ -55,6 +56,8 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
         }
     }
 }
+
+CDKGSessionManager::~CDKGSessionManager() = default;
 
 void CDKGSessionManager::MigrateDKG()
 {
