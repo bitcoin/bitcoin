@@ -489,13 +489,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         if (badNodes.count(nodeId)) {
             continue;
         }
-        bool ban = false;
-        session.ReceiveMessage(*p.second, ban);
-        if (ban) {
-            LogPrint(BCLog::LLMQ_DKG, "%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
-            pendingMessages.Misbehaving(nodeId, 100);
-            badNodes.emplace(nodeId);
-        }
+        session.ReceiveMessage(*p.second);
     }
 
     return true;
