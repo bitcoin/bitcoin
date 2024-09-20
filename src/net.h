@@ -44,6 +44,7 @@
 #include <optional>
 #include <queue>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -1152,7 +1153,7 @@ public:
     void ForEachNode(const NodeFn& func)
     {
         LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto& [_, node] : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -1161,7 +1162,7 @@ public:
     void ForEachNode(const NodeFn& func) const
     {
         LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
+        for (auto& [_, node] : m_nodes) {
             if (NodeFullyConnected(node))
                 func(node);
         }
@@ -1431,7 +1432,7 @@ private:
     std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
 
     mutable Mutex m_added_nodes_mutex;
-    std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::unordered_map<NodeId, CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
     unsigned int nPrevNodeCount{0};
@@ -1617,8 +1618,9 @@ private:
         {
             {
                 LOCK(connman.m_nodes_mutex);
-                m_nodes_copy = connman.m_nodes;
-                for (auto& node : m_nodes_copy) {
+                m_nodes_copy.reserve(connman.m_nodes.size());
+                for (auto& [_, node] : connman.m_nodes) {
+                    m_nodes_copy.push_back(node);
                     node->AddRef();
                 }
             }
