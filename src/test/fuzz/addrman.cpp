@@ -186,7 +186,7 @@ public:
             return false;
         }
 
-        auto IdsReferToSameAddress = [&](int id, int other_id) EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs, other.m_impl->cs) {
+        auto IdsReferToSameAddress = [&](nid_type id, nid_type other_id) EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs, other.m_impl->cs) {
             if (id == -1 && other_id == -1) {
                 return true;
             }
