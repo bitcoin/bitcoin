@@ -288,7 +288,7 @@ private:
     const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
 
-    const CBlockIndex* m_quorum_base_block_index{nullptr};
+    const CBlockIndex* const m_quorum_base_block_index;
     int quorumIndex{0};
 
 private:
@@ -326,16 +326,17 @@ private:
     std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CConnman& _connman,
+    CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CConnman& _connman,
                 CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
                 CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
                 const CSporkManager& sporkman) :
         params(_params), blsWorker(_blsWorker), cache(_blsWorker), connman(_connman), m_dmnman(dmnman), dkgManager(_dkgManager),
-        dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman)
+        dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman),
+        m_quorum_base_block_index{pQuorumBaseBlockIndex}
         {}
 
     // TODO: remove Init completely
-    bool Init(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex);
+    bool Init(Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex);
 
     [[nodiscard]] std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
 

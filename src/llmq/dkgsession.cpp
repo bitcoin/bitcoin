@@ -68,9 +68,8 @@ CDKGMember::CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx) :
 
 }
 
-bool CDKGSession::Init(gsl::not_null<const CBlockIndex*> _pQuorumBaseBlockIndex, Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex)
+bool CDKGSession::Init(Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex)
 {
-    m_quorum_base_block_index = _pQuorumBaseBlockIndex;
     quorumIndex = _quorumIndex;
     members.resize(mns.size());
     memberIds.resize(members.size());
