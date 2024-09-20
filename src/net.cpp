@@ -333,25 +333,25 @@ bool IsLocal(const CService& addr)
 bool CConnman::AlreadyConnectedToHost(std::string_view host) const
 {
     LOCK(m_nodes_mutex);
-    return std::ranges::any_of(m_nodes, [&host](CNode* node) { return node->m_addr_name == host; });
+    return std::ranges::any_of(m_nodes, [&host](const auto& pair) { return pair.second->m_addr_name == host; });
 }
 
 bool CConnman::AlreadyConnectedToAddressPort(const CService& addr_port) const
 {
     LOCK(m_nodes_mutex);
-    return std::ranges::any_of(m_nodes, [&addr_port](CNode* node) { return node->addr == addr_port; });
+    return std::ranges::any_of(m_nodes, [&addr_port](const auto& pair) { return pair.second->addr == addr_port; });
 }
 
 bool CConnman::AlreadyConnectedToAddress(const CNetAddr& addr) const
 {
     LOCK(m_nodes_mutex);
-    return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
+    return std::ranges::any_of(m_nodes, [&addr](const auto& pair) { return pair.second->addr == addr; });
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(m_nodes_mutex);
-    for (const CNode* pnode : m_nodes) {
+    for (const auto& [_, pnode] : m_nodes) {
         if (!pnode->fSuccessfullyConnected && !pnode->IsInboundConn() && pnode->GetLocalNonce() == nonce)
             return false;
     }
@@ -1684,11 +1684,11 @@ bool CConnman::AttemptToEvictConnection()
     {
 
         LOCK(m_nodes_mutex);
-        for (const CNode* node : m_nodes) {
+        for (const auto& [id, node] : m_nodes) {
             if (node->fDisconnect)
                 continue;
             NodeEvictionCandidate candidate{
-                .id = node->GetId(),
+                .id = id,
                 .m_connected = node->m_connected,
                 .m_min_ping_time = node->m_min_ping_time,
                 .m_last_block_time = node->m_last_block_time,
@@ -1711,18 +1711,18 @@ bool CConnman::AttemptToEvictConnection()
         return false;
     }
     LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
-        if (pnode->GetId() == *node_id_to_evict) {
-            LogDebug(BCLog::NET, "selected %s connection for eviction, %s", pnode->ConnectionTypeAsString(), pnode->DisconnectMsg(fLogIPs));
-            TRACEPOINT(net, evicted_inbound_connection,
-                pnode->GetId(),
-                pnode->m_addr_name.c_str(),
-                pnode->ConnectionTypeAsString().c_str(),
-                pnode->ConnectedThroughNetwork(),
-                Ticks<std::chrono::seconds>(pnode->m_connected));
-            pnode->fDisconnect = true;
-            return true;
-        }
+    auto it{m_nodes.find(*node_id_to_evict)};
+    if (it != m_nodes.end()) {
+        auto node{it->second};
+        LogDebug(BCLog::NET, "selected %s connection for eviction, %s", node->ConnectionTypeAsString(), node->DisconnectMsg(fLogIPs));
+        TRACEPOINT(net, evicted_inbound_connection,
+            node->GetId(),
+            node->m_addr_name.c_str(),
+            node->ConnectionTypeAsString().c_str(),
+            node->ConnectedThroughNetwork(),
+            Ticks<std::chrono::seconds>(node->m_connected));
+        node->fDisconnect = true;
+        return true;
     }
     return false;
 }
@@ -1747,7 +1747,7 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
 
     {
         LOCK(m_nodes_mutex);
-        for (const CNode* pnode : m_nodes) {
+        for (const auto& [_, pnode] : m_nodes) {
             if (pnode->IsInboundConn()) nInbound++;
         }
     }
@@ -1828,7 +1828,7 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
     m_msgproc->InitializeNode(*pnode, local_services);
     {
         LOCK(m_nodes_mutex);
-        m_nodes.push_back(pnode);
+        m_nodes.emplace(id, pnode);
     }
     LogDebug(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
     TRACEPOINT(net, inbound_connection,
@@ -1865,8 +1865,11 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     } // no default case, so the compiler can warn about missing cases
 
     // Count existing connections
-    int existing_connections = WITH_LOCK(m_nodes_mutex,
-                                         return std::count_if(m_nodes.begin(), m_nodes.end(), [conn_type](CNode* node) { return node->m_conn_type == conn_type; }););
+    int existing_connections = WITH_LOCK(
+        m_nodes_mutex, return std::count_if(m_nodes.begin(), m_nodes.end(), [conn_type](const auto& pair) {
+            const auto node{pair.second};
+            return node->m_conn_type == conn_type;
+        }););
 
     // Max connections of specified type already exist
     if (max_connections != std::nullopt && existing_connections >= max_connections) return false;
@@ -1894,7 +1897,7 @@ void CConnman::DisconnectNodes()
         const bool network_active{fNetworkActive};
         if (!network_active) {
             // Disconnect any connected nodes
-            for (CNode* pnode : m_nodes) {
+            for (auto& [_, pnode] : m_nodes) {
                 if (!pnode->fDisconnect) {
                     LogDebug(BCLog::NET, "Network not active, %s\n", pnode->DisconnectMsg(fLogIPs));
                     pnode->fDisconnect = true;
@@ -1903,40 +1906,42 @@ void CConnman::DisconnectNodes()
         }
 
         // Disconnect unused nodes
-        std::vector<CNode*> nodes_copy = m_nodes;
-        for (CNode* pnode : nodes_copy)
-        {
-            if (pnode->fDisconnect)
-            {
-                // remove from m_nodes
-                m_nodes.erase(remove(m_nodes.begin(), m_nodes.end(), pnode), m_nodes.end());
+        for (auto it{m_nodes.begin()}; it != m_nodes.end();) {
+            auto id{it->first};
+            auto pnode{it->second};
 
-                // Add to reconnection list if appropriate. We don't reconnect right here, because
-                // the creation of a connection is a blocking operation (up to several seconds),
-                // and we don't want to hold up the socket handler thread for that long.
-                if (network_active && pnode->m_transport->ShouldReconnectV1()) {
-                    reconnections_to_add.push_back({
-                        .addr_connect = pnode->addr,
-                        .grant = std::move(pnode->grantOutbound),
-                        .destination = pnode->m_dest,
-                        .conn_type = pnode->m_conn_type,
-                        .use_v2transport = false});
-                    LogDebug(BCLog::NET, "retrying with v1 transport protocol for peer=%d\n", pnode->GetId());
-                }
-
-                // release outbound grant (if any)
-                pnode->grantOutbound.Release();
-
-                // close socket and cleanup
-                pnode->CloseSocketDisconnect();
-
-                // update connection count by network
-                if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
-
-                // hold in disconnected pool until all refs are released
-                pnode->Release();
-                m_nodes_disconnected.push_back(pnode);
+            if (!pnode->fDisconnect) {
+                ++it;
+                continue;
             }
+
+            it = m_nodes.erase(it);
+
+            // Add to reconnection list if appropriate. We don't reconnect right here, because
+            // the creation of a connection is a blocking operation (up to several seconds),
+            // and we don't want to hold up the socket handler thread for that long.
+            if (network_active && pnode->m_transport->ShouldReconnectV1()) {
+                reconnections_to_add.push_back({
+                    .addr_connect = pnode->addr,
+                    .grant = std::move(pnode->grantOutbound),
+                    .destination = pnode->m_dest,
+                    .conn_type = pnode->m_conn_type,
+                    .use_v2transport = false});
+                LogDebug(BCLog::NET, "retrying with v1 transport protocol for peer=%d\n", id);
+            }
+
+            // release outbound grant (if any)
+            pnode->grantOutbound.Release();
+
+            // close socket and cleanup
+            pnode->CloseSocketDisconnect();
+
+            // update connection count by network
+            if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
+
+            // hold in disconnected pool until all refs are released
+            pnode->Release();
+            m_nodes_disconnected.push_back(pnode);
         }
     }
     {
@@ -2427,7 +2432,7 @@ int CConnman::GetFullOutboundConnCount() const
     int nRelevant = 0;
     {
         LOCK(m_nodes_mutex);
-        for (const CNode* pnode : m_nodes) {
+        for (const auto& [_, pnode] : m_nodes) {
             if (pnode->fSuccessfullyConnected && pnode->IsFullOutboundConn()) ++nRelevant;
         }
     }
@@ -2445,7 +2450,7 @@ int CConnman::GetExtraFullOutboundCount() const
     int full_outbound_peers = 0;
     {
         LOCK(m_nodes_mutex);
-        for (const CNode* pnode : m_nodes) {
+        for (const auto& [_, pnode] : m_nodes) {
             if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsFullOutboundConn()) {
                 ++full_outbound_peers;
             }
@@ -2459,7 +2464,7 @@ int CConnman::GetExtraBlockRelayCount() const
     int block_relay_peers = 0;
     {
         LOCK(m_nodes_mutex);
-        for (const CNode* pnode : m_nodes) {
+        for (const auto& [_, pnode] : m_nodes) {
             if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsBlockOnlyConn()) {
                 ++block_relay_peers;
             }
@@ -2633,7 +2638,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
 
         {
             LOCK(m_nodes_mutex);
-            for (const CNode* pnode : m_nodes) {
+            for (const auto& [_, pnode] : m_nodes) {
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
 
@@ -2877,7 +2882,7 @@ std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
 {
     std::vector<CAddress> ret;
     LOCK(m_nodes_mutex);
-    for (const CNode* pnode : m_nodes) {
+    for (const auto& [_, pnode] : m_nodes) {
         if (pnode->IsBlockOnlyConn()) {
             ret.push_back(pnode->addr);
         }
@@ -2903,7 +2908,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) co
     std::map<std::string, std::pair<bool, CService>> mapConnectedByName;
     {
         LOCK(m_nodes_mutex);
-        for (const CNode* pnode : m_nodes) {
+        for (const auto& [_, pnode] : m_nodes) {
             if (pnode->addr.IsValid()) {
                 mapConnected[pnode->addr] = pnode->IsInboundConn();
             }
@@ -3015,7 +3020,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
     m_msgproc->InitializeNode(*pnode, m_local_services);
     {
         LOCK(m_nodes_mutex);
-        m_nodes.push_back(pnode);
+        m_nodes.emplace(pnode->GetId(), pnode);
 
         // update connection count by network
         if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
@@ -3383,9 +3388,9 @@ void CConnman::StopNodes()
     }
 
     // Delete peer connections.
-    std::vector<CNode*> nodes;
+    decltype(m_nodes) nodes;
     WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
-    for (CNode* pnode : nodes) {
+    for (auto& [_, pnode] : nodes) {
         LogDebug(BCLog::NET, "Stopping node, %s", pnode->DisconnectMsg(fLogIPs));
         pnode->CloseSocketDisconnect();
         DeleteNode(pnode);
@@ -3508,7 +3513,7 @@ size_t CConnman::GetNodeCount(ConnectionDirection flags) const
         return m_nodes.size();
 
     int nNum = 0;
-    for (const auto& pnode : m_nodes) {
+    for (const auto& [_, pnode] : m_nodes) {
         if (flags & (pnode->IsInboundConn() ? ConnectionDirection::In : ConnectionDirection::Out)) {
             nNum++;
         }
@@ -3534,7 +3539,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     vstats.clear();
     LOCK(m_nodes_mutex);
     vstats.reserve(m_nodes.size());
-    for (CNode* pnode : m_nodes) {
+    for (const auto& [_, pnode] : m_nodes) {
         vstats.emplace_back();
         pnode->CopyStats(vstats.back());
         vstats.back().m_mapped_as = GetMappedAS(pnode->addr);
@@ -3544,9 +3549,9 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
 bool CConnman::DisconnectNode(std::string_view strNode)
 {
     LOCK(m_nodes_mutex);
-    auto it = std::ranges::find_if(m_nodes, [&strNode](CNode* node) { return node->m_addr_name == strNode; });
+    auto it = std::ranges::find_if(m_nodes, [&strNode](const auto& pair) { return pair.second->m_addr_name == strNode; });
     if (it != m_nodes.end()) {
-        CNode* node{*it};
+        CNode* node{it->second};
         LogDebug(BCLog::NET, "disconnect by address%s match, %s", (fLogIPs ? strprintf("=%s", strNode) : ""), node->DisconnectMsg(fLogIPs));
         node->fDisconnect = true;
         return true;
@@ -3558,7 +3563,7 @@ bool CConnman::DisconnectNode(const CSubNet& subnet)
 {
     bool disconnected = false;
     LOCK(m_nodes_mutex);
-    for (CNode* pnode : m_nodes) {
+    for (auto& [_, pnode] : m_nodes) {
         if (subnet.Match(pnode->addr)) {
             LogDebug(BCLog::NET, "disconnect by subnet%s match, %s", (fLogIPs ? strprintf("=%s", subnet.ToString()) : ""), pnode->DisconnectMsg(fLogIPs));
             pnode->fDisconnect = true;
@@ -3576,14 +3581,14 @@ bool CConnman::DisconnectNode(const CNetAddr& addr)
 bool CConnman::DisconnectNode(NodeId id)
 {
     LOCK(m_nodes_mutex);
-    for(CNode* pnode : m_nodes) {
-        if (id == pnode->GetId()) {
-            LogDebug(BCLog::NET, "disconnect by id, %s", pnode->DisconnectMsg(fLogIPs));
-            pnode->fDisconnect = true;
-            return true;
-        }
+    auto it{m_nodes.find(id)};
+    if (it == m_nodes.end()) {
+        return false;
     }
-    return false;
+    auto node{it->second};
+    LogDebug(BCLog::NET, "disconnect by id, %s", node->DisconnectMsg(fLogIPs));
+    node->fDisconnect = true;
+    return true;
 }
 
 void CConnman::RecordBytesRecv(uint64_t bytes)
@@ -3830,11 +3835,9 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 {
     CNode* found = nullptr;
     LOCK(m_nodes_mutex);
-    for (auto&& pnode : m_nodes) {
-        if(pnode->GetId() == id) {
-            found = pnode;
-            break;
-        }
+    auto it{m_nodes.find(id)};
+    if (it != m_nodes.end()) {
+        found = it->second;
     }
     return found != nullptr && NodeFullyConnected(found) && func(found);
 }
