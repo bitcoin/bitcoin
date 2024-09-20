@@ -93,7 +93,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/context -> llmq/ehf_signals -> net_processing -> llmq/context"
     "llmq/blockprocessor -> net_processing -> llmq/blockprocessor"
     "llmq/chainlocks -> net_processing -> llmq/chainlocks"
-    "llmq/dkgsession -> net_processing -> llmq/quorums -> llmq/dkgsession"
     "net_processing -> spork -> net_processing"
     "evo/simplifiedmns -> llmq/blockprocessor -> net_processing -> evo/simplifiedmns"
     "governance/governance -> net_processing -> governance/governance"

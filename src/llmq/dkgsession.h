@@ -5,13 +5,14 @@
 #ifndef BITCOIN_LLMQ_DKGSESSION_H
 #define BITCOIN_LLMQ_DKGSESSION_H
 
+#include <llmq/commitment.h>
+
+#include <batchedlogger.h>
 #include <bls/bls.h>
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
-
-#include <llmq/commitment.h>
-#include <util/underlying.h>
 #include <sync.h>
+#include <util/underlying.h>
 
 #include <optional>
 
@@ -22,7 +23,6 @@ class CDeterministicMN;
 class CMasternodeMetaMan;
 class CSporkManager;
 class UniValue;
-class PeerManager;
 
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
@@ -249,6 +249,13 @@ public:
     }
 };
 
+class CDKGLogger : public CBatchedLogger
+{
+public:
+    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func, int source_line);
+    CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func, int source_line);
+};
+
 /**
  * The DKG session is a single instance of the DKG process. It is owned and called by CDKGSessionHandler, which passes
  * received DKG messages to the session. The session is not persistent and will loose it's state (the whole object is
@@ -281,7 +288,6 @@ private:
     CMasternodeMetaMan& m_mn_metaman;
     const CActiveMasternodeManager* const m_mn_activeman;
     const CSporkManager& m_sporkman;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     const CBlockIndex* m_quorum_base_block_index{nullptr};
     int quorumIndex{0};
@@ -324,11 +330,12 @@ public:
     CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CConnman& _connman,
                 CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
                 CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman) :
+                const CSporkManager& sporkman) :
         params(_params), blsWorker(_blsWorker), cache(_blsWorker), connman(_connman), m_dmnman(dmnman), dkgManager(_dkgManager),
-        dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman),
-        m_peerman(peerman) {}
+        dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman)
+        {}
 
+    // TODO: remove Init completely
     bool Init(gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, Span<CDeterministicMNCPtr> mns, const uint256& _myProTxHash, int _quorumIndex);
 
     [[nodiscard]] std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
@@ -350,7 +357,7 @@ public:
     void Contribute(CDKGPendingMessages& pendingMessages);
     void SendContributions(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const CDKGContribution& qc, bool& retBan) const;
-    void ReceiveMessage(const CDKGContribution& qc);
+    std::optional<CInv> ReceiveMessage(const CDKGContribution& qc);
     void VerifyPendingContributions() EXCLUSIVE_LOCKS_REQUIRED(cs_pending);
 
     // Phase 2: complaint
@@ -358,19 +365,19 @@ public:
     void VerifyConnectionAndMinProtoVersions() const;
     void SendComplaint(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
-    void ReceiveMessage(const CDKGComplaint& qc);
+    std::optional<CInv> ReceiveMessage(const CDKGComplaint& qc);
 
     // Phase 3: justification
     void VerifyAndJustify(CDKGPendingMessages& pendingMessages);
     void SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers);
     bool PreVerifyMessage(const CDKGJustification& qj, bool& retBan) const;
-    void ReceiveMessage(const CDKGJustification& qj);
+    std::optional<CInv> ReceiveMessage(const CDKGJustification& qj);
 
     // Phase 4: commit
     void VerifyAndCommit(CDKGPendingMessages& pendingMessages);
     void SendCommitment(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retBan) const;
-    void ReceiveMessage(const CDKGPrematureCommitment& qc);
+    std::optional<CInv> ReceiveMessage(const CDKGPrematureCommitment& qc);
 
     // Phase 5: aggregate/finalize
     std::vector<CFinalCommitment> FinalizeCommitments();
@@ -378,10 +385,12 @@ public:
     [[nodiscard]] bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 
-    void RelayInvToParticipants(const CInv& inv) const;
-
 public:
     [[nodiscard]] CDKGMember* GetMember(const uint256& proTxHash) const;
+    [[nodiscard]] const std::set<uint256>& RelayMembers() const { return relayMembers; }
+    [[nodiscard]] const CBlockIndex* BlockIndex() const { return m_quorum_base_block_index; }
+    [[nodiscard]] const uint256& ProTx() const { return myProTxHash; }
+    [[nodiscard]] const Consensus::LLMQParams GetParams() const { return params; }
 
 private:
     [[nodiscard]] bool ShouldSimulateError(DKGError::type type) const;
