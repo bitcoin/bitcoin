@@ -9,6 +9,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
 )
+from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 
 
 class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
@@ -42,7 +43,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getblockhash(2))['filter']), 0)
 
         self.log.info("start node without blockfilterindex")
-        self.restart_node(0, extra_args=["-fastprune", "-prune=1"], expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+        self.restart_node(0, extra_args=["-fastprune", "-prune=1"], expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
         self.log.info("make sure accessing the blockfilters throws an error")
         assert_raises_rpc_error(-1, "Index is not enabled for filtertype basic", self.nodes[0].getblockfilter, self.nodes[0].getblockhash(2))
@@ -51,17 +52,17 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         self.log.info("prune below the blockfilterindexes best block while blockfilters are disabled")
         pruneheight_new = self.nodes[0].pruneblockchain(1000)
         assert_greater_than(pruneheight_new, pruneheight)
-        self.stop_node(0, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+        self.stop_node(0, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
         self.log.info("make sure we get an init error when starting the node again with block filters")
         self.nodes[0].assert_start_raises_init_error(
             extra_args=["-fastprune", "-prune=1", "-blockfilterindex=1"],
-            expected_msg="Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.\nError: basic block filter index best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)",
+            expected_msg=f"{EXPECTED_STDERR_NO_GOV_PRUNE}\nError: basic block filter index best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)",
         )
 
         self.log.info("make sure the node starts again with the -reindex arg")
         self.start_node(0, extra_args=["-fastprune", "-prune=1", "-blockfilterindex", "-reindex"])
-        self.stop_nodes(expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+        self.stop_nodes(expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
 
 if __name__ == '__main__':

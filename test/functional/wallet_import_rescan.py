@@ -20,6 +20,7 @@ happened previously.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 from test_framework.util import (
     assert_equal,
     set_node_times,
@@ -213,7 +214,7 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.check(variant.sent_txid, variant.sent_amount, variant.confirmation_height)
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
-                self.stop_node(i, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+                self.stop_node(i, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
 
 
