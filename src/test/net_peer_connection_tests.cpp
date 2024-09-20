@@ -117,9 +117,9 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     BOOST_CHECK_EQUAL(nodes.back()->ConnectedThroughNetwork(), Network::NET_CJDNS);
 
     BOOST_TEST_MESSAGE("Call AddNode() for all the peers");
-    for (auto node : connman->TestNodes()) {
+    for (const auto& [id, node] : connman->TestNodes()) {
         BOOST_CHECK(connman->AddNode({/*m_added_node=*/node->addr.ToStringAddrPort(), /*m_use_v2transport=*/true}));
-        BOOST_TEST_MESSAGE(strprintf("peer id=%s addr=%s", node->GetId(), node->addr.ToStringAddrPort()));
+        BOOST_TEST_MESSAGE(strprintf("peer id=%s addr=%s", id, node->addr.ToStringAddrPort()));
     }
 
     BOOST_TEST_MESSAGE("\nCall AddNode() with 2 addrs resolving to existing localhost addnode entry; neither should be added");
@@ -134,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     BOOST_CHECK(connman->GetAddedNodeInfo(/*include_connected=*/false).empty());
 
     // Test AddedNodesContain()
-    for (auto node : connman->TestNodes()) {
+    for (const auto& [id, node] : connman->TestNodes()) {
         BOOST_CHECK(connman->AddedNodesContain(node->addr));
     }
     AddPeer(id, nodes, *peerman, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
@@ -151,12 +151,12 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     }
 
     BOOST_TEST_MESSAGE("\nCheck that all connected peers are correctly detected as connected");
-    for (auto node : connman->TestNodes()) {
+    for (const auto& [id, node] : connman->TestNodes()) {
         BOOST_CHECK(connman->AlreadyConnectedPublic(node->addr));
     }
 
     // Clean up
-    for (auto node : connman->TestNodes()) {
+    for (const auto& [id, node] : connman->TestNodes()) {
         peerman->FinalizeNode(*node);
     }
     connman->ClearTestNodes();
