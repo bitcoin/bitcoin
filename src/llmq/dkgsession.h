@@ -253,7 +253,6 @@ class CDKGLogger : public CBatchedLogger
 {
 public:
     CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func, int source_line);
-    CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func, int source_line);
 };
 
 /**

@@ -33,12 +33,7 @@ namespace llmq
 {
 
 CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func, int source_line) :
-    CDKGLogger(_quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func, source_line)
-{
-}
-
-CDKGLogger::CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func, int source_line) :
-    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, qIndex=%d, h=%d, member=%d)", _llmqTypeName, _quorumIndex, _height, _areWeMember), __FILE__, source_line)
+    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, qIndex=%d, h=%d, member=%d)", _quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember()), __FILE__, source_line)
 {
 }
 
