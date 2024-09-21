@@ -145,6 +145,10 @@ void SockMan::StopListening()
     m_listen.clear();
 }
 
+bool SockMan::ShouldTryToSend(Id id) const { return true; }
+
+bool SockMan::ShouldTryToRecv(Id id) const { return true; }
+
 void SockMan::EventI2PStatus(const CService&, I2PStatus) {}
 
 void SockMan::ThreadI2PAccept()
