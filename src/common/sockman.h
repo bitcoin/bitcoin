@@ -152,6 +152,21 @@ private:
     //
 
     /**
+     * Can be used to temporarily pause sends on a connection.
+     * The implementation in SockMan always returns true.
+     * @param[in] id Connection for which to confirm or omit the next send.
+     */
+    virtual bool ShouldTryToSend(Id id) const;
+
+    /**
+     * SockMan would only call Recv() on a connection's socket if this returns true.
+     * Can be used to temporarily pause receives on a connection.
+     * The implementation in SockMan always returns true.
+     * @param[in] id Connection for which to confirm or omit the next receive.
+     */
+    virtual bool ShouldTryToRecv(Id id) const;
+
+    /**
      * Be notified of a change in the state of the I2P connectivity.
      * The default behavior, implemented by `SockMan`, is to ignore this event.
      * @param[in] addr The address we started or stopped listening on.
