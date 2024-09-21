@@ -1287,17 +1287,25 @@ private:
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
 
+    virtual bool ShouldTryToSend(NodeId node_id) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual bool ShouldTryToRecv(NodeId node_id) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
     /**
      * Generate a collection of sockets to check for IO readiness.
      * @param[in] nodes Select from these nodes' sockets.
      * @return sockets to check for readiness
      */
-    Sock::EventsPerSock GenerateWaitSockets(Span<CNode* const> nodes);
+    Sock::EventsPerSock GenerateWaitSockets(Span<CNode* const> nodes)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
      */
-    void SocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
+    void SocketHandler()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_total_bytes_sent_mutex, !mutexMsgProc);
 
     /**
      * Do the read/write for connected sockets that are ready for IO.
@@ -1409,6 +1417,8 @@ private:
 
     // connection string and whether to use v2 p2p
     std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
+
+    CNode* GetNodeById(NodeId node_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     mutable Mutex m_added_nodes_mutex;
     std::unordered_map<NodeId, CNode*> m_nodes GUARDED_BY(m_nodes_mutex);

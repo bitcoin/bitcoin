@@ -1647,6 +1647,16 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
     return {nSentSize, data_left};
 }
 
+CNode* CConnman::GetNodeById(NodeId node_id) const
+{
+    LOCK(m_nodes_mutex);
+    auto it{m_nodes.find(node_id)};
+    if (it != m_nodes.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
 /** Try to find a connection to evict when the node is full.
  *  Extreme care must be taken to avoid opening the node to attacker
  *   triggered network partitioning.
@@ -1976,8 +1986,37 @@ bool CConnman::InactivityCheck(const CNode& node) const
     return false;
 }
 
+bool CConnman::ShouldTryToSend(NodeId node_id) const
+{
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(node_id)};
+    if (node == nullptr) {
+        return false;
+    }
+    LOCK(node->cs_vSend);
+    // Sending is possible if either there are bytes to send right now, or if there will be
+    // once a potential message from vSendMsg is handed to the transport. GetBytesToSend
+    // determines both of these in a single call.
+    const auto& [to_send, more, _msg_type] = node->m_transport->GetBytesToSend(!node->vSendMsg.empty());
+    return !to_send.empty() || more;
+}
+
+bool CConnman::ShouldTryToRecv(NodeId node_id) const
+{
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(node_id)};
+    if (node == nullptr) {
+        return false;
+    }
+    return !node->fPauseRecv;
+}
+
 Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
 {
+    AssertLockNotHeld(m_nodes_mutex);
+
     Sock::EventsPerSock events_per_sock;
 
     for (const auto& sock : m_listen) {
@@ -1985,16 +2024,8 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
     }
 
     for (CNode* pnode : nodes) {
-        bool select_recv = !pnode->fPauseRecv;
-        bool select_send;
-        {
-            LOCK(pnode->cs_vSend);
-            // Sending is possible if either there are bytes to send right now, or if there will be
-            // once a potential message from vSendMsg is handed to the transport. GetBytesToSend
-            // determines both of these in a single call.
-            const auto& [to_send, more, _msg_type] = pnode->m_transport->GetBytesToSend(!pnode->vSendMsg.empty());
-            select_send = !to_send.empty() || more;
-        }
+        const bool select_recv{ShouldTryToRecv(pnode->GetId())};
+        const bool select_send{ShouldTryToSend(pnode->GetId())};
         if (!select_recv && !select_send) continue;
 
         LOCK(pnode->m_sock_mutex);
@@ -2154,6 +2185,7 @@ void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock
 
 void CConnman::ThreadSocketHandler()
 {
+    AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
     while (!interruptNet)

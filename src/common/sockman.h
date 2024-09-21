@@ -112,6 +112,22 @@ public:
     //
 
     /**
+     * SockMan would only call EventReadyToSend() if this returns true.
+     * Can be used to temporary pause sends for a node.
+     * The implementation in SockMan always returns true.
+     * @param[in] node_id Node for which to confirm or cancel a call to EventReadyToSend().
+     */
+    virtual bool ShouldTryToSend(NodeId node_id) const;
+
+    /**
+     * SockMan would only call Recv() on a node's socket if this returns true.
+     * Can be used to temporary pause receives for a node.
+     * The implementation in SockMan always returns true.
+     * @param[in] node_id Node for which to confirm or cancel a receive.
+     */
+    virtual bool ShouldTryToRecv(NodeId node_id) const;
+
+    /**
      * Be notified of a change in the state of listening for incoming I2P connections.
      * The default behavior, implemented by `SockMan`, is to ignore this event.
      * @param[in] addr Our listening address.
