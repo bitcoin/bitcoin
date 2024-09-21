@@ -579,13 +579,13 @@ class P2PInterface(P2PConnection):
 
     # Connection helper methods
 
-    def wait_until(self, test_function_in, *, timeout=60, check_connected=True):
+    def wait_until(self, test_function_in, *, timeout=60, check_connected=True, check_interval=0.05):
         def test_function():
             if check_connected:
                 assert self.is_connected
             return test_function_in()
 
-        wait_until_helper_internal(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
+        wait_until_helper_internal(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor, check_interval=check_interval)
 
     def wait_for_connect(self, *, timeout=60):
         test_function = lambda: self.is_connected
