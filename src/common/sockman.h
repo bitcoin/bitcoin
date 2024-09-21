@@ -128,6 +128,22 @@ public:
     virtual bool ShouldTryToRecv(NodeId node_id) const;
 
     /**
+     * SockMan has completed the current send+recv iteration for a node.
+     * It will do another send+recv for this node after processing all other nodes.
+     * Can be used to execute periodic tasks for a given node.
+     * The implementation in SockMan does nothing.
+     * @param[in] node_id Node for which send+recv has been done.
+     */
+    virtual void EventIOLoopCompletedForNode(NodeId node_id);
+
+    /**
+     * SockMan has completed send+recv for all nodes.
+     * Can be used to execute periodic tasks for all nodes.
+     * The implementation in SockMan does nothing.
+     */
+    virtual void EventIOLoopCompletedForAllPeers();
+
+    /**
      * Be notified of a change in the state of listening for incoming I2P connections.
      * The default behavior, implemented by `SockMan`, is to ignore this event.
      * @param[in] addr Our listening address.
