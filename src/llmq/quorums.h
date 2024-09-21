@@ -13,8 +13,8 @@
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
+#include <protocol.h>
 
-#include <net_types.h>
 #include <gsl/pointers.h>
 
 #include <atomic>

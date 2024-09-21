@@ -17,6 +17,9 @@
 #include <uint256.h>
 #include <version.h>
 
+#include <util/expected.h>
+
+
 #include <limits>
 #include <stdint.h>
 #include <string>
@@ -561,5 +564,36 @@ public:
     uint256 hash;
 };
 
+struct MisbehavingError
+{
+    int score;
+    std::string message;
+
+    MisbehavingError(int s) : score{s} {}
+
+     // Constructor does a perfect forwarding reference
+    template <typename T>
+    MisbehavingError(int s, T&& msg) :
+        score{s},
+        message{std::forward<T>(msg)}
+    {}
+};
+
+using PeerMsgRet = tl::expected<void, MisbehavingError>;
+
+struct MessageProcessingResult
+{
+    std::optional<MisbehavingError> m_error;
+    std::optional<CInv> m_inventory;
+
+    MessageProcessingResult() = default;
+    MessageProcessingResult(MisbehavingError error) :
+        m_error(error)
+    {}
+    MessageProcessingResult(CInv inv) :
+        m_inventory(inv)
+    {
+    }
+};
 
 #endif // BITCOIN_PROTOCOL_H

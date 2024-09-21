@@ -584,8 +584,9 @@ public:
     bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
 private:
-    /** Helper to process result of external handlers of message */
+    /** Helpers to process result of external handlers of message */
     void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void PostProcessMessage(MessageProcessingResult&& ret, NodeId node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
@@ -3307,6 +3308,16 @@ void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
 void PeerManagerImpl::ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom)
 {
     if (!ret) Misbehaving(pfrom.GetId(), ret.error().score, ret.error().message);
+}
+
+void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& ret, NodeId node)
+{
+    if (ret.m_error) {
+        Misbehaving(node, ret.m_error->score, ret.m_error->message);
+    }
+    if (ret.m_inventory) {
+        RelayInv(ret.m_inventory.value(), MIN_PEER_PROTO_VERSION);
+    }
 }
 
 void PeerManagerImpl::ProcessMessage(

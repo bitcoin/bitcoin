@@ -9,8 +9,8 @@
 
 #include <chain.h>
 #include <consensus/params.h>
-#include <net_types.h>
 #include <primitives/block.h>
+#include <protocol.h>
 #include <saltedhasher.h>
 #include <sync.h>
 

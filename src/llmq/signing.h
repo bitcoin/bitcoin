@@ -8,7 +8,7 @@
 #include <bls/bls.h>
 #include <consensus/params.h>
 #include <gsl/pointers.h>
-#include <net_types.h>
+#include <protocol.h>
 #include <random.h>
 #include <saltedhasher.h>
 #include <sync.h>

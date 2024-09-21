@@ -6,7 +6,7 @@
 #define BITCOIN_EVO_MNAUTH_H
 
 #include <bls/bls.h>
-#include <net_types.h>
+#include <protocol.h>
 #include <serialize.h>
 
 class CActiveMasternodeManager;
