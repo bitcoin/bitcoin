@@ -2074,6 +2074,29 @@ bool CConnman::ShouldTryToRecv(SockMan::Id id) const
     return !node->fPauseRecv;
 }
 
+void CConnman::EventIOLoopCompletedForOne(SockMan::Id id)
+{
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(id)};
+    if (node == nullptr) {
+        return;
+    }
+
+    if (InactivityCheck(*node)) {
+        node->fDisconnect = true;
+    }
+}
+
+void CConnman::EventIOLoopCompletedForAll()
+{
+    AssertLockNotHeld(m_nodes_mutex);
+    AssertLockNotHeld(m_reconnections_mutex);
+
+    DisconnectNodes();
+    NotifyNumConnectionsChanged();
+}
+
 Sock::EventsPerSock CConnman::GenerateWaitSockets(std::span<CNode* const> nodes)
 {
     AssertLockNotHeld(m_nodes_mutex);
@@ -2130,6 +2153,7 @@ void CConnman::SocketHandler()
 void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                                       const Sock::EventsPerSock& events_per_sock)
 {
+    AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
     for (CNode* pnode : nodes) {
@@ -2223,7 +2247,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             }
         }
 
-        if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
+        EventIOLoopCompletedForOne(pnode->GetId());
     }
 }
 
@@ -2255,8 +2279,7 @@ void CConnman::ThreadSocketHandler()
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
     while (!m_interrupt_net->interrupted()) {
-        DisconnectNodes();
-        NotifyNumConnectionsChanged();
+        EventIOLoopCompletedForAll();
         SocketHandler();
     }
 }
