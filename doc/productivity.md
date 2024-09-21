@@ -62,6 +62,9 @@ If you have multiple threads on your machine, you can utilize all of them with:
 cmake --build build -j$(nproc)
 ```
 
+Note: On macOS, the `nproc` command is not available by default.
+You can install it by running `brew install coreutils`.
+
 ### Only build what you need
 
 When rebuilding during development, note that running `cmake --build build`, without giving a target, will do a lot of work you probably don't need. It will build the GUI (if you've enabled it) and all the tests (which take much longer to build than the app does).
