@@ -142,6 +142,10 @@ void SockMan::CloseSockets()
     m_listen.clear();
 }
 
+bool SockMan::ShouldTryToSend(NodeId node_id) const { return true; }
+
+bool SockMan::ShouldTryToRecv(NodeId node_id) const { return true; }
+
 void SockMan::EventI2PListen(const CService&, bool) {}
 
 void SockMan::ThreadI2PAccept()
