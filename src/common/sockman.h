@@ -167,6 +167,23 @@ private:
     virtual bool ShouldTryToRecv(Id id) const;
 
     /**
+     * SockMan has completed the current send+recv iteration for a given connection.
+     * It will do another send+recv for this connection after processing all other connections.
+     * Can be used to execute periodic tasks for a given connection.
+     * The implementation in SockMan does nothing.
+     * @param[in] id Connection for which send+recv has been done.
+     */
+    virtual void EventIOLoopCompletedForOne(Id id);
+
+    /**
+     * SockMan has completed send+recv for all connections.
+     * Can be used to execute periodic tasks for all connections, like closing
+     * connections due to higher level logic.
+     * The implementation in SockMan does nothing.
+     */
+    virtual void EventIOLoopCompletedForAll();
+
+    /**
      * Be notified of a change in the state of the I2P connectivity.
      * The default behavior, implemented by `SockMan`, is to ignore this event.
      * @param[in] addr The address we started or stopped listening on.

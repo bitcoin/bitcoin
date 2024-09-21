@@ -1314,6 +1314,12 @@ private:
     virtual bool ShouldTryToRecv(SockMan::Id id) const override
         EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
+    virtual void EventIOLoopCompletedForOne(SockMan::Id id) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual void EventIOLoopCompletedForAll() override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_reconnections_mutex);
+
     /**
      * Generate a collection of sockets to check for IO readiness.
      * @param[in] nodes Select from these nodes' sockets.
@@ -1335,7 +1341,7 @@ private:
      */
     void SocketHandlerConnected(const std::vector<CNode*>& nodes,
                                 const Sock::EventsPerSock& events_per_sock)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_total_bytes_sent_mutex, !mutexMsgProc);
 
     /**
      * Accept incoming connections, one from each read-ready listening socket.
