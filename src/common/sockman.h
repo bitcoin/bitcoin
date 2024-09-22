@@ -146,6 +146,38 @@ private:
                                             const CService& me,
                                             const CService& them) = 0;
 
+    /**
+     * Called when the socket is ready to send data and `ShouldTryToSend()` has
+     * returned true. This is where the higher level code serializes its messages
+     * and calls `SockMan::SendBytes()`.
+     * @param[in] id Id of the connection whose socket is ready to send.
+     * @param[out] cancel_recv Should always be set upon return and if it is true,
+     * then the next attempt to receive data from that connection will be omitted.
+     */
+    virtual void EventReadyToSend(Id id, bool& cancel_recv) = 0;
+
+    /**
+     * Called when new data has been received.
+     * @param[in] id Connection for which the data arrived.
+     * @param[in] data Received data.
+     */
+    virtual void EventGotData(Id id, std::span<const uint8_t> data) = 0;
+
+    /**
+     * Called when the remote peer has sent an EOF on the socket. This is a graceful
+     * close of their writing side, we can still send and they will receive, if it
+     * makes sense at the application level.
+     * @param[in] id Connection whose socket got EOF.
+     */
+    virtual void EventGotEOF(Id id) = 0;
+
+    /**
+     * Called when we get an irrecoverable error trying to read from a socket.
+     * @param[in] id Connection whose socket got an error.
+     * @param[in] errmsg Message describing the error.
+     */
+    virtual void EventGotPermanentReadError(Id id, const std::string& errmsg) = 0;
+
     //
     // Non-pure virtual functions can be overridden by children classes or left
     // alone to use the default implementation from SockMan.
