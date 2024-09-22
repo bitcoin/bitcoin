@@ -106,6 +106,39 @@ public:
                                             const CService& me,
                                             const CService& them) = 0;
 
+    /**
+     * Called when the socket is ready to send data and `ShouldTryToSend()` has
+     * returned true. This is where the higher level code serializes its messages
+     * and calls `SockMan::SendBytes()`.
+     * @param[in] node_id Id of the node whose socket is ready to send.
+     * @param[out] cancel_recv Should always be set upon return and if it is true,
+     * then the next attempt to receive data from that node will be omitted.
+     */
+    virtual void EventReadyToSend(NodeId node_id, bool& cancel_recv) = 0;
+
+    /**
+     * Called when new data has been received.
+     * @param[in] node_id Node for which the data arrived.
+     * @param[in] data Data buffer.
+     * @param[in] n Number of bytes in `data`.
+     */
+    virtual void EventGotData(NodeId node_id, const uint8_t* data, size_t n) = 0;
+
+    /**
+     * Called when the remote peer has sent an EOF on the socket. This is a graceful
+     * close of their writing side, we can still send and they will receive, if it
+     * makes sense at the application level.
+     * @param[in] node_id Node whose socket got EOF.
+     */
+    virtual void EventGotEOF(NodeId node_id) = 0;
+
+    /**
+     * Called when we get an irrecoverable error trying to read from a socket.
+     * @param[in] node_id Node whose socket got an error.
+     * @param[in] errmsg Message describing the error.
+     */
+    virtual void EventGotPermanentReadError(NodeId node_id, const std::string& errmsg) = 0;
+
     //
     // Non-pure virtual functions can be overridden by children classes or left
     // alone to use the default implementation from SockMan.
