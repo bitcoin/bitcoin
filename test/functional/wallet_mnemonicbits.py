@@ -13,7 +13,6 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [['-usehd=1']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -23,18 +22,18 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
 
         self.log.info("Invalid -mnemonicbits should rise an error")
         self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(self.extra_args[0] + ['-mnemonicbits=123'], "Error: Invalid '-mnemonicbits'. Allowed values: 128, 160, 192, 224, 256.")
+        self.nodes[0].assert_start_raises_init_error(['-mnemonicbits=123'], "Error: Invalid '-mnemonicbits'. Allowed values: 128, 160, 192, 224, 256.")
         self.start_node(0)
         assert_equal(len(self.nodes[0].dumphdinfo()["mnemonic"].split()), 12)  # 12 words by default
 
         self.log.info("Can have multiple wallets with different mnemonic length loaded at the same time")
-        self.restart_node(0, extra_args=self.extra_args[0] + ["-mnemonicbits=160"])
+        self.restart_node(0, extra_args=["-mnemonicbits=160"])
         self.nodes[0].createwallet("wallet_160")
-        self.restart_node(0, extra_args=self.extra_args[0] + ["-mnemonicbits=192"])
+        self.restart_node(0, extra_args=["-mnemonicbits=192"])
         self.nodes[0].createwallet("wallet_192")
-        self.restart_node(0, extra_args=self.extra_args[0] + ["-mnemonicbits=224"])
+        self.restart_node(0, extra_args=["-mnemonicbits=224"])
         self.nodes[0].createwallet("wallet_224")
-        self.restart_node(0, extra_args=self.extra_args[0] + ["-mnemonicbits=256"])
+        self.restart_node(0, extra_args=["-mnemonicbits=256"])
         self.nodes[0].loadwallet("wallet_160")
         self.nodes[0].loadwallet("wallet_192")
         self.nodes[0].loadwallet("wallet_224")
