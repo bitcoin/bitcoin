@@ -1308,6 +1308,18 @@ private:
     /** Return true if the peer is inactive and should be disconnected. */
     bool InactivityCheck(const CNode& node) const;
 
+    void EventReadyToSend(SockMan::Id id, bool& cancel_recv) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual void EventGotData(SockMan::Id id, std::span<const uint8_t> data) override
+        EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc, !m_nodes_mutex);
+
+    virtual void EventGotEOF(SockMan::Id id) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
+    virtual void EventGotPermanentReadError(SockMan::Id id, const std::string& errmsg) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+
     virtual bool ShouldTryToSend(SockMan::Id id) const override
         EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
@@ -1371,7 +1383,8 @@ private:
     void DeleteNode(CNode* pnode);
 
     /** (Try to) send data from node's vSendMsg. Returns (bytes_sent, data_left). */
-    std::pair<size_t, bool> SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
+    std::pair<size_t, bool> SocketSendData(CNode& node)
+        EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend, !m_total_bytes_sent_mutex);
 
     void DumpAddresses();
 
