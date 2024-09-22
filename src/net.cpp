@@ -1591,8 +1591,10 @@ Transport::Info V2Transport::GetInfo() const noexcept
     return info;
 }
 
-std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
+std::pair<size_t, bool> CConnman::SocketSendData(CNode& node)
 {
+    AssertLockNotHeld(m_total_bytes_sent_mutex);
+
     auto it = node.vSendMsg.begin();
     size_t nSentSize = 0;
     bool data_left{false}; //!< second return value (whether unsent data remains)
@@ -1667,6 +1669,11 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
         assert(node.m_send_memusage == 0);
     }
     node.vSendMsg.erase(node.vSendMsg.begin(), it);
+
+    if (nSentSize > 0) {
+        RecordBytesSent(nSentSize);
+    }
+
     return {nSentSize, data_left};
 }
 
@@ -2047,6 +2054,83 @@ bool CConnman::InactivityCheck(const CNode& node) const
     return false;
 }
 
+void CConnman::EventReadyToSend(SockMan::Id id, bool& cancel_recv)
+{
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(id)};
+    if (node == nullptr) {
+        cancel_recv = true;
+        return;
+    }
+
+    const auto [bytes_sent, data_left] = WITH_LOCK(node->cs_vSend, return SocketSendData(*node););
+
+    // If both receiving and (non-optimistic) sending were possible, we first attempt
+    // sending. If that succeeds, but does not fully drain the send queue, do not
+    // attempt to receive. This avoids needlessly queueing data if the remote peer
+    // is slow at receiving data, by means of TCP flow control. We only do this when
+    // sending actually succeeded to make sure progress is always made; otherwise a
+    // deadlock would be possible when both sides have data to send, but neither is
+    // receiving.
+    cancel_recv = bytes_sent > 0 && data_left;
+}
+
+void CConnman::EventGotData(SockMan::Id id, std::span<const uint8_t> data)
+{
+    AssertLockNotHeld(mutexMsgProc);
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(id)};
+    if (node == nullptr) {
+        return;
+    }
+
+    bool notify = false;
+    if (!node->ReceiveMsgBytes(data, notify)) {
+        LogDebug(BCLog::NET,
+            "receiving message bytes failed, %s\n",
+            node->DisconnectMsg(fLogIPs)
+        );
+        node->CloseSocketDisconnect();
+    }
+    RecordBytesRecv(data.size());
+    if (notify) {
+        node->MarkReceivedMsgsForProcessing();
+        WakeMessageHandler();
+    }
+}
+
+void CConnman::EventGotEOF(SockMan::Id id)
+{
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(id)};
+    if (node == nullptr) {
+        return;
+    }
+
+    if (!node->fDisconnect) {
+        LogDebug(BCLog::NET, "socket closed for peer=%d\n", id);
+    }
+    node->CloseSocketDisconnect();
+}
+
+void CConnman::EventGotPermanentReadError(SockMan::Id id, const std::string& errmsg)
+{
+    AssertLockNotHeld(m_nodes_mutex);
+
+    CNode* node{GetNodeById(id)};
+    if (node == nullptr) {
+        return;
+    }
+
+    if (!node->fDisconnect) {
+        LogDebug(BCLog::NET, "socket recv error for peer=%d: %s\n", id, errmsg);
+    }
+    node->CloseSocketDisconnect();
+}
+
 bool CConnman::ShouldTryToSend(SockMan::Id id) const
 {
     AssertLockNotHeld(m_nodes_mutex);
@@ -2181,19 +2265,12 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
         }
 
         if (sendSet) {
-            // Send data
-            auto [bytes_sent, data_left] = WITH_LOCK(pnode->cs_vSend, return SocketSendData(*pnode));
-            if (bytes_sent) {
-                RecordBytesSent(bytes_sent);
+            bool cancel_recv;
 
-                // If both receiving and (non-optimistic) sending were possible, we first attempt
-                // sending. If that succeeds, but does not fully drain the send queue, do not
-                // attempt to receive. This avoids needlessly queueing data if the remote peer
-                // is slow at receiving data, by means of TCP flow control. We only do this when
-                // sending actually succeeded to make sure progress is always made; otherwise a
-                // deadlock would be possible when both sides have data to send, but neither is
-                // receiving.
-                if (data_left) recvSet = false;
+            EventReadyToSend(pnode->GetId(), cancel_recv);
+
+            if (cancel_recv) {
+                recvSet = false;
             }
         }
 
@@ -2211,27 +2288,11 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             }
             if (nBytes > 0)
             {
-                bool notify = false;
-                if (!pnode->ReceiveMsgBytes({pchBuf, (size_t)nBytes}, notify)) {
-                    LogDebug(BCLog::NET,
-                        "receiving message bytes failed, %s\n",
-                        pnode->DisconnectMsg(fLogIPs)
-                    );
-                    pnode->CloseSocketDisconnect();
-                }
-                RecordBytesRecv(nBytes);
-                if (notify) {
-                    pnode->MarkReceivedMsgsForProcessing();
-                    WakeMessageHandler();
-                }
+                EventGotData(pnode->GetId(), {pchBuf, static_cast<size_t>(nBytes)});
             }
             else if (nBytes == 0)
             {
-                // socket closed gracefully
-                if (!pnode->fDisconnect) {
-                    LogDebug(BCLog::NET, "socket closed, %s\n", pnode->DisconnectMsg(fLogIPs));
-                }
-                pnode->CloseSocketDisconnect();
+                EventGotEOF(pnode->GetId());
             }
             else if (nBytes < 0)
             {
@@ -2239,10 +2300,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
                 {
-                    if (!pnode->fDisconnect) {
-                        LogDebug(BCLog::NET, "socket recv error, %s: %s\n", pnode->DisconnectMsg(fLogIPs), NetworkErrorString(nErr));
-                    }
-                    pnode->CloseSocketDisconnect();
+                    EventGotPermanentReadError(pnode->GetId(), NetworkErrorString(nErr));
                 }
             }
         }
@@ -3857,7 +3915,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         msg.data.data()
     );
 
-    size_t nBytesSent = 0;
     {
         LOCK(pnode->cs_vSend);
         // Check if the transport still has unsent bytes, and indicate to it that we're about to
@@ -3880,10 +3937,9 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         // results in sendable bytes there, but with V2Transport this is not the case (it may
         // still be in the handshake).
         if (queue_was_empty && more) {
-            std::tie(nBytesSent, std::ignore) = SocketSendData(*pnode);
+            SocketSendData(*pnode);
         }
     }
-    if (nBytesSent) RecordBytesSent(nBytesSent);
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
