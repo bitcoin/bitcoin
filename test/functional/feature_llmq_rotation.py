@@ -64,9 +64,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
 
-        for i in range(len(self.nodes)):
-            self.connect_nodes(i, 0)
-
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 

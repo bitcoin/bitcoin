@@ -57,9 +57,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         null_hash = format(0, "064x")
 
-        for i in range(len(self.nodes)):
-            self.connect_nodes(i, 0)
-
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 1)
         self.wait_for_sporks_same()
