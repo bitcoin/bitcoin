@@ -1215,12 +1215,21 @@ static ChainstateLoadResult InitAndLoadChainstate(
         },
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
+
+    // Creating the chainstate manager internally creates a BlockManager, opens
+    // the blocks tree db, and wipes existing block files in case of a reindex.
+    // The coinsdb is opened at a later point on LoadChainstate.
     try {
         node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
+    } catch (dbwrapper_error& e) {
+        LogError("%s", e.what());
+        return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
     } catch (std::exception& e) {
         return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated(strprintf("Failed to initialize ChainstateManager: %s", e.what()))};
     }
     ChainstateManager& chainman = *node.chainman;
+    if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
+
     // This is defined and set here instead of inline in validation.h to avoid a hard
     // dependency between validation and index/base, since the latter is not in
     // libbitcoinkernel.

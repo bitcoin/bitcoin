@@ -257,8 +257,6 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             },
         };
         m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
-        LOCK(m_node.chainman->GetMutex());
-        m_node.chainman->m_blockman.m_block_tree_db = m_node.chainman->m_blockman.MakeBlockTreeDb();
     };
     m_make_chainman();
 }

@@ -268,8 +268,6 @@ public:
     using Options = kernel::BlockManagerOpts;
 
     explicit BlockManager(const util::SignalInterrupt& interrupt, Options opts);
-    auto MakeBlockTreeDb() { return std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params); }
-    auto OptsWipeBlockTreeDb() { return m_opts.block_tree_db_params.wipe_data; }
 
     const util::SignalInterrupt& m_interrupt;
     std::atomic<bool> m_importing{false};

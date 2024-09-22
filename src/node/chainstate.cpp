@@ -23,10 +23,7 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <atomic>
 #include <cassert>
-#include <limits>
-#include <memory>
 #include <vector>
 
 using kernel::CacheSizes;
@@ -38,26 +35,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     ChainstateManager& chainman,
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    // new BlockTreeDB tries to delete the existing file, which
-    // fails if it's still open from the previous loop. Close it first:
-    pblocktree.reset();
-    try {
-        pblocktree = chainman.m_blockman.MakeBlockTreeDb();
-    } catch (dbwrapper_error& err) {
-        LogError("%s\n", err.what());
-        return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
-    }
-
-    if (chainman.m_blockman.OptsWipeBlockTreeDb()) {
-        pblocktree->WriteReindexing(true);
-        chainman.m_blockman.m_blockfiles_indexed = false;
-        //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
-        if (options.prune) {
-            chainman.m_blockman.CleanupBlockRevFiles();
-        }
-    }
-
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
