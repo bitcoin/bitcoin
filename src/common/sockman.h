@@ -129,29 +129,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex, !m_unused_i2p_sessions_mutex);
 
     /**
-     * Accept a connection.
-     * @param[in] listen_sock Socket on which to accept the connection.
-     * @param[out] addr Address of the peer that was accepted.
-     * @return Newly created socket for the accepted connection.
-     */
-    std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, CService& addr);
-
-    /**
-     * After a new socket with a peer has been created, configure its flags,
-     * make a new connection id and call `EventNewConnectionAccepted()`.
-     * @param[in] sock The newly created socket.
-     * @param[in] me Address at our end of the connection.
-     * @param[in] them Address of the new peer.
-     */
-    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
-
-    /**
-     * Generate an id for a newly created connection.
-     */
-    Id GetNewId();
-
-    /**
      * Destroy a given connection by closing its socket and release resources occupied by it.
      * @param[in] id Connection to destroy.
      * @return Whether the connection existed and its socket was closed by this call.
@@ -188,18 +165,6 @@ public:
      * the lifetime of `m_i2p_sam_session`.
      */
     CThreadInterrupt interruptNet;
-
-    /**
-     * I2P SAM session.
-     * Used to accept incoming and make outgoing I2P connections from a persistent
-     * address.
-     */
-    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
-
-    /**
-     * List of listening sockets.
-     */
-    std::vector<std::shared_ptr<Sock>> m_listen;
 
 protected:
 
@@ -392,6 +357,29 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
+     * Accept a connection.
+     * @param[in] listen_sock Socket on which to accept the connection.
+     * @param[out] addr Address of the peer that was accepted.
+     * @return Newly created socket for the accepted connection.
+     */
+    std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, CService& addr);
+
+    /**
+     * After a new socket with a peer has been created, configure its flags,
+     * make a new connection id and call `EventNewConnectionAccepted()`.
+     * @param[in] sock The newly created socket.
+     * @param[in] me Address at our end of the connection.
+     * @param[in] them Address of the new peer.
+     */
+    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Generate an id for a newly created connection.
+     */
+    Id GetNewId();
+
+    /**
      * Generate a collection of sockets to check for IO readiness.
      * @return Sockets to check for readiness plus an aux map to find the
      * corresponding connection id given a socket.
@@ -449,6 +437,18 @@ private:
      * a host fails, then the created session is put to this pool for reuse.
      */
     std::queue<std::unique_ptr<i2p::sam::Session>> m_unused_i2p_sessions GUARDED_BY(m_unused_i2p_sessions_mutex);
+
+    /**
+     * I2P SAM session.
+     * Used to accept incoming and make outgoing I2P connections from a persistent
+     * address.
+     */
+    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
+
+    /**
+     * List of listening sockets.
+     */
+    std::vector<std::shared_ptr<Sock>> m_listen;
 
     mutable Mutex m_connected_mutex;
 
