@@ -200,7 +200,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.start_masternode(mn)
                 else:
                     mn.node.setnetworkactive(True)
-            self.connect_nodes(mn.node.index, 0)
+                self.connect_nodes(mn.node.index, 0)
 
         # syncing blocks only since node 0 has txes waiting to be mined
         self.sync_blocks()
