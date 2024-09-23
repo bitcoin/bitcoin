@@ -31,7 +31,8 @@ import threading
 from test_framework.messages import (
     CBlockHeader,
     CompressibleBlockHeader,
-    MAX_HEADERS_RESULTS,
+    MAX_HEADERS_COMPRESSED_RESULT,
+    MAX_HEADERS_UNCOMPRESSED_RESULT,
     NODE_HEADERS_COMPRESSED,
     msg_addr,
     msg_addrv2,
@@ -91,8 +92,8 @@ logger = logging.getLogger("TestFramework.p2p")
 # The minimum P2P version that this test framework supports
 MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
-# Version 70231 drops supports for legacy InstantSend locks
-P2P_VERSION = 70231
+# Version 70235 increased max header count for HEADERS2 message from 2000 to 8000
+P2P_VERSION = 70235
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_HEADERS_COMPRESSED
 # The P2P user agent string that this test framework sends in its `version` message
@@ -712,7 +713,7 @@ class P2PDataStore(P2PInterface):
             else:
                 logger.debug('getdata message type {} received.'.format(hex(inv.type)))
 
-    def _compute_requested_block_headers(self, locator, hash_stop):
+    def _compute_requested_block_headers(self, locator, hash_stop, max_results):
         # Assume that the most recent block added is the tip
         if not self.block_store:
             return
@@ -733,14 +734,14 @@ class P2PDataStore(P2PInterface):
                 break
 
         # Truncate the list if there are too many headers
-        headers_list = headers_list[:-MAX_HEADERS_RESULTS - 1:-1]
+        headers_list = headers_list[:-max_results - 1:-1]
 
         return headers_list
 
     def on_getheaders2(self, message):
         """Search back through our block store for the locator, and reply with a compressed headers message if found."""
 
-        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop)
+        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop, MAX_HEADERS_COMPRESSED_RESULT)
         compressible_headers_list = [CompressibleBlockHeader(h) for h in headers_list] if headers_list else None
         response = msg_headers2(compressible_headers_list)
 
@@ -750,7 +751,7 @@ class P2PDataStore(P2PInterface):
     def on_getheaders(self, message):
         """Search back through our block store for the locator, and reply with a headers message if found."""
 
-        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop)
+        headers_list = self._compute_requested_block_headers(message.locator, message.hashstop, MAX_HEADERS_UNCOMPRESSED_RESULT)
         response = msg_headers(headers_list)
 
         if response is not None:

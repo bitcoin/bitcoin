@@ -42,7 +42,8 @@ MAX_MONEY = 21000000 * COIN
 BIP125_SEQUENCE_NUMBER = 0xfffffffd  # Sequence number that is BIP 125 opt-in and BIP 68-opt-out
 
 MAX_PROTOCOL_MESSAGE_LENGTH = 3 * 1024 * 1024  # Maximum length of incoming protocol messages
-MAX_HEADERS_RESULTS = 2000  # Number of headers sent in one getheaders result
+MAX_HEADERS_UNCOMPRESSED_RESULT = 2000  # Number of headers sent in one getheaders result
+MAX_HEADERS_COMPRESSED_RESULT = 8000  # Number of headers2 sent in one getheaders2 result
 MAX_INV_SIZE = 50000  # Maximum number of entries in an 'inv' protocol message
 
 NODE_NETWORK = (1 << 0)
