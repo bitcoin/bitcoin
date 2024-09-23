@@ -221,65 +221,6 @@ SockMan::ConnectAndMakeId(const std::variant<CService, StringHostIntPort>& to,
     return id;
 }
 
-std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
-{
-    sockaddr_storage storage;
-    socklen_t len{sizeof(storage)};
-
-    auto sock{listen_sock.Accept(reinterpret_cast<sockaddr*>(&storage), &len)};
-
-    if (!sock) {
-        const int err{WSAGetLastError()};
-        if (err != WSAEWOULDBLOCK) {
-            LogPrintLevel(BCLog::NET,
-                          BCLog::Level::Error,
-                          "Cannot accept new connection: %s\n",
-                          NetworkErrorString(err));
-        }
-        return {};
-    }
-
-    if (!addr.SetSockAddr(reinterpret_cast<sockaddr*>(&storage), len)) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
-    }
-
-    return sock;
-}
-
-void SockMan::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
-{
-    AssertLockNotHeld(m_connected_mutex);
-
-    if (!sock->IsSelectable()) {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", them.ToStringAddrPort());
-        return;
-    }
-
-    // According to the internet TCP_NODELAY is not carried into accepted sockets
-    // on all platforms.  Set it again here just to be sure.
-    const int on{1};
-    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
-                 them.ToStringAddrPort());
-    }
-
-    const Id id{GetNewId()};
-
-    {
-        LOCK(m_connected_mutex);
-        m_connected.emplace(id, std::make_shared<ConnectionSockets>(std::move(sock)));
-    }
-
-    if (!EventNewConnectionAccepted(id, me, them)) {
-        CloseConnection(id);
-    }
-}
-
-SockMan::Id SockMan::GetNewId()
-{
-    return m_next_id.fetch_add(1, std::memory_order_relaxed);
-}
-
 bool SockMan::CloseConnection(Id id)
 {
     LOCK(m_connected_mutex);
@@ -338,6 +279,11 @@ void SockMan::EventIOLoopCompletedForOne(Id id) {}
 void SockMan::EventIOLoopCompletedForAll() {}
 
 void SockMan::EventI2PStatus(const CService&, I2PStatus) {}
+
+SockMan::Id SockMan::GetNewId()
+{
+    return m_next_id.fetch_add(1, std::memory_order_relaxed);
+}
 
 void SockMan::TestOnlyAddExistentConnection(Id id, std::unique_ptr<Sock>&& sock)
 {
@@ -411,6 +357,60 @@ void SockMan::ThreadSocketHandler()
 
         // Accept new connections from listening sockets.
         SocketHandlerListening(io_readiness.events_per_sock);
+    }
+}
+
+std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
+{
+    sockaddr_storage storage;
+    socklen_t len{sizeof(storage)};
+
+    auto sock{listen_sock.Accept(reinterpret_cast<sockaddr*>(&storage), &len)};
+
+    if (!sock) {
+        const int err{WSAGetLastError()};
+        if (err != WSAEWOULDBLOCK) {
+            LogPrintLevel(BCLog::NET,
+                          BCLog::Level::Error,
+                          "Cannot accept new connection: %s\n",
+                          NetworkErrorString(err));
+        }
+        return {};
+    }
+
+    if (!addr.SetSockAddr(reinterpret_cast<sockaddr*>(&storage), len)) {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
+    }
+
+    return sock;
+}
+
+void SockMan::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    if (!sock->IsSelectable()) {
+        LogPrintf("connection from %s dropped: non-selectable socket\n", them.ToStringAddrPort());
+        return;
+    }
+
+    // According to the internet TCP_NODELAY is not carried into accepted sockets
+    // on all platforms.  Set it again here just to be sure.
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
+                 them.ToStringAddrPort());
+    }
+
+    const Id id{GetNewId()};
+
+    {
+        LOCK(m_connected_mutex);
+        m_connected.emplace(id, std::make_shared<ConnectionSockets>(std::move(sock)));
+    }
+
+    if (!EventNewConnectionAccepted(id, me, them)) {
+        CloseConnection(id);
     }
 }
 
