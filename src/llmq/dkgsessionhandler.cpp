@@ -24,28 +24,34 @@
 namespace llmq
 {
 
-CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman, CDeterministicMNManager& dmnman,
-                                       CDKGDebugManager& _dkgDebugManager, CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
-                                       CQuorumBlockProcessor& _quorumBlockProcessor, const CActiveMasternodeManager* const mn_activeman,
-                                       const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman, const Consensus::LLMQParams& _params, int _quorumIndex) :
-        blsWorker(_blsWorker),
-        m_chainstate(chainstate),
-        connman(_connman),
-        m_dmnman(dmnman),
-        dkgDebugManager(_dkgDebugManager),
-        dkgManager(_dkgManager),
-        m_mn_metaman(mn_metaman),
-        quorumBlockProcessor(_quorumBlockProcessor),
-        m_mn_activeman(mn_activeman),
-        m_sporkman(sporkman),
-        m_peerman(peerman),
-        params(_params),
-        quorumIndex(_quorumIndex),
-        curSession(std::make_unique<CDKGSession>(nullptr, _params, _blsWorker, _connman, dmnman, _dkgManager, _dkgDebugManager, m_mn_metaman, m_mn_activeman, sporkman)),
-        pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-        pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
-        pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
-        pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
+CDKGSessionHandler::CDKGSessionHandler(CBLSWorker& _blsWorker, CChainState& chainstate, CConnman& _connman,
+                                       CDeterministicMNManager& dmnman, CDKGDebugManager& _dkgDebugManager,
+                                       CDKGSessionManager& _dkgManager, CMasternodeMetaMan& mn_metaman,
+                                       CQuorumBlockProcessor& _quorumBlockProcessor,
+                                       const CActiveMasternodeManager* const mn_activeman,
+                                       const CSporkManager& sporkman, const std::unique_ptr<PeerManager>& peerman,
+                                       const Consensus::LLMQParams& _params, int _quorumIndex) :
+    blsWorker(_blsWorker),
+    m_chainstate(chainstate),
+    connman(_connman),
+    m_dmnman(dmnman),
+    dkgDebugManager(_dkgDebugManager),
+    dkgManager(_dkgManager),
+    m_mn_metaman(mn_metaman),
+    quorumBlockProcessor(_quorumBlockProcessor),
+    m_mn_activeman(mn_activeman),
+    m_sporkman(sporkman),
+    m_peerman(peerman),
+    params(_params),
+    quorumIndex(_quorumIndex),
+    curSession(std::make_unique<CDKGSession>(nullptr, _params, _blsWorker, _connman, dmnman, _dkgManager,
+                                             _dkgDebugManager, m_mn_metaman, m_mn_activeman, sporkman)),
+    pendingContributions(
+        (size_t)_params.size * 2,
+        MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+    pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
+    pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
+    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
 {
     if (params.type == Consensus::LLMQType::LLMQ_NONE) {
         throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
@@ -194,10 +200,12 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
         return false;
     }
 
-    curSession = std::make_unique<CDKGSession>(pQuorumBaseBlockIndex, params, blsWorker, connman, m_dmnman, dkgManager, dkgDebugManager, m_mn_metaman, m_mn_activeman, m_sporkman);
+    curSession = std::make_unique<CDKGSession>(pQuorumBaseBlockIndex, params, blsWorker, connman, m_dmnman, dkgManager,
+                                               dkgDebugManager, m_mn_metaman, m_mn_activeman, m_sporkman);
 
     if (!curSession->Init(m_mn_activeman->GetProTxHash(), quorumIndex)) {
-        LogPrintf("CDKGSessionManager::%s -- height[%d] quorum initialization failed for %s qi[%d]\n", __func__, pQuorumBaseBlockIndex->nHeight, curSession->params.name, quorumIndex);
+        LogPrintf("CDKGSessionManager::%s -- height[%d] quorum initialization failed for %s qi[%d]\n", __func__,
+                  pQuorumBaseBlockIndex->nHeight, curSession->params.name, quorumIndex);
         return false;
     }
 
@@ -445,37 +453,32 @@ static void RelayInvToParticipants(const CDKGSession& session, CConnman& connman
     for (const auto& r : relayMembers) {
         ss << r.ToString().substr(0, 4) << " | ";
     }
-    logger.Batch("RelayInvToParticipants inv[%s] relayMembers[%d] GetNodeCount[%d] GetNetworkActive[%d] HasMasternodeQuorumNodes[%d] for quorumHash[%s] forMember[%s] relayMembers[%s]",
-                 inv.ToString(),
-                 relayMembers.size(),
-                 connman.GetNodeCount(ConnectionDirection::Both),
+    logger.Batch("RelayInvToParticipants inv[%s] relayMembers[%d] GetNodeCount[%d] GetNetworkActive[%d] "
+                 "HasMasternodeQuorumNodes[%d] for quorumHash[%s] forMember[%s] relayMembers[%s]",
+                 inv.ToString(), relayMembers.size(), connman.GetNodeCount(ConnectionDirection::Both),
                  connman.GetNetworkActive(),
                  connman.HasMasternodeQuorumNodes(session.GetParams().type, session.BlockIndex()->GetBlockHash()),
-                 session.BlockIndex()->GetBlockHash().ToString(),
-                 session.ProTx().ToString().substr(0, 4), ss.str());
+                 session.BlockIndex()->GetBlockHash().ToString(), session.ProTx().ToString().substr(0, 4), ss.str());
 
     std::stringstream ss2;
     connman.ForEachNode([&](const CNode* pnode) {
         if (pnode->qwatch ||
-                (!pnode->GetVerifiedProRegTxHash().IsNull() && (relayMembers.count(pnode->GetVerifiedProRegTxHash()) != 0))) {
+            (!pnode->GetVerifiedProRegTxHash().IsNull() && (relayMembers.count(pnode->GetVerifiedProRegTxHash()) != 0))) {
             peerman.PushInventory(pnode->GetId(), inv);
         }
 
         if (pnode->GetVerifiedProRegTxHash().IsNull()) {
-            logger.Batch("node[%d:%s] not mn",
-                         pnode->GetId(),
-                         pnode->m_addr_name);
+            logger.Batch("node[%d:%s] not mn", pnode->GetId(), pnode->m_addr_name);
         } else if (relayMembers.count(pnode->GetVerifiedProRegTxHash()) == 0) {
             ss2 << pnode->GetVerifiedProRegTxHash().ToString().substr(0, 4) << " | ";
         }
     });
-    logger.Batch("forMember[%s] NOTrelayMembers[%s]",
-                 session.ProTx().ToString().substr(0, 4),
-                 ss2.str());
+    logger.Batch("forMember[%s] NOTrelayMembers[%s]", session.ProTx().ToString().substr(0, 4), ss2.str());
     logger.Flush();
 }
-template<typename Message, int MessageType>
-bool ProcessPendingMessageBatch(CConnman& connman, PeerManager* peerman, CDKGSession& session, CDKGPendingMessages& pendingMessages, size_t maxCount)
+template <typename Message, int MessageType>
+bool ProcessPendingMessageBatch(CConnman& connman, PeerManager* peerman, CDKGSession& session,
+                                CDKGPendingMessages& pendingMessages, size_t maxCount)
 {
     auto msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
     if (msgs.empty()) {
@@ -571,7 +574,8 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->Contribute(pendingContributions);
     };
     auto fContributeWait = [this] {
-        return ProcessPendingMessageBatch<CDKGContribution, MSG_QUORUM_CONTRIB>(connman, m_peerman.get(), *curSession, pendingContributions, 8);
+        return ProcessPendingMessageBatch<CDKGContribution, MSG_QUORUM_CONTRIB>(connman, m_peerman.get(), *curSession,
+                                                                                pendingContributions, 8);
     };
     HandlePhase(QuorumPhase::Contribute, QuorumPhase::Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
@@ -580,7 +584,8 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndComplain(pendingComplaints);
     };
     auto fComplainWait = [this] {
-        return ProcessPendingMessageBatch<CDKGComplaint, MSG_QUORUM_COMPLAINT>(connman, m_peerman.get(), *curSession, pendingComplaints, 8);
+        return ProcessPendingMessageBatch<CDKGComplaint, MSG_QUORUM_COMPLAINT>(connman, m_peerman.get(), *curSession,
+                                                                               pendingComplaints, 8);
     };
     HandlePhase(QuorumPhase::Complain, QuorumPhase::Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
@@ -589,7 +594,9 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndJustify(pendingJustifications);
     };
     auto fJustifyWait = [this] {
-        return ProcessPendingMessageBatch<CDKGJustification, MSG_QUORUM_JUSTIFICATION>(connman, m_peerman.get(), *curSession, pendingJustifications, 8);
+        return ProcessPendingMessageBatch<CDKGJustification, MSG_QUORUM_JUSTIFICATION>(connman, m_peerman.get(),
+                                                                                       *curSession,
+                                                                                       pendingJustifications, 8);
     };
     HandlePhase(QuorumPhase::Justify, QuorumPhase::Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
@@ -598,7 +605,8 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndCommit(pendingPrematureCommitments);
     };
     auto fCommitWait = [this] {
-        return ProcessPendingMessageBatch<CDKGPrematureCommitment, MSG_QUORUM_PREMATURE_COMMITMENT>(connman, m_peerman.get(), *curSession, pendingPrematureCommitments, 8);
+        return ProcessPendingMessageBatch<CDKGPrematureCommitment, MSG_QUORUM_PREMATURE_COMMITMENT>(
+            connman, m_peerman.get(), *curSession, pendingPrematureCommitments, 8);
     };
     HandlePhase(QuorumPhase::Commit, QuorumPhase::Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 

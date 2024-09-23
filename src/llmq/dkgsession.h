@@ -326,10 +326,10 @@ private:
     std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
-    CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CConnman& _connman,
-                CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
-                CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                const CSporkManager& sporkman);
+    CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker,
+                CConnman& _connman, CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager,
+                CDKGDebugManager& _dkgDebugManager, CMasternodeMetaMan& mn_metaman,
+                const CActiveMasternodeManager* const mn_activeman, const CSporkManager& sporkman);
 
     // TODO: remove Init completely
     bool Init(const uint256& _myProTxHash, int _quorumIndex);

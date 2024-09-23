@@ -5,10 +5,10 @@
 #ifndef BITCOIN_LLMQ_DKGSESSIONMGR_H
 #define BITCOIN_LLMQ_DKGSESSIONMGR_H
 
-#include <llmq/dkgsessionhandler.h>
 #include <bls/bls.h>
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
+#include <llmq/dkgsessionhandler.h>
 #include <net_types.h>
 
 #include <map>

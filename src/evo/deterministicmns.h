@@ -13,10 +13,10 @@
 #include <crypto/common.h>
 #include <evo/dmn_types.h>
 #include <evo/providertx.h>
+#include <gsl/pointers.h>
 #include <saltedhasher.h>
 #include <scheduler.h>
 #include <sync.h>
-#include <gsl/pointers.h>
 
 #include <immer/map.hpp>
 

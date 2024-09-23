@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/validation.h>
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
+#include <evo/simplifiedmns.h>
+#include <evo/specialtx.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <node/blockstorage.h>
-#include <evo/simplifiedmns.h>
-#include <evo/specialtx.h>
-#include <consensus/validation.h>
 
 #include <chain.h>
 #include <chainparams.h>

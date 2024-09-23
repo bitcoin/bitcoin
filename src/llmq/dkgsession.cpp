@@ -33,7 +33,10 @@ namespace llmq
 {
 
 CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func, int source_line) :
-    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, qIndex=%d, h=%d, member=%d)", _quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember()), __FILE__, source_line)
+    CBatchedLogger(BCLog::LLMQ_DKG,
+                   strprintf("QuorumDKG(type=%s, qIndex=%d, h=%d, member=%d)", _quorumDkg.params.name, _quorumDkg.quorumIndex,
+                             _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember()),
+                   __FILE__, source_line)
 {
 }
 
@@ -68,12 +71,21 @@ CDKGMember::CDKGMember(const CDeterministicMNCPtr& _dmn, size_t _idx) :
 
 }
 
-CDKGSession::CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CConnman& _connman,
-                         CDeterministicMNManager& dmnman, CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
+CDKGSession::CDKGSession(const CBlockIndex* pQuorumBaseBlockIndex, const Consensus::LLMQParams& _params,
+                         CBLSWorker& _blsWorker, CConnman& _connman, CDeterministicMNManager& dmnman,
+                         CDKGSessionManager& _dkgManager, CDKGDebugManager& _dkgDebugManager,
                          CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
                          const CSporkManager& sporkman) :
-    params(_params), blsWorker(_blsWorker), cache(_blsWorker), connman(_connman), m_dmnman(dmnman), dkgManager(_dkgManager),
-    dkgDebugManager(_dkgDebugManager), m_mn_metaman(mn_metaman), m_mn_activeman(mn_activeman), m_sporkman(sporkman),
+    params(_params),
+    blsWorker(_blsWorker),
+    cache(_blsWorker),
+    connman(_connman),
+    m_dmnman(dmnman),
+    dkgManager(_dkgManager),
+    dkgDebugManager(_dkgDebugManager),
+    m_mn_metaman(mn_metaman),
+    m_mn_activeman(mn_activeman),
+    m_sporkman(sporkman),
     m_quorum_base_block_index{pQuorumBaseBlockIndex}
 {
 }
