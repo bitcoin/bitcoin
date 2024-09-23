@@ -241,103 +241,157 @@ std::vector<ClusterIndex> ReadLinearization(const DepGraph<BS>& depgraph, SpanRe
 
 } // namespace
 
-FUZZ_TARGET(clusterlin_add_dependencies)
+FUZZ_TARGET(clusterlin_depgraph_sim)
 {
-    // Verify that computing a DepGraph from a cluster, or building it step by step using
-    // AddDependencies has the same effect.
+    // Simulation test to verify the full behavior of DepGraph.
 
     FuzzedDataProvider provider(buffer.data(), buffer.size());
-    auto rng_seed = provider.ConsumeIntegral<uint64_t>();
-    InsecureRandomContext rng(rng_seed);
 
-    // Construct a cluster of a certain length, with no dependencies.
-    auto num_tx = provider.ConsumeIntegralInRange<ClusterIndex>(2, TestBitSet::Size());
-    Cluster<TestBitSet> cluster(num_tx, std::pair{FeeFrac{0, 1}, TestBitSet{}});
-    // Construct the corresponding DepGraph object (also no dependencies).
-    DepGraph depgraph_batch(cluster);
-    SanityCheck(depgraph_batch);
-    // Read (parents, child) pairs, and add the dependencies to the cluster and depgraph.
-    std::vector<std::pair<ClusterIndex, ClusterIndex>> deps_list;
-    LIMITED_WHILE(provider.remaining_bytes() > 0, TestBitSet::Size()) {
-        const auto parents_mask = provider.ConsumeIntegralInRange<uint64_t>(0, (uint64_t{1} << num_tx) - 1);
-        auto child = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx - 1);
+    /** Real DepGraph being tested. */
+    DepGraph<TestBitSet> real;
+    /** Simulated DepGraph (sim[i] is std::nullopt if position i does not exist; otherwise,
+     *  sim[i]->first is its individual feerate, and sim[i]->second is its set of ancestors. */
+    std::array<std::optional<std::pair<FeeFrac, TestBitSet>>, TestBitSet::Size()> sim;
+    /** The number of non-nullopt position in sim. */
+    ClusterIndex num_tx_sim{0};
 
-        auto parents_mask_shifted = parents_mask;
-        TestBitSet deps;
-        for (ClusterIndex i = 0; i < num_tx; ++i) {
-            if (parents_mask_shifted & 1) {
-                deps.Set(i);
-                cluster[child].second.Set(i);
+    /** Read a valid index of a transaction from the provider. */
+    auto idx_fn = [&]() {
+        auto offset = provider.ConsumeIntegralInRange<ClusterIndex>(0, num_tx_sim - 1);
+        for (ClusterIndex i = 0; i < sim.size(); ++i) {
+            if (!sim[i].has_value()) continue;
+            if (offset == 0) return i;
+            --offset;
+        }
+        assert(false);
+        return ClusterIndex(-1);
+    };
+
+    /** Read a valid subset of the transactions from the provider. */
+    auto subset_fn = [&]() {
+        auto range = (uint64_t{1} << num_tx_sim) - 1;
+        const auto mask = provider.ConsumeIntegralInRange<uint64_t>(0, range);
+        auto mask_shifted = mask;
+        TestBitSet subset;
+        for (ClusterIndex i = 0; i < sim.size(); ++i) {
+            if (!sim[i].has_value()) continue;
+            if (mask_shifted & 1) {
+                subset.Set(i);
             }
-            parents_mask_shifted >>= 1;
+            mask_shifted >>= 1;
         }
-        assert(parents_mask_shifted == 0);
-        depgraph_batch.AddDependencies(deps, child);
-        for (auto i : deps) {
-            deps_list.emplace_back(i, child);
-            assert(depgraph_batch.Ancestors(child)[i]);
-            assert(depgraph_batch.Descendants(i)[child]);
+        assert(mask_shifted == 0);
+        return subset;
+    };
+
+    /** Read any set of transactions from the provider (including unused positions). */
+    auto set_fn = [&]() {
+        auto range = (uint64_t{1} << sim.size()) - 1;
+        const auto mask = provider.ConsumeIntegralInRange<uint64_t>(0, range);
+        TestBitSet set;
+        for (ClusterIndex i = 0; i < sim.size(); ++i) {
+            if ((mask >> i) & 1) {
+                set.Set(i);
+            }
         }
-    }
-    // Sanity check the result.
-    SanityCheck(depgraph_batch);
-    // Verify that the resulting DepGraph matches one recomputed from the cluster.
-    assert(DepGraph(cluster) == depgraph_batch);
+        return set;
+    };
 
-    DepGraph<TestBitSet> depgraph_individual;
-    // Add all transactions to depgraph_individual.
-    for (const auto& [feerate, parents] : cluster) {
-        depgraph_individual.AddTransaction(feerate);
-    }
-    SanityCheck(depgraph_individual);
-    // Add all individual dependencies to depgraph_individual in randomized order.
-    std::shuffle(deps_list.begin(), deps_list.end(), rng);
-    for (auto [parent, child] : deps_list) {
-        depgraph_individual.AddDependencies(TestBitSet::Singleton(parent), child);
-        assert(depgraph_individual.Ancestors(child)[parent]);
-        assert(depgraph_individual.Descendants(parent)[child]);
-    }
-    // Sanity check and compare again the batched version.
-    SanityCheck(depgraph_individual);
-    assert(depgraph_individual == depgraph_batch);
-}
-
-FUZZ_TARGET(clusterlin_cluster_serialization)
-{
-    // Verify that any graph of transactions has its ancestry correctly computed by DepGraph, and
-    // if it is a DAG, that it can be serialized as a DepGraph in a way that roundtrips. This
-    // guarantees that any acyclic cluster has a corresponding DepGraph serialization.
-
-    FuzzedDataProvider provider(buffer.data(), buffer.size());
-
-    // Construct a cluster in a naive way (using a FuzzedDataProvider-based serialization).
-    Cluster<TestBitSet> cluster;
-    auto num_tx = provider.ConsumeIntegralInRange<ClusterIndex>(1, 32);
-    cluster.resize(num_tx);
-    for (ClusterIndex i = 0; i < num_tx; ++i) {
-        cluster[i].first.size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
-        cluster[i].first.fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-        for (ClusterIndex j = 0; j < num_tx; ++j) {
-            if (i == j) continue;
-            if (provider.ConsumeBool()) cluster[i].second.Set(j);
+    /** Propagate ancestor information in sim. */
+    auto anc_update_fn = [&]() {
+        while (true) {
+            bool updates{false};
+            for (ClusterIndex chl = 0; chl < sim.size(); ++chl) {
+                if (!sim[chl].has_value()) continue;
+                for (auto par : sim[chl]->second) {
+                    if (!sim[chl]->second.IsSupersetOf(sim[par]->second)) {
+                        sim[chl]->second |= sim[par]->second;
+                        updates = true;
+                    }
+                }
+            }
+            if (!updates) break;
         }
+    };
+
+    /** Compare the state of transaction i in the simulation with the real one. */
+    auto check_fn = [&](ClusterIndex i) {
+        // Compare used positions.
+        assert(real.Positions()[i] == sim[i].has_value());
+        if (sim[i].has_value()) {
+            // Compare feerate.
+            assert(real.FeeRate(i) == sim[i]->first);
+            // Compare ancestors (note that SanityCheck verifies correspondence between ancestors
+            // and descendants, so we can restrict ourselves to ancestors here).
+            assert(real.Ancestors(i) == sim[i]->second);
+        }
+    };
+
+    LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
+        uint8_t command = provider.ConsumeIntegral<uint8_t>();
+        if (num_tx_sim == 0 || ((command % 3) <= 0 && num_tx_sim < TestBitSet::Size())) {
+            // AddTransaction.
+            auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
+            auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
+            FeeFrac feerate{fee, size};
+            // Apply to DepGraph.
+            auto idx = real.AddTransaction(feerate);
+            // Verify that the returned index is correct.
+            assert(!sim[idx].has_value());
+            for (ClusterIndex i = 0; i < TestBitSet::Size(); ++i) {
+                if (!sim[i].has_value()) {
+                    assert(idx == i);
+                    break;
+                }
+            }
+            // Update sim.
+            sim[idx] = {feerate, TestBitSet::Singleton(idx)};
+            ++num_tx_sim;
+            continue;
+        }
+        if ((command % 3) <= 1 && num_tx_sim > 0) {
+            // AddDependencies.
+            ClusterIndex child = idx_fn();
+            auto parents = subset_fn();
+            // Apply to DepGraph.
+            real.AddDependencies(parents, child);
+            // Apply to sim.
+            sim[child]->second |= parents;
+            continue;
+        }
+        if (num_tx_sim > 0) {
+            // Remove transactions.
+            auto del = set_fn();
+            // Propagate all ancestry information before deleting anything in the simulation (as
+            // intermediary transactions may be deleted which impact connectivity).
+            anc_update_fn();
+            // Compare the state of the transactions being deleted.
+            for (auto i : del) check_fn(i);
+            // Apply to DepGraph.
+            real.RemoveTransactions(del);
+            // Apply to sim.
+            for (ClusterIndex i = 0; i < sim.size(); ++i) {
+                if (sim[i].has_value()) {
+                    if (del[i]) {
+                        --num_tx_sim;
+                        sim[i] = std::nullopt;
+                    } else {
+                        sim[i]->second -= del;
+                    }
+                }
+            }
+            continue;
+        }
+        // This should be unreachable (one of the 3 above actions should always be possible).
+        assert(false);
     }
 
-    // Construct dependency graph, and verify it matches the cluster (which includes a round-trip
-    // check for the serialization).
-    DepGraph depgraph(cluster);
-    VerifyDepGraphFromCluster(cluster, depgraph);
-
-    // Remove an arbitrary subset (in order to construct a graph with holes) and verify that it
-    // still sanity checks (incl. round-tripping serialization).
-    uint64_t del = provider.ConsumeIntegralInRange<uint64_t>(1, (uint64_t{1} << TestBitSet::Size()) - 1);
-    TestBitSet setdel;
-    for (ClusterIndex i = 0; i < TestBitSet::Size(); ++i) {
-        if (del & 1) setdel.Set(i);
-        del >>= 1;
-    }
-    depgraph.RemoveTransactions(setdel);
-    SanityCheck(depgraph);
+    // Compare the real obtained depgraph against the simulation.
+    anc_update_fn();
+    for (ClusterIndex i = 0; i < sim.size(); ++i) check_fn(i);
+    assert(real.TxCount() == num_tx_sim);
+    // Sanity check the result (which includes round-tripping serialization, if applicable).
+    SanityCheck(real);
 }
 
 FUZZ_TARGET(clusterlin_depgraph_serialization)
