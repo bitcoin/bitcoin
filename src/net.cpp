@@ -358,20 +358,6 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
     return true;
 }
 
-/** Get the bind address for a socket as CService. */
-static CService GetBindAddress(const Sock& sock)
-{
-    CService addr_bind;
-    struct sockaddr_storage sockaddr_bind;
-    socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
-    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
-        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind, sockaddr_bind_len);
-    } else {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
-    }
-    return addr_bind;
-}
-
 CNode* CConnman::ConnectNode(CAddress addrConnect,
                              const char* pszDest,
                              bool fCountFailure,
@@ -379,7 +365,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                              bool use_v2transport,
                              const std::optional<Proxy>& proxy_override)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     assert(conn_type != ConnectionType::INBOUND);
 
     if (pszDest == nullptr) {
@@ -437,9 +422,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     // Connect
     std::unique_ptr<Sock> sock;
     Proxy proxy;
-    CService addr_bind;
-    assert(!addr_bind.IsValid());
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
+
+    std::optional<NodeId> node_id;
+    CService me;
 
     for (auto& target_addr: connect_to) {
         if (target_addr.IsValid()) {
@@ -452,43 +438,18 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
             }
             bool proxyConnectionFailed = false;
 
-            if (target_addr.IsI2P() && use_proxy) {
-                i2p::Connection conn;
-                bool connected{false};
-
-                if (m_i2p_sam_session) {
-                    connected = m_i2p_sam_session->Connect(target_addr, conn, proxyConnectionFailed);
-                } else {
-                    {
-                        LOCK(m_unused_i2p_sessions_mutex);
-                        if (m_unused_i2p_sessions.empty()) {
-                            i2p_transient_session =
-                                std::make_unique<i2p::sam::Session>(proxy, m_interrupt_net);
-                        } else {
-                            i2p_transient_session.swap(m_unused_i2p_sessions.front());
-                            m_unused_i2p_sessions.pop();
-                        }
-                    }
-                    connected = i2p_transient_session->Connect(target_addr, conn, proxyConnectionFailed);
-                    if (!connected) {
-                        LOCK(m_unused_i2p_sessions_mutex);
-                        if (m_unused_i2p_sessions.size() < MAX_UNUSED_I2P_SESSIONS_SIZE) {
-                            m_unused_i2p_sessions.emplace(i2p_transient_session.release());
-                        }
-                    }
-                }
-
-                if (connected) {
-                    sock = std::move(conn.sock);
-                    addr_bind = conn.me;
-                }
-            } else if (use_proxy) {
+            if (use_proxy && !target_addr.IsI2P()) {
                 LogPrintLevel(BCLog::PROXY, BCLog::Level::Debug, "Using proxy: %s to connect to %s\n", proxy.ToString(), target_addr.ToStringAddrPort());
-                sock = ConnectThroughProxy(proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
-            } else {
-                // no proxy needed (none set for target network)
-                sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
             }
+
+            node_id = ConnectAndMakeId(target_addr,
+                                       /*is_important=*/conn_type == ConnectionType::MANUAL,
+                                       use_proxy ? std::optional<Proxy>{proxy} : std::nullopt,
+                                       proxyConnectionFailed,
+                                       me,
+                                       sock,
+                                       i2p_transient_session);
+
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
                 // the proxy, mark this as an attempt.
@@ -497,12 +458,19 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         } else if (pszDest && GetNameProxy(proxy)) {
             std::string host;
             uint16_t port{default_port};
-            SplitHostPort(std::string(pszDest), port, host);
-            bool proxyConnectionFailed;
-            sock = ConnectThroughProxy(proxy, host, port, proxyConnectionFailed);
+            SplitHostPort(pszDest, port, host);
+
+            bool dummy;
+            node_id = ConnectAndMakeId(StringHostIntPort{host, port},
+                                       /*is_important=*/conn_type == ConnectionType::MANUAL,
+                                       proxy,
+                                       dummy,
+                                       me,
+                                       sock,
+                                       i2p_transient_session);
         }
         // Check any other resolved address (if any) if we fail to connect
-        if (!sock) {
+        if (!node_id.has_value()) {
             continue;
         }
 
@@ -510,25 +478,20 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         std::vector<NetWhitelistPermissions> whitelist_permissions = conn_type == ConnectionType::MANUAL ? vWhitelistedRangeOutgoing : std::vector<NetWhitelistPermissions>{};
         AddWhitelistPermissionFlags(permission_flags, target_addr, whitelist_permissions);
 
-        // Add node
-        NodeId id = GetNewId();
-        uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-        if (!addr_bind.IsValid()) {
-            addr_bind = GetBindAddress(*sock);
-        }
+        const uint64_t nonce{GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(node_id.value()).Finalize()};
         uint64_t network_id = GetDeterministicRandomizer(RANDOMIZER_ID_NETWORKKEY)
                             .Write(target_addr.GetNetClass())
-                            .Write(addr_bind.GetAddrBytes())
+                            .Write(me.GetAddrBytes())
                             // For outbound connections, the port of the bound address is randomly
                             // assigned by the OS and would therefore not be useful for seeding.
                             .Write(0)
                             .Finalize();
-        CNode* pnode = new CNode(id,
+        CNode* pnode = new CNode(node_id.value(),
                                 std::move(sock),
                                 target_addr,
                                 CalculateKeyedNetGroup(target_addr),
                                 nonce,
-                                addr_bind,
+                                me,
                                 pszDest ? pszDest : "",
                                 conn_type,
                                 /*inbound_onion=*/false,
@@ -542,7 +505,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         pnode->AddRef();
 
         // We're making a new connection, harvest entropy from the time (and our peer count)
-        RandAddEvent((uint32_t)id);
+        RandAddEvent(static_cast<uint32_t>(node_id.value()));
 
         return pnode;
     }
@@ -1861,7 +1824,6 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
 
 bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport = false)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     std::optional<int> max_connections;
     switch (conn_type) {
     case ConnectionType::INBOUND:
@@ -2503,7 +2465,6 @@ void CConnman::DumpAddresses()
 
 void CConnman::ProcessAddrFetch()
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     std::string strDest;
     {
         LOCK(m_addr_fetches_mutex);
@@ -2623,7 +2584,6 @@ bool CConnman::MaybePickPreferredNetwork(std::optional<Network>& network)
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std::span<const std::string> seed_nodes)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
     FastRandomContext rng;
     // Connect to specific addresses
@@ -3066,7 +3026,6 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) co
 
 void CConnman::ThreadOpenAddedConnections()
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     AssertLockNotHeld(m_reconnections_mutex);
     while (true)
     {
@@ -3103,7 +3062,6 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
                                      bool use_v2transport,
                                      const std::optional<Proxy>& proxy_override)
 {
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     assert(conn_type != ConnectionType::INBOUND);
 
     //
@@ -3968,7 +3926,6 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CNetAddr& address) const
 void CConnman::PerformReconnections()
 {
     AssertLockNotHeld(m_reconnections_mutex);
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
     while (true) {
         // Move first element of m_reconnections to todo (avoiding an allocation inside the lock).
         decltype(m_reconnections) todo;
