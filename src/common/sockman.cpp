@@ -10,6 +10,20 @@
 #include <util/sock.h>
 #include <util/thread.h>
 
+/** Get the bind address for a socket as CService. */
+CService GetBindAddress(const Sock& sock)
+{
+    CService addr_bind;
+    struct sockaddr_storage sockaddr_bind;
+    socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
+    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
+        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind, sockaddr_bind_len);
+    } else {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
+    }
+    return addr_bind;
+}
+
 bool SockMan::BindAndStartListening(const CService& to, bilingual_str& err_msg)
 {
     // Create socket for listening for incoming connections
@@ -108,6 +122,83 @@ void SockMan::JoinSocketsThreads()
     if (m_thread_i2p_accept.joinable()) {
         m_thread_i2p_accept.join();
     }
+}
+
+std::optional<SockMan::Id>
+SockMan::ConnectAndMakeId(const std::variant<CService, StringHostIntPort>& to,
+                          bool is_important,
+                          std::optional<Proxy> proxy,
+                          bool& proxy_failed,
+                          CService& me,
+                          std::unique_ptr<Sock>& sock,
+                          std::unique_ptr<i2p::sam::Session>& i2p_transient_session)
+{
+    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
+
+    Assume(!me.IsValid());
+
+    if (std::holds_alternative<CService>(to)) {
+        const CService& addr_to{std::get<CService>(to)};
+        if (addr_to.IsI2P()) {
+            if (!Assume(proxy.has_value())) {
+                return std::nullopt;
+            }
+
+            i2p::Connection conn;
+            bool connected{false};
+
+            if (m_i2p_sam_session) {
+                connected = m_i2p_sam_session->Connect(addr_to, conn, proxy_failed);
+            } else {
+                {
+                    LOCK(m_unused_i2p_sessions_mutex);
+                    if (m_unused_i2p_sessions.empty()) {
+                        i2p_transient_session = std::make_unique<i2p::sam::Session>(proxy.value(), &interruptNet);
+                    } else {
+                        i2p_transient_session.swap(m_unused_i2p_sessions.front());
+                        m_unused_i2p_sessions.pop();
+                    }
+                }
+                connected = i2p_transient_session->Connect(addr_to, conn, proxy_failed);
+                if (!connected) {
+                    LOCK(m_unused_i2p_sessions_mutex);
+                    if (m_unused_i2p_sessions.size() < MAX_UNUSED_I2P_SESSIONS_SIZE) {
+                        m_unused_i2p_sessions.emplace(i2p_transient_session.release());
+                    }
+                }
+            }
+
+            if (connected) {
+                sock = std::move(conn.sock);
+                me = conn.me;
+            }
+        } else if (proxy.has_value()) {
+            sock = ConnectThroughProxy(proxy.value(), addr_to.ToStringAddr(), addr_to.GetPort(), proxy_failed);
+        } else {
+            sock = ConnectDirectly(addr_to, is_important);
+        }
+    } else {
+        if (!Assume(proxy.has_value())) {
+            return std::nullopt;
+        }
+
+        const auto& hostport{std::get<StringHostIntPort>(to)};
+
+        bool dummy_proxy_failed;
+        sock = ConnectThroughProxy(proxy.value(), hostport.host, hostport.port, dummy_proxy_failed);
+    }
+
+    if (!sock) {
+        return std::nullopt;
+    }
+
+    if (!me.IsValid()) {
+        me = GetBindAddress(*sock);
+    }
+
+    const Id id{GetNewId()};
+
+    return id;
 }
 
 std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
