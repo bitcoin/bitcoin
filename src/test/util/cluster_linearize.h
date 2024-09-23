@@ -390,43 +390,6 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
     }
 }
 
-/** Verify that a DepGraph corresponds to the information in a cluster. */
-template<typename SetType>
-void VerifyDepGraphFromCluster(const Cluster<SetType>& cluster, const DepGraph<SetType>& depgraph)
-{
-    // Sanity check the depgraph, which includes a check for correspondence between ancestors and
-    // descendants, so it suffices to check just ancestors below.
-    SanityCheck(depgraph);
-    // Verify transaction count.
-    assert(cluster.size() == depgraph.TxCount());
-    // Verify feerates.
-    for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
-        assert(depgraph.FeeRate(i) == cluster[i].first);
-    }
-    // Verify ancestors.
-    for (ClusterIndex i = 0; i < depgraph.TxCount(); ++i) {
-        // Start with the transaction having itself as ancestor.
-        auto ancestors = SetType::Singleton(i);
-        // Add parents of ancestors to the set of ancestors until it stops changing.
-        while (true) {
-            const auto old_ancestors = ancestors;
-            for (auto ancestor : ancestors) {
-                ancestors |= cluster[ancestor].second;
-            }
-            if (old_ancestors == ancestors) break;
-        }
-        // Compare against depgraph.
-        assert(depgraph.Ancestors(i) == ancestors);
-        // Some additional sanity tests:
-        // - Every transaction has itself as ancestor.
-        assert(ancestors[i]);
-        // - Every transaction has its direct parents as ancestors.
-        for (auto parent : cluster[i].second) {
-            assert(ancestors[parent]);
-        }
-    }
-}
-
 /** Perform a sanity check on a linearization. */
 template<typename SetType>
 void SanityCheck(const DepGraph<SetType>& depgraph, Span<const ClusterIndex> linearization)

@@ -19,14 +19,6 @@
 
 namespace cluster_linearize {
 
-/** Data type to represent cluster input.
- *
- * cluster[i].first is tx_i's fee and size.
- * cluster[i].second[j] is true iff tx_i spends one or more of tx_j's outputs.
- */
-template<typename SetType>
-using Cluster = std::vector<std::pair<FeeFrac, SetType>>;
-
 /** Data type to represent transaction indices in clusters. */
 using ClusterIndex = uint32_t;
 
@@ -54,7 +46,7 @@ class DepGraph
         Entry(const FeeFrac& f, const SetType& a, const SetType& d) noexcept : feerate(f), ancestors(a), descendants(d) {}
     };
 
-    /** Data for each transaction, in the same order as the Cluster it was constructed from. */
+    /** Data for each transaction. */
     std::vector<Entry> entries;
 
     /** Which positions are used. */
@@ -78,35 +70,6 @@ public:
     DepGraph(DepGraph&&) noexcept = default;
     DepGraph& operator=(const DepGraph&) noexcept = default;
     DepGraph& operator=(DepGraph&&) noexcept = default;
-
-    /** Construct a DepGraph object for ntx transactions, with no dependencies.
-     *
-     * Complexity: O(N) where N=ntx.
-     **/
-    explicit DepGraph(ClusterIndex ntx) noexcept
-    {
-        Assume(ntx <= SetType::Size());
-        entries.resize(ntx);
-        for (ClusterIndex i = 0; i < ntx; ++i) {
-            entries[i].ancestors = SetType::Singleton(i);
-            entries[i].descendants = SetType::Singleton(i);
-        }
-        m_used = SetType::Fill(ntx);
-    }
-
-    /** Construct a DepGraph object given a cluster.
-     *
-     * Complexity: O(N^2) where N=cluster.size().
-     */
-    explicit DepGraph(const Cluster<SetType>& cluster) noexcept : DepGraph(cluster.size())
-    {
-        for (ClusterIndex i = 0; i < cluster.size(); ++i) {
-            // Fill in fee and size.
-            entries[i].feerate = cluster[i].first;
-            // Fill in dependencies.
-            AddDependencies(cluster[i].second, i);
-        }
-    }
 
     /** Construct a DepGraph object given another DepGraph and a mapping from old to new.
      *

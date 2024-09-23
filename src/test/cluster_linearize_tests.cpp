@@ -23,17 +23,17 @@ namespace {
 constexpr std::pair<FeeFrac, TestBitSet> HOLE{FeeFrac{0, 0x3FFFFF}, {}};
 
 template<typename SetType>
-void TestDepGraphSerialization(const Cluster<SetType>& cluster, const std::string& hexenc)
+void TestDepGraphSerialization(const std::vector<std::pair<FeeFrac, SetType>>& cluster, const std::string& hexenc)
 {
-    DepGraph depgraph(cluster);
-
-    // Run normal sanity and correspondence checks, which includes a round-trip test.
-    VerifyDepGraphFromCluster(cluster, depgraph);
-
-    // Remove holes (which are expected to be present as HOLE entries in cluster).
+    // Construct DepGraph from cluster argument.
+    DepGraph<SetType> depgraph;
     SetType holes;
     for (ClusterIndex i = 0; i < cluster.size(); ++i) {
+        depgraph.AddTransaction(cluster[i].first);
         if (cluster[i] == HOLE) holes.Set(i);
+    }
+    for (ClusterIndex i = 0; i < cluster.size(); ++i) {
+        depgraph.AddDependencies(cluster[i].second, i);
     }
     depgraph.RemoveTransactions(holes);
 
