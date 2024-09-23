@@ -215,65 +215,6 @@ SockMan::ConnectAndMakeNodeId(const std::variant<CService, StringHostIntPort>& t
     return node_id;
 }
 
-std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
-{
-    sockaddr_storage storage;
-    socklen_t len{sizeof(storage)};
-
-    auto sock{listen_sock.Accept(reinterpret_cast<sockaddr*>(&storage), &len)};
-
-    if (!sock) {
-        const int err{WSAGetLastError()};
-        if (err != WSAEWOULDBLOCK) {
-            LogPrintLevel(BCLog::NET,
-                          BCLog::Level::Error,
-                          "Cannot accept new connection: %s\n",
-                          NetworkErrorString(err));
-        }
-        return {};
-    }
-
-    if (!addr.SetSockAddr(reinterpret_cast<sockaddr*>(&storage))) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
-    }
-
-    return sock;
-}
-
-void SockMan::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
-{
-    AssertLockNotHeld(m_connected_mutex);
-
-    if (!sock->IsSelectable()) {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", them.ToStringAddrPort());
-        return;
-    }
-
-    // According to the internet TCP_NODELAY is not carried into accepted sockets
-    // on all platforms.  Set it again here just to be sure.
-    const int on{1};
-    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
-                 them.ToStringAddrPort());
-    }
-
-    const NodeId node_id{GetNewNodeId()};
-
-    {
-        LOCK(m_connected_mutex);
-        m_connected.emplace(node_id, std::make_shared<NodeSockets>(std::move(sock)));
-    }
-
-    if (!EventNewConnectionAccepted(node_id, me, them)) {
-        CloseConnection(node_id);
-    }
-}
-
-NodeId SockMan::GetNewNodeId()
-{
-    return m_next_node_id.fetch_add(1, std::memory_order_relaxed);
-}
-
 bool SockMan::CloseConnection(NodeId node_id)
 {
     LOCK(m_connected_mutex);
@@ -403,6 +344,65 @@ void SockMan::ThreadSocketHandler()
         // Accept new connections from listening sockets.
         SocketHandlerListening(io_readiness.events_per_sock);
     }
+}
+
+std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
+{
+    sockaddr_storage storage;
+    socklen_t len{sizeof(storage)};
+
+    auto sock{listen_sock.Accept(reinterpret_cast<sockaddr*>(&storage), &len)};
+
+    if (!sock) {
+        const int err{WSAGetLastError()};
+        if (err != WSAEWOULDBLOCK) {
+            LogPrintLevel(BCLog::NET,
+                          BCLog::Level::Error,
+                          "Cannot accept new connection: %s\n",
+                          NetworkErrorString(err));
+        }
+        return {};
+    }
+
+    if (!addr.SetSockAddr(reinterpret_cast<sockaddr*>(&storage))) {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
+    }
+
+    return sock;
+}
+
+void SockMan::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    if (!sock->IsSelectable()) {
+        LogPrintf("connection from %s dropped: non-selectable socket\n", them.ToStringAddrPort());
+        return;
+    }
+
+    // According to the internet TCP_NODELAY is not carried into accepted sockets
+    // on all platforms.  Set it again here just to be sure.
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
+                 them.ToStringAddrPort());
+    }
+
+    const NodeId node_id{GetNewNodeId()};
+
+    {
+        LOCK(m_connected_mutex);
+        m_connected.emplace(node_id, std::make_shared<NodeSockets>(std::move(sock)));
+    }
+
+    if (!EventNewConnectionAccepted(node_id, me, them)) {
+        CloseConnection(node_id);
+    }
+}
+
+NodeId SockMan::GetNewNodeId()
+{
+    return m_next_node_id.fetch_add(1, std::memory_order_relaxed);
 }
 
 SockMan::IOReadiness SockMan::GenerateWaitSockets()
