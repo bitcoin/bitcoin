@@ -52,6 +52,12 @@ struct ConnmanTestMsg : public CConnman {
         return m_nodes;
     }
 
+    void AddTestNode(CNode& node, std::unique_ptr<Sock>&& sock)
+    {
+        TestOnlyAddExistentConnection(node.GetId(), std::move(sock));
+        AddTestNode(node);
+    }
+
     void AddTestNode(CNode& node)
     {
         LOCK(m_nodes_mutex);
@@ -91,6 +97,8 @@ struct ConnmanTestMsg : public CConnman {
     bool AlreadyConnectedPublic(const CAddress& addr) { return AlreadyConnectedToAddress(addr); };
 
     CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type);
+
+    using CConnman::MarkAsDisconnectAndCloseConnection;
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
