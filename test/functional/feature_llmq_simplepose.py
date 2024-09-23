@@ -23,6 +23,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def run_test(self):
 
+        self.deaf_mns = []
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -45,6 +46,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         self.test_banning(self.close_mn_port, 3)
+        self.deaf_mns.clear()
 
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
@@ -61,6 +63,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         self.repair_masternodes(True)
         self.close_mn_port(self.mninfo[0])
+        self.deaf_mns.clear()
         self.test_no_banning(3)
 
     def isolate_mn(self, mn):
@@ -69,12 +72,13 @@ class LLMQSimplePoSeTest(DashTestFramework):
         return True, True
 
     def close_mn_port(self, mn):
+        self.deaf_mns.append(mn)
         self.stop_node(mn.node.index)
         self.start_masternode(mn, ["-listen=0", "-nobind"])
         self.connect_nodes(mn.node.index, 0)
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo:
-            if mn2 is not mn:
+            if self.deaf_mns.count(mn2) == 0:
                 self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False, False
