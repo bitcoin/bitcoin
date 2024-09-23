@@ -23,14 +23,11 @@ DEFAULT_MIN_RELAY_TX_FEE = 1000
 # Default for -incrementalrelayfee in sat/kvB
 DEFAULT_INCREMENTAL_RELAY_FEE = 1000
 
-def fill_mempool(test_framework, node):
+def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """Fill mempool until eviction.
 
     Allows for simpler testing of scenarios with floating mempoolminfee > minrelay
-    Requires -datacarriersize=100000 and
-   -maxmempool=5.
-    It will not ensure mempools become synced as it
-    is based on a single node and assumes -minrelaytxfee
+    Requires -datacarriersize=100000 and -maxmempool=5 and assumes -minrelaytxfee
     is 1 sat/vbyte.
     To avoid unintentional tx dependencies, the mempool filling txs are created with a
     tagged ephemeral miniwallet instance.
@@ -73,9 +70,13 @@ def fill_mempool(test_framework, node):
     batch_fees = [(i + 1) * base_fee for i in range(num_of_batches)]
 
     test_framework.log.debug("Fill up the mempool with txs with higher fee rate")
-    with node.assert_debug_log(["rolling minimum fee bumped"]):
-        for fee in batch_fees:
-            send_batch(fee)
+    for fee in batch_fees[:-3]:
+        send_batch(fee)
+    tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync before any eviction
+    assert_equal(node.getmempoolinfo()["mempoolminfee"], Decimal("0.00001000"))
+    for fee in batch_fees[-3:]:
+        send_batch(fee)
+    tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync after all evictions
 
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
