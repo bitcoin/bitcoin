@@ -14,8 +14,13 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
+#include <queue>
 #include <thread>
+#include <variant>
 #include <vector>
+
+CService GetBindAddress(const Sock& sock);
 
 /**
  * A socket manager class which handles socket operations.
@@ -24,6 +29,7 @@
  * - binding and listening on sockets
  * - starting of necessary threads to process socket operations
  * - accepting incoming connections
+ * - making outbound connections
  */
 class SockMan
 {
@@ -93,6 +99,37 @@ public:
     void JoinSocketsThreads();
 
     /**
+     * A more readable std::tuple<std::string, uint16_t> for host and port.
+     */
+    struct StringHostIntPort {
+        const std::string& host;
+        uint16_t port;
+    };
+
+    /**
+     * Make an outbound connection, save the socket internally and return a newly generated connection id.
+     * @param[in] to The address to connect to, either as CService or a host as string and port as
+     * an integer, if the later is used, then `proxy` must be valid.
+     * @param[in] is_important If true, then log failures with higher severity.
+     * @param[in] proxy Proxy to connect through, if set.
+     * @param[out] proxy_failed If `proxy` is valid and the connection failed because of the
+     * proxy, then it will be set to true.
+     * @param[out] me If the connection was successful then this is set to the address on the
+     * local side of the socket.
+     * @param[out] sock Connected socket, if the operation is successful.
+     * @param[out] i2p_transient_session I2P session, if the operation is successful.
+     * @return Newly generated id, or std::nullopt if the operation fails.
+     */
+    std::optional<SockMan::Id> ConnectAndMakeId(const std::variant<CService, StringHostIntPort>& to,
+                                                bool is_important,
+                                                std::optional<Proxy> proxy,
+                                                bool& proxy_failed,
+                                                CService& me,
+                                                std::unique_ptr<Sock>& sock,
+                                                std::unique_ptr<i2p::sam::Session>& i2p_transient_session)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+
+    /**
      * Accept a connection.
      * @param[in] listen_sock Socket on which to accept the connection.
      * @param[out] addr Address of the peer that was accepted.
@@ -131,6 +168,12 @@ public:
     std::vector<std::shared_ptr<Sock>> m_listen;
 
 private:
+
+    /**
+     * Cap on the size of `m_unused_i2p_sessions`, to ensure it does not
+     * unexpectedly use too much memory.
+     */
+    static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
 
     //
     // Pure virtual functions must be implemented by children classes.
@@ -238,6 +281,20 @@ private:
      * Thread that accepts incoming I2P connections in a loop, can be stopped via `interruptNet`.
      */
     std::thread m_thread_i2p_accept;
+
+    /**
+     * Mutex protecting m_i2p_sam_sessions.
+     */
+    Mutex m_unused_i2p_sessions_mutex;
+
+    /**
+     * A pool of created I2P SAM transient sessions that should be used instead
+     * of creating new ones in order to reduce the load on the I2P network.
+     * Creating a session in I2P is not cheap, thus if this is not empty, then
+     * pick an entry from it instead of creating a new session. If connecting to
+     * a host fails, then the created session is put to this pool for reuse.
+     */
+    std::queue<std::unique_ptr<i2p::sam::Session>> m_unused_i2p_sessions GUARDED_BY(m_unused_i2p_sessions_mutex);
 };
 
 #endif // BITCOIN_COMMON_SOCKMAN_H
