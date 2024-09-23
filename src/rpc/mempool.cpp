@@ -609,9 +609,10 @@ static RPCHelpMan gettxspendingprevout()
                     },
                 },
             },
-            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"mempool_only", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true if txospenderindex unavailable, otherwise false"}, "If false and empool lacks a relevant spend, use txospenderindex (throws an exception if not available)."},
+                    {"return_spending_tx", RPCArg::Type::BOOL, RPCArg::DefaultHint{"false"}, "If true, return the full spending tx."},
                 },
             },
         },
@@ -623,6 +624,7 @@ static RPCHelpMan gettxspendingprevout()
                     {RPCResult::Type::STR_HEX, "txid", "the transaction id of the checked output"},
                     {RPCResult::Type::NUM, "vout", "the vout value of the checked output"},
                     {RPCResult::Type::STR_HEX, "spendingtxid", /*optional=*/true, "the transaction id of the mempool transaction spending this output (omitted if unspent)"},
+                    {RPCResult::Type::STR_HEX, "spendingtx", /*optional=*/true, "the transaction spending this output (only if return_spending_tx is set, omitted if unspent)"},
                     {RPCResult::Type::ARR, "warnings", /* optional */ true, "If spendingtxid isn't found in the mempool, and the mempool_only option isn't set explicitly, this will advise of issues using the txospenderindex.",
                     {
                         {RPCResult::Type::STR, "", ""},
@@ -642,15 +644,20 @@ static RPCHelpMan gettxspendingprevout()
             }
 
             std::optional<bool> mempool_only;
+            std::optional<bool> return_spending_tx;
             if (!request.params[1].isNull()) {
                 const UniValue& options = request.params[1];
                 RPCTypeCheckObj(options,
                     {
                         {"mempool_only", UniValueType(UniValue::VBOOL)},
+                        {"return_spending_tx", UniValueType(UniValue::VBOOL)},
                     },
                     /*fAllowNull=*/true, /*fStrict=*/true);
                 if (options.exists("mempool_only")) {
                     mempool_only = options["mempool_only"].get_bool();
+                }
+                if (options.exists("return_spending_tx")) {
+                    return_spending_tx = options["return_spending_tx"].get_bool();
                 }
             }
 
@@ -690,12 +697,18 @@ static RPCHelpMan gettxspendingprevout()
                 const CTransaction* spendingTx = mempool.GetConflictTx(prevout);
                 if (spendingTx != nullptr) {
                     o.pushKV("spendingtxid", spendingTx->GetHash().ToString());
+                    if (return_spending_tx) {
+                        o.pushKV("spendingtx", EncodeHexTx(*spendingTx));
+                    }
                 } else if (mempool_only.value_or(false)) {
                     // do nothing, caller has selected to only query the mempool
                 } else if (g_txospenderindex) {
                     // no spending tx in mempool, query txospender index
-                    if (auto spending_txid{g_txospenderindex->FindSpender(prevout)}) {
-                        o.pushKV("spendingtxid", spending_txid->GetHex());
+                    if (auto spending_tx{g_txospenderindex->FindSpender(prevout)}) {
+                        o.pushKV("spendingtxid", spending_tx->GetHash().GetHex());
+                        if (return_spending_tx) {
+                            o.pushKV("spendingtx", EncodeHexTx(*spending_tx));
+                        }
                         if (!f_txospenderindex_ready) {
                             // warn if index is not ready as the spending tx that we found may be stale (it may be reorged out)
                             UniValue warnings(UniValue::VARR);
