@@ -65,13 +65,14 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     CNetAddr random_netaddr;
     NodeId node_id{0};
-    CNode random_node = ConsumeNode(fuzzed_data_provider, node_id++);
+    CNode& random_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, node_id++).release()};
+    connman.AddTestNode(random_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     CSubNet random_subnet;
     std::string random_string;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
         CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider, node_id++).release()};
-        connman.AddTestNode(p2p_node);
+        connman.AddTestNode(p2p_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
@@ -103,6 +104,15 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             },
             [&] {
                 connman.DisconnectNode(random_subnet);
+            },
+            [&] {
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    auto nonexistent_node{ConsumeNodeAsUniquePtr(fuzzed_data_provider, node_id++)};
+                    connman.MarkAsDisconnectAndCloseConnection(*nonexistent_node);
+                } else {
+                    CNode& existent_node{*connman.TestNodes().begin()->second};
+                    connman.MarkAsDisconnectAndCloseConnection(existent_node);
+                }
             },
             [&] {
                 connman.ForEachNode([](auto) {});
