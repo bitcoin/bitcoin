@@ -90,8 +90,7 @@ struct ConnmanTestMsg : public CConnman {
 
     bool AlreadyConnectedPublic(const CAddress& addr) { return AlreadyConnectedToAddress(addr); };
 
-    CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+    CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type);
 };
 
 constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
