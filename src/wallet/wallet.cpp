@@ -3410,6 +3410,14 @@ void CWallet::postInitProcess()
 
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
+    if (m_chain) {
+        CBlockLocator loc;
+        WITH_LOCK(cs_wallet, chain().findBlock(m_last_block_processed, FoundBlock().locator(loc)));
+        if (!loc.IsNull()) {
+            WalletBatch batch(GetDatabase());
+            batch.WriteBestBlock(loc);
+        }
+    }
     return GetDatabase().Backup(strDest);
 }
 
@@ -4389,6 +4397,11 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
             return util::Error{_("Error: This wallet is already a descriptor wallet")};
         }
+
+        // Flush chain state before unloading wallet
+        CBlockLocator locator;
+        WITH_LOCK(wallet->cs_wallet, context.chain->findBlock(wallet->GetLastBlockHash(), FoundBlock().locator(locator)));
+        if (!locator.IsNull()) wallet->chainStateFlushed(ChainstateRole::NORMAL, locator);
 
         if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
             return util::Error{_("Unable to unload the wallet before migrating")};
