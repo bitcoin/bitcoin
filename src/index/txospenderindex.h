@@ -6,6 +6,7 @@
 #define BITCOIN_INDEX_TXOSPENDERINDEX_H
 
 #include <index/base.h>
+#include <index/disktxpos.h>
 
 static constexpr bool DEFAULT_TXOSPENDERINDEX{false};
 
@@ -16,13 +17,14 @@ static constexpr bool DEFAULT_TXOSPENDERINDEX{false};
  */
 class TxoSpenderIndex final : public BaseIndex
 {
-protected:
-    class DB;
-
 private:
-    const std::unique_ptr<DB> m_db;
-
+    std::unique_ptr<BaseIndex::DB> m_db;
+    std::pair<uint64_t, uint64_t> m_siphash_key;
+    uint64_t CreateKey(const COutPoint& vout) const;
     bool AllowPrune() const override { return true; }
+    bool WriteSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items);
+    bool EraseSpenderInfos(const std::vector<COutPoint>& items);
+    bool ReadTransaction(const CDiskTxPos& pos, CTransactionRef& tx) const;
 
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
@@ -37,7 +39,7 @@ public:
     // Destroys unique_ptr to an incomplete type.
     virtual ~TxoSpenderIndex() override;
 
-    std::optional<Txid> FindSpender(const COutPoint& txo) const;
+    CTransactionRef FindSpender(const COutPoint& txo) const;
 };
 
 /// The global txo spender index. May be null.

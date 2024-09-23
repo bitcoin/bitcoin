@@ -109,11 +109,11 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
 
         self.generate(self.wallet, 1)
         # spending transactions are found in the index of nodes 0 and 1 but not node 2
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0}, {'txid' : txidA, 'vout' : 1} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : txidA}, {'txid' : txidA, 'vout' : 1, 'spendingtxid' : txidC} ])
-        result = self.nodes[1].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0}, {'txid' : txidA, 'vout' : 1} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : txidA}, {'txid' : txidA, 'vout' : 1, 'spendingtxid' : txidC} ])
-        result = self.nodes[2].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0}, {'txid' : txidA, 'vout' : 1} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0}, {'txid' : txidA, 'vout' : 1} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : txidA, 'spendingtx' : txA['hex']}, {'txid' : txidA, 'vout' : 1, 'spendingtxid' : txidC, 'spendingtx' : txC['hex']} ])
+        result = self.nodes[1].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0}, {'txid' : txidA, 'vout' : 1} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : txidA, 'spendingtx' : txA['hex']}, {'txid' : txidA, 'vout' : 1, 'spendingtxid' : txidC, 'spendingtx' : txC['hex']} ])
+        result = self.nodes[2].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0}, {'txid' : txidA, 'vout' : 1} ], return_spending_tx=True)
         assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'warnings': ['txospenderindex is unavailable.']}, {'txid' : txidA, 'vout' : 1, 'warnings': ['txospenderindex is unavailable.']} ])
 
 
@@ -123,8 +123,8 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
         self.generate(self.wallet, 1)
         # tx1 is confirmed, and indexed in txospenderindex as spending our utxo
         assert not tx1["txid"] in self.nodes[0].getrawmempool()
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx1["txid"]} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx1["txid"], 'spendingtx' : tx1['hex']} ])
         # replace tx1 with tx2
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
@@ -135,13 +135,13 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
         assert tx2["txid"] in self.nodes[0].getrawmempool()
 
         # check that when we find tx2 when we look in the mempool for a tx spending our output
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"]} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"], 'spendingtx' : tx2['hex']} ])
 
         # check that our txospenderindex has been updated
         self.generate(self.wallet, 1)
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"]} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"], 'spendingtx' : tx2['hex']} ])
 
         self.log.info("Check that our txospenderindex is updated when a reorg cancels a spending transaction")
         confirmed_utxo = self.wallet.get_utxo(mark_as_spent = False)
@@ -150,10 +150,10 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
         # tx1 spends our utxo, tx2 spends tx1
         self.generate(self.wallet, 1)
         # tx1 and tx2 are confirmed, and indexed in txospenderindex
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx1["txid"]} ])
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : tx1['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : tx1['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"]} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx1["txid"], 'spendingtx' : tx1['hex']} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : tx1['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : tx1['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"], 'spendingtx' : tx2['hex']} ])
         # replace tx1 with tx3
         blockhash= self.nodes[0].getbestblockhash()
         self.nodes[0].invalidateblock(blockhash)
@@ -164,18 +164,18 @@ class RPCMempoolInfoTest(BitcoinTestFramework):
         assert not tx1["txid"] in self.nodes[0].getrawmempool()
         assert not tx2["txid"] in self.nodes[0].getrawmempool()
         # tx2 is not in the mempool anymore, but still in txospender index which has not been rewound yet
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : tx1['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : tx1['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"]} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : tx1['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : tx1['txid'], 'vout' : 0, 'spendingtxid' : tx2["txid"], 'spendingtx' : tx2['hex']} ])
         txinfo = self.nodes[0].getrawtransaction(tx2["txid"], verbose = True, blockhash = blockhash)
         assert_equal(txinfo["confirmations"], 0)
         assert_equal(txinfo["in_active_chain"], False)
 
         self.generate(self.wallet, 1)
         # we check that the spending tx for tx1 is now tx3
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ])
-        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx3["txid"]} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : confirmed_utxo['txid'], 'vout' : 0} ], return_spending_tx=True)
+        assert_equal(result, [ {'txid' : confirmed_utxo['txid'], 'vout' : 0, 'spendingtxid' : tx3["txid"], 'spendingtx' : tx3['hex']} ])
         # we check that there is no more spending tx for tx1
-        result = self.nodes[0].gettxspendingprevout([ {'txid' : tx1['txid'], 'vout' : 0} ])
+        result = self.nodes[0].gettxspendingprevout([ {'txid' : tx1['txid'], 'vout' : 0} ], return_spending_tx=True)
         assert_equal(result, [ {'txid' : tx1['txid'], 'vout' : 0} ])
 
 
