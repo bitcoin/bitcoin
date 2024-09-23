@@ -35,6 +35,7 @@ class FastRandomContext;
 
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
+    using CConnman::MarkAsDisconnectAndCloseConnection;
 
     void SetMsgProc(NetEventsInterface* msgproc)
     {
@@ -53,6 +54,12 @@ struct ConnmanTestMsg : public CConnman {
     {
         LOCK(m_nodes_mutex);
         return m_nodes;
+    }
+
+    void AddTestNode(CNode& node, std::unique_ptr<Sock>&& sock)
+    {
+        TestOnlyAddExistentConnection(node.GetId(), std::move(sock));
+        AddTestNode(node);
     }
 
     void AddTestNode(CNode& node)
@@ -74,21 +81,15 @@ struct ConnmanTestMsg : public CConnman {
     }
 
     void EventNewConnectionAcceptedPublic(SockMan::Id id,
-                                          std::unique_ptr<Sock> sock,
                                           const CAddress& me,
                                           const CAddress& them)
     {
-        EventNewConnectionAccepted(id, std::move(sock), me, them);
+        EventNewConnectionAccepted(id, me, them);
     }
 
     bool InitBindsPublic(const CConnman::Options& options)
     {
         return InitBinds(options);
-    }
-
-    void SocketHandlerPublic()
-    {
-        SocketHandler();
     }
 
     Id GetNewIdPublic()

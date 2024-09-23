@@ -43,9 +43,6 @@ FUZZ_TARGET(net, .init = initialize_net)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                node.CloseSocketDisconnect();
-            },
-            [&] {
                 CNodeStats stats;
                 node.CopyStats(stats);
             },

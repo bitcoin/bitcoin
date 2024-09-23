@@ -99,10 +99,6 @@ enum BindFlags {
     BF_DONT_ADVERTISE = (1U << 1),
 };
 
-// The set of sockets cannot be modified while waiting
-// The sleep time needs to be small to avoid new sockets stalling
-static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
-
 const std::string NET_MESSAGE_TYPE_OTHER = "*other*";
 
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
@@ -420,9 +416,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     }
 
     // Connect
-    std::unique_ptr<Sock> sock;
     Proxy proxy;
-    std::unique_ptr<i2p::sam::Session> i2p_transient_session;
 
     std::optional<NodeId> node_id;
     CService me;
@@ -446,9 +440,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                                        /*is_important=*/conn_type == ConnectionType::MANUAL,
                                        use_proxy ? std::optional<Proxy>{proxy} : std::nullopt,
                                        proxyConnectionFailed,
-                                       me,
-                                       sock,
-                                       i2p_transient_session);
+                                       me);
 
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
@@ -465,9 +457,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                                        /*is_important=*/conn_type == ConnectionType::MANUAL,
                                        proxy,
                                        dummy,
-                                       me,
-                                       sock,
-                                       i2p_transient_session);
+                                       me);
         }
         // Check any other resolved address (if any) if we fail to connect
         if (!node_id.has_value()) {
@@ -487,7 +477,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                             .Write(0)
                             .Finalize();
         CNode* pnode = new CNode(node_id.value(),
-                                std::move(sock),
                                 target_addr,
                                 CalculateKeyedNetGroup(target_addr),
                                 nonce,
@@ -498,7 +487,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                                 network_id,
                                 CNodeOptions{
                                     .permission_flags = permission_flags,
-                                    .i2p_sam_session = std::move(i2p_transient_session),
                                     .recv_flood_size = nReceiveFloodSize,
                                     .use_v2transport = use_v2transport,
                                 });
@@ -511,24 +499,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     }
 
     return nullptr;
-}
-
-void CNode::CloseSocketDisconnect()
-{
-    fDisconnect = true;
-    LOCK(m_sock_mutex);
-    if (m_sock) {
-        LogDebug(BCLog::NET, "Resetting socket for peer=%d%s", GetId(), LogIP(fLogIPs));
-        m_sock.reset();
-
-        TRACEPOINT(net, closed_connection,
-            GetId(),
-            m_addr_name.c_str(),
-            ConnectionTypeAsString().c_str(),
-            ConnectedThroughNetwork(),
-            Ticks<std::chrono::seconds>(m_connected));
-    }
-    m_i2p_sam_session.reset();
 }
 
 void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optional<CNetAddr> addr, const std::vector<NetWhitelistPermissions>& ranges) const {
@@ -1554,7 +1524,7 @@ Transport::Info V2Transport::GetInfo() const noexcept
     return info;
 }
 
-std::pair<size_t, bool> CConnman::SocketSendData(CNode& node)
+std::pair<size_t, bool> CConnman::SendMessagesAsBytes(CNode& node)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
@@ -1582,45 +1552,27 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node)
         if (expected_more.has_value()) Assume(!data.empty() == *expected_more);
         expected_more = more;
         data_left = !data.empty(); // will be overwritten on next loop if all of data gets sent
-        int nBytes = 0;
-        if (!data.empty()) {
-            LOCK(node.m_sock_mutex);
-            // There is no socket in case we've already disconnected, or in test cases without
-            // real connections. In these cases, we bail out immediately and just leave things
-            // in the send queue and transport.
-            if (!node.m_sock) {
-                break;
-            }
-            int flags = MSG_NOSIGNAL | MSG_DONTWAIT;
-#ifdef MSG_MORE
-            if (more) {
-                flags |= MSG_MORE;
-            }
-#endif
-            nBytes = node.m_sock->Send(data.data(), data.size(), flags);
-        }
-        if (nBytes > 0) {
+
+        std::string errmsg;
+        const ssize_t sent{SendBytes(node.GetId(), data, more, errmsg)};
+        if (sent > 0) {
             node.m_last_send = GetTime<std::chrono::seconds>();
-            node.nSendBytes += nBytes;
+            node.nSendBytes += sent;
             // Notify transport that bytes have been processed.
-            node.m_transport->MarkBytesSent(nBytes);
+            node.m_transport->MarkBytesSent(sent);
             // Update statistics per message type.
             if (!msg_type.empty()) { // don't report v2 handshake bytes for now
-                node.AccountForSentBytes(msg_type, nBytes);
+                node.AccountForSentBytes(msg_type, sent);
             }
-            nSentSize += nBytes;
-            if ((size_t)nBytes != data.size()) {
+            nSentSize += sent;
+            if (static_cast<size_t>(sent) != data.size()) {
                 // could not send full message; stop sending more
                 break;
             }
         } else {
-            if (nBytes < 0) {
-                // error
-                int nErr = WSAGetLastError();
-                if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
-                    LogDebug(BCLog::NET, "socket send error, %s: %s\n", node.DisconnectMsg(fLogIPs), NetworkErrorString(nErr));
-                    node.CloseSocketDisconnect();
-                }
+            if (sent < 0) {
+                LogDebug(BCLog::NET, "socket send error, %s: %s\n", node.DisconnectMsg(fLogIPs), errmsg);
+                MarkAsDisconnectAndCloseConnection(node);
             }
             break;
         }
@@ -1707,8 +1659,7 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::EventNewConnectionAccepted(SockMan::Id id,
-                                          std::unique_ptr<Sock>&& sock,
+bool CConnman::EventNewConnectionAccepted(SockMan::Id id,
                                           const CService& me,
                                           const CService& them)
 {
@@ -1738,7 +1689,7 @@ void CConnman::EventNewConnectionAccepted(SockMan::Id id,
 
     if (!fNetworkActive) {
         LogDebug(BCLog::NET, "connection from %s dropped: not accepting new connections\n", addr.ToStringAddrPort());
-        return;
+        return false;
     }
 
     // Don't accept connections from banned peers.
@@ -1746,7 +1697,7 @@ void CConnman::EventNewConnectionAccepted(SockMan::Id id,
     if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && banned)
     {
         LogDebug(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToStringAddrPort());
-        return;
+        return false;
     }
 
     // Only accept connections from discouraged peers if our inbound slots aren't (almost) full.
@@ -1754,7 +1705,7 @@ void CConnman::EventNewConnectionAccepted(SockMan::Id id,
     if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && nInbound + 1 >= m_max_inbound && discouraged)
     {
         LogDebug(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToStringAddrPort());
-        return;
+        return false;
     }
 
     if (nInbound >= m_max_inbound)
@@ -1762,7 +1713,7 @@ void CConnman::EventNewConnectionAccepted(SockMan::Id id,
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
             LogDebug(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
-            return;
+            return false;
         }
     }
 
@@ -1779,7 +1730,6 @@ void CConnman::EventNewConnectionAccepted(SockMan::Id id,
                         .Write(addr_bind.GetPort()) // inbound connections use bind port
                         .Finalize();
     CNode* pnode = new CNode(id,
-                             std::move(sock),
                              CAddress{addr, NODE_NONE},
                              CalculateKeyedNetGroup(addr),
                              nonce,
@@ -1810,6 +1760,8 @@ void CConnman::EventNewConnectionAccepted(SockMan::Id id,
 
     // We received a new connection, harvest entropy from the time (and our peer count)
     RandAddEvent((uint32_t)id);
+
+    return true;
 }
 
 bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport = false)
@@ -1849,6 +1801,20 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
 
     OpenNetworkConnection(CAddress(), false, std::move(grant), address.c_str(), conn_type, /*use_v2transport=*/use_v2transport);
     return true;
+}
+
+void CConnman::MarkAsDisconnectAndCloseConnection(CNode& node)
+{
+    node.fDisconnect = true;
+    if (CloseConnection(node.GetId())) {
+        LogDebug(BCLog::NET, "Closed sockets for peer=%d%s", node.GetId(), node.LogIP(fLogIPs));
+        TRACEPOINT(net, closed_connection,
+            node.GetId(),
+            node.m_addr_name.c_str(),
+            node.ConnectionTypeAsString().c_str(),
+            node.ConnectedThroughNetwork(),
+            Ticks<std::chrono::seconds>(node.m_connected));
+    }
 }
 
 void CConnman::DisconnectNodes()
@@ -1902,8 +1868,7 @@ void CConnman::DisconnectNodes()
             // release outbound grant (if any)
             pnode->grantOutbound.Release();
 
-            // close socket and cleanup
-            pnode->CloseSocketDisconnect();
+            MarkAsDisconnectAndCloseConnection(*pnode);
 
             // update connection count by network
             if (pnode->IsManualOrFullOutboundConn()) --m_network_conn_counts[pnode->addr.GetNetwork()];
@@ -2016,7 +1981,7 @@ void CConnman::EventReadyToSend(SockMan::Id id, bool& cancel_recv)
         return;
     }
 
-    const auto [bytes_sent, data_left] = WITH_LOCK(node->cs_vSend, return SocketSendData(*node););
+    const auto [bytes_sent, data_left] = WITH_LOCK(node->cs_vSend, return SendMessagesAsBytes(*node););
 
     // If both receiving and (non-optimistic) sending were possible, we first attempt
     // sending. If that succeeds, but does not fully drain the send queue, do not
@@ -2044,7 +2009,7 @@ void CConnman::EventGotData(SockMan::Id id, std::span<const uint8_t> data)
             "receiving message bytes failed, %s\n",
             node->DisconnectMsg(fLogIPs)
         );
-        node->CloseSocketDisconnect();
+        MarkAsDisconnectAndCloseConnection(*node);
     }
     RecordBytesRecv(data.size());
     if (notify) {
@@ -2065,7 +2030,7 @@ void CConnman::EventGotEOF(SockMan::Id id)
     if (!node->fDisconnect) {
         LogDebug(BCLog::NET, "socket closed for peer=%d\n", id);
     }
-    node->CloseSocketDisconnect();
+    MarkAsDisconnectAndCloseConnection(*node);
 }
 
 void CConnman::EventGotPermanentReadError(SockMan::Id id, const std::string& errmsg)
@@ -2080,7 +2045,7 @@ void CConnman::EventGotPermanentReadError(SockMan::Id id, const std::string& err
     if (!node->fDisconnect) {
         LogDebug(BCLog::NET, "socket recv error for peer=%d: %s\n", id, errmsg);
     }
-    node->CloseSocketDisconnect();
+    MarkAsDisconnectAndCloseConnection(*node);
 }
 
 bool CConnman::ShouldTryToSend(SockMan::Id id) const
@@ -2131,164 +2096,6 @@ void CConnman::EventIOLoopCompletedForAll()
 
     DisconnectNodes();
     NotifyNumConnectionsChanged();
-}
-
-Sock::EventsPerSock CConnman::GenerateWaitSockets(std::span<CNode* const> nodes)
-{
-    AssertLockNotHeld(m_nodes_mutex);
-
-    Sock::EventsPerSock events_per_sock;
-
-    for (const auto& sock : m_listen) {
-        events_per_sock.emplace(sock, Sock::Events{Sock::RECV});
-    }
-
-    for (CNode* pnode : nodes) {
-        const bool select_recv{ShouldTryToRecv(pnode->GetId())};
-        const bool select_send{ShouldTryToSend(pnode->GetId())};
-        if (!select_recv && !select_send) continue;
-
-        LOCK(pnode->m_sock_mutex);
-        if (pnode->m_sock) {
-            Sock::Event event = (select_send ? Sock::SEND : 0) | (select_recv ? Sock::RECV : 0);
-            events_per_sock.emplace(pnode->m_sock, Sock::Events{event});
-        }
-    }
-
-    return events_per_sock;
-}
-
-void CConnman::SocketHandler()
-{
-    AssertLockNotHeld(m_total_bytes_sent_mutex);
-
-    Sock::EventsPerSock events_per_sock;
-
-    {
-        const NodesSnapshot snap{*this, /*shuffle=*/false};
-
-        const auto timeout = std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS);
-
-        // Check for the readiness of the already connected sockets and the
-        // listening sockets in one call ("readiness" as in poll(2) or
-        // select(2)). If none are ready, wait for a short while and return
-        // empty sets.
-        events_per_sock = GenerateWaitSockets(snap.Nodes());
-        if (events_per_sock.empty() || !events_per_sock.begin()->first->WaitMany(timeout, events_per_sock)) {
-            m_interrupt_net->sleep_for(timeout);
-        }
-
-        // Service (send/receive) each of the already connected nodes.
-        SocketHandlerConnected(snap.Nodes(), events_per_sock);
-    }
-
-    // Accept new connections from listening sockets.
-    SocketHandlerListening(events_per_sock);
-}
-
-void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
-                                      const Sock::EventsPerSock& events_per_sock)
-{
-    AssertLockNotHeld(m_nodes_mutex);
-    AssertLockNotHeld(m_total_bytes_sent_mutex);
-
-    for (CNode* pnode : nodes) {
-        if (m_interrupt_net->interrupted()) {
-            return;
-        }
-
-        //
-        // Receive
-        //
-        bool recvSet = false;
-        bool sendSet = false;
-        bool errorSet = false;
-        {
-            LOCK(pnode->m_sock_mutex);
-            if (!pnode->m_sock) {
-                continue;
-            }
-            const auto it = events_per_sock.find(pnode->m_sock);
-            if (it != events_per_sock.end()) {
-                recvSet = it->second.occurred & Sock::RECV; // Sock::RECV could only be set if ShouldTryToRecv() has returned true in GenerateWaitSockets().
-                sendSet = it->second.occurred & Sock::SEND; // Sock::SEND could only be set if ShouldTryToSend() has returned true in GenerateWaitSockets().
-                errorSet = it->second.occurred & Sock::ERR;
-            }
-        }
-
-        if (sendSet) {
-            bool cancel_recv;
-
-            EventReadyToSend(pnode->GetId(), cancel_recv);
-
-            if (cancel_recv) {
-                recvSet = false;
-            }
-        }
-
-        if (recvSet || errorSet)
-        {
-            // typical socket buffer is 8K-64K
-            uint8_t pchBuf[0x10000];
-            int nBytes = 0;
-            {
-                LOCK(pnode->m_sock_mutex);
-                if (!pnode->m_sock) {
-                    continue;
-                }
-                nBytes = pnode->m_sock->Recv(pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
-            }
-            if (nBytes > 0)
-            {
-                EventGotData(pnode->GetId(), {pchBuf, static_cast<size_t>(nBytes)});
-            }
-            else if (nBytes == 0)
-            {
-                EventGotEOF(pnode->GetId());
-            }
-            else if (nBytes < 0)
-            {
-                // error
-                int nErr = WSAGetLastError();
-                if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
-                {
-                    EventGotPermanentReadError(pnode->GetId(), NetworkErrorString(nErr));
-                }
-            }
-        }
-
-        EventIOLoopCompletedForOne(pnode->GetId());
-    }
-}
-
-void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
-{
-    for (const auto& sock : m_listen) {
-        if (m_interrupt_net->interrupted()) {
-            return;
-        }
-        const auto it = events_per_sock.find(sock);
-        if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
-            CService addr_accepted;
-
-            auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
-
-            if (sock_accepted) {
-                NewSockAccepted(std::move(sock_accepted), GetBindAddress(*sock), addr_accepted);
-            }
-        }
-    }
-}
-
-void CConnman::ThreadSocketHandler()
-{
-    AssertLockNotHeld(m_nodes_mutex);
-    AssertLockNotHeld(m_total_bytes_sent_mutex);
-
-    while (!m_interrupt_net->interrupted()) {
-        EventIOLoopCompletedForAll();
-        SocketHandler();
-    }
 }
 
 void CConnman::WakeMessageHandler()
@@ -3325,10 +3132,9 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         fMsgProcWake = false;
     }
 
-    // Send and receive from sockets, accept connections
-    threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
-
     SockMan::Options sockman_options;
+
+    sockman_options.socket_handler_thread_name = "net";
 
     Proxy i2p_sam;
     if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
@@ -3425,8 +3231,6 @@ void CConnman::StopThreads()
         threadOpenAddedConnections.join();
     if (threadDNSAddressSeed.joinable())
         threadDNSAddressSeed.join();
-    if (threadSocketHandler.joinable())
-        threadSocketHandler.join();
 }
 
 void CConnman::StopNodes()
@@ -3450,7 +3254,7 @@ void CConnman::StopNodes()
     WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
     for (auto& [_, pnode] : nodes) {
         LogDebug(BCLog::NET, "Stopping node, %s", pnode->DisconnectMsg(fLogIPs));
-        pnode->CloseSocketDisconnect();
+        MarkAsDisconnectAndCloseConnection(*pnode);
         DeleteNode(pnode);
     }
 
@@ -3764,7 +3568,6 @@ static std::unique_ptr<Transport> MakeTransport(NodeId id, bool use_v2transport,
 }
 
 CNode::CNode(NodeId idIn,
-             std::shared_ptr<Sock> sock,
              const CAddress& addrIn,
              uint64_t nKeyedNetGroupIn,
              uint64_t nLocalHostNonceIn,
@@ -3776,7 +3579,6 @@ CNode::CNode(NodeId idIn,
              CNodeOptions&& node_opts)
     : m_transport{MakeTransport(idIn, node_opts.use_v2transport, conn_type_in == ConnectionType::INBOUND)},
       m_permission_flags{node_opts.permission_flags},
-      m_sock{sock},
       m_connected{GetTime<std::chrono::seconds>()},
       addr{addrIn},
       addrBind{addrBindIn},
@@ -3789,8 +3591,7 @@ CNode::CNode(NodeId idIn,
       m_conn_type{conn_type_in},
       id{idIn},
       nLocalHostNonce{nLocalHostNonceIn},
-      m_recv_flood_size{node_opts.recv_flood_size},
-      m_i2p_sam_session{std::move(node_opts.i2p_sam_session)}
+      m_recv_flood_size{node_opts.recv_flood_size}
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
 
@@ -3876,13 +3677,13 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
         // If there was nothing to send before, and there is now (predicted by the "more" value
         // returned by the GetBytesToSend call above), attempt "optimistic write":
-        // because the poll/select loop may pause for SELECT_TIMEOUT_MILLISECONDS before actually
+        // because the poll/select loop may pause for a while before actually
         // doing a send, try sending from the calling thread if the queue was empty before.
         // With a V1Transport, more will always be true here, because adding a message always
         // results in sendable bytes there, but with V2Transport this is not the case (it may
         // still be in the handshake).
         if (queue_was_empty && more) {
-            SocketSendData(*pnode);
+            SendMessagesAsBytes(*pnode);
         }
     }
 }
