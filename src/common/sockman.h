@@ -21,8 +21,6 @@
 
 typedef int64_t NodeId;
 
-CService GetBindAddress(const Sock& sock);
-
 /**
  * A socket manager class which handles socket operations.
  * To use this class, inherit from it and implement the pure virtual methods.
@@ -31,6 +29,8 @@ CService GetBindAddress(const Sock& sock);
  * - starting of necessary threads to process socket operations
  * - accepting incoming connections
  * - making outbound connections
+ * - closing connections
+ * - waiting for IO readiness on sockets and doing send/recv accordingly
  */
 class SockMan
 {
@@ -97,18 +97,14 @@ public:
      * proxy, then it will be set to true.
      * @param[out] me If the connection was successful then this is set to the address on the
      * local side of the socket.
-     * @param[out] sock Connected socket, if the operation is successful.
-     * @param[out] i2p_transient_session I2P session, if the operation is successful.
      * @return Newly generated node id, or std::nullopt if the operation fails.
      */
     std::optional<NodeId> ConnectAndMakeNodeId(const std::variant<CService, StringHostIntPort>& to,
                                                bool is_important,
                                                const Proxy& proxy,
                                                bool& proxy_failed,
-                                               CService& me,
-                                               std::unique_ptr<Sock>& sock,
-                                               std::unique_ptr<i2p::sam::Session>& i2p_transient_session)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
+                                               CService& me)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex, !m_unused_i2p_sessions_mutex);
 
     /**
      * Accept a connection.
@@ -125,12 +121,37 @@ public:
      * @param[in] me Address at our end of the connection.
      * @param[in] them Address of the new peer.
      */
-    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them);
+    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
      * Generate an id for a newly created node.
      */
     NodeId GetNewNodeId();
+
+    /**
+     * Disconnect a given peer by closing its socket and release resources occupied by it.
+     * @return Whether the peer existed and its socket was closed by this call.
+     */
+    bool CloseConnection(NodeId node_id)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Try to send some data to the given node.
+     * @param[in] node_id Identifier of the node to send to.
+     * @param[in] data The data to send, it might happen that only a prefix of this is sent.
+     * @param[in] will_send_more Used as an optimization if the caller knows that they will
+     * be sending more data soon after this call.
+     * @param[out] errmsg If <0 is returned then this will contain a human readable message
+     * explaining the error.
+     * @retval >=0 The number of bytes actually sent.
+     * @retval <0 A permanent error has occurred.
+     */
+    ssize_t SendBytes(NodeId node_id,
+                      Span<const unsigned char> data,
+                      bool will_send_more,
+                      std::string& errmsg) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
      * Close all sockets.
@@ -144,12 +165,13 @@ public:
     /**
      * Be notified when a new connection has been accepted.
      * @param[in] node_id Id of the newly accepted connection.
-     * @param[in] sock Connected socket to communicate with the peer.
      * @param[in] me The address and port at our side of the connection.
      * @param[in] them The address and port at the peer's side of the connection.
+     * @retval true The new connection was accepted at the higher level.
+     * @retval false The connection was refused at the higher level, so the
+     * associated socket and node_id should be discarded by `SockMan`.
      */
-    virtual void EventNewConnectionAccepted(NodeId node_id,
-                                            std::unique_ptr<Sock>&& sock,
+    virtual bool EventNewConnectionAccepted(NodeId node_id,
                                             const CService& me,
                                             const CService& them) = 0;
 
@@ -254,6 +276,15 @@ public:
      */
     std::vector<std::shared_ptr<Sock>> m_listen;
 
+protected:
+
+    /**
+     * During some tests mocked sockets are created outside of `SockMan`, make it
+     * possible to add those so that send/recv can be exercised.
+     */
+    void TestOnlyAddExistentNode(NodeId node_id, std::unique_ptr<Sock>&& sock)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
 private:
 
     /**
@@ -263,15 +294,105 @@ private:
     static constexpr size_t MAX_UNUSED_I2P_SESSIONS_SIZE{10};
 
     /**
+     * The sockets used by a connected node - a data socket and an optional I2P session.
+     */
+    struct NodeSockets {
+        explicit NodeSockets(std::unique_ptr<Sock>&& s)
+            : sock{std::move(s)}
+        {
+        }
+
+        explicit NodeSockets(std::shared_ptr<Sock>&& s, std::unique_ptr<i2p::sam::Session>&& sess)
+            : sock{std::move(s)},
+              i2p_transient_session{std::move(sess)}
+        {
+        }
+
+        /**
+         * Mutex that serializes the Send() and Recv() calls on `sock`.
+         */
+        Mutex mutex;
+
+        /**
+         * Underlying socket.
+         * `shared_ptr` (instead of `unique_ptr`) is used to avoid premature close of the
+         * underlying file descriptor by one thread while another thread is poll(2)-ing
+         * it for activity.
+         * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
+         */
+        std::shared_ptr<Sock> sock;
+
+        /**
+         * When transient I2P sessions are used, then each node has its own session, otherwise
+         * all nodes use the session from `m_i2p_sam_session` and share the same I2P address.
+         * I2P sessions involve a data/transport socket (in `sock`) and a control socket
+         * (in `i2p_transient_session`). For transient sessions, once the data socket `sock` is
+         * closed, the control socket is not going to be used anymore and would be just taking
+         * resources. Storing it here makes its deletion together with `sock` automatic.
+         */
+        std::unique_ptr<i2p::sam::Session> i2p_transient_session;
+    };
+
+    /**
+     * Info about which socket has which event ready and its node id.
+     */
+    struct IOReadiness {
+        Sock::EventsPerSock events_per_sock;
+        std::unordered_map<Sock::EventsPerSock::key_type, NodeId> node_ids_per_sock;
+    };
+
+    /**
      * Accept incoming I2P connections in a loop and call
      * `EventNewConnectionAccepted()` for each new connection.
      */
-    void ThreadI2PAccept();
+    void ThreadI2PAccept()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Check connected and listening sockets for IO readiness and process them accordingly.
+     */
+    void ThreadSocketHandler()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Generate a collection of sockets to check for IO readiness.
+     * @return Sockets to check for readiness plus an aux map to find the
+     * corresponding node id given a socket.
+     */
+    IOReadiness GenerateWaitSockets()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Do the read/write for connected sockets that are ready for IO.
+     * @param[in] io_readiness Which sockets are ready and their node ids.
+     */
+    void SocketHandlerConnected(const IOReadiness& io_readiness)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Accept incoming connections, one from each read-ready listening socket.
+     * @param[in] events_per_sock Sockets that are ready for IO.
+     */
+    void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Retrieve an entry from m_connected.
+     * @param[in] node_id Node id to search for.
+     * @return NodeSockets for the given node id or empty shared_ptr if not found.
+     */
+    std::shared_ptr<NodeSockets> GetNodeSockets(NodeId node_id) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
      * The id to assign to the next created node. Used to generate ids of nodes.
      */
     std::atomic<NodeId> m_next_node_id{0};
+
+    /**
+     * Thread that sends to and receives from sockets and accepts connections.
+     */
+    std::thread m_thread_socket_handler;
 
     /**
      * Thread that accepts incoming I2P connections in a loop, can be stopped via `interruptNet`.
@@ -291,6 +412,15 @@ private:
      * a host fails, then the created session is put to this pool for reuse.
      */
     std::queue<std::unique_ptr<i2p::sam::Session>> m_unused_i2p_sessions GUARDED_BY(m_unused_i2p_sessions_mutex);
+
+    mutable Mutex m_connected_mutex;
+
+    /**
+     * Sockets for connected peers.
+     * The `shared_ptr` makes it possible to create a snapshot of this by simply copying
+     * it (under `m_connected_mutex`).
+     */
+    std::unordered_map<NodeId, std::shared_ptr<NodeSockets>> m_connected GUARDED_BY(m_connected_mutex);
 };
 
 #endif // BITCOIN_COMMON_SOCKMAN_H

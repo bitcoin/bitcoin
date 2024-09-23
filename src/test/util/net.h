@@ -50,6 +50,12 @@ struct ConnmanTestMsg : public CConnman {
         return m_nodes;
     }
 
+    void AddTestNode(CNode& node, std::unique_ptr<Sock>&& sock)
+    {
+        TestOnlyAddExistentNode(node.GetId(), std::move(sock));
+        AddTestNode(node);
+    }
+
     void AddTestNode(CNode& node)
     {
         LOCK(m_nodes_mutex);

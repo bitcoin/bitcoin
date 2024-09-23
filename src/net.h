@@ -658,7 +658,6 @@ public:
 struct CNodeOptions
 {
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
-    std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
     bool use_v2transport = false;
@@ -673,16 +672,6 @@ public:
     const std::unique_ptr<Transport> m_transport;
 
     const NetPermissionFlags m_permission_flags;
-
-    /**
-     * Socket used for communication with the node.
-     * May not own a Sock object (after `CloseSocketDisconnect()` or during tests).
-     * `shared_ptr` (instead of `unique_ptr`) is used to avoid premature close of
-     * the underlying file descriptor by one thread while another thread is
-     * poll(2)-ing it for activity.
-     * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
-     */
-    std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
 
     /** Sum of GetMemoryUsage of all vSendMsg entries. */
     size_t m_send_memusage GUARDED_BY(cs_vSend){0};
@@ -875,7 +864,6 @@ public:
     std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
 
     CNode(NodeId id,
-          std::shared_ptr<Sock> sock,
           const CAddress& addrIn,
           uint64_t nKeyedNetGroupIn,
           uint64_t nLocalHostNonceIn,
@@ -937,8 +925,6 @@ public:
         nRefCount--;
     }
 
-    void CloseSocketDisconnect() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
-
     void CopyStats(CNodeStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!m_subver_mutex, !m_addr_local_mutex, !cs_vSend, !cs_vRecv);
 
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
@@ -967,18 +953,6 @@ private:
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
     mapMsgTypeSize mapRecvBytesPerMsgType GUARDED_BY(cs_vRecv);
-
-    /**
-     * If an I2P session is created per connection (for outbound transient I2P
-     * connections) then it is stored here so that it can be destroyed when the
-     * socket is closed. I2P sessions involve a data/transport socket (in `m_sock`)
-     * and a control socket (in `m_i2p_sam_session`). For transient sessions, once
-     * the data socket is closed, the control socket is not going to be used anymore
-     * and is just taking up resources. So better close it as soon as `m_sock` is
-     * closed.
-     * Otherwise this unique_ptr is empty.
-     */
-    std::unique_ptr<i2p::sam::Session> m_i2p_sam_session GUARDED_BY(m_sock_mutex);
 };
 
 /**
@@ -1274,14 +1248,20 @@ private:
     /**
      * Create a `CNode` object and add it to the `m_nodes` member.
      * @param[in] node_id Id of the newly accepted connection.
-     * @param[in] sock Connected socket to communicate with the peer.
      * @param[in] me The address and port at our side of the connection.
      * @param[in] them The address and port at the peer's side of the connection.
+     * @retval true on success
+     * @retval false on failure, meaning that the associated socket and node_id should be discarded
      */
-    virtual void EventNewConnectionAccepted(NodeId node_id,
-                                            std::unique_ptr<Sock>&& sock,
+    virtual bool EventNewConnectionAccepted(NodeId node_id,
                                             const CService& me,
                                             const CService& them) override;
+
+    /**
+     * Mark a node as disconnected and close its connection with the peer.
+     * @param[in] node Node to disconnect.
+     */
+    void MarkAsDisconnectAndCloseConnection(CNode& node);
 
     void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
     void NotifyNumConnectionsChanged();
@@ -1311,37 +1291,7 @@ private:
 
     virtual void EventIOLoopCompletedForAllPeers() override
         EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_reconnections_mutex);
- 
-    /**
-     * Generate a collection of sockets to check for IO readiness.
-     * @param[in] nodes Select from these nodes' sockets.
-     * @return sockets to check for readiness
-     */
-    Sock::EventsPerSock GenerateWaitSockets(Span<CNode* const> nodes)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
-    /**
-     * Check connected and listening sockets for IO readiness and process them accordingly.
-     */
-    void SocketHandler()
-        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_total_bytes_sent_mutex, !mutexMsgProc);
-
-    /**
-     * Do the read/write for connected sockets that are ready for IO.
-     * @param[in] nodes Nodes to process. The socket of each node is checked against `what`.
-     * @param[in] events_per_sock Sockets that are ready for IO.
-     */
-    void SocketHandlerConnected(const std::vector<CNode*>& nodes,
-                                const Sock::EventsPerSock& events_per_sock)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_total_bytes_sent_mutex, !mutexMsgProc);
-
-    /**
-     * Accept incoming connections, one from each read-ready listening socket.
-     * @param[in] events_per_sock Sockets that are ready for IO.
-     */
-    void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
-
-    void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
@@ -1363,8 +1313,8 @@ private:
     void DeleteNode(CNode* pnode);
 
     /** (Try to) send data from node's vSendMsg. Returns (bytes_sent, data_left). */
-    std::pair<size_t, bool> SocketSendData(CNode& node)
-        EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend, !m_total_bytes_sent_mutex);
+    std::pair<size_t, bool> SendMessagesAsBytes(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     void DumpAddresses();
 
@@ -1539,7 +1489,6 @@ private:
     std::atomic<bool> flagInterruptMsgProc{false};
 
     std::thread threadDNSAddressSeed;
-    std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
