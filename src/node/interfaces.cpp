@@ -17,6 +17,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
+#include <interfaces/types.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/context.h>
@@ -33,6 +34,7 @@
 #include <node/interface_ui.h>
 #include <node/mini_miner.h>
 #include <node/miner.h>
+#include <node/kernel_notifications.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
@@ -67,6 +69,7 @@
 
 #include <boost/signals2/signal.hpp>
 
+using interfaces::BlockRef;
 using interfaces::BlockTemplate;
 using interfaces::BlockTip;
 using interfaces::Chain;
@@ -137,7 +140,7 @@ public:
         // Stop RPC for clean shutdown if any of waitfor* commands is executed.
         if (args().GetBoolArg("-server", false)) {
             InterruptRPC();
-            StopRPC();
+            StopRPC(m_context);
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); };
@@ -925,12 +928,33 @@ public:
         return chainman().IsInitialBlockDownload();
     }
 
-    std::optional<uint256> getTipHash() override
+    std::optional<BlockRef> getTip() override
     {
         LOCK(::cs_main);
         CBlockIndex* tip{chainman().ActiveChain().Tip()};
         if (!tip) return {};
-        return tip->GetBlockHash();
+        return BlockRef{tip->GetBlockHash(), tip->nHeight};
+    }
+
+    BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
+    {
+        // Interrupt check interval
+        const MillisecondsDouble tick{1000};
+        auto now{std::chrono::steady_clock::now()};
+        auto deadline = now + timeout;
+        // std::chrono does not check against overflow
+        if (deadline < now) deadline = std::chrono::steady_clock::time_point::max();
+        {
+            WAIT_LOCK(notifications().m_tip_block_mutex, lock);
+            while ((notifications().m_tip_block == uint256() || notifications().m_tip_block == current_tip) && !chainman().m_interrupt) {
+                now = std::chrono::steady_clock::now();
+                if (now >= deadline) break;
+                notifications().m_tip_block_cv.wait_until(lock, std::min(deadline, now + tick));
+            }
+        }
+        // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
+        LOCK(::cs_main);
+        return BlockRef{chainman().ActiveChain().Tip()->GetBlockHash(), chainman().ActiveChain().Tip()->nHeight};
     }
 
     bool processNewBlock(const std::shared_ptr<const CBlock>& block, bool* new_block) override
@@ -965,6 +989,7 @@ public:
 
     NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
+    KernelNotifications& notifications() { return *Assert(m_node.notifications); }
     NodeContext& m_node;
 };
 } // namespace

@@ -112,7 +112,7 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
-bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockKey>& block)
+bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
         // Check that the cause of the read failure is that the key does not exist. Any other errors
@@ -316,7 +316,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     return true;
 }
 
-bool BlockFilterIndex::CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip)
+bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip)
 {
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());

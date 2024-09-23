@@ -284,7 +284,7 @@ void Shutdown(NodeContext& node)
 
     StopHTTPRPC();
     StopREST();
-    StopRPC();
+    StopRPC(&node);
     StopHTTPServer();
     for (const auto& client : node.chain_clients) {
         client->flush();
@@ -428,20 +428,6 @@ static void registerSignalHandler(int signal, void(*handler)(int))
     sigaction(signal, &sa, nullptr);
 }
 #endif
-
-static boost::signals2::connection rpc_notify_block_change_connection;
-static void OnRPCStarted()
-{
-    rpc_notify_block_change_connection = uiInterface.NotifyBlockTip_connect(std::bind(RPCNotifyBlockChange, std::placeholders::_2));
-}
-
-static void OnRPCStopped()
-{
-    rpc_notify_block_change_connection.disconnect();
-    RPCNotifyBlockChange(nullptr);
-    g_best_block_cv.notify_all();
-    LogDebug(BCLog::RPC, "RPC stopped.\n");
-}
 
 void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 {
@@ -723,8 +709,6 @@ static void StartupNotify(const ArgsManager& args)
 static bool AppInitServers(NodeContext& node)
 {
     const ArgsManager& args = *Assert(node.args);
-    RPCServer::OnStarted(&OnRPCStarted);
-    RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer(*Assert(node.shutdown))) {
         return false;
     }
@@ -2017,11 +2001,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // cannot yet be called. Before we make it callable, we need to make sure
     // that the RPC's view of the best block is valid and consistent with
     // ChainstateManager's active tip.
-    //
-    // If we do not do this, RPC's view of the best block will be height=0 and
-    // hash=0x0. This will lead to erroroneous responses for things like
-    // waitforblockheight.
-    RPCNotifyBlockChange(WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip()));
     SetRPCWarmupFinished();
 
     uiInterface.InitMessage(_("Done loading").translated);

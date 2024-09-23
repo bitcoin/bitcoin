@@ -11,6 +11,7 @@
 #include <common/system.h>
 #include <logging.h>
 #include <node/context.h>
+#include <node/kernel_notifications.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
@@ -18,8 +19,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
-
-#include <boost/signals2/signal.hpp>
+#include <validation.h>
 
 #include <cassert>
 #include <chrono>
@@ -68,22 +68,6 @@ struct RPCCommandExecution
         g_rpc_server_info.active_commands.erase(it);
     }
 };
-
-static struct CRPCSignals
-{
-    boost::signals2::signal<void ()> Started;
-    boost::signals2::signal<void ()> Stopped;
-} g_rpcSignals;
-
-void RPCServer::OnStarted(std::function<void ()> slot)
-{
-    g_rpcSignals.Started.connect(slot);
-}
-
-void RPCServer::OnStopped(std::function<void ()> slot)
-{
-    g_rpcSignals.Stopped.connect(slot);
-}
 
 std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq) const
 {
@@ -297,7 +281,6 @@ void StartRPC()
 {
     LogDebug(BCLog::RPC, "Starting RPC\n");
     g_rpc_running = true;
-    g_rpcSignals.Started();
 }
 
 void InterruptRPC()
@@ -311,16 +294,19 @@ void InterruptRPC()
     });
 }
 
-void StopRPC()
+void StopRPC(const std::any& context)
 {
     static std::once_flag g_rpc_stop_flag;
     // This function could be called twice if the GUI has been started with -server=1.
     assert(!g_rpc_running);
-    std::call_once(g_rpc_stop_flag, []() {
+    std::call_once(g_rpc_stop_flag, [&]() {
         LogDebug(BCLog::RPC, "Stopping RPC\n");
         WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
         DeleteAuthCookie();
-        g_rpcSignals.Stopped();
+        node::NodeContext& node = EnsureAnyNodeContext(context);
+        // The notifications interface doesn't exist between initialization step 4a and 7.
+        if (node.notifications) node.notifications->m_tip_block_cv.notify_all();
+        LogDebug(BCLog::RPC, "RPC stopped.\n");
     });
 }
 
