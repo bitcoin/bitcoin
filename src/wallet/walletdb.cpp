@@ -324,6 +324,7 @@ public:
     std::map<uint256, DescriptorCache> m_descriptor_caches;
     std::map<std::pair<uint256, CKeyID>, CKey> m_descriptor_keys;
     std::map<std::pair<uint256, CKeyID>, std::pair<CPubKey, std::vector<unsigned char>>> m_descriptor_crypt_keys;
+    bool tx_corrupt{false};
 
     CWalletScanState() {
     }
@@ -358,7 +359,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             // LoadToWallet call below creates a new CWalletTx that fill_wtx
             // callback fills with transaction metadata.
             auto fill_wtx = [&](CWalletTx& wtx, bool new_tx) {
-                assert(new_tx);
+                if(!new_tx) {
+                    // There's some corruption here since the tx we just tried to load was already in the wallet.
+                    // We don't consider this type of corruption critical, and can fix it by removing tx data and
+                    // rescanning.
+                    wss.tx_corrupt = true;
+                    return false;
+                }
                 ssValue >> wtx;
                 if (wtx.GetHash() != hash)
                     return false;
@@ -797,6 +804,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 } else if (strType == DBKeys::FLAGS) {
                     // reading the wallet flags can only fail if unknown flags are present
                     result = DBErrors::TOO_NEW;
+                } else if (wss.tx_corrupt) {
+                    pwallet->WalletLogPrintf("Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.\n");
+                    // Set tx_corrupt back to false so that the error is only printed once (per corrupt tx)
+                    wss.tx_corrupt = false;
+                    result = DBErrors::CORRUPT;
                 } else {
                     // Leave other errors alone, if we try to fix them we might make things worse.
                     fNoncriticalErrors = true; // ... but do warn the user there is something wrong.

@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     #if defined(WIN32)
         if (getenv("QT_QPA_PLATFORM") == nullptr) _putenv_s("QT_QPA_PLATFORM", "minimal");
     #else
-        setenv("QT_QPA_PLATFORM", "minimal", /* overwrite */ 0);
+        setenv("QT_QPA_PLATFORM", "minimal", 0 /* overwrite */);
     #endif
 
     BitcoinApplication app;

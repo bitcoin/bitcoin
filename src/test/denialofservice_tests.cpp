@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          /*nKeyedNetGroupIn=*/1,
                          /*nLocalHostNonceIn=*/1,
                          CAddress(),
-                         /*pszDest=*/"",
+                         /*addrNameIn=*/"",
                          ConnectionType::INBOUND,
                          /*inbound_onion=*/false};
     nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
                          /*nKeyedNetGroupIn=*/1,
                          /*nLocalHostNonceIn=*/1,
                          CAddress(),
-                         /*pszDest=*/"",
+                         /*addrNameIn=*/"",
                          ConnectionType::OUTBOUND_FULL_RELAY,
                          /*inbound_onion=*/false};
     nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
