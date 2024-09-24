@@ -194,20 +194,20 @@ jobs:
       - name: Build
         working-directory: build
         run: |
-          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
+          cmake --build . -j $env:NUMBER_OF_PROCESSORS --config RelWithDebInfo
 
       - name: Run test suite
         working-directory: build
         run: |
-          ctest -j $env:NUMBER_OF_PROCESSORS -C Release
+          ctest -j $env:NUMBER_OF_PROCESSORS -C RelWithDebInfo
 
       - name: Run functional tests
         working-directory: build
         env:
-          BITCOIND: '${{ github.workspace }}\build\src\Release\bitcoind.exe'
-          BITCOINCLI: '${{ github.workspace }}\build\src\Release\bitcoin-cli.exe'
-          BITCOINUTIL: '${{ github.workspace }}\build\src\Release\bitcoin-util.exe'
-          BITCOINWALLET: '${{ github.workspace }}\build\src\Release\bitcoin-wallet.exe'
+          BITCOIND: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoind.exe'
+          BITCOINCLI: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-cli.exe'
+          BITCOINUTIL: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-util.exe'
+          BITCOINWALLET: '${{ github.workspace }}\build\src\RelWithDebInfo\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         shell: cmd
         run: py -3 test\functional\test_runner.py --jobs %NUMBER_OF_PROCESSORS% --ci --quiet --tmpdirprefix=%RUNNER_TEMP% --combinedlogslen=99999999 --timeout-factor=%TEST_RUNNER_TIMEOUT_FACTOR% %TEST_RUNNER_EXTRA%
@@ -222,7 +222,7 @@ jobs:
       - name: Run fuzz binaries
         working-directory: build
         env:
-          BITCOINFUZZ: '${{ github.workspace }}\build\src\test\fuzz\Release\fuzz.exe'
+          BITCOINFUZZ: '${{ github.workspace }}\build\src\test\fuzz\RelWithDebInfo\fuzz.exe'
         shell: cmd
         run: py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_corpora
 
