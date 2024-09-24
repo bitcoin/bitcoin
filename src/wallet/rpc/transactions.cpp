@@ -135,8 +135,12 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         if (is_change) return; // no change addresses
 
         auto it = mapTally.find(address);
-        if (it == mapTally.end() && !fIncludeEmpty)
+        if (it == mapTally.end() && !fIncludeEmpty) {
             return;
+        } else if (it == mapTally.end()) {
+            LOCK(wallet.cs_wallet);
+            if (!wallet.IsMine(address)) return; // no send addresses
+        }
 
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
