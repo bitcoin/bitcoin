@@ -153,3 +153,5 @@ void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const 
     m_llmq_ctx->isman->NotifyChainLock(pindex);
     m_cj_ctx->dstxman->NotifyChainLock(pindex, *m_llmq_ctx->clhandler, m_mn_sync);
 }
+
+std::unique_ptr<CDSNotificationInterface> g_ds_notification_interface;

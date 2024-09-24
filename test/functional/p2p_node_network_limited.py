@@ -9,6 +9,7 @@ and that it responds to getdata requests for blocks correctly:
     - send a block within 288 + 2 of the tip
     - disconnect peers who request blocks older than that."""
 from test_framework.messages import CInv, MSG_BLOCK, msg_getdata, NODE_BLOOM, NODE_NETWORK_LIMITED, NODE_HEADERS_COMPRESSED
+from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -95,7 +96,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
         self.sync_blocks([self.nodes[0], self.nodes[1]])
-        self.stop_node(0, expected_stderr='Warning: You are starting with governance validation disabled. This is expected because you are running a pruned node.')
+        self.stop_node(0, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
 
 if __name__ == '__main__':

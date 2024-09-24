@@ -6,6 +6,9 @@
 
 import json
 
+EXPECTED_STDERR_NO_GOV = "Warning: You are starting with governance validation disabled."
+EXPECTED_STDERR_NO_GOV_PRUNE = f"{EXPECTED_STDERR_NO_GOV} This is expected because you are running a pruned node."
+
 def prepare_object(node, object_type, parent_hash, creation_time, revision, name, amount, payment_address):
     proposal_rev = revision
     proposal_time = int(creation_time)
