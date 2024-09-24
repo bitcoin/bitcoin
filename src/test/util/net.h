@@ -73,11 +73,12 @@ struct ConnmanTestMsg : public CConnman {
         m_nodes.clear();
     }
 
-    void EventNewConnectionAcceptedPublic(std::unique_ptr<Sock> sock,
-                                            const CAddress& me,
-                                            const CAddress& them)
+    void EventNewConnectionAcceptedPublic(SockMan::Id id,
+                                          std::unique_ptr<Sock> sock,
+                                          const CAddress& me,
+                                          const CAddress& them)
     {
-        EventNewConnectionAccepted(std::move(sock), me, them);
+        EventNewConnectionAccepted(id, std::move(sock), me, them);
     }
 
     bool InitBindsPublic(const CConnman::Options& options)
