@@ -27,6 +27,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_listreceivedbyaddress()
+        self.test_listreceivedby()
         self.test_getreceivedby()
         self.test_receivedbylabel()
         self.test_coinbase_inclusion()
@@ -104,12 +105,33 @@ class ReceivedByTest(BitcoinTestFramework):
         res = self.nodes[1].listreceivedbyaddress(0, True, True, other_addr)
         assert_equal(len(res), 0)
 
+    def test_listreceivedby(self):
+        self.log.info("Tests listreceivedbyaddress does not return address with 'send' purpose")
+        label = "node0address"
+        address = self.nodes[0].getnewaddress(label)
+        # using setlabel for an address that does not belong to the wallet assigns a "send" purpose to that address
+        self.nodes[1].setlabel(address, label) # address has now assigned a "send" purpose on node1
+        assert_equal(self.nodes[0].getaddressesbylabel(label=label), {address: {'purpose': 'receive'}})
+        assert_equal(self.nodes[1].getaddressesbylabel(label=label), {address: {'purpose': 'send'}})
+
+        txid = self.nodes[0].sendtoaddress(address, 0.1)
+        self.sync_all()
+
+        expected = {"address": address, "label": label, "amount": Decimal("0.1"), "confirmations": 0, "txids": [txid, ]}
+        assert_array_result(self.nodes[0].listreceivedbyaddress(minconf=0, include_empty=True), {"address": address}, expected)
+        assert_array_result(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True), {"address": address}, {}, True)
+
+        self.log.info("Tests listreceivedbylabel does not return label of address with 'send' purpose")
+        expected = {"label": label, "amount": Decimal("0.1")}
+        assert_array_result(self.nodes[0].listreceivedbylabel(minconf=0, include_empty=True), {"label": label}, expected)
+        assert_array_result(self.nodes[1].listreceivedbylabel(minconf=0, include_empty=True), {"label": label}, {}, True)
+
     def test_getreceivedby(self):
         self.log.info("Tests getreceivedbyaddress")
 
         # Send from node 0 to 1
         addr = self.nodes[1].getnewaddress()
-        
+
         self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()
 
