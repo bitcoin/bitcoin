@@ -71,14 +71,6 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMem
                                                   CTxMemPool::setEntries& all_conflicts)
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
-/** The replacement transaction may only include an unconfirmed input if that input was included in
- * one of the original transactions.
- * @returns error message if tx spends unconfirmed inputs not also spent by iters_conflicting,
- * otherwise std::nullopt. */
-std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx, const CTxMemPool& pool,
-                                               const CTxMemPool::setEntries& iters_conflicting)
-    EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
-
 /** Check the intersection between two sets of transactions (a set of mempool entries and a set of
  * txids) to make sure they are disjoint.
  * @param[in]   ancestors           Set of mempool entries corresponding to ancestors of the
