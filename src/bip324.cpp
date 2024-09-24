@@ -22,13 +22,6 @@
 #include <iterator>
 #include <string>
 
-BIP324Cipher::BIP324Cipher() noexcept
-{
-    m_key.MakeNewKey(true);
-    uint256 entropy = GetRandHash();
-    m_our_pubkey = m_key.EllSwiftCreate(MakeByteSpan(entropy));
-}
-
 BIP324Cipher::BIP324Cipher(const CKey& key, Span<const std::byte> ent32) noexcept :
     m_key(key)
 {
