@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, with error message for stderr
-        const std::string command{"python3 -c 'import sys; print(\"err\", file=sys.stderr); sys.exit(2)'"};
+        const std::string command{"sh -c 'echo err 1>&2 && false'"};
         const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
