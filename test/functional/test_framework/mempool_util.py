@@ -57,18 +57,21 @@ def fill_mempool(test_framework, node):
     tx_to_be_evicted_id = ephemeral_miniwallet.send_self_transfer(
         from_node=node, utxo_to_spend=confirmed_utxos.pop(0), fee_rate=relayfee)["txid"]
 
+    def send_batch(fee):
+        utxos = confirmed_utxos[:tx_batch_size]
+        create_lots_of_big_transactions(ephemeral_miniwallet, node, fee, tx_batch_size, txouts, utxos)
+        del confirmed_utxos[:tx_batch_size]
+
     # Increase the tx fee rate to give the subsequent transactions a higher priority in the mempool
     # The tx has an approx. vsize of 65k, i.e. multiplying the previous fee rate (in sats/kvB)
     # by 130 should result in a fee that corresponds to 2x of that fee rate
     base_fee = relayfee * 130
+    batch_fees = [(i + 1) * base_fee for i in range(num_of_batches)]
 
     test_framework.log.debug("Fill up the mempool with txs with higher fee rate")
     with node.assert_debug_log(["rolling minimum fee bumped"]):
-        for batch_of_txid in range(num_of_batches):
-            fee = (batch_of_txid + 1) * base_fee
-            utxos = confirmed_utxos[:tx_batch_size]
-            create_lots_of_big_transactions(ephemeral_miniwallet, node, fee, tx_batch_size, txouts, utxos)
-            del confirmed_utxos[:tx_batch_size]
+        for fee in batch_fees:
+            send_batch(fee)
 
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
