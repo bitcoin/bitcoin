@@ -1707,10 +1707,14 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
-                                          const CService& addr_bind,
-                                          const CService& addr)
+void CConnman::EventNewConnectionAccepted(SockMan::Id id,
+                                          std::unique_ptr<Sock>&& sock,
+                                          const CService& me,
+                                          const CService& them)
 {
+    const CService addr_bind{MaybeFlipIPv6toCJDNS(me)};
+    const CService addr{MaybeFlipIPv6toCJDNS(them)};
+
     int nInbound = 0;
 
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
@@ -1735,19 +1739,6 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
     if (!fNetworkActive) {
         LogDebug(BCLog::NET, "connection from %s dropped: not accepting new connections\n", addr.ToStringAddrPort());
         return;
-    }
-
-    if (!sock->IsSelectable()) {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToStringAddrPort());
-        return;
-    }
-
-    // According to the internet TCP_NODELAY is not carried into accepted sockets
-    // on all platforms.  Set it again here just to be sure.
-    const int on{1};
-    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
-                 addr.ToStringAddrPort());
     }
 
     // Don't accept connections from banned peers.
@@ -1775,7 +1766,6 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
         }
     }
 
-    NodeId id = GetNewId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
@@ -2284,10 +2274,7 @@ void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock
             auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
 
             if (sock_accepted) {
-                addr_accepted = MaybeFlipIPv6toCJDNS(addr_accepted);
-                const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
-
-                EventNewConnectionAccepted(std::move(sock_accepted), addr_bind, addr_accepted);
+                NewSockAccepted(std::move(sock_accepted), GetBindAddress(*sock), addr_accepted);
             }
         }
     }
