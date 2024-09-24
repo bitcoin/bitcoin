@@ -226,6 +226,26 @@ std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CServic
     return sock;
 }
 
+void SockMan::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
+{
+    if (!sock->IsSelectable()) {
+        LogPrintf("connection from %s dropped: non-selectable socket\n", them.ToStringAddrPort());
+        return;
+    }
+
+    // According to the internet TCP_NODELAY is not carried into accepted sockets
+    // on all platforms.  Set it again here just to be sure.
+    const int on{1};
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
+        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
+                 them.ToStringAddrPort());
+    }
+
+    const Id id{GetNewId()};
+
+    EventNewConnectionAccepted(id, std::move(sock), me, them);
+}
+
 SockMan::Id SockMan::GetNewId()
 {
     return m_next_id.fetch_add(1, std::memory_order_relaxed);
@@ -276,7 +296,10 @@ void SockMan::ThreadI2PAccept()
             continue;
         }
 
-        EventNewConnectionAccepted(std::move(conn.sock), conn.me, conn.peer);
+        Assume(conn.me.IsI2P());
+        Assume(conn.peer.IsI2P());
+
+        NewSockAccepted(std::move(conn.sock), conn.me, conn.peer);
 
         err_wait = err_wait_begin;
     }

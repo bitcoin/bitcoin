@@ -1294,11 +1294,13 @@ private:
 
     /**
      * Create a `CNode` object and add it to the `m_nodes` member.
+     * @param[in] id Id of the newly accepted connection.
      * @param[in] sock Connected socket to communicate with the peer.
      * @param[in] me The address and port at our side of the connection.
      * @param[in] them The address and port at the peer's side of the connection.
      */
-    virtual void EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
+    virtual void EventNewConnectionAccepted(SockMan::Id id,
+                                            std::unique_ptr<Sock>&& sock,
                                             const CService& me,
                                             const CService& them) override;
 
