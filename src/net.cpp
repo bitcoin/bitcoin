@@ -1680,10 +1680,14 @@ bool CConnman::AttemptToEvictConnection()
     return false;
 }
 
-void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
-                                          const CService& addr_bind,
-                                          const CService& addr)
+void CConnman::EventNewConnectionAccepted(NodeId node_id,
+                                          std::unique_ptr<Sock>&& sock,
+                                          const CService& addr_bind_,
+                                          const CService& addr_)
 {
+    const CService addr_bind{MaybeFlipIPv6toCJDNS(addr_bind_)};
+    const CService addr{MaybeFlipIPv6toCJDNS(addr_)};
+
     int nInbound = 0;
 
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
@@ -1704,19 +1708,6 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
     if (!fNetworkActive) {
         LogDebug(BCLog::NET, "connection from %s dropped: not accepting new connections\n", addr.ToStringAddrPort());
         return;
-    }
-
-    if (!sock->IsSelectable()) {
-        LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToStringAddrPort());
-        return;
-    }
-
-    // According to the internet TCP_NODELAY is not carried into accepted sockets
-    // on all platforms.  Set it again here just to be sure.
-    const int on{1};
-    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
-                 addr.ToStringAddrPort());
     }
 
     // Don't accept connections from banned peers.
@@ -1744,8 +1735,7 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
         }
     }
 
-    NodeId id = GetNewNodeId();
-    uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
+    const uint64_t nonce{GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(node_id).Finalize()};
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
@@ -1753,7 +1743,7 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
     ServiceFlags local_services = GetLocalServices();
     const bool use_v2transport(local_services & NODE_P2P_V2);
 
-    CNode* pnode = new CNode(id,
+    CNode* pnode = new CNode(node_id,
                              std::move(sock),
                              CAddress{addr, NODE_NONE},
                              CalculateKeyedNetGroup(addr),
@@ -1772,12 +1762,12 @@ void CConnman::EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
     m_msgproc->InitializeNode(*pnode, local_services);
     {
         LOCK(m_nodes_mutex);
-        m_nodes.emplace(id, pnode);
+        m_nodes.emplace(node_id, pnode);
     }
     LogDebug(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
 
     // We received a new connection, harvest entropy from the time (and our peer count)
-    RandAddEvent((uint32_t)id);
+    RandAddEvent(static_cast<uint32_t>(node_id));
 }
 
 bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type, bool use_v2transport = false)
@@ -2219,10 +2209,7 @@ void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock
             auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
 
             if (sock_accepted) {
-                addr_accepted = MaybeFlipIPv6toCJDNS(addr_accepted);
-                const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
-
-                EventNewConnectionAccepted(std::move(sock_accepted), addr_bind, addr_accepted);
+                NewSockAccepted(std::move(sock_accepted), GetBindAddress(*sock), addr_accepted);
             }
         }
     }
