@@ -138,6 +138,15 @@ public:
     std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, CService& addr);
 
     /**
+     * After a new socket with a peer has been created, configure its flags,
+     * make a new connection id and call `EventNewConnectionAccepted()`.
+     * @param[in] sock The newly created socket.
+     * @param[in] me Address at our end of the connection.
+     * @param[in] them Address of the new peer.
+     */
+    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them);
+
+    /**
      * Generate an id for a newly created connection.
      */
     Id GetNewId();
@@ -181,11 +190,13 @@ private:
 
     /**
      * Be notified when a new connection has been accepted.
+     * @param[in] id Id of the newly accepted connection.
      * @param[in] sock Connected socket to communicate with the peer.
      * @param[in] me The address and port at our side of the connection.
      * @param[in] them The address and port at the peer's side of the connection.
      */
-    virtual void EventNewConnectionAccepted(std::unique_ptr<Sock>&& sock,
+    virtual void EventNewConnectionAccepted(Id id,
+                                            std::unique_ptr<Sock>&& sock,
                                             const CService& me,
                                             const CService& them) = 0;
 
