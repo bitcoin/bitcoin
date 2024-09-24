@@ -17,3 +17,4 @@ export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="install"
 export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang-16 CXX=clang++-16"
 export CCACHE_MAXSIZE=200M
+export LLVM_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-16"
