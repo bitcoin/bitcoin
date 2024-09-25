@@ -1056,33 +1056,33 @@ inline void vformat(std::ostream& out, const char* fmt, FormatListRef list)
 #ifdef TINYFORMAT_USE_VARIADIC_TEMPLATES
 
 /// Format list of arguments to the stream according to given format string.
-template<typename... Args>
-void format(std::ostream& out, const char* fmt, const Args&... args)
+template <typename... Args>
+void format_raw(std::ostream& out, const char* fmt, const Args&... args) // Renamed for Bitcoin Core
 {
     vformat(out, fmt, makeFormatList(args...));
 }
 
 /// Format list of arguments according to the given format string and return
 /// the result as a string.
-template<typename... Args>
-std::string format(const char* fmt, const Args&... args)
+template <typename... Args>
+std::string format_raw(const char* fmt, const Args&... args) // Renamed for Bitcoin Core
 {
     std::ostringstream oss;
-    format(oss, fmt, args...);
+    format_raw(oss, fmt, args...);
     return oss.str();
 }
 
 /// Format list of arguments to std::cout, according to the given format string
-template<typename... Args>
-void printf(const char* fmt, const Args&... args)
+template <typename... Args>
+void printf_raw(const char* fmt, const Args&... args) // Renamed for Bitcoin Core
 {
-    format(std::cout, fmt, args...);
+    format_raw(std::cout, fmt, args...);
 }
 
-template<typename... Args>
-void printfln(const char* fmt, const Args&... args)
+template <typename... Args>
+void printfln_raw(const char* fmt, const Args&... args) // Renamed for Bitcoin Core
 {
-    format(std::cout, fmt, args...);
+    format_raw(std::cout, fmt, args...);
     std::cout << '\n';
 }
 
@@ -1150,7 +1150,12 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 template <typename... Args>
 std::string format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return format(fmt.fmt, args...);
+    return format_raw(fmt.fmt, args...);
+}
+template <typename... Args>
+void format(std::ostream& out, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
+    return format_raw(out, fmt.fmt, args...);
 }
 } // namespace tinyformat
 
