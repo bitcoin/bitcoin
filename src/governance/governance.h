@@ -228,7 +228,6 @@ class CGovernanceManager : public GovernanceStore
     friend class CGovernanceObject;
 
 private:
-    using hash_s_t = std::set<uint256>;
     using db_type = CFlatDB<GovernanceStore>;
 
 private:
@@ -249,7 +248,7 @@ private:
     // keep track of current block height
     int nCachedBlockHeight;
     std::map<uint256, CGovernanceObject> mapPostponedObjects;
-    hash_s_t setAdditionalRelayObjects;
+    std::set<uint256> setAdditionalRelayObjects;
     std::map<uint256, std::chrono::seconds> m_requested_hash_time;
     bool fRateChecksEnabled;
     std::optional<uint256> votedFundingYesTriggerHash;
