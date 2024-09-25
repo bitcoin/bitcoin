@@ -1072,6 +1072,13 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!blockman_result) {
             return InitError(util::ErrorString(blockman_result));
         }
+        CTxMemPool::Options mempool_opts{
+            .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        };
+        auto mempool_result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
+        if (!mempool_result) {
+            return InitError(util::ErrorString(mempool_result));
+        }
     }
 
     return true;
@@ -1543,10 +1550,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
         .signals = &validation_signals,
     };
-    auto result{ApplyArgsManOptions(args, chainparams, mempool_opts)};
-    if (!result) {
-        return InitError(util::ErrorString(result));
-    }
+    Assert(ApplyArgsManOptions(args, chainparams, mempool_opts)); // no error can happen, already checked in AppInitParameterInteraction
 
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
