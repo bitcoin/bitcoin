@@ -288,7 +288,7 @@ protected:
      *
      * @return Blocks path which is network specific
      */
-    const fs::path& GetBlocksDirPath() const;
+    const fs::path GetBlocksDirPath() const;
 
     /**
      * Get data directory path
@@ -296,7 +296,7 @@ protected:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path& GetDataDirBase() const { return GetDataDir(false); }
+    const fs::path GetDataDirBase() const { return GetDataDir(false); }
 
     /**
      * Get data directory path with appended network identifier
@@ -304,7 +304,7 @@ protected:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path& GetDataDirNet() const { return GetDataDir(true); }
+    const fs::path GetDataDirNet() const { return GetDataDir(true); }
 
     fs::path GetBackupsDirPath();
 
@@ -483,7 +483,7 @@ private:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path& GetDataDir(bool net_specific) const;
+    const fs::path GetDataDir(bool net_specific) const;
 
     // Helper function for LogArgs().
     void logArgsPrefix(
