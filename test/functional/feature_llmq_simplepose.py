@@ -31,7 +31,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.test_no_banning()
 
         # Now lets isolate MNs one by one and verify that punishment/banning happens
-        self.test_banning(self.isolate_mn, 1)
+        self.test_banning(self.isolate_mn, 2)
 
         self.repair_masternodes(False)
 
