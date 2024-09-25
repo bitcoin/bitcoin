@@ -93,8 +93,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
     def test_no_banning(self, expected_connections=None):
         for _ in range(3):
             self.mine_quorum(expected_connections=expected_connections)
-        for mn in self.mninfo:
-            assert not self.check_punished(mn) and not self.check_banned(mn)
+            for mn in self.mninfo:
+                assert not self.check_punished(mn) and not self.check_banned(mn)
 
     def mine_quorum_less_checks(self, expected_good_nodes, mninfos_online):
         # Unlike in mine_quorum we skip most of the checks and only care about
