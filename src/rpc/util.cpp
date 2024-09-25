@@ -72,12 +72,12 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
-CAmount AmountFromValue(const UniValue& value)
+CAmount AmountFromValue(const UniValue& value, int decimals)
 {
     if (!value.isNum() && !value.isStr())
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
     CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
+    if (!ParseFixedPoint(value.getValStr(), decimals, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     if (!MoneyRange(amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
@@ -319,11 +319,12 @@ UniValue DescribeAddress(const CTxDestination& dest)
 
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
 {
-    int target = value.get_int();
-    if (target < 1 || (unsigned int)target > max_target) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid conf_target, must be between %u - %u", 1, max_target));
+    const int target{value.get_int()};
+    const unsigned int unsigned_target{static_cast<unsigned int>(target)};
+    if (target < 1 || unsigned_target > max_target) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid conf_target, must be between %u and %u", 1, max_target));
     }
-    return (unsigned int)target;
+    return unsigned_target;
 }
 
 /**

@@ -2872,26 +2872,20 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     nValueRet = 0;
 
     if (coin_selection_params.use_bnb) {
-        // Get long term estimate
-        FeeCalculation feeCalc;
-        CCoinControl temp;
-        temp.m_confirm_target = 1008;
-        CFeeRate long_term_feerate = GetMinimumFeeRate(*this, temp, &feeCalc);
-
         // Get the feerate for effective value.
         // When subtracting the fee from the outputs, we want the effective feerate to be 0
         CFeeRate effective_feerate{0};
         if (!coin_selection_params.m_subtract_fee_outputs) {
-            effective_feerate = coin_selection_params.effective_fee;
+            effective_feerate = coin_selection_params.m_effective_feerate;
         }
 
-        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, long_term_feerate, eligibility_filter, true /* positive_only */);
+        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
 
         // Calculate cost of change
-        CAmount cost_of_change = GetDiscardRate(*this).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
+        CAmount cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
 
         // Calculate the fees for things that aren't inputs
-        CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
+        CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
         bnb_used = true;
         return SelectCoinsBnB(groups, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
     } else {
@@ -2959,7 +2953,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
             }
-            coin.effective_value = coin.txout.nValue - coin_selection_params.effective_fee.GetFee(coin.m_input_bytes);
+            coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
             if (coin_selection_params.use_bnb) {
                 value_to_select -= coin.effective_value;
             } else {
@@ -3548,7 +3542,19 @@ bool CWallet::CreateTransactionInternal(
 
     CMutableTransaction txNew;
     FeeCalculation feeCalc;
-    CFeeRate discard_rate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
+
+    CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
+    coin_selection_params.m_discard_feerate = coin_control.m_discard_feerate ? *coin_control.m_discard_feerate : GetDiscardRate(*this);
+
+    // Get the fee rate to use effective values in coin selection
+    coin_selection_params.m_effective_feerate = GetMinimumFeeRate(*this, coin_control, &feeCalc);
+    // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
+    // provided one
+    if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
+        error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::DUFF_B), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::DUFF_B));
+        return false;
+    }
+
     int nBytes{0};
     {
         std::vector<CInputCoin> vecCoins;
@@ -3558,7 +3564,6 @@ bool CWallet::CreateTransactionInternal(
             CAmount nAmountAvailable{0};
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
-            CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.use_bnb = false; // never use BnB
 
             for (auto out : vAvailableCoins) {
@@ -3746,7 +3751,7 @@ bool CWallet::CreateTransactionInternal(
 
                         // Never create dust outputs; if we would, just
                         // add the dust to the fee.
-                        if (IsDust(newTxOut, discard_rate))
+                        if (IsDust(newTxOut, coin_selection_params.m_discard_feerate))
                         {
                             nFeeRet = nFeePrev;
                             nChangePosInOut = -1;

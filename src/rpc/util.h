@@ -84,7 +84,14 @@ int64_t ParseInt64V(const UniValue& v, const std::string &strName);
 double ParseDoubleV(const UniValue& v, const std::string &strName);
 bool ParseBoolV(const UniValue& v, const std::string &strName);
 
-CAmount AmountFromValue(const UniValue& value);
+/**
+ * Validate and return a CAmount from a UniValue number or string.
+ *
+ * @param[in] value     UniValue number or string to parse.
+ * @param[in] decimals  Number of significant digits (default: 8).
+ * @returns a CAmount if the various checks pass.
+ */
+CAmount AmountFromValue(const UniValue& value, int decimals = 8);
 
 using RPCArgList = std::vector<std::pair<std::string, UniValue>>;
 std::string HelpExampleCli(const std::string& methodname, const std::string& args);

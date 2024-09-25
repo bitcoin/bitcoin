@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet."""
 from decimal import Decimal
+from itertools import product
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
@@ -15,6 +16,9 @@ from test_framework.util import (
     count_bytes,
 )
 from test_framework.wallet_util import test_address
+
+NOT_A_NUMBER_OR_STRING = "Amount is not a number or string"
+OUT_OF_RANGE = "Amount out of range"
 
 
 class WalletTest(BitcoinTestFramework):
@@ -50,6 +54,9 @@ class WalletTest(BitcoinTestFramework):
         assert_fee_amount(fee, tx_size, fee_per_byte * 1000)
         return curr_balance
 
+    def get_vsize(self, txn):
+        return self.nodes[0].decoderawtransaction(txn)['size']
+
     def run_test(self):
 
         # Check that there's no UTXO on none of the nodes
@@ -79,7 +86,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listunspent()), 1)
         assert_equal(len(self.nodes[2].listunspent()), 0)
 
-        self.log.info("test gettxout")
+        self.log.info("Test gettxout")
         confirmed_txid, confirmed_index = utxos[0]["txid"], utxos[0]["vout"]
         # First, outputs that are unspent both in the chain and in the
         # mempool should appear with or without include_mempool
@@ -93,7 +100,7 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 110)
         mempool_txid = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 100)
 
-        self.log.info("test gettxout (second part)")
+        self.log.info("Test gettxout (second part)")
         # utxo spent in mempool should be visible if you exclude mempool
         # but invisible if you include mempool
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
@@ -221,6 +228,8 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), Decimal('200'), fee_per_byte, count_bytes(self.nodes[2].gettransaction(txid)['hex']))
 
+        self.log.info("Test sendmany")
+
         # Sendmany 100 DASH
         txid = self.nodes[2].sendmany('', {address: 100}, 0, False, "", [])
         self.nodes[2].generate(1)
@@ -237,62 +246,69 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), node_2_bal)
         node_0_bal = self.check_fee_amount(self.nodes[0].getbalance(), node_0_bal + Decimal('100'), fee_per_byte, count_bytes(self.nodes[2].gettransaction(txid)['hex']))
 
-        self.start_node(3, self.nodes[3].extra_args)
-        self.connect_nodes(0, 3)
-        # Sendmany with explicit fee (DASH/kB)
-        # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
-            self.nodes[2].sendmany,
-            amounts={ address: 10 },
-            estimate_mode='dash/kB')
-        # Throw if negative feerate
-        assert_raises_rpc_error(-3, "Amount out of range",
-            self.nodes[2].sendmany,
-            amounts={ address: 10 },
-            conf_target=-1,
-            estimate_mode='dash/kB')
-        fee_per_kb = 0.0002500
-        explicit_fee_per_byte = Decimal(fee_per_kb) / 1000
-        txid = self.nodes[2].sendmany(
-            amounts={ address: 10 },
-            conf_target=fee_per_kb,
-            estimate_mode='dash/kB',
-        )
-        self.nodes[2].generate(1)
-        self.sync_all(self.nodes[0:3])
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), node_2_bal - Decimal('10'), explicit_fee_per_byte, count_bytes(self.nodes[2].gettransaction(txid)['hex']))
-        assert_equal(self.nodes[2].getbalance(), node_2_bal)
-        node_0_bal += Decimal('10')
-        assert_equal(self.nodes[0].getbalance(), node_0_bal)
+        self.log.info("Test sendmany with fee_rate param (explicit fee rate in duff/B)")
+        fee_rate_sat_vb = 2
+        fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
+        explicit_fee_rate_btc_kvb = Decimal(fee_rate_btc_kvb) / 1000
 
-        # Sendmany with explicit fee (DUFF/B)
-        # Throw if no conf_target provided
-        assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
-            self.nodes[2].sendmany,
-            amounts={ address: 10 },
-            estimate_mode='duff/b')
-        # Throw if negative feerate
-        assert_raises_rpc_error(-3, "Amount out of range",
-            self.nodes[2].sendmany,
-            amounts={ address: 10 },
-            conf_target=-1,
-            estimate_mode='duff/b')
-        fee_duff_per_b = 2
-        fee_per_kb = fee_duff_per_b / 100000.0
-        explicit_fee_per_byte = Decimal(fee_per_kb) / 1000
-        txid = self.nodes[2].sendmany(
-            amounts={ address: 10 },
-            conf_target=fee_duff_per_b,
-            estimate_mode='duff/b',
-        )
+        # Test passing fee_rate as a string
+        txid = self.nodes[2].sendmany(amounts={address: 10}, fee_rate=str(fee_rate_sat_vb))
         self.nodes[2].generate(1)
         self.sync_all(self.nodes[0:3])
         balance = self.nodes[2].getbalance()
-        node_2_bal = self.check_fee_amount(balance, node_2_bal - Decimal('10'), explicit_fee_per_byte, count_bytes(self.nodes[2].gettransaction(txid)['hex']))
+        node_2_bal = self.check_fee_amount(balance, node_2_bal - Decimal('10'), explicit_fee_rate_btc_kvb, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
         assert_equal(balance, node_2_bal)
         node_0_bal += Decimal('10')
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
+        # Test passing fee_rate as an integer
+        amount = Decimal("0.0001")
+        txid = self.nodes[2].sendmany(amounts={address: amount}, fee_rate=fee_rate_sat_vb)
+        self.nodes[2].generate(1)
+        self.sync_all(self.nodes[0:3])
+        balance = self.nodes[2].getbalance()
+        node_2_bal = self.check_fee_amount(balance, node_2_bal - amount, explicit_fee_rate_btc_kvb, self.get_vsize(self.nodes[2].gettransaction(txid)['hex']))
+        assert_equal(balance, node_2_bal)
+        node_0_bal += amount
+        assert_equal(self.nodes[0].getbalance(), node_0_bal)
+
+        for key in ["totalFee", "feeRate"]:
+            assert_raises_rpc_error(-8, "Unknown named parameter key", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, key=1)
+
+        # Test setting explicit fee rate just below the minimum.
+        self.log.info("Test sendmany raises 'fee rate too low' if fee_rate of 0.99999999 is passed")
+        assert_raises_rpc_error(-6, "Fee rate (0.999 duff/B) is lower than the minimum fee rate setting (1.000 duff/B)",
+            self.nodes[2].sendmany, amounts={address: 10}, fee_rate=0.999)
+
+        self.log.info("Test sendmany raises if an invalid fee_rate is passed")
+        # Test fee_rate with zero values.
+        msg = "Fee rate (0.000 duff/B) is lower than the minimum fee rate setting (1.000 duff/B)"
+        for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
+            assert_raises_rpc_error(-6, msg, self.nodes[2].sendmany, amounts={address: 1}, fee_rate=zero_value)
+        msg = "Invalid amount"
+        # Test fee_rate values that don't pass fixed-point parsing checks.
+        for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
+            assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 1.0}, fee_rate=invalid_value)
+        # Test fee_rate values that cannot be represented in duff/B.
+        for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999, "0.0001", "0.00000001", "0.00099999", "31.99999999"]:
+            assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
+        # Test fee_rate out of range (negative number).
+        assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=-1)
+        # Test type error.
+        for invalid_value in [True, {"foo": "bar"}]:
+            assert_raises_rpc_error(-3, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
+
+        self.log.info("Test sendmany raises if an invalid conf_target or estimate_mode is passed")
+        for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
+            assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees.h
+                self.nodes[2].sendmany, amounts={address: 1}, conf_target=target, estimate_mode=mode)
+        for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
+            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+                self.nodes[2].sendmany, amounts={address: 1}, conf_target=target, estimate_mode=mode)
+
+        self.start_node(3, self.nodes[3].extra_args)
+        self.connect_nodes(0, 3)
+        self.sync_all()
 
         # check if we can list zero value tx as available coins
         # 1. create raw_tx
@@ -321,7 +337,7 @@ class WalletTest(BitcoinTestFramework):
                 assert_equal(uTx['amount'], Decimal('0'))
         assert found
 
-        # do some -walletbroadcast tests
+        self.log.info("Test -walletbroadcast")
         self.stop_nodes()
         self.start_node(0, ["-walletbroadcast=0"])
         self.start_node(1, ["-walletbroadcast=0"])
@@ -381,7 +397,7 @@ class WalletTest(BitcoinTestFramework):
 
         # General checks for errors from incorrect inputs
         # This will raise an exception because the amount is negative
-        assert_raises_rpc_error(-3, "Amount out of range", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "-1")
+        assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "-1")
 
         # This will raise an exception because the amount type is wrong
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
@@ -423,73 +439,70 @@ class WalletTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
 
-            # send with explicit dash/kb fee
-            self.log.info("test explicit fee (sendtoaddress as dash/kb)")
-            self.nodes[0].generate(1)
-            self.sync_all(self.nodes[0:3])
+            self.log.info("Test sendtoaddress with fee_rate param (explicit fee rate in duff/B)")
             prebalance = self.nodes[2].getbalance()
             assert prebalance > 2
             address = self.nodes[1].getnewaddress()
-            # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
-                self.nodes[2].sendtoaddress,
-                address=address,
-                amount=1.0,
-                estimate_mode='dash/Kb')
-            # Throw if negative feerate
-            assert_raises_rpc_error(-3, "Amount out of range",
-                self.nodes[2].sendtoaddress,
-                address=address,
-                amount=1.0,
-                conf_target=-1,
-                estimate_mode='dash/kb')
-            txid = self.nodes[2].sendtoaddress(
-                address=address,
-                amount=1.0,
-                conf_target=0.00002500,
-                estimate_mode='dash/kb',
-            )
-            tx_size = count_bytes(self.nodes[2].gettransaction(txid)['hex'])
-            self.sync_all(self.nodes[0:3])
+            amount = 3
+            fee_rate_sat_vb = 2
+            fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
+            # Test passing fee_rate as an integer
+            txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=fee_rate_sat_vb)
+            tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
             postbalance = self.nodes[2].getbalance()
-            fee = prebalance - postbalance - Decimal('1')
-            assert_fee_amount(fee, tx_size, Decimal('0.00002500'))
+            fee = prebalance - postbalance - Decimal(amount)
+            assert_fee_amount(fee, tx_size, Decimal(fee_rate_btc_kvb))
 
-            # send with explicit duff/b fee
-            self.sync_all(self.nodes[0:3])
-            self.log.info("test explicit fee (sendtoaddress as duff/b)")
-            self.nodes[0].generate(1)
             prebalance = self.nodes[2].getbalance()
-            assert prebalance > 2
-            address = self.nodes[1].getnewaddress()
-            # Throw if no conf_target provided
-            assert_raises_rpc_error(-8, "Selected estimate_mode requires a fee rate",
-                self.nodes[2].sendtoaddress,
-                address=address,
-                amount=1.0,
-                estimate_mode='duff/b')
-            # Throw if negative feerate
-            assert_raises_rpc_error(-3, "Amount out of range",
-                self.nodes[2].sendtoaddress,
-                address=address,
-                amount=1.0,
-                conf_target=-1,
-                estimate_mode='duff/b')
-            txid = self.nodes[2].sendtoaddress(
-                address=address,
-                amount=1.0,
-                conf_target=2,
-                estimate_mode='duff/B',
-            )
-            tx_size = count_bytes(self.nodes[2].gettransaction(txid)['hex'])
-            self.sync_all(self.nodes[0:3])
+            amount = Decimal("0.001")
+            fee_rate_sat_vb = 1.23
+            fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
+            # Test passing fee_rate as a string
+            txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=str(fee_rate_sat_vb))
+            tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
             postbalance = self.nodes[2].getbalance()
-            fee = prebalance - postbalance - Decimal('1')
-            assert_fee_amount(fee, tx_size, Decimal('0.00002000'))
+            fee = prebalance - postbalance - amount
+            # TODO: remove workaround after bitcoin/bitcoin#22949 done
+            workaround_offset = 1
+            assert_fee_amount(fee, tx_size - workaround_offset, Decimal(fee_rate_btc_kvb))
+
+            for key in ["totalFee", "feeRate"]:
+                assert_raises_rpc_error(-8, "Unknown named parameter key", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, key=1)
+
+            # Test setting explicit fee rate just below the minimum.
+            self.log.info("Test sendtoaddress raises 'fee rate too low' if fee_rate of 0.99999999 is passed")
+            assert_raises_rpc_error(-6, "Fee rate (0.999 duff/B) is lower than the minimum fee rate setting (1.000 duff/B)",
+                self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=0.999)
+
+            self.log.info("Test sendtoaddress raises if an invalid fee_rate is passed")
+            # Test fee_rate with zero values.
+            msg = "Fee rate (0.000 duff/B) is lower than the minimum fee rate setting (1.000 duff/B)"
+            for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
+                assert_raises_rpc_error(-6, msg, self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=zero_value)
+            msg = "Invalid amount"
+            # Test fee_rate values that don't pass fixed-point parsing checks.
+            for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
+                assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
+            # Test fee_rate values that cannot be represented in duff/B.
+            for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999, "0.0001", "0.00000001", "0.00099999", "31.99999999"]:
+                assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=10, fee_rate=invalid_value)
+            # Test fee_rate out of range (negative number).
+            assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=-1)
+            # Test type error.
+            for invalid_value in [True, {"foo": "bar"}]:
+                assert_raises_rpc_error(-3, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
+
+            self.log.info("Test sendtoaddress raises if an invalid conf_target or estimate_mode is passed")
+            for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
+                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees.h
+                    self.nodes[2].sendtoaddress, address=address, amount=1, conf_target=target, estimate_mode=mode)
+            for target, mode in product([-1, 0], ["dash/kb", "duff/b"]):
+                assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+                    self.nodes[2].sendtoaddress, address=address, amount=1, conf_target=target, estimate_mode=mode)
 
             # 2. Import address from node2 to node1
             self.nodes[1].importaddress(address_to_import)
@@ -547,7 +560,7 @@ class WalletTest(BitcoinTestFramework):
         ]
         chainlimit = 6
         for m in maintenance:
-            self.log.info("check " + m)
+            self.log.info("Test " + m)
             self.stop_nodes()
             # set lower ancestor limit for later
             self.start_node(0, [m, "-limitancestorcount=" + str(chainlimit)])
