@@ -4,6 +4,7 @@
 
 #include <llmq/snapshot.h>
 
+#include <evo/evodb.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 

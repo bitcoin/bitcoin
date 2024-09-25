@@ -5,7 +5,6 @@
 #ifndef BITCOIN_LLMQ_SNAPSHOT_H
 #define BITCOIN_LLMQ_SNAPSHOT_H
 
-#include <evo/evodb.h>
 #include <evo/simplifiedmns.h>
 #include <llmq/commitment.h>
 #include <llmq/params.h>
@@ -20,6 +19,7 @@
 class CBlockIndex;
 class CDeterministicMN;
 class CDeterministicMNList;
+class CEvoDb;
 
 namespace llmq {
 class CQuorumBlockProcessor;

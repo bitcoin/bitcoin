@@ -56,6 +56,8 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, CChainState& chai
     }
 }
 
+CDKGSessionManager::~CDKGSessionManager() = default;
+
 void CDKGSessionManager::MigrateDKG()
 {
     if (!db->IsEmpty()) return;
@@ -297,10 +299,7 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
         if (dkgType.phase < QuorumPhase::Initialized || dkgType.phase > QuorumPhase::Contribute) {
             continue;
         }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->contributions.find(hash);
-        if (it != dkgType.curSession->contributions.end()) {
-            ret = it->second;
+        if (dkgType.GetContribution(hash, ret)) {
             return true;
         }
     }
@@ -318,10 +317,7 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
         if (dkgType.phase < QuorumPhase::Contribute || dkgType.phase > QuorumPhase::Complain) {
             continue;
         }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->complaints.find(hash);
-        if (it != dkgType.curSession->complaints.end()) {
-            ret = it->second;
+        if (dkgType.GetComplaint(hash, ret)) {
             return true;
         }
     }
@@ -339,10 +335,7 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
         if (dkgType.phase < QuorumPhase::Complain || dkgType.phase > QuorumPhase::Justify) {
             continue;
         }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->justifications.find(hash);
-        if (it != dkgType.curSession->justifications.end()) {
-            ret = it->second;
+        if (dkgType.GetJustification(hash, ret)) {
             return true;
         }
     }
@@ -360,10 +353,7 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
         if (dkgType.phase < QuorumPhase::Justify || dkgType.phase > QuorumPhase::Commit) {
             continue;
         }
-        LOCK(dkgType.curSession->invCs);
-        auto it = dkgType.curSession->prematureCommitments.find(hash);
-        if (it != dkgType.curSession->prematureCommitments.end() && dkgType.curSession->validCommitments.count(hash)) {
-            ret = it->second;
+        if (dkgType.GetPrematureCommitment(hash, ret)) {
             return true;
         }
     }

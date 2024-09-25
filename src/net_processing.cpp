@@ -61,6 +61,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/context.h>
+#include <llmq/dkgsession.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/instantsend.h>
 #include <llmq/options.h>

@@ -90,6 +90,7 @@
 #include <spork.h>
 #include <walletinitinterface.h>
 
+#include <evo/evodb.h>
 #include <evo/chainhelper.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>

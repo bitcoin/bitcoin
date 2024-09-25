@@ -8,7 +8,6 @@
 #include <coins.h>
 
 #include <evo/assetlocktx.h>
-#include <evo/evodb.h>
 
 #include <saltedhasher.h>
 #include <serialize.h>
@@ -23,6 +22,7 @@
 class BlockManager;
 class CBlockIndex;
 class BlockValidationState;
+class CEvoDB;
 class TxValidationState;
 namespace Consensus {
 struct Params;

@@ -8,15 +8,15 @@
 #include <evo/dmnstate.h>
 
 #include <arith_uint256.h>
+#include <clientversion.h>
 #include <consensus/params.h>
 #include <crypto/common.h>
 #include <evo/dmn_types.h>
-#include <evo/evodb.h>
 #include <evo/providertx.h>
+#include <gsl/pointers.h>
 #include <saltedhasher.h>
 #include <scheduler.h>
 #include <sync.h>
-#include <gsl/pointers.h>
 
 #include <immer/map.hpp>
 
@@ -30,6 +30,7 @@ class CBlock;
 class CBlockIndex;
 class CChainState;
 class CConnman;
+class CEvoDB;
 class TxValidationState;
 
 extern RecursiveMutex cs_main;

@@ -11,10 +11,12 @@
 #include <llmq/params.h>
 #include <llmq/utils.h>
 
-#include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
+#include <evo/evodb.h>
+#include <evo/specialtx.h>
 
 #include <chainparams.h>
+#include <dbwrapper.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
@@ -229,6 +231,8 @@ CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CChainState& chainstate, 
     quorumThreadInterrupt.reset();
     MigrateOldQuorumDB(_evoDb);
 }
+
+CQuorumManager::~CQuorumManager() { Stop(); }
 
 void CQuorumManager::Start()
 {
