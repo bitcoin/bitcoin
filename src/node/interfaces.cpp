@@ -941,9 +941,7 @@ public:
         // Interrupt check interval
         const MillisecondsDouble tick{1000};
         auto now{std::chrono::steady_clock::now()};
-        auto deadline = now + timeout;
-        // std::chrono does not check against overflow
-        if (deadline < now) deadline = std::chrono::steady_clock::time_point::max();
+        const auto deadline{now + timeout};
         {
             WAIT_LOCK(notifications().m_tip_block_mutex, lock);
             while ((notifications().m_tip_block == uint256() || notifications().m_tip_block == current_tip) && !chainman().m_interrupt) {
