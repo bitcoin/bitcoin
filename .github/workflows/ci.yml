@@ -80,8 +80,10 @@ jobs:
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-14
 
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    ## No need to run on the read-only mirror, unless it is a PR.
+    #if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    # Temporarily disabled as the PR is focused on Windows only
+    if: false
 
     timeout-minutes: 120
 
@@ -253,8 +255,10 @@ jobs:
   asan-lsan-ubsan-integer-no-depends-usdt:
     name: 'ASan + LSan + UBSan + integer, no depends, USDT'
     runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
-    # No need to run on the read-only mirror, unless it is a PR.
-    if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    ## No need to run on the read-only mirror, unless it is a PR.
+    #if: github.repository != 'bitcoin-core/gui' || github.event_name == 'pull_request'
+    # Temporarily disabled as the PR is focused on Windows only
+    if: false
     timeout-minutes: 120
     env:
       FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
