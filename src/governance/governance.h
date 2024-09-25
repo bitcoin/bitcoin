@@ -231,26 +231,6 @@ private:
     using hash_s_t = std::set<uint256>;
     using db_type = CFlatDB<GovernanceStore>;
 
-    class ScopedLockBool
-    {
-        bool& ref;
-        bool fPrevValue;
-
-    public:
-        ScopedLockBool(RecursiveMutex& _cs, bool& _ref, bool _value) :
-            ref(_ref)
-        {
-            AssertLockHeld(_cs);
-            fPrevValue = ref;
-            ref = _value;
-        }
-
-        ~ScopedLockBool()
-        {
-            ref = fPrevValue;
-        }
-    };
-
 private:
     static const int MAX_TIME_FUTURE_DEVIATION;
     static const int RELIABLE_PROPAGATION_TIME;

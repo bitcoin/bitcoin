@@ -33,6 +33,25 @@ const std::string GovernanceStore::SERIALIZATION_VERSION_STRING = "CGovernanceMa
 const int CGovernanceManager::MAX_TIME_FUTURE_DEVIATION = 60 * 60;
 const int CGovernanceManager::RELIABLE_PROPAGATION_TIME = 60;
 
+namespace {
+class ScopedLockBool
+{
+    bool& ref;
+    bool fPrevValue;
+
+public:
+    ScopedLockBool(RecursiveMutex& _cs, bool& _ref, bool _value) :
+        ref(_ref)
+    {
+        AssertLockHeld(_cs);
+        fPrevValue = ref;
+        ref = _value;
+    }
+
+    ~ScopedLockBool() { ref = fPrevValue; }
+};
+} // anonymous namespace
+
 GovernanceStore::GovernanceStore() :
     cs(),
     mapObjects(),
