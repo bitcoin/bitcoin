@@ -1446,16 +1446,11 @@ class DashTestFramework(BitcoinTestFramework):
             job.result()
         jobs.clear()
 
-        # connect nodes in parallel
-        for idx in range(0, self.mn_count):
-            jobs.append(executor.submit(do_connect, idx))
-
-        # wait for all nodes to connect
-        for job in jobs:
-            job.result()
-        jobs.clear()
-
         executor.shutdown()
+
+        # connect nodes
+        for idx in range(0, self.mn_count):
+            do_connect(idx)
 
     def start_masternode(self, mninfo, extra_args=None):
         args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
