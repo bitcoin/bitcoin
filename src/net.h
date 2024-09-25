@@ -1223,6 +1223,8 @@ public:
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active, CMasternodeSync* const mn_sync);
+    bool GetMasternodeThreadActive() const { return m_masternode_thread_active; };
+    void SetMasternodeThreadActive(bool active) { m_masternode_thread_active = active; };
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
 
     enum class MasternodeConn {
@@ -1721,6 +1723,7 @@ private:
 
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
+    std::atomic<bool> m_masternode_thread_active{true};
     bool fAddressesInitialized{false};
     AddrMan& addrman;
     const NetGroupManager& m_netgroupman;

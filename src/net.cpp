@@ -3486,8 +3486,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
 
         didConnect = false;
 
-        if (!fNetworkActive || !mn_sync.IsBlockchainSynced())
-            continue;
+        if (!fNetworkActive || !m_masternode_thread_active || !mn_sync.IsBlockchainSynced()) continue;
 
         std::set<CService> connectedNodes;
         std::map<uint256 /*proTxHash*/, bool /*fInbound*/> connectedProRegTxHashes;

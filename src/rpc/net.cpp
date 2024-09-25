@@ -1019,6 +1019,32 @@ static RPCHelpMan addpeeraddress()
     };
 }
 
+static RPCHelpMan setmnthreadactive()
+{
+    return RPCHelpMan{"setmnthreadactive",
+        "\nDisable/enable automatic masternode connections thread activity.\n",
+        {
+            {"state", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable the thread, false to disable"},
+        },
+        RPCResult{RPCResult::Type::BOOL, "", "The value that was passed in"},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        throw std::runtime_error("setmnthreadactive is for regression testing (-regtest mode) only.");
+    }
+
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    CConnman& connman = EnsureConnman(node);
+
+    connman.SetMasternodeThreadActive(request.params[0].get_bool());
+
+    return connman.GetMasternodeThreadActive();
+},
+    };
+}
+
 void RegisterNetRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -1042,6 +1068,7 @@ static const CRPCCommand commands[] =
 
     { "hidden",              &addconnection,           },
     { "hidden",              &addpeeraddress,          },
+    { "hidden",              &setmnthreadactive        },
 };
 // clang-format on
     for (const auto& c : commands) {
