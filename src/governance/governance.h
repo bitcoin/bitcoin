@@ -69,7 +69,7 @@ public:
         fBufferEmpty = false;
     }
 
-    int64_t GetMinTimestamp()
+    int64_t GetMinTimestamp() const
     {
         int nIndex = nDataStart;
         int64_t nMin = std::numeric_limits<int64_t>::max();
@@ -85,7 +85,7 @@ public:
         return nMin;
     }
 
-    int64_t GetMaxTimestamp()
+    int64_t GetMaxTimestamp() const
     {
         int nIndex = nDataStart;
         int64_t nMax = 0;
@@ -112,7 +112,7 @@ public:
         return RATE_BUFFER_SIZE - nDataStart + nDataEnd;
     }
 
-    double GetRate()
+    double GetRate() const
     {
         int nCount = GetCount();
         if (nCount < RATE_BUFFER_SIZE) {
