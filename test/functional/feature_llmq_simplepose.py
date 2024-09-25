@@ -92,16 +92,16 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for mn in self.mninfo:
             assert not self.check_punished(mn) and not self.check_banned(mn)
 
-    def mine_quorum_no_check(self, expected_good_nodes, mninfos_online):
+    def mine_quorum_less_checks(self, expected_good_nodes, mninfos_online):
         # Unlike in mine_quorum we skip most of the checks and only care about
-        # nodes moving forward from phase to phase and the fact that the quorum is actually mined.
-        self.log.info("Mining a quorum with no checks")
+        # nodes moving forward from phase to phase correctly and the fact that the quorum is actually mined.
+        self.log.info("Mining a quorum with less checks")
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
-            self.bump_mocktime(1, nodes=nodes)
+            self.bump_mocktime(skip_count, nodes=nodes)
             self.nodes[0].generate(skip_count)
         self.sync_blocks(nodes)
 
@@ -112,7 +112,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 2 (contribute)")
-        self.wait_for_quorum_phase(q, 2, expected_good_nodes, None, 0, mninfos_online)
+        self.wait_for_quorum_phase(q, 2, expected_good_nodes, "receivedContributions", expected_good_nodes, mninfos_online)
         self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 3 (complain)")
@@ -124,7 +124,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 5 (commit)")
-        self.wait_for_quorum_phase(q, 5, expected_good_nodes, None, 0, mninfos_online)
+        self.wait_for_quorum_phase(q, 5, expected_good_nodes, "receivedPrematureCommitments", expected_good_nodes, mninfos_online)
         self.move_blocks(nodes, 2)
 
         self.log.info("Waiting for phase 6 (mining)")
@@ -147,6 +147,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
+        self.bump_mocktime(8)
         self.nodes[0].generate(8)
         self.sync_blocks(nodes)
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
@@ -174,7 +175,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 # 6th time is when it should be banned for sure.
                 for _ in range(6):
                     self.reset_probe_timeouts()
-                    self.mine_quorum_no_check(expected_contributors - 1, mninfos_online)
+                    self.mine_quorum_less_checks(expected_contributors - 1, mninfos_online)
 
             assert self.check_banned(mn)
 
