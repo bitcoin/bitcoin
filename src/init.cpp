@@ -1635,42 +1635,36 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
 
-    for (bool fLoaded = false; !fLoaded && !ShutdownRequested(node);) {
-        auto [status, error] = InitAndLoadChainstate(
+    // Chainstate initialization and loading may be retried once with reindexing by GUI users
+    auto [status, error] = InitAndLoadChainstate(
+        node,
+        do_reindex,
+        do_reindex_chainstate,
+        cache_sizes,
+        args);
+    if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !ShutdownRequested(node)) {
+        // suggest a reindex
+        bool do_retry = uiInterface.ThreadSafeQuestion(
+            error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
+            error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
+            "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+        if (!do_retry) {
+            LogError("Aborted block database rebuild. Exiting.\n");
+            return false;
+        }
+        do_reindex = true;
+        if (!Assert(node.shutdown)->reset()) {
+            LogError("Internal error: failed to reset shutdown signal.\n");
+        }
+        std::tie(status, error) = InitAndLoadChainstate(
             node,
             do_reindex,
             do_reindex_chainstate,
             cache_sizes,
             args);
-
-        if (status == node::ChainstateLoadStatus::FAILURE_FATAL || status == node::ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB || status == node::ChainstateLoadStatus::FAILURE_INSUFFICIENT_DBCACHE) {
-            return InitError(error);
-        }
-
-        if (status == ChainstateLoadStatus::SUCCESS) {
-            fLoaded = true;
-        }
-
-        if (!fLoaded && !ShutdownRequested(node)) {
-            // first suggest a reindex
-            if (!do_reindex) {
-                bool fRet = uiInterface.ThreadSafeQuestion(
-                    error + Untranslated(".\n\n") + _("Do you want to rebuild the block database now?"),
-                    error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
-                    "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
-                if (fRet) {
-                    do_reindex = true;
-                    if (!Assert(node.shutdown)->reset()) {
-                        LogError("Internal error: failed to reset shutdown signal.\n");
-                    }
-                } else {
-                    LogError("Aborted block database rebuild. Exiting.\n");
-                    return false;
-                }
-            } else {
-                return InitError(error);
-            }
-        }
+    }
+    if (status != ChainstateLoadStatus::SUCCESS && status != ChainstateLoadStatus::INTERRUPTED) {
+        return InitError(error);
     }
 
     // As LoadBlockIndex can take several minutes, it's possible the user
