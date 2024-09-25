@@ -187,6 +187,7 @@ static RPCHelpMan getpeerinfo()
                                                               "best capture connection behaviors."},
                     {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
                     {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
+                    {RPCResult::Type::BOOL, "tx_reconciliation", /*optional=*/true, "Whether peer is registered for transaction reconciliation"}
                 }},
             }},
         },
@@ -199,6 +200,9 @@ static RPCHelpMan getpeerinfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
     const PeerManager& peerman = EnsurePeerman(node);
+
+    const auto& peerman_info{peerman.GetInfo()};
+    const bool reconcile_txs{peerman_info.reconcile_txs};
 
     std::vector<CNodeStats> vstats;
     connman.GetNodeStats(vstats);
@@ -293,6 +297,9 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
         obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
         obj.pushKV("session_id", stats.m_session_id);
+        if (reconcile_txs) {
+            obj.pushKV("tx_reconciliation", statestats.m_tx_reconciliation);
+        }
 
         ret.push_back(std::move(obj));
     }
