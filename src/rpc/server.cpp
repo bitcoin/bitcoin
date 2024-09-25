@@ -15,6 +15,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <sync.h>
+#include <util/any.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -303,7 +304,7 @@ void StopRPC(const std::any& context)
         LogDebug(BCLog::RPC, "Stopping RPC\n");
         WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
         DeleteAuthCookie();
-        node::NodeContext& node = EnsureAnyNodeContext(context);
+        node::NodeContext& node = *Assert(util::AnyPtr<node::NodeContext>(context));
         // The notifications interface doesn't exist between initialization step 4a and 7.
         if (node.notifications) node.notifications->m_tip_block_cv.notify_all();
         LogDebug(BCLog::RPC, "RPC stopped.\n");
