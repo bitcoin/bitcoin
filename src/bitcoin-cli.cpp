@@ -540,15 +540,15 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<->   type   net  v  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
-                                m_max_addr_processed_length, "addrp",
-                                m_max_addr_rate_limited_length, "addrl",
-                                m_max_age_length, "age");
+            result += tfm::format_raw("<->   type   net  v  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
+                                      m_max_addr_processed_length, "addrp",
+                                      m_max_addr_rate_limited_length, "addrl",
+                                      m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
-            result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
+            result += tfm::format_raw("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
-                result += strprintf(
+                result += tfm::format_raw(
                     "%3s %6s %5s %2s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     ConnectionTypeForNetinfo(peer.conn_type),
@@ -575,7 +575,7 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                        ms     ms  sec  sec  min  min                %*s\n\n", m_max_age_length, "min");
+            result += tfm::format_raw("                        ms     ms  sec  sec  min  min                %*s\n\n", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
@@ -624,7 +624,7 @@ public:
                 max_addr_size = std::max(addr["address"].get_str().length() + 1, max_addr_size);
             }
             for (const UniValue& addr : local_addrs) {
-                result += strprintf("\n%-*s    port %6i    score %6i", max_addr_size, addr["address"].get_str(), addr["port"].getInt<int>(), addr["score"].getInt<int>());
+                result += tfm::format_raw("\n%-*s    port %6i    score %6i", max_addr_size, addr["address"].get_str(), addr["port"].getInt<int>(), addr["score"].getInt<int>());
             }
         }
 
@@ -1117,10 +1117,10 @@ static void ParseGetInfoResult(UniValue& result)
         }
 
         for (const std::string& wallet : result["balances"].getKeys()) {
-            result_string += strprintf("%*s %s\n",
-                                       max_balance_length,
-                                       result["balances"][wallet].getValStr(),
-                                       wallet.empty() ? "\"\"" : wallet);
+            result_string += tfm::format_raw("%*s %s\n",
+                                             max_balance_length,
+                                             result["balances"][wallet].getValStr(),
+                                             wallet.empty() ? "\"\"" : wallet);
         }
         result_string += "\n";
     }

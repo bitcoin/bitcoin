@@ -46,7 +46,7 @@ struct FuzzedWallet {
 
         for (const std::string& desc_fmt : DESCS) {
             for (bool internal : {true, false}) {
-                const auto descriptor{strprintf(desc_fmt.c_str(), "[5aa9973a/66h/4h/2h]" + seed_insecure, int{internal})};
+                const auto descriptor{tfm::format_raw(desc_fmt.c_str(), "[5aa9973a/66h/4h/2h]" + seed_insecure, int{internal})};
 
                 FlatSigningProvider keys;
                 std::string error;
