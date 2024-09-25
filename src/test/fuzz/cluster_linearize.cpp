@@ -64,7 +64,6 @@ public:
         SetInfo best(m_depgraph, m_todo);
         // Process the queue.
         while (!queue.empty() && iterations_left) {
-            --iterations_left;
             // Pop top element of the queue.
             auto [inc, und] = queue.back();
             queue.pop_back();
@@ -75,6 +74,7 @@ public:
                 // transactions that share ancestry with inc so far (which means only connected
                 // sets will be considered).
                 if (inc_none || inc.Overlaps(m_depgraph.Ancestors(split))) {
+                    --iterations_left;
                     // Add a queue entry with split included.
                     SetInfo new_inc(m_depgraph, inc | (m_todo & m_depgraph.Ancestors(split)));
                     queue.emplace_back(new_inc.transactions, und - new_inc.transactions);
