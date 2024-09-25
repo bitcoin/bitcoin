@@ -59,8 +59,10 @@ struct NodeContext {
     std::unique_ptr<ECC_Context> ecc_context;
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
+    //! Function to request a shutdown.
+    std::function<bool()> shutdown_request;
     //! Interrupt object used to track whether node shutdown was requested.
-    util::SignalInterrupt* shutdown{nullptr};
+    util::SignalInterrupt* shutdown_signal{nullptr};
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;

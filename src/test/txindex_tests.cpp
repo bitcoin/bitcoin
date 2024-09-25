@@ -33,7 +33,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     BOOST_REQUIRE(txindex.StartBackgroundSync());
 
     // Allow tx index to catch up with the block index.
-    IndexWaitSynced(txindex, *Assert(m_node.shutdown));
+    IndexWaitSynced(txindex, *Assert(m_node.shutdown_signal));
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();

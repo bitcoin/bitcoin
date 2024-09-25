@@ -382,7 +382,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             LOCK(::cs_main);
             chainman.ResetChainstates();
             BOOST_CHECK_EQUAL(chainman.GetAll().size(), 0);
-            m_node.notifications = std::make_unique<KernelNotifications>(*Assert(m_node.shutdown), m_node.exit_status, *Assert(m_node.warnings));
+            m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
             const ChainstateManager::Options chainman_opts{
                 .chainparams = ::Params(),
                 .datadir = chainman.m_options.datadir,
@@ -397,7 +397,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             // For robustness, ensure the old manager is destroyed before creating a
             // new one.
             m_node.chainman.reset();
-            m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown), chainman_opts, blockman_opts);
+            m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
         }
         return *Assert(m_node.chainman);
     }

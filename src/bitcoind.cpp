@@ -274,7 +274,7 @@ MAIN_FUNCTION
     if (ProcessInitCommands(args)) return EXIT_SUCCESS;
 
     // Start application
-    if (!AppInit(node) || !Assert(node.shutdown)->wait()) {
+    if (!AppInit(node) || !Assert(node.shutdown_signal)->wait()) {
         node.exit_status = EXIT_FAILURE;
     }
     Interrupt(node);

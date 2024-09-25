@@ -207,7 +207,14 @@ void InitContext(NodeContext& node)
     g_shutdown.emplace();
 
     node.args = &gArgs;
-    node.shutdown = &*g_shutdown;
+    node.shutdown_signal = &*g_shutdown;
+    node.shutdown_request = [&node] {
+        assert(node.shutdown_signal);
+        if (!(*node.shutdown_signal)()) return false;
+        // Wake any threads that may be waiting for the tip to change.
+        if (node.notifications) WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
+        return true;
+    };
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -235,7 +242,7 @@ void InitContext(NodeContext& node)
 
 bool ShutdownRequested(node::NodeContext& node)
 {
-    return bool{*Assert(node.shutdown)};
+    return bool{*Assert(node.shutdown_signal)};
 }
 
 #if HAVE_SYSTEM
@@ -286,7 +293,7 @@ void Shutdown(NodeContext& node)
 
     StopHTTPRPC();
     StopREST();
-    StopRPC(&node);
+    StopRPC();
     StopHTTPServer();
     for (const auto& client : node.chain_clients) {
         client->flush();
@@ -707,7 +714,7 @@ static void StartupNotify(const ArgsManager& args)
 static bool AppInitServers(NodeContext& node)
 {
     const ArgsManager& args = *Assert(node.args);
-    if (!InitHTTPServer(*Assert(node.shutdown))) {
+    if (!InitHTTPServer(*Assert(node.shutdown_signal))) {
         return false;
     }
     StartRPC();
@@ -1216,7 +1223,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
     try {
-        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown), chainman_opts, blockman_opts);
+        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
     } catch (std::exception& e) {
         return {ChainstateLoadStatus::FAILURE_FATAL, strprintf(Untranslated("Failed to initialize ChainstateManager: %s"), e.what())};
     }
@@ -1327,7 +1334,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         constexpr uint64_t min_disk_space = 50 << 20; // 50 MB
         if (!CheckDiskSpace(args.GetBlocksDirPath(), min_disk_space)) {
             LogError("Shutting down due to lack of disk space!\n");
-            if (!(*Assert(node.shutdown))()) {
+            if (!(Assert(node.shutdown_request))()) {
                 LogError("Failed to send shutdown signal after disk space check\n");
             }
         }
@@ -1608,7 +1615,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 7: load block chain
 
-    node.notifications = std::make_unique<KernelNotifications>(*Assert(node.shutdown), node.exit_status, *Assert(node.warnings));
+    node.notifications = std::make_unique<KernelNotifications>(Assert(node.shutdown_request), node.exit_status, *Assert(node.warnings));
     ReadNotificationArgs(args, *node.notifications);
 
     // cache size calculations
@@ -1649,7 +1656,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return false;
         }
         do_reindex = true;
-        if (!Assert(node.shutdown)->reset()) {
+        if (!Assert(node.shutdown_signal)->reset()) {
             LogError("Internal error: failed to reset shutdown signal.\n");
         }
         std::tie(status, error) = InitAndLoadChainstate(
@@ -1794,7 +1801,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         ImportBlocks(chainman, vImportFiles);
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogPrintf("Stopping after block import\n");
-            if (!(*Assert(node.shutdown))()) {
+            if (!(Assert(node.shutdown_request))()) {
                 LogError("Failed to send shutdown signal after finishing block import\n");
             }
             return;
