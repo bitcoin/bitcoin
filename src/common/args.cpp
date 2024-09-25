@@ -99,11 +99,11 @@ KeyInfo InterpretKey(std::string key)
  * @param[in]   flags    ArgsManager registered argument flags
  * @param[out]  error    Error description if settings value is not valid
  *
- * @return parsed settings value if it is valid, otherwise nullopt accompanied
+ * @return parsed settings value if it is valid, otherwise `nullopt` accompanied
  * by a descriptive error string
  */
 std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const std::string* value,
-                                                  unsigned int flags, std::string& error)
+                                                    unsigned int flags, std::string& error)
 {
     // Return negated settings as false values.
     if (key.negated) {
@@ -119,7 +119,7 @@ std::optional<common::SettingsValue> InterpretValue(const KeyInfo& key, const st
         return false;
     }
     if (!value && (flags & ArgsManager::DISALLOW_ELISION)) {
-        error = strprintf("Can not set -%s with no value. Please specify value with -%s=value.", key.name, key.name);
+        error = strprintf("Cannot set -%s with no value. Please specify value with -%s=value.", key.name, key.name);
         return std::nullopt;
     }
     return value ? *value : "";
