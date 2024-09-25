@@ -1147,13 +1147,6 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 #endif
 
 // Added for Bitcoin Core
-template<typename... Args>
-std::string format(const std::string &fmt, const Args&... args)
-{
-    std::ostringstream oss;
-    format(oss, fmt.c_str(), args...);
-    return oss.str();
-}
 template <typename... Args>
 std::string format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
