@@ -60,7 +60,7 @@ public:
     Mutex m_tip_block_mutex;
     std::condition_variable m_tip_block_cv;
     //! The block for which the last blockTip notification was received for.
-    uint256 m_tip_block;
+    uint256 m_tip_block GUARDED_BY(m_tip_block_mutex);
 
 private:
     util::SignalInterrupt& m_shutdown;
