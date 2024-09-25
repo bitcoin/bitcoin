@@ -57,7 +57,9 @@ public:
     Mutex m_tip_block_mutex;
     std::condition_variable m_tip_block_cv GUARDED_BY(m_tip_block_mutex);
     //! The block for which the last blockTip notification was received for.
-    uint256 m_tip_block GUARDED_BY(m_tip_block_mutex);
+    //! The initial ZERO means that no block has been connected yet, which may
+    //! be true even long after startup, until shutdown.
+    uint256 m_tip_block GUARDED_BY(m_tip_block_mutex){uint256::ZERO};
 
 private:
     const std::function<bool()>& m_shutdown_request;
