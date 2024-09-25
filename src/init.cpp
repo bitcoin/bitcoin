@@ -1811,17 +1811,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 12: start node
 
-    //// debug print
     int64_t best_block_time{};
     {
-        LOCK(cs_main);
+        LOCK(chainman.GetMutex());
+        const auto& tip{*Assert(chainman.ActiveTip())};
         LogPrintf("block tree size = %u\n", chainman.BlockIndex().size());
-        chain_active_height = chainman.ActiveChain().Height();
-        best_block_time = chainman.ActiveChain().Tip() ? chainman.ActiveChain().Tip()->GetBlockTime() : chainman.GetParams().GenesisBlock().GetBlockTime();
+        chain_active_height = tip.nHeight;
+        best_block_time = tip.GetBlockTime();
         if (tip_info) {
             tip_info->block_height = chain_active_height;
             tip_info->block_time = best_block_time;
-            tip_info->verification_progress = GuessVerificationProgress(chainman.GetParams().TxData(), chainman.ActiveChain().Tip());
+            tip_info->verification_progress = GuessVerificationProgress(chainman.GetParams().TxData(), &tip);
         }
         if (tip_info && chainman.m_best_header) {
             tip_info->header_height = chainman.m_best_header->nHeight;
