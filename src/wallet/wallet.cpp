@@ -3681,7 +3681,7 @@ bool CWallet::CreateTransactionInternal(
                     txNew.vin.emplace_back(coin.outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1);
                 }
 
-                auto calculateFee = [&](CAmount& nFee) -> bool {
+                auto calculateFee = [&](CAmount& nFee) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) -> bool {
                     AssertLockHeld(cs_wallet);
                     nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
                     if (nBytes < 0) {

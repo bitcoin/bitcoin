@@ -73,7 +73,11 @@ public:
     UniValue ToJson() const;
 
 public:
-    const uint256& GetProTxHash() const { LOCK(cs); return proTxHash; }
+    const uint256 GetProTxHash() const
+    {
+        LOCK(cs);
+        return proTxHash;
+    }
     int64_t GetLastDsq() const { return nLastDsq; }
     int GetMixingTxCount() const { return nMixingTxCount; }
 

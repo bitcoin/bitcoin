@@ -1067,11 +1067,13 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
             mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
         } else {
             // keep snapshots for yet alive quorums
-            if (ranges::any_of(Params().GetConsensus().llmqs, [&snapshot, this](const auto& params){
-                AssertLockHeld(cs);
-                return (snapshot.GetHeight() % params.dkgInterval == 0) &&
-                (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >= tipIndex->nHeight);
-            })) {
+            if (ranges::any_of(Params().GetConsensus().llmqs,
+                               [&snapshot, this](const auto& params) EXCLUSIVE_LOCKS_REQUIRED(cs) {
+                                   AssertLockHeld(cs);
+                                   return (snapshot.GetHeight() % params.dkgInterval == 0) &&
+                                          (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >=
+                                           tipIndex->nHeight);
+                               })) {
                 mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
             }
         }

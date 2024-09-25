@@ -5771,7 +5771,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             peer->m_blocks_for_inv_relay.clear();
         }
 
-        auto queueAndMaybePushInv = [this, pto, peer, &vInv, &msgMaker](const CInv& invIn) {
+        auto queueAndMaybePushInv = [this, pto, peer, &vInv, &msgMaker](const CInv& invIn) EXCLUSIVE_LOCKS_REQUIRED(peer->m_tx_relay->m_tx_inventory_mutex) {
             AssertLockHeld(peer->m_tx_relay->m_tx_inventory_mutex);
             peer->m_tx_relay->m_tx_inventory_known_filter.insert(invIn.hash);
             LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", invIn.ToString(), vInv.size(), pto->GetId());

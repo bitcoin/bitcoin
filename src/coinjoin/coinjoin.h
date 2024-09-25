@@ -398,8 +398,8 @@ public:
 private:
     void CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_mapdstx);
-    void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight);
-
+    void UpdateDSTXConfirmedHeight(const CTransactionRef& tx, std::optional<int> nHeight)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_mapdstx);
 };
 
 bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef& tx, bool test_accept = false)
