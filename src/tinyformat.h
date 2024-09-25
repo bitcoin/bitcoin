@@ -145,6 +145,7 @@ namespace tfm = tinyformat;
 #include <iostream>
 #include <sstream>
 #include <stdexcept> // Added for Bitcoin Core
+#include <util/string.h> // Added for Bitcoin Core
 
 #ifndef TINYFORMAT_ASSERT
 #   include <cassert>
@@ -1153,7 +1154,11 @@ std::string format(const std::string &fmt, const Args&... args)
     format(oss, fmt.c_str(), args...);
     return oss.str();
 }
-
+template <typename... Args>
+std::string format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
+    return format(fmt.fmt, args...);
+}
 } // namespace tinyformat
 
 // Added for Bitcoin Core:
