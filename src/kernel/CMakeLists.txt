@@ -84,6 +84,7 @@ target_link_libraries(bitcoinkernel
     bitcoin_crypto
     leveldb
     secp256k1
+    $<TARGET_NAME_IF_EXISTS:USDT::headers>
   PUBLIC
     Boost::headers
 )
