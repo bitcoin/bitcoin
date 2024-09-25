@@ -1083,6 +1083,8 @@ class MasternodeInfo:
         self.collateral_vout = collateral_vout
         self.addr = addr
         self.evo = evo
+        self.node = None
+        self.nodeIdx = None
 
 
 class DashTestFramework(BitcoinTestFramework):
@@ -1096,6 +1098,15 @@ class DashTestFramework(BitcoinTestFramework):
     def run_test(self):
         """Tests must override this method to define test logic"""
         raise NotImplementedError
+
+    def connect_nodes(self, a, b):
+        for mn2 in self.mninfo:
+            if mn2.node is not None:
+                mn2.node.setmnthreadactive(False)
+        super().connect_nodes(a, b)
+        for mn2 in self.mninfo:
+            if mn2.node is not None:
+                mn2.node.setmnthreadactive(True)
 
     def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False, evo_count=0):
         self.mn_count = masterodes_count
