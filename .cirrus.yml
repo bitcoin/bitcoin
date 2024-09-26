@@ -1,7 +1,6 @@
 env:  # Global defaults
   CIRRUS_CLONE_DEPTH: 1
   CIRRUS_LOG_TIMESTAMP: true
-  PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on error
@@ -14,9 +13,9 @@ env:  # Global defaults
 # Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
 #
 # The following specific types should exist, with the following requirements:
-# - small: For an x86_64 machine, recommended to have 2 CPUs and 8 GB of memory.
-# - medium: For an x86_64 machine, recommended to have 4 CPUs and 16 GB of memory.
-# - arm64: For an aarch64 machine, recommended to have 2 CPUs and 8 GB of memory.
+# - small: For an x86_64 machine, with at least 2 vCPUs and 8 GB of memory.
+# - medium: For an x86_64 machine, with at least 4 vCPUs and 16 GB of memory.
+# - arm64: For an aarch64 machine, with at least 2 vCPUs and 8 GB of memory.
 #
 # CI jobs for the latter configuration can be run on x86_64 hardware
 # by installing qemu-user-static, which works out of the box with
@@ -37,14 +36,13 @@ env:  # Global defaults
 # This requires installing Podman instead of Docker.
 #
 # Futhermore:
-# - apt-get is required due to PACKAGE_MANAGER_INSTALL
 # - podman-docker-4.1+ is required due to the bugfix in 4.1
 #   (https://github.com/bitcoin/bitcoin/pull/21652#issuecomment-1657098200)
 # - The ./ci/ dependencies (with cirrus-cli) should be installed. One-liner example
 #   for a single user setup with sudo permission:
 #
 #   ```
-#   apt update && apt install git screen python3 bash podman-docker curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
+#   apt update && apt install git screen python3 bash podman-docker uidmap slirp4netns curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
 #   ```
 #
 # - There are no strict requirements on the hardware. Having fewer CPU threads
@@ -73,8 +71,8 @@ filter_template: &FILTER_TEMPLATE
 base_template: &BASE_TEMPLATE
   << : *FILTER_TEMPLATE
   merge_base_script:
-    # Unconditionally install git (used in fingerprint_script).
-    - git --version || bash -c "$PACKAGE_MANAGER_INSTALL git"
+    # Require git (used in fingerprint_script).
+    - git --version || ( apt-get update && apt-get install -y git )
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - git fetch --depth=1 $CIRRUS_REPO_CLONE_URL "pull/${CIRRUS_PR}/merge"
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
