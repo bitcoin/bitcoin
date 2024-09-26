@@ -63,7 +63,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         send_wrpc = self.nodes[0].get_wallet_rpc("desc1")
 
         # Generate some coins
-        send_wrpc.generatetoaddress(101, send_wrpc.getnewaddress())
+        self.generatetoaddress(send_wrpc, 101, send_wrpc.getnewaddress())
 
         # Make transactions
         self.log.info("Test sending and receiving")

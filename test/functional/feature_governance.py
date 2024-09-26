@@ -193,7 +193,7 @@ class DashGovernanceTest (DashTestFramework):
         isolated = self.nodes[payee_idx]
 
         self.log.info("Move 1 block inside the Superblock maturity window on the isolated node")
-        isolated.generate(1)
+        self.generate(isolated, 1)
         self.bump_mocktime(1)
         self.log.info("The isolated 'winner' should submit new trigger and vote for it")
         self.wait_until(lambda: len(isolated.gobject("list", "valid", "triggers")) == 1, timeout=5)
