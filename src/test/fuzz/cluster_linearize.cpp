@@ -707,6 +707,10 @@ FUZZ_TARGET(clusterlin_simple_finder)
                 auto exhaustive = exh_finder.FindCandidateSet();
                 assert(exhaustive.feerate == found.feerate);
             }
+
+            // Compare with a topological set read from the fuzz input.
+            auto read_topo = ReadTopologicalSet(depgraph, todo, reader);
+            if (read_topo.Any()) assert(found.feerate >= depgraph.FeeRate(read_topo));
         }
 
         // Find a topologically valid subset of transactions to remove from the graph.
@@ -807,6 +811,10 @@ FUZZ_TARGET(clusterlin_search_finder)
             // Compare with AncestorCandidateFinder;
             auto anc = anc_finder.FindCandidateSet();
             assert(found.feerate >= anc.feerate);
+
+            // Compare with a topological set read from the fuzz input.
+            auto read_topo = ReadTopologicalSet(depgraph, todo, reader);
+            if (read_topo.Any()) assert(found.feerate >= depgraph.FeeRate(read_topo));
         }
 
         // Find a topologically valid subset of transactions to remove from the graph.
