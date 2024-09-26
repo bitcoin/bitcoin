@@ -622,14 +622,14 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     return true;
 }
 
-void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
+MessageProcessingResult CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
 {
     if (!IsInstantSendEnabled()) {
-        return;
+        return {};
     }
 
     if (Params().GetConsensus().llmqTypeDIP0024InstantSend == Consensus::LLMQType::LLMQ_NONE) {
-        return;
+        return {};
     }
 
     uint256 txid;
@@ -641,6 +641,7 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
     } else if (/*isInstantSendLock=*/ WITH_LOCK(cs_creating, return creatingInstantSendLocks.count(recoveredSig.getId()))) {
         HandleNewInstantSendLockRecoveredSig(recoveredSig);
     }
+    return {};
 }
 
 void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid)

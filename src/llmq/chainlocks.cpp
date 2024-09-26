@@ -525,10 +525,10 @@ void CChainLocksHandler::EnforceBestChainLock()
     uiInterface.NotifyChainLock(clsig->getBlockHash().ToString(), clsig->getHeight());
 }
 
-void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
+MessageProcessingResult CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
     if (!isEnabled) {
-        return;
+        return {};
     }
 
     CChainLockSig clsig;
@@ -537,17 +537,18 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
 
         if (recoveredSig.getId() != lastSignedRequestId || recoveredSig.getMsgHash() != lastSignedMsgHash) {
             // this is not what we signed, so lets not create a CLSIG for it
-            return;
+            return {};
         }
         if (bestChainLock.getHeight() >= lastSignedHeight) {
             // already got the same or a better CLSIG through the CLSIG message
-            return;
+            return {};
         }
 
 
         clsig = CChainLockSig(lastSignedHeight, lastSignedMsgHash, recoveredSig.sig.Get());
     }
     ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
+    return {};
 }
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash) const
