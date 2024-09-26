@@ -88,7 +88,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "coinjoin/client -> net_processing -> coinjoin/context -> coinjoin/client"
     "coinjoin/context -> coinjoin/server -> net_processing -> coinjoin/context"
     "coinjoin/server -> net_processing -> coinjoin/server"
-    "llmq/context -> llmq/ehf_signals -> net_processing -> llmq/context"
+    "llmq/context -> llmq/instantsend -> net_processing -> llmq/context"
     "llmq/chainlocks -> llmq/instantsend -> net_processing -> llmq/chainlocks"
     "net_processing -> spork -> net_processing"
     "governance/governance -> net_processing -> governance/governance"

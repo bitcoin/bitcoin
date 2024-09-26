@@ -3318,6 +3318,9 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
     if (result.m_to_erase) {
         WITH_LOCK(cs_main, EraseObjectRequest(node, result.m_to_erase.value()));
     }
+    for (const auto& tx : result.m_transactions) {
+        WITH_LOCK(cs_main, RelayTransaction(tx));
+    }
     if (result.m_inventory) {
         RelayInv(result.m_inventory.value(), MIN_PEER_PROTO_VERSION);
     }
