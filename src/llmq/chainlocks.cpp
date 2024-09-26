@@ -23,6 +23,11 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
+{
+    return sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
+}
+
 namespace llmq
 {
 std::unique_ptr<CChainLocksHandler> chainLocksHandler;
@@ -676,11 +681,6 @@ void CChainLocksHandler::Cleanup()
 bool AreChainLocksEnabled(const CSporkManager& sporkman)
 {
     return sporkman.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
-}
-
-bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
-{
-    return sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
 }
 
 } // namespace llmq
