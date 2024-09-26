@@ -116,7 +116,7 @@ class NotificationsTest(DashTestFramework):
 
         self.log.info("Mine single block, wait for chainlock")
         self.bump_mocktime(1)
-        tip = self.generate(self.nodes[0], 1)[-1]
+        tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
         self.wait_for_chainlocked_block_all_nodes(tip)
         # directory content should equal the chainlocked block hash
         assert_equal([tip], sorted(os.listdir(self.chainlocknotify_dir)))

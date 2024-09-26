@@ -29,7 +29,7 @@ class LoadblockTest(BitcoinTestFramework):
 
     def run_test(self):
         self.nodes[1].setnetworkactive(state=False)
-        self.generate(self.nodes[0], COINBASE_MATURITY)
+        self.generate(self.nodes[0], COINBASE_MATURITY, sync_fun=self.no_op)
 
         # Parsing the url of our node to get settings for config file
         data_dir = self.nodes[0].datadir

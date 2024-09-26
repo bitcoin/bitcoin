@@ -31,7 +31,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # only one connection. (See fPreferredDownload in net_processing)
         self.connect_nodes(1, 2)
         self.generate(self.nodes[2], COINBASE_MATURITY + 1)
-        self.sync_all()
 
         self.test_no_blockhash()
         self.test_invalid_blockhash()
@@ -46,7 +45,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
-        self.sync_all()
 
         txs = self.nodes[0].listtransactions()
         assert_array_result(txs, {"txid": txid}, {
@@ -88,7 +86,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.log.info("Test target_confirmations")
         blockhash, = self.generate(self.nodes[2], 1)
         blockheight = self.nodes[2].getblockheader(blockhash)['height']
-        self.sync_all()
 
         assert_equal(
             self.nodes[0].getblockhash(0),
@@ -136,13 +133,10 @@ class ListSinceBlockTest(BitcoinTestFramework):
         senttx = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
 
         # generate on both sides
-        nodes1_last_blockhash = self.generate(self.nodes[1], 6)[-1]
-        nodes2_first_blockhash = self.generate(self.nodes[2], 7)[0]
+        nodes1_last_blockhash = self.generate(self.nodes[1], 6, sync_fun=lambda: self.sync_all(self.nodes[:2]))[-1]
+        nodes2_first_blockhash = self.generate(self.nodes[2], 7, sync_fun=lambda: self.sync_all(self.nodes[2:]))[0]
         self.log.debug("nodes[1] last blockhash = {}".format(nodes1_last_blockhash))
         self.log.debug("nodes[2] first blockhash = {}".format(nodes2_first_blockhash))
-
-        self.sync_all(self.nodes[:2])
-        self.sync_all(self.nodes[2:])
 
         self.join_network()
 
@@ -192,7 +186,6 @@ class ListSinceBlockTest(BitcoinTestFramework):
         address = key_to_p2pkh(eckey.get_pubkey().get_bytes())
         self.nodes[2].sendtoaddress(address, 10)
         self.generate(self.nodes[2], 6)
-        self.sync_all()
         self.nodes[2].importprivkey(privkey)
         utxos = self.nodes[2].listunspent()
         utxo = [u for u in utxos if u["address"] == address][0]
@@ -225,8 +218,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 self.nodes[2].createrawtransaction(utxo_dicts, recipient_dict2))['hex'])
 
         # generate on both sides
-        lastblockhash = self.generate(self.nodes[1], 3)[2]
-        self.generate(self.nodes[2], 4)
+        lastblockhash = self.generate(self.nodes[1], 3, sync_fun=self.no_op)[2]
+        self.generate(self.nodes[2], 4, sync_fun=self.no_op)
 
         self.join_network()
 
@@ -297,7 +290,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         txid1 = self.nodes[1].sendrawtransaction(signedtx)
 
         # generate bb1-bb2 on right side
-        self.generate(self.nodes[2], 2)
+        self.generate(self.nodes[2], 2, sync_fun=self.no_op)
 
         # send from nodes[2]; this will end up in bb3
         txid2 = self.nodes[2].sendrawtransaction(signedtx)
@@ -305,8 +298,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(txid1, txid2)
 
         # generate on both sides
-        lastblockhash = self.generate(self.nodes[1], 3)[2]
-        self.generate(self.nodes[2], 2)
+        lastblockhash = self.generate(self.nodes[1], 3, sync_fun=self.no_op)[2]
+        self.generate(self.nodes[2], 2, sync_fun=self.no_op)
 
         self.join_network()
 
@@ -360,7 +353,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         double_signedtx = spending_node.signrawtransactionwithwallet(double_rawtx)
         dbl_tx_id = double_spending_node.sendrawtransaction(double_signedtx["hex"])
         double_tx = double_spending_node.getrawtransaction(dbl_tx_id, 1)
-        lastblockhash = self.generate(double_spending_node, 1)[0]
+        lastblockhash = self.generate(double_spending_node, 1, sync_fun=self.no_op)[0]
 
         self.reconnect_isolated_node(3, 2)
         self.sync_all()
@@ -379,7 +372,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(original_found, True)
         assert_equal(double_found, True)
 
-        lastblockhash = self.generate(spending_node, 1)[0]
+        lastblockhash = self.generate(spending_node, 1, sync_fun=self.no_op)[0]
 
         # check that neither transaction exists
         block_hash = spending_node.listsinceblock(lastblockhash)

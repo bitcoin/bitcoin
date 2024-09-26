@@ -65,7 +65,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
                     assert_equal(keypath, "m/44'/1'/0'/1/%d" % i)
 
         self.bump_mocktime(1)
-        self.generate(node, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
 
         self.log.info("Should no longer be able to start it with HD disabled")
         self.stop_node(0)

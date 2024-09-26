@@ -231,7 +231,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Mine
         while len(self.nodes[0].getrawmempool()) > 0:
-            self.generate(self.nodes[0], 1)
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
         # Repeatedly split those 2 outputs, doubling twice for each rep
         # Use txouts to monitor the available utxo, since these won't be tracked in wallet
@@ -241,12 +241,12 @@ class EstimateFeeTest(BitcoinTestFramework):
             while len(self.txouts) > 0:
                 split_inputs(self.nodes[0], self.txouts, self.txouts2)
             while len(self.nodes[0].getrawmempool()) > 0:
-                self.generate(self.nodes[0], 1)
+                self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             # Double txouts2 to txouts
             while len(self.txouts2) > 0:
                 split_inputs(self.nodes[0], self.txouts2, self.txouts)
             while len(self.nodes[0].getrawmempool()) > 0:
-                self.generate(self.nodes[0], 1)
+                self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             reps += 1
         self.log.info("Finished splitting")
 
