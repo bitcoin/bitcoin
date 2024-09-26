@@ -554,7 +554,7 @@ class PackageRBFTest(BitcoinTestFramework):
         self.generate(node, 1)
 
     def test_child_conflicts_parent_mempool_ancestor(self):
-        fill_mempool(self, self.nodes[0])
+        fill_mempool(self, self.nodes[0], tx_sync_fun=self.no_op)
         # Reset coins since we filled the mempool with current coins
         self.coins = self.wallet.get_utxos(mark_as_spent=False, confirmed_only=True)
 

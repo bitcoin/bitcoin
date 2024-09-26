@@ -49,9 +49,6 @@ class PackageRelayTest(BitcoinTestFramework):
     def raise_network_minfee(self):
         fill_mempool(self, self.nodes[0])
 
-        self.log.debug("Wait for the network to sync mempools")
-        self.sync_mempools()
-
         self.log.debug("Check that all nodes' mempool minimum feerates are above min relay feerate")
         for node in self.nodes:
             assert_equal(node.getmempoolinfo()['minrelaytxfee'], FEERATE_1SAT_VB)

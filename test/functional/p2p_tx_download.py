@@ -250,7 +250,7 @@ class TxDownloadTest(BitcoinTestFramework):
     def test_rejects_filter_reset(self):
         self.log.info('Check that rejected tx is not requested again')
         node = self.nodes[0]
-        fill_mempool(self, node)
+        fill_mempool(self, node, tx_sync_fun=self.no_op)
         self.wallet.rescan_utxos()
         mempoolminfee = node.getmempoolinfo()['mempoolminfee']
         peer = node.add_p2p_connection(TestP2PConn())
