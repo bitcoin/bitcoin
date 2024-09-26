@@ -23,6 +23,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def run_test(self):
 
+        self.deaf_mns = []
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -30,7 +31,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.test_no_banning()
 
         # Now lets isolate MNs one by one and verify that punishment/banning happens
-        self.test_banning(self.isolate_mn, 1)
+        self.test_banning(self.isolate_mn, 2)
 
         self.repair_masternodes(False)
 
@@ -44,7 +45,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.test_no_banning()
 
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
-        self.test_banning(self.close_mn_port, 3)
+        self.test_banning(self.close_mn_port)
+        self.deaf_mns.clear()
 
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
@@ -61,6 +63,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         self.repair_masternodes(True)
         self.close_mn_port(self.mninfo[0])
+        self.deaf_mns.clear()
         self.test_no_banning(3)
 
     def isolate_mn(self, mn):
@@ -69,12 +72,13 @@ class LLMQSimplePoSeTest(DashTestFramework):
         return True, True
 
     def close_mn_port(self, mn):
+        self.deaf_mns.append(mn)
         self.stop_node(mn.node.index)
         self.start_masternode(mn, ["-listen=0", "-nobind"])
         self.connect_nodes(mn.node.index, 0)
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo:
-            if mn2 is not mn:
+            if self.deaf_mns.count(mn2) == 0:
                 self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False, False
@@ -87,10 +91,11 @@ class LLMQSimplePoSeTest(DashTestFramework):
         return False, True
 
     def test_no_banning(self, expected_connections=None):
-        for _ in range(3):
+        for i in range(3):
+            self.log.info(f"Testing no PoSe banning in normal conditions {i + 1}/3")
             self.mine_quorum(expected_connections=expected_connections)
-        for mn in self.mninfo:
-            assert not self.check_punished(mn) and not self.check_banned(mn)
+            for mn in self.mninfo:
+                assert not self.check_punished(mn) and not self.check_banned(mn)
 
     def mine_quorum_less_checks(self, expected_good_nodes, mninfos_online):
         # Unlike in mine_quorum we skip most of the checks and only care about
@@ -154,13 +159,15 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         return new_quorum
 
-    def test_banning(self, invalidate_proc, expected_connections):
+    def test_banning(self, invalidate_proc, expected_connections=None):
         mninfos_online = self.mninfo.copy()
         mninfos_valid = self.mninfo.copy()
         expected_contributors = len(mninfos_online)
-        for _ in range(2):
+        for i in range(2):
+            self.log.info(f"Testing PoSe banning due to {invalidate_proc.__name__} {i + 1}/2")
             mn = mninfos_valid.pop()
             went_offline, instant_ban = invalidate_proc(mn)
+            expected_complaints = expected_contributors - 1
             if went_offline:
                 mninfos_online.remove(mn)
                 expected_contributors -= 1
@@ -168,12 +175,16 @@ class LLMQSimplePoSeTest(DashTestFramework):
             # NOTE: Min PoSe penalty is 100 (see CDeterministicMNList::CalcMaxPoSePenalty()),
             # so nodes are PoSe-banned in the same DKG they misbehave without being PoSe-punished first.
             if instant_ban:
+                assert expected_connections is not None
+                self.log.info("Expecting instant PoSe banning")
                 self.reset_probe_timeouts()
-                self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
+                self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_complaints, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
             else:
                 # It's ok to miss probes/quorum connections up to 5 times.
                 # 6th time is when it should be banned for sure.
-                for _ in range(6):
+                assert expected_connections is None
+                for j in range(6):
+                    self.log.info(f"Accumulating PoSe penalty {j + 1}/6")
                     self.reset_probe_timeouts()
                     self.mine_quorum_less_checks(expected_contributors - 1, mninfos_online)
 
@@ -184,7 +195,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 expected_contributors -= 1
 
     def repair_masternodes(self, restart):
-        # Repair all nodes
+        self.log.info("Repairing all banned and punished masternodes")
         for mn in self.mninfo:
             if self.check_banned(mn) or self.check_punished(mn):
                 addr = self.nodes[0].getnewaddress()
@@ -195,7 +206,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.start_masternode(mn)
                 else:
                     mn.node.setnetworkactive(True)
-            self.connect_nodes(mn.node.index, 0)
+                self.connect_nodes(mn.node.index, 0)
 
         # syncing blocks only since node 0 has txes waiting to be mined
         self.sync_blocks()
