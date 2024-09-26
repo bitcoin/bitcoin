@@ -3023,7 +3023,7 @@ static RPCHelpMan loadtxoutset()
                 }
         },
         RPCExamples{
-            HelpExampleCli("loadtxoutset -rpcclienttimeout=0", "utxo.dat")
+            HelpExampleCli("-rpcclienttimeout=0 loadtxoutset", "utxo.dat")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
