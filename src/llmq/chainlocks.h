@@ -29,7 +29,6 @@ class CMasternodeSync;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-class PeerManager;
 
 namespace llmq
 {
@@ -53,7 +52,6 @@ private:
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
-    const std::unique_ptr<PeerManager>& m_peerman;
 
     const bool m_is_masternode;
     std::unique_ptr<CScheduler> scheduler;
@@ -89,8 +87,7 @@ private:
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
                                 CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
-                                const CMasternodeSync& mn_sync, const std::unique_ptr<PeerManager>& peerman,
-                                bool is_masternode);
+                                const CMasternodeSync& mn_sync, bool is_masternode);
     ~CChainLocksHandler();
 
     void Start();
@@ -100,8 +97,8 @@ public:
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     CChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    PeerMsgRet ProcessMessage(const CNode& pfrom, const std::string& msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    PeerMsgRet ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const CChainLockSig& clsig,
+                                                              const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip();
@@ -111,7 +108,8 @@ public:
     void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void TrySignChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);

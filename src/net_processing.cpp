@@ -4999,7 +4999,18 @@ void PeerManagerImpl::ProcessMessage(
         ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->shareman->ProcessMessage(pfrom, m_sporkman, msg_type, vRecv);
         ProcessPeerMsgRet(m_llmq_ctx->sigman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(m_llmq_ctx->clhandler->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
+
+        if (msg_type == NetMsgType::CLSIG) {
+            if (llmq::AreChainLocksEnabled(m_sporkman)) {
+                llmq::CChainLockSig clsig;
+                vRecv >> clsig;
+                const uint256& hash = ::SerializeHash(clsig);
+                WITH_LOCK(::cs_main, EraseObjectRequest(pfrom.GetId(), CInv{MSG_CLSIG, hash}));
+                PostProcessMessage(m_llmq_ctx->clhandler->ProcessNewChainLock(pfrom.GetId(), clsig, hash), pfrom.GetId());
+            }
+            return; // CLSIG
+        }
+
         ProcessPeerMsgRet(m_llmq_ctx->isman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         return;
     }
