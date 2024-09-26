@@ -1,5 +1,6 @@
 env:  # Global defaults
   CIRRUS_CLONE_DEPTH: 1
+  CIRRUS_LOG_TIMESTAMP: true
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
