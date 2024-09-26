@@ -55,6 +55,7 @@ struct CNodeStateStats {
 struct PeerManagerInfo {
     std::chrono::seconds median_outbound_time_offset{0s};
     bool ignores_incoming_txs{false};
+    bool reconcile_txs{DEFAULT_TXRECONCILIATION_ENABLE};
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface

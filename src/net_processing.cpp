@@ -1925,6 +1925,7 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
     return PeerManagerInfo{
         .median_outbound_time_offset = m_outbound_time_offsets.Median(),
         .ignores_incoming_txs = m_opts.ignore_incoming_txs,
+        .reconcile_txs = m_opts.reconcile_txs
     };
 }
 
