@@ -73,7 +73,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "evo/simplifiedmns -> llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns"
     "llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> llmq/blockprocessor"
     "llmq/commitment -> llmq/utils -> llmq/snapshot -> llmq/commitment"
-    "spork -> validation -> spork"
     "governance/governance -> validation -> governance/governance"
     "evo/deterministicmns -> validationinterface -> governance/vote -> evo/deterministicmns"
     "governance/vote -> masternode/node -> validationinterface -> governance/vote"

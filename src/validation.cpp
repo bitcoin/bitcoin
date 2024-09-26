@@ -35,7 +35,6 @@
 #include <script/script.h>
 #include <script/sigcache.h>
 #include <shutdown.h>
-#include <spork.h>
 
 #include <timedata.h>
 #include <tinyformat.h>
