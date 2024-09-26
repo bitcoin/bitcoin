@@ -312,7 +312,6 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Mine these in a block
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         # Now generate tx8, with a big fee
         inputs = [ {'txid' : tx1_id, 'vout': 0}, {'txid' : txid, 'vout': 0} ]

@@ -71,10 +71,8 @@ class WalletTest(BitcoinTestFramework):
 
         self.log.info("Mining blocks ...")
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         self.generate(self.nodes[1], 1)
         self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 1, ADDRESS_WATCHONLY)
-        self.sync_all()
 
         if not self.options.descriptors:
             # Tests legacy watchonly behavior which is not present (and does not need to be tested) in descriptor wallets
@@ -201,7 +199,6 @@ class WalletTest(BitcoinTestFramework):
         # test_balances(fee_node_1=Decimal('0.02')) # disabled, no RBF in Dash
 
         self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
-        self.sync_all()
 
         # balances are correct after the transactions are confirmed
         balance_node0 = Decimal('969.99')  # node 1's send plus change from node 0's send
@@ -215,7 +212,6 @@ class WalletTest(BitcoinTestFramework):
         txs = create_transactions(self.nodes[1], self.nodes[0].getnewaddress(), Decimal('29.98'), [Decimal('0.01')])
         self.nodes[1].sendrawtransaction(txs[0]['hex'])
         self.generatetoaddress(self.nodes[1], 2, ADDRESS_WATCHONLY)
-        self.sync_all()
 
         # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
         # TODO: fix getbalance tracking of coin spentness depth
@@ -279,7 +275,6 @@ class WalletTest(BitcoinTestFramework):
         self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
         self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
-        self.sync_all()
         assert_equal(self.nodes[0].getbalance(minconf=0), total_amount + 1)  # The reorg recovered our fee of 1 coin
 
 

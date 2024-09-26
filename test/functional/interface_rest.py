@@ -85,9 +85,7 @@ class RESTTest (BitcoinTestFramework):
         not_related_address = "yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
         self.generatetoaddress(self.nodes[1], 100, not_related_address)
-        self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 500)
 
@@ -118,7 +116,6 @@ class RESTTest (BitcoinTestFramework):
         self.log.info("Query an unspent TXO using the /getutxos URI")
 
         self.generatetoaddress(self.nodes[1], 1, not_related_address)
-        self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
         assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
@@ -193,7 +190,6 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(len(json_obj['utxos']), 0)
 
         self.generate(self.nodes[0], 1)
-        self.sync_all()
 
         json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
         assert_equal(len(json_obj['utxos']), 1)
@@ -214,7 +210,6 @@ class RESTTest (BitcoinTestFramework):
         self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=200)
 
         self.generate(self.nodes[0], 1)  # generate block to not affect upcoming tests
-        self.sync_all()
 
         self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
         bb_hash = self.nodes[0].getbestblockhash()
@@ -285,7 +280,6 @@ class RESTTest (BitcoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        self.sync_all()
         json_obj = self.test_rest_request("/headers/5/{}".format(bb_hash))
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
 
@@ -320,7 +314,6 @@ class RESTTest (BitcoinTestFramework):
 
         # Now mine the transactions
         newblockhash = self.generate(self.nodes[1], 1)
-        self.sync_all()
 
         # Check if the 3 tx show up in the new block
         json_obj = self.test_rest_request("/block/{}".format(newblockhash[0]))

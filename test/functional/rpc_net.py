@@ -79,7 +79,6 @@ class NetTest(DashTestFramework):
         # Create a few getpeerinfo last_block/last_transaction values.
         self.wallet.send_self_transfer(from_node=self.nodes[0]) # Make a transaction so we can see it in the getpeerinfo results
         self.generate(self.nodes[1], 1)
-        self.sync_all()
         time_now = self.mocktime
         peer_info = [x.getpeerinfo() for x in self.nodes]
         # Verify last_block and last_transaction keys/values.

@@ -98,7 +98,6 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         # insufficient work chain, in which case we'd need to reconnect them to
         # continue the test.
 
-        self.sync_all()
         self.log.info("Blockcounts: %s", [n.getblockcount() for n in self.nodes])
 
         self.log.info("Test that getheaders requests to node2 are not ignored")
