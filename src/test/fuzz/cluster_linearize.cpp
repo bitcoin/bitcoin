@@ -1010,6 +1010,14 @@ FUZZ_TARGET(clusterlin_simple_linearize)
             }
         } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
     }
+
+    if (optimal) {
+        // Compare with a linearization read from the fuzz input.
+        auto read = ReadLinearization(depgraph, reader);
+        auto read_chunking = ChunkLinearization(depgraph, read);
+        auto cmp = CompareChunks(simple_chunking, read_chunking);
+        assert(cmp >= 0);
+    }
 }
 
 FUZZ_TARGET(clusterlin_linearize)
@@ -1087,6 +1095,12 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
+
+        // Compare with a linearization read from the fuzz input.
+        auto read = ReadLinearization(depgraph, reader);
+        auto read_chunking = ChunkLinearization(depgraph, read);
+        auto cmp_read = CompareChunks(chunking, read_chunking);
+        assert(cmp_read >= 0);
     }
 }
 
