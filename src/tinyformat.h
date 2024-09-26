@@ -1049,7 +1049,15 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_MAKEFORMATLIST)
 /// list of format arguments is held in a single function argument.
 inline void vformat(std::ostream& out, const char* fmt, FormatListRef list)
 {
-    detail::formatImpl(out, fmt, list.m_args, list.m_N);
+    // Modified for Bitcoin Core to not throw for formatting errors
+    try {
+        detail::formatImpl(out, fmt, list.m_args, list.m_N);
+    } catch (tinyformat::format_error& fmterr) {
+        out << "Error \"" + std::string{fmterr.what()} + "\" while formatting: " + fmt;
+#ifdef DEBUG
+        throw;
+#endif
+    }
 }
 
 
@@ -1150,12 +1158,12 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 template <typename... Args>
 std::string format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return format_raw(fmt.fmt, args...);
+    return tfm::format_raw(fmt.fmt, args...);
 }
 template <typename... Args>
 void format(std::ostream& out, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return format_raw(out, fmt.fmt, args...);
+    tfm::format_raw(out, fmt.fmt, args...);
 }
 } // namespace tinyformat
 

@@ -242,12 +242,7 @@ template <typename... Args>
 inline void LogPrintFormatInternal(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
-        }
+        const auto log_msg{tfm::format(fmt, args...)};
         LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
     }
 }
