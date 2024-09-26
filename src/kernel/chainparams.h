@@ -105,10 +105,12 @@ public:
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Minimum free space (in GB) needed for data directory */
     uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
-    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target*/
+    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
     uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
     /** Whether it is possible to mine blocks on demand (no retargeting) */
     bool MineBlocksOnDemand() const { return consensus.fPowNoRetargeting; }
+    /** Return the chain type as a user-facing string */
+    std::string GetChainTypeDisplayString() const { return ChainTypeToDisplayString(m_chain_type); }
     /** Return the chain type string */
     std::string GetChainTypeString() const { return ChainTypeToString(m_chain_type); }
     /** Return the chain type */
