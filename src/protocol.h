@@ -585,6 +585,7 @@ struct MessageProcessingResult
 {
     std::optional<MisbehavingError> m_error;
     std::optional<CInv> m_inventory;
+    std::optional<CInv> m_to_erase;
 
     MessageProcessingResult() = default;
     MessageProcessingResult(MisbehavingError error) :

@@ -3310,13 +3310,16 @@ void PeerManagerImpl::ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom)
     if (!ret) Misbehaving(pfrom.GetId(), ret.error().score, ret.error().message);
 }
 
-void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& ret, NodeId node)
+void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeId node)
 {
-    if (ret.m_error) {
-        Misbehaving(node, ret.m_error->score, ret.m_error->message);
+    if (result.m_error) {
+        Misbehaving(node, result.m_error->score, result.m_error->message);
     }
-    if (ret.m_inventory) {
-        RelayInv(ret.m_inventory.value(), MIN_PEER_PROTO_VERSION);
+    if (result.m_to_erase) {
+        WITH_LOCK(cs_main, EraseObjectRequest(node, result.m_to_erase.value()));
+    }
+    if (result.m_inventory) {
+        RelayInv(result.m_inventory.value(), MIN_PEER_PROTO_VERSION);
     }
 }
 
@@ -4994,7 +4997,7 @@ void PeerManagerImpl::ProcessMessage(
         m_mn_sync.ProcessMessage(pfrom, msg_type, vRecv);
         ProcessPeerMsgRet(m_govman.ProcessMessage(pfrom, m_connman, *this, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(CMNAuth::ProcessMessage(pfrom, peer->m_their_services, m_connman, m_mn_metaman, m_mn_activeman, m_chainman.ActiveChain(), m_mn_sync, m_dmnman->GetListAtChainTip(), msg_type, vRecv), pfrom);
-        ProcessPeerMsgRet(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
+        PostProcessMessage(m_llmq_ctx->quorum_block_processor->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
         ProcessPeerMsgRet(m_llmq_ctx->qdkgsman->ProcessMessage(pfrom, this, is_masternode, msg_type, vRecv), pfrom);
         ProcessPeerMsgRet(m_llmq_ctx->qman->ProcessMessage(pfrom, msg_type, vRecv), pfrom);
         m_llmq_ctx->shareman->ProcessMessage(pfrom, m_sporkman, msg_type, vRecv);
