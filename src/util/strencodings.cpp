@@ -427,3 +427,9 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
     }
     return *parsed_num * unit_amount;
 }
+
+std::vector<std::byte> StringToBuffer(const std::string& str)
+{
+    auto span = std::as_bytes(std::span(str));
+    return {span.begin(), span.end()};
+}
