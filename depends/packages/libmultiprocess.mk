@@ -13,6 +13,7 @@ ifneq ($(host),$(build))
 $(package)_config_opts := -DCAPNP_EXECUTABLE="$$(native_capnp_prefixbin)/capnp"
 $(package)_config_opts += -DCAPNPC_CXX_EXECUTABLE="$$(native_capnp_prefixbin)/capnpc-c++"
 endif
+$(package)_cxxflags += -ffile-prefix-map=$$($(package)_extract_dir)=/usr
 endef
 
 define $(package)_config_cmds
