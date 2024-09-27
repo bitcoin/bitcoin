@@ -274,11 +274,9 @@ std::ostream& operator<<(std::ostream& os, const uint256& num);
 class HasReason
 {
 public:
-    explicit HasReason(const std::string& reason) : m_reason(reason) {}
-    bool operator()(const std::exception& e) const
-    {
-        return std::string(e.what()).find(m_reason) != std::string::npos;
-    };
+    explicit HasReason(std::string_view reason) : m_reason(reason) {}
+    bool operator()(std::string_view s) const { return s.find(m_reason) != std::string_view::npos; }
+    bool operator()(const std::exception& e) const { return (*this)(e.what()); }
 
 private:
     const std::string m_reason;
