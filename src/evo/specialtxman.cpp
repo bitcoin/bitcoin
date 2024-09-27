@@ -48,23 +48,10 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, const Chainstat
         case TRANSACTION_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(dmnman, chainman, tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
-            if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "mnhf-before-v20");
-            }
             return CheckMNHFTx(chainman, qman, tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
-            if (!DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetlocks-before-v20");
-            }
             return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
         case TRANSACTION_ASSET_UNLOCK:
-            if (Params().NetworkIDString() == CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_V20)) {
-                // TODO:  adjust functional tests to make it activated by MN_RR on regtest too
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-v20");
-            }
-            if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !DeploymentActiveAfter(pindexPrev, consensusParams, Consensus::DEPLOYMENT_MN_RR)) {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, "assetunlocks-before-mn_rr");
-            }
             return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
         }
     } catch (const std::exception& e) {

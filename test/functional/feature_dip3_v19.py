@@ -43,7 +43,10 @@ class TestP2PConn(P2PInterface):
 
 class DIP3V19Test(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True, evo_count=2)
+        self.extra_args = [[
+            '-testactivationheight=v20@1200', # required otherwise mine_quorum("llmq_test [100]") fails
+        ]] * 6
+        self.set_dash_test_params(6, 5, evo_count=2, extra_args=self.extra_args)
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected

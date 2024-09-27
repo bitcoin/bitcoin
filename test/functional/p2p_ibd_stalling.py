@@ -48,7 +48,7 @@ class P2PStaller(P2PDataStore):
 class P2PIBDStallingTest(BitcoinTestFramework):
     def set_test_params(self):
         self.disable_mocktime = True
-        self.extra_args = [["-dip3params=2000:2000"]]
+        self.extra_args = [["-dip3params=2000:2000", "-testactivationheight=v20@2000"]]
         self.setup_clean_chain = True
         self.num_nodes = 1
 

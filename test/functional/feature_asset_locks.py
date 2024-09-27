@@ -242,8 +242,8 @@ class AssetLocksTest(DashTestFramework):
 
         self.set_sporks()
 
-        self.activate_v19(expected_activation_height=900)
-        self.log.info("Activated v19 at height:" + str(node.getblockcount()))
+        self.activate_v20(expected_activation_height=900)
+        self.log.info("Activated v20 at height:" + str(node.getblockcount()))
 
         self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -256,7 +256,6 @@ class AssetLocksTest(DashTestFramework):
             self.sync_blocks()
 
         self.set_sporks()
-        self.activate_v20()
         node.generate(1)
         self.sync_all()
         self.mempool_size = 0
@@ -640,7 +639,7 @@ class AssetLocksTest(DashTestFramework):
         all_mn_rewards = platform_reward + owner_reward + operator_reward
         assert_equal(all_mn_rewards, bt['coinbasevalue'] * 3 // 4)  # 75/25 mn/miner reward split
         assert_equal(platform_reward, all_mn_rewards * 375 // 1000)  # 0.375 platform share
-        assert_equal(platform_reward, 31916328)
+        assert_equal(platform_reward, 37015386)
         assert_equal(locked, self.get_credit_pool_balance())
         node.generate(1)
         self.sync_all()

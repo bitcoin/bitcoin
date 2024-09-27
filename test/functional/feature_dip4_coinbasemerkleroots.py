@@ -44,7 +44,7 @@ class TestP2PConn(P2PInterface):
 class LLMQCoinbaseCommitmentsTest(DashTestFramework):
     def set_test_params(self):
         self.extra_args = [[ f'-testactivationheight=dip0008@{DIP0008_HEIGHT}', "-vbparams=testdummy:999999999999:999999999999" ]] * 4
-        self.set_dash_test_params(4, 3, extra_args = self.extra_args, fast_dip3_enforcement=True)
+        self.set_dash_test_params(4, 3, extra_args = self.extra_args)
     def run_test(self):
         # No IS or Chainlocks in this test
         self.bump_mocktime(1)

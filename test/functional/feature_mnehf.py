@@ -25,7 +25,7 @@ from test_framework.util import (
 class MnehfTest(DashTestFramework):
     def set_test_params(self):
         extra_args = [["-vbparams=testdummy:0:999999999999:0:12:12:12:5:1", "-persistmempool=0"] for _ in range(4)]
-        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=extra_args)
+        self.set_dash_test_params(4, 3, extra_args=extra_args)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

@@ -20,7 +20,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, fast_dip3_enforcement=True)
+        self.set_dash_test_params(5, 4)
 
     def run_test(self):
 
@@ -33,7 +33,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.test_coinbase_best_cl(self.nodes[0], expected_cl_in_cb=False)
 
-        self.activate_v20(expected_activation_height=1200)
+        self.activate_v20(expected_activation_height=900)
         self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
 
         # v20 is active for the next block, not for the tip

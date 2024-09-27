@@ -183,26 +183,6 @@ struct TestChain100Setup : public TestChainSetup {
     TestChain100Setup(const std::vector<const char*>& extra_args = {});
 };
 
-struct TestChainDIP3Setup : public TestChainSetup
-{
-    TestChainDIP3Setup() : TestChainSetup(431) {}
-};
-
-struct TestChainV19Setup : public TestChainSetup
-{
-    TestChainV19Setup();
-};
-
-struct TestChainDIP3BeforeActivationSetup : public TestChainSetup
-{
-    TestChainDIP3BeforeActivationSetup() : TestChainSetup(430) {}
-};
-
-struct TestChainV19BeforeActivationSetup : public TestChainSetup
-{
-    TestChainV19BeforeActivationSetup();
-};
-
 /**
  * Make a test setup that has disk access to the debug.log file disabled. Can
  * be used in "hot loops", for example fuzzing or benchmarking.
