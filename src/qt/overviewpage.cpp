@@ -199,11 +199,6 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
         Q_EMIT transactionClicked(filter->mapToSource(index));
 }
 
-void OverviewPage::handleOutOfSyncWarningClicks()
-{
-    Q_EMIT outOfSyncWarningClicked();
-}
-
 void OverviewPage::setPrivacy(bool privacy)
 {
     m_privacy = privacy;
@@ -469,7 +464,7 @@ void OverviewPage::updateCoinJoinProgress()
 
     ui->coinJoinProgress->setValue(progress);
 
-    QString strToolPip = ("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
+    QString strToolPip = QString("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
                           tr("Denominated") + ": %2%<br/>" +
                           tr("Partially mixed") + ": %3%<br/>" +
                           tr("Mixed") + ": %4%<br/>" +

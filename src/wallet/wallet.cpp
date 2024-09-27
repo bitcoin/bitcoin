@@ -238,7 +238,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, interfaces
             return nullptr;
         }
 
-        chain.initMessage(_("Loading wallet...").translated);
+        chain.initMessage(_("Loading wallet…").translated);
         std::shared_ptr<CWallet> wallet = CWallet::Create(&chain, &coinjoin_loader, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
@@ -304,7 +304,7 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, interfaces::Coin
     }
 
     // Make the wallet
-    chain.initMessage(_("Loading wallet...").translated);
+    chain.initMessage(_("Loading wallet…").translated);
     std::shared_ptr<CWallet> wallet = CWallet::Create(&chain, &coinjoin_loader, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
