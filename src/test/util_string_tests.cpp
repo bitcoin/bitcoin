@@ -161,4 +161,47 @@ BOOST_AUTO_TEST_CASE(case_insensitive_comparator_test)
     BOOST_CHECK(cmp("a", "\xe4"));
 }
 
+BOOST_AUTO_TEST_CASE(line_reader_test)
+{
+    {
+        // Check three lines terminated by \n, \r\n, and end of buffer, trimming whitespace
+        const std::vector<std::byte> input{StringToBuffer("once upon a time\n there was a dog \r\nwho liked food")};
+        LineReader reader(input, /*max_read=*/128);
+        std::optional<std::string> line1{reader.ReadLine()};
+        BOOST_CHECK_EQUAL(reader.Left(), 33);
+        std::optional<std::string> line2{reader.ReadLine()};
+        BOOST_CHECK_EQUAL(reader.Left(), 14);
+        std::optional<std::string> line3{reader.ReadLine()};
+        std::optional<std::string> line4{reader.ReadLine()};
+        BOOST_CHECK(line1);
+        BOOST_CHECK(line2);
+        BOOST_CHECK(line3);
+        BOOST_CHECK(!line4);
+        BOOST_CHECK_EQUAL(line1.value(), "once upon a time");
+        BOOST_CHECK_EQUAL(line2.value(), "there was a dog");
+        BOOST_CHECK_EQUAL(line3.value(), "who liked food");
+    }
+    {
+        // Do not exceed max_read while searching for EOL
+        const std::vector<std::byte> input1{StringToBuffer("once upon a time there was a dog\nwho liked food")};
+        LineReader reader1(input1, /*max_read=*/10);
+        BOOST_CHECK_THROW(reader1.ReadLine(), std::runtime_error);
+
+        const std::vector<std::byte> input2{StringToBuffer("once upon\n a time there was a dog who liked food")};
+        LineReader reader2(input2, /*max_read=*/10);
+        BOOST_CHECK_EQUAL(reader2.ReadLine(), "once upon");
+        BOOST_CHECK_THROW(reader2.ReadLine(), std::runtime_error);
+    }
+    {
+        // Read specific number of bytes regardless of max_read or \n unless buffer is too short
+        const std::vector<std::byte> input{StringToBuffer("once upon a time\n there was a dog \r\nwho liked food")};
+        LineReader reader(input, /*max_read=*/1);
+        BOOST_CHECK_EQUAL(reader.ReadLength(0), "");
+        BOOST_CHECK_EQUAL(reader.ReadLength(3), "onc");
+        BOOST_CHECK_EQUAL(reader.ReadLength(8), "e upon a");
+        BOOST_CHECK_EQUAL(reader.ReadLength(8), " time\n t");
+        BOOST_CHECK_THROW(reader.ReadLength(128), std::runtime_error);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

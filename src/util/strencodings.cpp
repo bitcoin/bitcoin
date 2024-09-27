@@ -497,3 +497,10 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
     }
     return *parsed_num * unit_amount;
 }
+
+std::vector<std::byte> StringToBuffer(const std::string& str)
+{
+    return std::vector<std::byte>(
+        reinterpret_cast<const std::byte*>(str.data()),
+        reinterpret_cast<const std::byte*>(str.data() + str.size()));
+}
