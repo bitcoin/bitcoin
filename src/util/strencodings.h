@@ -375,6 +375,15 @@ std::string Capitalize(std::string str);
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
 
+/**
+ * Returns a byte vector filled with data from a string. Used to test string-
+ * encoded data from a socket like HTTP headers.
+ *
+ * @param[in] str                  the string to convert into bytes
+ * @returns                        byte vector
+ */
+std::vector<std::byte> StringToBuffer(const std::string& str);
+
 namespace util {
 /** consteval version of HexDigit() without the lookup table. */
 consteval uint8_t ConstevalHexDigit(const char c)
