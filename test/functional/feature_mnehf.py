@@ -24,7 +24,7 @@ from test_framework.util import (
 
 class MnehfTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=testdummy:0:999999999999:0:12:12:12:5:1", "-persistmempool=0"] for _ in range(4)]
+        extra_args = [["-vbparams=testdummy:0:999999999999:0:4:4:4:5:1", "-persistmempool=0"] for _ in range(4)]
         self.set_dash_test_params(4, 3, extra_args=extra_args)
 
     def skip_test_if_missing_module(self):
@@ -34,7 +34,7 @@ class MnehfTest(DashTestFramework):
         for inode in range(self.num_nodes):
             self.log.info(f"Restart node {inode} with {self.extra_args[inode]}")
             if params is not None:
-                self.extra_args[inode][0] = f"-vbparams=testdummy:{params[0]}:{params[1]}:0:12:12:12:5:1"
+                self.extra_args[inode][0] = f"-vbparams=testdummy:{params[0]}:{params[1]}:0:4:4:4:5:1"
                 self.log.info(f"Actual restart options: {self.extra_args[inode]}")
 
         self.restart_node(0)
@@ -169,7 +169,7 @@ class MnehfTest(DashTestFramework):
         self.log.info(f"mempool: {node.getmempoolinfo()}")
         assert_equal(node.getmempoolinfo()['size'], 0)
 
-        while (node.getblockcount() + 1) % 12 != 0:
+        while (node.getblockcount() + 1) % 4 != 0:
             self.check_fork('defined')
             node.generate(1)
             self.sync_all()
@@ -177,13 +177,13 @@ class MnehfTest(DashTestFramework):
 
         self.restart_all_nodes()
 
-        for _ in range(12):
+        for _ in range(4):
             self.check_fork('started')
             node.generate(1)
             self.sync_all()
 
 
-        for i in range(12):
+        for i in range(4):
             self.check_fork('locked_in')
             node.generate(1)
             self.sync_all()
@@ -198,7 +198,7 @@ class MnehfTest(DashTestFramework):
             inode.invalidateblock(ehf_blockhash)
 
         self.log.info("Expecting for fork to be defined in next blocks because no MnEHF tx here")
-        for _ in range(12):
+        for _ in range(4):
             self.check_fork('defined')
             node.generate(1)
             self.sync_all()
@@ -213,7 +213,7 @@ class MnehfTest(DashTestFramework):
         assert tx_sent_2 in node.getblock(ehf_blockhash_2)['tx']
 
         self.log.info(f"Generate some more block to jump to `started` status")
-        for _ in range(12):
+        for _ in range(4):
             node.generate(1)
         self.check_fork('started')
         self.restart_all_nodes()
@@ -260,7 +260,7 @@ class MnehfTest(DashTestFramework):
         assert ehf_tx_sent in block['tx']
 
         self.check_fork('defined')
-        self.slowly_generate_batch(12 * 4)
+        self.slowly_generate_batch(4 * 4)
         self.check_fork('active')
 
 
