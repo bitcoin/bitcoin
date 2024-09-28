@@ -16,6 +16,11 @@ OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-
 clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
 clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 
+# Setting make flags early because xcode does not
+ifeq ($(build_os), darwin)
+	.SHELLFLAGS=-c
+endif
+
 darwin_AR=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-ar")
 darwin_DSYMUTIL=$(shell $(SHELL) $(.SHELLFLAGS) "command -v dsymutil")
 darwin_NM=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-nm")
