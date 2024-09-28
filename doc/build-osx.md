@@ -179,6 +179,17 @@ brew install python
 You can [deploy](#3-deploy-optional) a `.zip` containing the Bitcoin Core application.
 It is required that you have `python` installed.
 
+---
+
+#### Relinking brew dependencies
+
+#### ***Try relinking brew installed dependencies - if they are not detected when building.***
+##### Example:
+
+```bash
+brew unlink qrencode && brew link qrencode
+```
+
 ## Building Bitcoin Core
 
 ### 1. Configuration
