@@ -98,7 +98,7 @@ public:
     /*
      * Filter for transactions that have been recently confirmed.
      * We use this to avoid requesting transactions that have already been
-     * confirnmed.
+     * confirmed.
      *
      * Blocks don't typically have more than 4000 transactions, so this should
      * be at least six blocks (~1 hr) worth of transactions that we can store,
