@@ -29,7 +29,16 @@ const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
 const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS{};
 
-const std::function<std::string()> G_TEST_GET_FULL_NAME{};
+/**
+ * Retrieve the name of the currently in-use benchmark.
+ * This is applicable only to benchmarks that utilize the unit test
+ * framework context setup (e.g. ones using 'MakeNoLogFileContext<TestingSetup>()').
+ * It places the datadir of each benchmark run within their respective benchmark name.
+ */
+static std::string g_running_benchmark_name;
+const std::function<std::string()> G_TEST_GET_FULL_NAME = []() {
+    return g_running_benchmark_name;
+};
 
 namespace {
 
@@ -117,6 +126,7 @@ void BenchRunner::RunAll(const Args& args)
             bench.output(nullptr);
         }
         bench.name(name);
+        g_running_benchmark_name = name;
         if (args.min_time > 0ms) {
             // convert to nanos before dividing to reduce rounding errors
             std::chrono::nanoseconds min_time_ns = args.min_time;
