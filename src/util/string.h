@@ -42,7 +42,7 @@ constexpr static void CheckFormatSpecifiers(std::string_view str, unsigned num_p
             continue;
         }
 
-        if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
+        if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string!";
         if (*it == '%') {
             // Percent escape: %%
             ++it;
@@ -58,9 +58,9 @@ constexpr static void CheckFormatSpecifiers(std::string_view str, unsigned num_p
 
         if (*it == '$') {
             // Positional specifier, like %8$s
-            if (maybe_num == 0) throw "Positional format specifier must have position of at least 1";
+            if (maybe_num == 0) throw "Positional format specifier must have position of at least 1!";
             count_pos = std::max(count_pos, maybe_num);
-            if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string";
+            if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string!";
         } else {
             // Non-positional specifier, like %s
             ++count_normal;

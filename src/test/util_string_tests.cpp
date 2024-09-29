@@ -71,13 +71,13 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_RuntimeFail)
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$s", 0), const char*, err_num);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$s", 2), const char*, err_num);
 
-    HasReason err_0_pos{"Positional format specifier must have position of at least 1"};
+    HasReason err_0_pos{"Positional format specifier must have position of at least 1!"};
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%$s", INVALID), const char*, err_0_pos);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%$", INVALID), const char*, err_0_pos);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%0$", INVALID), const char*, err_0_pos);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%0$s", INVALID), const char*, err_0_pos);
 
-    HasReason err_term{"Format specifier incorrectly terminated by end of string"};
+    HasReason err_term{"Format specifier incorrectly terminated by end of string!"};
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%", INVALID), const char*, err_term);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$", INVALID), const char*, err_term);
 }
