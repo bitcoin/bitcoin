@@ -169,8 +169,15 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
         /** check if the locale name consists of 2 parts (language_country) */
         if(langStr.contains("_"))
         {
-            /** display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
-            ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
+            /** display language strings as "native language - native country/territory (locale name)", e.g. "Deutsch - Deutschland (de)" */
+            ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") +
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 2, 0))
+                              locale.nativeTerritoryName() +
+#else
+                              locale.nativeCountryName() +
+#endif
+                              QString(" (") + langStr + QString(")"), QVariant(langStr));
+
         }
         else
         {
