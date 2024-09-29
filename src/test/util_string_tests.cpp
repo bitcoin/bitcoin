@@ -54,7 +54,6 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_CompileTimePass)
     // The `*` specifier behavior is unsupported and can lead to runtime
     // errors when used in a ConstevalFormatString. Please refer to the
     // note in the ConstevalFormatString docs.
-    ValidFormatSpecifiers("%*c", 1);
     ValidFormatSpecifiers("%2$*3$d", 2);
     ValidFormatSpecifiers("%.*f", 1);
 }
@@ -80,7 +79,18 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_RuntimeFail)
     HasReason err_term{"Format specifier incorrectly terminated by end of string!"};
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%", INVALID), const char*, err_term);
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1", INVALID), const char*, err_term);
-    BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$", 1), const char*, err_term);
+    BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$", INVALID), const char*, err_term);
+}
+
+BOOST_AUTO_TEST_CASE(ConstevalFormatString_SpecificUsageTests)
+{
+    // Example usages from bitcoin-cli
+    CheckFormatSpecifiers("<->   type   net  v  mping   ping send recv  txn  blk  hb %*s%*s%*s ", 6);
+    CheckFormatSpecifiers("%*s %-*s%s\n", 5);
+    CheckFormatSpecifiers("%3s %6s %5s %2s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n", 24);
+    CheckFormatSpecifiers("                        ms     ms  sec  sec  min  min                %*s\n\n", 2);
+    CheckFormatSpecifiers("\n%-*s    port %6i    score %6i", 4);
+    CheckFormatSpecifiers("%*s %s\n", 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
