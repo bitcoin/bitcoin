@@ -289,7 +289,7 @@ def ensure_for(*, duration, f, check_interval=0.2):
         time.sleep(check_interval)
 
 
-def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0, check_interval=0.05):
+def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_factor=1.0, check_interval=0.05):
     """Sleep until the predicate resolves to be True.
 
     Warning: Note that this method is not recommended to be used in tests as it is
@@ -298,13 +298,10 @@ def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=floa
     properly scaled. Furthermore, `wait_until()` from `P2PInterface` class in
     `p2p.py` has a preset lock.
     """
-    if attempts == float('inf') and timeout == float('inf'):
-        timeout = 60
     timeout = timeout * timeout_factor
-    attempt = 0
     time_end = time.time() + timeout
 
-    while attempt < attempts and time.time() < time_end:
+    while time.time() < time_end:
         if lock:
             with lock:
                 if predicate():
@@ -312,17 +309,12 @@ def wait_until_helper_internal(predicate, *, attempts=float('inf'), timeout=floa
         else:
             if predicate():
                 return
-        attempt += 1
         time.sleep(check_interval)
 
     # Print the cause of the timeout
     predicate_source = "''''\n" + inspect.getsource(predicate) + "'''"
     logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
-    if attempt >= attempts:
-        raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
-    elif time.time() >= time_end:
-        raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
-    raise RuntimeError('Unreachable')
+    raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
 
 
 def sha256sum_file(filename):
