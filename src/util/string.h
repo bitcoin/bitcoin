@@ -51,9 +51,8 @@ constexpr static void CheckFormatSpecifiers(std::string_view str, unsigned num_p
 
         unsigned maybe_num{0};
         while ('0' <= *it && *it <= '9') {
-            maybe_num *= 10;
-            maybe_num += *it - '0';
-            ++it;
+            maybe_num = maybe_num * 10 + (*it - '0');
+            if (++it >= str.end()) throw "Format specifier incorrectly terminated by end of string!";
         };
 
         if (*it == '$') {

@@ -79,7 +79,8 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_RuntimeFail)
 
     HasReason err_term{"Format specifier incorrectly terminated by end of string!"};
     BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%", INVALID), const char*, err_term);
-    BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$", INVALID), const char*, err_term);
+    BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1", INVALID), const char*, err_term);
+    BOOST_CHECK_EXCEPTION(CheckFormatSpecifiers("%1$", 1), const char*, err_term);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
